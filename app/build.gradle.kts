@@ -6,16 +6,17 @@ plugins {
 
 android {
     namespace = "com.example.fyp"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.fyp"
-        minSdk = 24
-        targetSdk = 36
+        minSdk = 21
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "GOOGLE_API_KEY", "\"0bc890feea19121de80b044c92a7ebefa84fb8fe\"")
     }
 
     buildTypes {
@@ -27,35 +28,53 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.7"
     }
 }
 
-dependencies {
+repositories {
+    google()
+    mavenCentral()
+}
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
+dependencies {
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
+
+    implementation("androidx.compose.ui:ui") // 版本由 BOM 管理
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.activity:activity-compose")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+
+    implementation("androidx.core:core-ktx:1.10.1")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.20")
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+
+    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.33.0")
+    implementation("com.google.accompanist:accompanist-permissions:0.37.3")
+
+    // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.33.0")
-    implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 }
