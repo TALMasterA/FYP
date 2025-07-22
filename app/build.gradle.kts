@@ -6,17 +6,19 @@ plugins {
 
 android {
     namespace = "com.example.fyp"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.fyp"
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "GOOGLE_API_KEY", "\"0bc890feea19121de80b044c92a7ebefa84fb8fe\"")
+        buildConfigField("String", "GOOGLE_API_KEY", "\"key\"")
+        buildConfigField("String", "AZURE_SPEECH_KEY", "\"key\"")
+
     }
 
     buildTypes {
@@ -56,7 +58,7 @@ repositories {
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
 
-    implementation("androidx.compose.ui:ui") // 版本由 BOM 管理
+    implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.activity:activity-compose")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -67,6 +69,7 @@ dependencies {
 
     implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.33.0")
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
+    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.24.0")
 
     // Test
     testImplementation(libs.junit)
