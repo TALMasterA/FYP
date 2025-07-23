@@ -30,8 +30,6 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import com.microsoft.cognitiveservices.speech.PropertyId
 import okhttp3.RequestBody.Companion.toRequestBody
 
 
@@ -70,29 +68,34 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SpeechRecognitionScreen() {
     val scope = rememberCoroutineScope()
-    var recognizedText by remember { mutableStateOf("Tap 'Start Recording' to begin.") }
+    // Static instruction text, shown all the time at the top
+    val instructions = "If Use Azure, just press Azure button. For Google, please start recording-stop then press Use Google button."
+
+    var recognizedText by remember { mutableStateOf("") }
     var recordedAudioData by remember { mutableStateOf<ByteArray?>(null) }
     val googleApiKey = BuildConfig.GOOGLE_API_KEY
 
-    // A single, stable stream to write audio data to.
     val audioStream = remember { ByteArrayOutputStream() }
 
     RecordAudioPermissionRequest {
         Column(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(start = 16.dp, end = 16.dp, top = 48.dp)  // top padding to avoid camera
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Text(
+                text = instructions,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
             Button(
                 onClick = {
                     if (isRecording) {
-                        // Stop recording and get the data
                         recordedAudioData = stopRecording(audioStream)
                         recognizedText = "Recording stopped. Ready to recognize."
                     } else {
-                        // Start recording
-                        recordedAudioData = null // Clear previous data
+                        recordedAudioData = null
                         startRecording(audioStream)
                         recognizedText = "Recording..."
                     }
@@ -130,10 +133,16 @@ fun SpeechRecognitionScreen() {
                 Text("Use Google Recognize")
             }
 
-            Text(text = recognizedText, modifier = Modifier.padding(top = 16.dp))
+            Spacer(modifier = Modifier.height(24.dp)) // Add some space before the recognition result text
+
+            Text(
+                text = recognizedText,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     }
 }
+
 
 // --- STABLE RECORDING LOGIC ---
 
@@ -223,49 +232,49 @@ suspend fun recognizeSpeechWithGoogle(audioData: ByteArray?, apiKey: String): St
 
 
         client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: java.io.IOException) {
-                    if (cont.isActive) {
-                        Log.e("GoogleSpeech", "Network failure", e)
-                        cont.resume("Google API Error: ${e.message}")
-                    }
+            override fun onFailure(call: Call, e: java.io.IOException) {
+                if (cont.isActive) {
+                    Log.e("GoogleSpeech", "Network failure", e)
+                    cont.resume("Google API Error: ${e.message}")
                 }
-
-                override fun onResponse(call: Call, response: Response) {
-                    if (!cont.isActive) return
-                    response.use { resp ->
-                        val body = resp.body?.string()
-                        if (!resp.isSuccessful) {
-                            val errorMsg = "Google API Error: HTTP ${resp.code}. Body: $body"
-                            Log.e("GoogleSpeech", errorMsg)
-                            cont.resume("Google recongize failed: HTTP ${resp.code}")
-                            return
-                        }
-                        if (body.isNullOrEmpty()) {
-                            cont.resume("Google API not sending")
-                            return
-                        }
-                        try {
-                            val jsonObject = JSONObject(body)
-                            val results = jsonObject.optJSONArray("results")
-                            if (results != null && results.length() > 0) {
-                                val transcript = results.getJSONObject(0).getJSONArray("alternatives").getJSONObject(0).getString("transcript")
-                                Log.i("GoogleSpeech", "Recognized: $transcript")
-                                cont.resume(transcript)
-                            } else {
-                                Log.w("GoogleSpeech", "No recognition results found: $body")
-                                cont.resume("No Google result")
-                            }
-                        } catch (e: Exception) {
-                            Log.e("GoogleSpeech", "Error parsing Google response: ${e.message}. Raw: $body", e)
-                            cont.resume("Google recongize failed: ${e.message}")
-                        }
-                    }
-                }
-            })
-
-                    cont.invokeOnCancellation {
-                client.dispatcher.cancelAll()
             }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (!cont.isActive) return
+                response.use { resp ->
+                    val body = resp.body?.string()
+                    if (!resp.isSuccessful) {
+                        val errorMsg = "Google API Error: HTTP ${resp.code}. Body: $body"
+                        Log.e("GoogleSpeech", errorMsg)
+                        cont.resume("Google recongize failed: HTTP ${resp.code}")
+                        return
+                    }
+                    if (body.isNullOrEmpty()) {
+                        cont.resume("Google API not sending")
+                        return
+                    }
+                    try {
+                        val jsonObject = JSONObject(body)
+                        val results = jsonObject.optJSONArray("results")
+                        if (results != null && results.length() > 0) {
+                            val transcript = results.getJSONObject(0).getJSONArray("alternatives").getJSONObject(0).getString("transcript")
+                            Log.i("GoogleSpeech", "Recognized: $transcript")
+                            cont.resume(transcript)
+                        } else {
+                            Log.w("GoogleSpeech", "No recognition results found: $body")
+                            cont.resume("No Google result")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("GoogleSpeech", "Error parsing Google response: ${e.message}. Raw: $body", e)
+                        cont.resume("Google recongize failed: ${e.message}")
+                    }
+                }
+            }
+        })
+
+        cont.invokeOnCancellation {
+            client.dispatcher.cancelAll()
+        }
     }
 
 suspend fun recognizeSpeechWithAzure(): String = withContext(Dispatchers.IO) {
