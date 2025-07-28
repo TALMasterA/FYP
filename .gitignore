@@ -1,0 +1,32 @@
+# Gradle files
+.gradle/
+build/
+
+# Local configuration files
+/local.properties
+
+# Android Studio files
+.idea/
+*.iml
+
+# Build outputs
+app/build/
+*/build/
+
+# Kotlin
+*.ktbuild
+
+# IntelliJ
+out/
+
+# User-specific files
+*.swp
+*.swo
+*.DS_Store
+
+# Android generated files
+captures/
+.externalNativeBuild/
+
+# Other
+*.log

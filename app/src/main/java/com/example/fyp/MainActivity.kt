@@ -125,7 +125,7 @@ fun SpeechRecognitionScreen() {
             Button(
                 onClick = {
                     scope.launch {
-                        recognizedText = "Processing with Azure,SPEAK plz and WAIT..."
+                        recognizedText = "Processing with Azure,plz WAIT..."
                         val azureResult = recognizeSpeechWithAzure()
                         recognizedText = azureResult
                     }
@@ -139,7 +139,7 @@ fun SpeechRecognitionScreen() {
             Button(
                 onClick = {
                     scope.launch {
-                        recognizedText = "Processing with Google, SPEAK plz and WAIT..."
+                        recognizedText = "Recording with Google, SPEAK plz and WAIT..."
                         val googleResult = recognizeSpeechWithGoogle(recordedAudioData, googleApiKey)
                         recognizedText = googleResult
                     }
