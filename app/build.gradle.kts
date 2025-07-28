@@ -16,8 +16,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "GOOGLE_API_KEY", "\"key\"")
-        buildConfigField("String", "AZURE_SPEECH_KEY", "\"key\"")
+        buildConfigField("String", "GOOGLE_API_KEY", "\"\"")
+        buildConfigField("String", "AZURE_SPEECH_KEY", "\"\"")
 
     }
 

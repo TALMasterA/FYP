@@ -31,8 +31,20 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import kotlin.coroutines.resume
 import okhttp3.RequestBody.Companion.toRequestBody
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 
-
+object NetworkClient {
+    val okHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
+            .build()
+    }
+}
 
 // --- AudioRecord State ---
 private var audioRecord: AudioRecord? = null
@@ -69,13 +81,16 @@ class MainActivity : ComponentActivity() {
 fun SpeechRecognitionScreen() {
     val scope = rememberCoroutineScope()
     // Static instruction text, shown all the time at the top
-    val instructions = "If Use Azure, just press Azure button. For Google, please start recording-stop then press Use Google button."
+    val instructions = "If Use Azure, just press Azure button. For Google, please start recording-stop then press Use Google button. Use Copy to copy the recognize text."
 
     var recognizedText by remember { mutableStateOf("") }
+    var prefixText by remember { mutableStateOf("") }
     var recordedAudioData by remember { mutableStateOf<ByteArray?>(null) }
     val googleApiKey = BuildConfig.GOOGLE_API_KEY
 
     val audioStream = remember { ByteArrayOutputStream() }
+
+    val clipboardManager = LocalClipboardManager.current
 
     RecordAudioPermissionRequest {
         Column(
@@ -93,11 +108,13 @@ fun SpeechRecognitionScreen() {
                 onClick = {
                     if (isRecording) {
                         recordedAudioData = stopRecording(audioStream)
-                        recognizedText = "Recording stopped. Ready to recognize."
+                        prefixText = "Recording stopped. Ready to recognize."
+                        recognizedText = ""
                     } else {
                         recordedAudioData = null
                         startRecording(audioStream)
-                        recognizedText = "Recording..."
+                        prefixText = "Recording..."
+                        recognizedText = ""
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -108,9 +125,9 @@ fun SpeechRecognitionScreen() {
             Button(
                 onClick = {
                     scope.launch {
-                        recognizedText = "Processing with Azure..."
+                        recognizedText = "Processing with Azure,SPEAK plz and WAIT..."
                         val azureResult = recognizeSpeechWithAzure()
-                        recognizedText = "Azure: $azureResult"
+                        recognizedText = azureResult
                     }
                 },
                 enabled = !isRecording,
@@ -122,9 +139,9 @@ fun SpeechRecognitionScreen() {
             Button(
                 onClick = {
                     scope.launch {
-                        recognizedText = "Processing with Google..."
+                        recognizedText = "Processing with Google, SPEAK plz and WAIT..."
                         val googleResult = recognizeSpeechWithGoogle(recordedAudioData, googleApiKey)
-                        recognizedText = "Google: $googleResult"
+                        recognizedText = googleResult
                     }
                 },
                 enabled = recordedAudioData != null && !isRecording,
@@ -139,6 +156,15 @@ fun SpeechRecognitionScreen() {
                 text = recognizedText,
                 modifier = Modifier.padding(top = 8.dp)
             )
+
+            Button(
+                onClick = {
+                    clipboardManager.setText(AnnotatedString(recognizedText))
+                },
+                enabled = recognizedText.isNotEmpty()
+            ) {
+                Text("Copy")
+            }
         }
     }
 }
@@ -223,7 +249,7 @@ suspend fun recognizeSpeechWithGoogle(audioData: ByteArray?, apiKey: String): St
         }
         val jsonString = requestBodyJson.toString()
 
-        val client = OkHttpClient()
+        val client = NetworkClient.okHttpClient
         val requestBody = jsonString.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val request = Request.Builder()
             .url("https://speech.googleapis.com/v1/speech:recognize?key=$apiKey")
