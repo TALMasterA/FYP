@@ -15,6 +15,7 @@ app/build/
 
 # Kotlin
 *.ktbuild
+.kotlin/errors
 
 # IntelliJ
 out/
