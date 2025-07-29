@@ -6,8 +6,8 @@
  Caution:
  Testing APP: Connect phone and Computer with USB
  Enable USB debugging in phone Developer Options
- Turn OFF when not testing or you can not get in online bank!
+ Turn OFF when not testing, or you can not get in online bank!
 
- Remember enter you key in Azure Speech Service & Google Text-to-Speech API, and Sync to test.
+ Remember to enter your key in Azure Speech Service & Google Text-to-Speech API, and Sync to test.
 
  If BuilbConfig is in red, try sync + Clear & Rebuild, if still red, just run.
