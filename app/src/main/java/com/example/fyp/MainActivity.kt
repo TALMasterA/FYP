@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
+import com.example.fyp.BuildConfig
 
 object NetworkClient {
     val okHttpClient: OkHttpClient by lazy {
