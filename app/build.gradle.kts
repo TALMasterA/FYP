@@ -58,7 +58,7 @@ repositories {
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
 
-    implementation("androidx.compose.ui:ui")
+    implementation(libs.ui)
     implementation("androidx.compose.material3:material3")
     implementation("androidx.activity:activity-compose")
     implementation("androidx.compose.ui:ui-tooling-preview")
