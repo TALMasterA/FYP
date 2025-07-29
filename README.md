@@ -10,4 +10,4 @@
 
  Remember to enter your key in Azure Speech Service & Google Text-to-Speech API, and Sync to test.
 
- If BuilbConfig is in red, try sync + Clear & Rebuild, if still red, just run.
+ If BuildConfig is in red, try sync + Clear & Rebuild, if still red, just run.
