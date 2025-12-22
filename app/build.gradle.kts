@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.fyp"
-        minSdk = 21
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -58,20 +58,21 @@ repositories {
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
 
-    implementation(libs.ui)
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.activity:activity-compose")
-    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation(libs.ui) // your alias pointing to "androidx.compose.ui:ui"
+    implementation("androidx.compose.material3:material3:1.1.0")
+    implementation("androidx.activity:activity-compose:1.7.1")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.4.0")
 
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.20")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
 
-    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.33.0")
-    implementation("com.google.accompanist:accompanist-permissions:0.37.3")
-    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.24.0")
+    // Use only one Azure Speech SDK version
+    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.45.0")
 
-    // Test
+    implementation("com.google.accompanist:accompanist-permissions:0.37.3")
+
+    // Test dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -81,3 +82,4 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
