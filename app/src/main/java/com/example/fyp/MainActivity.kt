@@ -8,11 +8,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.example.fyp.ui.theme.FYPTheme
 import com.google.accompanist.permissions.*
@@ -23,19 +28,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
-import kotlin.coroutines.resume
-import okhttp3.RequestBody.Companion.toRequestBody
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
-import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import com.example.fyp.AudioRecorder
-import com.example.fyp.BuildConfig
+import kotlin.coroutines.resume
 
 object NetworkClient {
     val okHttpClient: OkHttpClient by lazy {
@@ -70,28 +68,26 @@ class MainActivity : ComponentActivity() {
 fun SpeechRecognitionScreen() {
     val scope = rememberCoroutineScope()
     val instructions =
-        "If Use Azure, just press Azure button. For Google, please start recording-stop then press Use Google button. (The google API have stopped development) Use Copy to copy the recognize text."
+        "Press Azure button of recognition. Use Copy to copy the recognize text."
 
     var recognizedText by remember { mutableStateOf("") }
-    var prefixText by remember { mutableStateOf("") }
-    var recordedAudioData by remember { mutableStateOf<ByteArray?>(null) }
-    val googleApiKey = BuildConfig.GOOGLE_API_KEY
 
     val audioStream = remember { ByteArrayOutputStream() }
     val clipboardManager = LocalClipboardManager.current
 
     val context = LocalContext.current
-    var selectedLanguage by remember { mutableStateOf("en-US") }
     val supportedLanguages by remember {
         mutableStateOf(AzureLanguageConfig.loadSupportedLanguages(context))
     }
+    var selectedLanguage by remember {
+        mutableStateOf(supportedLanguages.firstOrNull() ?: "en-US")
+    }
+    var selectedTargetLanguage by remember {
+        mutableStateOf(supportedLanguages.getOrNull(1) ?: "zh-HK")
+    }
 
     var translatedText by remember { mutableStateOf("") }
-    var selectedTargetLanguage by remember { mutableStateOf("zh-HK") }
-
-    val translationLanguages = listOf(
-        "en-US", "zh-HK", "ja-JP", "zh-CN", "fr-FR", "de-DE", "ko-KR", "es-ES"
-    )
+    var ttsStatus by remember { mutableStateOf("") }
 
     RecordAudioPermissionRequest {
         val scrollState = rememberScrollState()
@@ -109,15 +105,16 @@ fun SpeechRecognitionScreen() {
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // 2) Language selector row
+            // 2) Recognition language selector
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Language: $selectedLanguage")
+                Text("Detect Language: $selectedLanguage")
                 Button(onClick = {
-                    val currentIndex = supportedLanguages.indexOf(selectedLanguage).takeIf { it >= 0 } ?: 0
+                    val currentIndex = supportedLanguages.indexOf(selectedLanguage)
+                        .takeIf { it >= 0 } ?: 0
                     val nextIndex = (currentIndex + 1) % supportedLanguages.size
                     selectedLanguage = supportedLanguages[nextIndex]
                 }) {
@@ -125,6 +122,7 @@ fun SpeechRecognitionScreen() {
                 }
             }
 
+            // 3) Translation target language selector
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -132,35 +130,16 @@ fun SpeechRecognitionScreen() {
             ) {
                 Text("Translate to: $selectedTargetLanguage")
                 Button(onClick = {
-                    val currentIndex = translationLanguages.indexOf(selectedTargetLanguage)
+                    val currentIndex = supportedLanguages.indexOf(selectedTargetLanguage)
                         .takeIf { it >= 0 } ?: 0
-                    val nextIndex = (currentIndex + 1) % translationLanguages.size
-                    selectedTargetLanguage = translationLanguages[nextIndex]
+                    val nextIndex = (currentIndex + 1) % supportedLanguages.size
+                    selectedTargetLanguage = supportedLanguages[nextIndex]
                 }) {
                     Text("Change")
                 }
             }
 
-            // 3) Recording button
-            Button(
-                onClick = {
-                    if (AudioRecorder.isRecording) {
-                        recordedAudioData = AudioRecorder.stop(audioStream)
-                        prefixText = "Recording stopped. Ready to recognize."
-                        recognizedText = ""
-                    } else {
-                        recordedAudioData = null
-                        AudioRecorder.start(audioStream)
-                        prefixText = "Recording..."
-                        recognizedText = ""
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (AudioRecorder.isRecording) "Stop Recording" else "Start Recording")
-            }
-
-            // 4) Azure button
+            // 4) Azure recognition button
             Button(
                 onClick = {
                     scope.launch {
@@ -177,23 +156,9 @@ fun SpeechRecognitionScreen() {
                 Text("Use Azure Recognize (from Mic)")
             }
 
-            // 5) Google button
-            Button(
-                onClick = {
-                    scope.launch {
-                        recognizedText = "Processing with Google, plz WAIT..."
-                        val googleResult = recognizeSpeechWithGoogle(recordedAudioData, googleApiKey)
-                        recognizedText = googleResult
-                    }
-                },
-                enabled = recordedAudioData != null && !AudioRecorder.isRecording,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Use Google Recognize")
-            }
-
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Original text
             Text(
                 text = recognizedText,
                 modifier = Modifier.padding(top = 8.dp)
@@ -208,6 +173,23 @@ fun SpeechRecognitionScreen() {
                 Text("Copy")
             }
 
+            // Speak original
+            Button(
+                onClick = {
+                    scope.launch {
+                        when (val result = speakWithAzure(recognizedText, selectedLanguage)) {
+                            is SpeechResult.Success -> ttsStatus = "Speaking original text..."
+                            is SpeechResult.Error -> ttsStatus = "TTS error: ${result.message}"
+                        }
+                    }
+                },
+                enabled = recognizedText.isNotBlank(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Speak script")
+            }
+
+            // Translate
             Button(
                 onClick = {
                     scope.launch {
@@ -215,7 +197,7 @@ fun SpeechRecognitionScreen() {
                         val result = TranslatorClient.translateText(
                             text = recognizedText,
                             toLanguage = selectedTargetLanguage,
-                            fromLanguage = selectedLanguage   // optional; Azure can auto-detect too
+                            fromLanguage = selectedLanguage
                         )
                         translatedText = when (result) {
                             is SpeechResult.Success -> result.text
@@ -231,6 +213,7 @@ fun SpeechRecognitionScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Translated text
             Text(
                 text = translatedText,
                 modifier = Modifier.padding(top = 8.dp)
@@ -245,96 +228,36 @@ fun SpeechRecognitionScreen() {
                 Text("Copy Translation")
             }
 
+            // Speak translation
+            Button(
+                onClick = {
+                    scope.launch {
+                        when (val result = speakWithAzure(translatedText, selectedTargetLanguage)) {
+                            is SpeechResult.Success -> ttsStatus = "Speaking translation..."
+                            is SpeechResult.Error -> ttsStatus = "TTS error: ${result.message}"
+                        }
+                    }
+                },
+                enabled = translatedText.isNotBlank(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Speak Translation")
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
+
+            if (ttsStatus.isNotBlank()) {
+                Text(ttsStatus)
+            }
         }
     }
 }
 
-// --- GOOGLE AND AZURE FUNCTIONS ---
+// --- AZURE ---
 
 private const val SAMPLE_RATE = 16000
 
-suspend fun recognizeSpeechWithGoogle(audioData: ByteArray?, apiKey: String): String =
-    suspendCancellableCoroutine { cont ->
-        if (audioData == null || audioData.isEmpty()) {
-            cont.resume("Error: No audio data to recognize.")
-            return@suspendCancellableCoroutine
-        }
-
-        val audioBase64 = Base64.encodeToString(audioData, Base64.NO_WRAP)
-
-        val alternativeLanguages = org.json.JSONArray(listOf("zh-HK", "ja-JP"))
-        val config = JSONObject().apply {
-            put("encoding", "LINEAR16")
-            put("sampleRateHertz", SAMPLE_RATE)
-            put("languageCode", "en-US")
-            put("alternativeLanguageCodes", alternativeLanguages)
-        }
-
-
-        val audio = JSONObject().apply {
-            put("content", audioBase64)
-        }
-        val requestBodyJson = JSONObject().apply {
-            put("config", config)
-            put("audio", audio)
-        }
-        val jsonString = requestBodyJson.toString()
-
-        val client = NetworkClient.okHttpClient
-        val requestBody = jsonString.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-        val request = Request.Builder()
-            .url("https://speech.googleapis.com/v1/speech:recognize?key=$apiKey")
-            .post(requestBody)
-            .build()
-
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: java.io.IOException) {
-                if (cont.isActive) {
-                    Log.e("GoogleSpeech", "Network failure", e)
-                    cont.resume("Google API Error: ${e.message}")
-                }
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                if (!cont.isActive) return
-                response.use { resp ->
-                    val body = resp.body?.string()
-                    if (!resp.isSuccessful) {
-                        val errorMsg = "Google API Error: HTTP ${resp.code}. Body: $body"
-                        Log.e("GoogleSpeech", errorMsg)
-                        cont.resume("Google recongize failed: HTTP ${resp.code}")
-                        return
-                    }
-                    if (body.isNullOrEmpty()) {
-                        cont.resume("Google API not sending")
-                        return
-                    }
-                    try {
-                        val jsonObject = JSONObject(body)
-                        val results = jsonObject.optJSONArray("results")
-                        if (results != null && results.length() > 0) {
-                            val transcript = results.getJSONObject(0).getJSONArray("alternatives").getJSONObject(0).getString("transcript")
-                            Log.i("GoogleSpeech", "Recognized: $transcript")
-                            cont.resume(transcript)
-                        } else {
-                            Log.w("GoogleSpeech", "No recognition results found: $body")
-                            cont.resume("No Google result")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("GoogleSpeech", "Error parsing Google response: ${e.message}. Raw: $body", e)
-                        cont.resume("Google recongize failed: ${e.message}")
-                    }
-                }
-            }
-        })
-
-        cont.invokeOnCancellation {
-            client.dispatcher.cancelAll()
-        }
-    }
-
+// Azure recognition
 suspend fun recognizeSpeechWithAzure(languageCode: String): SpeechResult =
     withContext(Dispatchers.IO) {
         val azureKey = BuildConfig.AZURE_SPEECH_KEY
@@ -342,8 +265,6 @@ suspend fun recognizeSpeechWithAzure(languageCode: String): SpeechResult =
 
         try {
             val speechConfig = SpeechConfig.fromSubscription(azureKey, region)
-
-            // <<< set the chosen language here
             speechConfig.speechRecognitionLanguage = languageCode
 
             val recognizer = SpeechRecognizer(speechConfig)
@@ -373,7 +294,49 @@ suspend fun recognizeSpeechWithAzure(languageCode: String): SpeechResult =
         }
     }
 
+// Azure text-to-speech
+suspend fun speakWithAzure(text: String, languageCode: String): SpeechResult =
+    withContext(Dispatchers.IO) {
+        if (text.isBlank()) {
+            return@withContext SpeechResult.Error("No text to speak")
+        }
+
+        val azureKey = BuildConfig.AZURE_SPEECH_KEY
+        val region = "eastasia"
+
+        try {
+            val speechConfig = SpeechConfig.fromSubscription(azureKey, region)
+            speechConfig.speechSynthesisLanguage = languageCode
+
+            val synthesizer = SpeechSynthesizer(speechConfig)
+
+            try {
+                val result = synthesizer.SpeakTextAsync(text).get()
+
+                if (result.reason == ResultReason.SynthesizingAudioCompleted) {
+                    Log.i("AzureTTS", "Speech synthesized for text: $text")
+                    SpeechResult.Success("Spoken successfully")
+                } else if (result.reason == ResultReason.Canceled) {
+                    val cancellation =
+                        SpeechSynthesisCancellationDetails.fromResult(result)
+                    val msg =
+                        "TTS canceled: ${cancellation.reason}. ${cancellation.errorDetails}"
+                    Log.e("AzureTTS", msg)
+                    SpeechResult.Error(msg)
+                } else {
+                    SpeechResult.Error("TTS failed: ${result.reason}")
+                }
+            } finally {
+                synthesizer.close()
+            }
+        } catch (ex: Exception) {
+            Log.e("AzureTTS", "Error: ${ex.message}", ex)
+            SpeechResult.Error("Error speaking text: ${ex.message}")
+        }
+    }
+
 // --- PERMISSION REQUEST
+
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun RecordAudioPermissionRequest(
@@ -389,9 +352,12 @@ fun RecordAudioPermissionRequest(
 
     when {
         permissionState.status.isGranted -> onPermissionGranted()
+
         permissionState.status.shouldShowRationale || !permissionState.status.isGranted -> {
             Column(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
