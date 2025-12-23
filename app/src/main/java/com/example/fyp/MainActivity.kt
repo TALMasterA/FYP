@@ -34,6 +34,12 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.TextField
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MenuAnchorType
 
 object NetworkClient {
     val okHttpClient: OkHttpClient by lazy {
@@ -64,6 +70,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SpeechRecognitionScreen() {
     val scope = rememberCoroutineScope()
@@ -107,7 +114,7 @@ fun SpeechRecognitionScreen() {
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // 2) Recognition language selector
+            /* 2a) Recognition language selector (Button)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -123,8 +130,46 @@ fun SpeechRecognitionScreen() {
                     Text("Change")
                 }
             }
+            */
 
-            // 3) Translation target language selector
+            // 2b) Recognition language selector (dropdown)
+            var isRecLangMenuExpanded by remember { mutableStateOf(false) }
+
+            ExposedDropdownMenuBox(
+                expanded = isRecLangMenuExpanded,
+                onExpandedChange = { isRecLangMenuExpanded = !isRecLangMenuExpanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                TextField(
+                    value = LanguageDisplayNames.displayName(selectedLanguage),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Detect language") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = isRecLangMenuExpanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = isRecLangMenuExpanded,
+                    onDismissRequest = { isRecLangMenuExpanded = false }
+                ) {
+                    supportedLanguages.forEach { code ->
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(LanguageDisplayNames.displayName(code)) },
+                            onClick = {
+                                selectedLanguage = code
+                                isRecLangMenuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            /* 3a) Translation target language selector (Button)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -138,6 +183,44 @@ fun SpeechRecognitionScreen() {
                     selectedTargetLanguage = supportedLanguages[nextIndex]
                 }) {
                     Text("Change")
+                }
+            }
+            */
+
+            // 3b) Translation target language selector (dropdown)
+            var isTargetLangMenuExpanded by remember { mutableStateOf(false) }
+
+            ExposedDropdownMenuBox(
+                expanded = isTargetLangMenuExpanded,
+                onExpandedChange = { isTargetLangMenuExpanded = !isTargetLangMenuExpanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                TextField(
+                    value = LanguageDisplayNames.displayName(selectedTargetLanguage),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Translate to") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = isTargetLangMenuExpanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = isTargetLangMenuExpanded,
+                    onDismissRequest = { isTargetLangMenuExpanded = false }
+                ) {
+                    supportedLanguages.forEach { code ->
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(LanguageDisplayNames.displayName(code)) },
+                            onClick = {
+                                selectedTargetLanguage = code
+                                isTargetLangMenuExpanded = false
+                            }
+                        )
+                    }
                 }
             }
 
