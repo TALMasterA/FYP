@@ -88,6 +88,7 @@ fun SpeechRecognitionScreen() {
 
     var translatedText by remember { mutableStateOf("") }
     var ttsStatus by remember { mutableStateOf("") }
+    var isTtsRunning by remember { mutableStateOf(false) }
 
     RecordAudioPermissionRequest {
         val scrollState = rememberScrollState()
@@ -177,16 +178,23 @@ fun SpeechRecognitionScreen() {
             Button(
                 onClick = {
                     scope.launch {
+                        isTtsRunning = true
+                        ttsStatus = "Speaking original text, please wait..."
                         when (val result = speakWithAzure(recognizedText, selectedLanguage)) {
-                            is SpeechResult.Success -> ttsStatus = "Speaking original text..."
-                            is SpeechResult.Error -> ttsStatus = "TTS error: ${result.message}"
+                            is SpeechResult.Success -> {
+                                ttsStatus = "Finished speaking original text."
+                            }
+                            is SpeechResult.Error -> {
+                                ttsStatus = "TTS error: ${result.message}"
+                            }
                         }
+                        isTtsRunning = false
                     }
                 },
-                enabled = recognizedText.isNotBlank(),
+                enabled = recognizedText.isNotBlank() && !isTtsRunning,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Speak script")
+                Text(if (isTtsRunning) "Speaking..." else "Speak script")
             }
 
             // Translate
@@ -232,23 +240,30 @@ fun SpeechRecognitionScreen() {
             Button(
                 onClick = {
                     scope.launch {
+                        isTtsRunning = true
+                        ttsStatus = "Speaking translation, please wait..."
                         when (val result = speakWithAzure(translatedText, selectedTargetLanguage)) {
-                            is SpeechResult.Success -> ttsStatus = "Speaking translation..."
-                            is SpeechResult.Error -> ttsStatus = "TTS error: ${result.message}"
+                            is SpeechResult.Success -> {
+                                ttsStatus = "Finished speaking translation."
+                            }
+                            is SpeechResult.Error -> {
+                                ttsStatus = "TTS error: ${result.message}"
+                            }
                         }
+                        isTtsRunning = false
                     }
                 },
-                enabled = translatedText.isNotBlank(),
+                enabled = translatedText.isNotBlank() && !isTtsRunning,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Speak Translation")
+                Text(if (isTtsRunning) "Speaking..." else "Speak Translation")
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
 
             if (ttsStatus.isNotBlank()) {
                 Text(ttsStatus)
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
