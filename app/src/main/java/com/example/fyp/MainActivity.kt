@@ -32,6 +32,8 @@ import androidx.compose.ui.text.AnnotatedString
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.example.fyp.AudioRecorder
 import com.example.fyp.BuildConfig
 
@@ -68,7 +70,7 @@ class MainActivity : ComponentActivity() {
 fun SpeechRecognitionScreen() {
     val scope = rememberCoroutineScope()
     val instructions =
-        "If Use Azure, just press Azure button. For Google, please start recording-stop then press Use Google button. Use Copy to copy the recognize text."
+        "If Use Azure, just press Azure button. For Google, please start recording-stop then press Use Google button. (The google API have stopped development) Use Copy to copy the recognize text."
 
     var recognizedText by remember { mutableStateOf("") }
     var prefixText by remember { mutableStateOf("") }
@@ -84,11 +86,21 @@ fun SpeechRecognitionScreen() {
         mutableStateOf(AzureLanguageConfig.loadSupportedLanguages(context))
     }
 
+    var translatedText by remember { mutableStateOf("") }
+    var selectedTargetLanguage by remember { mutableStateOf("zh-HK") }
+
+    val translationLanguages = listOf(
+        "en-US", "zh-HK", "ja-JP", "zh-CN", "fr-FR", "de-DE", "ko-KR", "es-ES"
+    )
+
     RecordAudioPermissionRequest {
+        val scrollState = rememberScrollState()
+
         Column(
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp, top = 48.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // 1) Instruction text
@@ -108,6 +120,22 @@ fun SpeechRecognitionScreen() {
                     val currentIndex = supportedLanguages.indexOf(selectedLanguage).takeIf { it >= 0 } ?: 0
                     val nextIndex = (currentIndex + 1) % supportedLanguages.size
                     selectedLanguage = supportedLanguages[nextIndex]
+                }) {
+                    Text("Change")
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Translate to: $selectedTargetLanguage")
+                Button(onClick = {
+                    val currentIndex = translationLanguages.indexOf(selectedTargetLanguage)
+                        .takeIf { it >= 0 } ?: 0
+                    val nextIndex = (currentIndex + 1) % translationLanguages.size
+                    selectedTargetLanguage = translationLanguages[nextIndex]
                 }) {
                     Text("Change")
                 }
@@ -179,6 +207,45 @@ fun SpeechRecognitionScreen() {
             ) {
                 Text("Copy")
             }
+
+            Button(
+                onClick = {
+                    scope.launch {
+                        translatedText = "Translating, please wait..."
+                        val result = TranslatorClient.translateText(
+                            text = recognizedText,
+                            toLanguage = selectedTargetLanguage,
+                            fromLanguage = selectedLanguage   // optional; Azure can auto-detect too
+                        )
+                        translatedText = when (result) {
+                            is SpeechResult.Success -> result.text
+                            is SpeechResult.Error -> "Translation error: ${result.message}"
+                        }
+                    }
+                },
+                enabled = recognizedText.isNotBlank(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Translate")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = translatedText,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Button(
+                onClick = {
+                    clipboardManager.setText(AnnotatedString(translatedText))
+                },
+                enabled = translatedText.isNotEmpty()
+            ) {
+                Text("Copy Translation")
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
