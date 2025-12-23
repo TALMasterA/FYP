@@ -68,7 +68,8 @@ class MainActivity : ComponentActivity() {
 fun SpeechRecognitionScreen() {
     val scope = rememberCoroutineScope()
     val instructions =
-        "Press Azure button of recognition. Use Copy to copy the recognize text."
+        "Press Azure button of recognition. Use Copy to copy the recognize text. " +
+                "Support languages: English, Cantonese, Japanese, Mandarin..."
 
     var recognizedText by remember { mutableStateOf("") }
 
@@ -112,7 +113,7 @@ fun SpeechRecognitionScreen() {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Detect Language: $selectedLanguage")
+                Text("Detect Language: ${LanguageDisplayNames.displayName(selectedLanguage)}")
                 Button(onClick = {
                     val currentIndex = supportedLanguages.indexOf(selectedLanguage)
                         .takeIf { it >= 0 } ?: 0
@@ -129,7 +130,7 @@ fun SpeechRecognitionScreen() {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Translate to: $selectedTargetLanguage")
+                Text("Translate to: ${LanguageDisplayNames.displayName(selectedTargetLanguage)}")
                 Button(onClick = {
                     val currentIndex = supportedLanguages.indexOf(selectedTargetLanguage)
                         .takeIf { it >= 0 } ?: 0
