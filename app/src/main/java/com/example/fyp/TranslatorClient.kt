@@ -77,4 +77,71 @@ object TranslatorClient {
             SpeechResult.Error("Translator error: ${e.message}")
         }
     }
+
+    suspend fun translateTexts(
+        texts: List<String>,
+        toLanguage: String,
+        fromLanguage: String = "en"
+    ): SpeechResult = withContext(Dispatchers.IO) {
+
+        if (texts.isEmpty()) {
+            return@withContext SpeechResult.Error("No texts to translate")
+        }
+
+        try {
+            val key = BuildConfig.AZURE_TRANSLATOR_KEY
+            val region = BuildConfig.AZURE_TRANSLATOR_REGION
+
+            val url = buildString {
+                append("$ENDPOINT/translate?api-version=$API_VERSION")
+                append("&from=$fromLanguage")
+                append("&to=$toLanguage")
+            }
+
+            // Body: [{"Text":"..."}, {"Text":"..."}]
+            val arr = JSONArray()
+            texts.forEach { t ->
+                arr.put(JSONObject().apply { put("Text", t) })
+            }
+            val body = arr.toString().toRequestBody(
+                "application/json; charset=utf-8".toMediaTypeOrNull()
+            )
+
+            val request = Request.Builder()
+                .url(url)
+                .post(body)
+                .addHeader("Ocp-Apim-Subscription-Key", key)
+                .addHeader("Ocp-Apim-Subscription-Region", region)
+                .build()
+
+            val client = NetworkClient.okHttpClient
+            client.newCall(request).execute().use { response ->
+                val respBody = response.body?.string()
+                if (!response.isSuccessful || respBody.isNullOrEmpty()) {
+                    return@withContext SpeechResult.Error("Translator error: HTTP ${response.code}")
+                }
+
+                // Response example: [ { "translations":[{"text":"..."}, ...] }, ... ]
+                val jsonArray = JSONArray(respBody)
+                if (jsonArray.length() != texts.size) {
+                    return@withContext SpeechResult.Error("Unexpected translation result size")
+                }
+
+                val translatedList = mutableListOf<String>()
+                for (i in 0 until jsonArray.length()) {
+                    val translations = jsonArray.getJSONObject(i).getJSONArray("translations")
+                    if (translations.length() == 0) {
+                        return@withContext SpeechResult.Error("Missing translation")
+                    }
+                    translatedList.add(
+                        translations.getJSONObject(0).getString("text")
+                    )
+                }
+
+                SpeechResult.Success(translatedList.joinToString("\u0001")) // join with separator
+            }
+        } catch (e: Exception) {
+            SpeechResult.Error("Translator error: ${e.message}")
+        }
+    }
 }

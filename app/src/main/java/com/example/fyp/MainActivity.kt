@@ -2,7 +2,6 @@ package com.example.fyp
 
 import android.Manifest
 import android.os.Bundle
-import android.util.Base64
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,7 +10,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,26 +24,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.example.fyp.ui.theme.FYPTheme
-import com.google.accompanist.permissions.*
-import com.microsoft.cognitiveservices.speech.*
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
+import com.microsoft.cognitiveservices.speech.CancellationDetails
+import com.microsoft.cognitiveservices.speech.ResultReason
+import com.microsoft.cognitiveservices.speech.SpeechConfig
+import com.microsoft.cognitiveservices.speech.SpeechRecognizer
+import com.microsoft.cognitiveservices.speech.SpeechSynthesisCancellationDetails
+import com.microsoft.cognitiveservices.speech.SpeechSynthesizer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
-import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.resume
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.TextField
-import androidx.compose.foundation.clickable
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MenuAnchorType
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.shouldShowRationale
 
 object NetworkClient {
     val okHttpClient: OkHttpClient by lazy {
@@ -74,15 +73,48 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SpeechRecognitionScreen() {
     val scope = rememberCoroutineScope()
-    val instructions =
-        "Press Azure button of recognition. Use Copy to copy the recognize text. " +
-                "Support languages: English, Cantonese, Japanese, Mandarin..."
 
     var recognizedText by remember { mutableStateOf("") }
-
     val clipboardManager = LocalClipboardManager.current
-
     val context = LocalContext.current
+
+    // --- UI language & dynamic UI texts ---
+
+    val uiLanguages = listOf(
+        "en" to "English UI",
+        "zh-HK" to "中文（香港）UI",
+        "ja-JP" to "日本語 UI"
+    )
+
+    var selectedUiLanguage by remember { mutableStateOf(uiLanguages[0].first) }
+
+    var uiTexts by remember {
+        mutableStateOf<Map<UiTextKey, String>>(emptyMap())
+    }
+
+    fun uiText(key: UiTextKey, default: String): String {
+        return uiTexts[key] ?: default
+    }
+
+    fun uiLanguageNameFor(code: String): String {
+        val key = when (code) {
+            "en-US" -> UiTextKey.LangEnUs
+            "zh-HK" -> UiTextKey.LangZhHk
+            "ja-JP" -> UiTextKey.LangJaJp
+            "zh-CN" -> UiTextKey.LangZhCn
+            "fr-FR" -> UiTextKey.LangFrFr
+            "de-DE" -> UiTextKey.LangDeDe
+            "ko-KR" -> UiTextKey.LangKoKr
+            "es-ES" -> UiTextKey.LangEsEs
+            else    -> return LanguageDisplayNames.displayName(code)
+        }
+        val fallback = LanguageDisplayNames.displayName(code)
+        return uiText(key, fallback)
+    }
+
+
+    // --- existing Azure language lists ---
+
     val supportedLanguages by remember {
         mutableStateOf(AzureLanguageConfig.loadSupportedLanguages(context))
     }
@@ -107,31 +139,110 @@ fun SpeechRecognitionScreen() {
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // --- App UI language dropdown ---
+
+            var isUiLangMenuExpanded by remember { mutableStateOf(false) }
+
+            ExposedDropdownMenuBox(
+                expanded = isUiLangMenuExpanded,
+                onExpandedChange = { isUiLangMenuExpanded = !isUiLangMenuExpanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                TextField(
+                    value = uiLanguages.first { it.first == selectedUiLanguage }.second,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(uiText(UiTextKey.AppUiLanguageLabel, "App UI language")) },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = isUiLangMenuExpanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = isUiLangMenuExpanded,
+                    onDismissRequest = { isUiLangMenuExpanded = false }
+                ) {
+                    uiLanguages.forEach { (code, label) ->
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                isUiLangMenuExpanded = false
+                                selectedUiLanguage = code
+
+                                if (code.startsWith("en")) {
+                                    uiTexts = emptyMap()   // use English defaults
+                                } else {
+                                    scope.launch {
+                                        val baseTexts = listOf(
+                                            // Order must match UiTextKey enum
+                                            "Select User Interface language on top, then the detect and translate languages. " +
+                                                    "Support languages: English, Cantonese, Japanese, Mandarin...",
+                                            "Use Azure Recognize (from Mic)",
+                                            "Copy",
+                                            "Speak script",
+                                            "Translate",
+                                            "Copy Translation",
+                                            "Speak Translation",
+                                            "Recording with Azure, SPEAK and please WAIT...",
+                                            "Translating, please wait...",
+                                            "Speaking original text, please wait...",
+                                            "Speaking translation, please wait...",
+                                            "App UI language",
+                                            "Detect language",
+                                            "Translate to",
+                                            "Speaking...",
+                                            "Finished speaking original text.",
+                                            "Finished speaking translation.",
+                                            "TTS error: %s",
+                                            // Language names in English
+                                            "English",
+                                            "Cantonese",
+                                            "Japanese",
+                                            "Mandarin",
+                                            "French",
+                                            "German",
+                                            "Korean",
+                                            "Spanish"
+                                        )
+
+                                        when (val result = TranslatorClient.translateTexts(
+                                            texts = baseTexts,
+                                            toLanguage = code,
+                                            fromLanguage = "en"
+                                        )) {
+                                            is SpeechResult.Success -> {
+                                                val parts = result.text.split('\u0001')
+                                                if (parts.size == baseTexts.size) {
+                                                    uiTexts = UiTextKey.values().zip(parts).toMap()
+                                                }
+                                            }
+                                            is SpeechResult.Error -> {
+                                                Log.e("UITranslation", "Error: ${result.message}")
+                                                uiTexts = emptyMap()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
             // 1) Instruction text
             Text(
-                text = instructions,
+                text = uiText(
+                    UiTextKey.Instructions,
+                    "Select User Interface language on top, then the detect and translate languages. " +
+                            "Support languages: English, Cantonese, Japanese, Mandarin..."
+                ),
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            /* 2a) Recognition language selector (Button)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Detect Language: ${LanguageDisplayNames.displayName(selectedLanguage)}")
-                Button(onClick = {
-                    val currentIndex = supportedLanguages.indexOf(selectedLanguage)
-                        .takeIf { it >= 0 } ?: 0
-                    val nextIndex = (currentIndex + 1) % supportedLanguages.size
-                    selectedLanguage = supportedLanguages[nextIndex]
-                }) {
-                    Text("Change")
-                }
-            }
-            */
-
-            // 2b) Recognition language selector (dropdown)
+            // 2) Recognition language selector (dropdown)
             var isRecLangMenuExpanded by remember { mutableStateOf(false) }
 
             ExposedDropdownMenuBox(
@@ -140,10 +251,12 @@ fun SpeechRecognitionScreen() {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 TextField(
-                    value = LanguageDisplayNames.displayName(selectedLanguage),
+                    value = uiLanguageNameFor(selectedLanguage),
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Detect language") },
+                    label = {
+                        Text(uiText(UiTextKey.DetectLanguageLabel, "Detect language"))
+                    },
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = isRecLangMenuExpanded)
                     },
@@ -158,7 +271,7 @@ fun SpeechRecognitionScreen() {
                 ) {
                     supportedLanguages.forEach { code ->
                         androidx.compose.material3.DropdownMenuItem(
-                            text = { Text(LanguageDisplayNames.displayName(code)) },
+                            text = { Text(uiLanguageNameFor(code)) },
                             onClick = {
                                 selectedLanguage = code
                                 isRecLangMenuExpanded = false
@@ -168,25 +281,7 @@ fun SpeechRecognitionScreen() {
                 }
             }
 
-            /* 3a) Translation target language selector (Button)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Translate to: ${LanguageDisplayNames.displayName(selectedTargetLanguage)}")
-                Button(onClick = {
-                    val currentIndex = supportedLanguages.indexOf(selectedTargetLanguage)
-                        .takeIf { it >= 0 } ?: 0
-                    val nextIndex = (currentIndex + 1) % supportedLanguages.size
-                    selectedTargetLanguage = supportedLanguages[nextIndex]
-                }) {
-                    Text("Change")
-                }
-            }
-            */
-
-            // 3b) Translation target language selector (dropdown)
+            // 3) Translation target language selector (dropdown)
             var isTargetLangMenuExpanded by remember { mutableStateOf(false) }
 
             ExposedDropdownMenuBox(
@@ -195,10 +290,12 @@ fun SpeechRecognitionScreen() {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 TextField(
-                    value = LanguageDisplayNames.displayName(selectedTargetLanguage),
+                    value = uiLanguageNameFor(selectedTargetLanguage),
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Translate to") },
+                    label = {
+                        Text(uiText(UiTextKey.TranslateToLabel, "Translate to"))
+                    },
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = isTargetLangMenuExpanded)
                     },
@@ -213,7 +310,7 @@ fun SpeechRecognitionScreen() {
                 ) {
                     supportedLanguages.forEach { code ->
                         androidx.compose.material3.DropdownMenuItem(
-                            text = { Text(LanguageDisplayNames.displayName(code)) },
+                            text = { Text(uiLanguageNameFor(code)) },
                             onClick = {
                                 selectedTargetLanguage = code
                                 isTargetLangMenuExpanded = false
@@ -227,7 +324,10 @@ fun SpeechRecognitionScreen() {
             Button(
                 onClick = {
                     scope.launch {
-                        recognizedText = "Recording with Azure, SPEAK and plz WAIT..."
+                        recognizedText = uiText(
+                            UiTextKey.RecognizingStatus,
+                            "Recording with Azure, SPEAK and plz WAIT..."
+                        )
                         when (val result = recognizeSpeechWithAzure(selectedLanguage)) {
                             is SpeechResult.Success -> recognizedText = result.text
                             is SpeechResult.Error -> recognizedText = "Azure error: ${result.message}"
@@ -237,7 +337,12 @@ fun SpeechRecognitionScreen() {
                 enabled = !AudioRecorder.isRecording,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Use Azure Recognize (from Mic)")
+                Text(
+                    uiText(
+                        UiTextKey.AzureRecognizeButton,
+                        "Use Azure Recognize (from Mic)"
+                    )
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -254,7 +359,7 @@ fun SpeechRecognitionScreen() {
                 },
                 enabled = recognizedText.isNotEmpty()
             ) {
-                Text("Copy")
+                Text(uiText(UiTextKey.CopyButton, "Copy"))
             }
 
             // Speak original
@@ -262,13 +367,23 @@ fun SpeechRecognitionScreen() {
                 onClick = {
                     scope.launch {
                         isTtsRunning = true
-                        ttsStatus = "Speaking original text, please wait..."
+                        ttsStatus = uiText(
+                            UiTextKey.SpeakingOriginalStatus,
+                            "Speaking original text, please wait..."
+                        )
                         when (val result = speakWithAzure(recognizedText, selectedLanguage)) {
                             is SpeechResult.Success -> {
-                                ttsStatus = "Finished speaking original text."
+                                ttsStatus = uiText(
+                                    UiTextKey.FinishedSpeakingOriginal,
+                                    "Finished speaking original text."
+                                )
                             }
                             is SpeechResult.Error -> {
-                                ttsStatus = "TTS error: ${result.message}"
+                                val fmt = uiText(
+                                    UiTextKey.TtsErrorTemplate,
+                                    "TTS error: %s"
+                                )
+                                ttsStatus = String.format(fmt, result.message)
                             }
                         }
                         isTtsRunning = false
@@ -277,14 +392,22 @@ fun SpeechRecognitionScreen() {
                 enabled = recognizedText.isNotBlank() && !isTtsRunning,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (isTtsRunning) "Speaking..." else "Speak script")
+                Text(
+                    if (isTtsRunning)
+                        uiText(UiTextKey.SpeakingLabel, "Speaking...")
+                    else
+                        uiText(UiTextKey.SpeakScriptButton, "Speak script")
+                )
             }
 
             // Translate
             Button(
                 onClick = {
                     scope.launch {
-                        translatedText = "Translating, please wait..."
+                        translatedText = uiText(
+                            UiTextKey.TranslatingStatus,
+                            "Translating, please wait..."
+                        )
                         val result = TranslatorClient.translateText(
                             text = recognizedText,
                             toLanguage = selectedTargetLanguage,
@@ -299,7 +422,7 @@ fun SpeechRecognitionScreen() {
                 enabled = recognizedText.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Translate")
+                Text(uiText(UiTextKey.TranslateButton, "Translate"))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -316,7 +439,12 @@ fun SpeechRecognitionScreen() {
                 },
                 enabled = translatedText.isNotEmpty()
             ) {
-                Text("Copy Translation")
+                Text(
+                    uiText(
+                        UiTextKey.CopyTranslationButton,
+                        "Copy Translation"
+                    )
+                )
             }
 
             // Speak translation
@@ -324,13 +452,23 @@ fun SpeechRecognitionScreen() {
                 onClick = {
                     scope.launch {
                         isTtsRunning = true
-                        ttsStatus = "Speaking translation, please wait..."
+                        ttsStatus = uiText(
+                            UiTextKey.SpeakingTranslationStatus,
+                            "Speaking translation, please wait..."
+                        )
                         when (val result = speakWithAzure(translatedText, selectedTargetLanguage)) {
                             is SpeechResult.Success -> {
-                                ttsStatus = "Finished speaking translation."
+                                ttsStatus = uiText(
+                                    UiTextKey.FinishedSpeakingTranslation,
+                                    "Finished speaking translation."
+                                )
                             }
                             is SpeechResult.Error -> {
-                                ttsStatus = "TTS error: ${result.message}"
+                                val fmt = uiText(
+                                    UiTextKey.TtsErrorTemplate,
+                                    "TTS error: %s"
+                                )
+                                ttsStatus = String.format(fmt, result.message)
                             }
                         }
                         isTtsRunning = false
@@ -339,7 +477,12 @@ fun SpeechRecognitionScreen() {
                 enabled = translatedText.isNotBlank() && !isTtsRunning,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (isTtsRunning) "Speaking..." else "Speak Translation")
+                Text(
+                    if (isTtsRunning)
+                        uiText(UiTextKey.SpeakingLabel, "Speaking...")
+                    else
+                        uiText(UiTextKey.SpeakTranslationButton, "Speak Translation")
+                )
             }
 
             if (ttsStatus.isNotBlank()) {
@@ -353,14 +496,13 @@ fun SpeechRecognitionScreen() {
 
 // --- AZURE ---
 
-// Azure recognition
 suspend fun recognizeSpeechWithAzure(languageCode: String): SpeechResult =
     withContext(Dispatchers.IO) {
         val azureKey = BuildConfig.AZURE_SPEECH_KEY
         val region = BuildConfig.AZURE_SPEECH_REGION
 
         try {
-            val speechConfig = AzureSpeechProvider.speechConfig()
+            val speechConfig: SpeechConfig = AzureSpeechProvider.speechConfig()
             speechConfig.speechRecognitionLanguage = languageCode
 
             val recognizer = SpeechRecognizer(speechConfig)
@@ -390,7 +532,6 @@ suspend fun recognizeSpeechWithAzure(languageCode: String): SpeechResult =
         }
     }
 
-// Azure text-to-speech
 suspend fun speakWithAzure(text: String, languageCode: String): SpeechResult =
     withContext(Dispatchers.IO) {
         if (text.isBlank()) {
@@ -401,7 +542,7 @@ suspend fun speakWithAzure(text: String, languageCode: String): SpeechResult =
         val region = BuildConfig.AZURE_SPEECH_REGION
 
         try {
-            val speechConfig = AzureSpeechProvider.speechConfig()
+            val speechConfig: SpeechConfig = AzureSpeechProvider.speechConfig()
             speechConfig.speechSynthesisLanguage = languageCode
 
             val synthesizer = SpeechSynthesizer(speechConfig)
@@ -431,7 +572,7 @@ suspend fun speakWithAzure(text: String, languageCode: String): SpeechResult =
         }
     }
 
-// --- PERMISSION REQUEST
+// --- PERMISSION REQUEST ---
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
