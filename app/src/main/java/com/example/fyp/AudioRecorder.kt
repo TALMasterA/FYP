@@ -9,7 +9,6 @@ import java.io.ByteArrayOutputStream
 
 object AudioRecorder {
 
-    private const val SAMPLE_RATE = 16000
     private const val ENCODING = AudioFormat.ENCODING_PCM_16BIT
     private const val CHANNEL_MASK = AudioFormat.CHANNEL_IN_MONO
 

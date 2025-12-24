@@ -354,8 +354,6 @@ fun SpeechRecognitionScreen() {
 
 // --- AZURE ---
 
-private const val SAMPLE_RATE = 16000
-
 // Azure recognition
 suspend fun recognizeSpeechWithAzure(languageCode: String): SpeechResult =
     withContext(Dispatchers.IO) {
