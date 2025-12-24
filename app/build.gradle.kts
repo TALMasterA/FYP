@@ -17,6 +17,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "AZURE_SPEECH_KEY", "\"\"")
+        buildConfigField("String", "AZURE_SPEECH_REGION", "\"\"")
         buildConfigField("String", "AZURE_TRANSLATOR_KEY", "\"\"")
         buildConfigField("String", "AZURE_TRANSLATOR_REGION", "\"\"")
     }

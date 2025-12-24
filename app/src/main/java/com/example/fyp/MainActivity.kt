@@ -360,7 +360,7 @@ private const val SAMPLE_RATE = 16000
 suspend fun recognizeSpeechWithAzure(languageCode: String): SpeechResult =
     withContext(Dispatchers.IO) {
         val azureKey = BuildConfig.AZURE_SPEECH_KEY
-        val region = "eastasia"
+        val region = BuildConfig.AZURE_SPEECH_REGION
 
         try {
             val speechConfig = SpeechConfig.fromSubscription(azureKey, region)
@@ -401,7 +401,7 @@ suspend fun speakWithAzure(text: String, languageCode: String): SpeechResult =
         }
 
         val azureKey = BuildConfig.AZURE_SPEECH_KEY
-        val region = "eastasia"
+        val region = BuildConfig.AZURE_SPEECH_REGION
 
         try {
             val speechConfig = SpeechConfig.fromSubscription(azureKey, region)
