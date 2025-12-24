@@ -13,9 +13,17 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,7 +33,9 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import com.example.fyp.ui.theme.FYPTheme
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 import com.microsoft.cognitiveservices.speech.CancellationDetails
 import com.microsoft.cognitiveservices.speech.ResultReason
 import com.microsoft.cognitiveservices.speech.SpeechConfig
@@ -37,8 +47,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.shouldShowRationale
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 object NetworkClient {
     val okHttpClient: OkHttpClient by lazy {
@@ -56,7 +67,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FYPTheme {
-                SpeechRecognitionScreen()
+                AppNavigation()
             }
         }
     }
@@ -69,9 +80,143 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+sealed class AppScreen(val route: String) {
+    object Home : AppScreen("home")
+    object Speech : AppScreen("speech")
+    object Help : AppScreen("help")
+}
+
+@Composable
+fun AppNavigation() {
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = AppScreen.Home.route
+    ) {
+        composable(AppScreen.Home.route) {
+            HomeScreen(
+                onStartSpeech = { navController.navigate(AppScreen.Speech.route) },
+                onOpenHelp = { navController.navigate(AppScreen.Help.route) }
+            )
+        }
+        composable(AppScreen.Speech.route) {
+            SpeechRecognitionScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(AppScreen.Help.route) {
+            HelpScreen(onBack = { navController.popBackStack() })
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SpeechRecognitionScreen() {
+fun HomeScreen(
+    onStartSpeech: () -> Unit,
+    onOpenHelp: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("FYP Translator") },
+                actions = {
+                    IconButton(onClick = onOpenHelp) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Help / instructions"
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                text = "Welcome!",
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            Text(
+                text = "This app lets you speak, translate, and listen across languages. " +
+                        "You can choose recognition and target languages, then have Azure read text aloud."
+            )
+
+            Button(
+                onClick = onStartSpeech,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Start speech & translation")
+            }
+
+            Text(
+                text = "Tap the ! icon in the top‑right for detailed instructions and cautions.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HelpScreen(onBack: () -> Unit) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("How to use") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text("Current features", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "- Choose UI language, detection language, and target language.\n" +
+                        "- Press Azure Recognize to capture one sentence from microphone.\n" +
+                        "- Tap Translate to translate once, then use Speak buttons to listen."
+            )
+
+            Text("Planned features", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "- Continuous translation for face‑to‑face conversations (streaming speech recognition and periodic translation).\n" +
+                        "- Clear visual indicators for when the microphone is listening."
+            )
+
+            Text("Caution", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "- Requires internet and valid Azure keys.\n" +
+                        "- Do not use for medical, legal, or safety‑critical decisions; translations may contain errors."
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SpeechRecognitionScreen(
+    onBack: () -> Unit
+) {
     val scope = rememberCoroutineScope()
 
     var recognizedText by remember { mutableStateOf("") }
@@ -112,7 +257,6 @@ fun SpeechRecognitionScreen() {
         return uiText(key, fallback)
     }
 
-
     // --- existing Azure language lists ---
 
     val supportedLanguages by remember {
@@ -129,367 +273,386 @@ fun SpeechRecognitionScreen() {
     var ttsStatus by remember { mutableStateOf("") }
     var isTtsRunning by remember { mutableStateOf(false) }
 
-    RecordAudioPermissionRequest {
-        val scrollState = rememberScrollState()
+    // >>> Scaffold with back button <<<
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Speech & Translation") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
 
-        Column(
-            modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp, top = 48.dp)
-                .fillMaxWidth()
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // --- App UI language dropdown ---
+        RecordAudioPermissionRequest {
+            val scrollState = rememberScrollState()
 
-            var isUiLangMenuExpanded by remember { mutableStateOf(false) }
-
-            ExposedDropdownMenuBox(
-                expanded = isUiLangMenuExpanded,
-                onExpandedChange = { isUiLangMenuExpanded = !isUiLangMenuExpanded },
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                TextField(
-                    value = uiLanguages.first { it.first == selectedUiLanguage }.second,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text(uiText(UiTextKey.AppUiLanguageLabel, "App UI language")) },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = isUiLangMenuExpanded)
-                    },
-                    modifier = Modifier
-                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
-                        .fillMaxWidth()
-                )
+                // --- App UI language dropdown ---
 
-                ExposedDropdownMenu(
+                var isUiLangMenuExpanded by remember { mutableStateOf(false) }
+
+                ExposedDropdownMenuBox(
                     expanded = isUiLangMenuExpanded,
-                    onDismissRequest = { isUiLangMenuExpanded = false }
+                    onExpandedChange = { isUiLangMenuExpanded = !isUiLangMenuExpanded },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    uiLanguages.forEach { (code, label) ->
-                        androidx.compose.material3.DropdownMenuItem(
-                            text = { Text(label) },
-                            onClick = {
-                                isUiLangMenuExpanded = false
-                                selectedUiLanguage = code
+                    TextField(
+                        value = uiLanguages.first { it.first == selectedUiLanguage }.second,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(uiText(UiTextKey.AppUiLanguageLabel, "App UI language")) },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = isUiLangMenuExpanded)
+                        },
+                        modifier = Modifier
+                            .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                            .fillMaxWidth()
+                    )
 
-                                if (code.startsWith("en")) {
-                                    uiTexts = emptyMap()   // use English defaults
-                                } else {
-                                    scope.launch {
-                                        val baseTexts = listOf(
-                                            // Order must match UiTextKey enum
-                                            "Select User Interface language on top, then the detect and translate languages. " +
-                                                    "Support languages: English, Cantonese, Japanese, Mandarin...",
-                                            "Use Azure Recognize (from Mic)",
-                                            "Copy",
-                                            "Speak script",
-                                            "Translate",
-                                            "Copy Translation",
-                                            "Speak Translation",
-                                            "Recording with Azure, SPEAK and please WAIT...",
-                                            "Translating, please wait...",
-                                            "Speaking original text, please wait...",
-                                            "Speaking translation, please wait...",
-                                            "App UI language",
-                                            "Detect language",
-                                            "Translate to",
-                                            "Speaking...",
-                                            "Finished speaking original text.",
-                                            "Finished speaking translation.",
-                                            "TTS error: %s",
-                                            // Language names in English
-                                            "English",
-                                            "Cantonese",
-                                            "Japanese",
-                                            "Mandarin",
-                                            "French",
-                                            "German",
-                                            "Korean",
-                                            "Spanish"
-                                        )
+                    ExposedDropdownMenu(
+                        expanded = isUiLangMenuExpanded,
+                        onDismissRequest = { isUiLangMenuExpanded = false }
+                    ) {
+                        uiLanguages.forEach { (code, label) ->
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    isUiLangMenuExpanded = false
+                                    selectedUiLanguage = code
 
-                                        when (val result = TranslatorClient.translateTexts(
-                                            texts = baseTexts,
-                                            toLanguage = code,
-                                            fromLanguage = "en"
-                                        )) {
-                                            is SpeechResult.Success -> {
-                                                val parts = result.text.split('\u0001')
-                                                if (parts.size == baseTexts.size) {
-                                                    uiTexts = UiTextKey.values().zip(parts).toMap()
+                                    if (code.startsWith("en")) {
+                                        uiTexts = emptyMap()   // use English defaults
+                                    } else {
+                                        scope.launch {
+                                            val baseTexts = listOf(
+                                                // Order must match UiTextKey enum
+                                                "Select User Interface language on top, then the detect and translate languages. " +
+                                                        "Support languages: English, Cantonese, Japanese, Mandarin...",
+                                                "Use Azure Recognize (from Mic)",
+                                                "Copy",
+                                                "Speak script",
+                                                "Translate",
+                                                "Copy Translation",
+                                                "Speak Translation",
+                                                "Recording with Azure, SPEAK and please WAIT...",
+                                                "Translating, please wait...",
+                                                "Speaking original text, please wait...",
+                                                "Speaking translation, please wait...",
+                                                "App UI language",
+                                                "Detect language",
+                                                "Translate to",
+                                                "Speaking...",
+                                                "Finished speaking original text.",
+                                                "Finished speaking translation.",
+                                                "TTS error: %s",
+                                                // Language names in English
+                                                "English",
+                                                "Cantonese",
+                                                "Japanese",
+                                                "Mandarin",
+                                                "French",
+                                                "German",
+                                                "Korean",
+                                                "Spanish"
+                                            )
+
+                                            when (val result = TranslatorClient.translateTexts(
+                                                texts = baseTexts,
+                                                toLanguage = code,
+                                                fromLanguage = "en"
+                                            )) {
+                                                is SpeechResult.Success -> {
+                                                    val parts = result.text.split('\u0001')
+                                                    if (parts.size == baseTexts.size) {
+                                                        uiTexts = UiTextKey.values().zip(parts).toMap()
+                                                    }
                                                 }
-                                            }
-                                            is SpeechResult.Error -> {
-                                                Log.e("UITranslation", "Error: ${result.message}")
-                                                uiTexts = emptyMap()
+                                                is SpeechResult.Error -> {
+                                                    Log.e("UITranslation", "Error: ${result.message}")
+                                                    uiTexts = emptyMap()
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
-            }
 
-            // 1) Instruction text
-            Text(
-                text = uiText(
-                    UiTextKey.Instructions,
-                    "Select User Interface language on top, then the detect and translate languages. " +
-                            "Support languages: English, Cantonese, Japanese, Mandarin..."
-                ),
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            // 2) Recognition language selector (dropdown)
-            var isRecLangMenuExpanded by remember { mutableStateOf(false) }
-
-            ExposedDropdownMenuBox(
-                expanded = isRecLangMenuExpanded,
-                onExpandedChange = { isRecLangMenuExpanded = !isRecLangMenuExpanded },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                TextField(
-                    value = uiLanguageNameFor(selectedLanguage),
-                    onValueChange = {},
-                    readOnly = true,
-                    label = {
-                        Text(uiText(UiTextKey.DetectLanguageLabel, "Detect language"))
-                    },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = isRecLangMenuExpanded)
-                    },
-                    modifier = Modifier
-                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
-                        .fillMaxWidth()
+                // 1) Instruction text
+                Text(
+                    text = uiText(
+                        UiTextKey.Instructions,
+                        "Select User Interface language on top, then the detect and translate languages. " +
+                                "Support languages: English, Cantonese, Japanese, Mandarin..."
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                ExposedDropdownMenu(
+                // 2) Recognition language selector (dropdown)
+                var isRecLangMenuExpanded by remember { mutableStateOf(false) }
+
+                ExposedDropdownMenuBox(
                     expanded = isRecLangMenuExpanded,
-                    onDismissRequest = { isRecLangMenuExpanded = false }
+                    onExpandedChange = { isRecLangMenuExpanded = !isRecLangMenuExpanded },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    supportedLanguages.forEach { code ->
-                        androidx.compose.material3.DropdownMenuItem(
-                            text = { Text(uiLanguageNameFor(code)) },
-                            onClick = {
-                                selectedLanguage = code
-                                isRecLangMenuExpanded = false
-                            }
-                        )
+                    TextField(
+                        value = uiLanguageNameFor(selectedLanguage),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = {
+                            Text(uiText(UiTextKey.DetectLanguageLabel, "Detect language"))
+                        },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = isRecLangMenuExpanded)
+                        },
+                        modifier = Modifier
+                            .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                            .fillMaxWidth()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = isRecLangMenuExpanded,
+                        onDismissRequest = { isRecLangMenuExpanded = false }
+                    ) {
+                        supportedLanguages.forEach { code ->
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(uiLanguageNameFor(code)) },
+                                onClick = {
+                                    selectedLanguage = code
+                                    isRecLangMenuExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
-            }
 
-            // 3) Translation target language selector (dropdown)
-            var isTargetLangMenuExpanded by remember { mutableStateOf(false) }
+                // 3) Translation target language selector (dropdown)
+                var isTargetLangMenuExpanded by remember { mutableStateOf(false) }
 
-            ExposedDropdownMenuBox(
-                expanded = isTargetLangMenuExpanded,
-                onExpandedChange = { isTargetLangMenuExpanded = !isTargetLangMenuExpanded },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                TextField(
-                    value = uiLanguageNameFor(selectedTargetLanguage),
-                    onValueChange = {},
-                    readOnly = true,
-                    label = {
-                        Text(uiText(UiTextKey.TranslateToLabel, "Translate to"))
-                    },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = isTargetLangMenuExpanded)
-                    },
-                    modifier = Modifier
-                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
-                        .fillMaxWidth()
-                )
-
-                ExposedDropdownMenu(
+                ExposedDropdownMenuBox(
                     expanded = isTargetLangMenuExpanded,
-                    onDismissRequest = { isTargetLangMenuExpanded = false }
+                    onExpandedChange = { isTargetLangMenuExpanded = !isTargetLangMenuExpanded },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    supportedLanguages.forEach { code ->
-                        androidx.compose.material3.DropdownMenuItem(
-                            text = { Text(uiLanguageNameFor(code)) },
-                            onClick = {
-                                selectedTargetLanguage = code
-                                isTargetLangMenuExpanded = false
-                            }
-                        )
+                    TextField(
+                        value = uiLanguageNameFor(selectedTargetLanguage),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = {
+                            Text(uiText(UiTextKey.TranslateToLabel, "Translate to"))
+                        },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = isTargetLangMenuExpanded)
+                        },
+                        modifier = Modifier
+                            .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                            .fillMaxWidth()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = isTargetLangMenuExpanded,
+                        onDismissRequest = { isTargetLangMenuExpanded = false }
+                    ) {
+                        supportedLanguages.forEach { code ->
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(uiLanguageNameFor(code)) },
+                                onClick = {
+                                    selectedTargetLanguage = code
+                                    isTargetLangMenuExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
-            }
 
-            // 4) Azure recognition button
-            Button(
-                onClick = {
-                    scope.launch {
-                        recognizedText = uiText(
-                            UiTextKey.RecognizingStatus,
-                            "Recording with Azure, SPEAK and plz WAIT..."
-                        )
-                        when (val result = recognizeSpeechWithAzure(selectedLanguage)) {
-                            is SpeechResult.Success -> recognizedText = result.text
-                            is SpeechResult.Error -> recognizedText = "Azure error: ${result.message}"
+                // 4) Azure recognition button
+                Button(
+                    onClick = {
+                        scope.launch {
+                            recognizedText = uiText(
+                                UiTextKey.RecognizingStatus,
+                                "Recording with Azure, SPEAK and plz WAIT..."
+                            )
+                            when (val result = recognizeSpeechWithAzure(selectedLanguage)) {
+                                is SpeechResult.Success -> recognizedText = result.text
+                                is SpeechResult.Error -> recognizedText = "Azure error: ${result.message}"
+                            }
                         }
-                    }
-                },
-                enabled = !AudioRecorder.isRecording,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    uiText(
-                        UiTextKey.AzureRecognizeButton,
-                        "Use Azure Recognize (from Mic)"
+                    },
+                    enabled = !AudioRecorder.isRecording,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        uiText(
+                            UiTextKey.AzureRecognizeButton,
+                            "Use Azure Recognize (from Mic)"
+                        )
                     )
-                )
-            }
+                }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // Original text
-            Text(
-                text = recognizedText,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Button(
-                onClick = {
-                    clipboardManager.setText(AnnotatedString(recognizedText))
-                },
-                enabled = recognizedText.isNotEmpty()
-            ) {
-                Text(uiText(UiTextKey.CopyButton, "Copy"))
-            }
-
-            // Speak original
-            Button(
-                onClick = {
-                    scope.launch {
-                        isTtsRunning = true
-                        ttsStatus = uiText(
-                            UiTextKey.SpeakingOriginalStatus,
-                            "Speaking original text, please wait..."
-                        )
-                        when (val result = speakWithAzure(recognizedText, selectedLanguage)) {
-                            is SpeechResult.Success -> {
-                                ttsStatus = uiText(
-                                    UiTextKey.FinishedSpeakingOriginal,
-                                    "Finished speaking original text."
-                                )
-                            }
-                            is SpeechResult.Error -> {
-                                val fmt = uiText(
-                                    UiTextKey.TtsErrorTemplate,
-                                    "TTS error: %s"
-                                )
-                                ttsStatus = String.format(fmt, result.message)
-                            }
-                        }
-                        isTtsRunning = false
-                    }
-                },
-                enabled = recognizedText.isNotBlank() && !isTtsRunning,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+                // Original text
                 Text(
-                    if (isTtsRunning)
-                        uiText(UiTextKey.SpeakingLabel, "Speaking...")
-                    else
-                        uiText(UiTextKey.SpeakScriptButton, "Speak script")
+                    text = recognizedText,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
-            }
 
-            // Translate
-            Button(
-                onClick = {
-                    scope.launch {
-                        translatedText = uiText(
-                            UiTextKey.TranslatingStatus,
-                            "Translating, please wait..."
-                        )
-                        val result = TranslatorClient.translateText(
-                            text = recognizedText,
-                            toLanguage = selectedTargetLanguage,
-                            fromLanguage = selectedLanguage
-                        )
-                        translatedText = when (result) {
-                            is SpeechResult.Success -> result.text
-                            is SpeechResult.Error -> "Translation error: ${result.message}"
+                Button(
+                    onClick = {
+                        clipboardManager.setText(AnnotatedString(recognizedText))
+                    },
+                    enabled = recognizedText.isNotEmpty()
+                ) {
+                    Text(uiText(UiTextKey.CopyButton, "Copy"))
+                }
+
+                // Speak original
+                Button(
+                    onClick = {
+                        scope.launch {
+                            isTtsRunning = true
+                            ttsStatus = uiText(
+                                UiTextKey.SpeakingOriginalStatus,
+                                "Speaking original text, please wait..."
+                            )
+                            when (val result = speakWithAzure(recognizedText, selectedLanguage)) {
+                                is SpeechResult.Success -> {
+                                    ttsStatus = uiText(
+                                        UiTextKey.FinishedSpeakingOriginal,
+                                        "Finished speaking original text."
+                                    )
+                                }
+                                is SpeechResult.Error -> {
+                                    val fmt = uiText(
+                                        UiTextKey.TtsErrorTemplate,
+                                        "TTS error: %s"
+                                    )
+                                    ttsStatus = String.format(fmt, result.message)
+                                }
+                            }
+                            isTtsRunning = false
                         }
-                    }
-                },
-                enabled = recognizedText.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(uiText(UiTextKey.TranslateButton, "Translate"))
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Translated text
-            Text(
-                text = translatedText,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-
-            Button(
-                onClick = {
-                    clipboardManager.setText(AnnotatedString(translatedText))
-                },
-                enabled = translatedText.isNotEmpty()
-            ) {
-                Text(
-                    uiText(
-                        UiTextKey.CopyTranslationButton,
-                        "Copy Translation"
+                    },
+                    enabled = recognizedText.isNotBlank() && !isTtsRunning,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        if (isTtsRunning)
+                            uiText(UiTextKey.SpeakingLabel, "Speaking...")
+                        else
+                            uiText(UiTextKey.SpeakScriptButton, "Speak script")
                     )
-                )
-            }
+                }
 
-            // Speak translation
-            Button(
-                onClick = {
-                    scope.launch {
-                        isTtsRunning = true
-                        ttsStatus = uiText(
-                            UiTextKey.SpeakingTranslationStatus,
-                            "Speaking translation, please wait..."
-                        )
-                        when (val result = speakWithAzure(translatedText, selectedTargetLanguage)) {
-                            is SpeechResult.Success -> {
-                                ttsStatus = uiText(
-                                    UiTextKey.FinishedSpeakingTranslation,
-                                    "Finished speaking translation."
-                                )
-                            }
-                            is SpeechResult.Error -> {
-                                val fmt = uiText(
-                                    UiTextKey.TtsErrorTemplate,
-                                    "TTS error: %s"
-                                )
-                                ttsStatus = String.format(fmt, result.message)
+                // Translate
+                Button(
+                    onClick = {
+                        scope.launch {
+                            translatedText = uiText(
+                                UiTextKey.TranslatingStatus,
+                                "Translating, please wait..."
+                            )
+                            val result = TranslatorClient.translateText(
+                                text = recognizedText,
+                                toLanguage = selectedTargetLanguage,
+                                fromLanguage = selectedLanguage
+                            )
+                            translatedText = when (result) {
+                                is SpeechResult.Success -> result.text
+                                is SpeechResult.Error -> "Translation error: ${result.message}"
                             }
                         }
-                        isTtsRunning = false
-                    }
-                },
-                enabled = translatedText.isNotBlank() && !isTtsRunning,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+                    },
+                    enabled = recognizedText.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(uiText(UiTextKey.TranslateButton, "Translate"))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Translated text
                 Text(
-                    if (isTtsRunning)
-                        uiText(UiTextKey.SpeakingLabel, "Speaking...")
-                    else
-                        uiText(UiTextKey.SpeakTranslationButton, "Speak Translation")
+                    text = translatedText,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
-            }
 
-            if (ttsStatus.isNotBlank()) {
-                Text(ttsStatus)
-            }
+                Button(
+                    onClick = {
+                        clipboardManager.setText(AnnotatedString(translatedText))
+                    },
+                    enabled = translatedText.isNotEmpty()
+                ) {
+                    Text(
+                        uiText(
+                            UiTextKey.CopyTranslationButton,
+                            "Copy Translation"
+                        )
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(32.dp))
+                // Speak translation
+                Button(
+                    onClick = {
+                        scope.launch {
+                            isTtsRunning = true
+                            ttsStatus = uiText(
+                                UiTextKey.SpeakingTranslationStatus,
+                                "Speaking translation, please wait..."
+                            )
+                            when (val result = speakWithAzure(translatedText, selectedTargetLanguage)) {
+                                is SpeechResult.Success -> {
+                                    ttsStatus = uiText(
+                                        UiTextKey.FinishedSpeakingTranslation,
+                                        "Finished speaking translation."
+                                    )
+                                }
+                                is SpeechResult.Error -> {
+                                    val fmt = uiText(
+                                        UiTextKey.TtsErrorTemplate,
+                                        "TTS error: %s"
+                                    )
+                                    ttsStatus = String.format(fmt, result.message)
+                                }
+                            }
+                            isTtsRunning = false
+                        }
+                    },
+                    enabled = translatedText.isNotBlank() && !isTtsRunning,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        if (isTtsRunning)
+                            uiText(UiTextKey.SpeakingLabel, "Speaking...")
+                        else
+                            uiText(UiTextKey.SpeakTranslationButton, "Speak Translation")
+                    )
+                }
+
+                if (ttsStatus.isNotBlank()) {
+                    Text(ttsStatus)
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+            }
         }
     }
 }

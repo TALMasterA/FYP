@@ -73,6 +73,8 @@ dependencies {
 
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 
+    implementation("androidx.navigation:navigation-compose:2.8.5")
+
     // Test dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
