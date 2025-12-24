@@ -80,7 +80,6 @@ fun SpeechRecognitionScreen() {
 
     var recognizedText by remember { mutableStateOf("") }
 
-    val audioStream = remember { ByteArrayOutputStream() }
     val clipboardManager = LocalClipboardManager.current
 
     val context = LocalContext.current
@@ -361,7 +360,7 @@ suspend fun recognizeSpeechWithAzure(languageCode: String): SpeechResult =
         val region = BuildConfig.AZURE_SPEECH_REGION
 
         try {
-            val speechConfig = SpeechConfig.fromSubscription(azureKey, region)
+            val speechConfig = AzureSpeechProvider.speechConfig()
             speechConfig.speechRecognitionLanguage = languageCode
 
             val recognizer = SpeechRecognizer(speechConfig)
@@ -402,7 +401,7 @@ suspend fun speakWithAzure(text: String, languageCode: String): SpeechResult =
         val region = BuildConfig.AZURE_SPEECH_REGION
 
         try {
-            val speechConfig = SpeechConfig.fromSubscription(azureKey, region)
+            val speechConfig = AzureSpeechProvider.speechConfig()
             speechConfig.speechSynthesisLanguage = languageCode
 
             val synthesizer = SpeechSynthesizer(speechConfig)

@@ -54,8 +54,9 @@ object TranslatorClient {
             client.newCall(request).execute().use { response ->
                 val respBody = response.body?.string()
                 if (!response.isSuccessful || respBody.isNullOrEmpty()) {
-                    Log.e("Translator", "HTTP ${response.code}: $respBody")
-                    return@withContext SpeechResult.Error("Translator error: HTTP ${response.code}")
+                    val msg = "HTTP ${response.code}: ${respBody ?: "empty body"}"
+                    Log.e("Translator", msg)
+                    return@withContext SpeechResult.Error("Translator error, please check key/region or network. ($msg)")
                 }
 
                 val arr = JSONArray(respBody)

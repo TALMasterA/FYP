@@ -35,6 +35,14 @@ object AudioRecorder {
             bufferSize
         )
 
+        if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
+            Log.e("AudioRecorder", "AudioRecord not initialized")
+            audioRecord?.release()
+            audioRecord = null
+            isRecording = false
+            return
+        }
+
         stream.reset()
         isRecording = true
         audioRecord?.startRecording()
