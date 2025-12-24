@@ -378,7 +378,7 @@ fun SpeechRecognitionScreen(
                                                 is SpeechResult.Success -> {
                                                     val parts = result.text.split('\u0001')
                                                     if (parts.size == baseTexts.size) {
-                                                        uiTexts = UiTextKey.values().zip(parts).toMap()
+                                                        uiTexts = UiTextKey.entries.zip(parts).toMap()
                                                     }
                                                 }
                                                 is SpeechResult.Error -> {
@@ -661,9 +661,6 @@ fun SpeechRecognitionScreen(
 
 suspend fun recognizeSpeechWithAzure(languageCode: String): SpeechResult =
     withContext(Dispatchers.IO) {
-        val azureKey = BuildConfig.AZURE_SPEECH_KEY
-        val region = BuildConfig.AZURE_SPEECH_REGION
-
         try {
             val speechConfig: SpeechConfig = AzureSpeechProvider.speechConfig()
             speechConfig.speechRecognitionLanguage = languageCode
@@ -700,10 +697,6 @@ suspend fun speakWithAzure(text: String, languageCode: String): SpeechResult =
         if (text.isBlank()) {
             return@withContext SpeechResult.Error("No text to speak")
         }
-
-        val azureKey = BuildConfig.AZURE_SPEECH_KEY
-        val region = BuildConfig.AZURE_SPEECH_REGION
-
         try {
             val speechConfig: SpeechConfig = AzureSpeechProvider.speechConfig()
             speechConfig.speechSynthesisLanguage = languageCode

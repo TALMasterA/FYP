@@ -59,7 +59,7 @@ repositories {
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
 
-    implementation(libs.ui) // your alias pointing to "androidx.compose.ui:ui"
+    implementation(libs.ui)
     implementation("androidx.compose.material3:material3:1.1.0")
     implementation("androidx.activity:activity-compose:1.7.1")
     implementation("androidx.compose.ui:ui-tooling-preview:1.4.0")
@@ -70,9 +70,7 @@ dependencies {
 
     // Use only one Azure Speech SDK version
     implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.45.0")
-
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
-
     implementation("androidx.navigation:navigation-compose:2.8.5")
 
     // Test dependencies
