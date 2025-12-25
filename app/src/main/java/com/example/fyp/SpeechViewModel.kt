@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import com.microsoft.cognitiveservices.speech.SpeechRecognizer
 
 class SpeechViewModel : ViewModel() {
 
@@ -21,11 +22,51 @@ class SpeechViewModel : ViewModel() {
     var isTtsRunning by mutableStateOf(false)
         private set
 
+    var livePartialText by mutableStateOf("")
+        private set
+
+    var lastSegmentTranslation by mutableStateOf("")
+        private set
+
+    var isContinuousRunning by mutableStateOf(false)
+        private set
+
+    private var continuousRecognizer: SpeechRecognizer? = null
+
     fun clear() {
         recognizedText = ""
         translatedText = ""
         ttsStatus = ""
         isTtsRunning = false
+    }
+
+    data class ChatMessage(
+        val id: Long,
+        val text: String,
+        val lang: String,
+        val isFromPersonA: Boolean,
+        val isTranslation: Boolean
+    )
+
+    var continuousMessages by mutableStateOf(listOf<ChatMessage>())
+        private set
+
+    private var nextId = 0L
+
+    private fun addMessage(
+        text: String,
+        lang: String,
+        isFromPersonA: Boolean,
+        isTranslation: Boolean
+    ) {
+        val message = ChatMessage(
+            id = nextId++,
+            text = text,
+            lang = lang,
+            isFromPersonA = isFromPersonA,
+            isTranslation = isTranslation
+        )
+        continuousMessages = continuousMessages + message
     }
 
     fun recognize(languageCode: String) {
@@ -81,5 +122,79 @@ class SpeechViewModel : ViewModel() {
             }
             isTtsRunning = false
         }
+    }
+
+    fun startContinuous(
+        speakingLang: String,
+        targetLang: String,
+        isFromPersonA: Boolean
+    ) {
+        if (isContinuousRunning) return
+
+        livePartialText = ""
+        isContinuousRunning = true
+
+        continuousRecognizer =
+            SpeechUseCases.startContinuousRecognition(
+                languageCode = speakingLang,
+                onPartial = { partial -> livePartialText = partial },
+                onFinal = { text ->
+                    val from = speakingLang
+                    val to = targetLang
+
+                    addMessage(
+                        text = text,
+                        lang = from,
+                        isFromPersonA = isFromPersonA,
+                        isTranslation = false
+                    )
+
+                    viewModelScope.launch {
+                        when (
+                            val tr = TranslatorClient.translateText(
+                                text = text,
+                                toLanguage = to,
+                                fromLanguage = from
+                            )
+                        ) {
+                            is SpeechResult.Success -> {
+                                addMessage(
+                                    text = tr.text,
+                                    lang = to,
+                                    isFromPersonA = isFromPersonA,
+                                    isTranslation = true
+                                )
+                            }
+                            is SpeechResult.Error -> {
+                                ttsStatus = "Continuous translation error: ${tr.message}"
+                            }
+                        }
+                    }
+                },
+                onError = { msg ->
+                    ttsStatus = "Continuous recognition error: $msg"
+                    stopContinuous()
+                }
+            )
+    }
+
+    fun stopContinuous() {
+        isContinuousRunning = false
+        SpeechUseCases.stopContinuousRecognition(continuousRecognizer)
+        continuousRecognizer = null
+    }
+
+    fun speakText(languageCode: String, text: String) {
+        speakInternal(text = text, languageCode = languageCode, isTranslation = true)
+    }
+
+    fun clearContinuousMessages() {
+        continuousMessages = emptyList()
+        nextId = 0L
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopContinuous()
     }
 }

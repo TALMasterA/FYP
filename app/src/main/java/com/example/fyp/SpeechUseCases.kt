@@ -9,6 +9,7 @@ import com.microsoft.cognitiveservices.speech.SpeechSynthesisCancellationDetails
 import com.microsoft.cognitiveservices.speech.SpeechSynthesizer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.microsoft.cognitiveservices.speech.PropertyId
 
 object SpeechUseCases {
 
@@ -81,5 +82,43 @@ object SpeechUseCases {
             }
         }
 
-    // later you will also add continuous‑recognition helpers here
+    fun startContinuousRecognition(
+        languageCode: String,
+        onPartial: (String) -> Unit,
+        onFinal: (String) -> Unit,
+        onError: (String) -> Unit
+    ): SpeechRecognizer {
+        val speechConfig: SpeechConfig = AzureSpeechProvider.speechConfig().apply {
+            speechRecognitionLanguage = languageCode
+        }
+
+        val recognizer = SpeechRecognizer(speechConfig)
+
+        recognizer.recognizing.addEventListener { _, e ->
+            onPartial(e.result.text)
+        }
+
+        recognizer.recognized.addEventListener { _, e ->
+            val result = e.result
+            if (result.reason == ResultReason.RecognizedSpeech) {
+                onFinal(result.text)
+            } else if (result.reason == ResultReason.Canceled) {
+                val det = CancellationDetails.fromResult(result)
+                onError("Canceled: ${det.reason} - ${det.errorDetails}")
+            }
+        }
+
+        recognizer.canceled.addEventListener { _, e ->
+            val det = CancellationDetails.fromResult(e.result)
+            onError("Canceled: ${det.reason} - ${det.errorDetails}")
+        }
+
+        recognizer.startContinuousRecognitionAsync()
+        return recognizer
+    }
+
+    fun stopContinuousRecognition(recognizer: SpeechRecognizer?) {
+        recognizer?.stopContinuousRecognitionAsync()
+        recognizer?.close()
+    }
 }
