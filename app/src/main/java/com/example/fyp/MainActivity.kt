@@ -52,18 +52,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
-
-// -------- network client --------
-
-object NetworkClient {
-    val okHttpClient: OkHttpClient by lazy {
-        OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
-            .build()
-    }
-}
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 // -------- activity --------
 
@@ -427,10 +416,12 @@ fun SpeechRecognitionScreen(
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     onBack: () -> Unit
 ) {
+    val viewModel: SpeechViewModel = viewModel()
+
     val scope = rememberCoroutineScope()
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
 
-    var recognizedText by remember { mutableStateOf("") }
+    val recognizedText = viewModel.recognizedText
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
 
@@ -444,9 +435,9 @@ fun SpeechRecognitionScreen(
         mutableStateOf(supportedLanguages.getOrNull(1) ?: "zh-HK")
     }
 
-    var translatedText by remember { mutableStateOf("") }
-    var ttsStatus by remember { mutableStateOf("") }
-    var isTtsRunning by remember { mutableStateOf(false) }
+    val translatedText = viewModel.translatedText
+    val ttsStatus = viewModel.ttsStatus
+    val isTtsRunning = viewModel.isTtsRunning
 
     Scaffold(
         topBar = {
@@ -579,18 +570,7 @@ fun SpeechRecognitionScreen(
 
                 // 4) Azure recognition
                 Button(
-                    onClick = {
-                        scope.launch {
-                            recognizedText = uiText(
-                                UiTextKey.RecognizingStatus,
-                                "Recording with Azure, SPEAK and plz WAIT..."
-                            )
-                            when (val result = recognizeSpeechWithAzure(selectedLanguage)) {
-                                is SpeechResult.Success -> recognizedText = result.text
-                                is SpeechResult.Error -> recognizedText = "Azure error: ${result.message}"
-                            }
-                        }
-                    },
+                    onClick = { viewModel.recognize(selectedLanguage) },
                     enabled = !AudioRecorder.isRecording,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -617,32 +597,7 @@ fun SpeechRecognitionScreen(
 
                 // Speak original
                 Button(
-                    onClick = {
-                        scope.launch {
-                            isTtsRunning = true
-                            ttsStatus = uiText(
-                                UiTextKey.SpeakingOriginalStatus,
-                                "Speaking original text, please wait..."
-                            )
-                            when (val result = speakWithAzure(recognizedText, selectedLanguage)) {
-                                is SpeechResult.Success -> {
-                                    ttsStatus = uiText(
-                                        UiTextKey.FinishedSpeakingOriginal,
-                                        "Finished speaking original text."
-                                    )
-                                }
-
-                                is SpeechResult.Error -> {
-                                    val fmt = uiText(
-                                        UiTextKey.TtsErrorTemplate,
-                                        "TTS error: %s"
-                                    )
-                                    ttsStatus = String.format(fmt, result.message)
-                                }
-                            }
-                            isTtsRunning = false
-                        }
-                    },
+                    onClick = { viewModel.speakOriginal(selectedLanguage) },
                     enabled = recognizedText.isNotBlank() && !isTtsRunning,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -657,21 +612,10 @@ fun SpeechRecognitionScreen(
                 // Translate
                 Button(
                     onClick = {
-                        scope.launch {
-                            translatedText = uiText(
-                                UiTextKey.TranslatingStatus,
-                                "Translating, please wait..."
-                            )
-                            val result = TranslatorClient.translateText(
-                                text = recognizedText,
-                                toLanguage = selectedTargetLanguage,
-                                fromLanguage = selectedLanguage
-                            )
-                            translatedText = when (result) {
-                                is SpeechResult.Success -> result.text
-                                is SpeechResult.Error -> "Translation error: ${result.message}"
-                            }
-                        }
+                        viewModel.translate(
+                            fromLanguage = selectedLanguage,
+                            toLanguage = selectedTargetLanguage
+                        )
                     },
                     enabled = recognizedText.isNotBlank(),
                     modifier = Modifier.fillMaxWidth()
@@ -694,32 +638,7 @@ fun SpeechRecognitionScreen(
 
                 // Speak translation
                 Button(
-                    onClick = {
-                        scope.launch {
-                            isTtsRunning = true
-                            ttsStatus = uiText(
-                                UiTextKey.SpeakingTranslationStatus,
-                                "Speaking translation, please wait..."
-                            )
-                            when (val result = speakWithAzure(translatedText, selectedTargetLanguage)) {
-                                is SpeechResult.Success -> {
-                                    ttsStatus = uiText(
-                                        UiTextKey.FinishedSpeakingTranslation,
-                                        "Finished speaking translation."
-                                    )
-                                }
-
-                                is SpeechResult.Error -> {
-                                    val fmt = uiText(
-                                        UiTextKey.TtsErrorTemplate,
-                                        "TTS error: %s"
-                                    )
-                                    ttsStatus = String.format(fmt, result.message)
-                                }
-                            }
-                            isTtsRunning = false
-                        }
-                    },
+                    onClick = { viewModel.speakTranslation(selectedTargetLanguage) },
                     enabled = translatedText.isNotBlank() && !isTtsRunning,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -736,115 +655,6 @@ fun SpeechRecognitionScreen(
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
-            }
-        }
-    }
-}
-
-// --- AZURE ---
-
-suspend fun recognizeSpeechWithAzure(languageCode: String): SpeechResult =
-    withContext(Dispatchers.IO) {
-        try {
-            val speechConfig: SpeechConfig = AzureSpeechProvider.speechConfig()
-            speechConfig.speechRecognitionLanguage = languageCode
-
-            val recognizer = SpeechRecognizer(speechConfig)
-
-            try {
-                val result = recognizer.recognizeOnceAsync().get()
-
-                if (result.reason == ResultReason.RecognizedSpeech) {
-                    Log.i("AzureSpeech", "Recognized: ${result.text}")
-                    SpeechResult.Success(result.text)
-                } else {
-                    val errorDetails = if (result.reason == ResultReason.Canceled) {
-                        val cancellation = CancellationDetails.fromResult(result)
-                        "Canceled: ${cancellation.reason}. Error details: ${cancellation.errorDetails}"
-                    } else {
-                        result.reason.toString()
-                    }
-                    Log.e("AzureSpeech", "Speech not recognized, reason: $errorDetails")
-                    SpeechResult.Error("Azure Speech not recognized: $errorDetails")
-                }
-            } finally {
-                recognizer.close()
-            }
-        } catch (ex: Exception) {
-            Log.e("AzureSpeech", "Error: ${ex.message}")
-            SpeechResult.Error("Error recognizing speech: ${ex.message}")
-        }
-    }
-
-suspend fun speakWithAzure(text: String, languageCode: String): SpeechResult =
-    withContext(Dispatchers.IO) {
-        if (text.isBlank()) {
-            return@withContext SpeechResult.Error("No text to speak")
-        }
-        try {
-            val speechConfig: SpeechConfig = AzureSpeechProvider.speechConfig()
-            speechConfig.speechSynthesisLanguage = languageCode
-
-            val synthesizer = SpeechSynthesizer(speechConfig)
-
-            try {
-                val result = synthesizer.SpeakTextAsync(text).get()
-
-                if (result.reason == ResultReason.SynthesizingAudioCompleted) {
-                    Log.i("AzureTTS", "Speech synthesized for text: $text")
-                    SpeechResult.Success("Spoken successfully")
-                } else if (result.reason == ResultReason.Canceled) {
-                    val cancellation =
-                        SpeechSynthesisCancellationDetails.fromResult(result)
-                    val msg =
-                        "TTS canceled: ${cancellation.reason}. ${cancellation.errorDetails}"
-                    Log.e("AzureTTS", msg)
-                    SpeechResult.Error(msg)
-                } else {
-                    SpeechResult.Error("TTS failed: ${result.reason}")
-                }
-            } finally {
-                synthesizer.close()
-            }
-        } catch (ex: Exception) {
-            Log.e("AzureTTS", "Error: ${ex.message}", ex)
-            SpeechResult.Error("Error speaking text: ${ex.message}")
-        }
-    }
-
-// --- PERMISSION REQUEST ---
-
-@OptIn(ExperimentalPermissionsApi::class)
-@Composable
-fun RecordAudioPermissionRequest(
-    onPermissionGranted: @Composable () -> Unit
-) {
-    val permissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
-
-    LaunchedEffect(Unit) {
-        if (!permissionState.status.isGranted) {
-            permissionState.launchPermissionRequest()
-        }
-    }
-
-    when {
-        permissionState.status.isGranted -> onPermissionGranted()
-
-        permissionState.status.shouldShowRationale || !permissionState.status.isGranted -> {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    "Microphone permission is needed for speech recognition. Please grant the permission.",
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Button(onClick = { permissionState.launchPermissionRequest() }) {
-                    Text("Grant Permission")
-                }
             }
         }
     }
