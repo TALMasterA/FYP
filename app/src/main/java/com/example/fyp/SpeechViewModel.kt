@@ -5,23 +5,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 import com.microsoft.cognitiveservices.speech.SpeechRecognizer
+import kotlinx.coroutines.launch
+
+data class SpeechScreenState(
+    val recognizedText: String = "",
+    val translatedText: String = "",
+    val ttsStatus: String = "",
+    val isTtsRunning: Boolean = false
+)
 
 class SpeechViewModel : ViewModel() {
 
-    var recognizedText by mutableStateOf("")
+    // --- main speech screen state ---
+    var speechState by mutableStateOf(SpeechScreenState())
         private set
 
-    var translatedText by mutableStateOf("")
-        private set
+    val recognizedText: String get() = speechState.recognizedText
+    val translatedText: String get() = speechState.translatedText
+    val ttsStatus: String get() = speechState.ttsStatus
+    val isTtsRunning: Boolean get() = speechState.isTtsRunning
 
-    var ttsStatus by mutableStateOf("")
-        private set
-
-    var isTtsRunning by mutableStateOf(false)
-        private set
-
+    // --- continuous state ---
     var livePartialText by mutableStateOf("")
         private set
 
@@ -34,11 +39,10 @@ class SpeechViewModel : ViewModel() {
     private var continuousRecognizer: SpeechRecognizer? = null
 
     fun clear() {
-        recognizedText = ""
-        translatedText = ""
-        ttsStatus = ""
-        isTtsRunning = false
+        speechState = SpeechScreenState()
     }
+
+    // -------- chat messages --------
 
     data class ChatMessage(
         val id: Long,
@@ -53,7 +57,7 @@ class SpeechViewModel : ViewModel() {
 
     private var nextId = 0L
 
-    private fun addMessage(
+    private fun addMessageInternal(
         text: String,
         lang: String,
         isFromPersonA: Boolean,
@@ -69,12 +73,33 @@ class SpeechViewModel : ViewModel() {
         continuousMessages = continuousMessages + message
     }
 
+    private fun addSpokenMessage(
+        text: String,
+        lang: String,
+        isFromPersonA: Boolean
+    ) = addMessageInternal(text, lang, isFromPersonA, isTranslation = false)
+
+    private fun addTranslationMessage(
+        text: String,
+        lang: String,
+        isFromPersonA: Boolean
+    ) = addMessageInternal(text, lang, isFromPersonA, isTranslation = true)
+
+    // -------- one‑shot speech & translation --------
+
     fun recognize(languageCode: String) {
         viewModelScope.launch {
-            recognizedText = "Recording with Azure, SPEAK and plz WAIT..."
+            speechState = speechState.copy(
+                recognizedText = "Recording with Azure, SPEAK and plz WAIT..."
+            )
+
             when (val result = SpeechUseCases.recognizeSpeechWithAzure(languageCode)) {
-                is SpeechResult.Success -> recognizedText = result.text
-                is SpeechResult.Error -> recognizedText = speechError("Azure error", result)
+                is SpeechResult.Success ->
+                    speechState = speechState.copy(recognizedText = result.text)
+                is SpeechResult.Error ->
+                    speechState = speechState.copy(
+                        recognizedText = speechError("Azure error", result)
+                    )
             }
         }
     }
@@ -82,14 +107,23 @@ class SpeechViewModel : ViewModel() {
     fun translate(fromLanguage: String, toLanguage: String) {
         if (recognizedText.isBlank()) return
         viewModelScope.launch {
-            translatedText = "Translating, please wait..."
-            when (val result = TranslatorClient.translateText(
-                text = recognizedText,
-                toLanguage = toLanguage,
-                fromLanguage = fromLanguage
-            )) {
-                is SpeechResult.Success -> translatedText = result.text
-                is SpeechResult.Error -> translatedText = "Translation error: ${result.message}"
+            speechState = speechState.copy(
+                translatedText = "Translating, please wait..."
+            )
+
+            when (
+                val result = TranslatorClient.translateText(
+                    text = recognizedText,
+                    toLanguage = toLanguage,
+                    fromLanguage = fromLanguage
+                )
+            ) {
+                is SpeechResult.Success ->
+                    speechState = speechState.copy(translatedText = result.text)
+                is SpeechResult.Error ->
+                    speechState = speechState.copy(
+                        translatedText = "Translation error: ${result.message}"
+                    )
             }
         }
     }
@@ -105,24 +139,35 @@ class SpeechViewModel : ViewModel() {
     private fun speakInternal(text: String, languageCode: String, isTranslation: Boolean) {
         if (text.isBlank() || isTtsRunning) return
         viewModelScope.launch {
-            isTtsRunning = true
-            ttsStatus =
-                if (isTranslation) "Speaking translation, please wait..."
-                else "Speaking original text, please wait..."
+            speechState = speechState.copy(
+                isTtsRunning = true,
+                ttsStatus = if (isTranslation)
+                    "Speaking translation, please wait..."
+                else
+                    "Speaking original text, please wait..."
+            )
 
             when (val result = SpeechUseCases.speakWithAzure(text, languageCode)) {
                 is SpeechResult.Success -> {
-                    ttsStatus =
-                        if (isTranslation) "Finished speaking translation."
-                        else "Finished speaking original text."
+                    speechState = speechState.copy(
+                        ttsStatus = if (isTranslation)
+                            "Finished speaking translation."
+                        else
+                            "Finished speaking original text."
+                    )
                 }
                 is SpeechResult.Error -> {
-                    ttsStatus = "TTS error: ${result.message}"
+                    speechState = speechState.copy(
+                        ttsStatus = "TTS error: ${result.message}"
+                    )
                 }
             }
-            isTtsRunning = false
+
+            speechState = speechState.copy(isTtsRunning = false)
         }
     }
+
+    // -------- continuous conversation --------
 
     fun startContinuous(
         speakingLang: String,
@@ -142,11 +187,10 @@ class SpeechViewModel : ViewModel() {
                     val from = speakingLang
                     val to = targetLang
 
-                    addMessage(
+                    addSpokenMessage(
                         text = text,
                         lang = from,
-                        isFromPersonA = isFromPersonA,
-                        isTranslation = false
+                        isFromPersonA = isFromPersonA
                     )
 
                     viewModelScope.launch {
@@ -158,21 +202,24 @@ class SpeechViewModel : ViewModel() {
                             )
                         ) {
                             is SpeechResult.Success -> {
-                                addMessage(
+                                addTranslationMessage(
                                     text = tr.text,
                                     lang = to,
-                                    isFromPersonA = isFromPersonA,
-                                    isTranslation = true
+                                    isFromPersonA = isFromPersonA
                                 )
                             }
                             is SpeechResult.Error -> {
-                                ttsStatus = "Continuous translation error: ${tr.message}"
+                                speechState = speechState.copy(
+                                    ttsStatus = "Continuous translation error: ${tr.message}"
+                                )
                             }
                         }
                     }
                 },
                 onError = { msg ->
-                    ttsStatus = "Continuous recognition error: $msg"
+                    speechState = speechState.copy(
+                        ttsStatus = "Continuous recognition error: $msg"
+                    )
                     stopContinuous()
                 }
             )
@@ -195,7 +242,6 @@ class SpeechViewModel : ViewModel() {
 
     private fun speechError(prefix: String, result: SpeechResult.Error): String =
         "$prefix: ${result.message}"
-
 
     override fun onCleared() {
         super.onCleared()
