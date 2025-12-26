@@ -26,7 +26,7 @@ object SpeechUseCases {
 
                     if (result.reason == ResultReason.RecognizedSpeech) {
                         Log.i("AzureSpeech", "Recognized: ${result.text}")
-                        SpeechResult.Success(result.text)
+                        success(result.text)
                     } else {
                         val errorDetails = if (result.reason == ResultReason.Canceled) {
                             val cancellation = CancellationDetails.fromResult(result)
@@ -34,15 +34,21 @@ object SpeechUseCases {
                         } else {
                             result.reason.toString()
                         }
-                        Log.e("AzureSpeech", "Speech not recognized, reason: $errorDetails")
-                        SpeechResult.Error("Azure Speech not recognized: $errorDetails")
+                        logAndError(
+                            tag = "AzureSpeech",
+                            userMessage = "Azure Speech not recognized: $errorDetails",
+                            logMessage = "Speech not recognized, reason: $errorDetails"
+                        )
                     }
                 } finally {
                     recognizer.close()
                 }
             } catch (ex: Exception) {
-                Log.e("AzureSpeech", "Error: ${ex.message}")
-                SpeechResult.Error("Error recognizing speech: ${ex.message}")
+                logAndError(
+                    tag = "AzureSpeech",
+                    userMessage = "Error recognizing speech: ${ex.message}",
+                    ex = ex
+                )
             }
         }
 
@@ -62,25 +68,60 @@ object SpeechUseCases {
 
                     if (result.reason == ResultReason.SynthesizingAudioCompleted) {
                         Log.i("AzureTTS", "Speech synthesized for text: $text")
-                        SpeechResult.Success("Spoken successfully")
+                        success("Spoken successfully")
                     } else if (result.reason == ResultReason.Canceled) {
                         val cancellation =
                             SpeechSynthesisCancellationDetails.fromResult(result)
-                        val msg =
+                        val logMsg =
                             "TTS canceled: ${cancellation.reason}. ${cancellation.errorDetails}"
-                        Log.e("AzureTTS", msg)
-                        SpeechResult.Error(msg)
+                        logAndError(
+                            tag = "AzureTTS",
+                            userMessage = logMsg,
+                            logMessage = logMsg
+                        )
                     } else {
-                        SpeechResult.Error("TTS failed: ${result.reason}")
+                        logAndError(
+                            tag = "AzureTTS",
+                            userMessage = "TTS failed: ${result.reason}"
+                        )
                     }
                 } finally {
                     synthesizer.close()
                 }
             } catch (ex: Exception) {
-                Log.e("AzureTTS", "Error: ${ex.message}", ex)
-                SpeechResult.Error("Error speaking text: ${ex.message}")
+                logAndError(
+                    tag = "AzureTTS",
+                    userMessage = "Error speaking text: ${ex.message}",
+                    ex = ex
+                )
             }
         }
+
+    suspend fun translateSegment(
+        text: String,
+        fromLanguage: String,
+        toLanguage: String
+    ): SpeechResult = TranslatorClient.translateText(
+        text = text,
+        toLanguage = toLanguage,
+        fromLanguage = fromLanguage
+    )
+
+    private fun logAndError(
+        tag: String,
+        userMessage: String,
+        logMessage: String = userMessage,
+        ex: Exception? = null
+    ): SpeechResult.Error {
+        if (ex != null) {
+            Log.e(tag, logMessage, ex)
+        } else {
+            Log.e(tag, logMessage)
+        }
+        return SpeechResult.Error(userMessage)
+    }
+
+    private fun success(text: String) = SpeechResult.Success(text)
 
     fun startContinuousRecognition(
         languageCode: String,

@@ -74,7 +74,7 @@ class SpeechViewModel : ViewModel() {
             recognizedText = "Recording with Azure, SPEAK and plz WAIT..."
             when (val result = SpeechUseCases.recognizeSpeechWithAzure(languageCode)) {
                 is SpeechResult.Success -> recognizedText = result.text
-                is SpeechResult.Error -> recognizedText = "Azure error: ${result.message}"
+                is SpeechResult.Error -> recognizedText = speechError("Azure error", result)
             }
         }
     }
@@ -151,7 +151,7 @@ class SpeechViewModel : ViewModel() {
 
                     viewModelScope.launch {
                         when (
-                            val tr = TranslatorClient.translateText(
+                            val tr = SpeechUseCases.translateSegment(
                                 text = text,
                                 toLanguage = to,
                                 fromLanguage = from
@@ -192,6 +192,10 @@ class SpeechViewModel : ViewModel() {
         continuousMessages = emptyList()
         nextId = 0L
     }
+
+    private fun speechError(prefix: String, result: SpeechResult.Error): String =
+        "$prefix: ${result.message}"
+
 
     override fun onCleared() {
         super.onCleared()
