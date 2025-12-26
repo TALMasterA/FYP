@@ -1,6 +1,4 @@
-package com.example.fyp
-
-import com.example.fyp.UiTextKey
+package com.example.fyp.model
 
 data class AppLanguageState(
     val selectedUiLanguage: String,

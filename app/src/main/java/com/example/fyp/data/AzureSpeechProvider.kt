@@ -1,5 +1,6 @@
-package com.example.fyp
+package com.example.fyp.data
 
+import com.example.fyp.BuildConfig
 import com.microsoft.cognitiveservices.speech.SpeechConfig
 
 object AzureSpeechProvider {

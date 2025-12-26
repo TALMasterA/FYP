@@ -1,4 +1,4 @@
-package com.example.fyp
+package com.example.fyp.data
 
 import android.content.Context
 import org.json.JSONArray

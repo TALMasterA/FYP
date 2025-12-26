@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.TranslatorClient
+import com.example.fyp.model.SpeechResult
 import com.microsoft.cognitiveservices.speech.SpeechRecognizer
 import kotlinx.coroutines.launch
 

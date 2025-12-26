@@ -1,6 +1,9 @@
 package com.example.fyp
 
 import android.util.Log
+import com.example.fyp.data.AzureSpeechProvider
+import com.example.fyp.data.TranslatorClient
+import com.example.fyp.model.SpeechResult
 import com.microsoft.cognitiveservices.speech.CancellationDetails
 import com.microsoft.cognitiveservices.speech.ResultReason
 import com.microsoft.cognitiveservices.speech.SpeechConfig
@@ -9,7 +12,6 @@ import com.microsoft.cognitiveservices.speech.SpeechSynthesisCancellationDetails
 import com.microsoft.cognitiveservices.speech.SpeechSynthesizer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.microsoft.cognitiveservices.speech.PropertyId
 
 object SpeechUseCases {
 

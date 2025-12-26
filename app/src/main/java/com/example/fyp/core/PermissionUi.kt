@@ -1,10 +1,11 @@
-package com.example.fyp
+package com.example.fyp.core
 
 import android.Manifest
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -20,7 +21,7 @@ fun RecordAudioPermissionRequest(
 ) {
     val permissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
-    androidx.compose.runtime.LaunchedEffect(Unit) {
+    LaunchedEffect(Unit) {
         if (!permissionState.status.isGranted) {
             permissionState.launchPermissionRequest()
         }

@@ -1,4 +1,4 @@
-package com.example.fyp
+package com.example.fyp.core
 
 import android.annotation.SuppressLint
 import android.media.AudioFormat
@@ -74,5 +74,11 @@ object AudioRecorder {
             Log.d("AudioRecorder", "Recording stopped and resources released.")
         }
         return stream?.toByteArray()
+    }
+
+    fun stopIfRecording() {
+        if (isRecording) {
+            stop(null)
+        }
     }
 }

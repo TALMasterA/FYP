@@ -1,4 +1,4 @@
-package com.example.fyp
+package com.example.fyp.data
 
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit

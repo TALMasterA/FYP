@@ -1,6 +1,8 @@
-package com.example.fyp
+package com.example.fyp.data
 
 import android.util.Log
+import com.example.fyp.BuildConfig
+import com.example.fyp.model.SpeechResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
