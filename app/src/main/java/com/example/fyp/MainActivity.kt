@@ -126,22 +126,15 @@ fun AppLanguageDropdown(
                 onUpdateAppLanguage(code, emptyMap())
             } else {
                 scope.launch {
-                    val baseTexts = BaseUiTexts
                     when (val result = TranslatorClient.translateTexts(
-                        texts = baseTexts,
+                        texts = BaseUiTexts,
                         toLanguage = code,
                         fromLanguage = "en"
                     )) {
                         is SpeechResult.Success -> {
-                            val parts = result.text.split('\u0001')
-                            if (parts.size == baseTexts.size) {
-                                val map = UiTextKey.entries.zip(parts).toMap()
-                                onUpdateAppLanguage(code, map)
-                            } else {
-                                onUpdateAppLanguage(code, emptyMap())
-                            }
+                            val map = buildUiTextMap(result.text)
+                            onUpdateAppLanguage(code, map)
                         }
-
                         is SpeechResult.Error -> {
                             Log.e("UITranslation", "Error: ${result.message}")
                             onUpdateAppLanguage(code, emptyMap())
@@ -302,7 +295,12 @@ fun HomeScreen(
                 onClick = onStartContinuous,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Start continuous translate & speak") // later can move this string into UiTexts
+                Text(
+                    uiText(
+                        UiTextKey.ContinuousStartScreenButton,
+                        BaseUiTexts[UiTextKey.ContinuousStartScreenButton.ordinal]
+                    )
+                )
             }
         }
     }
@@ -637,7 +635,14 @@ fun ContinuousConversationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Continuous conversation") },
+                title = {
+                    Text(
+                        uiText(
+                            UiTextKey.ContinuousTitle,
+                            BaseUiTexts[UiTextKey.ContinuousTitle.ordinal]
+                        )
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = {
                         viewModel.stopContinuous()
@@ -673,7 +678,10 @@ fun ContinuousConversationScreen(
                     )
 
                     LanguageDropdownField(
-                        label = "Person A language",
+                        label = uiText(
+                            UiTextKey.ContinuousSpeakerAName,
+                            BaseUiTexts[UiTextKey.ContinuousSpeakerAName.ordinal]
+                        ),
                         selectedCode = fromLanguage,
                         options = supportedLanguages,
                         nameFor = uiLanguageNameFor,
@@ -681,7 +689,10 @@ fun ContinuousConversationScreen(
                     )
 
                     LanguageDropdownField(
-                        label = "Person B language",
+                        label = uiText(
+                            UiTextKey.ContinuousSpeakerBName,
+                            BaseUiTexts[UiTextKey.ContinuousSpeakerBName.ordinal]
+                        ),
                         selectedCode = toLanguage,
                         options = supportedLanguages,
                         nameFor = uiLanguageNameFor,
@@ -695,9 +706,15 @@ fun ContinuousConversationScreen(
                     ) {
                         Text(
                             text = if (isPersonATalking)
-                                "Now: Person A speaking"
+                                uiText(
+                                    UiTextKey.ContinuousPersonALabel,
+                                    BaseUiTexts[UiTextKey.ContinuousPersonALabel.ordinal]
+                                )
                             else
-                                "Now: Person B speaking"
+                                uiText(
+                                    UiTextKey.ContinuousPersonBLabel,
+                                    BaseUiTexts[UiTextKey.ContinuousPersonBLabel.ordinal]
+                                )
                         )
 
                         androidx.compose.material3.Switch(
@@ -724,12 +741,28 @@ fun ContinuousConversationScreen(
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(if (isRunning) "Stop listening" else "Start conversation")
+                        Text(
+                            if (isRunning)
+                                uiText(
+                                    UiTextKey.ContinuousStopButton,
+                                    BaseUiTexts[UiTextKey.ContinuousStopButton.ordinal]
+                                )
+                            else
+                                uiText(
+                                    UiTextKey.ContinuousStartButton,
+                                    BaseUiTexts[UiTextKey.ContinuousStartButton.ordinal]
+                                )
+                        )
                     }
 
                     Spacer(Modifier.height(8.dp))
 
-                    Text("Listening partial: $partial")
+                    Text(
+                        text = uiText(
+                            UiTextKey.ContinuousCurrentStringLabel,
+                            BaseUiTexts[UiTextKey.ContinuousCurrentStringLabel.ordinal]
+                        ) + ": " + partial
+                    )
                     if (lastTranslation.isNotBlank()) {
                         Text("Last translation: $lastTranslation")
                     }
@@ -762,8 +795,26 @@ fun ContinuousConversationScreen(
                                 // speaker + type
                                 Text(
                                     text = buildString {
-                                        append(if (msg.isFromPersonA) "Person A" else "Person B")
-                                        if (msg.isTranslation) append(" · translation")
+                                        val speakerName = if (msg.isFromPersonA) {
+                                            uiText(
+                                                UiTextKey.ContinuousSpeakerAName,
+                                                BaseUiTexts[UiTextKey.ContinuousSpeakerAName.ordinal]
+                                            )
+                                        } else {
+                                            uiText(
+                                                UiTextKey.ContinuousSpeakerBName,
+                                                BaseUiTexts[UiTextKey.ContinuousSpeakerBName.ordinal]
+                                            )
+                                        }
+                                        append(speakerName)
+                                        if (msg.isTranslation) {
+                                            append(
+                                                uiText(
+                                                    UiTextKey.ContinuousTranslationSuffix,
+                                                    BaseUiTexts[UiTextKey.ContinuousTranslationSuffix.ordinal]
+                                                )
+                                            )
+                                        }
                                     },
                                     style = MaterialTheme.typography.labelSmall
                                 )

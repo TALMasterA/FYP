@@ -34,7 +34,17 @@ enum class UiTextKey {
     HelpCurrentTitle,
     HelpCautionTitle,
     HelpCurrentFeatures,
-    HelpCaution
+    HelpCaution,
+    ContinuousTitle,
+    ContinuousStartButton,
+    ContinuousStopButton,
+    ContinuousStartScreenButton,
+    ContinuousPersonALabel,
+    ContinuousPersonBLabel,
+    ContinuousCurrentStringLabel,
+    ContinuousSpeakerAName,
+    ContinuousSpeakerBName,
+    ContinuousTranslationSuffix
 }
 
 val BaseUiTexts: List<String> = listOf(
@@ -76,5 +86,24 @@ val BaseUiTexts: List<String> = listOf(
             "- Press Azure Recognize to capture one sentence from microphone.\n" +
             "- Tap Translate to translate once, then use Speak buttons to listen.",
     "- Requires internet and valid Azure keys.\n" +
-            "- Do not use for medical, legal, or safety‑critical decisions; translations may contain errors."
+            "- Do not use for medical, legal, or safety‑critical decisions; translations may contain errors.",
+    "Continuous conversation",
+    "Start conversation",
+    "Stop listening",
+    "Start continuous translate & speak",
+    "Person A speaking",
+    "Person B speaking",
+    "Current string",
+    "Person A",
+    "Person B",
+    " · translation"
 )
+
+fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
+    val parts = translatedJoined.split('\u0001')
+    // If translation result is shorter, fill missing entries with the English base text
+    return UiTextKey.entries.mapIndexed { index, key ->
+        val value = parts.getOrNull(index) ?: BaseUiTexts[index]
+        key to value
+    }.toMap()
+}
