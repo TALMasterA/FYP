@@ -96,15 +96,14 @@ fun SpeechRecognitionScreen(
 
                 Text(
                     text = uiText(
-                        UiTextKey.Instructions,
-                        "Select User Interface language on top, then the detect and translate languages. " +
-                                "Support languages: English, Cantonese, Japanese, Mandarin..."
+                        UiTextKey.SpeechInstructions,
+                        BaseUiTexts[UiTextKey.SpeechInstructions.ordinal]
                     ),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
                 LanguageDropdownField(
-                    label = uiText(UiTextKey.DetectLanguageLabel, "Detect language"),
+                    label = uiText(UiTextKey.DetectLanguageLabel, BaseUiTexts[UiTextKey.DetectLanguageLabel.ordinal]),
                     selectedCode = selectedLanguage,
                     options = supportedLanguages,
                     nameFor = uiLanguageNameFor,
@@ -112,7 +111,7 @@ fun SpeechRecognitionScreen(
                 )
 
                 LanguageDropdownField(
-                    label = uiText(UiTextKey.TranslateToLabel, "Translate to"),
+                    label = uiText(UiTextKey.TranslateToLabel, BaseUiTexts[UiTextKey.TranslateToLabel.ordinal]),
                     selectedCode = selectedTargetLanguage,
                     options = supportedLanguages,
                     nameFor = uiLanguageNameFor,
@@ -127,7 +126,7 @@ fun SpeechRecognitionScreen(
                     Text(
                         uiText(
                             UiTextKey.AzureRecognizeButton,
-                            "Use Azure Recognize (from Mic)"
+                            BaseUiTexts[UiTextKey.AzureRecognizeButton.ordinal]
                         )
                     )
                 }
@@ -142,7 +141,7 @@ fun SpeechRecognitionScreen(
                     },
                     enabled = recognizedText.isNotEmpty()
                 ) {
-                    Text(uiText(UiTextKey.CopyButton, "Copy"))
+                    Text(uiText(UiTextKey.CopyButton, BaseUiTexts[UiTextKey.CopyButton.ordinal]))
                 }
 
                 Button(
@@ -152,9 +151,9 @@ fun SpeechRecognitionScreen(
                 ) {
                     Text(
                         if (isTtsRunning)
-                            uiText(UiTextKey.SpeakingLabel, "Speaking...")
+                            uiText(UiTextKey.SpeakingLabel, BaseUiTexts[UiTextKey.SpeakingLabel.ordinal])
                         else
-                            uiText(UiTextKey.SpeakScriptButton, "Speak script")
+                            uiText(UiTextKey.SpeakScriptButton, BaseUiTexts[UiTextKey.SpeakScriptButton.ordinal])
                     )
                 }
 
@@ -168,7 +167,7 @@ fun SpeechRecognitionScreen(
                     enabled = recognizedText.isNotBlank(),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(uiText(UiTextKey.TranslateButton, "Translate"))
+                    Text(uiText(UiTextKey.TranslateButton, BaseUiTexts[UiTextKey.TranslateButton.ordinal]))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -181,7 +180,7 @@ fun SpeechRecognitionScreen(
                     },
                     enabled = translatedText.isNotEmpty()
                 ) {
-                    Text(uiText(UiTextKey.CopyTranslationButton, "Copy Translation"))
+                    Text(uiText(UiTextKey.CopyTranslationButton, BaseUiTexts[UiTextKey.CopyTranslationButton.ordinal]))
                 }
 
                 Button(
@@ -191,9 +190,9 @@ fun SpeechRecognitionScreen(
                 ) {
                     Text(
                         if (isTtsRunning)
-                            uiText(UiTextKey.SpeakingLabel, "Speaking...")
+                            uiText(UiTextKey.SpeakingLabel, BaseUiTexts[UiTextKey.SpeakingLabel.ordinal])
                         else
-                            uiText(UiTextKey.SpeakTranslationButton, "Speak Translation")
+                            uiText(UiTextKey.SpeakTranslationButton, BaseUiTexts[UiTextKey.SpeakTranslationButton.ordinal])
                     )
                 }
 
@@ -249,7 +248,7 @@ private fun SpeechRecognitionContent(
 
         Text(
             text = uiText(
-                UiTextKey.Instructions,
+                UiTextKey.SpeechInstructions,
                 "Select User Interface language on top, then the detect and translate languages. " +
                         "Support languages: English, Cantonese, Japanese, Mandarin..."
             ),

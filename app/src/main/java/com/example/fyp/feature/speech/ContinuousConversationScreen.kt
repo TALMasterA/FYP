@@ -216,6 +216,14 @@ private fun ConversationControls(
             uiText = uiText
         )
 
+        Text(
+            text = uiText(
+                UiTextKey.ContinuousInstructions,
+                BaseUiTexts[UiTextKey.ContinuousInstructions.ordinal]
+            ),
+            style = MaterialTheme.typography.bodyMedium
+        )
+
         LanguageDropdownField(
             label = uiText(
                 UiTextKey.ContinuousSpeakerAName,

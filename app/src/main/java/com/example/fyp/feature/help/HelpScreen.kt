@@ -71,29 +71,31 @@ fun HelpScreen(
 
             Text(
                 text = uiText(
-                    UiTextKey.HelpCurrentTitle,
-                    BaseUiTexts[UiTextKey.HelpCurrentTitle.ordinal]
-                ),
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = uiText(
-                    UiTextKey.HelpCurrentFeatures,
-                    BaseUiTexts[UiTextKey.HelpCurrentFeatures.ordinal]
-                )
-            )
-
-            Text(
-                text = uiText(
                     UiTextKey.HelpCautionTitle,
                     BaseUiTexts[UiTextKey.HelpCautionTitle.ordinal]
                 ),
                 style = MaterialTheme.typography.titleMedium
             )
+
             Text(
                 text = uiText(
                     UiTextKey.HelpCaution,
                     BaseUiTexts[UiTextKey.HelpCaution.ordinal]
+                )
+            )
+
+            Text(
+                text = uiText(
+                    UiTextKey.HelpCurrentTitle,
+                    BaseUiTexts[UiTextKey.HelpCurrentTitle.ordinal]
+                ),
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text = uiText(
+                    UiTextKey.HelpCurrentFeatures,
+                    BaseUiTexts[UiTextKey.HelpCurrentFeatures.ordinal]
                 )
             )
         }

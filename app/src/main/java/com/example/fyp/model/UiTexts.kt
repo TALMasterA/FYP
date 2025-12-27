@@ -1,7 +1,9 @@
 package com.example.fyp.model
 
 enum class UiTextKey {
-    Instructions,
+    SpeechInstructions,
+    HomeInstructions,
+    ContinuousInstructions,
     AzureRecognizeButton,
     CopyButton,
     SpeakScriptButton,
@@ -49,11 +51,16 @@ enum class UiTextKey {
 
 val BaseUiTexts: List<String> = listOf(
     // must match UiTextKey order exactly
-    "Select User Interface language on top, then the detect and translate languages. " +
+    "Select the detect and translate languages below. \n" +
             "Support languages: English, Cantonese, Japanese, Mandarin...",
-    "Use Azure Recognize (from Mic)",
-    "Copy",
-    "Speak script",
+    "You can change the app UI language by the dropdown on top. The base language is English. \nNote that is translate by API and may contain errors. \n" +
+            "Support languages: English, Cantonese, Japanese. \nBelow is the two mode of speech-to-text. " +
+            "First is the discrete recognition, second is the continuous mode, good for conversation translation.",
+    "Set Speaker A and B languages below. \n" +
+            "Use the toggle to switch who is speaking.",
+    "Recognize (from Microphone)",
+    "Copy speech",
+    "Speak",
     "Translate",
     "Copy Translation",
     "Speak Translation",
@@ -76,21 +83,24 @@ val BaseUiTexts: List<String> = listOf(
     "German",
     "Korean",
     "Spanish",
-    "FYP Translator",
+    "Translator",
     "How to use",
-    "Speech & Translation",
-    "Start speech & translation",
+    "Notes & Cautions",
+    "Discrete speech recognition & translation",
     "Current features",
-    "Caution",
+    "Cautions",
     "- Choose UI language, detection language, and target language.\n" +
-            "- Press Azure Recognize to capture one sentence from microphone.\n" +
-            "- Tap Translate to translate once, then use Speak buttons to listen.",
+            "- Discrete mode:  Press Azure Recognize to capture short sentences/paragraph from microphone.\n" +
+            "Tap Translate, then use Speak buttons to listen. \n" +
+            "- Continuous mode:  Press start to continuous listen conversation from microphone.\n" +
+            "You can use 🔊 to listen, but be careful if use it without earphone and the listening is still ongoing, " +
+            "the speech will capture by the system.",
     "- Requires internet and valid Azure keys.\n" +
             "- Do not use for medical, legal, or safety‑critical decisions; translations may contain errors.",
     "Continuous conversation",
     "Start conversation",
     "Stop listening",
-    "Start continuous translate & speak",
+    "Continuous translation mode",
     "Person A speaking",
     "Person B speaking",
     "Current string",

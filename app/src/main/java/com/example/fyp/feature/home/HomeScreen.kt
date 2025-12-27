@@ -36,7 +36,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(uiText(UiTextKey.HomeTitle, "FYP Translator")) },
+                title = { Text(uiText(UiTextKey.HomeTitle, BaseUiTexts[UiTextKey.HomeTitle.ordinal])) },
                 actions = {
                     IconButton(onClick = onOpenHelp) {
                         Icon(
@@ -65,9 +65,8 @@ fun HomeScreen(
 
             Text(
                 text = uiText(
-                    UiTextKey.Instructions,
-                    "Select User Interface language on top, then the detect and translate languages. " +
-                            "Support languages: English, Cantonese, Japanese, Mandarin..."
+                    UiTextKey.HomeInstructions,
+                    BaseUiTexts[UiTextKey.HomeInstructions.ordinal]
                 ),
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -76,7 +75,7 @@ fun HomeScreen(
                 onClick = onStartSpeech,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(uiText(UiTextKey.HomeStartButton, "Start speech & translation"))
+                Text(uiText(UiTextKey.HomeStartButton, BaseUiTexts[UiTextKey.HomeStartButton.ordinal]))
             }
             Button(
                 onClick = onStartContinuous,
