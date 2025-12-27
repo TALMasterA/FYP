@@ -22,6 +22,7 @@ import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.rememberUiTextFunctions
+import androidx.compose.foundation.layout.fillMaxSize
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,8 +40,8 @@ fun HelpScreen(
                 title = {
                     Text(
                         uiText(
-                            UiTextKey.SpeechTitle,
-                            BaseUiTexts[UiTextKey.SpeechTitle.ordinal]
+                            UiTextKey.HelpTitle,
+                            BaseUiTexts[UiTextKey.HelpTitle.ordinal]
                         )
                     )
                 },
@@ -55,10 +56,13 @@ fun HelpScreen(
             )
         }
     ) { innerPadding ->
+        val scrollState = rememberScrollState()
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -96,6 +100,21 @@ fun HelpScreen(
                 text = uiText(
                     UiTextKey.HelpCurrentFeatures,
                     BaseUiTexts[UiTextKey.HelpCurrentFeatures.ordinal]
+                )
+            )
+
+            Text(
+                text = uiText(
+                    UiTextKey.HelpNotesTitle,
+                    BaseUiTexts[UiTextKey.HelpNotesTitle.ordinal]
+                ),
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text = uiText(
+                    UiTextKey.HelpNotes,
+                    BaseUiTexts[UiTextKey.HelpNotes.ordinal]
                 )
             )
         }

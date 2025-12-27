@@ -20,6 +20,8 @@ import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.rememberUiTextFunctions
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,11 +50,14 @@ fun HomeScreen(
             )
         }
     ) { innerPadding ->
+        val scrollState = rememberScrollState()
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.Start
         ) {

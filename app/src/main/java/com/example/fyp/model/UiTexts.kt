@@ -46,14 +46,16 @@ enum class UiTextKey {
     ContinuousCurrentStringLabel,
     ContinuousSpeakerAName,
     ContinuousSpeakerBName,
-    ContinuousTranslationSuffix
+    ContinuousTranslationSuffix,
+    HelpNotesTitle,
+    HelpNotes
 }
 
 val BaseUiTexts: List<String> = listOf(
     // must match UiTextKey order exactly
     "Select the detect and translate languages below. \n" +
             "Support languages: English, Cantonese, Japanese, Mandarin...",
-    "You can change the app UI language by the dropdown on top. The base language is English. \nNote that is translate by API and may contain errors. \n" +
+    "You can change the app UI language by the dropdown on top. \nPlease look at the ! information before using the app. \n" +
             "Support languages: English, Cantonese, Japanese. \nBelow is the two mode of speech-to-text. " +
             "First is the discrete recognition, second is the continuous mode, good for conversation translation.",
     "Set Speaker A and B languages below. \n" +
@@ -84,8 +86,8 @@ val BaseUiTexts: List<String> = listOf(
     "Korean",
     "Spanish",
     "Translator",
-    "How to use",
     "Notes & Cautions",
+    "Discrete mode",
     "Discrete speech recognition & translation",
     "Current features",
     "Cautions",
@@ -97,7 +99,7 @@ val BaseUiTexts: List<String> = listOf(
             "the speech will capture by the system.",
     "- Requires internet and valid Azure keys.\n" +
             "- Do not use for medical, legal, or safety‑critical decisions; translations may contain errors.",
-    "Continuous conversation",
+    "Continuous mode",
     "Start conversation",
     "Stop listening",
     "Continuous translation mode",
@@ -106,7 +108,9 @@ val BaseUiTexts: List<String> = listOf(
     "Current string",
     "Person A",
     "Person B",
-    " · translation"
+    " · translation",
+    "Notes",
+    "The base language of this app is English, you can use the app UI list to change the languages but it may contain error."
 )
 
 fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
