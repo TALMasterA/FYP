@@ -12,5 +12,7 @@
 
  For now, to add new UI text to UI language translate scope, you need to 1. Add the key to enum class in UiTexts.kt, 2. Add the english text to val BaseUiTexts, you will manage the UI description here, 3. Apply the Ui text composable.
 
+ Following MVVM (Model–View–ViewModel) structure.
+
 
 
