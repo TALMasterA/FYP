@@ -8,10 +8,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.UiTextKey
-import com.example.fyp.screen.ContinuousConversationScreen
-import com.example.fyp.screen.HelpScreen
-import com.example.fyp.screen.HomeScreen
-import com.example.fyp.screen.SpeechRecognitionScreen
+import com.example.fyp.feature.speech.ContinuousConversationScreen
+import com.example.fyp.feature.help.HelpScreen
+import com.example.fyp.feature.home.HomeScreen
+import com.example.fyp.feature.speech.SpeechRecognitionScreen
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")

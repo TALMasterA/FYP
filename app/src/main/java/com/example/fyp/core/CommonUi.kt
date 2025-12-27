@@ -1,4 +1,4 @@
-package com.example.fyp.screen
+package com.example.fyp.core
 
 import android.util.Log
 import androidx.compose.material3.*

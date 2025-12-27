@@ -1,4 +1,4 @@
-package com.example.fyp
+package com.example.fyp.feature.speech
 
 import android.util.Log
 import com.example.fyp.data.AzureSpeechProvider

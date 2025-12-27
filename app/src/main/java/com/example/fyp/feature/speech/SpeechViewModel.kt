@@ -1,11 +1,14 @@
-package com.example.fyp
+package com.example.fyp.feature.speech
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fyp.data.TranslatorClient
+import com.example.fyp.domain.speech.RecognizeFromMicUseCase
+import com.example.fyp.domain.speech.SpeakTextUseCase
+import com.example.fyp.domain.speech.StartContinuousConversationUseCase
+import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.example.fyp.model.SpeechResult
 import com.microsoft.cognitiveservices.speech.SpeechRecognizer
 import kotlinx.coroutines.launch
@@ -17,7 +20,12 @@ data class SpeechScreenState(
     val isTtsRunning: Boolean = false
 )
 
-class SpeechViewModel : ViewModel() {
+class SpeechViewModel(
+    private val recognizeFromMic: RecognizeFromMicUseCase,
+    private val translateTextUseCase: TranslateTextUseCase,
+    private val speakTextUseCase: SpeakTextUseCase,
+    private val continuousUseCase: StartContinuousConversationUseCase
+) : ViewModel() {
 
     // --- main speech screen state ---
     var speechState by mutableStateOf(SpeechScreenState())
@@ -95,7 +103,7 @@ class SpeechViewModel : ViewModel() {
                 recognizedText = "Recording with Azure, SPEAK and plz WAIT..."
             )
 
-            when (val result = SpeechUseCases.recognizeSpeechWithAzure(languageCode)) {
+            when (val result = recognizeFromMic(languageCode)) {
                 is SpeechResult.Success ->
                     speechState = speechState.copy(recognizedText = result.text)
                 is SpeechResult.Error ->
@@ -114,10 +122,10 @@ class SpeechViewModel : ViewModel() {
             )
 
             when (
-                val result = TranslatorClient.translateText(
+                val result = translateTextUseCase(
                     text = recognizedText,
-                    toLanguage = toLanguage,
-                    fromLanguage = fromLanguage
+                    fromLanguage = fromLanguage,
+                    toLanguage = toLanguage
                 )
             ) {
                 is SpeechResult.Success ->
@@ -149,7 +157,7 @@ class SpeechViewModel : ViewModel() {
                     "Speaking original text, please wait..."
             )
 
-            when (val result = SpeechUseCases.speakWithAzure(text, languageCode)) {
+            when (val result = speakTextUseCase(text, languageCode)) {
                 is SpeechResult.Success -> {
                     speechState = speechState.copy(
                         ttsStatus = if (isTranslation)
@@ -182,7 +190,7 @@ class SpeechViewModel : ViewModel() {
         isContinuousRunning = true
 
         continuousRecognizer =
-            SpeechUseCases.startContinuousRecognition(
+            continuousUseCase(
                 languageCode = speakingLang,
                 onPartial = { partial -> livePartialText = partial },
                 onFinal = { text ->
@@ -197,10 +205,10 @@ class SpeechViewModel : ViewModel() {
 
                     viewModelScope.launch {
                         when (
-                            val tr = SpeechUseCases.translateSegment(
+                            val tr = translateTextUseCase(
                                 text = text,
-                                toLanguage = to,
-                                fromLanguage = from
+                                fromLanguage = from,
+                                toLanguage = to
                             )
                         ) {
                             is SpeechResult.Success -> {
@@ -229,7 +237,7 @@ class SpeechViewModel : ViewModel() {
 
     fun stopContinuous() {
         isContinuousRunning = false
-        SpeechUseCases.stopContinuousRecognition(continuousRecognizer)
+        continuousUseCase.stop(continuousRecognizer)
         continuousRecognizer = null
     }
 

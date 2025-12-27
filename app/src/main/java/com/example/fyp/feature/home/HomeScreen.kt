@@ -1,4 +1,4 @@
-package com.example.fyp.screen
+package com.example.fyp.feature.home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
+import com.example.fyp.core.AppLanguageDropdown
+import com.example.fyp.core.rememberUiTextFunctions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
