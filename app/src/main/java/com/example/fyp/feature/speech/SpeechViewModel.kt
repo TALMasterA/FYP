@@ -48,10 +48,6 @@ class SpeechViewModel(
 
     private var continuousRecognizer: SpeechRecognizer? = null
 
-    fun clear() {
-        speechState = SpeechScreenState()
-    }
-
     // -------- chat messages --------
 
     data class ChatMessage(
