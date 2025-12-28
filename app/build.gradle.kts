@@ -47,7 +47,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
+        kotlinCompilerExtensionVersion = "1.5.17"
     }
 }
 
@@ -62,18 +62,20 @@ dependencies {
     implementation(libs.ui)
     implementation("androidx.compose.material3:material3:1.1.0")
     implementation("androidx.activity:activity-compose:1.7.1")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.4.0")
 
     implementation("androidx.core:core-ktx:1.10.1")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.8.20")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
 
-    // Use only one Azure Speech SDK version
+    // Azure + others
     implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.45.0")
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
     implementation("androidx.navigation:navigation-compose:2.8.5")
 
-    // Test dependencies
+    // Lifecycle
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+
+    // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -82,8 +84,5 @@ dependencies {
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
 }
 
