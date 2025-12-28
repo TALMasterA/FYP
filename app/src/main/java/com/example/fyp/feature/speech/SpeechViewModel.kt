@@ -252,5 +252,7 @@ class SpeechViewModel(
     override fun onCleared() {
         super.onCleared()
         stopContinuous()
+        continuousRecognizer?.close()
+        continuousRecognizer = null
     }
 }

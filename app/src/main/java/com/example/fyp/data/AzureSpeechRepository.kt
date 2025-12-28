@@ -152,4 +152,9 @@ class AzureSpeechRepository : SpeechRepository {
         }
         return SpeechResult.Error(userMessage)
     }
+
+    fun closeContinuousRecognizer(recognizer: SpeechRecognizer?) {
+        recognizer?.stopContinuousRecognitionAsync()
+        recognizer?.close()
+    }
 }
