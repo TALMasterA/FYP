@@ -62,14 +62,14 @@ dependencies {
     implementation(libs.ui)
     implementation("androidx.compose.material3:material3:1.1.0")
     implementation("androidx.activity:activity-compose:1.7.1")
+    implementation(libs.androidx.core.ktx)
 
-    implementation("androidx.core:core-ktx:1.10.1")
-    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // Azure + others
-    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.45.0")
+    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.47.0")
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
-    implementation("androidx.navigation:navigation-compose:2.8.5")
+    implementation("androidx.navigation:navigation-compose:2.8.6")
 
     // Lifecycle
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
