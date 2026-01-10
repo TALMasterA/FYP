@@ -31,3 +31,4 @@ captures/
 
 # Other
 *.log
+/app/google-services.json
