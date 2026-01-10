@@ -22,6 +22,12 @@ import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.rememberUiTextFunctions
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.example.fyp.feature.login.AuthViewModel
+import com.example.fyp.feature.login.LoginScreen
+import com.example.fyp.model.AuthState
+import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +39,25 @@ fun HomeScreen(
     onOpenHelp: () -> Unit,
     onStartContinuous: () -> Unit
 ) {
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+
+    // Show Login if not logged in
+    when (authState) {
+        is AuthState.LoggedOut -> {
+            LoginScreen(
+                onLoginSuccess = {
+                    // Stay on Home or navigate
+                }
+            )
+            return
+        }
+        is AuthState.LoggedIn -> {
+            // User logged in - show normal Home
+        }
+        else -> {}  // Loading...
+    }
+
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
 
     Scaffold(

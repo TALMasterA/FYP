@@ -12,6 +12,7 @@ import com.example.fyp.feature.speech.ContinuousConversationScreen
 import com.example.fyp.feature.help.HelpScreen
 import com.example.fyp.feature.home.HomeScreen
 import com.example.fyp.feature.speech.SpeechRecognitionScreen
+import com.example.fyp.feature.login.LoginScreen
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")

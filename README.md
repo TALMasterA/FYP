@@ -1,4 +1,4 @@
-﻿# FYP (Using Azure API to develop translation function)
+﻿# FYP (Developing login function and database implement)
  Develop in Android Studio, Android ONLY.
 
  Caution:

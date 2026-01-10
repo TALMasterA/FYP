@@ -12,6 +12,12 @@ import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.example.fyp.model.SpeechResult
 import com.microsoft.cognitiveservices.speech.SpeechRecognizer
 import kotlinx.coroutines.launch
+import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.domain.auth.LoginUseCase
+import com.example.fyp.domain.history.SaveTranslationUseCase
+import com.example.fyp.model.AuthState
+import com.example.fyp.model.TranslationRecord
+import com.example.fyp.model.User
 
 data class SpeechScreenState(
     val recognizedText: String = "",
@@ -26,6 +32,16 @@ class SpeechViewModel(
     private val speakTextUseCase: SpeakTextUseCase,
     private val continuousUseCase: StartContinuousConversationUseCase
 ) : ViewModel() {
+
+    init {
+
+        // NEW: Auth state
+        viewModelScope.launch {
+            authRepo.currentUserState.collect { state ->
+                _authState.value = state
+            }
+        }
+    }
 
     // --- main speech screen state ---
     var speechState by mutableStateOf(SpeechScreenState())
@@ -63,6 +79,18 @@ class SpeechViewModel(
 
     private var nextId = 0L
 
+    // Auth
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
+    val authState: StateFlow<AuthState> = _authState.asStateFlow()
+
+    private val loginUseCase: LoginUseCase by lazy { LoginUseCase(authRepo) }
+    private val authRepo: FirebaseAuthRepository by lazy { FirebaseAuthRepository(Firebase.auth) }
+
+    // History
+    private val saveTranslationUseCase: SaveTranslationUseCase by lazy {
+        SaveTranslationUseCase(FirestoreHistoryRepository(Firebase.firestore))
+    }
+
     private fun addMessageInternal(
         text: String,
         lang: String,
@@ -90,6 +118,35 @@ class SpeechViewModel(
         lang: String,
         isFromPersonA: Boolean
     ) = addMessageInternal(text, lang, isFromPersonA, isTranslation = true)
+
+    private suspend fun saveTranslation(result: SpeechResult, mode: String) {
+        val userState = authState.value
+        if (userState is AuthState.LoggedIn) {
+            saveTranslationUseCase(
+                TranslationRecord(
+                    userId = userState.user.uid,
+                    mode = mode,
+                    sourceLang = result.detectedLanguage ?: "",
+                    targetLang = appLanguageState.value.targetLanguage,
+                    originalText = result.text,
+                    translatedText = result.translatedText ?: ""
+                )
+            )
+        }
+    }
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            loginUseCase(email, password).fold(
+                onSuccess = { /* handled by authState flow */ },
+                onFailure = { _uiState.update { it.copy(error = it.error ?: "Login failed: ${it.message}") } }
+            )
+        }
+    }
+
+    fun logout() {
+        authRepo.logout()
+    }
 
     // -------- one‑shot speech & translation --------
 
