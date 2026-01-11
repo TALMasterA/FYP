@@ -182,6 +182,9 @@ class SpeechViewModel @Inject constructor(
     fun speakText(languageCode: String, text: String) =
         speakInternal(text = text, languageCode = languageCode, isTranslation = true)
 
+    fun speakTextOriginal(languageCode: String, text: String) =
+        speakInternal(text = text, languageCode = languageCode, isTranslation = false)
+
     private fun speakInternal(text: String, languageCode: String, isTranslation: Boolean) {
         if (text.isBlank() || isTtsRunning) return
 

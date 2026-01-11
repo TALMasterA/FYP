@@ -48,6 +48,16 @@ fun HistoryScreen(
     var pendingRenameSessionId by remember { mutableStateOf<String?>(null) }
     var renameText by remember { mutableStateOf("") }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            pendingDeleteRecord = null
+            pendingDeleteSessionId = null
+            pendingRenameSessionId = null
+            renameText = ""
+            selectedSessionId = null
+        }
+    }
+
     // ----- dialogs -----
     if (pendingDeleteRecord != null) {
         AlertDialog(
@@ -184,7 +194,8 @@ fun HistoryScreen(
                     HistoryList(
                         records = discreteRecords,
                         languageNameFor = uiLanguageNameFor,
-                        onSpeak = { rec -> speechVm.speakText(rec.targetLang, rec.targetText) },
+                        onSpeakOriginal = { rec -> speechVm.speakTextOriginal(rec.sourceLang, rec.sourceText) },
+                        onSpeakTranslation = { rec -> speechVm.speakText(rec.targetLang, rec.targetText) },
                         onDelete = { rec -> pendingDeleteRecord = rec }
                     )
                 }
@@ -237,8 +248,11 @@ fun HistoryScreen(
                             }
                         }
                     } else {
-                        val sessionRecords =
-                            sessions.firstOrNull { (sid, _) -> sid == selectedSessionId }?.second.orEmpty()
+                        val sessionRecords = sessions
+                            .firstOrNull { (sid, _) -> sid == selectedSessionId }
+                            ?.second
+                            ?.sortedBy { it.timestamp }
+                            .orEmpty()
 
                         val displayName = uiState.sessionNames[selectedSessionId!!].orEmpty()
                         val title = if (displayName.isNotBlank()) displayName else "Session ${selectedSessionId!!.take(8)}"
@@ -257,7 +271,8 @@ fun HistoryScreen(
                         HistoryList(
                             records = sessionRecords,
                             languageNameFor = uiLanguageNameFor,
-                            onSpeak = { rec -> speechVm.speakText(rec.targetLang, rec.targetText) },
+                            onSpeakOriginal = { rec -> speechVm.speakTextOriginal(rec.sourceLang, rec.sourceText) },
+                            onSpeakTranslation = { rec -> speechVm.speakText(rec.targetLang, rec.targetText) },
                             onDelete = { rec -> pendingDeleteRecord = rec }
                         )
                     }
@@ -271,7 +286,8 @@ fun HistoryScreen(
 private fun HistoryList(
     records: List<TranslationRecord>,
     languageNameFor: (String) -> String,
-    onSpeak: (TranslationRecord) -> Unit,
+    onSpeakOriginal: (TranslationRecord) -> Unit,
+    onSpeakTranslation: (TranslationRecord) -> Unit,
     onDelete: (TranslationRecord) -> Unit
 ) {
     LazyColumn(
@@ -299,7 +315,8 @@ private fun HistoryList(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Button(onClick = { onSpeak(rec) }) { Text("Speak") }
+                        Button(onClick = { onSpeakOriginal(rec) }) { Text("🗣️O") }      // original
+                        Button(onClick = { onSpeakTranslation(rec) }) { Text("🔊T") }   // translation
 
                         Button(
                             onClick = { onDelete(rec) },
@@ -309,6 +326,7 @@ private fun HistoryList(
                             )
                         ) { Text("Delete") }
                     }
+
                 }
             }
         }

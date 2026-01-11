@@ -44,6 +44,7 @@ class HistoryViewModel @Inject constructor(
                         currentUserId = auth.user.uid
                         startListening(auth.user.uid)
                     }
+
                     AuthState.LoggedOut -> {
                         currentUserId = null
                         historyJob?.cancel()
@@ -51,6 +52,18 @@ class HistoryViewModel @Inject constructor(
                         _uiState.value = HistoryUiState(
                             isLoading = false,
                             error = "Not logged in",
+                            records = emptyList(),
+                            sessionNames = emptyMap()
+                        )
+                    }
+
+                    AuthState.Loading -> {
+                        currentUserId = null
+                        historyJob?.cancel()
+                        sessionsJob?.cancel()
+                        _uiState.value = HistoryUiState(
+                            isLoading = true,
+                            error = null,
                             records = emptyList(),
                             sessionNames = emptyMap()
                         )

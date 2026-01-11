@@ -16,13 +16,14 @@ class FirebaseAuthRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth
 ) {
     val currentUserState: Flow<AuthState> = callbackFlow {
+        val initial = firebaseAuth.currentUser
+        trySend(if (initial != null) AuthState.LoggedIn(initial.toUser()) else AuthState.LoggedOut)
+
         val listener = FirebaseAuth.AuthStateListener { auth ->
             val user = auth.currentUser
-            trySend(
-                if (user != null) AuthState.LoggedIn(user.toUser())
-                else AuthState.LoggedOut
-            )
+            trySend(if (user != null) AuthState.LoggedIn(user.toUser()) else AuthState.LoggedOut)
         }
+
         firebaseAuth.addAuthStateListener(listener)
         awaitClose { firebaseAuth.removeAuthStateListener(listener) }
     }

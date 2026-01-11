@@ -49,6 +49,14 @@ fun HomeScreen(
                             TextButton(onClick = { onOpenHistory() }) { Text("History") }
                             TextButton(onClick = { authViewModel.logout() }) { Text("Logout") }
                         }
+
+                        AuthState.Loading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+
                         AuthState.LoggedOut -> {
                             TextButton(onClick = onOpenLogin) { Text("Login") }
                         }

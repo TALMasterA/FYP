@@ -94,8 +94,16 @@ fun AppNavigation() {
                     onStartSpeech = { navController.navigate(AppScreen.Speech.route) },
                     onOpenHelp = { navController.navigate(AppScreen.Help.route) },
                     onStartContinuous = { navController.navigate(AppScreen.Continuous.route) },
-                    onOpenLogin = { navController.navigate(AppScreen.Login.route) },
-                    onOpenHistory = { navController.navigate(AppScreen.History.route) }
+                    onOpenHistory = {
+                        navController.navigate(AppScreen.History.route) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onOpenLogin = {
+                        navController.navigate(AppScreen.Login.route) {
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
             composable(AppScreen.Speech.route) {
@@ -138,7 +146,9 @@ fun AppNavigation() {
                         )
                     },
                     onNeedLogin = {
-                        navController.navigate(AppScreen.Login.route)
+                        navController.navigate(AppScreen.Login.route) {
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
@@ -156,6 +166,7 @@ private fun RequireLogin(
 
     when (authState) {
         is AuthState.LoggedIn -> content()
-        AuthState.LoggedOut -> LaunchedEffect(Unit) { onNeedLogin() }
+        AuthState.Loading -> { /* show a progress indicator UI */ }
+        AuthState.LoggedOut -> LaunchedEffect(authState) { onNeedLogin() }
     }
 }
