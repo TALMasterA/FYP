@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
 
 data class LoginUiState(
     val error: String? = null,
@@ -34,10 +35,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             val result = authRepository.login(email, password)
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                error = result.exceptionOrNull()?.message
-            )
+            _uiState.value = _uiState.value.copy(isLoading = false, error = result.exceptionOrNull()?.message ?: "Unknown error")
         }
     }
 
@@ -46,10 +44,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             val result = authRepository.register(email, password)
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                error = result.exceptionOrNull()?.message
-            )
+            _uiState.value = _uiState.value.copy(isLoading = false, error = result.exceptionOrNull()?.message ?: "Unknown error")
         }
     }
 }

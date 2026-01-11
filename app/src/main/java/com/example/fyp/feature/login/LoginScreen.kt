@@ -9,6 +9,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.feature.login.AuthViewModel
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.example.fyp.model.AuthState
 
 @Composable
 fun LoginScreen(

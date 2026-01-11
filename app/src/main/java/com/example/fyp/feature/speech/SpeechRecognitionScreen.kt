@@ -22,6 +22,7 @@ import com.example.fyp.model.UiTextKey
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.rememberUiTextFunctions
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,7 +32,7 @@ fun SpeechRecognitionScreen(
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     onBack: () -> Unit
 ) {
-    val viewModel: SpeechViewModel = viewModel(factory = SpeechViewModelFactory())
+    val viewModel: SpeechViewModel = hiltViewModel()
 
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
 

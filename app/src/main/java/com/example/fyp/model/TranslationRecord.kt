@@ -9,5 +9,6 @@ data class TranslationRecord(
     val targetText: String = "",
     val sourceLang: String = "",
     val targetLang: String = "",
-    val timestamp: Timestamp = Timestamp.now()
+    val timestamp: Timestamp = Timestamp.now(),
+    val mode: String = ""
 )
