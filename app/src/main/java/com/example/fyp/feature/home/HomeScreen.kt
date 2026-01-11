@@ -107,6 +107,7 @@ fun HomeScreen(
             ) {
                 Text(uiText(UiTextKey.HomeStartButton, BaseUiTexts[UiTextKey.HomeStartButton.ordinal]))
             }
+
             Button(
                 onClick = onStartContinuous,
                 modifier = Modifier.fillMaxWidth()
@@ -118,6 +119,14 @@ fun HomeScreen(
                     )
                 )
             }
+
+            Button(
+                onClick = { authViewModel.logout() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Logout")
+            }
+
         }
     }
 }

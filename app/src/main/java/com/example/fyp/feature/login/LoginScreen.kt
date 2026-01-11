@@ -28,57 +28,92 @@ fun LoginScreen(
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }   // NEW
     var isLogin by remember { mutableStateOf(true) }
+    var localError by remember { mutableStateOf<String?>(null) }  // NEW
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = if (isLogin) "Login" else "Register",
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = {
-                if (isLogin) viewModel.login(email, password)
-                else viewModel.register(email, password) // add registerUseCase similarly
-            },
-            modifier = Modifier.fillMaxWidth()
+    Surface(modifier = modifier.fillMaxSize()) {  // ensures theme surface color
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(if (isLogin) "Login" else "Register")
-        }
+            Text(
+                text = if (isLogin) "Login" else "Register",
+                style = MaterialTheme.typography.headlineMedium
+            )
 
-        TextButton(
-            onClick = { isLogin = !isLogin }
-        ) {
-            Text(if (isLogin) "Don't have account? Register" else "Have account? Login")
-        }
+            Spacer(modifier = Modifier.height(32.dp))
 
-        uiState.error?.let {
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
-            Text(text = it, color = MaterialTheme.colorScheme.error)
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (!isLogin) {
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirm password") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    localError = null
+                    if (!isLogin) {
+                        if (password != confirmPassword) {
+                            localError = "Passwords do not match."
+                            return@Button
+                        }
+                        if (password.length < 6) {
+                            localError = "Password must be at least 6 characters."
+                            return@Button
+                        }
+                    }
+                    if (isLogin) viewModel.login(email.trim(), password)
+                    else viewModel.register(email.trim(), password)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isLoading
+            ) {
+                Text(if (isLogin) "Login" else "Register")
+            }
+
+            TextButton(onClick = {
+                isLogin = !isLogin
+                localError = null
+                // reset confirm field when switching
+                confirmPassword = ""
+            }) {
+                Text(if (isLogin) "Don't have account? Register" else "Have account? Login")
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Prefer local validation error first
+            (localError ?: uiState.error)?.let {
+                Text(text = it, color = MaterialTheme.colorScheme.error)
+            }
         }
     }
 }

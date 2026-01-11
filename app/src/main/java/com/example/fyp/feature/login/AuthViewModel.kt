@@ -35,7 +35,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             val result = authRepository.login(email, password)
-            _uiState.value = _uiState.value.copy(isLoading = false, error = result.exceptionOrNull()?.message ?: "Unknown error")
+            _uiState.value = _uiState.value.copy(isLoading = false, error = result.exceptionOrNull()?.message)
         }
     }
 
@@ -44,7 +44,12 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             val result = authRepository.register(email, password)
-            _uiState.value = _uiState.value.copy(isLoading = false, error = result.exceptionOrNull()?.message ?: "Unknown error")
+            _uiState.value = _uiState.value.copy(isLoading = false, error = result.exceptionOrNull()?.message)
         }
+    }
+
+    fun logout() {
+        authRepository.logout()
+        _uiState.value = LoginUiState()
     }
 }
