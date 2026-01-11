@@ -1,33 +1,25 @@
 package com.example.fyp.feature.home
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.model.UiTextKey
-import com.example.fyp.core.AppLanguageDropdown
-import com.example.fyp.core.rememberUiTextFunctions
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import com.example.fyp.feature.login.AuthViewModel
-import com.example.fyp.feature.login.LoginScreen
-import com.example.fyp.model.AuthState
-import androidx.compose.runtime.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.fyp.core.AppLanguageDropdown
+import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.feature.login.AuthViewModel
+import com.example.fyp.model.AppLanguageState
+import com.example.fyp.model.AuthState
+import com.example.fyp.model.BaseUiTexts
+import com.example.fyp.model.UiTextKey
+import androidx.compose.runtime.getValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,39 +29,32 @@ fun HomeScreen(
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     onStartSpeech: () -> Unit,
     onOpenHelp: () -> Unit,
-    onStartContinuous: () -> Unit
+    onStartContinuous: () -> Unit,
+    onOpenLogin: () -> Unit,          // NEW
+    onOpenHistory: () -> Unit         // NEW (for later history screen)
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
-    // Show Login if not logged in
-    when (authState) {
-        is AuthState.LoggedOut -> {
-            LoginScreen(
-                onLoginSuccess = {
-                    // Stay on Home or navigate
-                }
-            )
-            return
-        }
-        is AuthState.LoggedIn -> {
-            // User logged in - show normal Home
-        }
-        else -> {}  // Loading...
-    }
-
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { Text(uiText(UiTextKey.HomeTitle, BaseUiTexts[UiTextKey.HomeTitle.ordinal])) },
                 actions = {
+                    when (authState) {
+                        is AuthState.LoggedIn -> {
+                            TextButton(onClick = { onOpenHistory() }) { Text("History") }
+                            TextButton(onClick = { authViewModel.logout() }) { Text("Logout") }
+                        }
+                        AuthState.LoggedOut -> {
+                            TextButton(onClick = onOpenLogin) { Text("Login") }
+                        }
+                    }
                     IconButton(onClick = onOpenHelp) {
-                        Icon(
-                            imageVector = Icons.Filled.Info,
-                            contentDescription = "Help / instructions"
-                        )
+                        Icon(imageVector = Icons.Filled.Info, contentDescription = "Help / instructions")
                     }
                 }
             )
@@ -94,39 +79,17 @@ fun HomeScreen(
             )
 
             Text(
-                text = uiText(
-                    UiTextKey.HomeInstructions,
-                    BaseUiTexts[UiTextKey.HomeInstructions.ordinal]
-                ),
+                text = uiText(UiTextKey.HomeInstructions, BaseUiTexts[UiTextKey.HomeInstructions.ordinal]),
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Button(
-                onClick = onStartSpeech,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Button(onClick = onStartSpeech, modifier = Modifier.fillMaxWidth()) {
                 Text(uiText(UiTextKey.HomeStartButton, BaseUiTexts[UiTextKey.HomeStartButton.ordinal]))
             }
 
-            Button(
-                onClick = onStartContinuous,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    uiText(
-                        UiTextKey.ContinuousStartScreenButton,
-                        BaseUiTexts[UiTextKey.ContinuousStartScreenButton.ordinal]
-                    )
-                )
+            Button(onClick = onStartContinuous, modifier = Modifier.fillMaxWidth()) {
+                Text(uiText(UiTextKey.ContinuousStartScreenButton, BaseUiTexts[UiTextKey.ContinuousStartScreenButton.ordinal]))
             }
-
-            Button(
-                onClick = { authViewModel.logout() },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Logout")
-            }
-
         }
     }
 }

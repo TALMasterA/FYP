@@ -13,12 +13,24 @@ import com.example.fyp.feature.help.HelpScreen
 import com.example.fyp.feature.home.HomeScreen
 import com.example.fyp.feature.speech.SpeechRecognitionScreen
 import com.example.fyp.feature.login.LoginScreen
+import com.example.fyp.feature.history.HistoryScreen
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
+import com.example.fyp.feature.login.AuthViewModel
+import com.example.fyp.model.AuthState
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
     object Speech : AppScreen("speech")
     object Help : AppScreen("help")
     object Continuous : AppScreen("continuous")
+    object Login : AppScreen("login")
+    object History : AppScreen("history")
 }
 
 @Composable
@@ -66,43 +78,84 @@ fun AppNavigation() {
         )
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = AppScreen.Home.route
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        composable(AppScreen.Home.route) {
-            HomeScreen(
-                uiLanguages = uiLanguages,
-                appLanguageState = appLanguageState,
-                onUpdateAppLanguage = ::updateAppLanguage,
-                onStartSpeech = { navController.navigate(AppScreen.Speech.route) },
-                onOpenHelp = { navController.navigate(AppScreen.Help.route) },
-                onStartContinuous = { navController.navigate(AppScreen.Continuous.route) }
-            )
+        NavHost(
+            navController = navController,
+            startDestination = AppScreen.Home.route
+        ) {
+            composable(AppScreen.Home.route) {
+                HomeScreen(
+                    uiLanguages = uiLanguages,
+                    appLanguageState = appLanguageState,
+                    onUpdateAppLanguage = ::updateAppLanguage,
+                    onStartSpeech = { navController.navigate(AppScreen.Speech.route) },
+                    onOpenHelp = { navController.navigate(AppScreen.Help.route) },
+                    onStartContinuous = { navController.navigate(AppScreen.Continuous.route) },
+                    onOpenLogin = { navController.navigate(AppScreen.Login.route) },
+                    onOpenHistory = { navController.navigate(AppScreen.History.route) }
+                )
+            }
+            composable(AppScreen.Speech.route) {
+                SpeechRecognitionScreen(
+                    uiLanguages = uiLanguages,
+                    appLanguageState = appLanguageState,
+                    onUpdateAppLanguage = ::updateAppLanguage,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(AppScreen.Help.route) {
+                HelpScreen(
+                    uiLanguages = uiLanguages,
+                    appLanguageState = appLanguageState,
+                    onUpdateAppLanguage = ::updateAppLanguage,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(AppScreen.Continuous.route) {
+                ContinuousConversationScreen(
+                    uiLanguages = uiLanguages,
+                    appLanguageState = appLanguageState,
+                    onUpdateAppLanguage = ::updateAppLanguage,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(AppScreen.Login.route) {
+                LoginScreen(
+                    onLoginSuccess = {
+                        navController.popBackStack() // go back to previous screen (Home / History)
+                    }
+                )
+            }
+            composable(AppScreen.History.route) {
+                RequireLogin(
+                    content = {
+                        HistoryScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() }
+                        )
+                    },
+                    onNeedLogin = {
+                        navController.navigate(AppScreen.Login.route)
+                    }
+                )
+            }
         }
-        composable(AppScreen.Speech.route) {
-            SpeechRecognitionScreen(
-                uiLanguages = uiLanguages,
-                appLanguageState = appLanguageState,
-                onUpdateAppLanguage = ::updateAppLanguage,
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(AppScreen.Help.route) {
-            HelpScreen(
-                uiLanguages = uiLanguages,
-                appLanguageState = appLanguageState,
-                onUpdateAppLanguage = ::updateAppLanguage,
-                onBack = { navController.popBackStack() }
-            )
-        }
-        composable(AppScreen.Continuous.route) {
-            ContinuousConversationScreen(
-                uiLanguages = uiLanguages,
-                appLanguageState = appLanguageState,
-                onUpdateAppLanguage = ::updateAppLanguage,
-                onBack = { navController.popBackStack() }
-            )
-        }
+    }
+}
+
+@Composable
+private fun RequireLogin(
+    content: @Composable () -> Unit,
+    onNeedLogin: () -> Unit
+) {
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+
+    when (authState) {
+        is AuthState.LoggedIn -> content()
+        AuthState.LoggedOut -> LaunchedEffect(Unit) { onNeedLogin() }
     }
 }

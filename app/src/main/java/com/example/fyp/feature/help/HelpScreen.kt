@@ -35,6 +35,7 @@ fun HelpScreen(
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {

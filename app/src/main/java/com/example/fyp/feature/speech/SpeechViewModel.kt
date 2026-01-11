@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 data class SpeechScreenState(
@@ -70,6 +71,9 @@ class SpeechViewModel @Inject constructor(
 
     private var continuousRecognizer: SpeechRecognizer? = null
 
+    // One session id per "run" of continuous mode (Start -> Stop)
+    private var continuousSessionId: String? = null
+
     // -------- chat messages --------
     data class ChatMessage(
         val id: Long,
@@ -84,7 +88,12 @@ class SpeechViewModel @Inject constructor(
 
     private var nextId = 0L
 
-    private fun addMessage(text: String, lang: String, isFromPersonA: Boolean, isTranslation: Boolean) {
+    private fun addMessage(
+        text: String,
+        lang: String,
+        isFromPersonA: Boolean,
+        isTranslation: Boolean
+    ) {
         continuousMessages = continuousMessages + ChatMessage(
             id = nextId++,
             text = text,
@@ -94,24 +103,32 @@ class SpeechViewModel @Inject constructor(
         )
     }
 
+    private fun ensureContinuousSessionId() {
+        if (continuousSessionId == null) {
+            continuousSessionId = UUID.randomUUID().toString()
+        }
+    }
+
     private suspend fun saveHistory(
         mode: String,
         sourceText: String,
         targetText: String,
         sourceLang: String,
-        targetLang: String
+        targetLang: String,
+        sessionId: String = "" // NEW (empty for discrete)
     ) {
         val state = _authState.value
         if (state is AuthState.LoggedIn) {
             historyRepo.save(
                 TranslationRecord(
-                    id = java.util.UUID.randomUUID().toString(),
+                    id = UUID.randomUUID().toString(),
                     userId = state.user.uid,
                     sourceText = sourceText,
                     targetText = targetText,
                     sourceLang = sourceLang,
                     targetLang = targetLang,
-                    mode = mode
+                    mode = mode,
+                    sessionId = sessionId
                 )
             )
         }
@@ -122,14 +139,18 @@ class SpeechViewModel @Inject constructor(
         viewModelScope.launch {
             speechState = speechState.copy(recognizedText = "Recording... Please speak and wait.")
             when (val result = recognizeFromMic(languageCode)) {
-                is SpeechResult.Success -> speechState = speechState.copy(recognizedText = result.text)
-                is SpeechResult.Error -> speechState = speechState.copy(recognizedText = "Azure error: ${result.message}")
+                is SpeechResult.Success ->
+                    speechState = speechState.copy(recognizedText = result.text)
+
+                is SpeechResult.Error ->
+                    speechState = speechState.copy(recognizedText = "Azure error: ${result.message}")
             }
         }
     }
 
     fun translate(fromLanguage: String, toLanguage: String) {
         if (recognizedText.isBlank()) return
+
         viewModelScope.launch {
             speechState = speechState.copy(translatedText = "Translating, please wait...")
             when (val tr = translateTextUseCase(recognizedText, fromLanguage, toLanguage)) {
@@ -140,10 +161,14 @@ class SpeechViewModel @Inject constructor(
                         sourceText = recognizedText,
                         targetText = tr.text,
                         sourceLang = fromLanguage,
-                        targetLang = toLanguage
+                        targetLang = toLanguage,
+                        sessionId = "" // discrete has no session
                     )
                 }
-                is SpeechResult.Error -> speechState = speechState.copy(translatedText = "Translation error: ${tr.message}")
+
+                is SpeechResult.Error -> {
+                    speechState = speechState.copy(translatedText = "Translation error: ${tr.message}")
+                }
             }
         }
     }
@@ -159,6 +184,7 @@ class SpeechViewModel @Inject constructor(
 
     private fun speakInternal(text: String, languageCode: String, isTranslation: Boolean) {
         if (text.isBlank() || isTtsRunning) return
+
         viewModelScope.launch {
             speechState = speechState.copy(
                 isTtsRunning = true,
@@ -168,6 +194,7 @@ class SpeechViewModel @Inject constructor(
             when (val result = speakTextUseCase(text, languageCode)) {
                 is SpeechResult.Success ->
                     speechState = speechState.copy(ttsStatus = "Finished speaking.")
+
                 is SpeechResult.Error ->
                     speechState = speechState.copy(ttsStatus = "TTS error: ${result.message}")
             }
@@ -179,17 +206,26 @@ class SpeechViewModel @Inject constructor(
     // -------- continuous conversation --------
     fun startContinuous(speakingLang: String, targetLang: String, isFromPersonA: Boolean) {
         if (isContinuousRunning) return
+
+        // If user is starting a run, make sure we have a session id.
+        // Important: do NOT clear session id in stopContinuous(), because the UI may
+        // temporarily stop/start when switching speaker.
+        ensureContinuousSessionId()
+
         livePartialText = ""
         lastSegmentTranslation = ""
         isContinuousRunning = true
 
         continuousRecognizer = continuousUseCase(
             languageCode = speakingLang,
-            onPartial = { livePartialText = it },
+            onPartial = { text ->
+                // ensure state updates happen on main thread
+                viewModelScope.launch { livePartialText = text }
+            },
             onFinal = { finalText ->
-                addMessage(finalText, speakingLang, isFromPersonA, isTranslation = false)
-
                 viewModelScope.launch {
+                    addMessage(finalText, speakingLang, isFromPersonA, isTranslation = false)
+
                     when (val tr = translateTextUseCase(finalText, speakingLang, targetLang)) {
                         is SpeechResult.Success -> {
                             lastSegmentTranslation = tr.text
@@ -200,26 +236,45 @@ class SpeechViewModel @Inject constructor(
                                 sourceText = finalText,
                                 targetText = tr.text,
                                 sourceLang = speakingLang,
-                                targetLang = targetLang
+                                targetLang = targetLang,
+                                sessionId = continuousSessionId.orEmpty()
                             )
                         }
+
                         is SpeechResult.Error -> {
-                            speechState = speechState.copy(ttsStatus = "Continuous translation error: ${tr.message}")
+                            speechState = speechState.copy(
+                                ttsStatus = "Continuous translation error: ${tr.message}"
+                            )
                         }
                     }
                 }
             },
             onError = { msg ->
-                speechState = speechState.copy(ttsStatus = "Continuous recognition error: $msg")
-                stopContinuous()
+                viewModelScope.launch {
+                    speechState = speechState.copy(ttsStatus = "Continuous recognition error: $msg")
+                    stopContinuous()
+                }
             }
         )
     }
 
     fun stopContinuous() {
+        if (!isContinuousRunning && continuousRecognizer == null) return
         isContinuousRunning = false
-        continuousUseCase.stop(continuousRecognizer)
+        runCatching { continuousUseCase.stop(continuousRecognizer) }
         continuousRecognizer = null
+    }
+
+    /**
+     * Call this when the user ends a continuous "run" (Stop button),
+     * OR when leaving the continuous screen and you want a new session next time.
+     */
+    fun endContinuousSession() {
+        stopContinuous()
+        clearContinuousMessages()
+        continuousSessionId = null
+        livePartialText = ""
+        lastSegmentTranslation = ""
     }
 
     fun clearContinuousMessages() {

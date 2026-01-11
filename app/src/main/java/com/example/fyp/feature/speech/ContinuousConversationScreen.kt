@@ -38,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.data.AzureLanguageConfig
 import com.example.fyp.model.BaseUiTexts
@@ -101,12 +100,12 @@ fun ContinuousConversationScreen(
 
     DisposableEffect(Unit) {
         onDispose {
-            viewModel.stopContinuous()
-            viewModel.clearContinuousMessages()
+            viewModel.endContinuousSession()
         }
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -119,7 +118,7 @@ fun ContinuousConversationScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        viewModel.stopContinuous()
+                        viewModel.endContinuousSession()
                         onBack()
                     }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
@@ -166,7 +165,7 @@ fun ContinuousConversationScreen(
                                 isFromPersonA = isPersonATalking
                             )
                         } else {
-                            viewModel.stopContinuous()
+                            viewModel.endContinuousSession()
                         }
                     }
                 )
