@@ -13,6 +13,13 @@ import com.example.fyp.model.UiTextKey
 import com.example.fyp.model.buildUiTextMap
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun rememberUiTextFunctions(
@@ -133,4 +140,80 @@ fun LanguageDropdownField(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StandardTopAppBar(
+    title: String,
+    onBack: (() -> Unit)?,
+    backContentDescription: String = "Back",
+    actions: @Composable RowScope.() -> Unit = {}
+) {
+    TopAppBar(
+        title = { Text(title) },
+        navigationIcon = {
+            if (onBack != null) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = backContentDescription
+                    )
+                }
+            }
+        },
+        actions = actions
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StandardScreenScaffold(
+    title: String,
+    onBack: (() -> Unit)? = null,
+    backContentDescription: String = "Back",
+    actions: @Composable RowScope.() -> Unit = {},
+    content: @Composable (PaddingValues) -> Unit
+) {
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            StandardTopAppBar(
+                title = title,
+                onBack = onBack,
+                backContentDescription = backContentDescription,
+                actions = actions
+            )
+        },
+        content = content
+    )
+}
+
+/**
+ * This is the shared "page body" padding rule:
+ * - Always apply innerPadding from Scaffold/TopAppBar
+ * - Then apply 16.dp page padding
+ * - Optionally enable vertical scrolling
+ */
+
+@Composable
+fun StandardScreenBody(
+    innerPadding: PaddingValues,
+    scrollable: Boolean = true,
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(12.dp),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val base = Modifier
+        .padding(innerPadding)
+        .padding(16.dp)
+        .fillMaxSize()
+
+    val finalModifier =
+        if (scrollable) base.verticalScroll(rememberScrollState()) else base
+
+    Column(
+        modifier = finalModifier,
+        verticalArrangement = verticalArrangement,
+        content = content
+    )
 }

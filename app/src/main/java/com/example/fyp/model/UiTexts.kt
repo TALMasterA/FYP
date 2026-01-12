@@ -48,7 +48,43 @@ enum class UiTextKey {
     ContinuousSpeakerBName,
     ContinuousTranslationSuffix,
     HelpNotesTitle,
-    HelpNotes
+    HelpNotes,
+    NavHistory,
+    NavLogin,
+    NavLogout,
+    NavBack,
+    ActionCancel,
+    ActionDelete,
+    ActionOpen,
+    ActionName,
+    ActionSave,
+    DialogLogoutTitle,
+    DialogLogoutMessage,HistoryTitle,
+    HistoryTabDiscrete,
+    HistoryTabContinuous,
+    HistoryNoContinuousSessions,
+    DialogDeleteRecordTitle,
+    DialogDeleteRecordMessage,
+    DialogDeleteSessionTitle,
+    DialogDeleteSessionMessage,
+    HistoryDeleteSessionButton,
+    HistoryNameSessionTitle,
+    HistorySessionNameLabel,
+    HistorySessionTitleTemplate,
+    HistoryItemsCountTemplate,
+    AuthLoginTitle,
+    AuthRegisterTitle,
+    AuthLoginHint,
+    AuthRegisterRules,
+    AuthEmailLabel,
+    AuthPasswordLabel,
+    AuthConfirmPasswordLabel,
+    AuthLoginButton,
+    AuthRegisterButton,
+    AuthToggleToRegister,
+    AuthToggleToLogin,
+    AuthErrorPasswordsMismatch,
+    AuthErrorPasswordTooShort
 }
 
 val BaseUiTexts: List<String> = listOf(
@@ -115,14 +151,67 @@ val BaseUiTexts: List<String> = listOf(
     "Notes",
     "The base language of this app is English, you can use the app UI list to change the languages but it may contain error. \n" +
             "FYP goal: build a translator app and store translation history in a database for future learning features.\n" +
-            "Planned learning part: use saved history to extract frequent vocabulary/phrases and generate practice content."
+            "Planned learning part: use saved history to extract frequent vocabulary/phrases and generate practice content.",
+    "History",
+    "Login",
+    "Logout",
+    "Back",
+    "Cancel",
+    "Delete",
+    "Open",
+    "Name",
+    "Save",
+    "Logout?",
+    "You will need to login again to view your history.",
+    "History",
+    "Discrete",
+    "Continuous",
+    "No continuous sessions yet.",
+    "Delete record?",
+    "This action cannot be undone.",
+    "Delete session?",
+    "All records in this session will be deleted. This action cannot be undone.",
+    "Delete session",
+    "Name this session",
+    "Session name",
+    "Session {id}",
+    "{count} items",
+    "Login",
+    "Register",
+    "Use your registered email and password.",
+    "Register rules:\n" +
+            "• Email must be a valid format (e.g., name@example.com)\n" +
+            "• Password must be at least 6 characters\n" +
+            "• Confirm password must match",
+    "Email",
+    "Password",
+    "Confirm password",
+    "Login",
+    "Register",
+    "Don't have account? Register",
+    "Have account? Login",
+    "Passwords do not match.",
+    "Password must be at least 6 characters."
 )
 
 fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
     val parts = translatedJoined.split('\u0001')
-    // If translation result is shorter, fill missing entries with the English base text
-    return UiTextKey.entries.mapIndexed { index, key ->
+
+    val map = UiTextKey.entries.mapIndexed { index, key ->
         val value = parts.getOrNull(index) ?: BaseUiTexts[index]
         key to value
-    }.toMap()
+    }.toMap().toMutableMap()
+
+    // Ensure tokens exist (translation sometimes breaks/removes them)
+    val sessionTemplate = map[UiTextKey.HistorySessionTitleTemplate] ?: BaseUiTexts[UiTextKey.HistorySessionTitleTemplate.ordinal]
+    if (!sessionTemplate.contains("{id}")) {
+        map[UiTextKey.HistorySessionTitleTemplate] = BaseUiTexts[UiTextKey.HistorySessionTitleTemplate.ordinal] // "Session {id}"
+    }
+
+    val countTemplate = map[UiTextKey.HistoryItemsCountTemplate] ?: BaseUiTexts[UiTextKey.HistoryItemsCountTemplate.ordinal]
+    if (!countTemplate.contains("{count}")) {
+        map[UiTextKey.HistoryItemsCountTemplate] = BaseUiTexts[UiTextKey.HistoryItemsCountTemplate.ordinal] // "{count} items"
+    }
+
+    return map
 }

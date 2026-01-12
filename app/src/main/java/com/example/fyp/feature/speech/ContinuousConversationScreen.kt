@@ -1,23 +1,39 @@
 package com.example.fyp.feature.speech
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.RecordAudioPermissionRequest
+import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.data.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
@@ -49,7 +65,9 @@ fun ContinuousConversationScreen(
     val partial = viewModel.livePartialText
     val lastTranslation = viewModel.lastSegmentTranslation
     val messages = viewModel.continuousMessages
-    val listState = rememberLazyListState()
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
@@ -64,7 +82,8 @@ fun ContinuousConversationScreen(
             viewModel.startContinuous(
                 speakingLang = speakLang,
                 targetLang = otherLang,
-                isFromPersonA = isPersonATalking
+                isFromPersonA = isPersonATalking,
+                resetSession = false
             )
         }
     }
@@ -74,108 +93,128 @@ fun ContinuousConversationScreen(
         onDispose { viewModel.endContinuousSession() }
     }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        // Stable peek height to avoid flashing/jumping.
-        val estimatedControlsHeight = 380.dp
-        val peek = (maxHeight - estimatedControlsHeight).coerceIn(180.dp, maxHeight * 0.85f)
+    StandardScreenScaffold(
+        title = t(UiTextKey.ContinuousTitle),
+        onBack = {
+            viewModel.endContinuousSession()
+            onBack()
+        },
+        backContentDescription = t(UiTextKey.NavBack)
+    ) { outerPadding ->
 
-        BottomSheetScaffold(
-            sheetPeekHeight = peek,
-            sheetTonalElevation = 2.dp,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            uiText(
-                                UiTextKey.ContinuousTitle,
-                                BaseUiTexts[UiTextKey.ContinuousTitle.ordinal]
-                            )
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            viewModel.endContinuousSession()
-                            onBack()
-                        }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    }
-                )
-            },
-            sheetContent = {
-                ConversationSheet(
-                    uiText = uiText,
-                    isPersonATalking = isPersonATalking,
-                    isRunning = isRunning,
-                    partial = partial,
-                    lastTranslation = lastTranslation,
-                    onPersonToggle = { isPersonATalking = it },
-                    onStartStop = { start ->
-                        if (start) {
-                            val speakLang = if (isPersonATalking) fromLanguage else toLanguage
-                            val otherLang = if (isPersonATalking) toLanguage else fromLanguage
-                            viewModel.startContinuous(
-                                speakingLang = speakLang,
-                                targetLang = otherLang,
-                                isFromPersonA = isPersonATalking,
-                                resetSession = true
-                            )
-                        } else {
-                            viewModel.stopContinuous() // keep messages for 🔊
-                        }
-                    },
-                    messages = messages,
-                    listState = listState,
-                    onSpeakMessage = { msg ->
-                        viewModel.speakText(languageCode = msg.lang, text = msg.text)
-                    }
-                )
+        // Put everything inside the same padded area so measurements match maxHeight.
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(outerPadding)
+        ) {
+            val density = LocalDensity.current
+            val pagePadding = 16.dp // matches your app's StandardScreenBody rule. [file:107]
+            val gap = 12.dp
+
+            var controlsHeightPx by remember { mutableIntStateOf(0) }
+            val controlsHeightDp = with(density) { controlsHeightPx.toDp() }
+            val controlsBottomDp = pagePadding + controlsHeightDp
+
+            // Sheet height so its top starts right below Person B dropdown (+gap).
+            val peek = if (controlsHeightPx == 0) {
+                // Avoid first-frame overlap/jump before measurement is available.
+                0.dp
+            } else {
+                (maxHeight - (controlsBottomDp + gap)).coerceAtLeast(0.dp)
             }
-        ) { innerPadding ->
-            RecordAudioPermissionRequest {
-                Column(
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    AppLanguageDropdown(
-                        uiLanguages = uiLanguages,
-                        appLanguageState = appLanguageState,
-                        onUpdateAppLanguage = onUpdateAppLanguage,
-                        uiText = uiText
-                    )
 
-                    Text(
-                        text = uiText(
-                            UiTextKey.ContinuousInstructions,
-                            BaseUiTexts[UiTextKey.ContinuousInstructions.ordinal]
-                        ),
-                        style = MaterialTheme.typography.bodyMedium
+            BottomSheetScaffold(
+                topBar = {}, // top bar is handled by StandardScreenScaffold
+                sheetPeekHeight = peek,
+                sheetTonalElevation = 2.dp,
+                sheetDragHandle = {
+                    // Custom drag handle (no dependency on BottomSheetDefaults/SheetDefaults).
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 10.dp)
+                            .size(width = 44.dp, height = 5.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                                shape = RoundedCornerShape(100)
+                            )
                     )
+                },
+                sheetContent = {
+                    ConversationSheet(
+                        uiText = uiText,
+                        isPersonATalking = isPersonATalking,
+                        isRunning = isRunning,
+                        partial = partial,
+                        lastTranslation = lastTranslation,
+                        onPersonToggle = { isPersonATalking = it },
+                        onStartStop = { start ->
+                            if (start) {
+                                val speakLang = if (isPersonATalking) fromLanguage else toLanguage
+                                val otherLang = if (isPersonATalking) toLanguage else fromLanguage
+                                viewModel.startContinuous(
+                                    speakingLang = speakLang,
+                                    targetLang = otherLang,
+                                    isFromPersonA = isPersonATalking,
+                                    resetSession = true
+                                )
+                            } else {
+                                viewModel.stopContinuous()
+                            }
+                        },
+                        messages = messages,
+                        listState = listState,
+                        onSpeakMessage = { msg ->
+                            viewModel.speakText(languageCode = msg.lang, text = msg.text)
+                        }
+                    )
+                }
+            ) {
+                RecordAudioPermissionRequest {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(pagePadding),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Measure the whole controls block (App UI + instructions + A + B).
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onGloballyPositioned { coords ->
+                                    controlsHeightPx = coords.size.height
+                                },
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            AppLanguageDropdown(
+                                uiLanguages = uiLanguages,
+                                appLanguageState = appLanguageState,
+                                onUpdateAppLanguage = onUpdateAppLanguage,
+                                uiText = uiText
+                            )
 
-                    LanguageDropdownField(
-                        label = uiText(
-                            UiTextKey.ContinuousSpeakerAName,
-                            BaseUiTexts[UiTextKey.ContinuousSpeakerAName.ordinal]
-                        ),
-                        selectedCode = fromLanguage,
-                        options = supportedLanguages,
-                        nameFor = uiLanguageNameFor,
-                        onSelected = { fromLanguage = it }
-                    )
+                            Text(
+                                text = t(UiTextKey.ContinuousInstructions),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
 
-                    LanguageDropdownField(
-                        label = uiText(
-                            UiTextKey.ContinuousSpeakerBName,
-                            BaseUiTexts[UiTextKey.ContinuousSpeakerBName.ordinal]
-                        ),
-                        selectedCode = toLanguage,
-                        options = supportedLanguages,
-                        nameFor = uiLanguageNameFor,
-                        onSelected = { toLanguage = it }
-                    )
+                            LanguageDropdownField(
+                                label = t(UiTextKey.ContinuousSpeakerAName),
+                                selectedCode = fromLanguage,
+                                options = supportedLanguages,
+                                nameFor = uiLanguageNameFor,
+                                onSelected = { fromLanguage = it }
+                            )
+
+                            LanguageDropdownField(
+                                label = t(UiTextKey.ContinuousSpeakerBName),
+                                selectedCode = toLanguage,
+                                options = supportedLanguages,
+                                nameFor = uiLanguageNameFor,
+                                onSelected = { toLanguage = it }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -257,11 +296,18 @@ private fun ConversationSheet(
                                 text = buildString {
                                     val speakerName =
                                         if (msg.isFromPersonA)
-                                            uiText(UiTextKey.ContinuousSpeakerAName, BaseUiTexts[UiTextKey.ContinuousSpeakerAName.ordinal])
+                                            uiText(
+                                                UiTextKey.ContinuousSpeakerAName,
+                                                BaseUiTexts[UiTextKey.ContinuousSpeakerAName.ordinal]
+                                            )
                                         else
-                                            uiText(UiTextKey.ContinuousSpeakerBName, BaseUiTexts[UiTextKey.ContinuousSpeakerBName.ordinal])
+                                            uiText(
+                                                UiTextKey.ContinuousSpeakerBName,
+                                                BaseUiTexts[UiTextKey.ContinuousSpeakerBName.ordinal]
+                                            )
 
                                     append(speakerName)
+
                                     if (msg.isTranslation) {
                                         append(
                                             uiText(
@@ -276,8 +322,8 @@ private fun ConversationSheet(
 
                             Spacer(Modifier.height(4.dp))
                             Text(text = msg.text)
-
                             Spacer(Modifier.height(8.dp))
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End

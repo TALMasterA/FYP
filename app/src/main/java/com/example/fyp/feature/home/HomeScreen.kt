@@ -1,8 +1,6 @@
 package com.example.fyp.feature.home
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
@@ -13,6 +11,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.AppLanguageDropdown
+import com.example.fyp.core.StandardScreenBody
+import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.feature.login.AuthViewModel
 import com.example.fyp.model.AppLanguageState
@@ -35,14 +35,15 @@ fun HomeScreen(
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Logout?") },
-            text = { Text("You will need to login again to view your history.") },
+            title = { Text(t(UiTextKey.DialogLogoutTitle)) },
+            text = { Text(t(UiTextKey.DialogLogoutMessage)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -53,47 +54,42 @@ fun HomeScreen(
                         containerColor = MaterialTheme.colorScheme.error,
                         contentColor = MaterialTheme.colorScheme.onError
                     )
-                ) { Text("Logout") }
+                ) { Text(t(UiTextKey.NavLogout)) }
             },
             dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text(t(UiTextKey.ActionCancel))
+                }
             }
         )
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = { Text(uiText(UiTextKey.HomeTitle, BaseUiTexts[UiTextKey.HomeTitle.ordinal])) },
-                actions = {
-                    when (authState) {
-                        is AuthState.LoggedIn -> {
-                            TextButton(onClick = onOpenHistory) { Text("History") }
-                            TextButton(onClick = { showLogoutDialog = true }) { Text("Logout") }
-                        }
-                        AuthState.Loading -> {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                        }
-                        AuthState.LoggedOut -> {
-                            TextButton(onClick = onOpenLogin) { Text("Login") }
-                        }
-                    }
-                    IconButton(onClick = onOpenHelp) {
-                        Icon(imageVector = Icons.Filled.Info, contentDescription = "Help / instructions")
-                    }
+    StandardScreenScaffold(
+        title = t(UiTextKey.HomeTitle),
+        onBack = null,
+        actions = {
+            when (authState) {
+                is AuthState.LoggedIn -> {
+                    TextButton(onClick = onOpenHistory) { Text(t(UiTextKey.NavHistory)) }
+                    TextButton(onClick = { showLogoutDialog = true }) { Text(t(UiTextKey.NavLogout)) }
                 }
-            )
+                AuthState.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                }
+                AuthState.LoggedOut -> {
+                    TextButton(onClick = onOpenLogin) { Text(t(UiTextKey.NavLogin)) }
+                }
+            }
+
+            IconButton(onClick = onOpenHelp) {
+                Icon(imageVector = Icons.Filled.Info, contentDescription = "Help / instructions")
+            }
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(16.dp)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.Start
+        StandardScreenBody(
+            innerPadding = innerPadding,
+            scrollable = true,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AppLanguageDropdown(
                 uiLanguages = uiLanguages,
@@ -103,16 +99,16 @@ fun HomeScreen(
             )
 
             Text(
-                text = uiText(UiTextKey.HomeInstructions, BaseUiTexts[UiTextKey.HomeInstructions.ordinal]),
+                text = t(UiTextKey.HomeInstructions),
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Button(onClick = onStartSpeech, modifier = Modifier.fillMaxWidth()) {
-                Text(uiText(UiTextKey.HomeStartButton, BaseUiTexts[UiTextKey.HomeStartButton.ordinal]))
+                Text(t(UiTextKey.HomeStartButton))
             }
 
             Button(onClick = onStartContinuous, modifier = Modifier.fillMaxWidth()) {
-                Text(uiText(UiTextKey.ContinuousStartScreenButton, BaseUiTexts[UiTextKey.ContinuousStartScreenButton.ordinal]))
+                Text(t(UiTextKey.ContinuousStartScreenButton))
             }
         }
     }

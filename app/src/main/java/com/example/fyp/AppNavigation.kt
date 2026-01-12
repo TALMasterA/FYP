@@ -1,28 +1,30 @@
 package com.example.fyp
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.mapSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.UiTextKey
-import com.example.fyp.feature.speech.ContinuousConversationScreen
+import com.example.fyp.data.AzureLanguageConfig
+import com.example.fyp.data.LanguageDisplayNames
 import com.example.fyp.feature.help.HelpScreen
-import com.example.fyp.feature.home.HomeScreen
-import com.example.fyp.feature.speech.SpeechRecognitionScreen
-import com.example.fyp.feature.login.LoginScreen
 import com.example.fyp.feature.history.HistoryScreen
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.getValue
+import com.example.fyp.feature.home.HomeScreen
 import com.example.fyp.feature.login.AuthViewModel
+import com.example.fyp.feature.login.LoginScreen
+import com.example.fyp.feature.speech.ContinuousConversationScreen
+import com.example.fyp.feature.speech.SpeechRecognitionScreen
+import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.AuthState
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import com.example.fyp.model.UiTextKey
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
@@ -37,11 +39,14 @@ sealed class AppScreen(val route: String) {
 fun AppNavigation() {
     val navController = rememberNavController()
 
-    val uiLanguages = listOf(
-        "en" to "English UI",
-        "zh-HK" to "中文（香港）UI",
-        "ja-JP" to "日本語 UI"
-    )
+    val context = LocalContext.current
+    val supported = remember { AzureLanguageConfig.loadSupportedLanguages(context) }
+
+    val uiLanguages = remember(supported) {
+        supported.distinct().map { code ->
+            code to LanguageDisplayNames.displayName(code)
+        }
+    }
 
     val languageSaver = mapSaver(
         save = { state ->
@@ -51,13 +56,14 @@ fun AppNavigation() {
             )
         },
         restore = { map ->
-            val code = map["code"] as String
-            val textsList = map["texts"] as List<Pair<String, String>>
+            val code = map["code"] as? String ?: uiLanguages[0].first
+
+            val textsList: List<Pair<String, String>> =
+                (map["texts"] as? List<*>)?.mapNotNull { it as? Pair<String, String> } ?: emptyList()
+
             AppLanguageState(
                 selectedUiLanguage = code,
-                uiTexts = textsList.associate { (k, v) ->
-                    UiTextKey.valueOf(k) to v
-                }
+                uiTexts = textsList.associate { (k, v) -> UiTextKey.valueOf(k) to v }
             )
         }
     )
@@ -79,7 +85,7 @@ fun AppNavigation() {
     }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = androidx.compose.ui.Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         NavHost(
@@ -95,17 +101,14 @@ fun AppNavigation() {
                     onOpenHelp = { navController.navigate(AppScreen.Help.route) },
                     onStartContinuous = { navController.navigate(AppScreen.Continuous.route) },
                     onOpenHistory = {
-                        navController.navigate(AppScreen.History.route) {
-                            launchSingleTop = true
-                        }
+                        navController.navigate(AppScreen.History.route) { launchSingleTop = true }
                     },
                     onOpenLogin = {
-                        navController.navigate(AppScreen.Login.route) {
-                            launchSingleTop = true
-                        }
+                        navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
                     }
                 )
             }
+
             composable(AppScreen.Speech.route) {
                 SpeechRecognitionScreen(
                     uiLanguages = uiLanguages,
@@ -114,6 +117,7 @@ fun AppNavigation() {
                     onBack = { navController.popBackStack() }
                 )
             }
+
             composable(AppScreen.Help.route) {
                 HelpScreen(
                     uiLanguages = uiLanguages,
@@ -122,6 +126,7 @@ fun AppNavigation() {
                     onBack = { navController.popBackStack() }
                 )
             }
+
             composable(AppScreen.Continuous.route) {
                 ContinuousConversationScreen(
                     uiLanguages = uiLanguages,
@@ -130,25 +135,29 @@ fun AppNavigation() {
                     onBack = { navController.popBackStack() }
                 )
             }
+
             composable(AppScreen.Login.route) {
                 LoginScreen(
-                    onLoginSuccess = {
-                        navController.popBackStack() // go back to previous screen (Home / History)
-                    }
+                    uiLanguages = uiLanguages,
+                    appLanguageState = appLanguageState,
+                    onUpdateAppLanguage = ::updateAppLanguage,
+                    onBack = { navController.popBackStack() },
+                    onLoginSuccess = { navController.popBackStack() }
                 )
             }
+
             composable(AppScreen.History.route) {
                 RequireLogin(
                     content = {
                         HistoryScreen(
+                            uiLanguages = uiLanguages,
                             appLanguageState = appLanguageState,
+                            onUpdateAppLanguage = ::updateAppLanguage,
                             onBack = { navController.popBackStack() }
                         )
                     },
                     onNeedLogin = {
-                        navController.navigate(AppScreen.Login.route) {
-                            launchSingleTop = true
-                        }
+                        navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
                     }
                 )
             }
