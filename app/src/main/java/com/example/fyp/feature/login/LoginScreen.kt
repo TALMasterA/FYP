@@ -45,6 +45,21 @@ fun LoginScreen(
                 style = MaterialTheme.typography.headlineMedium
             )
 
+            Text(
+                text = if (isLogin) {
+                    "Use your registered email and password."
+                } else {
+                    "Register rules:\n" +
+                            "• Email must be a valid format (e.g., name@example.com)\n" +
+                            "• Password must be at least 6 characters\n" +
+                            "• Confirm password must match"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(

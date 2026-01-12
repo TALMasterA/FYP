@@ -1,53 +1,30 @@
 package com.example.fyp.feature.speech
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.data.AzureLanguageConfig
-import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.core.RecordAudioPermissionRequest
-import com.example.fyp.model.UiTextKey
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.LanguageDropdownField
+import com.example.fyp.core.RecordAudioPermissionRequest
 import com.example.fyp.core.rememberUiTextFunctions
-import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.fyp.data.AzureLanguageConfig
+import com.example.fyp.model.AppLanguageState
+import com.example.fyp.model.BaseUiTexts
+import com.example.fyp.model.UiTextKey
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContinuousConversationScreen(
@@ -58,27 +35,27 @@ fun ContinuousConversationScreen(
 ) {
     val viewModel: SpeechViewModel = hiltViewModel()
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
-    val context = LocalContext.current
 
+    val context = LocalContext.current
     val supportedLanguages by remember {
         mutableStateOf(AzureLanguageConfig.loadSupportedLanguages(context))
     }
 
-    // conversation languages
     var fromLanguage by remember { mutableStateOf(supportedLanguages.firstOrNull() ?: "en-US") }
     var toLanguage by remember { mutableStateOf(supportedLanguages.getOrNull(1) ?: "zh-HK") }
-
-    // true = person A speaking (fromLanguage), false = person B speaking (toLanguage)
     var isPersonATalking by remember { mutableStateOf(true) }
 
     val isRunning = viewModel.isContinuousRunning
     val partial = viewModel.livePartialText
     val lastTranslation = viewModel.lastSegmentTranslation
     val messages = viewModel.continuousMessages
-
     val listState = rememberLazyListState()
 
-    // auto‑restart when speaker switches
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
+    }
+
+    // Switch speaker while running: stop and restart recognizer, keep session/messages.
     LaunchedEffect(isPersonATalking) {
         if (isRunning) {
             viewModel.stopContinuous()
@@ -92,165 +69,152 @@ fun ContinuousConversationScreen(
         }
     }
 
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.lastIndex)
-        }
-    }
-
+    // Leaving screen: end session and clear messages.
     DisposableEffect(Unit) {
-        onDispose {
-            viewModel.endContinuousSession()
-        }
+        onDispose { viewModel.endContinuousSession() }
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        uiText(
-                            UiTextKey.ContinuousTitle,
-                            BaseUiTexts[UiTextKey.ContinuousTitle.ordinal]
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        // Stable peek height to avoid flashing/jumping.
+        val estimatedControlsHeight = 380.dp
+        val peek = (maxHeight - estimatedControlsHeight).coerceIn(180.dp, maxHeight * 0.85f)
+
+        BottomSheetScaffold(
+            sheetPeekHeight = peek,
+            sheetTonalElevation = 2.dp,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            uiText(
+                                UiTextKey.ContinuousTitle,
+                                BaseUiTexts[UiTextKey.ContinuousTitle.ordinal]
+                            )
                         )
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        viewModel.endContinuousSession()
-                        onBack()
-                    }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            viewModel.endContinuousSession()
+                            onBack()
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
                     }
-                }
-            )
-        }
-    ) { innerPadding ->
-
-        RecordAudioPermissionRequest {
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-
-                ConversationControls(
-                    innerPadding = innerPadding,
-                    uiLanguages = uiLanguages,
-                    appLanguageState = appLanguageState,
-                    onUpdateAppLanguage = onUpdateAppLanguage,
+                )
+            },
+            sheetContent = {
+                ConversationSheet(
                     uiText = uiText,
-                    uiLanguageNameFor = uiLanguageNameFor,
-                    supportedLanguages = supportedLanguages,
-                    fromLanguage = fromLanguage,
-                    toLanguage = toLanguage,
                     isPersonATalking = isPersonATalking,
                     isRunning = isRunning,
                     partial = partial,
                     lastTranslation = lastTranslation,
-                    onFromLanguageChange = { fromLanguage = it },
-                    onToLanguageChange = { toLanguage = it },
                     onPersonToggle = { isPersonATalking = it },
                     onStartStop = { start ->
                         if (start) {
-                            val speakLang =
-                                if (isPersonATalking) fromLanguage else toLanguage
-                            val otherLang =
-                                if (isPersonATalking) toLanguage else fromLanguage
+                            val speakLang = if (isPersonATalking) fromLanguage else toLanguage
+                            val otherLang = if (isPersonATalking) toLanguage else fromLanguage
                             viewModel.startContinuous(
                                 speakingLang = speakLang,
                                 targetLang = otherLang,
-                                isFromPersonA = isPersonATalking
+                                isFromPersonA = isPersonATalking,
+                                resetSession = true
                             )
                         } else {
-                            viewModel.endContinuousSession()
+                            viewModel.stopContinuous() // keep messages for 🔊
                         }
-                    }
-                )
-
-                ConversationMessageList(
+                    },
                     messages = messages,
                     listState = listState,
-                    uiText = uiText,
                     onSpeakMessage = { msg ->
                         viewModel.speakText(languageCode = msg.lang, text = msg.text)
                     }
                 )
+            }
+        ) { innerPadding ->
+            RecordAudioPermissionRequest {
+                Column(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    AppLanguageDropdown(
+                        uiLanguages = uiLanguages,
+                        appLanguageState = appLanguageState,
+                        onUpdateAppLanguage = onUpdateAppLanguage,
+                        uiText = uiText
+                    )
+
+                    Text(
+                        text = uiText(
+                            UiTextKey.ContinuousInstructions,
+                            BaseUiTexts[UiTextKey.ContinuousInstructions.ordinal]
+                        ),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    LanguageDropdownField(
+                        label = uiText(
+                            UiTextKey.ContinuousSpeakerAName,
+                            BaseUiTexts[UiTextKey.ContinuousSpeakerAName.ordinal]
+                        ),
+                        selectedCode = fromLanguage,
+                        options = supportedLanguages,
+                        nameFor = uiLanguageNameFor,
+                        onSelected = { fromLanguage = it }
+                    )
+
+                    LanguageDropdownField(
+                        label = uiText(
+                            UiTextKey.ContinuousSpeakerBName,
+                            BaseUiTexts[UiTextKey.ContinuousSpeakerBName.ordinal]
+                        ),
+                        selectedCode = toLanguage,
+                        options = supportedLanguages,
+                        nameFor = uiLanguageNameFor,
+                        onSelected = { toLanguage = it }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ConversationControls(
-    innerPadding: PaddingValues,
-    uiLanguages: List<Pair<String, String>>,
-    appLanguageState: AppLanguageState,
-    onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
+private fun ConversationSheet(
     uiText: (UiTextKey, String) -> String,
-    uiLanguageNameFor: (String) -> String,
-    supportedLanguages: List<String>,
-    fromLanguage: String,
-    toLanguage: String,
     isPersonATalking: Boolean,
     isRunning: Boolean,
     partial: String,
     lastTranslation: String,
-    onFromLanguageChange: (String) -> Unit,
-    onToLanguageChange: (String) -> Unit,
     onPersonToggle: (Boolean) -> Unit,
-    onStartStop: (Boolean) -> Unit
+    onStartStop: (Boolean) -> Unit,
+    messages: List<SpeechViewModel.ChatMessage>,
+    listState: LazyListState,
+    onSpeakMessage: (SpeechViewModel.ChatMessage) -> Unit
 ) {
     Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .fillMaxWidth()
+            .heightIn(min = 240.dp)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        AppLanguageDropdown(
-            uiLanguages = uiLanguages,
-            appLanguageState = appLanguageState,
-            onUpdateAppLanguage = onUpdateAppLanguage,
-            uiText = uiText
-        )
-
-        Text(
-            text = uiText(
-                UiTextKey.ContinuousInstructions,
-                BaseUiTexts[UiTextKey.ContinuousInstructions.ordinal]
-            ),
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        LanguageDropdownField(
-            label = uiText(
-                UiTextKey.ContinuousSpeakerAName,
-                BaseUiTexts[UiTextKey.ContinuousSpeakerAName.ordinal]
-            ),
-            selectedCode = fromLanguage,
-            options = supportedLanguages,
-            nameFor = uiLanguageNameFor,
-            onSelected = onFromLanguageChange
-        )
-
-        LanguageDropdownField(
-            label = uiText(
-                UiTextKey.ContinuousSpeakerBName,
-                BaseUiTexts[UiTextKey.ContinuousSpeakerBName.ordinal]
-            ),
-            selectedCode = toLanguage,
-            options = supportedLanguages,
-            nameFor = uiLanguageNameFor,
-            onSelected = onToLanguageChange
-        )
-
-        SpeakerToggle(
-            isPersonATalking = isPersonATalking,
-            uiText = uiText,
-            onToggle = onPersonToggle
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (isPersonATalking)
+                    uiText(UiTextKey.ContinuousPersonALabel, BaseUiTexts[UiTextKey.ContinuousPersonALabel.ordinal])
+                else
+                    uiText(UiTextKey.ContinuousPersonBLabel, BaseUiTexts[UiTextKey.ContinuousPersonBLabel.ordinal])
+            )
+            Switch(checked = isPersonATalking, onCheckedChange = onPersonToggle)
+        }
 
         Button(
             onClick = { onStartStop(!isRunning) },
@@ -258,134 +222,68 @@ private fun ConversationControls(
         ) {
             Text(
                 if (isRunning)
-                    uiText(
-                        UiTextKey.ContinuousStopButton,
-                        BaseUiTexts[UiTextKey.ContinuousStopButton.ordinal]
-                    )
+                    uiText(UiTextKey.ContinuousStopButton, BaseUiTexts[UiTextKey.ContinuousStopButton.ordinal])
                 else
-                    uiText(
-                        UiTextKey.ContinuousStartButton,
-                        BaseUiTexts[UiTextKey.ContinuousStartButton.ordinal]
-                    )
+                    uiText(UiTextKey.ContinuousStartButton, BaseUiTexts[UiTextKey.ContinuousStartButton.ordinal])
             )
         }
-
-        Spacer(Modifier.height(8.dp))
 
         Text(
             text = uiText(
                 UiTextKey.ContinuousCurrentStringLabel,
                 BaseUiTexts[UiTextKey.ContinuousCurrentStringLabel.ordinal]
-            ) + ": " + partial
+            ) + ": " + partial,
+            style = MaterialTheme.typography.bodySmall
         )
+
         if (lastTranslation.isNotBlank()) {
-            Text("Last translation: $lastTranslation")
+            Text(text = "Last translation: $lastTranslation", style = MaterialTheme.typography.bodySmall)
         }
-    }
-}
 
-@Composable
-private fun SpeakerToggle(
-    isPersonATalking: Boolean,
-    uiText: (UiTextKey, String) -> String,
-    onToggle: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = if (isPersonATalking)
-                uiText(
-                    UiTextKey.ContinuousPersonALabel,
-                    BaseUiTexts[UiTextKey.ContinuousPersonALabel.ordinal]
-                )
-            else
-                uiText(
-                    UiTextKey.ContinuousPersonBLabel,
-                    BaseUiTexts[UiTextKey.ContinuousPersonBLabel.ordinal]
-                )
-        )
-
-        Switch(
-            checked = isPersonATalking,
-            onCheckedChange = onToggle
-        )
-    }
-}
-
-@Composable
-private fun ConversationMessageList(
-    messages: List<SpeechViewModel.ChatMessage>,
-    listState: LazyListState,
-    uiText: (UiTextKey, String) -> String,
-    onSpeakMessage: (SpeechViewModel.ChatMessage) -> Unit
-) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        state = listState
-    ) {
-        items(messages, key = { it.id }) { msg ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                horizontalArrangement = if (msg.isFromPersonA) {
-                    Arrangement.End       // Person A on the right
-                } else {
-                    Arrangement.Start      // Person B on the left
-                }
-            ) {
-                Column(
-                    modifier = Modifier
-                        .widthIn(max = 280.dp)
-                        .padding(horizontal = 8.dp)
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            state = listState,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(bottom = 12.dp)
+        ) {
+            items(messages, key = { it.id }) { msg ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = if (msg.isFromPersonA) Arrangement.End else Arrangement.Start
                 ) {
-                    // speaker + type
-                    Text(
-                        text = buildString {
-                            val speakerName = if (msg.isFromPersonA) {
-                                uiText(
-                                    UiTextKey.ContinuousSpeakerAName,
-                                    BaseUiTexts[UiTextKey.ContinuousSpeakerAName.ordinal]
-                                )
-                            } else {
-                                uiText(
-                                    UiTextKey.ContinuousSpeakerBName,
-                                    BaseUiTexts[UiTextKey.ContinuousSpeakerBName.ordinal]
-                                )
-                            }
-                            append(speakerName)
-                            if (msg.isTranslation) {
-                                append(
-                                    uiText(
-                                        UiTextKey.ContinuousTranslationSuffix,
-                                        BaseUiTexts[UiTextKey.ContinuousTranslationSuffix.ordinal]
-                                    )
-                                )
-                            }
-                        },
-                        style = MaterialTheme.typography.labelSmall
-                    )
+                    OutlinedCard(modifier = Modifier.fillMaxWidth(0.92f)) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = buildString {
+                                    val speakerName =
+                                        if (msg.isFromPersonA)
+                                            uiText(UiTextKey.ContinuousSpeakerAName, BaseUiTexts[UiTextKey.ContinuousSpeakerAName.ordinal])
+                                        else
+                                            uiText(UiTextKey.ContinuousSpeakerBName, BaseUiTexts[UiTextKey.ContinuousSpeakerBName.ordinal])
 
-                    // message text
-                    Text(
-                        text = msg.text,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                                    append(speakerName)
+                                    if (msg.isTranslation) {
+                                        append(
+                                            uiText(
+                                                UiTextKey.ContinuousTranslationSuffix,
+                                                BaseUiTexts[UiTextKey.ContinuousTranslationSuffix.ordinal]
+                                            )
+                                        )
+                                    }
+                                },
+                                style = MaterialTheme.typography.labelSmall
+                            )
 
-                    // speak button
-                    Row(
-                        horizontalArrangement = Arrangement.End,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Button(
-                            onClick = { onSpeakMessage(msg) }
-                        ) {
-                            Text("🔊")
+                            Spacer(Modifier.height(4.dp))
+                            Text(text = msg.text)
+
+                            Spacer(Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                OutlinedButton(onClick = { onSpeakMessage(msg) }) { Text("🔊") }
+                            }
                         }
                     }
                 }

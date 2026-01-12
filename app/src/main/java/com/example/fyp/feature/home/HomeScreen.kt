@@ -6,7 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -19,8 +19,6 @@ import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
-import androidx.compose.runtime.getValue
-//import com.example.fyp.BuildConfig //For crush testing only
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,8 +34,32 @@ fun HomeScreen(
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
-
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Logout?") },
+            text = { Text("You will need to login again to view your history.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        authViewModel.logout()
+                        showLogoutDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) { Text("Logout") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -47,17 +69,12 @@ fun HomeScreen(
                 actions = {
                     when (authState) {
                         is AuthState.LoggedIn -> {
-                            TextButton(onClick = { onOpenHistory() }) { Text("History") }
-                            TextButton(onClick = { authViewModel.logout() }) { Text("Logout") }
+                            TextButton(onClick = onOpenHistory) { Text("History") }
+                            TextButton(onClick = { showLogoutDialog = true }) { Text("Logout") }
                         }
-
                         AuthState.Loading -> {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp
-                            )
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                         }
-
                         AuthState.LoggedOut -> {
                             TextButton(onClick = onOpenLogin) { Text("Login") }
                         }
@@ -69,14 +86,12 @@ fun HomeScreen(
             )
         }
     ) { innerPadding ->
-        val scrollState = rememberScrollState()
-
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(16.dp)
                 .fillMaxSize()
-                .verticalScroll(scrollState),
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.Start
         ) {
@@ -99,17 +114,6 @@ fun HomeScreen(
             Button(onClick = onStartContinuous, modifier = Modifier.fillMaxWidth()) {
                 Text(uiText(UiTextKey.ContinuousStartScreenButton, BaseUiTexts[UiTextKey.ContinuousStartScreenButton.ordinal]))
             }
-
-            //For crush testing only
-            /*if (BuildConfig.DEBUG) {
-                Button(
-                    onClick = { throw RuntimeException("Test Crash") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Test Crash")
-                }
-            } */
         }
     }
 }

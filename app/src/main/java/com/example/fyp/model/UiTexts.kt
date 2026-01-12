@@ -92,13 +92,16 @@ val BaseUiTexts: List<String> = listOf(
     "Current features",
     "Cautions",
     "- Choose UI language, detection language, and target language.\n" +
-            "- Discrete mode:  Press Azure Recognize to capture short sentences/paragraph from microphone.\n" +
-            "Tap Translate, then use Speak buttons to listen. \n" +
-            "- Continuous mode:  Press start to continuous listen conversation from microphone.\n" +
-            "You can use 🔊 to listen, but be careful if use it without earphone and the listening is still ongoing, " +
-            "the speech will capture by the system.",
-    "- Requires internet and valid Azure keys.\n" +
-            "- Do not use for medical, legal, or safety‑critical decisions; translations may contain errors.",
+            "- Discrete mode: Speech-to-text → Translate → Speak (TTS).\n" +
+            "- Continuous mode: Live conversation capture with Speaker A/B switching.\n" +
+            "- Login/Register (Email/Password).\n" +
+            "- History: Save translation records per user in Firebase Firestore (Discrete + Continuous sessions).\n" +
+            "- Basic session management: name session, delete record/session.\n" +
+            "- App UI language translation (English base; translated UI may contain errors).",
+    "- Requires internet connection.\n" +
+            "- Microphone audio is used for speech recognition; avoid speaking sensitive info in public.\n" +
+            "- Use earphones if using 🔊 during continuous listening to avoid the app re-capturing its own audio.\n" +
+            "- Do not use for medical/legal/safety-critical decisions; recognition/translation may be wrong.",
     "Continuous mode",
     "Start conversation",
     "Stop listening",
@@ -110,7 +113,9 @@ val BaseUiTexts: List<String> = listOf(
     "Person B",
     " · translation",
     "Notes",
-    "The base language of this app is English, you can use the app UI list to change the languages but it may contain error."
+    "The base language of this app is English, you can use the app UI list to change the languages but it may contain error. \n" +
+            "FYP goal: build a translator app and store translation history in a database for future learning features.\n" +
+            "Planned learning part: use saved history to extract frequent vocabulary/phrases and generate practice content."
 )
 
 fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {

@@ -207,33 +207,34 @@ class SpeechViewModel @Inject constructor(
     }
 
     // -------- continuous conversation --------
-    fun startContinuous(speakingLang: String, targetLang: String, isFromPersonA: Boolean) {
+    fun startContinuous(
+        speakingLang: String,
+        targetLang: String,
+        isFromPersonA: Boolean,
+        resetSession: Boolean = false
+    ) {
         if (isContinuousRunning) return
 
-        // If user is starting a run, make sure we have a session id.
-        // Important: do NOT clear session id in stopContinuous(), because the UI may
-        // temporarily stop/start when switching speaker.
-        ensureContinuousSessionId()
+        if (resetSession) {
+            clearContinuousMessages()
+            continuousSessionId = null
+        }
 
+        ensureContinuousSessionId()
         livePartialText = ""
         lastSegmentTranslation = ""
         isContinuousRunning = true
 
         continuousRecognizer = continuousUseCase(
             languageCode = speakingLang,
-            onPartial = { text ->
-                // ensure state updates happen on main thread
-                viewModelScope.launch { livePartialText = text }
-            },
+            onPartial = { text -> viewModelScope.launch { livePartialText = text } },
             onFinal = { finalText ->
                 viewModelScope.launch {
                     addMessage(finalText, speakingLang, isFromPersonA, isTranslation = false)
-
                     when (val tr = translateTextUseCase(finalText, speakingLang, targetLang)) {
                         is SpeechResult.Success -> {
                             lastSegmentTranslation = tr.text
                             addMessage(tr.text, targetLang, isFromPersonA, isTranslation = true)
-
                             saveHistory(
                                 mode = "continuous",
                                 sourceText = finalText,
@@ -243,11 +244,8 @@ class SpeechViewModel @Inject constructor(
                                 sessionId = continuousSessionId.orEmpty()
                             )
                         }
-
                         is SpeechResult.Error -> {
-                            speechState = speechState.copy(
-                                ttsStatus = "Continuous translation error: ${tr.message}"
-                            )
+                            speechState = speechState.copy(ttsStatus = "Continuous translation error: ${tr.message}")
                         }
                     }
                 }
