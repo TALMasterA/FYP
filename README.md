@@ -14,5 +14,9 @@
 
  Following MVVM (Model–View–ViewModel) structure.
 
+ Using Firebase for log in auth. control, able to create accounts with email/password. Translation history will be recorded to Firebase Firestore when the user log in an account.
+ The history is planned to use for develop the learning part of the app. Using gen ai API to generate learning materials.
+
+
 
 
