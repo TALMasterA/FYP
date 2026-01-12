@@ -6,6 +6,8 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.dagger.hilt.android")
 
+    id("com.google.firebase.crashlytics")
+
     kotlin("kapt")
 }
 
@@ -84,9 +86,11 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
 
     // Firebase - BOM + explicit KTX
-    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
-    implementation("com.google.firebase:firebase-auth-ktx")
-    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-crashlytics")
+    implementation("com.google.firebase:firebase-analytics")
 
     // Hilt DI
     implementation("com.google.dagger:hilt-android:2.52")

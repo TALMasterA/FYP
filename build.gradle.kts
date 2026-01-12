@@ -5,7 +5,9 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
 
     id("com.google.gms.google-services") version "4.4.4" apply false
-    id("com.google.dagger.hilt.android") version "2.52" apply false
+    id("com.google.dagger.hilt.android") version "2.52" apply false //keep the version
+
+    id("com.google.firebase.crashlytics") version "3.0.6" apply false
 }
 
 buildscript {
@@ -16,7 +18,6 @@ buildscript {
     dependencies {
         classpath(libs.gradle)
         classpath(libs.kotlin.gradle.plugin)
-        classpath("com.google.gms:google-services:4.4.2")
     }
 }
 

@@ -20,6 +20,7 @@ import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
 import androidx.compose.runtime.getValue
+//import com.example.fyp.BuildConfig //For crush testing only
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,8 +31,8 @@ fun HomeScreen(
     onStartSpeech: () -> Unit,
     onOpenHelp: () -> Unit,
     onStartContinuous: () -> Unit,
-    onOpenLogin: () -> Unit,          // NEW
-    onOpenHistory: () -> Unit         // NEW (for later history screen)
+    onOpenLogin: () -> Unit,
+    onOpenHistory: () -> Unit
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
@@ -98,6 +99,17 @@ fun HomeScreen(
             Button(onClick = onStartContinuous, modifier = Modifier.fillMaxWidth()) {
                 Text(uiText(UiTextKey.ContinuousStartScreenButton, BaseUiTexts[UiTextKey.ContinuousStartScreenButton.ordinal]))
             }
+
+            //For crush testing only
+            /*if (BuildConfig.DEBUG) {
+                Button(
+                    onClick = { throw RuntimeException("Test Crash") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Test Crash")
+                }
+            } */
         }
     }
 }
