@@ -65,11 +65,13 @@ fun AppLanguageDropdown(
 ) {
     val scope = rememberCoroutineScope()
 
+    val (_, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
+
     LanguageDropdownField(
         label = uiText(UiTextKey.AppUiLanguageLabel, "App UI language"),
         selectedCode = appLanguageState.selectedUiLanguage,
         options = uiLanguages.map { it.first },
-        nameFor = { code -> uiLanguages.first { it.first == code }.second },
+        nameFor = { code -> uiLanguageNameFor(code) },
         onSelected = { code ->
             if (code.startsWith("en")) {
                 onUpdateAppLanguage(code, emptyMap())
