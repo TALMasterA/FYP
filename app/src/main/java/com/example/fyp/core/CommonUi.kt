@@ -8,7 +8,8 @@ import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.data.LanguageDisplayNames
 import com.example.fyp.model.SpeechResult
-import com.example.fyp.data.TranslatorClient
+// com.example.fyp.data.TranslatorClient
+import com.example.fyp.data.CloudTranslatorClient
 import com.example.fyp.model.UiTextKey
 import com.example.fyp.model.buildUiTextMap
 import kotlinx.coroutines.launch
@@ -77,19 +78,22 @@ fun AppLanguageDropdown(
                 onUpdateAppLanguage(code, emptyMap())
             } else {
                 scope.launch {
-                    when (val result = TranslatorClient.translateTexts(
-                        texts = BaseUiTexts,
-                        toLanguage = code,
-                        fromLanguage = "en"
-                    )) {
-                        is SpeechResult.Success -> {
-                            val map = buildUiTextMap(result.text)
-                            onUpdateAppLanguage(code, map)
-                        }
-                        is SpeechResult.Error -> {
-                            Log.e("UITranslation", "Error: ${result.message}")
-                            onUpdateAppLanguage(code, emptyMap())
-                        }
+                    val cloud = CloudTranslatorClient()
+
+                    try {
+                        val translatedList = cloud.translateTexts(
+                            texts = BaseUiTexts,
+                            from = "en",
+                            to = code
+                        )
+
+                        // Your existing buildUiTextMap expects a single string joined by \u0001
+                        val joined = translatedList.joinToString("\u0001")
+                        val map = buildUiTextMap(joined)
+                        onUpdateAppLanguage(code, map)
+                    } catch (e: Exception) {
+                        Log.e("UITranslation", "Error: ${e.message}", e)
+                        onUpdateAppLanguage(code, emptyMap())
                     }
                 }
             }

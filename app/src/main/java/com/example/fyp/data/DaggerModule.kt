@@ -27,8 +27,11 @@ object AppModule {
     @Provides @Singleton
     fun provideSpeechRepository(): SpeechRepository = AzureSpeechRepository()
 
+    //@Provides @Singleton
+    //fun provideTranslationRepository(): TranslationRepository = AzureTranslationRepository()
     @Provides @Singleton
-    fun provideTranslationRepository(): TranslationRepository = AzureTranslationRepository()
+    fun provideTranslationRepository(): TranslationRepository = FirebaseTranslationRepository()
+
 
     @Provides
     fun provideRecognizeUseCase(repo: SpeechRepository) = RecognizeFromMicUseCase(repo)

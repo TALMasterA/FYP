@@ -25,8 +25,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "AZURE_SPEECH_KEY", "\"\"")
         buildConfigField("String", "AZURE_SPEECH_REGION", "\"\"")
-        buildConfigField("String", "AZURE_TRANSLATOR_KEY", "\"\"")
-        buildConfigField("String", "AZURE_TRANSLATOR_REGION", "\"\"")
     }
 
     buildTypes {
@@ -91,6 +89,8 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-functions")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
     // Hilt DI
     implementation("com.google.dagger:hilt-android:2.52")
