@@ -32,3 +32,8 @@ captures/
 # Other
 *.log
 /app/google-services.json
+
+# Firebase backend
+fyp-backend/functions/node_modules/
+fyp-backend/functions/lib/
+fyp-backend/.firebase/
