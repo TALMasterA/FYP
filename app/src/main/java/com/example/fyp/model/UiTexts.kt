@@ -84,7 +84,8 @@ enum class UiTextKey {
     AuthToggleToRegister,
     AuthToggleToLogin,
     AuthErrorPasswordsMismatch,
-    AuthErrorPasswordTooShort
+    AuthErrorPasswordTooShort,
+    DisableText
 }
 
 val BaseUiTexts: List<String> = listOf(
@@ -131,9 +132,7 @@ val BaseUiTexts: List<String> = listOf(
             "- Discrete mode: Speech-to-text → Translate → Speak (TTS).\n" +
             "- Continuous mode: Live conversation capture with Speaker A/B switching.\n" +
             "- Login/Register (Email/Password).\n" +
-            "- History: Save translation records per user in Firebase Firestore (Discrete + Continuous sessions).\n" +
-            "- Basic session management: name session, delete record/session.\n" +
-            "- App UI language translation (English base; translated UI may contain errors).",
+            "- App UI language translation.",
     "- Requires internet connection.\n" +
             "- Microphone audio is used for speech recognition; avoid speaking sensitive info in public.\n" +
             "- Use earphones if using 🔊 during continuous listening to avoid the app re-capturing its own audio.\n" +
@@ -171,14 +170,15 @@ val BaseUiTexts: List<String> = listOf(
     "This action cannot be undone.",
     "Delete session?",
     "All records in this session will be deleted. This action cannot be undone.",
-    "Delete session",
-    "Name this session",
+    "Delete",
+    "Name",
     "Session name",
     "Session {id}",
     "{count} items",
     "Login",
     "Register",
-    "Use your registered email and password.",
+    "Use your registered (provided) email and password.",
+    "Register is disabled for now.\n" +
     "Register rules:\n" +
             "• Email must be a valid format (e.g., name@example.com)\n" +
             "• Password must be at least 6 characters\n" +
@@ -188,10 +188,11 @@ val BaseUiTexts: List<String> = listOf(
     "Confirm password",
     "Login",
     "Register",
-    "Don't have account? Register",
+    "Don't have account? Register (Disable during development)",
     "Have account? Login",
     "Passwords do not match.",
-    "Password must be at least 6 characters."
+    "Password must be at least 6 characters.",
+    "Login is required to use translation features & storing translation history."
 )
 
 fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
@@ -214,4 +215,8 @@ fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
     }
 
     return map
+}
+
+fun baseUiTextsHash(): Int {
+    return BaseUiTexts.joinToString(separator = "\u0001").hashCode()
 }

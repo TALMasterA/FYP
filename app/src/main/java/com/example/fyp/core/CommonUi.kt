@@ -21,6 +21,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import com.example.fyp.data.UiLanguageCacheStore
+import com.example.fyp.model.baseUiTextsHash
 
 @Composable
 fun rememberUiTextFunctions(
@@ -62,11 +65,14 @@ fun AppLanguageDropdown(
     uiLanguages: List<Pair<String, String>>,
     appLanguageState: AppLanguageState,
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
-    uiText: (UiTextKey, String) -> String
+    uiText: (UiTextKey, String) -> String,
+    enabled: Boolean = true
 ) {
     val scope = rememberCoroutineScope()
-
     val (_, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
+
+    val context = LocalContext.current
+    val cache = remember { UiLanguageCacheStore(context) }
 
     LanguageDropdownField(
         label = uiText(UiTextKey.AppUiLanguageLabel, "App UI language"),
@@ -74,30 +80,53 @@ fun AppLanguageDropdown(
         options = uiLanguages.map { it.first },
         nameFor = { code -> uiLanguageNameFor(code) },
         onSelected = { code ->
+            if (!enabled) return@LanguageDropdownField
+
             if (code.startsWith("en")) {
                 onUpdateAppLanguage(code, emptyMap())
-            } else {
                 scope.launch {
-                    val cloud = CloudTranslatorClient()
+                    cache.setSelectedLanguage(code)
+                    cache.setBaseHash(baseUiTextsHash())
+                }
+                return@LanguageDropdownField
+            }
 
-                    try {
-                        val translatedList = cloud.translateTexts(
-                            texts = BaseUiTexts,
-                            from = "en",
-                            to = code
-                        )
+            scope.launch {
+                try {
+                    val currentHash = baseUiTextsHash()
+                    val cachedHash = cache.getBaseHash()
 
-                        // Your existing buildUiTextMap expects a single string joined by \u0001
-                        val joined = translatedList.joinToString("\u0001")
-                        val map = buildUiTextMap(joined)
-                        onUpdateAppLanguage(code, map)
-                    } catch (e: Exception) {
-                        Log.e("UITranslation", "Error: ${e.message}", e)
-                        onUpdateAppLanguage(code, emptyMap())
+                    if (cachedHash == currentHash) {
+                        val cachedMap = cache.loadUiTexts(code)
+                        if (!cachedMap.isNullOrEmpty()) {
+                            onUpdateAppLanguage(code, cachedMap)
+                            cache.setSelectedLanguage(code)
+                            return@launch
+                        }
                     }
+
+                    val cloud = CloudTranslatorClient()
+                    val translatedList = cloud.translateTexts(
+                        texts = BaseUiTexts,
+                        from = "en",
+                        to = code
+                    )
+
+                    val joined = translatedList.joinToString("\u0001")
+                    val map = buildUiTextMap(joined)
+
+                    onUpdateAppLanguage(code, map)
+
+                    cache.setSelectedLanguage(code)
+                    cache.saveUiTexts(code, map)
+                    cache.setBaseHash(currentHash)
+                } catch (e: Exception) {
+                    Log.e("UITranslation", "Error: ${e.message}", e)
+                    onUpdateAppLanguage("en-US", emptyMap())
                 }
             }
-        }
+        },
+        enabled = enabled
     )
 }
 
@@ -109,19 +138,20 @@ fun LanguageDropdownField(
     options: List<String>,
     nameFor: (String) -> String,
     onSelected: (String) -> Unit,
+    enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = Modifier
-            .fillMaxWidth()
+        onExpandedChange = { if (enabled) expanded = !expanded },
+        modifier = Modifier.fillMaxWidth()
     ) {
         TextField(
             value = nameFor(selectedCode),
             onValueChange = {},
             readOnly = true,
+            enabled = enabled,
             label = { Text(label) },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)

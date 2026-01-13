@@ -151,6 +151,11 @@ class SpeechViewModel @Inject constructor(
     fun translate(fromLanguage: String, toLanguage: String) {
         if (recognizedText.isBlank()) return
 
+        if (!isLoggedIn()) {
+            speechState = speechState.copy(translatedText = "Please login to use translation.")
+            return
+        }
+
         viewModelScope.launch {
             speechState = speechState.copy(translatedText = "Translating, please wait...")
             when (val tr = translateTextUseCase(recognizedText, fromLanguage, toLanguage)) {
@@ -162,10 +167,9 @@ class SpeechViewModel @Inject constructor(
                         targetText = tr.text,
                         sourceLang = fromLanguage,
                         targetLang = toLanguage,
-                        sessionId = "" // discrete has no session
+                        sessionId = ""
                     )
                 }
-
                 is SpeechResult.Error -> {
                     speechState = speechState.copy(translatedText = "Translation error: ${tr.message}")
                 }
@@ -206,6 +210,8 @@ class SpeechViewModel @Inject constructor(
         }
     }
 
+    private fun isLoggedIn(): Boolean = _authState.value is AuthState.LoggedIn
+
     // -------- continuous conversation --------
     fun startContinuous(
         speakingLang: String,
@@ -213,6 +219,11 @@ class SpeechViewModel @Inject constructor(
         isFromPersonA: Boolean,
         resetSession: Boolean = false
     ) {
+        if (_authState.value !is AuthState.LoggedIn) {
+            speechState = speechState.copy(ttsStatus = "Please login to use continuous translation.")
+            return
+        }
+
         if (isContinuousRunning) return
 
         if (resetSession) {

@@ -39,6 +39,8 @@ import com.example.fyp.data.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.fyp.model.AuthState
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,13 +71,16 @@ fun ContinuousConversationScreen(
 
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
+    val authState by viewModel.authState.collectAsStateWithLifecycle()
+    val isLoggedIn = authState is AuthState.LoggedIn
+
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
     }
 
     // Switch speaker while running: stop and restart recognizer, keep session/messages.
-    LaunchedEffect(isPersonATalking) {
-        if (isRunning) {
+    LaunchedEffect(isPersonATalking, isLoggedIn) {
+        if (isRunning && isLoggedIn) {
             viewModel.stopContinuous()
             val speakLang = if (isPersonATalking) fromLanguage else toLanguage
             val otherLang = if (isPersonATalking) toLanguage else fromLanguage
@@ -143,6 +148,7 @@ fun ContinuousConversationScreen(
                 sheetContent = {
                     ConversationSheet(
                         uiText = uiText,
+                        isLoggedIn = isLoggedIn,
                         isPersonATalking = isPersonATalking,
                         isRunning = isRunning,
                         partial = partial,
@@ -190,7 +196,8 @@ fun ContinuousConversationScreen(
                                 uiLanguages = uiLanguages,
                                 appLanguageState = appLanguageState,
                                 onUpdateAppLanguage = onUpdateAppLanguage,
-                                uiText = uiText
+                                uiText = uiText,
+                                enabled = isLoggedIn
                             )
 
                             Text(
@@ -224,6 +231,7 @@ fun ContinuousConversationScreen(
 @Composable
 private fun ConversationSheet(
     uiText: (UiTextKey, String) -> String,
+    isLoggedIn: Boolean,
     isPersonATalking: Boolean,
     isRunning: Boolean,
     partial: String,
@@ -257,6 +265,7 @@ private fun ConversationSheet(
 
         Button(
             onClick = { onStartStop(!isRunning) },
+            enabled = isLoggedIn,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(

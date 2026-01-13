@@ -24,6 +24,8 @@ import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
 import androidx.compose.foundation.layout.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.fyp.model.AuthState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +54,9 @@ fun SpeechRecognitionScreen(
     var selectedLanguage by remember { mutableStateOf(supportedLanguages.firstOrNull() ?: "en-US") }
     var selectedTargetLanguage by remember { mutableStateOf(supportedLanguages.getOrNull(1) ?: "zh-HK") }
 
+    val authState by viewModel.authState.collectAsStateWithLifecycle()
+    val isLoggedIn = authState is AuthState.LoggedIn
+
     StandardScreenScaffold(
         title = t(UiTextKey.SpeechTitle),
         onBack = onBack,
@@ -67,7 +72,8 @@ fun SpeechRecognitionScreen(
                     uiLanguages = uiLanguages,
                     appLanguageState = appLanguageState,
                     onUpdateAppLanguage = onUpdateAppLanguage,
-                    uiText = uiText
+                    uiText = uiText,
+                    enabled = isLoggedIn
                 )
 
                 Text(text = t(UiTextKey.SpeechInstructions))
@@ -123,7 +129,7 @@ fun SpeechRecognitionScreen(
                             toLanguage = selectedTargetLanguage
                         )
                     },
-                    enabled = recognizedText.isNotBlank(),
+                    enabled = isLoggedIn && recognizedText.isNotBlank(),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(t(UiTextKey.TranslateButton))
@@ -142,7 +148,7 @@ fun SpeechRecognitionScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Button(
                         onClick = { viewModel.speakTranslation(selectedTargetLanguage) },
-                        enabled = translatedText.isNotBlank() && !isTtsRunning
+                        enabled = isLoggedIn && translatedText.isNotBlank() && !isTtsRunning
                     ) {
                         Text(
                             if (isTtsRunning) t(UiTextKey.SpeakingLabel)

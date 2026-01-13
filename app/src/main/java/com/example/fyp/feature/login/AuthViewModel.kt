@@ -43,14 +43,10 @@ class AuthViewModel @Inject constructor(
     }
 
     fun register(email: String, password: String) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            val result = authRepository.register(email, password)
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                error = result.exceptionOrNull()?.message
-            )
-        }
+        _uiState.value = LoginUiState(
+            error = "Registration is disabled during development.",
+            isLoading = false
+        )
     }
 
     fun logout() {
