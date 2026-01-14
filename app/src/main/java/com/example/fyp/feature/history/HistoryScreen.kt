@@ -58,8 +58,8 @@ fun HistoryScreen(
 ) {
     val viewModel: HistoryViewModel = hiltViewModel()
     val speechVm: SpeechViewModel = hiltViewModel()
-    val uiState by viewModel.uiState.collectAsState()
 
+    val uiState by viewModel.uiState.collectAsState()
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
@@ -82,6 +82,10 @@ fun HistoryScreen(
     var pendingRenameSessionId by remember { mutableStateOf<String?>(null) }
     var renameText by remember { mutableStateOf("") }
 
+    // NEW: track which history record button is currently speaking
+    var speakingRecordId by remember { mutableStateOf<String?>(null) }
+    var speakingType by remember { mutableStateOf<String?>(null) } // "O" or "T"
+
     DisposableEffect(Unit) {
         onDispose {
             pendingDeleteRecord = null
@@ -89,6 +93,8 @@ fun HistoryScreen(
             pendingRenameSessionId = null
             renameText = ""
             selectedSessionId = null
+            speakingRecordId = null
+            speakingType = null
         }
     }
 
@@ -226,8 +232,20 @@ fun HistoryScreen(
                         HistoryList(
                             records = discreteRecords,
                             languageNameFor = uiLanguageNameFor,
-                            onSpeakOriginal = { rec -> speechVm.speakTextOriginal(rec.sourceLang, rec.sourceText) },
-                            onSpeakTranslation = { rec -> speechVm.speakText(rec.targetLang, rec.targetText) },
+                            speakingRecordId = speakingRecordId,
+                            speakingType = speakingType,
+                            isTtsRunning = speechVm.isTtsRunning,
+                            ttsStatus = speechVm.ttsStatus,
+                            onSpeakOriginal = { rec ->
+                                speakingRecordId = rec.id
+                                speakingType = "O"
+                                speechVm.speakTextOriginal(rec.sourceLang, rec.sourceText)
+                            },
+                            onSpeakTranslation = { rec ->
+                                speakingRecordId = rec.id
+                                speakingType = "T"
+                                speechVm.speakText(rec.targetLang, rec.targetText)
+                            },
                             onDelete = { rec -> pendingDeleteRecord = rec },
                             deleteLabel = t(UiTextKey.ActionDelete),
                             modifier = Modifier.fillMaxSize()
@@ -327,8 +345,20 @@ fun HistoryScreen(
                                 HistoryList(
                                     records = sessionRecords,
                                     languageNameFor = uiLanguageNameFor,
-                                    onSpeakOriginal = { rec -> speechVm.speakTextOriginal(rec.sourceLang, rec.sourceText) },
-                                    onSpeakTranslation = { rec -> speechVm.speakText(rec.targetLang, rec.targetText) },
+                                    speakingRecordId = speakingRecordId,
+                                    speakingType = speakingType,
+                                    isTtsRunning = speechVm.isTtsRunning,
+                                    ttsStatus = speechVm.ttsStatus,
+                                    onSpeakOriginal = { rec ->
+                                        speakingRecordId = rec.id
+                                        speakingType = "O"
+                                        speechVm.speakTextOriginal(rec.sourceLang, rec.sourceText)
+                                    },
+                                    onSpeakTranslation = { rec ->
+                                        speakingRecordId = rec.id
+                                        speakingType = "T"
+                                        speechVm.speakText(rec.targetLang, rec.targetText)
+                                    },
                                     onDelete = { rec -> pendingDeleteRecord = rec },
                                     deleteLabel = t(UiTextKey.ActionDelete),
                                     modifier = Modifier.fillMaxSize()
@@ -346,6 +376,10 @@ fun HistoryScreen(
 private fun HistoryList(
     records: List<TranslationRecord>,
     languageNameFor: (String) -> String,
+    speakingRecordId: String?,
+    speakingType: String?,
+    isTtsRunning: Boolean,
+    ttsStatus: String,
     onSpeakOriginal: (TranslationRecord) -> Unit,
     onSpeakTranslation: (TranslationRecord) -> Unit,
     onDelete: (TranslationRecord) -> Unit,
@@ -358,26 +392,37 @@ private fun HistoryList(
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
         items(records, key = { it.id }) { rec ->
+            val busyOriginal = isTtsRunning && speakingRecordId == rec.id && speakingType == "O"
+            val busyTranslation = isTtsRunning && speakingRecordId == rec.id && speakingType == "T"
+            val busyAny = busyOriginal || busyTranslation
+
             OutlinedCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.background)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(text = "${languageNameFor(rec.sourceLang)} → ${languageNameFor(rec.targetLang)}")
-
                     Spacer(Modifier.height(6.dp))
                     Text(text = rec.sourceText)
-
                     Spacer(Modifier.height(4.dp))
                     Text(text = rec.targetText, style = MaterialTheme.typography.bodyMedium)
 
                     Spacer(Modifier.height(10.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Button(onClick = { onSpeakOriginal(rec) }) { Text("🗣️O") }
-                        Button(onClick = { onSpeakTranslation(rec) }) { Text("🔊T") }
+                        Button(
+                            onClick = { onSpeakOriginal(rec) },
+                            enabled = !busyOriginal
+                        ) { Text(if (busyOriginal) "Waiting..." else "🗣️O") }
+
+                        Button(
+                            onClick = { onSpeakTranslation(rec) },
+                            enabled = !busyTranslation
+                        ) { Text(if (busyTranslation) "Waiting..." else "🔊T") }
+
                         Button(
                             onClick = { onDelete(rec) },
                             colors = ButtonDefaults.buttonColors(
@@ -385,6 +430,14 @@ private fun HistoryList(
                                 contentColor = MaterialTheme.colorScheme.onError
                             )
                         ) { Text(deleteLabel) }
+                    }
+
+                    if (busyAny) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = if (ttsStatus.isBlank()) "Waiting..." else ttsStatus,
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 }
             }
@@ -399,7 +452,6 @@ private fun HistoryList(
  */
 private fun formatSessionTitle(template: String, sessionId: String): String {
     val shortId = sessionId.take(8)
-
     return when {
         template.contains("{id}") -> template.replace("{id}", shortId)
         else -> safeFormat(template, shortId)
@@ -422,12 +474,10 @@ private fun safeFormat(template: String, vararg args: Any): String {
     return try {
         String.format(template, *args)
     } catch (_: Exception) {
-        // Escape any '%' that is not a valid placeholder so it won't crash.
         val escaped = template.replace(Regex("%(?!([0-9]+\\$)?[sd%])"), "%%")
         try {
             String.format(escaped, *args)
         } catch (_: Exception) {
-            // Last resort: show the template without formatting
             template
         }
     }

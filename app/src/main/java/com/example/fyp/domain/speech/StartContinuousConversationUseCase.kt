@@ -6,6 +6,7 @@ import com.microsoft.cognitiveservices.speech.SpeechRecognizer
 class StartContinuousConversationUseCase(
     private val speechRepository: SpeechRepository
 ) {
+
     suspend operator fun invoke(
         languageCode: String,
         onPartial: (String) -> Unit,
@@ -20,7 +21,8 @@ class StartContinuousConversationUseCase(
         )
     }
 
-    fun stop(recognizer: SpeechRecognizer?) {
+    // CHANGED: suspend
+    suspend fun stop(recognizer: SpeechRecognizer?) {
         speechRepository.stopContinuous(recognizer)
     }
 }

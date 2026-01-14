@@ -136,7 +136,7 @@ class SpeechViewModel @Inject constructor(
     fun recognize(languageCode: String) {
         viewModelScope.launch {
             speechState = speechState.copy(recognizedText = "Preparing mic...")
-            delay(500)
+            delay(200)
             speechState = speechState.copy(recognizedText = "Listening... Please speak now.")
             when (val result = recognizeFromMic(languageCode)) {
                 is SpeechResult.Success ->
@@ -248,7 +248,7 @@ class SpeechViewModel @Inject constructor(
             isContinuousRunning = false
             speechState = speechState.copy(ttsStatus = "Preparing mic...")
 
-            delay(500)
+            delay(200)
 
             val startedAt = System.currentTimeMillis()
 
@@ -256,7 +256,7 @@ class SpeechViewModel @Inject constructor(
                 continuousRecognizer = continuousUseCase(
                     languageCode = speakingLang,
                     onPartial = { text ->
-                        if (System.currentTimeMillis() - startedAt >= 400) {
+                        if (System.currentTimeMillis() - startedAt >= 200) {
                             viewModelScope.launch { livePartialText = text }
                         }
                     },
@@ -313,8 +313,12 @@ class SpeechViewModel @Inject constructor(
         if (!isContinuousRunning && continuousRecognizer == null) return
 
         isContinuousRunning = false
-        runCatching { continuousUseCase.stop(continuousRecognizer) }
+        val recognizer = continuousRecognizer
         continuousRecognizer = null
+
+        viewModelScope.launch {
+            runCatching { continuousUseCase.stop(recognizer) }
+        }
     }
 
     fun endContinuousSession() {

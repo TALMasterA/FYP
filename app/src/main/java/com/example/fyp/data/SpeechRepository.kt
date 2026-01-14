@@ -4,7 +4,9 @@ import com.example.fyp.model.SpeechResult
 import com.microsoft.cognitiveservices.speech.SpeechRecognizer
 
 interface SpeechRepository {
+
     suspend fun recognizeOnce(languageCode: String): SpeechResult
+
     suspend fun speak(text: String, languageCode: String): SpeechResult
 
     suspend fun startContinuous(
@@ -14,5 +16,6 @@ interface SpeechRepository {
         onError: (String) -> Unit
     ): SpeechRecognizer
 
-    fun stopContinuous(recognizer: SpeechRecognizer?)
+    // CHANGED: make it suspend so we can wait for stop to finish
+    suspend fun stopContinuous(recognizer: SpeechRecognizer?)
 }
