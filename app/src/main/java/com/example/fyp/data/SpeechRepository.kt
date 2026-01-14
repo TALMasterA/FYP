@@ -7,7 +7,7 @@ interface SpeechRepository {
     suspend fun recognizeOnce(languageCode: String): SpeechResult
     suspend fun speak(text: String, languageCode: String): SpeechResult
 
-    fun startContinuous(
+    suspend fun startContinuous(
         languageCode: String,
         onPartial: (String) -> Unit,
         onFinal: (String) -> Unit,

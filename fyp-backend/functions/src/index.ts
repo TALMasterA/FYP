@@ -5,6 +5,8 @@ import fetch from "node-fetch";
 
 setGlobalOptions({maxInstances: 10});
 
+const AZURE_SPEECH_KEY = defineSecret("AZURE_SPEECH_KEY");
+const AZURE_SPEECH_REGION = defineSecret("AZURE_SPEECH_REGION");
 const AZURE_TRANSLATOR_KEY = defineSecret("AZURE_TRANSLATOR_KEY");
 const AZURE_TRANSLATOR_REGION = defineSecret("AZURE_TRANSLATOR_REGION");
 
@@ -19,6 +21,35 @@ function requireAuth(auth: unknown) {
     );
   }
 }
+
+export const getSpeechToken = onCall(
+  {secrets: [AZURE_SPEECH_KEY, AZURE_SPEECH_REGION]},
+  async (request) => {
+    requireAuth(request.auth);
+
+    const key = AZURE_SPEECH_KEY.value();
+    const region = AZURE_SPEECH_REGION.value();
+
+    const url = `https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`;
+
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Ocp-Apim-Subscription-Key": key,
+        "Content-Length": "0",
+      },
+    });
+
+    const token = await resp.text();
+    if (!resp.ok) {
+      throw new HttpsError(
+        "internal", `Speech token HTTP ${resp.status}: ${token}`
+      );
+    }
+
+    return {token, region};
+  }
+);
 
 function buildTranslateUrl(params: { to: string; from?: string }) {
   const url = new URL(`${ENDPOINT}/translate`);

@@ -6,7 +6,7 @@ import com.microsoft.cognitiveservices.speech.SpeechRecognizer
 class StartContinuousConversationUseCase(
     private val speechRepository: SpeechRepository
 ) {
-    operator fun invoke(
+    suspend operator fun invoke(
         languageCode: String,
         onPartial: (String) -> Unit,
         onFinal: (String) -> Unit,

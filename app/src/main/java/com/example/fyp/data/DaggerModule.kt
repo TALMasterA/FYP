@@ -8,6 +8,7 @@ import com.example.fyp.domain.speech.StartContinuousConversationUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctions
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,14 +25,19 @@ object AppModule {
     @Provides @Singleton
     fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
 
+    // NEW: Firebase Functions instance
     @Provides @Singleton
-    fun provideSpeechRepository(): SpeechRepository = AzureSpeechRepository()
+    fun provideFirebaseFunctions(): FirebaseFunctions = FirebaseFunctions.getInstance()
 
-    //@Provides @Singleton
-    //fun provideTranslationRepository(): TranslationRepository = AzureTranslationRepository()
+    // NEW: Token client (uses functions)
     @Provides @Singleton
-    fun provideTranslationRepository(): TranslationRepository = FirebaseTranslationRepository()
+    fun provideCloudSpeechTokenClient(functions: FirebaseFunctions): CloudSpeechTokenClient =
+        CloudSpeechTokenClient(functions)
 
+    // UPDATED: SpeechRepository now needs token client
+    @Provides @Singleton
+    fun provideSpeechRepository(tokenClient: CloudSpeechTokenClient): SpeechRepository =
+        AzureSpeechRepository(tokenClient)
 
     @Provides
     fun provideRecognizeUseCase(repo: SpeechRepository) = RecognizeFromMicUseCase(repo)
@@ -44,4 +50,12 @@ object AppModule {
 
     @Provides
     fun provideTranslateUseCase(repo: TranslationRepository) = TranslateTextUseCase(repo)
+
+    @Provides @Singleton
+    fun provideCloudTranslatorClient(functions: FirebaseFunctions): CloudTranslatorClient =
+        CloudTranslatorClient(functions)
+
+    @Provides @Singleton
+    fun provideTranslationRepository(client: CloudTranslatorClient): TranslationRepository =
+        FirebaseTranslationRepository(client)
 }

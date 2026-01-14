@@ -1,9 +1,10 @@
 package com.example.fyp.data
 
 import com.example.fyp.model.SpeechResult
+import javax.inject.Inject
 
-class FirebaseTranslationRepository(
-    private val cloudTranslatorClient: CloudTranslatorClient = CloudTranslatorClient()
+class FirebaseTranslationRepository @Inject constructor(
+    private val cloudTranslatorClient: CloudTranslatorClient
 ) : TranslationRepository {
 
     override suspend fun translate(

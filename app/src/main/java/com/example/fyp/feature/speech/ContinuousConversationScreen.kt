@@ -6,14 +6,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -28,8 +29,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.RecordAudioPermissionRequest
@@ -37,10 +38,9 @@ import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.data.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
+import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.fyp.model.AuthState
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +64,7 @@ fun ContinuousConversationScreen(
     var isPersonATalking by remember { mutableStateOf(true) }
 
     val isRunning = viewModel.isContinuousRunning
+    val isPreparing = viewModel.isContinuousPreparing
     val partial = viewModel.livePartialText
     val lastTranslation = viewModel.lastSegmentTranslation
     val messages = viewModel.continuousMessages
@@ -78,9 +79,10 @@ fun ContinuousConversationScreen(
         if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
     }
 
-    // Switch speaker while running: stop and restart recognizer, keep session/messages.
+    // Same logic as before: switching person while running restarts recognizer to change STT language.
+    // Added: ViewModel now has delay + "Preparing mic..." when startContinuous is called.
     LaunchedEffect(isPersonATalking, isLoggedIn) {
-        if (isRunning && isLoggedIn) {
+        if (isRunning && isLoggedIn && !isPreparing) {
             viewModel.stopContinuous()
             val speakLang = if (isPersonATalking) fromLanguage else toLanguage
             val otherLang = if (isPersonATalking) toLanguage else fromLanguage
@@ -93,7 +95,6 @@ fun ContinuousConversationScreen(
         }
     }
 
-    // Leaving screen: end session and clear messages.
     DisposableEffect(Unit) {
         onDispose { viewModel.endContinuousSession() }
     }
@@ -106,35 +107,30 @@ fun ContinuousConversationScreen(
         },
         backContentDescription = t(UiTextKey.NavBack)
     ) { outerPadding ->
-
-        // Put everything inside the same padded area so measurements match maxHeight.
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(outerPadding)
         ) {
             val density = LocalDensity.current
-            val pagePadding = 16.dp // matches your app's StandardScreenBody rule. [file:107]
+            val pagePadding = 16.dp
             val gap = 12.dp
 
             var controlsHeightPx by remember { mutableIntStateOf(0) }
             val controlsHeightDp = with(density) { controlsHeightPx.toDp() }
             val controlsBottomDp = pagePadding + controlsHeightDp
 
-            // Sheet height so its top starts right below Person B dropdown (+gap).
             val peek = if (controlsHeightPx == 0) {
-                // Avoid first-frame overlap/jump before measurement is available.
                 0.dp
             } else {
                 (maxHeight - (controlsBottomDp + gap)).coerceAtLeast(0.dp)
             }
 
             BottomSheetScaffold(
-                topBar = {}, // top bar is handled by StandardScreenScaffold
+                topBar = {},
                 sheetPeekHeight = peek,
                 sheetTonalElevation = 2.dp,
                 sheetDragHandle = {
-                    // Custom drag handle (no dependency on BottomSheetDefaults/SheetDefaults).
                     Box(
                         modifier = Modifier
                             .padding(vertical = 10.dp)
@@ -151,6 +147,7 @@ fun ContinuousConversationScreen(
                         isLoggedIn = isLoggedIn,
                         isPersonATalking = isPersonATalking,
                         isRunning = isRunning,
+                        isPreparing = isPreparing,
                         partial = partial,
                         lastTranslation = lastTranslation,
                         onPersonToggle = { isPersonATalking = it },
@@ -183,7 +180,6 @@ fun ContinuousConversationScreen(
                             .padding(pagePadding),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Measure the whole controls block (App UI + instructions + A + B).
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -234,6 +230,7 @@ private fun ConversationSheet(
     isLoggedIn: Boolean,
     isPersonATalking: Boolean,
     isRunning: Boolean,
+    isPreparing: Boolean,
     partial: String,
     lastTranslation: String,
     onPersonToggle: (Boolean) -> Unit,
@@ -265,14 +262,15 @@ private fun ConversationSheet(
 
         Button(
             onClick = { onStartStop(!isRunning) },
-            enabled = isLoggedIn,
+            enabled = isLoggedIn && !isPreparing,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                if (isRunning)
-                    uiText(UiTextKey.ContinuousStopButton, BaseUiTexts[UiTextKey.ContinuousStopButton.ordinal])
-                else
-                    uiText(UiTextKey.ContinuousStartButton, BaseUiTexts[UiTextKey.ContinuousStartButton.ordinal])
+                when {
+                    isPreparing -> "Preparing mic..."
+                    isRunning -> uiText(UiTextKey.ContinuousStopButton, BaseUiTexts[UiTextKey.ContinuousStopButton.ordinal])
+                    else -> uiText(UiTextKey.ContinuousStartButton, BaseUiTexts[UiTextKey.ContinuousStartButton.ordinal])
+                }
             )
         }
 

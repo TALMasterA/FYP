@@ -9,16 +9,25 @@ import com.microsoft.cognitiveservices.speech.SpeechSynthesisCancellationDetails
 import com.microsoft.cognitiveservices.speech.SpeechSynthesizer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.microsoft.cognitiveservices.speech.SpeechConfig
+import com.microsoft.cognitiveservices.speech.audio.AudioConfig
 
-class AzureSpeechRepository : SpeechRepository {
+class AzureSpeechRepository(
+    private val tokenClient: CloudSpeechTokenClient
+) : SpeechRepository {
+
+    private suspend fun getSpeechConfig(): SpeechConfig {
+        val resp = tokenClient.getSpeechToken()
+        return AzureSpeechProvider.speechConfigFromToken(resp.token, resp.region)
+    }
 
     override suspend fun recognizeOnce(languageCode: String): SpeechResult =
         withContext(Dispatchers.IO) {
             try {
-                val speechConfig = AzureSpeechProvider.speechConfig()
+                val speechConfig = getSpeechConfig()
                 speechConfig.speechRecognitionLanguage = languageCode
-
-                val recognizer = SpeechRecognizer(speechConfig)
+                val audioConfig = AudioConfig.fromDefaultMicrophoneInput()
+                val recognizer = SpeechRecognizer(speechConfig, audioConfig)
                 try {
                     val result = recognizer.recognizeOnceAsync().get()
                     if (result.reason == ResultReason.RecognizedSpeech) {
@@ -56,9 +65,8 @@ class AzureSpeechRepository : SpeechRepository {
             }
 
             try {
-                val speechConfig = AzureSpeechProvider.speechConfig()
+                val speechConfig = getSpeechConfig()
                 speechConfig.speechSynthesisLanguage = languageCode
-
                 val synthesizer = SpeechSynthesizer(speechConfig)
                 try {
                     val result = synthesizer.SpeakTextAsync(text).get()
@@ -99,17 +107,18 @@ class AzureSpeechRepository : SpeechRepository {
             }
         }
 
-    override fun startContinuous(
+    override suspend fun startContinuous(
         languageCode: String,
         onPartial: (String) -> Unit,
         onFinal: (String) -> Unit,
         onError: (String) -> Unit
-    ): SpeechRecognizer {
-        val speechConfig = AzureSpeechProvider.speechConfig().apply {
-            speechRecognitionLanguage = languageCode
-        }
+    ): SpeechRecognizer = withContext(Dispatchers.IO) {
 
-        val recognizer = SpeechRecognizer(speechConfig)
+        val speechConfig = getSpeechConfig()
+        speechConfig.speechRecognitionLanguage = languageCode
+
+        val audioConfig = AudioConfig.fromDefaultMicrophoneInput()
+        val recognizer = SpeechRecognizer(speechConfig, audioConfig)
 
         recognizer.recognizing.addEventListener { _, e ->
             onPartial(e.result.text)
@@ -117,11 +126,13 @@ class AzureSpeechRepository : SpeechRepository {
 
         recognizer.recognized.addEventListener { _, e ->
             val result = e.result
-            if (result.reason == ResultReason.RecognizedSpeech) {
-                onFinal(result.text)
-            } else if (result.reason == ResultReason.Canceled) {
-                val det = CancellationDetails.fromResult(result)
-                onError("Canceled: ${det.reason} - ${det.errorDetails}")
+            when (result.reason) {
+                ResultReason.RecognizedSpeech -> onFinal(result.text)
+                ResultReason.Canceled -> {
+                    val det = CancellationDetails.fromResult(result)
+                    onError("Canceled: ${det.reason} - ${det.errorDetails}")
+                }
+                else -> Unit
             }
         }
 
@@ -131,7 +142,7 @@ class AzureSpeechRepository : SpeechRepository {
         }
 
         recognizer.startContinuousRecognitionAsync()
-        return recognizer
+        recognizer
     }
 
     override fun stopContinuous(recognizer: SpeechRecognizer?) {

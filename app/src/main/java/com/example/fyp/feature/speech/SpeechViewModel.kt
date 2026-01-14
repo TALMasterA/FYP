@@ -16,6 +16,7 @@ import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
 import com.microsoft.cognitiveservices.speech.SpeechRecognizer
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,7 +41,6 @@ class SpeechViewModel @Inject constructor(
     private val historyRepo: FirestoreHistoryRepository
 ) : ViewModel() {
 
-    // --- auth state ---
     private val _authState = MutableStateFlow<AuthState>(AuthState.LoggedOut)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
@@ -50,7 +50,6 @@ class SpeechViewModel @Inject constructor(
         }
     }
 
-    // --- main speech screen state ---
     var speechState by mutableStateOf(SpeechScreenState())
         private set
 
@@ -69,12 +68,12 @@ class SpeechViewModel @Inject constructor(
     var isContinuousRunning by mutableStateOf(false)
         private set
 
-    private var continuousRecognizer: SpeechRecognizer? = null
+    var isContinuousPreparing by mutableStateOf(false)
+        private set
 
-    // One session id per "run" of continuous mode (Start -> Stop)
+    private var continuousRecognizer: SpeechRecognizer? = null
     private var continuousSessionId: String? = null
 
-    // -------- chat messages --------
     data class ChatMessage(
         val id: Long,
         val text: String,
@@ -115,7 +114,7 @@ class SpeechViewModel @Inject constructor(
         targetText: String,
         sourceLang: String,
         targetLang: String,
-        sessionId: String = "" // NEW (empty for discrete)
+        sessionId: String = ""
     ) {
         val state = _authState.value
         if (state is AuthState.LoggedIn) {
@@ -134,14 +133,14 @@ class SpeechViewModel @Inject constructor(
         }
     }
 
-    // -------- one-shot speech & translation --------
     fun recognize(languageCode: String) {
         viewModelScope.launch {
-            speechState = speechState.copy(recognizedText = "Recording... Please speak and wait.")
+            speechState = speechState.copy(recognizedText = "Preparing mic...")
+            delay(500)
+            speechState = speechState.copy(recognizedText = "Listening... Please speak now.")
             when (val result = recognizeFromMic(languageCode)) {
                 is SpeechResult.Success ->
                     speechState = speechState.copy(recognizedText = result.text)
-
                 is SpeechResult.Error ->
                     speechState = speechState.copy(recognizedText = "Azure error: ${result.message}")
             }
@@ -170,6 +169,7 @@ class SpeechViewModel @Inject constructor(
                         sessionId = ""
                     )
                 }
+
                 is SpeechResult.Error -> {
                     speechState = speechState.copy(translatedText = "Translation error: ${tr.message}")
                 }
@@ -212,7 +212,14 @@ class SpeechViewModel @Inject constructor(
 
     private fun isLoggedIn(): Boolean = _authState.value is AuthState.LoggedIn
 
-    // -------- continuous conversation --------
+    /**
+     * Same logic as before:
+     * - Start button starts recognizer (resetSession can clear messages)
+     * - Switching person in UI should call stop + start again (UI does that)
+     *
+     * Added:
+     * - "Preparing mic..." + delay(500) before starting recognizer
+     */
     fun startContinuous(
         speakingLang: String,
         targetLang: String,
@@ -224,6 +231,7 @@ class SpeechViewModel @Inject constructor(
             return
         }
 
+        if (isContinuousPreparing) return
         if (isContinuousRunning) return
 
         if (resetSession) {
@@ -234,53 +242,81 @@ class SpeechViewModel @Inject constructor(
         ensureContinuousSessionId()
         livePartialText = ""
         lastSegmentTranslation = ""
-        isContinuousRunning = true
 
-        continuousRecognizer = continuousUseCase(
-            languageCode = speakingLang,
-            onPartial = { text -> viewModelScope.launch { livePartialText = text } },
-            onFinal = { finalText ->
-                viewModelScope.launch {
-                    addMessage(finalText, speakingLang, isFromPersonA, isTranslation = false)
-                    when (val tr = translateTextUseCase(finalText, speakingLang, targetLang)) {
-                        is SpeechResult.Success -> {
-                            lastSegmentTranslation = tr.text
-                            addMessage(tr.text, targetLang, isFromPersonA, isTranslation = true)
-                            saveHistory(
-                                mode = "continuous",
-                                sourceText = finalText,
-                                targetText = tr.text,
-                                sourceLang = speakingLang,
-                                targetLang = targetLang,
-                                sessionId = continuousSessionId.orEmpty()
-                            )
+        viewModelScope.launch {
+            isContinuousPreparing = true
+            isContinuousRunning = false
+            speechState = speechState.copy(ttsStatus = "Preparing mic...")
+
+            delay(500)
+
+            val startedAt = System.currentTimeMillis()
+
+            try {
+                continuousRecognizer = continuousUseCase(
+                    languageCode = speakingLang,
+                    onPartial = { text ->
+                        if (System.currentTimeMillis() - startedAt >= 400) {
+                            viewModelScope.launch { livePartialText = text }
                         }
-                        is SpeechResult.Error -> {
-                            speechState = speechState.copy(ttsStatus = "Continuous translation error: ${tr.message}")
+                    },
+                    onFinal = { finalText ->
+                        viewModelScope.launch {
+                            addMessage(finalText, speakingLang, isFromPersonA, isTranslation = false)
+
+                            when (val tr = translateTextUseCase(finalText, speakingLang, targetLang)) {
+                                is SpeechResult.Success -> {
+                                    lastSegmentTranslation = tr.text
+                                    addMessage(tr.text, targetLang, isFromPersonA, isTranslation = true)
+
+                                    saveHistory(
+                                        mode = "continuous",
+                                        sourceText = finalText,
+                                        targetText = tr.text,
+                                        sourceLang = speakingLang,
+                                        targetLang = targetLang,
+                                        sessionId = continuousSessionId.orEmpty()
+                                    )
+                                }
+
+                                is SpeechResult.Error -> {
+                                    speechState = speechState.copy(
+                                        ttsStatus = "Continuous translation error: ${tr.message}"
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    onError = { msg ->
+                        viewModelScope.launch {
+                            speechState = speechState.copy(ttsStatus = "Continuous recognition error: $msg")
+                            stopContinuous()
                         }
                     }
-                }
-            },
-            onError = { msg ->
-                viewModelScope.launch {
-                    speechState = speechState.copy(ttsStatus = "Continuous recognition error: $msg")
-                    stopContinuous()
-                }
+                )
+
+                isContinuousPreparing = false
+                isContinuousRunning = true
+                speechState = speechState.copy(ttsStatus = "Listening...")
+
+            } catch (e: Exception) {
+                isContinuousPreparing = false
+                isContinuousRunning = false
+                speechState = speechState.copy(ttsStatus = "Continuous start error: ${e.message}")
+                stopContinuous()
             }
-        )
+        }
     }
 
     fun stopContinuous() {
+        isContinuousPreparing = false
         if (!isContinuousRunning && continuousRecognizer == null) return
+
         isContinuousRunning = false
         runCatching { continuousUseCase.stop(continuousRecognizer) }
         continuousRecognizer = null
     }
 
-    /**
-     * Call this when the user ends a continuous "run" (Stop button),
-     * OR when leaving the continuous screen and you want a new session next time.
-     */
     fun endContinuousSession() {
         stopContinuous()
         clearContinuousMessages()

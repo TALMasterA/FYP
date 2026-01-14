@@ -23,8 +23,6 @@ android {
         versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "AZURE_SPEECH_KEY", "\"\"")
-        buildConfigField("String", "AZURE_SPEECH_REGION", "\"\"")
     }
 
     buildTypes {
