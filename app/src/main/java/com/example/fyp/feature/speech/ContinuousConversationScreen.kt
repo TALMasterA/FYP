@@ -11,7 +11,6 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -41,7 +40,7 @@ import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
-import com.example.fyp.feature.speech.ChatMessage
+import androidx.compose.material3.ButtonDefaults
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -202,21 +201,30 @@ fun ContinuousConversationScreen(
                                 style = MaterialTheme.typography.bodyMedium
                             )
 
-                            LanguageDropdownField(
-                                label = t(UiTextKey.ContinuousSpeakerAName),
-                                selectedCode = fromLanguage,
-                                options = supportedLanguages,
-                                nameFor = uiLanguageNameFor,
-                                onSelected = { fromLanguage = it }
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    LanguageDropdownField(
+                                        label = t(UiTextKey.ContinuousSpeakerAName),
+                                        selectedCode = fromLanguage,
+                                        options = supportedLanguages,
+                                        nameFor = uiLanguageNameFor,
+                                        onSelected = { fromLanguage = it }
+                                    )
+                                }
 
-                            LanguageDropdownField(
-                                label = t(UiTextKey.ContinuousSpeakerBName),
-                                selectedCode = toLanguage,
-                                options = supportedLanguages,
-                                nameFor = uiLanguageNameFor,
-                                onSelected = { toLanguage = it }
-                            )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    LanguageDropdownField(
+                                        label = t(UiTextKey.ContinuousSpeakerBName),
+                                        selectedCode = toLanguage,
+                                        options = supportedLanguages,
+                                        nameFor = uiLanguageNameFor,
+                                        onSelected = { toLanguage = it }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -336,7 +344,15 @@ private fun ConversationSheet(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End
                             ) {
-                                OutlinedButton(onClick = { onSpeakMessage(msg) }) { Text("🔊") }
+                                Button(
+                                    onClick = { onSpeakMessage(msg) },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                ) {
+                                    Text("🔊")
+                                }
                             }
                         }
                     }

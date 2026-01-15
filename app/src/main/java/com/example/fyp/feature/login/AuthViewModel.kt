@@ -14,6 +14,7 @@ import javax.inject.Inject
 
 data class LoginUiState(
     val error: String? = null,
+    val message: String? = null,
     val isLoading: Boolean = false
 )
 
@@ -33,7 +34,7 @@ class AuthViewModel @Inject constructor(
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null, message = null)
             val result = authRepository.login(email, password)
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
@@ -47,6 +48,18 @@ class AuthViewModel @Inject constructor(
             error = "Registration is disabled during development.",
             isLoading = false
         )
+    }
+
+    fun resetPassword(email: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null, message = null)
+            val result = authRepository.sendPasswordResetEmail(email.trim())
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                error = result.exceptionOrNull()?.message,
+                message = if (result.isSuccess) "Reset email sent. Please check your inbox." else null
+            )
+        }
     }
 
     fun logout() {

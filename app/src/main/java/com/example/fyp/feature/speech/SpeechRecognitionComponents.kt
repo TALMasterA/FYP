@@ -1,8 +1,10 @@
 package com.example.fyp.feature.speech
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -23,21 +25,30 @@ fun SpeechLanguagePickers(
     onSelectedLanguage: (String) -> Unit,
     onSelectedTargetLanguage: (String) -> Unit,
 ) {
-    LanguageDropdownField(
-        label = detectLabel,
-        selectedCode = selectedLanguage,
-        options = supportedLanguages,
-        nameFor = languageNameFor,
-        onSelected = onSelectedLanguage
-    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            LanguageDropdownField(
+                label = detectLabel,
+                selectedCode = selectedLanguage,
+                options = supportedLanguages,
+                nameFor = languageNameFor,
+                onSelected = onSelectedLanguage
+            )
+        }
 
-    LanguageDropdownField(
-        label = translateToLabel,
-        selectedCode = selectedTargetLanguage,
-        options = supportedLanguages,
-        nameFor = languageNameFor,
-        onSelected = onSelectedTargetLanguage
-    )
+        Column(modifier = Modifier.weight(1f)) {
+            LanguageDropdownField(
+                label = translateToLabel,
+                selectedCode = selectedTargetLanguage,
+                options = supportedLanguages,
+                nameFor = languageNameFor,
+                onSelected = onSelectedTargetLanguage
+            )
+        }
+    }
 }
 
 @Composable

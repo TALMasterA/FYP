@@ -16,6 +16,12 @@ import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.text.input.VisualTransformation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,8 +32,10 @@ fun LoginScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AuthViewModel = hiltViewModel(),
-    onLoginSuccess: () -> Unit = {}
-) {
+    onLoginSuccess: () -> Unit = {},
+    onOpenResetPassword: () -> Unit = {},
+
+    ) {
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -44,6 +52,9 @@ fun LoginScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var isLogin by remember { mutableStateOf(true) }
     var localError by remember { mutableStateOf<String?>(null) }
+
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     StandardScreenScaffold(
         title = if (isLogin) t(UiTextKey.AuthLoginTitle) else t(UiTextKey.AuthRegisterTitle),
@@ -79,7 +90,15 @@ fun LoginScreen(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text(t(UiTextKey.AuthPasswordLabel)) },
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                        )
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -88,7 +107,15 @@ fun LoginScreen(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
                     label = { Text(t(UiTextKey.AuthConfirmPasswordLabel)) },
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                            Icon(
+                                imageVector = if (confirmPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

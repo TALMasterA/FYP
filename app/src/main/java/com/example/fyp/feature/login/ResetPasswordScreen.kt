@@ -1,0 +1,84 @@
+package com.example.fyp.feature.login
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.fyp.core.AppLanguageDropdown
+import com.example.fyp.core.StandardScreenBody
+import com.example.fyp.core.StandardScreenScaffold
+import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.model.AppLanguageState
+import com.example.fyp.model.BaseUiTexts
+import com.example.fyp.model.UiTextKey
+
+@Composable
+fun ResetPasswordScreen(
+    uiLanguages: List<Pair<String, String>>,
+    appLanguageState: AppLanguageState,
+    onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
+    onBack: () -> Unit,
+    viewModel: AuthViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+
+    var email by remember { mutableStateOf("") }
+
+    StandardScreenScaffold(
+        title = "Reset password",
+        onBack = onBack,
+        backContentDescription = t(UiTextKey.NavBack)
+    ) { innerPadding ->
+        StandardScreenBody(
+            innerPadding = innerPadding,
+            scrollable = true,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            AppLanguageDropdown(
+                uiLanguages = uiLanguages,
+                appLanguageState = appLanguageState,
+                onUpdateAppLanguage = onUpdateAppLanguage,
+                uiText = uiText
+            )
+
+            Text(
+                text = "Enter your email and a reset link will be sent.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text(t(UiTextKey.AuthEmailLabel)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Button(
+                onClick = { viewModel.resetPassword(email) },
+                enabled = !uiState.isLoading && email.isNotBlank(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(if (uiState.isLoading) "Sending..." else "Send reset email")
+            }
+
+            uiState.message?.let {
+                Text(text = it, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp))
+            }
+
+            uiState.error?.let {
+                Text(text = it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 4.dp))
+            }
+        }
+    }
+}

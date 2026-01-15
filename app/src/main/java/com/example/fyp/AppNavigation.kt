@@ -26,6 +26,7 @@ import com.example.fyp.model.AuthState
 import com.example.fyp.model.UiTextKey
 import com.example.fyp.data.UiLanguageCacheStore
 import com.example.fyp.model.baseUiTextsHash
+import com.example.fyp.feature.login.ResetPasswordScreen
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
@@ -34,6 +35,7 @@ sealed class AppScreen(val route: String) {
     object Continuous : AppScreen("continuous")
     object Login : AppScreen("login")
     object History : AppScreen("history")
+    object ResetPassword : AppScreen("reset_password")
 }
 
 @Composable
@@ -206,7 +208,17 @@ fun AppNavigation() {
                     appLanguageState = appLanguageState,
                     onUpdateAppLanguage = ::updateAppLanguage,
                     onBack = { navController.popBackStack() },
-                    onLoginSuccess = { navController.popBackStack() }
+                    onLoginSuccess = { navController.popBackStack() },
+                    onOpenResetPassword = { navController.navigate(AppScreen.ResetPassword.route) }
+                )
+            }
+
+            composable(AppScreen.ResetPassword.route) {
+                ResetPasswordScreen(
+                    uiLanguages = uiLanguages,
+                    appLanguageState = appLanguageState,
+                    onUpdateAppLanguage = ::updateAppLanguage,
+                    onBack = { navController.popBackStack() }
                 )
             }
 
