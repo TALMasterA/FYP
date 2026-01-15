@@ -3,25 +3,15 @@ package com.example.fyp.feature.history
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -58,8 +48,8 @@ fun HistoryScreen(
 ) {
     val viewModel: HistoryViewModel = hiltViewModel()
     val speechVm: SpeechViewModel = hiltViewModel()
-
     val uiState by viewModel.uiState.collectAsState()
+
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
@@ -67,22 +57,14 @@ fun HistoryScreen(
     val tabs = listOf(t(UiTextKey.HistoryTabDiscrete), t(UiTextKey.HistoryTabContinuous))
 
     val discreteRecords = uiState.records.filter { it.mode == "discrete" }
-    val continuousRecords = uiState.records.filter { it.mode == "continuous" }
-
-    val sessions = continuousRecords
-        .filter { it.sessionId.isNotBlank() }
-        .groupBy { it.sessionId }
-        .toList()
-        .sortedByDescending { (_, records) -> records.lastOrNull()?.timestamp }
+    val sessions = groupContinuousSessions(uiState.records)
 
     var selectedSessionId by remember { mutableStateOf<String?>(null) }
-
     var pendingDeleteRecord by remember { mutableStateOf<TranslationRecord?>(null) }
     var pendingDeleteSessionId by remember { mutableStateOf<String?>(null) }
     var pendingRenameSessionId by remember { mutableStateOf<String?>(null) }
     var renameText by remember { mutableStateOf("") }
 
-    // NEW: track which history record button is currently speaking
     var speakingRecordId by remember { mutableStateOf<String?>(null) }
     var speakingType by remember { mutableStateOf<String?>(null) } // "O" or "T"
 
@@ -99,76 +81,48 @@ fun HistoryScreen(
     }
 
     // ----- dialogs -----
-    if (pendingDeleteRecord != null) {
-        AlertDialog(
-            onDismissRequest = { pendingDeleteRecord = null },
-            title = { Text(t(UiTextKey.DialogDeleteRecordTitle)) },
-            text = { Text(t(UiTextKey.DialogDeleteRecordMessage)) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.deleteRecord(pendingDeleteRecord!!)
-                        pendingDeleteRecord = null
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    )
-                ) { Text(t(UiTextKey.ActionDelete)) }
+    pendingDeleteRecord?.let { rec ->
+        DeleteRecordDialog(
+            title = t(UiTextKey.DialogDeleteRecordTitle),
+            message = t(UiTextKey.DialogDeleteRecordMessage),
+            confirmText = t(UiTextKey.ActionDelete),
+            cancelText = t(UiTextKey.ActionCancel),
+            onConfirm = {
+                viewModel.deleteRecord(rec)
+                pendingDeleteRecord = null
             },
-            dismissButton = {
-                TextButton(onClick = { pendingDeleteRecord = null }) { Text(t(UiTextKey.ActionCancel)) }
-            }
+            onDismiss = { pendingDeleteRecord = null }
         )
     }
 
-    if (pendingDeleteSessionId != null) {
-        AlertDialog(
-            onDismissRequest = { pendingDeleteSessionId = null },
-            title = { Text(t(UiTextKey.DialogDeleteSessionTitle)) },
-            text = { Text(t(UiTextKey.DialogDeleteSessionMessage)) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.deleteSession(pendingDeleteSessionId!!)
-                        if (selectedSessionId == pendingDeleteSessionId) selectedSessionId = null
-                        pendingDeleteSessionId = null
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    )
-                ) { Text(t(UiTextKey.HistoryDeleteSessionButton)) }
+    pendingDeleteSessionId?.let { sid ->
+        DeleteSessionDialog(
+            title = t(UiTextKey.DialogDeleteSessionTitle),
+            message = t(UiTextKey.DialogDeleteSessionMessage),
+            confirmText = t(UiTextKey.HistoryDeleteSessionButton),
+            cancelText = t(UiTextKey.ActionCancel),
+            onConfirm = {
+                viewModel.deleteSession(sid)
+                if (selectedSessionId == sid) selectedSessionId = null
+                pendingDeleteSessionId = null
             },
-            dismissButton = {
-                TextButton(onClick = { pendingDeleteSessionId = null }) { Text(t(UiTextKey.ActionCancel)) }
-            }
+            onDismiss = { pendingDeleteSessionId = null }
         )
     }
 
-    if (pendingRenameSessionId != null) {
-        AlertDialog(
-            onDismissRequest = { pendingRenameSessionId = null },
-            title = { Text(t(UiTextKey.HistoryNameSessionTitle)) },
-            text = {
-                OutlinedTextField(
-                    value = renameText,
-                    onValueChange = { renameText = it },
-                    label = { Text(t(UiTextKey.HistorySessionNameLabel)) },
-                    singleLine = true
-                )
+    pendingRenameSessionId?.let { sid ->
+        RenameSessionDialog(
+            title = t(UiTextKey.HistoryNameSessionTitle),
+            label = t(UiTextKey.HistorySessionNameLabel),
+            value = renameText,
+            confirmText = t(UiTextKey.ActionSave),
+            cancelText = t(UiTextKey.ActionCancel),
+            onValueChange = { renameText = it },
+            onConfirm = {
+                viewModel.renameSession(sid, renameText.trim())
+                pendingRenameSessionId = null
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.renameSession(pendingRenameSessionId!!, renameText.trim())
-                        pendingRenameSessionId = null
-                    }
-                ) { Text(t(UiTextKey.ActionSave)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingRenameSessionId = null }) { Text(t(UiTextKey.ActionCancel)) }
-            }
+            onDismiss = { pendingRenameSessionId = null }
         )
     }
 
@@ -214,22 +168,18 @@ fun HistoryScreen(
 
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                 when {
-                    uiState.isLoading -> {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
-                        }
+                    uiState.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
                     }
 
-                    uiState.error != null -> {
-                        Text(
-                            text = uiState.error.orEmpty(),
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
+                    uiState.error != null -> Text(
+                        text = uiState.error.orEmpty(),
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(8.dp)
+                    )
 
                     selectedTab == 0 -> {
-                        HistoryList(
+                        HistoryDiscreteTab(
                             records = discreteRecords,
                             languageNameFor = uiLanguageNameFor,
                             speakingRecordId = speakingRecordId,
@@ -254,80 +204,38 @@ fun HistoryScreen(
 
                     else -> {
                         if (selectedSessionId == null) {
-                            if (sessions.isEmpty()) {
-                                Text(t(UiTextKey.HistoryNoContinuousSessions), modifier = Modifier.padding(8.dp))
-                            } else {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                                    contentPadding = PaddingValues(bottom = 16.dp)
-                                ) {
-                                    items(sessions, key = { (sid, _) -> sid }) { (sid, records) ->
-                                        val displayName = uiState.sessionNames[sid].orEmpty()
-                                        val title =
-                                            if (displayName.isNotBlank()) displayName
-                                            else formatSessionTitle(
-                                                template = t(UiTextKey.HistorySessionTitleTemplate),
-                                                sessionId = sid
-                                            )
-
-                                        OutlinedCard(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            colors = CardDefaults.outlinedCardColors(
-                                                containerColor = MaterialTheme.colorScheme.background
-                                            )
-                                        ) {
-                                            Column(modifier = Modifier.padding(12.dp)) {
-                                                Text(title, style = MaterialTheme.typography.titleMedium)
-                                                Text(
-                                                    formatItemsCount(
-                                                        template = t(UiTextKey.HistoryItemsCountTemplate),
-                                                        count = records.size
-                                                    )
-                                                )
-
-                                                Spacer(Modifier.height(10.dp))
-
-                                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                                    Button(onClick = { selectedSessionId = sid }) {
-                                                        Text(t(UiTextKey.ActionOpen))
-                                                    }
-
-                                                    OutlinedButton(onClick = {
-                                                        renameText = uiState.sessionNames[sid].orEmpty()
-                                                        pendingRenameSessionId = sid
-                                                    }) {
-                                                        Text(t(UiTextKey.ActionName))
-                                                    }
-
-                                                    Button(
-                                                        onClick = { pendingDeleteSessionId = sid },
-                                                        colors = ButtonDefaults.buttonColors(
-                                                            containerColor = MaterialTheme.colorScheme.error,
-                                                            contentColor = MaterialTheme.colorScheme.onError
-                                                        )
-                                                    ) {
-                                                        Text(t(UiTextKey.ActionDelete))
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            HistoryContinuousTab(
+                                sessions = sessions,
+                                selectedSessionId = selectedSessionId,
+                                sessionNames = uiState.sessionNames,
+                                noSessionsText = t(UiTextKey.HistoryNoContinuousSessions),
+                                openLabel = t(UiTextKey.ActionOpen),
+                                nameLabel = t(UiTextKey.ActionName),
+                                deleteLabel = t(UiTextKey.ActionDelete),
+                                sessionTitleTemplate = t(UiTextKey.HistorySessionTitleTemplate),
+                                itemsCountTemplate = t(UiTextKey.HistoryItemsCountTemplate),
+                                onOpenSession = { sid -> selectedSessionId = sid },
+                                onRequestRename = { sid ->
+                                    renameText = uiState.sessionNames[sid].orEmpty()
+                                    pendingRenameSessionId = sid
+                                },
+                                onRequestDelete = { sid -> pendingDeleteSessionId = sid },
+                                modifier = Modifier.fillMaxSize()
+                            )
                         } else {
+                            val sid = selectedSessionId.orEmpty()
                             val sessionRecords = sessions
-                                .firstOrNull { (sid, _) -> sid == selectedSessionId }
-                                ?.second
+                                .firstOrNull { it.sessionId == sid }
+                                ?.records
                                 ?.sortedBy { it.timestamp }
                                 .orEmpty()
 
-                            val displayName = uiState.sessionNames[selectedSessionId!!].orEmpty()
+                            val displayName = uiState.sessionNames[sid].orEmpty()
                             val title =
                                 if (displayName.isNotBlank()) displayName
                                 else formatSessionTitle(
                                     template = t(UiTextKey.HistorySessionTitleTemplate),
-                                    sessionId = selectedSessionId!!
+                                    sessionId = sid
                                 )
 
                             Column(modifier = Modifier.fillMaxSize()) {
@@ -337,7 +245,9 @@ fun HistoryScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(title, style = MaterialTheme.typography.titleMedium)
-                                    TextButton(onClick = { selectedSessionId = null }) { Text(t(UiTextKey.NavBack)) }
+                                    TextButton(onClick = { selectedSessionId = null }) {
+                                        Text(t(UiTextKey.NavBack))
+                                    }
                                 }
 
                                 Spacer(Modifier.height(8.dp))
@@ -368,117 +278,6 @@ fun HistoryScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun HistoryList(
-    records: List<TranslationRecord>,
-    languageNameFor: (String) -> String,
-    speakingRecordId: String?,
-    speakingType: String?,
-    isTtsRunning: Boolean,
-    ttsStatus: String,
-    onSpeakOriginal: (TranslationRecord) -> Unit,
-    onSpeakTranslation: (TranslationRecord) -> Unit,
-    onDelete: (TranslationRecord) -> Unit,
-    deleteLabel: String,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(bottom = 16.dp)
-    ) {
-        items(records, key = { it.id }) { rec ->
-            val busyOriginal = isTtsRunning && speakingRecordId == rec.id && speakingType == "O"
-            val busyTranslation = isTtsRunning && speakingRecordId == rec.id && speakingType == "T"
-            val busyAny = busyOriginal || busyTranslation
-
-            OutlinedCard(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.background)
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = "${languageNameFor(rec.sourceLang)} → ${languageNameFor(rec.targetLang)}")
-                    Spacer(Modifier.height(6.dp))
-                    Text(text = rec.sourceText)
-                    Spacer(Modifier.height(4.dp))
-                    Text(text = rec.targetText, style = MaterialTheme.typography.bodyMedium)
-
-                    Spacer(Modifier.height(10.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Button(
-                            onClick = { onSpeakOriginal(rec) },
-                            enabled = !busyOriginal
-                        ) { Text(if (busyOriginal) "Waiting..." else "🗣️O") }
-
-                        Button(
-                            onClick = { onSpeakTranslation(rec) },
-                            enabled = !busyTranslation
-                        ) { Text(if (busyTranslation) "Waiting..." else "🔊T") }
-
-                        Button(
-                            onClick = { onDelete(rec) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onError
-                            )
-                        ) { Text(deleteLabel) }
-                    }
-
-                    if (busyAny) {
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = if (ttsStatus.isBlank()) "Waiting..." else ttsStatus,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * Supports both styles:
- * - New: "Session {id}"
- * - Old: "Session %s" (or any translated variant that still uses %s)
- */
-private fun formatSessionTitle(template: String, sessionId: String): String {
-    val shortId = sessionId.take(8)
-    return when {
-        template.contains("{id}") -> template.replace("{id}", shortId)
-        else -> safeFormat(template, shortId)
-    }
-}
-
-/**
- * Supports both styles:
- * - New: "{count} items"
- * - Old: "%d items" (or any translated variant that still uses %d)
- */
-private fun formatItemsCount(template: String, count: Int): String {
-    return when {
-        template.contains("{count}") -> template.replace("{count}", count.toString())
-        else -> safeFormat(template, count)
-    }
-}
-
-private fun safeFormat(template: String, vararg args: Any): String {
-    return try {
-        String.format(template, *args)
-    } catch (_: Exception) {
-        val escaped = template.replace(Regex("%(?!([0-9]+\\$)?[sd%])"), "%%")
-        try {
-            String.format(escaped, *args)
-        } catch (_: Exception) {
-            template
         }
     }
 }

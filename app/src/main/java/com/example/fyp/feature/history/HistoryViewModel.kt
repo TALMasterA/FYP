@@ -32,7 +32,6 @@ class HistoryViewModel @Inject constructor(
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
 
     private var currentUserId: String? = null
-
     private var historyJob: Job? = null
     private var sessionsJob: Job? = null
 
