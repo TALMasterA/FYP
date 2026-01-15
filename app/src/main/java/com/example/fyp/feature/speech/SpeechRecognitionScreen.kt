@@ -1,31 +1,36 @@
 package com.example.fyp.feature.speech
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.AudioRecorder
-import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.RecordAudioPermissionRequest
 import com.example.fyp.core.StandardScreenBody
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.data.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
+import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
-import androidx.compose.foundation.layout.*
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.fyp.model.AuthState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,10 +51,7 @@ fun SpeechRecognitionScreen(
 
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
-
-    val supportedLanguages by remember {
-        mutableStateOf(AzureLanguageConfig.loadSupportedLanguages(context))
-    }
+    val supportedLanguages by remember { mutableStateOf(AzureLanguageConfig.loadSupportedLanguages(context)) }
 
     var selectedLanguage by remember { mutableStateOf(supportedLanguages.firstOrNull() ?: "en-US") }
     var selectedTargetLanguage by remember { mutableStateOf(supportedLanguages.getOrNull(1) ?: "zh-HK") }
@@ -78,20 +80,15 @@ fun SpeechRecognitionScreen(
 
                 Text(text = t(UiTextKey.SpeechInstructions))
 
-                LanguageDropdownField(
-                    label = t(UiTextKey.DetectLanguageLabel),
-                    selectedCode = selectedLanguage,
-                    options = supportedLanguages,
-                    nameFor = uiLanguageNameFor,
-                    onSelected = { selectedLanguage = it }
-                )
-
-                LanguageDropdownField(
-                    label = t(UiTextKey.TranslateToLabel),
-                    selectedCode = selectedTargetLanguage,
-                    options = supportedLanguages,
-                    nameFor = uiLanguageNameFor,
-                    onSelected = { selectedTargetLanguage = it }
+                SpeechLanguagePickers(
+                    detectLabel = t(UiTextKey.DetectLanguageLabel),
+                    translateToLabel = t(UiTextKey.TranslateToLabel),
+                    selectedLanguage = selectedLanguage,
+                    selectedTargetLanguage = selectedTargetLanguage,
+                    supportedLanguages = supportedLanguages,
+                    languageNameFor = uiLanguageNameFor,
+                    onSelectedLanguage = { selectedLanguage = it },
+                    onSelectedTargetLanguage = { selectedTargetLanguage = it }
                 )
 
                 Button(
@@ -102,25 +99,18 @@ fun SpeechRecognitionScreen(
                     Text(t(UiTextKey.AzureRecognizeButton))
                 }
 
+                LabeledTextBlock(text = recognizedText)
+
+                TextActionsRow(
+                    leftText = t(UiTextKey.CopyButton),
+                    leftEnabled = recognizedText.isNotBlank(),
+                    onLeft = { clipboardManager.setText(AnnotatedString(recognizedText)) },
+                    rightText = if (isTtsRunning) t(UiTextKey.SpeakingLabel) else t(UiTextKey.SpeakScriptButton),
+                    rightEnabled = recognizedText.isNotBlank() && !isTtsRunning,
+                    onRight = { viewModel.speakOriginal(selectedLanguage) }
+                )
+
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = recognizedText)
-
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Button(
-                        onClick = { clipboardManager.setText(AnnotatedString(recognizedText)) },
-                        enabled = recognizedText.isNotBlank()
-                    ) { Text(t(UiTextKey.CopyButton)) }
-
-                    Button(
-                        onClick = { viewModel.speakOriginal(selectedLanguage) },
-                        enabled = recognizedText.isNotBlank() && !isTtsRunning
-                    ) {
-                        Text(
-                            if (isTtsRunning) t(UiTextKey.SpeakingLabel)
-                            else t(UiTextKey.SpeakScriptButton)
-                        )
-                    }
-                }
 
                 Button(
                     onClick = {
@@ -135,29 +125,24 @@ fun SpeechRecognitionScreen(
                     Text(t(UiTextKey.TranslateButton))
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = translatedText)
+                LabeledTextBlock(text = translatedText)
 
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Button(
                         onClick = { clipboardManager.setText(AnnotatedString(translatedText)) },
                         enabled = translatedText.isNotBlank()
                     ) { Text(t(UiTextKey.CopyTranslationButton)) }
-                }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     Button(
                         onClick = { viewModel.speakTranslation(selectedTargetLanguage) },
                         enabled = isLoggedIn && translatedText.isNotBlank() && !isTtsRunning
                     ) {
-                        Text(
-                            if (isTtsRunning) t(UiTextKey.SpeakingLabel)
-                            else t(UiTextKey.SpeakTranslationButton)
-                        )
+                        Text(if (isTtsRunning) t(UiTextKey.SpeakingLabel) else t(UiTextKey.SpeakTranslationButton))
                     }
                 }
 
                 if (ttsStatus.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(ttsStatus)
                 }
 

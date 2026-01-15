@@ -56,7 +56,9 @@ fun HistoryScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(t(UiTextKey.HistoryTabDiscrete), t(UiTextKey.HistoryTabContinuous))
 
-    val discreteRecords = uiState.records.filter { it.mode == "discrete" }
+    val discreteRecords = uiState.records
+        .filter { it.mode == "discrete" }
+        .sortedByDescending { it.timestamp }
     val sessions = groupContinuousSessions(uiState.records)
 
     var selectedSessionId by remember { mutableStateOf<String?>(null) }

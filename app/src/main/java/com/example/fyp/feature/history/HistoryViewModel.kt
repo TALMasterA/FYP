@@ -3,7 +3,11 @@ package com.example.fyp.feature.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
-import com.example.fyp.data.history.FirestoreHistoryRepository
+import com.example.fyp.domain.history.DeleteHistoryRecordUseCase
+import com.example.fyp.domain.history.DeleteSessionUseCase
+import com.example.fyp.domain.history.ObserveSessionNamesUseCase
+import com.example.fyp.domain.history.ObserveUserHistoryUseCase
+import com.example.fyp.domain.history.RenameSessionUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.TranslationRecord
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +29,11 @@ data class HistoryUiState(
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
-    private val historyRepo: FirestoreHistoryRepository
+    private val observeUserHistory: ObserveUserHistoryUseCase,
+    private val observeSessionNames: ObserveSessionNamesUseCase,
+    private val deleteHistoryRecord: DeleteHistoryRecordUseCase,
+    private val renameSession: RenameSessionUseCase,
+    private val deleteSession: DeleteSessionUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryUiState())
@@ -77,7 +85,7 @@ class HistoryViewModel @Inject constructor(
         if (uid.isBlank() || record.id.isBlank()) return
 
         viewModelScope.launch {
-            runCatching { historyRepo.delete(uid, record.id) }
+            runCatching { deleteHistoryRecord(uid, record.id) }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(error = e.message ?: "Delete failed")
                 }
@@ -89,7 +97,7 @@ class HistoryViewModel @Inject constructor(
         if (uid.isBlank() || sessionId.isBlank()) return
 
         viewModelScope.launch {
-            runCatching { historyRepo.setSessionName(uid, sessionId, name) }
+            runCatching { renameSession(uid, sessionId, name) }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(error = e.message ?: "Rename failed")
                 }
@@ -101,7 +109,7 @@ class HistoryViewModel @Inject constructor(
         if (uid.isBlank() || sessionId.isBlank()) return
 
         viewModelScope.launch {
-            runCatching { historyRepo.deleteSession(uid, sessionId) }
+            runCatching { deleteSession(uid, sessionId) }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(error = e.message ?: "Delete session failed")
                 }
@@ -111,11 +119,10 @@ class HistoryViewModel @Inject constructor(
     private fun startListening(userId: String) {
         historyJob?.cancel()
         sessionsJob?.cancel()
-
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         historyJob = viewModelScope.launch {
-            historyRepo.getHistory(userId)
+            observeUserHistory(userId)
                 .catch { e ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -133,12 +140,10 @@ class HistoryViewModel @Inject constructor(
         }
 
         sessionsJob = viewModelScope.launch {
-            historyRepo.listenSessions(userId)
+            observeSessionNames(userId)
                 .catch { /* optional: ignore */ }
-                .collect { list ->
-                    _uiState.value = _uiState.value.copy(
-                        sessionNames = list.associate { it.sessionId to it.name }
-                    )
+                .collect { map ->
+                    _uiState.value = _uiState.value.copy(sessionNames = map)
                 }
         }
     }
