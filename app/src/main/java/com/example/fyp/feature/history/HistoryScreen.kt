@@ -66,7 +66,6 @@ fun HistoryScreen(
     var pendingDeleteSessionId by remember { mutableStateOf<String?>(null) }
     var pendingRenameSessionId by remember { mutableStateOf<String?>(null) }
     var renameText by remember { mutableStateOf("") }
-
     var speakingRecordId by remember { mutableStateOf<String?>(null) }
     var speakingType by remember { mutableStateOf<String?>(null) } // "O" or "T"
 
@@ -234,11 +233,12 @@ fun HistoryScreen(
 
                             val displayName = uiState.sessionNames[sid].orEmpty()
                             val title =
-                                if (displayName.isNotBlank()) displayName
-                                else formatSessionTitle(
-                                    template = t(UiTextKey.HistorySessionTitleTemplate),
-                                    sessionId = sid
-                                )
+                                displayName.ifBlank {
+                                    formatSessionTitle(
+                                        template = t(UiTextKey.HistorySessionTitleTemplate),
+                                        sessionId = sid
+                                    )
+                                }
 
                             Column(modifier = Modifier.fillMaxSize()) {
                                 Row(

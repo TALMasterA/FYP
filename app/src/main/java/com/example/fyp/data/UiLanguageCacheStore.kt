@@ -14,28 +14,28 @@ private val Context.uiLangDataStore by preferencesDataStore(name = "ui_lang_cach
 
 class UiLanguageCacheStore(private val context: Context) {
 
-    private val KEY_SELECTED = stringPreferencesKey("selected_ui_language")
-    private val KEY_BASE_HASH = intPreferencesKey("base_ui_texts_hash")
+    private val keyselected = stringPreferencesKey("selected_ui_language")
+    private val keybasehash = intPreferencesKey("base_ui_texts_hash")
 
     private fun keyForLang(code: String): Preferences.Key<String> =
         stringPreferencesKey("uiTexts_json_$code")
 
     suspend fun getSelectedLanguage(defaultCode: String): String {
         val prefs = context.uiLangDataStore.data.first()
-        return prefs[KEY_SELECTED] ?: defaultCode
+        return prefs[keyselected] ?: defaultCode
     }
 
     suspend fun setSelectedLanguage(code: String) {
-        context.uiLangDataStore.edit { it[KEY_SELECTED] = code }
+        context.uiLangDataStore.edit { it[keyselected] = code }
     }
 
     suspend fun getBaseHash(): Int? {
         val prefs = context.uiLangDataStore.data.first()
-        return prefs[KEY_BASE_HASH]
+        return prefs[keybasehash]
     }
 
     suspend fun setBaseHash(hash: Int) {
-        context.uiLangDataStore.edit { it[KEY_BASE_HASH] = hash }
+        context.uiLangDataStore.edit { it[keybasehash] = hash }
     }
 
     suspend fun loadUiTexts(code: String): Map<UiTextKey, String>? {

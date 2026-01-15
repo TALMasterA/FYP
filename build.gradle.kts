@@ -8,6 +8,7 @@ plugins {
     id("com.google.dagger.hilt.android") version "2.52" apply false //keep the version
 
     id("com.google.firebase.crashlytics") version "3.0.6" apply false
+    id("com.google.firebase.firebase-perf") version "2.0.2" apply false
 }
 
 buildscript {

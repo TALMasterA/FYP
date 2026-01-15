@@ -113,7 +113,7 @@ fun HistoryList(
                     if (busyAny) {
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = if (ttsStatus.isBlank()) "Waiting..." else ttsStatus,
+                            text = ttsStatus.ifBlank { "Waiting..." },
                             style = MaterialTheme.typography.bodySmall
                         )
                     }

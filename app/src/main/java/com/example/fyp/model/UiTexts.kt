@@ -85,7 +85,11 @@ enum class UiTextKey {
     AuthToggleToLogin,
     AuthErrorPasswordsMismatch,
     AuthErrorPasswordTooShort,
-    DisableText
+    DisableText,
+    ForgotPwText,
+    ResetPwText,
+    ResetSendingText,
+    ResetSendText
 }
 
 val BaseUiTexts: List<String> = listOf(
@@ -108,8 +112,8 @@ val BaseUiTexts: List<String> = listOf(
     "Speaking original text, please wait...",
     "Speaking translation, please wait...",
     "App UI language",
-    "Detect language",
-    "Translate to",
+    "Detect",
+    "Translate",
     "Speaking...",
     "Finished speaking original text.",
     "Finished speaking translation.",
@@ -178,7 +182,7 @@ val BaseUiTexts: List<String> = listOf(
     "Login",
     "Register",
     "Use your registered (provided) email and password.",
-    "Register is disabled in development stage.\n" +
+    "Register is disabled in development stage.\n" + "Caution: You cannot reset password if you use email that not exist\n" +
     "Register rules:\n" +
             "• Email must be a valid format (e.g., name@example.com)\n" +
             "• Password must be at least 6 characters\n" +
@@ -192,7 +196,12 @@ val BaseUiTexts: List<String> = listOf(
     "Have account? Login",
     "Passwords do not match.",
     "Password must be at least 6 characters.",
-    "Login is required to use translation features & storing translation history."
+    "Login is required to use translation features & storing translation history.",
+    "Forgot password? Reset here",
+    "Enter your account email and a reset link will be sent." +
+            "Make sure the email is real & register for the app or no email will be sent.",
+    "Sending...",
+    "Send reset email"
 )
 
 fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {

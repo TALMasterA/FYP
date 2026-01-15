@@ -1,7 +1,6 @@
 package com.example.fyp.feature.home
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -45,8 +44,9 @@ fun HomeScreen(
     onOpenHelp: () -> Unit,
     onStartContinuous: () -> Unit,
     onOpenLogin: () -> Unit,
-    onOpenHistory: () -> Unit
-) {
+    onOpenHistory: () -> Unit,
+    onOpenResetPassword: () -> Unit,
+    ) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
@@ -146,6 +146,12 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(t(UiTextKey.ContinuousStartScreenButton))
+            }
+
+            if (!isLoggedIn) {
+                TextButton(onClick = onOpenResetPassword) {
+                    Text(t(UiTextKey.ForgotPwText))
+                }
             }
         }
     }

@@ -57,7 +57,7 @@ class AuthViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
                 error = result.exceptionOrNull()?.message,
-                message = if (result.isSuccess) "Reset email sent. Please check your inbox." else null
+                message = if (result.isSuccess) "Reset email sent (if email is real & exist). Please check your inbox." else null
             )
         }
     }

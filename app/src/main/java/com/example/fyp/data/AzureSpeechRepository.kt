@@ -163,7 +163,7 @@ class AzureSpeechRepository(
     }
 
     override suspend fun stopContinuous(recognizer: SpeechRecognizer?) = withContext(Dispatchers.IO) {
-        if (recognizer == null) return@withContext Unit
+        if (recognizer == null) return@withContext
 
         runCatching { recognizer.stopContinuousRecognitionAsync().get() }
         runCatching { recognizer.close() }
@@ -179,10 +179,5 @@ class AzureSpeechRepository(
     ): SpeechResult.Error {
         if (ex != null) Log.e(tag, logMessage, ex) else Log.e(tag, logMessage)
         return SpeechResult.Error(userMessage)
-    }
-
-    fun closeContinuousRecognizer(recognizer: SpeechRecognizer?) {
-        recognizer?.stopContinuousRecognitionAsync()
-        recognizer?.close()
     }
 }

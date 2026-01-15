@@ -7,6 +7,7 @@ plugins {
     id("com.google.dagger.hilt.android")
 
     id("com.google.firebase.crashlytics")
+    id("com.google.firebase.firebase-perf")
 
     kotlin("kapt")
 }
@@ -19,8 +20,8 @@ android {
         applicationId = "com.example.fyp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.2.1"
+        versionCode = 5
+        versionName = "1.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,6 +34,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isMinifyEnabled = false
+            isShrinkResources = false  // Skip stripping native libs
+        } //build faster but APK install slower
     }
 
     compileOptions {
@@ -89,6 +94,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-functions")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+    implementation("com.google.firebase:firebase-perf")
 
     // Hilt DI
     implementation("com.google.dagger:hilt-android:2.52")

@@ -1,3 +1,5 @@
+@file:Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
+
 package com.example.fyp.feature.speech
 
 import android.annotation.SuppressLint

@@ -57,8 +57,7 @@ fun HistoryContinuousTab(
 
             val displayName = sessionNames[sid].orEmpty()
             val title =
-                if (displayName.isNotBlank()) displayName
-                else formatSessionTitle(template = sessionTitleTemplate, sessionId = sid)
+                displayName.ifBlank { formatSessionTitle(template = sessionTitleTemplate, sessionId = sid) }
 
             OutlinedCard(
                 modifier = Modifier.fillMaxWidth(),

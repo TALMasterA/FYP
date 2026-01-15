@@ -171,6 +171,9 @@ fun AppNavigation() {
                     },
                     onOpenLogin = {
                         navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
+                    },
+                    onOpenResetPassword = {
+                        navController.navigate(AppScreen.ResetPassword.route) { launchSingleTop = true }
                     }
                 )
             }

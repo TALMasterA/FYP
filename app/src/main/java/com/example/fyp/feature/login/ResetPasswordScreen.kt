@@ -52,7 +52,7 @@ fun ResetPasswordScreen(
             )
 
             Text(
-                text = "Enter your email and a reset link will be sent.",
+                text = t(UiTextKey.ResetPwText),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -69,7 +69,7 @@ fun ResetPasswordScreen(
                 enabled = !uiState.isLoading && email.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (uiState.isLoading) "Sending..." else "Send reset email")
+                Text(if (uiState.isLoading) t(UiTextKey.ResetSendingText) else t(UiTextKey.ResetSendText))
             }
 
             uiState.message?.let {
