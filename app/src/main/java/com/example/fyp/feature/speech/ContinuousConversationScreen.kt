@@ -41,6 +41,7 @@ import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
+import com.example.fyp.feature.speech.ChatMessage
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -167,7 +168,7 @@ fun ContinuousConversationScreen(
                         },
                         messages = messages,
                         listState = listState,
-                        onSpeakMessage = { msg ->
+                        onSpeakMessage = { msg: ChatMessage ->
                             viewModel.speakText(languageCode = msg.lang, text = msg.text)
                         }
                     )
@@ -235,9 +236,9 @@ private fun ConversationSheet(
     lastTranslation: String,
     onPersonToggle: (Boolean) -> Unit,
     onStartStop: (Boolean) -> Unit,
-    messages: List<SpeechViewModel.ChatMessage>,
+    messages: List<ChatMessage>,
     listState: LazyListState,
-    onSpeakMessage: (SpeechViewModel.ChatMessage) -> Unit
+    onSpeakMessage: (ChatMessage) -> Unit
 ) {
     Column(
         modifier = Modifier
