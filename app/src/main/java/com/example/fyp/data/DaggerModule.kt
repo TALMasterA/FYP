@@ -1,7 +1,5 @@
 package com.example.fyp.data
 
-import com.example.fyp.data.auth.FirebaseAuthRepository
-import com.example.fyp.data.history.FirestoreHistoryRepository
 import com.example.fyp.domain.speech.RecognizeFromMicUseCase
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.StartContinuousConversationUseCase
@@ -25,16 +23,13 @@ object AppModule {
     @Provides @Singleton
     fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
 
-    // NEW: Firebase Functions instance
     @Provides @Singleton
     fun provideFirebaseFunctions(): FirebaseFunctions = FirebaseFunctions.getInstance()
 
-    // NEW: Token client (uses functions)
     @Provides @Singleton
     fun provideCloudSpeechTokenClient(functions: FirebaseFunctions): CloudSpeechTokenClient =
         CloudSpeechTokenClient(functions)
 
-    // UPDATED: SpeechRepository now needs token client
     @Provides @Singleton
     fun provideSpeechRepository(tokenClient: CloudSpeechTokenClient): SpeechRepository =
         AzureSpeechRepository(tokenClient)

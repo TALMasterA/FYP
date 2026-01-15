@@ -93,11 +93,11 @@ val BaseUiTexts: List<String> = listOf(
     "Select the detect and translate languages below. \n" +
             "Support languages: English, Cantonese, Japanese, Mandarin...",
     "You can change the app UI language by the dropdown on top. \nPlease look at the ! information before using the app. \n" +
-            "Support languages: English, Cantonese, Japanese. \nBelow is the two mode of speech-to-text. " +
-            "First is the discrete recognition, second is the continuous mode, good for conversation translation.",
+            "Below is the two mode of speech-to-text. " +
+            "First is the discrete recognition for texting, second is the continuous mode for face communication.",
     "Set Speaker A and B languages below. \n" +
             "Use the toggle to switch who is speaking.",
-    "Recognize (from Microphone)",
+    "Microphone Recognize",
     "Copy speech",
     "Speak",
     "Translate",
@@ -125,13 +125,13 @@ val BaseUiTexts: List<String> = listOf(
     "Translator",
     "Notes & Cautions",
     "Discrete mode",
-    "Discrete speech recognition & translation",
+    "Discrete speech translation",
     "Current features",
     "Cautions",
     "- Choose UI language, detection language, and target language.\n" +
-            "- Discrete mode: Speech-to-text → Translate → Speak (TTS).\n" +
+            "- Discrete mode: Speech-to-text → Translate → Speak out.\n" +
             "- Continuous mode: Live conversation capture with Speaker A/B switching.\n" +
-            "- Login/Register (Email/Password).\n" +
+            "- Login (Email/Password) for storing translation history.\n" +
             "- App UI language translation.",
     "- Requires internet connection.\n" +
             "- Microphone audio is used for speech recognition; avoid speaking sensitive info in public.\n" +
@@ -141,15 +141,15 @@ val BaseUiTexts: List<String> = listOf(
     "Start conversation",
     "Stop listening",
     "Continuous translation mode",
-    "Person A speaking",
-    "Person B speaking",
+    "A speaking",
+    "B speaking",
     "Current string",
     "Person A",
     "Person B",
     " · translation",
     "Notes",
     "The base language of this app is English, you can use the app UI list to change the languages but it may contain error. \n" +
-            "FYP goal: build a translator app and store translation history in a database for future learning features.\n" +
+            "App project goal: build a translator app and store translation history in a database for (future) learning features.\n" +
             "Planned learning part: use saved history to extract frequent vocabulary/phrases and generate practice content.",
     "History",
     "Login",
@@ -161,11 +161,11 @@ val BaseUiTexts: List<String> = listOf(
     "Name",
     "Save",
     "Logout?",
-    "You will need to login again to view your history.",
+    "You will need to login again to store & view your history.",
     "History",
     "Discrete",
     "Continuous",
-    "No continuous sessions yet.",
+    "No record(s) yet.",
     "Delete record?",
     "This action cannot be undone.",
     "Delete session?",
@@ -174,11 +174,11 @@ val BaseUiTexts: List<String> = listOf(
     "Name",
     "Session name",
     "Session {id}",
-    "{count} items",
+    "{count} item(s)",
     "Login",
     "Register",
     "Use your registered (provided) email and password.",
-    "Register is disabled for now.\n" +
+    "Register is disabled in development stage.\n" +
     "Register rules:\n" +
             "• Email must be a valid format (e.g., name@example.com)\n" +
             "• Password must be at least 6 characters\n" +
@@ -188,7 +188,7 @@ val BaseUiTexts: List<String> = listOf(
     "Confirm password",
     "Login",
     "Register",
-    "Don't have account? Register (Disable during development)",
+    "Don't have account? Register (Disabled)",
     "Have account? Login",
     "Passwords do not match.",
     "Password must be at least 6 characters.",

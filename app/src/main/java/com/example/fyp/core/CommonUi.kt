@@ -7,8 +7,6 @@ import androidx.compose.ui.Modifier
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.data.LanguageDisplayNames
-import com.example.fyp.model.SpeechResult
-// com.example.fyp.data.TranslatorClient
 import com.example.fyp.data.CloudTranslatorClient
 import com.example.fyp.model.UiTextKey
 import com.example.fyp.model.buildUiTextMap
