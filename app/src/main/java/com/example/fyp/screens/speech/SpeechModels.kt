@@ -1,4 +1,4 @@
-package com.example.fyp.feature.speech
+package com.example.fyp.screens.speech
 
 data class SpeechScreenState(
     val recognizedText: String = "",

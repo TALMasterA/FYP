@@ -14,19 +14,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.fyp.data.AzureLanguageConfig
 import com.example.fyp.data.LanguageDisplayNames
-import com.example.fyp.feature.help.HelpScreen
-import com.example.fyp.feature.history.HistoryScreen
-import com.example.fyp.feature.home.HomeScreen
-import com.example.fyp.feature.login.AuthViewModel
-import com.example.fyp.feature.login.LoginScreen
-import com.example.fyp.feature.speech.ContinuousConversationScreen
-import com.example.fyp.feature.speech.SpeechRecognitionScreen
+import com.example.fyp.screens.help.HelpScreen
+import com.example.fyp.screens.history.HistoryScreen
+import com.example.fyp.screens.home.HomeScreen
+import com.example.fyp.screens.login.AuthViewModel
+import com.example.fyp.screens.login.LoginScreen
+import com.example.fyp.screens.speech.ContinuousConversationScreen
+import com.example.fyp.screens.speech.SpeechRecognitionScreen
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.UiTextKey
 import com.example.fyp.data.UiLanguageCacheStore
 import com.example.fyp.model.baseUiTextsHash
-import com.example.fyp.feature.login.ResetPasswordScreen
+import com.example.fyp.screens.login.ResetPasswordScreen
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")

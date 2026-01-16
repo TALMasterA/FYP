@@ -1,4 +1,4 @@
-package com.example.fyp.feature.history
+package com.example.fyp.screens.history
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button

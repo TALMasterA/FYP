@@ -1,6 +1,6 @@
 @file:Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 
-package com.example.fyp.feature.speech
+package com.example.fyp.screens.speech
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
@@ -68,7 +68,6 @@ fun ContinuousConversationScreen(
     val isRunning = viewModel.isContinuousRunning
     val isPreparing = viewModel.isContinuousPreparing
     val partial = viewModel.livePartialText
-    val lastTranslation = viewModel.lastSegmentTranslation
     val messages = viewModel.continuousMessages
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
 
@@ -151,7 +150,6 @@ fun ContinuousConversationScreen(
                         isRunning = isRunning,
                         isPreparing = isPreparing,
                         partial = partial,
-                        lastTranslation = lastTranslation,
                         onPersonToggle = { isPersonATalking = it },
                         onStartStop = { start ->
                             if (start) {
@@ -243,7 +241,6 @@ private fun ConversationSheet(
     isRunning: Boolean,
     isPreparing: Boolean,
     partial: String,
-    lastTranslation: String,
     onPersonToggle: (Boolean) -> Unit,
     onStartStop: (Boolean) -> Unit,
     messages: List<ChatMessage>,
@@ -292,10 +289,6 @@ private fun ConversationSheet(
             ) + ": " + partial,
             style = MaterialTheme.typography.bodySmall
         )
-
-        if (lastTranslation.isNotBlank()) {
-            Text(text = "Last translation: $lastTranslation", style = MaterialTheme.typography.bodySmall)
-        }
 
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),

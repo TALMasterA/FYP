@@ -1,4 +1,4 @@
-package com.example.fyp.feature.speech
+package com.example.fyp.screens.speech
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -99,7 +100,14 @@ fun SpeechRecognitionScreen(
                     Text(t(UiTextKey.AzureRecognizeButton))
                 }
 
-                LabeledTextBlock(text = recognizedText)
+                // Step 1: typed text + mic share same source, and mic "replace" is done in VM.
+                OutlinedTextField(
+                    value = recognizedText,
+                    onValueChange = { viewModel.updateSourceText(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Type here or use microphone...") },
+                    minLines = 3
+                )
 
                 TextActionsRow(
                     leftText = t(UiTextKey.CopyButton),
@@ -137,7 +145,10 @@ fun SpeechRecognitionScreen(
                         onClick = { viewModel.speakTranslation(selectedTargetLanguage) },
                         enabled = isLoggedIn && translatedText.isNotBlank() && !isTtsRunning
                     ) {
-                        Text(if (isTtsRunning) t(UiTextKey.SpeakingLabel) else t(UiTextKey.SpeakTranslationButton))
+                        Text(
+                            if (isTtsRunning) t(UiTextKey.SpeakingLabel)
+                            else t(UiTextKey.SpeakTranslationButton)
+                        )
                     }
                 }
 

@@ -1,4 +1,4 @@
-package com.example.fyp.feature.login
+package com.example.fyp.screens.login
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*

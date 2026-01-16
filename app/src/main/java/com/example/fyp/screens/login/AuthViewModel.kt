@@ -1,4 +1,4 @@
-package com.example.fyp.feature.login
+package com.example.fyp.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

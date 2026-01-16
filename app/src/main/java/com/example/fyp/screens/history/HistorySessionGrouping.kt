@@ -1,4 +1,4 @@
-package com.example.fyp.feature.history
+package com.example.fyp.screens.history
 
 import com.example.fyp.model.TranslationRecord
 
@@ -47,7 +47,6 @@ private fun safeFormat(template: String, vararg args: Any): String {
     return try {
         String.format(template, *args)
     } catch (_: Exception) {
-        // Escape unknown % patterns then try again.
         val escaped = template.replace(Regex("%(?!([0-9]+\\$)?[sd%])"), "%%")
         try {
             String.format(escaped, *args)

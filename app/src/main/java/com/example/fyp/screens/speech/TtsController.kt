@@ -1,4 +1,4 @@
-package com.example.fyp.feature.speech
+package com.example.fyp.screens.speech
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

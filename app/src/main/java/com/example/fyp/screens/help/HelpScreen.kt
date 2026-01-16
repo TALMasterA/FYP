@@ -1,4 +1,4 @@
-package com.example.fyp.feature.help
+package com.example.fyp.screens.help
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.*

@@ -1,10 +1,10 @@
-package com.example.fyp.feature.history
+package com.example.fyp.screens.history
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,7 +38,7 @@ fun HistoryContinuousTab(
     onRequestDelete: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Session details view stays in HistoryScreen (same behavior as before).
+    // Session details view stays in HistoryScreen.
     if (selectedSessionId != null) return
 
     if (sessions.isEmpty()) {
@@ -56,12 +56,15 @@ fun HistoryContinuousTab(
             val records = session.records
 
             val displayName = sessionNames[sid].orEmpty()
-            val title =
-                displayName.ifBlank { formatSessionTitle(template = sessionTitleTemplate, sessionId = sid) }
+            val title = displayName.ifBlank {
+                formatSessionTitle(template = sessionTitleTemplate, sessionId = sid)
+            }
 
             OutlinedCard(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = CardDefaults.outlinedCardColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(title, style = MaterialTheme.typography.titleMedium)

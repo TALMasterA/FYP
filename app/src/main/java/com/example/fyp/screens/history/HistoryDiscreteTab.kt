@@ -1,4 +1,4 @@
-package com.example.fyp.feature.history
+package com.example.fyp.screens.history
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues

@@ -1,4 +1,4 @@
-package com.example.fyp.feature.speech
+package com.example.fyp.screens.speech
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

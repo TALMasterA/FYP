@@ -1,4 +1,4 @@
-package com.example.fyp.feature.speech
+package com.example.fyp.screens.speech
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +37,7 @@ class SpeechViewModel @Inject constructor(
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     private var speechState by mutableStateOf(SpeechScreenState())
+
     val recognizedText: String get() = speechState.recognizedText
     val translatedText: String get() = speechState.translatedText
     val ttsStatus: String get() = speechState.ttsStatus
@@ -103,22 +104,27 @@ class SpeechViewModel @Inject constructor(
     // ---- Discrete mode ----
     fun recognize(languageCode: String) {
         viewModelScope.launch {
-            speechState = speechState.copy(recognizedText = "Preparing mic...")
+            speechState = speechState.copy(ttsStatus = "Preparing mic...")
             delay(200)
-            speechState = speechState.copy(recognizedText = "Listening... Please speak now.")
+            speechState = speechState.copy(ttsStatus = "Listening... Please speak now.")
 
             when (val result = recognizeFromMic(languageCode)) {
-                is SpeechResult.Success ->
-                    speechState = speechState.copy(recognizedText = result.text)
-                is SpeechResult.Error ->
-                    speechState = speechState.copy(recognizedText = "Azure error: ${result.message}")
+                is SpeechResult.Success -> {
+                    // replace existing typed text (your choice)
+                    speechState = speechState.copy(
+                        recognizedText = result.text,
+                        ttsStatus = ""
+                    )
+                }
+                is SpeechResult.Error -> {
+                    speechState = speechState.copy(ttsStatus = "Azure error: ${result.message}")
+                }
             }
         }
     }
 
     fun translate(fromLanguage: String, toLanguage: String) {
         if (recognizedText.isBlank()) return
-
         if (!isLoggedIn()) {
             speechState = speechState.copy(translatedText = "Please login to use translation.")
             return
@@ -126,7 +132,6 @@ class SpeechViewModel @Inject constructor(
 
         viewModelScope.launch {
             speechState = speechState.copy(translatedText = "Translating, please wait...")
-
             when (val tr = translateTextUseCase(recognizedText, fromLanguage, toLanguage)) {
                 is SpeechResult.Success -> {
                     speechState = speechState.copy(translatedText = tr.text)
@@ -139,7 +144,6 @@ class SpeechViewModel @Inject constructor(
                         sessionId = ""
                     )
                 }
-
                 is SpeechResult.Error -> {
                     speechState = speechState.copy(translatedText = "Translation error: ${tr.message}")
                 }
@@ -147,7 +151,7 @@ class SpeechViewModel @Inject constructor(
         }
     }
 
-    // ---- TTS (same public API) ----
+    // ---- TTS ----
     fun speakOriginal(languageCode: String) =
         ttsController.speak(text = recognizedText, languageCode = languageCode, isTranslation = false)
 
@@ -160,7 +164,7 @@ class SpeechViewModel @Inject constructor(
     fun speakTextOriginal(languageCode: String, text: String) =
         ttsController.speak(text = text, languageCode = languageCode, isTranslation = false)
 
-    // ---- Continuous mode (same public API) ----
+    // ---- Continuous mode ----
     fun startContinuous(
         speakingLang: String,
         targetLang: String,
@@ -181,6 +185,10 @@ class SpeechViewModel @Inject constructor(
 
     fun endContinuousSession() {
         continuousController.endSession()
+    }
+
+    fun updateSourceText(text: String) {
+        speechState = speechState.copy(recognizedText = text)
     }
 
     override fun onCleared() {

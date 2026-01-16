@@ -1,4 +1,4 @@
-package com.example.fyp.feature.history
+package com.example.fyp.screens.history
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,11 +32,11 @@ import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.StandardScreenBody
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.feature.speech.SpeechViewModel
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.UiTextKey
+import com.example.fyp.screens.speech.SpeechViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,8 +48,8 @@ fun HistoryScreen(
 ) {
     val viewModel: HistoryViewModel = hiltViewModel()
     val speechVm: SpeechViewModel = hiltViewModel()
-    val uiState by viewModel.uiState.collectAsState()
 
+    val uiState by viewModel.uiState.collectAsState()
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
@@ -59,16 +59,32 @@ fun HistoryScreen(
     val discreteRecords = uiState.records
         .filter { it.mode == "discrete" }
         .sortedByDescending { it.timestamp }
+
     val sessions = groupContinuousSessions(uiState.records)
 
     var selectedSessionId by remember { mutableStateOf<String?>(null) }
+
     var pendingDeleteRecord by remember { mutableStateOf<TranslationRecord?>(null) }
     var pendingDeleteSessionId by remember { mutableStateOf<String?>(null) }
     var pendingRenameSessionId by remember { mutableStateOf<String?>(null) }
     var renameText by remember { mutableStateOf("") }
+
     var speakingRecordId by remember { mutableStateOf<String?>(null) }
     var speakingType by remember { mutableStateOf<String?>(null) } // "O" or "T"
 
+    val pageSize = 10
+
+    // Discrete pagination
+    var discretePage by remember { mutableIntStateOf(0) }
+    val discreteTotalPages = pageCount(discreteRecords.size, pageSize)
+    val discretePageRecords = discreteRecords.drop(discretePage * pageSize).take(pageSize)
+
+    // Continuous sessions pagination (session list only)
+    var sessionsPage by remember { mutableIntStateOf(0) }
+    val sessionsTotalPages = pageCount(sessions.size, pageSize)
+    val sessionsPageItems = sessions.drop(sessionsPage * pageSize).take(pageSize)
+
+    // Cleanup transient UI state when leaving screen
     DisposableEffect(Unit) {
         onDispose {
             pendingDeleteRecord = null
@@ -137,6 +153,7 @@ fun HistoryScreen(
         },
         backContentDescription = t(UiTextKey.NavBack)
     ) { innerPadding ->
+
         StandardScreenBody(
             innerPadding = innerPadding,
             scrollable = false,
@@ -161,6 +178,10 @@ fun HistoryScreen(
                         onClick = {
                             selectedTab = index
                             if (index == 0) selectedSessionId = null
+
+                            // reset both pagers when switching tabs
+                            discretePage = 0
+                            sessionsPage = 0
                         },
                         text = { Text(label) }
                     )
@@ -169,9 +190,10 @@ fun HistoryScreen(
 
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                 when {
-                    uiState.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                    uiState.isLoading -> Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) { CircularProgressIndicator() }
 
                     uiState.error != null -> Text(
                         text = uiState.error.orEmpty(),
@@ -180,51 +202,75 @@ fun HistoryScreen(
                     )
 
                     selectedTab == 0 -> {
-                        HistoryDiscreteTab(
-                            records = discreteRecords,
-                            languageNameFor = uiLanguageNameFor,
-                            speakingRecordId = speakingRecordId,
-                            speakingType = speakingType,
-                            isTtsRunning = speechVm.isTtsRunning,
-                            ttsStatus = speechVm.ttsStatus,
-                            onSpeakOriginal = { rec ->
-                                speakingRecordId = rec.id
-                                speakingType = "O"
-                                speechVm.speakTextOriginal(rec.sourceLang, rec.sourceText)
-                            },
-                            onSpeakTranslation = { rec ->
-                                speakingRecordId = rec.id
-                                speakingType = "T"
-                                speechVm.speakText(rec.targetLang, rec.targetText)
-                            },
-                            onDelete = { rec -> pendingDeleteRecord = rec },
-                            deleteLabel = t(UiTextKey.ActionDelete),
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            HistoryDiscreteTab(
+                                records = discretePageRecords,
+                                languageNameFor = uiLanguageNameFor,
+                                speakingRecordId = speakingRecordId,
+                                speakingType = speakingType,
+                                isTtsRunning = speechVm.isTtsRunning,
+                                ttsStatus = speechVm.ttsStatus,
+                                onSpeakOriginal = { rec ->
+                                    speakingRecordId = rec.id
+                                    speakingType = "O"
+                                    speechVm.speakTextOriginal(rec.sourceLang, rec.sourceText)
+                                },
+                                onSpeakTranslation = { rec ->
+                                    speakingRecordId = rec.id
+                                    speakingType = "T"
+                                    speechVm.speakText(rec.targetLang, rec.targetText)
+                                },
+                                onDelete = { rec -> pendingDeleteRecord = rec },
+                                deleteLabel = t(UiTextKey.ActionDelete),
+                                modifier = Modifier.fillMaxSize()
+                            )
+
+                            Spacer(Modifier.height(8.dp))
+
+                            PaginationRow(
+                                page = discretePage,
+                                totalPages = discreteTotalPages,
+                                onPrev = { if (discretePage > 0) discretePage-- },
+                                onNext = { if (discretePage < discreteTotalPages - 1) discretePage++ }
+                            )
+                        }
                     }
 
                     else -> {
+                        // Continuous tab
                         if (selectedSessionId == null) {
-                            HistoryContinuousTab(
-                                sessions = sessions,
-                                selectedSessionId = selectedSessionId,
-                                sessionNames = uiState.sessionNames,
-                                noSessionsText = t(UiTextKey.HistoryNoContinuousSessions),
-                                openLabel = t(UiTextKey.ActionOpen),
-                                nameLabel = t(UiTextKey.ActionName),
-                                deleteLabel = t(UiTextKey.ActionDelete),
-                                sessionTitleTemplate = t(UiTextKey.HistorySessionTitleTemplate),
-                                itemsCountTemplate = t(UiTextKey.HistoryItemsCountTemplate),
-                                onOpenSession = { sid -> selectedSessionId = sid },
-                                onRequestRename = { sid ->
-                                    renameText = uiState.sessionNames[sid].orEmpty()
-                                    pendingRenameSessionId = sid
-                                },
-                                onRequestDelete = { sid -> pendingDeleteSessionId = sid },
-                                modifier = Modifier.fillMaxSize()
-                            )
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                HistoryContinuousTab(
+                                    sessions = sessionsPageItems,
+                                    selectedSessionId = selectedSessionId,
+                                    sessionNames = uiState.sessionNames,
+                                    noSessionsText = t(UiTextKey.HistoryNoContinuousSessions),
+                                    openLabel = t(UiTextKey.ActionOpen),
+                                    nameLabel = t(UiTextKey.ActionName),
+                                    deleteLabel = t(UiTextKey.ActionDelete),
+                                    sessionTitleTemplate = t(UiTextKey.HistorySessionTitleTemplate),
+                                    itemsCountTemplate = t(UiTextKey.HistoryItemsCountTemplate),
+                                    onOpenSession = { sid -> selectedSessionId = sid },
+                                    onRequestRename = { sid ->
+                                        renameText = uiState.sessionNames[sid].orEmpty()
+                                        pendingRenameSessionId = sid
+                                    },
+                                    onRequestDelete = { sid -> pendingDeleteSessionId = sid },
+                                    modifier = Modifier.fillMaxSize()
+                                )
+
+                                Spacer(Modifier.height(8.dp))
+
+                                PaginationRow(
+                                    page = sessionsPage,
+                                    totalPages = sessionsTotalPages,
+                                    onPrev = { if (sessionsPage > 0) sessionsPage-- },
+                                    onNext = { if (sessionsPage < sessionsTotalPages - 1) sessionsPage++ }
+                                )
+                            }
                         } else {
                             val sid = selectedSessionId.orEmpty()
+
                             val sessionRecords = sessions
                                 .firstOrNull { it.sessionId == sid }
                                 ?.records
@@ -232,13 +278,12 @@ fun HistoryScreen(
                                 .orEmpty()
 
                             val displayName = uiState.sessionNames[sid].orEmpty()
-                            val title =
-                                displayName.ifBlank {
-                                    formatSessionTitle(
-                                        template = t(UiTextKey.HistorySessionTitleTemplate),
-                                        sessionId = sid
-                                    )
-                                }
+                            val title = displayName.ifBlank {
+                                formatSessionTitle(
+                                    template = t(UiTextKey.HistorySessionTitleTemplate),
+                                    sessionId = sid
+                                )
+                            }
 
                             Column(modifier = Modifier.fillMaxSize()) {
                                 Row(
@@ -281,5 +326,27 @@ fun HistoryScreen(
                 }
             }
         }
+    }
+}
+
+private fun pageCount(total: Int, pageSize: Int): Int =
+    if (total <= 0) 1 else ((total - 1) / pageSize) + 1
+
+@Composable
+private fun PaginationRow(
+    page: Int,
+    totalPages: Int,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        TextButton(onClick = onPrev, enabled = page > 0) { Text("Prev") }
+        Text("Page ${page + 1} / $totalPages")
+        TextButton(onClick = onNext, enabled = page < totalPages - 1) { Text("Next") }
     }
 }

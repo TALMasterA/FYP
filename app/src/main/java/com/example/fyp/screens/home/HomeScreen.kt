@@ -1,4 +1,4 @@
-package com.example.fyp.feature.home
+package com.example.fyp.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +28,7 @@ import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.StandardScreenBody
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.feature.login.AuthViewModel
+import com.example.fyp.screens.login.AuthViewModel
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts

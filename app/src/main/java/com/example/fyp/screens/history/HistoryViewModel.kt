@@ -1,4 +1,4 @@
-package com.example.fyp.feature.history
+package com.example.fyp.screens.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
