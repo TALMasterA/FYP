@@ -83,6 +83,7 @@ fun HistoryScreen(
     var sessionsPage by remember { mutableIntStateOf(0) }
     val sessionsTotalPages = pageCount(sessions.size, pageSize)
     val sessionsPageItems = sessions.drop(sessionsPage * pageSize).take(pageSize)
+    var sessionPage by remember { mutableIntStateOf(0) }
 
     // Cleanup transient UI state when leaving screen
     DisposableEffect(Unit) {
@@ -201,7 +202,7 @@ fun HistoryScreen(
                         modifier = Modifier.padding(8.dp)
                     )
 
-                    selectedTab == 0 -> {
+                    selectedTab == 0 -> { // Discrete tab
                         Column(modifier = Modifier.fillMaxSize()) {
                             HistoryDiscreteTab(
                                 records = discretePageRecords,
@@ -222,22 +223,12 @@ fun HistoryScreen(
                                 },
                                 onDelete = { rec -> pendingDeleteRecord = rec },
                                 deleteLabel = t(UiTextKey.ActionDelete),
-                                modifier = Modifier.fillMaxSize()
-                            )
-
-                            Spacer(Modifier.height(8.dp))
-
-                            PaginationRow(
-                                page = discretePage,
-                                totalPages = discreteTotalPages,
-                                onPrev = { if (discretePage > 0) discretePage-- },
-                                onNext = { if (discretePage < discreteTotalPages - 1) discretePage++ }
+                                modifier = Modifier.weight(1f)  // Takes all remaining space
                             )
                         }
                     }
 
-                    else -> {
-                        // Continuous tab
+                    else -> { // Continuous tab
                         if (selectedSessionId == null) {
                             Column(modifier = Modifier.fillMaxSize()) {
                                 HistoryContinuousTab(
@@ -256,22 +247,13 @@ fun HistoryScreen(
                                         pendingRenameSessionId = sid
                                     },
                                     onRequestDelete = { sid -> pendingDeleteSessionId = sid },
-                                    modifier = Modifier.fillMaxSize()
-                                )
-
-                                Spacer(Modifier.height(8.dp))
-
-                                PaginationRow(
-                                    page = sessionsPage,
-                                    totalPages = sessionsTotalPages,
-                                    onPrev = { if (sessionsPage > 0) sessionsPage-- },
-                                    onNext = { if (sessionsPage < sessionsTotalPages - 1) sessionsPage++ }
+                                    modifier = Modifier.weight(1f)  // Takes all remaining space
                                 )
                             }
                         } else {
+                            // Session details view
                             val sid = selectedSessionId.orEmpty()
-
-                            val sessionRecords = sessions
+                            val allSessionRecords = sessions
                                 .firstOrNull { it.sessionId == sid }
                                 ?.records
                                 ?.sortedBy { it.timestamp }
@@ -285,6 +267,10 @@ fun HistoryScreen(
                                 )
                             }
 
+                            val pageSize = 10
+                            val sessionTotalPages = pageCount(allSessionRecords.size, pageSize)
+                            val sessionPageRecords = allSessionRecords.drop(sessionPage * pageSize).take(pageSize)
+
                             Column(modifier = Modifier.fillMaxSize()) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -296,11 +282,8 @@ fun HistoryScreen(
                                         Text(t(UiTextKey.NavBack))
                                     }
                                 }
-
-                                Spacer(Modifier.height(8.dp))
-
                                 HistoryList(
-                                    records = sessionRecords,
+                                    records = sessionPageRecords,
                                     languageNameFor = uiLanguageNameFor,
                                     speakingRecordId = speakingRecordId,
                                     speakingType = speakingType,
@@ -318,13 +301,42 @@ fun HistoryScreen(
                                     },
                                     onDelete = { rec -> pendingDeleteRecord = rec },
                                     deleteLabel = t(UiTextKey.ActionDelete),
-                                    modifier = Modifier.fillMaxSize()
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
                         }
                     }
                 }
             }
+
+            PaginationRow(
+                page = when {
+                    selectedTab == 0 -> discretePage
+                    selectedSessionId == null -> sessionsPage
+                    else -> sessionPage  // ⭐ NEW: session detail
+                },
+                totalPages = when {
+                    selectedTab == 0 -> discreteTotalPages
+                    selectedSessionId == null -> sessionsTotalPages
+                    else -> pageCount(  // ⭐ NEW: calculate session total
+                        sessions.firstOrNull { it.sessionId == selectedSessionId }?.records?.size ?: 0, pageSize
+                    )
+                },
+                onPrev = {
+                    when {
+                        selectedTab == 0 && discretePage > 0 -> discretePage--
+                        selectedSessionId == null && sessionsPage > 0 -> sessionsPage--
+                        else -> sessionPage--  // ⭐ NEW: session detail prev
+                    }
+                },
+                onNext = {
+                    when {
+                        selectedTab == 0 && discretePage < discreteTotalPages - 1 -> discretePage++
+                        selectedSessionId == null && sessionsPage < sessionsTotalPages - 1 -> sessionsPage++
+                        else -> sessionPage++  // ⭐ NEW: session detail next
+                    }
+                }
+            )
         }
     }
 }
