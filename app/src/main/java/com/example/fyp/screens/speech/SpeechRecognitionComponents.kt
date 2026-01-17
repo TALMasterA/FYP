@@ -13,6 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.fyp.core.LanguageDropdownField
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun SpeechLanguagePickers(
@@ -24,29 +27,47 @@ fun SpeechLanguagePickers(
     languageNameFor: (String) -> String,
     onSelectedLanguage: (String) -> Unit,
     onSelectedTargetLanguage: (String) -> Unit,
+    onSwapLanguages: () -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            LanguageDropdownField(
-                label = detectLabel,
-                selectedCode = selectedLanguage,
-                options = supportedLanguages,
-                nameFor = languageNameFor,
-                onSelected = onSelectedLanguage
-            )
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Spacer(modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = onSwapLanguages,
+                modifier = Modifier.size(28.dp),
+                contentPadding = PaddingValues(0.dp),
+            ) {
+                Text("⇄", fontSize = 16.sp)
+            }
         }
 
-        Column(modifier = Modifier.weight(1f)) {
-            LanguageDropdownField(
-                label = translateToLabel,
-                selectedCode = selectedTargetLanguage,
-                options = supportedLanguages,
-                nameFor = languageNameFor,
-                onSelected = onSelectedTargetLanguage
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                LanguageDropdownField(
+                    label = detectLabel,
+                    selectedCode = selectedLanguage,
+                    options = supportedLanguages,
+                    nameFor = languageNameFor,
+                    onSelected = onSelectedLanguage,
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                LanguageDropdownField(
+                    label = translateToLabel,
+                    selectedCode = selectedTargetLanguage,
+                    options = supportedLanguages,
+                    nameFor = languageNameFor,
+                    onSelected = onSelectedTargetLanguage,
+                )
+            }
         }
     }
 }

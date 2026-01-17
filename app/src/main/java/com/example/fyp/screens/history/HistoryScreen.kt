@@ -412,12 +412,12 @@ private fun HistoryContinuousSessionBubbles(
                         ) {
                             Button(
                                 onClick = { onSpeakOriginal(rec) },
-                                enabled = !busyOriginal,
+                                enabled = !isTtsRunning,
                             ) { Text(if (busyOriginal) "Waiting..." else "🗣️O") }
 
                             Button(
                                 onClick = { onSpeakTranslation(rec) },
-                                enabled = !busyTranslation,
+                                enabled = !isTtsRunning,
                             ) { Text(if (busyTranslation) "Waiting..." else "🔊T") }
 
                             Button(

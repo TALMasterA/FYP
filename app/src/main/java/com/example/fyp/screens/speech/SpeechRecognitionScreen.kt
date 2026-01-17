@@ -38,8 +38,15 @@ import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.delay
+import androidx.compose.foundation.ExperimentalFoundationApi
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class,
+ExperimentalFoundationApi::class)
 @Composable
 fun SpeechRecognitionScreen(
     uiLanguages: List<Pair<String, String>>,
@@ -53,6 +60,17 @@ fun SpeechRecognitionScreen(
 
     val recognizedText = viewModel.recognizedText
     val translatedText = viewModel.translatedText
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(translatedText) {
+        // Only scroll when translation becomes available
+        if (translatedText.isNotBlank()) {
+            // small delay helps after recomposition/layout
+            delay(150)
+            bringIntoViewRequester.bringIntoView()
+        }
+    }
     val ttsStatus = viewModel.ttsStatus
     val statusMessage = viewModel.statusMessage
     val recognizePhase = viewModel.recognizePhase
@@ -111,6 +129,12 @@ fun SpeechRecognitionScreen(
                         languageNameFor = uiLanguageNameFor,
                         onSelectedLanguage = { selectedLanguage = it },
                         onSelectedTargetLanguage = { selectedTargetLanguage = it },
+
+                        onSwapLanguages = {
+                            val tmp = selectedLanguage
+                            selectedLanguage = selectedTargetLanguage
+                            selectedTargetLanguage = tmp
+                        },
                     )
 
                     val isRecognizing = recognizePhase != RecognizePhase.Idle
@@ -179,26 +203,29 @@ fun SpeechRecognitionScreen(
                         Text(t(UiTextKey.TranslateButton))
                     }
 
-                    LabeledTextBlock(text = translatedText)
+                    Column(
+                        modifier = Modifier.bringIntoViewRequester(bringIntoViewRequester)
+                    ) {
+                        LabeledTextBlock(text = translatedText)
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(
-                            onClick = { clipboardManager.setText(AnnotatedString(translatedText)) },
-                            enabled = translatedText.isNotBlank(),
-                        ) {
-                            Text(t(UiTextKey.CopyTranslationButton))
-                        }
-                        Button(
-                            onClick = { viewModel.speakTranslation(selectedTargetLanguage) },
-                            enabled = isLoggedIn && translatedText.isNotBlank() && !isTtsRunning,
-                        ) {
-                            Text(
-                                if (isTtsRunning) t(UiTextKey.SpeakingLabel)
-                                else t(UiTextKey.SpeakTranslationButton),
-                            )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Button(
+                                onClick = { clipboardManager.setText(AnnotatedString(translatedText)) },
+                                enabled = translatedText.isNotBlank(),
+                            ) {
+                                Text(t(UiTextKey.CopyTranslationButton))
+                            }
+                            Button(
+                                onClick = { viewModel.speakTranslation(selectedTargetLanguage) },
+                                enabled = isLoggedIn && translatedText.isNotBlank() && !isTtsRunning,
+                            ) {
+                                Text(
+                                    if (isTtsRunning) t(UiTextKey.SpeakingLabel)
+                                    else t(UiTextKey.SpeakTranslationButton),
+                                )
+                            }
                         }
                     }
-
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 

@@ -168,7 +168,7 @@ class AzureSpeechRepository(
         runCatching { recognizer.stopContinuousRecognitionAsync().get() }
         runCatching { recognizer.close() }
 
-        Unit // <- IMPORTANT: force return type of this block to Unit
+        Unit
     }
 
     private fun logAndError(

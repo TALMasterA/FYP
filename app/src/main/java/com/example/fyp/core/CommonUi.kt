@@ -223,13 +223,6 @@ fun StandardScreenScaffold(
     )
 }
 
-/**
- * This is the shared "page body" padding rule:
- * - Always apply innerPadding from Scaffold/TopAppBar
- * - Then apply 16.dp page padding
- * - Optionally enable vertical scrolling
- */
-
 @Composable
 fun StandardScreenBody(
     innerPadding: PaddingValues,
