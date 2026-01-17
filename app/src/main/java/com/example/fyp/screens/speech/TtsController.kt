@@ -11,10 +11,11 @@ internal class TtsController(
     private val getSpeechState: () -> SpeechScreenState,
     private val setSpeechState: (SpeechScreenState) -> Unit,
 ) {
+
     fun speak(
         text: String,
         languageCode: String,
-        isTranslation: Boolean
+        isTranslation: Boolean,
     ) {
         val state = getSpeechState()
         if (text.isBlank() || state.isTtsRunning) return
@@ -23,20 +24,37 @@ internal class TtsController(
             setSpeechState(
                 getSpeechState().copy(
                     isTtsRunning = true,
-                    ttsStatus = if (isTranslation) "Speaking translation..." else "Speaking original..."
-                )
+                    ttsStatus = if (isTranslation) {
+                        "Speaking translation..."
+                    } else {
+                        "Speaking original..."
+                    },
+                ),
             )
 
             when (val result = speakTextUseCase(text, languageCode)) {
                 is SpeechResult.Success -> {
-                    setSpeechState(getSpeechState().copy(ttsStatus = "Finished speaking."))
+                    setSpeechState(
+                        getSpeechState().copy(
+                            ttsStatus = "Finished speaking.",
+                        ),
+                    )
                 }
+
                 is SpeechResult.Error -> {
-                    setSpeechState(getSpeechState().copy(ttsStatus = "TTS error: ${result.message}"))
+                    setSpeechState(
+                        getSpeechState().copy(
+                            ttsStatus = "TTS error: ${result.message}",
+                        ),
+                    )
                 }
             }
 
-            setSpeechState(getSpeechState().copy(isTtsRunning = false))
+            setSpeechState(
+                getSpeechState().copy(
+                    isTtsRunning = false,
+                ),
+            )
         }
     }
 }

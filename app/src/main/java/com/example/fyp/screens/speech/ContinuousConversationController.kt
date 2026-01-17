@@ -23,7 +23,10 @@ internal class ContinuousConversationController(
         targetText: String,
         sourceLang: String,
         targetLang: String,
-        sessionId: String
+        sessionId: String,
+        speaker: String?,
+        direction: String?,
+        sequence: Long?,
     ) -> Unit,
     private val isLoggedIn: () -> Boolean,
 ) {
@@ -39,12 +42,16 @@ internal class ContinuousConversationController(
     var isContinuousPreparing by mutableStateOf(false)
         private set
 
+    var isContinuousProcessing by mutableStateOf(false)
+        private set
+
     var continuousMessages by mutableStateOf(listOf<ChatMessage>())
         private set
 
     private var nextId = 0L
     private var continuousRecognizer: SpeechRecognizer? = null
     private var continuousSessionId: String? = null
+    private var continuousSequence = 0L
 
     private fun ensureSessionId() {
         if (continuousSessionId == null) continuousSessionId = UUID.randomUUID().toString()
@@ -56,7 +63,7 @@ internal class ContinuousConversationController(
             text = text,
             lang = lang,
             isFromPersonA = isFromPersonA,
-            isTranslation = isTranslation
+            isTranslation = isTranslation,
         )
     }
 
@@ -64,7 +71,7 @@ internal class ContinuousConversationController(
         speakingLang: String,
         targetLang: String,
         isFromPersonA: Boolean,
-        resetSession: Boolean
+        resetSession: Boolean,
     ) {
         if (!isLoggedIn()) {
             setStatus("Please login to use continuous translation.")
@@ -86,6 +93,7 @@ internal class ContinuousConversationController(
         scope.launch {
             isContinuousPreparing = true
             isContinuousRunning = false
+            isContinuousProcessing = false
             setStatus("Preparing mic...")
             delay(200)
 
@@ -101,12 +109,22 @@ internal class ContinuousConversationController(
                     },
                     onFinal = { finalText ->
                         scope.launch {
+                            // 1) show source in UI immediately
                             addMessage(finalText, speakingLang, isFromPersonA, isTranslation = false)
+
+                            // 2) translate (lock UI while processing)
+                            isContinuousProcessing = true
+                            setStatus("Translating...")
 
                             when (val tr = translateTextUseCase(finalText, speakingLang, targetLang)) {
                                 is SpeechResult.Success -> {
                                     lastSegmentTranslation = tr.text
                                     addMessage(tr.text, targetLang, isFromPersonA, isTranslation = true)
+
+                                    // Save ONE record per segment
+                                    val speaker = if (isFromPersonA) "A" else "B"
+                                    val direction = if (isFromPersonA) "A_to_B" else "B_to_A"
+                                    val seq = continuousSequence++
 
                                     saveHistory(
                                         "continuous",
@@ -114,7 +132,10 @@ internal class ContinuousConversationController(
                                         tr.text,
                                         speakingLang,
                                         targetLang,
-                                        continuousSessionId.orEmpty()
+                                        continuousSessionId.orEmpty(),
+                                        speaker,
+                                        direction,
+                                        seq,
                                     )
                                 }
 
@@ -122,6 +143,8 @@ internal class ContinuousConversationController(
                                     setStatus("Continuous translation error: ${tr.message}")
                                 }
                             }
+
+                            isContinuousProcessing = false
                         }
                     },
                     onError = { msg ->
@@ -129,7 +152,7 @@ internal class ContinuousConversationController(
                             setStatus("Continuous recognition error: $msg")
                             stop()
                         }
-                    }
+                    },
                 )
 
                 isContinuousPreparing = false
@@ -138,6 +161,7 @@ internal class ContinuousConversationController(
             } catch (e: Exception) {
                 isContinuousPreparing = false
                 isContinuousRunning = false
+                isContinuousProcessing = false
                 setStatus("Continuous start error: ${e.message}")
                 stop()
             }
@@ -146,9 +170,11 @@ internal class ContinuousConversationController(
 
     fun stop() {
         isContinuousPreparing = false
-        if (!isContinuousRunning && continuousRecognizer == null) return
+        isContinuousProcessing = false
 
+        if (!isContinuousRunning && continuousRecognizer == null) return
         isContinuousRunning = false
+
         val recognizer = continuousRecognizer
         continuousRecognizer = null
 
@@ -165,8 +191,9 @@ internal class ContinuousConversationController(
         lastSegmentTranslation = ""
     }
 
-    fun clearMessages() {
+    private fun clearMessages() {
         continuousMessages = emptyList()
         nextId = 0L
+        continuousSequence = 0L
     }
 }
