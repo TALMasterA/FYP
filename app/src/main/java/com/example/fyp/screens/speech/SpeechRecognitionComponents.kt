@@ -15,7 +15,12 @@ import androidx.compose.ui.unit.dp
 import com.example.fyp.core.LanguageDropdownField
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedCard
 
 @Composable
 fun SpeechLanguagePickers(
@@ -88,10 +93,162 @@ fun TextActionsRow(
 }
 
 @Composable
-fun LabeledTextBlock(
+fun TranslatedResultBox(
     text: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Spacer(modifier = Modifier.height(8.dp))
-    Text(text = text, modifier = modifier, style = MaterialTheme.typography.bodyMedium)
+
+    OutlinedCard(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(12.dp),
+            style = MaterialTheme.typography.titleMedium
+        )
+    }
+}
+
+@Composable
+fun RecognizeButton(
+    recognizePhase: RecognizePhase,
+    idleLabel: String,
+    preparingLabel: String,
+    listeningLabel: String,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val colors = when (recognizePhase) {
+        RecognizePhase.Preparing ->
+            ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+
+        RecognizePhase.Listening,
+        RecognizePhase.Idle,
+            -> ButtonDefaults.buttonColors()
+    }
+
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier,
+        colors = colors,
+    ) {
+        val label = when (recognizePhase) {
+            RecognizePhase.Preparing -> preparingLabel
+            RecognizePhase.Listening -> listeningLabel
+            RecognizePhase.Idle -> idleLabel
+        }
+        Text(label)
+    }
+}
+
+@Composable
+fun BottomStatusText(
+    statusMessage: String,
+    ttsStatus: String,
+    modifier: Modifier = Modifier,
+) {
+    val bottomStatus = when {
+        statusMessage.isNotBlank() && ttsStatus.isNotBlank() -> statusMessage + "" + ttsStatus
+        statusMessage.isNotBlank() -> statusMessage
+        ttsStatus.isNotBlank() -> ttsStatus
+        else -> ""
+    }
+
+    if (bottomStatus.isNotBlank()) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = bottomStatus,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = modifier,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+    }
+}
+
+@Composable
+fun TranslateButton(
+    label: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier,
+    ) {
+        Text(label)
+    }
+}
+
+@Composable
+fun TranslationActionsRow(
+    copyLabel: String,
+    speakLabel: String,
+    isTtsRunning: Boolean,
+    enableCopy: Boolean,
+    enableSpeak: Boolean,
+    onCopy: () -> Unit,
+    onSpeak: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Button(
+            onClick = onCopy,
+            enabled = enableCopy,
+        ) {
+            Text(copyLabel)
+        }
+
+        Button(
+            onClick = onSpeak,
+            enabled = enableSpeak,
+        ) {
+            Text(if (isTtsRunning) "..." else speakLabel)
+        }
+    }
+}
+
+@Composable
+fun SourceTextEditor(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    copyLabel: String,
+    speakLabel: String,
+    isTtsRunning: Boolean,
+    enableCopy: Boolean,
+    enableSpeak: Boolean,
+    onCopy: () -> Unit,
+    onSpeak: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text(placeholder) },
+            minLines = 3,
+        )
+
+        TextActionsRow(
+            leftText = copyLabel,
+            leftEnabled = enableCopy,
+            onLeft = onCopy,
+            rightText = if (isTtsRunning) "..." else speakLabel,
+            rightEnabled = enableSpeak,
+            onRight = onSpeak,
+        )
+    }
 }

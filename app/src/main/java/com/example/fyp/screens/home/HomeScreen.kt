@@ -1,3 +1,5 @@
+@file:Suppress("AssignedValueIsNeverRead")
+
 package com.example.fyp.screens.home
 
 import androidx.compose.foundation.layout.Arrangement

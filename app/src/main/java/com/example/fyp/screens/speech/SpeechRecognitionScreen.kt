@@ -1,22 +1,21 @@
 package com.example.fyp.screens.speech
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,15 +37,9 @@ import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.delay
-import androidx.compose.foundation.ExperimentalFoundationApi
 
-@OptIn(ExperimentalMaterial3Api::class,
-ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SpeechRecognitionScreen(
     uiLanguages: List<Pair<String, String>>,
@@ -55,13 +48,14 @@ fun SpeechRecognitionScreen(
     onBack: () -> Unit,
 ) {
     val viewModel: SpeechViewModel = hiltViewModel()
+
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     val recognizedText = viewModel.recognizedText
     val translatedText = viewModel.translatedText
+
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(translatedText) {
         // Only scroll when translation becomes available
@@ -71,6 +65,7 @@ fun SpeechRecognitionScreen(
             bringIntoViewRequester.bringIntoView()
         }
     }
+
     val ttsStatus = viewModel.ttsStatus
     val statusMessage = viewModel.statusMessage
     val recognizePhase = viewModel.recognizePhase
@@ -78,15 +73,19 @@ fun SpeechRecognitionScreen(
 
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
+
     val supportedLanguages by remember {
         mutableStateOf(AzureLanguageConfig.loadSupportedLanguages(context))
     }
+
     var selectedLanguage by remember {
         mutableStateOf(supportedLanguages.firstOrNull() ?: "en-US")
     }
+
     var selectedTargetLanguage by remember {
         mutableStateOf(supportedLanguages.getOrNull(1) ?: "zh-HK")
     }
+
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val isLoggedIn = authState is AuthState.LoggedIn
 
@@ -129,7 +128,6 @@ fun SpeechRecognitionScreen(
                         languageNameFor = uiLanguageNameFor,
                         onSelectedLanguage = { selectedLanguage = it },
                         onSelectedTargetLanguage = { selectedTargetLanguage = it },
-
                         onSwapLanguages = {
                             val tmp = selectedLanguage
                             selectedLanguage = selectedTargetLanguage
@@ -138,117 +136,64 @@ fun SpeechRecognitionScreen(
                     )
 
                     val isRecognizing = recognizePhase != RecognizePhase.Idle
-                    val recognizeButtonColors = when (recognizePhase) {
-                        RecognizePhase.Preparing ->
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            )
 
-                        RecognizePhase.Listening,
-                        RecognizePhase.Idle,
-                            -> ButtonDefaults.buttonColors()
-                    }
-
-                    Button(
+                    RecognizeButton(
+                        recognizePhase = recognizePhase,
+                        idleLabel = t(UiTextKey.AzureRecognizeButton),
+                        preparingLabel = t(UiTextKey.StatusRecognizePreparing),
+                        listeningLabel = t(UiTextKey.StatusRecognizeListening),
                         onClick = { viewModel.recognize(selectedLanguage) },
                         enabled = !isRecognizing && !AudioRecorder.isRecording,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = recognizeButtonColors,
-                    ) {
-                        val label = when (recognizePhase) {
-                            RecognizePhase.Preparing -> "Preparing mic..."
-                            RecognizePhase.Listening -> "Listening..."
-                            RecognizePhase.Idle -> t(UiTextKey.AzureRecognizeButton)
-                        }
-                        Text(label)
-                    }
-
-                    // Typed text + mic share same source
-                    OutlinedTextField(
-                        value = recognizedText,
-                        onValueChange = { viewModel.updateSourceText(it) },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = {
-                            Text(
-                                uiText(
-                                    UiTextKey.SpeechInputPlaceholder,
-                                    BaseUiTexts[UiTextKey.SpeechInputPlaceholder.ordinal],
-                                ),
-                            )
-                        },
-                        minLines = 3,
                     )
 
-                    TextActionsRow(
-                        leftText = t(UiTextKey.CopyButton),
-                        leftEnabled = recognizedText.isNotBlank(),
-                        onLeft = { clipboardManager.setText(AnnotatedString(recognizedText)) },
-                        rightText = if (isTtsRunning) t(UiTextKey.SpeakingLabel) else t(UiTextKey.SpeakScriptButton),
-                        rightEnabled = recognizedText.isNotBlank() && !isTtsRunning,
-                        onRight = { viewModel.speakOriginal(selectedLanguage) },
+                    SourceTextEditor(
+                        value = recognizedText,
+                        onValueChange = viewModel::updateSourceText,
+                        placeholder = uiText(UiTextKey.SpeechInputPlaceholder, BaseUiTexts[UiTextKey.SpeechInputPlaceholder.ordinal]),
+                        copyLabel = t(UiTextKey.CopyButton),
+                        speakLabel = t(UiTextKey.SpeakScriptButton),
+                        isTtsRunning = isTtsRunning,
+                        enableCopy = recognizedText.isNotBlank(),
+                        enableSpeak = recognizedText.isNotBlank() && !isTtsRunning,
+                        onCopy = { clipboardManager.setText(AnnotatedString(recognizedText)) },
+                        onSpeak = { viewModel.speakOriginal(selectedLanguage) },
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Button(
-                        onClick = {
-                            viewModel.translate(
-                                fromLanguage = selectedLanguage,
-                                toLanguage = selectedTargetLanguage,
-                            )
-                        },
+                    TranslateButton(
+                        label = t(UiTextKey.TranslateButton),
                         enabled = isLoggedIn && recognizedText.isNotBlank(),
+                        onClick = { viewModel.translate(fromLanguage = selectedLanguage, toLanguage = selectedTargetLanguage) },
                         modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(t(UiTextKey.TranslateButton))
-                    }
+                    )
 
                     Column(
                         modifier = Modifier.bringIntoViewRequester(bringIntoViewRequester)
                     ) {
-                        LabeledTextBlock(text = translatedText)
+                        TranslatedResultBox(
+                            text = translatedText,
+                            modifier = Modifier.bringIntoViewRequester(bringIntoViewRequester),
+                        )
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Button(
-                                onClick = { clipboardManager.setText(AnnotatedString(translatedText)) },
-                                enabled = translatedText.isNotBlank(),
-                            ) {
-                                Text(t(UiTextKey.CopyTranslationButton))
-                            }
-                            Button(
-                                onClick = { viewModel.speakTranslation(selectedTargetLanguage) },
-                                enabled = isLoggedIn && translatedText.isNotBlank() && !isTtsRunning,
-                            ) {
-                                Text(
-                                    if (isTtsRunning) t(UiTextKey.SpeakingLabel)
-                                    else t(UiTextKey.SpeakTranslationButton),
-                                )
-                            }
-                        }
+                        TranslationActionsRow(
+                            copyLabel = t(UiTextKey.CopyTranslationButton),
+                            speakLabel = t(UiTextKey.SpeakTranslationButton),
+                            isTtsRunning = isTtsRunning,
+                            enableCopy = translatedText.isNotBlank(),
+                            enableSpeak = isLoggedIn && translatedText.isNotBlank() && !isTtsRunning,
+                            onCopy = { clipboardManager.setText(AnnotatedString(translatedText)) },
+                            onSpeak = { viewModel.speakTranslation(selectedTargetLanguage) },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                // Sticky bottom status area (no scrolling needed to see it)
-                val bottomStatus = when {
-                    statusMessage.isNotBlank() && ttsStatus.isNotBlank() ->
-                        statusMessage + "\n" + ttsStatus
-
-                    statusMessage.isNotBlank() -> statusMessage
-                    ttsStatus.isNotBlank() -> ttsStatus
-                    else -> ""
-                }
-
-                if (bottomStatus.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = bottomStatus,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
+                BottomStatusText(
+                    statusMessage = statusMessage,
+                    ttsStatus = ttsStatus,
+                )
             }
         }
     }

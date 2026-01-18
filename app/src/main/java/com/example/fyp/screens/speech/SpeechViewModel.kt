@@ -65,7 +65,6 @@ class SpeechViewModel @Inject constructor(
 
     // Expose continuous state
     val livePartialText: String get() = continuousController.livePartialText
-    val lastSegmentTranslation: String get() = continuousController.lastSegmentTranslation
     val isContinuousRunning: Boolean get() = continuousController.isContinuousRunning
     val isContinuousPreparing: Boolean get() = continuousController.isContinuousPreparing
     val isContinuousProcessing: Boolean get() = continuousController.isContinuousProcessing

@@ -108,8 +108,9 @@ val BaseUiTexts: List<String> = listOf(
     // must match UiTextKey order exactly
 
     // SpeechInstructions
-    "Select the detect and translate languages below.\n" +
-            "Support languages: English, Cantonese, Japanese, Mandarin...",
+    "Select the detect and translate languages below. Only suitable for short pharse.\n" +
+            "Support languages: English, Cantonese, Japanese, Mandarin... \n" +
+            "Switch button for swiping the languages selected",
     // HomeInstructions
     "You can change the app UI language by the dropdown on top.\nPlease look at the ! information before using the app.\n" +
             "Below is the two mode of speech-to-text. " +
@@ -118,7 +119,7 @@ val BaseUiTexts: List<String> = listOf(
     "Set Speaker A and B languages below.\n" +
             "Use the toggle to switch who is speaking.",
     // AzureRecognizeButton
-    "Microphone Recognize",
+    "Use Microphone",
     // CopyButton
     "Copy",
     // SpeakScriptButton
@@ -130,7 +131,7 @@ val BaseUiTexts: List<String> = listOf(
     // SpeakTranslationButton
     "Speak",
     // RecognizingStatus
-    "Recording with Azure, SPEAK and please WAIT...",
+    "Recording with Azure, SPEAK and please WAIT...(Stop listening after slient.",
     // TranslatingStatus
     "Translating, please wait...",
     // SpeakingOriginalStatus
@@ -181,9 +182,8 @@ val BaseUiTexts: List<String> = listOf(
     "Cautions",
     // HelpCurrentFeatures
     "- Choose UI language, detection language, and target language.\n" +
-            "- Discrete mode: Speech-to-text → Translate → Speak out.\n" +
-            "- Continuous mode: Live conversation capture with Speaker A/B switching.\n" +
-            "- Login (Email/Password) for storing translation history.\n" +
+            "- Discrete mode: For short sentences translation.\n" +
+            "- Continuous mode: Live conversation capture with user switching.\n" +
             "- App UI language translation.",
     // HelpCaution
     "- Requires internet connection.\n" +
@@ -203,7 +203,7 @@ val BaseUiTexts: List<String> = listOf(
     // ContinuousPersonBLabel
     "B speaking",
     // ContinuousCurrentStringLabel
-    "Current string",
+    "Current string: ",
     // ContinuousSpeakerAName
     "Person A",
     // ContinuousSpeakerBName
@@ -237,7 +237,7 @@ val BaseUiTexts: List<String> = listOf(
     // DialogLogoutTitle
     "Logout?",
     // DialogLogoutMessage
-    "You will need to login again to store & view your history.",
+    "You will need to login again to use translation function / store + view your history.",
     // HistoryTitle
     "History",
     // HistoryTabDiscrete
@@ -253,7 +253,7 @@ val BaseUiTexts: List<String> = listOf(
     // DialogDeleteSessionTitle
     "Delete session?",
     // DialogDeleteSessionMessage
-    "All records in this session will be deleted. This action cannot be undone.",
+    "All record(s) in this session will be deleted. This action cannot be undone.",
     // HistoryDeleteSessionButton
     "Delete",
     // HistoryNameSessionTitle
@@ -267,7 +267,7 @@ val BaseUiTexts: List<String> = listOf(
     // AuthLoginTitle
     "Login",
     // AuthRegisterTitle
-    "Register",
+    "Register (Disabled)",
     // AuthLoginHint
     "Use your registered (provided) email and password.",
     // AuthRegisterRules
@@ -316,18 +316,18 @@ val BaseUiTexts: List<String> = listOf(
     // StatusLoginRequiredTranslation
     "Login is required to use translation.",
     // StatusRecognizePreparing
-    "Preparing mic...",
+    "Preparing mic... (Do not speak now)",
     // StatusRecognizeListening
     "Listening... Please speak now.",
     // PaginationPrevLabel
-    "Prev",
+    "< Prev",
     // PaginationNextLabel
-    "Next",
+    "Next >",
     // PaginationPageLabelTemplate
     "Page {page} / {total}",
 
     // ContinuousPreparingMicText
-    "Preparing mic...",
+    "Preparing mic... (Do not speak now)",
     // ContinuousTranslatingText
     "Translating...",
 )

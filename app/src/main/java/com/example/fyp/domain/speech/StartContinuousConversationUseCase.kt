@@ -21,7 +21,6 @@ class StartContinuousConversationUseCase(
         )
     }
 
-    // CHANGED: suspend
     suspend fun stop(recognizer: SpeechRecognizer?) {
         speechRepository.stopContinuous(recognizer)
     }

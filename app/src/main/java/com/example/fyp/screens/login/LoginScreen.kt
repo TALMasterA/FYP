@@ -1,3 +1,5 @@
+@file:Suppress("AssignedValueIsNeverRead", "unused")
+
 package com.example.fyp.screens.login
 
 import androidx.compose.foundation.layout.*

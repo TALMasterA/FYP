@@ -16,6 +16,5 @@ interface SpeechRepository {
         onError: (String) -> Unit
     ): SpeechRecognizer
 
-    // CHANGED: make it suspend so we can wait for stop to finish
     suspend fun stopContinuous(recognizer: SpeechRecognizer?)
 }
