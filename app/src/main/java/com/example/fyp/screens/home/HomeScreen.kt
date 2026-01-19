@@ -48,7 +48,8 @@ fun HomeScreen(
     onOpenLogin: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenResetPassword: () -> Unit,
-    ) {
+    onOpenLearning: () -> Unit, // NEW
+) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
@@ -148,6 +149,14 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(t(UiTextKey.ContinuousStartScreenButton))
+            }
+
+            Button(
+                onClick = onOpenLearning,
+                enabled = isLoggedIn,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Learning")
             }
 
             if (!isLoggedIn) {

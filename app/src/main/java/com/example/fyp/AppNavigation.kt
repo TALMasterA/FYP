@@ -20,6 +20,7 @@ import com.example.fyp.screens.login.ResetPasswordScreen
 import com.example.fyp.screens.speech.ContinuousConversationScreen
 import com.example.fyp.screens.speech.SpeechRecognitionScreen
 import com.example.fyp.core.RequireLoginGate
+import com.example.fyp.screens.learning.LearningScreen
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
@@ -29,6 +30,8 @@ sealed class AppScreen(val route: String) {
     object Login : AppScreen("login")
     object History : AppScreen("history")
     object ResetPassword : AppScreen("reset_password")
+
+    object Learning : AppScreen("learning") // NEW
 }
 
 @Composable
@@ -70,7 +73,10 @@ fun AppNavigation() {
                     onOpenResetPassword = {
                         navController.navigate(AppScreen.ResetPassword.route) { launchSingleTop = true }
                     },
-                )
+                    onOpenLearning = {
+                        navController.navigate(AppScreen.Learning.route) { launchSingleTop = true }
+                    },
+                    )
             }
 
             composable(AppScreen.Speech.route) {
@@ -124,6 +130,22 @@ fun AppNavigation() {
                 RequireLoginGate(
                     content = {
                         HistoryScreen(
+                            uiLanguages = uiLanguages,
+                            appLanguageState = appLanguageState,
+                            onUpdateAppLanguage = updateAppLanguage,
+                            onBack = { navController.popBackStack() }
+                        )
+                    },
+                    onNeedLogin = {
+                        navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
+                    }
+                )
+            }
+
+            composable(AppScreen.Learning.route) {
+                RequireLoginGate(
+                    content = {
+                        LearningScreen(
                             uiLanguages = uiLanguages,
                             appLanguageState = appLanguageState,
                             onUpdateAppLanguage = updateAppLanguage,
