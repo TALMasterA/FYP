@@ -1,5 +1,11 @@
-package com.example.fyp.data
+package com.example.fyp.data.di
 
+import com.example.fyp.data.clients.CloudSpeechTokenClient
+import com.example.fyp.data.clients.CloudTranslatorClient
+import com.example.fyp.data.repositories.AzureSpeechRepository
+import com.example.fyp.data.repositories.FirebaseTranslationRepository
+import com.example.fyp.data.repositories.SpeechRepository
+import com.example.fyp.data.repositories.TranslationRepository
 import com.example.fyp.domain.speech.RecognizeFromMicUseCase
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.StartContinuousConversationUseCase

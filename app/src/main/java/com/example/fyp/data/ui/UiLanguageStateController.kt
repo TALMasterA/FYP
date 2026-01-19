@@ -1,4 +1,4 @@
-package com.example.fyp.data
+package com.example.fyp.data.ui
 
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable

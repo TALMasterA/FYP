@@ -1,4 +1,4 @@
-package com.example.fyp.data
+package com.example.fyp.data.repositories
 
 import com.example.fyp.model.SpeechResult
 

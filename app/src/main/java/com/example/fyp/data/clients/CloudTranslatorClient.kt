@@ -1,4 +1,4 @@
-package com.example.fyp.data
+package com.example.fyp.data.clients
 
 import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.tasks.await

@@ -1,6 +1,6 @@
 package com.example.fyp.domain.speech
 
-import com.example.fyp.data.SpeechRepository
+import com.example.fyp.data.repositories.SpeechRepository
 import com.microsoft.cognitiveservices.speech.SpeechRecognizer
 
 class StartContinuousConversationUseCase(

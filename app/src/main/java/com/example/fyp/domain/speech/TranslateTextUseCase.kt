@@ -1,6 +1,6 @@
 package com.example.fyp.domain.speech
 
-import com.example.fyp.data.TranslationRepository
+import com.example.fyp.data.repositories.TranslationRepository
 import com.example.fyp.model.SpeechResult
 
 class TranslateTextUseCase(

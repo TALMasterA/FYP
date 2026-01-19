@@ -1,4 +1,4 @@
-package com.example.fyp.data
+package com.example.fyp.data.ui
 
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences

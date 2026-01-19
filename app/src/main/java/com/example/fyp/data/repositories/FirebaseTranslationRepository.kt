@@ -1,5 +1,6 @@
-package com.example.fyp.data
+package com.example.fyp.data.repositories
 
+import com.example.fyp.data.clients.CloudTranslatorClient
 import com.example.fyp.model.SpeechResult
 import javax.inject.Inject
 

@@ -6,8 +6,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.data.LanguageDisplayNames
-import com.example.fyp.data.CloudTranslatorClient
+import com.example.fyp.data.config.LanguageDisplayNames
+import com.example.fyp.data.clients.CloudTranslatorClient
 import com.example.fyp.model.UiTextKey
 import com.example.fyp.model.buildUiTextMap
 import kotlinx.coroutines.launch
@@ -20,7 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
-import com.example.fyp.data.UiLanguageCacheStore
+import com.example.fyp.data.ui.UiLanguageCacheStore
 import com.example.fyp.model.baseUiTextsHash
 
 @Composable

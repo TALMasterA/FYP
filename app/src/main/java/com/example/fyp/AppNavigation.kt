@@ -9,9 +9,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.fyp.data.AzureLanguageConfig
-import com.example.fyp.data.LanguageDisplayNames
-import com.example.fyp.data.rememberUiLanguageState
+import com.example.fyp.data.config.AzureLanguageConfig
+import com.example.fyp.data.config.LanguageDisplayNames
+import com.example.fyp.data.ui.rememberUiLanguageState
 import com.example.fyp.screens.help.HelpScreen
 import com.example.fyp.screens.history.HistoryScreen
 import com.example.fyp.screens.home.HomeScreen

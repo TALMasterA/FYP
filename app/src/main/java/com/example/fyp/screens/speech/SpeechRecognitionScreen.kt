@@ -32,7 +32,7 @@ import com.example.fyp.core.AudioRecorder
 import com.example.fyp.core.RecordAudioPermissionRequest
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.data.AzureLanguageConfig
+import com.example.fyp.data.config.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts

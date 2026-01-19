@@ -1,6 +1,8 @@
-package com.example.fyp.data
+package com.example.fyp.data.repositories
 
 import android.util.Log
+import com.example.fyp.data.clients.CloudSpeechTokenClient
+import com.example.fyp.data.providers.AzureSpeechProvider
 import com.example.fyp.model.SpeechResult
 import com.microsoft.cognitiveservices.speech.CancellationDetails
 import com.microsoft.cognitiveservices.speech.ResultReason
