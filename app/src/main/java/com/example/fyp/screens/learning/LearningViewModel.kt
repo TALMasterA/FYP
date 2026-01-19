@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.domain.history.ObserveUserHistoryUseCase
+import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.TranslationRecord
@@ -21,6 +22,8 @@ data class LearningUiState(
     val primaryLanguageCode: String = "en-US",
     val records: List<TranslationRecord> = emptyList(),
     val clusters: List<LanguageClusterUi> = emptyList(),
+    val isGenerating: Boolean = false,
+    val generatedContent: String? = null
 )
 
 @HiltViewModel
@@ -28,6 +31,7 @@ class LearningViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val observeUserHistory: ObserveUserHistoryUseCase,
     private val observeUserSettings: ObserveUserSettingsUseCase,
+    private val generateLearningMaterials: GenerateLearningMaterialsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LearningUiState())
@@ -35,19 +39,13 @@ class LearningViewModel @Inject constructor(
 
     private var historyJob: Job? = null
     private var settingsJob: Job? = null
-
     private var supportedLanguages: Set<String> = emptySet()
-
-    fun setSupportedLanguages(codes: Set<String>) {
-        supportedLanguages = codes
-        recomputeClusters()
-    }
 
     init {
         viewModelScope.launch {
             authRepo.currentUserState.collect { auth ->
                 when (auth) {
-                    is AuthState.LoggedIn -> start(uid = auth.user.uid)
+                    is AuthState.LoggedIn -> start(auth.user.uid)
                     AuthState.Loading -> {
                         stopJobs()
                         _uiState.value = LearningUiState(isLoading = true)
@@ -59,6 +57,11 @@ class LearningViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun setSupportedLanguages(codes: Set<String>) {
+        supportedLanguages = codes
+        recomputeClusters()
     }
 
     private fun stopJobs() {
@@ -90,15 +93,28 @@ class LearningViewModel @Inject constructor(
 
     private fun recomputeClusters() {
         val s = _uiState.value
-        val clusters = if (supportedLanguages.isEmpty()) {
-            emptyList()
-        } else {
-            buildLanguageClusters(
-                records = s.records,
-                primaryLanguageCode = s.primaryLanguageCode,
-                supportedLanguages = supportedLanguages
-            )
-        }
+        val clusters = if (supportedLanguages.isEmpty()) emptyList() else
+            buildLanguageClusters(s.records, s.primaryLanguageCode, supportedLanguages)
         _uiState.value = s.copy(clusters = clusters)
+    }
+
+    fun generateFor(languageCode: String) {
+        val current = _uiState.value
+        viewModelScope.launch {
+            _uiState.value = current.copy(isGenerating = true, error = null, generatedContent = null)
+
+            runCatching {
+                generateLearningMaterials(
+                    deployment = "gpt-5-mini",
+                    primaryLanguageCode = current.primaryLanguageCode,
+                    targetLanguageCode = languageCode,
+                    records = current.records
+                )
+            }.onSuccess { content ->
+                _uiState.value = _uiState.value.copy(isGenerating = false, generatedContent = content)
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(isGenerating = false, error = e.message ?: "Generate failed")
+            }
+        }
     }
 }

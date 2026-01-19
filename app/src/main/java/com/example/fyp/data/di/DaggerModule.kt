@@ -18,6 +18,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.example.fyp.data.genai.CloudGenAiClient
+import com.example.fyp.data.learning.LearningContentRepositoryImpl
+import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
+import com.example.fyp.domain.learning.LearningContentRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -59,4 +63,19 @@ object AppModule {
     @Provides @Singleton
     fun provideTranslationRepository(client: CloudTranslatorClient): TranslationRepository =
         FirebaseTranslationRepository(client)
+
+    @Provides
+    @Singleton
+    fun provideCloudGenAiClient(functions: FirebaseFunctions): CloudGenAiClient =
+        CloudGenAiClient(functions)
+
+    @Provides
+    @Singleton
+    fun provideLearningContentRepository(genAi: CloudGenAiClient): LearningContentRepository =
+        LearningContentRepositoryImpl(genAi)
+
+    @Provides
+    fun provideGenerateLearningMaterialsUseCase(repo: LearningContentRepository) =
+        GenerateLearningMaterialsUseCase(repo)
+
 }

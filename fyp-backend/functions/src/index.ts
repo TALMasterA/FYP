@@ -9,6 +9,9 @@ const AZURE_SPEECH_KEY = defineSecret("AZURE_SPEECH_KEY");
 const AZURE_SPEECH_REGION = defineSecret("AZURE_SPEECH_REGION");
 const AZURE_TRANSLATOR_KEY = defineSecret("AZURE_TRANSLATOR_KEY");
 const AZURE_TRANSLATOR_REGION = defineSecret("AZURE_TRANSLATOR_REGION");
+const GENAI_BASE_URL = defineSecret("GENAI_BASE_URL");
+const GENAI_API_VERSION = defineSecret("GENAI_API_VERSION");
+const GENAI_API_KEY = defineSecret("GENAI_API_KEY");
 
 const ENDPOINT = "https://api.cognitive.microsofttranslator.com";
 const API_VERSION = "3.0";
@@ -158,5 +161,58 @@ export const translateTexts = onCall(
       [];
 
     return {translatedTexts};
+  }
+);
+
+export const generateLearningContent = onCall(
+  { secrets: [GENAI_BASE_URL, GENAI_API_VERSION, GENAI_API_KEY] },
+  async (request) => {
+    requireAuth(request.auth);
+
+    const deployment = String(request.data?.deployment ?? "");
+    const prompt = String(request.data?.prompt ?? "");
+
+    if (!deployment.trim()) {
+      throw new HttpsError("invalid-argument", "deployment is required");
+    }
+    if (!prompt.trim()) {
+      throw new HttpsError("invalid-argument", "prompt is required");
+    }
+
+    const baseUrl = GENAI_BASE_URL.value();
+    const apiVersion = GENAI_API_VERSION.value();
+    const apiKey = GENAI_API_KEY.value();
+
+    const url = new URL(
+      baseUrl.replace(/\/+$/, "") +
+        `/deployments/${encodeURIComponent(deployment)}/chat/completions`
+    );
+    url.searchParams.set("api-version", apiVersion);
+
+    const body = {
+      messages: [
+        { role: "system", content: "You are a helpful language learning assistant." },
+        { role: "user", content: prompt },
+      ],
+      temperature: 1,
+    };
+
+    const resp = await fetch(url.toString(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": apiKey,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const text = await resp.text();
+    if (!resp.ok) {
+      throw new HttpsError("internal", `GenAI HTTP ${resp.status}: ${text}`);
+    }
+
+    const json = JSON.parse(text);
+    const content = json?.choices?.[0]?.message?.content ?? "";
+    return { content };
   }
 );
