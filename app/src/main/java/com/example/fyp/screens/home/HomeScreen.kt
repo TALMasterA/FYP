@@ -37,6 +37,7 @@ import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.Alignment
@@ -179,7 +180,8 @@ fun HomeScreen(
                 onClick = onOpenSettings,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(bottom = 16.dp, end = 16.dp, top = (-8).dp)
+                    .offset(y = (-28).dp)
+                    .padding(16.dp)
             ) {
                 Icon(Icons.Filled.Settings, contentDescription = "Settings")
             }
