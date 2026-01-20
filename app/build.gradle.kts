@@ -37,7 +37,7 @@ android {
         debug {
             isMinifyEnabled = false
             isShrinkResources = false  // Skip stripping native libs
-        } //build faster but APK install slower
+        } //build faster but APK bigger
     }
 
     compileOptions {

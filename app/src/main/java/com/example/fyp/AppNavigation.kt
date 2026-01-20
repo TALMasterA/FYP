@@ -21,6 +21,7 @@ import com.example.fyp.screens.speech.ContinuousConversationScreen
 import com.example.fyp.screens.speech.SpeechRecognitionScreen
 import com.example.fyp.core.RequireLoginGate
 import com.example.fyp.screens.learning.LearningScreen
+import com.example.fyp.screens.settings.SettingsScreen
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
@@ -30,8 +31,8 @@ sealed class AppScreen(val route: String) {
     object Login : AppScreen("login")
     object History : AppScreen("history")
     object ResetPassword : AppScreen("reset_password")
-
-    object Learning : AppScreen("learning") // NEW
+    object Learning : AppScreen("learning")
+    object Settings : AppScreen("settings")
 }
 
 @Composable
@@ -76,6 +77,8 @@ fun AppNavigation() {
                     onOpenLearning = {
                         navController.navigate(AppScreen.Learning.route) { launchSingleTop = true }
                     },
+                    onOpenSettings = {
+                        navController.navigate(AppScreen.Settings.route) { launchSingleTop = true } },
                     )
             }
 
@@ -155,6 +158,15 @@ fun AppNavigation() {
                     onNeedLogin = {
                         navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
                     }
+                )
+            }
+
+            composable(AppScreen.Settings.route) {
+                SettingsScreen(
+                    uiLanguages = uiLanguages,
+                    appLanguageState = appLanguageState,
+                    onUpdateAppLanguage = updateAppLanguage,
+                    onBack = { navController.popBackStack() }
                 )
             }
         }

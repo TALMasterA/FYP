@@ -17,19 +17,23 @@ import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.data.config.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
+import com.example.fyp.model.UiTextKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     uiLanguages: List<Pair<String, String>>,
     appLanguageState: AppLanguageState,
-    onUpdateAppLanguage: (String, Map<Any, String>) -> Unit, // keep your existing signature here
+    onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     onBack: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val supportedLanguages = remember { AzureLanguageConfig.loadSupportedLanguages(context) }
+
+    val languageNameMap = remember(uiLanguages) { uiLanguages.toMap() }
+    fun displayName(code: String) = languageNameMap[code] ?: code
 
     var selected by remember(uiState.settings.primaryLanguageCode) {
         mutableStateOf(uiState.settings.primaryLanguageCode.ifBlank { "en-US" })
@@ -56,7 +60,7 @@ fun SettingsScreen(
                 label = "Primary language",
                 selectedCode = selected,
                 options = supportedLanguages,
-                nameFor = { code -> code }, // replace with your displayName mapper if you want
+                nameFor = { code -> displayName(code) },
                 onSelected = {
                     selected = it
                     viewModel.updatePrimaryLanguage(it)

@@ -35,6 +35,12 @@ import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.padding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +54,8 @@ fun HomeScreen(
     onOpenLogin: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenResetPassword: () -> Unit,
-    onOpenLearning: () -> Unit, // NEW
+    onOpenLearning: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
@@ -109,60 +116,72 @@ fun HomeScreen(
             }
         }
     ) { innerPadding ->
-        StandardScreenBody(
-            innerPadding = innerPadding,
-            scrollable = true,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            AppLanguageDropdown(
-                uiLanguages = uiLanguages,
-                appLanguageState = appLanguageState,
-                onUpdateAppLanguage = onUpdateAppLanguage,
-                uiText = uiText,
-                enabled = true
-            )
+        Box(modifier = Modifier.fillMaxSize()) {
 
-            if (!isLoggedIn) {
-                Text(
-                    text = t(UiTextKey.DisableText),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            StandardScreenBody(
+                innerPadding = innerPadding,
+                scrollable = true,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                AppLanguageDropdown(
+                    uiLanguages = uiLanguages,
+                    appLanguageState = appLanguageState,
+                    onUpdateAppLanguage = onUpdateAppLanguage,
+                    uiText = uiText,
+                    enabled = true
                 )
-            }
 
-            Text(
-                text = t(UiTextKey.HomeInstructions),
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Button(
-                onClick = onStartSpeech,
-                enabled = isLoggedIn,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(t(UiTextKey.HomeStartButton))
-            }
-
-            Button(
-                onClick = onStartContinuous,
-                enabled = isLoggedIn,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(t(UiTextKey.ContinuousStartScreenButton))
-            }
-
-            Button(
-                onClick = onOpenLearning,
-                enabled = isLoggedIn,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Learning")
-            }
-
-            if (!isLoggedIn) {
-                TextButton(onClick = onOpenResetPassword) {
-                    Text(t(UiTextKey.ForgotPwText))
+                if (!isLoggedIn) {
+                    Text(
+                        text = t(UiTextKey.DisableText),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
+
+                Text(
+                    text = t(UiTextKey.HomeInstructions),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Button(
+                    onClick = onStartSpeech,
+                    enabled = isLoggedIn,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(t(UiTextKey.HomeStartButton))
+                }
+
+                Button(
+                    onClick = onStartContinuous,
+                    enabled = isLoggedIn,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(t(UiTextKey.ContinuousStartScreenButton))
+                }
+
+                Button(
+                    onClick = onOpenLearning,
+                    enabled = isLoggedIn,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Learning")
+                }
+
+                if (!isLoggedIn) {
+                    TextButton(onClick = onOpenResetPassword) {
+                        Text(t(UiTextKey.ForgotPwText))
+                    }
+                }
+            }
+
+            FloatingActionButton(
+                onClick = onOpenSettings,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+            ) {
+                Icon(Icons.Filled.Settings, contentDescription = "Settings")
             }
         }
     }
