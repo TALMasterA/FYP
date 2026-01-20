@@ -38,6 +38,7 @@ fun LearningScreen(
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     onBack: () -> Unit,
     viewModel: LearningViewModel = hiltViewModel(),
+    onOpenSheet: (String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -74,31 +75,43 @@ fun LearningScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(uiState.clusters, key = { it.languageCode }) { c ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        AssistChip(
-                            onClick = { /* optional: select this language to view cached content */ },
-                            label = { Text("${displayName(c.languageCode)} (${c.count})") },
-                            colors = AssistChipDefaults.assistChipColors()
-                        )
+                    val hasSheet = uiState.sheetExistsByLanguage[c.languageCode] == true
+                    val isGeneratingThis = uiState.generatingLanguageCode == c.languageCode
+                    val isGeneratingAny = uiState.generatingLanguageCode != null
+                    val lastCount = uiState.sheetCountByLanguage[c.languageCode]
+                    val unchanged = (lastCount != null && lastCount == c.count)
+                    val generateEnabled = !isGeneratingAny && c.count > 0 && !unchanged
 
-                        Button(
-                            onClick = { viewModel.generateFor(c.languageCode) },
-                            enabled = !uiState.isGenerating
-                        ) {
-                            Text("Generate")
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            AssistChip(
+                                onClick = { },
+                                label = { Text("${displayName(c.languageCode)} (${c.count})") },
+                                colors = AssistChipDefaults.assistChipColors()
+                            )
+
+                            Button(
+                                onClick = { viewModel.generateFor(c.languageCode) },
+                                enabled = generateEnabled
+                            ) {
+                                Text(
+                                    when {
+                                        isGeneratingThis -> "Generating..."
+                                        hasSheet -> "Re-gen"
+                                        else -> "Generate"
+                                    }
+                                )
+                            }
+                        }
+
+                        // Button B: below the row
+                        if (hasSheet) {
+                            Button(onClick = { onOpenSheet(c.languageCode) }) {
+                                Text("${displayName(c.languageCode)} Sheet")
+                            }
                         }
                     }
                 }
-            }
-
-            uiState.generatedContent?.let { content ->
-                Text(
-                    text = content,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                        .padding(vertical = 8.dp)
-                )
             }
         }
     }

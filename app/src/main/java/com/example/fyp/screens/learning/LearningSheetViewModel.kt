@@ -1,5 +1,6 @@
 package com.example.fyp.screens.learning
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
@@ -17,23 +18,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class LearningUiState(
+data class LearningSheetUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val primaryLanguageCode: String = "en-US",
-    val records: List<TranslationRecord> = emptyList(),
-    val clusters: List<LanguageClusterUi> = emptyList(),
-    val generatingLanguageCode: String? = null,
-
-    // languageCode -> whether a sheet exists in Firestore for current primaryLanguageCode
-    val sheetExistsByLanguage: Map<String, Boolean> = emptyMap(),
-
-    // languageCode -> count saved in Firestore when sheet was generated (for unchanged-count rule)
-    val sheetCountByLanguage: Map<String, Int> = emptyMap(),
+    val targetLanguageCode: String = "",
+    val content: String? = null,
+    val historyCountAtGenerate: Int? = null,
+    val countNow: Int = 0,
+    val isGenerating: Boolean = false
 )
 
 @HiltViewModel
-class LearningViewModel @Inject constructor(
+class LearningSheetViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val authRepo: FirebaseAuthRepository,
     private val sheetsRepo: FirestoreLearningSheetsRepository,
     private val observeUserHistory: ObserveUserHistoryUseCase,
@@ -41,13 +39,15 @@ class LearningViewModel @Inject constructor(
     private val generateLearningMaterials: GenerateLearningMaterialsUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LearningUiState())
-    val uiState: StateFlow<LearningUiState> = _uiState.asStateFlow()
+    private val languageCode: String = savedStateHandle.get<String>("languageCode").orEmpty()
+
+    private val _uiState = MutableStateFlow(LearningSheetUiState(targetLanguageCode = languageCode))
+    val uiState: StateFlow<LearningSheetUiState> = _uiState.asStateFlow()
 
     private var uid: String? = null
-    private var historyJob: Job? = null
+    private var latestRecords: List<TranslationRecord> = emptyList()
     private var settingsJob: Job? = null
-    private var supportedLanguages: Set<String> = emptySet()
+    private var historyJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -56,130 +56,126 @@ class LearningViewModel @Inject constructor(
                     is AuthState.LoggedIn -> start(auth.user.uid)
                     AuthState.Loading -> {
                         stopJobs()
-                        _uiState.value = LearningUiState(isLoading = true)
+                        _uiState.value = _uiState.value.copy(isLoading = true, error = null)
                     }
                     AuthState.LoggedOut -> {
                         stopJobs()
-                        _uiState.value = LearningUiState(isLoading = false, error = "Not logged in")
+                        _uiState.value = _uiState.value.copy(isLoading = false, error = "Not logged in")
                     }
                 }
             }
         }
     }
 
-    fun setSupportedLanguages(codes: Set<String>) {
-        supportedLanguages = codes
-        recomputeClusters()
-    }
-
     private fun stopJobs() {
-        historyJob?.cancel()
         settingsJob?.cancel()
-        historyJob = null
+        historyJob?.cancel()
         settingsJob = null
+        historyJob = null
     }
 
     private fun start(uid: String) {
         this.uid = uid
         stopJobs()
+
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         settingsJob = viewModelScope.launch {
             observeUserSettings(uid).collect { s ->
                 val primary = s.primaryLanguageCode.ifBlank { "en-US" }
                 _uiState.value = _uiState.value.copy(primaryLanguageCode = primary, isLoading = false)
-                recomputeClusters()
+                loadSheet()
             }
         }
 
         historyJob = viewModelScope.launch {
             observeUserHistory(uid).collect { records ->
-                _uiState.value = _uiState.value.copy(records = records, isLoading = false)
-                recomputeClusters()
+                latestRecords = records
+                val countNow = countInvolvingLanguage(records, languageCode)
+                _uiState.value = _uiState.value.copy(countNow = countNow)
+                // Do not overwrite content here; content comes from Firestore
             }
         }
     }
 
-    private fun recomputeClusters() {
-        val s = _uiState.value
-        val clusters = if (supportedLanguages.isEmpty()) {
-            emptyList()
-        } else {
-            buildLanguageClusters(s.records, s.primaryLanguageCode, supportedLanguages)
-        }
-        _uiState.value = s.copy(clusters = clusters)
-
-        refreshSheetMetaForClusters()
+    private fun countInvolvingLanguage(records: List<TranslationRecord>, lang: String): Int {
+        if (lang.isBlank()) return 0
+        return records.count { it.sourceLang == lang || it.targetLang == lang }
     }
 
-    private fun refreshSheetMetaForClusters() {
+    fun loadSheet() {
         val uid = this.uid ?: return
         val s = _uiState.value
         val primary = s.primaryLanguageCode
-        val languages = s.clusters.map { it.languageCode }
-
-        if (languages.isEmpty()) return
+        val target = s.targetLanguageCode
+        if (target.isBlank()) return
 
         viewModelScope.launch {
-            var existsMap = s.sheetExistsByLanguage
-            var countMap = s.sheetCountByLanguage
-
-            for (lang in languages) {
-                val doc = sheetsRepo.getSheet(uid, primary, lang)
-                existsMap = existsMap + (lang to (doc != null))
-                if (doc != null) countMap = countMap + (lang to doc.historyCountAtGenerate)
-            }
-
-            _uiState.value = _uiState.value.copy(
-                sheetExistsByLanguage = existsMap,
-                sheetCountByLanguage = countMap
-            )
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            runCatching { sheetsRepo.getSheet(uid, primary, target) }
+                .onSuccess { doc ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        content = doc?.content,
+                        historyCountAtGenerate = doc?.historyCountAtGenerate
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = e.message ?: "Load sheet failed"
+                    )
+                }
         }
     }
 
-    fun generateFor(languageCode: String) {
+    fun canRegen(): Boolean {
+        val s = _uiState.value
+        val last = s.historyCountAtGenerate
+        if (s.isGenerating) return false
+        if (s.countNow == 0) return false
+        if (last != null && last == s.countNow) return false
+        return true
+    }
+
+    fun regen() {
         val uid = this.uid ?: run {
             _uiState.value = _uiState.value.copy(error = "Not logged in")
             return
         }
-
         val current = _uiState.value
         val primary = current.primaryLanguageCode
-        val countNow = current.clusters.firstOrNull { it.languageCode == languageCode }?.count ?: 0
-        val lastCount = current.sheetCountByLanguage[languageCode]
+        val target = current.targetLanguageCode
 
-        // Disable rule: unchanged count (also disable if count==0)
-        if (countNow == 0) return
-        if (lastCount != null && lastCount == countNow) return
+        if (!canRegen()) return
 
         viewModelScope.launch {
-            _uiState.value = current.copy(generatingLanguageCode = languageCode, error = null)
+            _uiState.value = _uiState.value.copy(isGenerating = true, error = null)
 
             runCatching {
                 generateLearningMaterials(
                     deployment = "gpt-5-mini",
                     primaryLanguageCode = primary,
-                    targetLanguageCode = languageCode,
-                    records = current.records
+                    targetLanguageCode = target,
+                    records = latestRecords
                 )
             }.onSuccess { content ->
                 sheetsRepo.upsertSheet(
                     uid = uid,
                     primary = primary,
-                    target = languageCode,
+                    target = target,
                     content = content,
-                    historyCountAtGenerate = countNow
+                    historyCountAtGenerate = current.countNow
                 )
-
                 _uiState.value = _uiState.value.copy(
-                    generatingLanguageCode = null,
-                    sheetExistsByLanguage = _uiState.value.sheetExistsByLanguage + (languageCode to true),
-                    sheetCountByLanguage = _uiState.value.sheetCountByLanguage + (languageCode to countNow)
+                    isGenerating = false,
+                    content = content,
+                    historyCountAtGenerate = current.countNow
                 )
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
-                    generatingLanguageCode = null,
-                    error = e.message ?: "Generate failed"
+                    isGenerating = false,
+                    error = e.message ?: "Re-gen failed"
                 )
             }
         }

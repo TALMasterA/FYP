@@ -22,6 +22,9 @@ import com.example.fyp.screens.speech.SpeechRecognitionScreen
 import com.example.fyp.core.RequireLoginGate
 import com.example.fyp.screens.learning.LearningScreen
 import com.example.fyp.screens.settings.SettingsScreen
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.fyp.screens.learning.LearningSheetScreen
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
@@ -33,6 +36,9 @@ sealed class AppScreen(val route: String) {
     object ResetPassword : AppScreen("reset_password")
     object Learning : AppScreen("learning")
     object Settings : AppScreen("settings")
+    object LearningSheet : AppScreen("learning_sheet/{languageCode}") {
+        fun routeFor(languageCode: String) = "learning_sheet/$languageCode"
+    }
 }
 
 @Composable
@@ -78,8 +84,9 @@ fun AppNavigation() {
                         navController.navigate(AppScreen.Learning.route) { launchSingleTop = true }
                     },
                     onOpenSettings = {
-                        navController.navigate(AppScreen.Settings.route) { launchSingleTop = true } },
-                    )
+                        navController.navigate(AppScreen.Settings.route) { launchSingleTop = true }
+                    },
+                )
             }
 
             composable(AppScreen.Speech.route) {
@@ -152,7 +159,8 @@ fun AppNavigation() {
                             uiLanguages = uiLanguages,
                             appLanguageState = appLanguageState,
                             onUpdateAppLanguage = updateAppLanguage,
-                            onBack = { navController.popBackStack() }
+                            onBack = { navController.popBackStack() },
+                            onOpenSheet = { lang -> navController.navigate(AppScreen.LearningSheet.routeFor(lang)) }
                         )
                     },
                     onNeedLogin = {
@@ -167,6 +175,28 @@ fun AppNavigation() {
                     appLanguageState = appLanguageState,
                     onUpdateAppLanguage = updateAppLanguage,
                     onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = AppScreen.LearningSheet.route,
+                arguments = listOf(navArgument("languageCode") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val languageCode = backStackEntry.arguments?.getString("languageCode").orEmpty()
+
+                RequireLoginGate(
+                    content = {
+                        LearningSheetScreen(
+                            uiLanguages = uiLanguages,
+                            appLanguageState = appLanguageState,
+                            onUpdateAppLanguage = updateAppLanguage,
+                            languageCode = languageCode,
+                            onBack = { navController.popBackStack() }
+                        )
+                    },
+                    onNeedLogin = {
+                        navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
+                    }
                 )
             }
         }

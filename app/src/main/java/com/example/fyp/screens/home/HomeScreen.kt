@@ -179,7 +179,7 @@ fun HomeScreen(
                 onClick = onOpenSettings,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(16.dp)
+                    .padding(bottom = 16.dp, end = 16.dp, top = (-8).dp)
             ) {
                 Icon(Icons.Filled.Settings, contentDescription = "Settings")
             }
