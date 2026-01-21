@@ -42,6 +42,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.systemBarsPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -168,18 +170,14 @@ fun HomeScreen(
                 ) {
                     Text("Learning")
                 }
-
-                if (!isLoggedIn) {
-                    TextButton(onClick = onOpenResetPassword) {
-                        Text(t(UiTextKey.ForgotPwText))
-                    }
-                }
             }
 
             FloatingActionButton(
                 onClick = onOpenSettings,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
+                    .imePadding()
+                    .systemBarsPadding()
                     .offset(y = (-28).dp)
                     .padding(16.dp)
             ) {

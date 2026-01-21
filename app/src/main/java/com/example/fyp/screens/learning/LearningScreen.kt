@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -71,8 +69,6 @@ fun LearningScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 260.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(uiState.clusters, key = { it.languageCode }) { c ->
                     val hasSheet = uiState.sheetExistsByLanguage[c.languageCode] == true
@@ -104,7 +100,6 @@ fun LearningScreen(
                             }
                         }
 
-                        // Button B: below the row
                         if (hasSheet) {
                             Button(onClick = { onOpenSheet(c.languageCode) }) {
                                 Text("${displayName(c.languageCode)} Sheet")

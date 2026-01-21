@@ -154,6 +154,10 @@ fun LoginScreen(
                 Text(if (isLogin) t(UiTextKey.AuthToggleToRegister) else t(UiTextKey.AuthToggleToLogin))
             }
 
+            TextButton(onClick = onOpenResetPassword) {
+                Text(t(UiTextKey.ForgotPwText))
+            }
+
             (localError ?: uiState.error)?.let {
                 Text(text = it, color = MaterialTheme.colorScheme.error)
             }
