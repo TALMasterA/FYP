@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.domain.settings.SetPrimaryLanguageUseCase
+import com.example.fyp.domain.settings.SetFontSizeScaleUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,7 +28,8 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val observeSettings: ObserveUserSettingsUseCase,
-    private val setPrimaryLanguage: SetPrimaryLanguageUseCase
+    private val setPrimaryLanguage: SetPrimaryLanguageUseCase,
+    private val setFontSizeScale: SetFontSizeScaleUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -56,18 +58,48 @@ class SettingsViewModel @Inject constructor(
     private fun start(uid: String) {
         settingsJob?.cancel()
         _uiState.value = _uiState.value.copy(isLoading = true, error = null, uid = uid)
+
         settingsJob = viewModelScope.launch {
             observeSettings(uid)
-                .catch { e -> _uiState.value = _uiState.value.copy(isLoading = false, error = e.message) }
-                .collect { s -> _uiState.value = _uiState.value.copy(isLoading = false, settings = s, error = null) }
+                .catch { e ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = e.message ?: "Load failed"
+                    )
+                }
+                .collect { s ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        settings = s,
+                        error = null
+                    )
+                }
         }
     }
 
     fun updatePrimaryLanguage(newCode: String) {
         val uid = _uiState.value.uid ?: return
         viewModelScope.launch {
-            runCatching { setPrimaryLanguage(uid, newCode) }
-                .onFailure { e -> _uiState.value = _uiState.value.copy(error = e.message ?: "Save failed") }
+            runCatching {
+                setPrimaryLanguage(uid, newCode)
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(
+                    error = e.message ?: "Save failed"
+                )
+            }
+        }
+    }
+
+    fun updateFontSizeScale(scale: Float) {
+        val uid = _uiState.value.uid ?: return
+        viewModelScope.launch {
+            runCatching {
+                setFontSizeScale(uid, scale)
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(
+                    error = e.message ?: "Font size save failed"
+                )
+            }
         }
     }
 }

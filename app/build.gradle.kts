@@ -115,5 +115,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
 
     implementation("androidx.preference:preference:1.2.1")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 }
 
