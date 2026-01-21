@@ -21,14 +21,14 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 11
-        versionName = "1.3.2"
+        versionName = "1.3.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -36,7 +36,8 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            isShrinkResources = false  // Skip stripping native libs
+            isShrinkResources = false // Skip stripping native libs
+            versionNameSuffix = "-dev"
         } //build faster but APK bigger
     }
 

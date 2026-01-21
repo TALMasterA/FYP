@@ -31,6 +31,9 @@ import com.example.fyp.core.validateScale
 import com.example.fyp.data.config.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.UiTextKey
+import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.model.BaseUiTexts
+import com.example.fyp.BuildConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +48,9 @@ fun SettingsScreen(
     val context = LocalContext.current
     val supportedLanguages = remember { AzureLanguageConfig.loadSupportedLanguages(context) }
     val languageNameMap = remember(uiLanguages) { uiLanguages.toMap() }
+
+    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     fun displayName(code: String) = languageNameMap[code] ?: code
 
@@ -61,9 +67,9 @@ fun SettingsScreen(
     }
 
     StandardScreenScaffold(
-        title = "Settings",
+        title = t(UiTextKey.SettingsPrimaryLanguageTitle),
         onBack = onBack,
-        backContentDescription = "Back"
+        backContentDescription = t(UiTextKey.NavBack)
     ) { padding ->
         Column(
             modifier = Modifier
@@ -83,15 +89,15 @@ fun SettingsScreen(
 
             // ==================== SECTION 1: PRIMARY LANGUAGE ====================
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Primary Language", style = MaterialTheme.typography.titleMedium)
+                Text(t(UiTextKey.SettingsPrimaryLanguageLabel), style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "Used for learning explanations and recommendations",
+                    t(UiTextKey.SettingsFontSizeDesc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 LanguageDropdownField(
-                    label = "Primary language",
+                    label = t(UiTextKey.SettingsPrimaryLanguageLabel),
                     selectedCode = selected,
                     options = supportedLanguages,
                     nameFor = { code -> displayName(code) },
@@ -104,17 +110,17 @@ fun SettingsScreen(
 
             // ==================== SECTION 2: FONT SIZE ====================
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Font Size", style = MaterialTheme.typography.titleMedium)
+                Text(t(UiTextKey.SettingsFontSizeTitle), style = MaterialTheme.typography.titleMedium)
 
                 Text(
-                    "Adjust text size for better readability (synced across devices)",
+                    t(UiTextKey.SettingsFontSizeDesc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Text(
-                    "Scale: ${(sliderValue * 100).toInt()}%",
-                    style = MaterialTheme.typography.bodyMedium
+                    t(UiTextKey.SettingsScaleTemplate)
+                        .replace("{pct}", (sliderValue * 100).toInt().toString())
                 )
 
                 // Preview card (local preview)
@@ -133,19 +139,19 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            "Headline: Large text preview",
+                            t(UiTextKey.SettingsPreviewHeadline),
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontSize = MaterialTheme.typography.headlineSmall.fontSize * sliderValue
                             )
                         )
                         Text(
-                            "Body: This is normal text preview",
+                            t(UiTextKey.SettingsPreviewBody),
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontSize = MaterialTheme.typography.bodyMedium.fontSize * sliderValue
                             )
                         )
                         Text(
-                            "Label: Small text preview",
+                            t(UiTextKey.SettingsPreviewLabel),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = MaterialTheme.typography.labelSmall.fontSize * sliderValue
                             )
@@ -181,10 +187,10 @@ fun SettingsScreen(
 
             // ==================== SECTION 3: APP INFO ====================
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("About", style = MaterialTheme.typography.titleMedium)
-                Text("Talk & Learn Translator v1.3.2", style = MaterialTheme.typography.bodyMedium)
+                Text(t(UiTextKey.SettingsAboutTitle), style = MaterialTheme.typography.titleMedium)
+                Text(t(UiTextKey.SettingsAppVersion), style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    "Your preferences are automatically saved and synced to your account.",
+                    t(UiTextKey.SettingsSyncInfo) + {BuildConfig.VERSION_NAME},
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

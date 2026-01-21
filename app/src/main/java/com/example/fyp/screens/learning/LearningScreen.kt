@@ -24,9 +24,10 @@ import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.data.config.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.UiTextKey
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.model.BaseUiTexts
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +41,9 @@ fun LearningScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+
     val context = LocalContext.current
     val supported = remember { AzureLanguageConfig.loadSupportedLanguages(context).toSet() }
 
@@ -51,9 +55,9 @@ fun LearningScreen(
     }
 
     StandardScreenScaffold(
-        title = "Learning",
+        title = t(UiTextKey.LearningTitle),
         onBack = onBack,
-        backContentDescription = "Back"
+        backContentDescription = t(UiTextKey.NavBack)
     ) { padding ->
         Column(
             modifier = Modifier
@@ -62,9 +66,12 @@ fun LearningScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Primary: ${displayName(uiState.primaryLanguageCode)}")
-            Text("(*) Count = number of history records involving this language.")
-            uiState.error?.let { Text("Error: $it") }
+            Text(
+                t(UiTextKey.LearningPrimaryTemplate)
+                    .replace("{language}", displayName(uiState.primaryLanguageCode))
+            )
+            Text(t(UiTextKey.LearningHintCount))
+            uiState.error?.let { Text(t(UiTextKey.LearningErrorTemplate)) }
 
             LazyColumn(
                 modifier = Modifier
@@ -92,9 +99,9 @@ fun LearningScreen(
                             ) {
                                 Text(
                                     when {
-                                        isGeneratingThis -> "Generating..."
-                                        hasSheet -> "Re-gen"
-                                        else -> "Generate"
+                                        isGeneratingThis -> t(UiTextKey.LearningGenerating)
+                                        hasSheet -> t(UiTextKey.LearningRegenerate)
+                                        else -> t(UiTextKey.LearningGenerate)
                                     }
                                 )
                             }
@@ -102,7 +109,10 @@ fun LearningScreen(
 
                         if (hasSheet) {
                             Button(onClick = { onOpenSheet(c.languageCode) }) {
-                                Text("${displayName(c.languageCode)} Sheet")
+                                Text(
+                                    t(UiTextKey.LearningOpenSheetTemplate)
+                                        .replace("{language}", displayName(c.languageCode))
+                                )
                             }
                         }
                     }

@@ -168,7 +168,7 @@ fun HomeScreen(
                     enabled = isLoggedIn,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Learning")
+                    Text(t(UiTextKey.LearningTitle))
                 }
             }
 

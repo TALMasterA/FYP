@@ -21,6 +21,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.BaseUiTexts
+import com.example.fyp.core.rememberUiTextFunctions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,13 +36,16 @@ fun LearningSheetScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+
     val languageNameMap = remember(uiLanguages) { uiLanguages.toMap() }
     fun displayName(code: String) = languageNameMap[code] ?: code
 
     StandardScreenScaffold(
-        title = "${displayName(languageCode)} Sheet",
+        title = t(UiTextKey.LearningSheetTitleTemplate).replace("{language}", displayName(languageCode)),
         onBack = onBack,
-        backContentDescription = "Back"
+        backContentDescription = t(UiTextKey.NavBack)
     ) { padding ->
         Column(
             modifier = Modifier
@@ -50,18 +55,21 @@ fun LearningSheetScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Primary: ${displayName(uiState.primaryLanguageCode)}",
+                text = t(UiTextKey.LearningSheetPrimaryTemplate)
+                    .replace("{language}", displayName(uiState.primaryLanguageCode)),
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Text(
-                text = "History count now: ${uiState.countNow} (saved at gen: ${uiState.historyCountAtGenerate ?: "-"})",
+                text = t(UiTextKey.LearningSheetHistoryCountTemplate)
+                    .replace("{now}", uiState.countNow.toString())
+                    .replace("{saved}", (uiState.historyCountAtGenerate?.toString() ?: "-")),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             uiState.error?.let {
-                Text(text = "Error: $it", color = MaterialTheme.colorScheme.error)
+                Text(t(UiTextKey.LearningErrorTemplate).format(it))
             }
 
             Button(
@@ -69,12 +77,12 @@ fun LearningSheetScreen(
                 enabled = viewModel.canRegen(),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (uiState.isGenerating) "Generating..." else "Re-gen")
+                Text(if (uiState.isGenerating) t(UiTextKey.LearningSheetGenerating) else t(UiTextKey.LearningSheetRegenerate))
             }
 
             val content = uiState.content
             if (content.isNullOrBlank()) {
-                Text("No sheet content yet.")
+                Text(t(UiTextKey.LearningSheetNoContent))
             } else {
                 Text(
                     text = content,

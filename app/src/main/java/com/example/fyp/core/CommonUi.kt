@@ -80,20 +80,21 @@ fun AppLanguageDropdown(
         onSelected = { code ->
             if (!enabled) return@LanguageDropdownField
 
-            if (code.startsWith("en")) {
-                onUpdateAppLanguage(code, emptyMap())
-                scope.launch {
-                    cache.setSelectedLanguage(code)
-                    cache.setBaseHash(baseUiTextsHash())
-                }
-                return@LanguageDropdownField
-            }
-
             scope.launch {
                 try {
-                    val currentHash = baseUiTextsHash()
-                    val cachedHash = cache.getBaseHash()
+                    // English: no translated map, always fallback to BaseUiTexts
+                    if (code.startsWith("en")) {
+                        onUpdateAppLanguage(code, emptyMap())
+                        cache.setSelectedLanguage(code)
+                        // optional: store a hash for english, but not required
+                        cache.setBaseHash(code, baseUiTextsHash())
+                        return@launch
+                    }
 
+                    val currentHash = baseUiTextsHash()
+                    val cachedHash = cache.getBaseHash(code)
+
+                    // If same version and we have cached map => use it (NO API call)
                     if (cachedHash == currentHash) {
                         val cachedMap = cache.loadUiTexts(code)
                         if (!cachedMap.isNullOrEmpty()) {
@@ -103,6 +104,7 @@ fun AppLanguageDropdown(
                         }
                     }
 
+                    // Otherwise => call API (only happens on user selection)
                     val cloud = CloudTranslatorClient()
                     val translatedList = cloud.translateTexts(
                         texts = BaseUiTexts,
@@ -117,7 +119,7 @@ fun AppLanguageDropdown(
 
                     cache.setSelectedLanguage(code)
                     cache.saveUiTexts(code, map)
-                    cache.setBaseHash(currentHash)
+                    cache.setBaseHash(code, currentHash)
                 } catch (e: Exception) {
                     Log.e("UITranslation", "Error: ${e.message}", e)
                     onUpdateAppLanguage("en-US", emptyMap())

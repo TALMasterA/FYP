@@ -14,28 +14,30 @@ private val Context.uiLangDataStore by preferencesDataStore(name = "ui_lang_cach
 
 class UiLanguageCacheStore(private val context: Context) {
 
-    private val keyselected = stringPreferencesKey("selected_ui_language")
-    private val keybasehash = intPreferencesKey("base_ui_texts_hash")
+    private val keySelected = stringPreferencesKey("selected_ui_language")
 
     private fun keyForLang(code: String): Preferences.Key<String> =
         stringPreferencesKey("uiTexts_json_$code")
 
+    private fun keyHashForLang(code: String): Preferences.Key<Int> =
+        intPreferencesKey("base_ui_texts_hash_$code")
+
     suspend fun getSelectedLanguage(defaultCode: String): String {
         val prefs = context.uiLangDataStore.data.first()
-        return prefs[keyselected] ?: defaultCode
+        return prefs[keySelected] ?: defaultCode
     }
 
     suspend fun setSelectedLanguage(code: String) {
-        context.uiLangDataStore.edit { it[keyselected] = code }
+        context.uiLangDataStore.edit { it[keySelected] = code }
     }
 
-    suspend fun getBaseHash(): Int? {
+    suspend fun getBaseHash(code: String): Int? {
         val prefs = context.uiLangDataStore.data.first()
-        return prefs[keybasehash]
+        return prefs[keyHashForLang(code)]
     }
 
-    suspend fun setBaseHash(hash: Int) {
-        context.uiLangDataStore.edit { it[keybasehash] = hash }
+    suspend fun setBaseHash(code: String, hash: Int) {
+        context.uiLangDataStore.edit { it[keyHashForLang(code)] = hash }
     }
 
     suspend fun loadUiTexts(code: String): Map<UiTextKey, String>? {
@@ -43,9 +45,9 @@ class UiLanguageCacheStore(private val context: Context) {
         val json = prefs[keyForLang(code)] ?: return null
         val obj = JSONObject(json)
 
-        return UiTextKey.entries.associateWith { key ->
-            obj.optString(key.name, "")
-        }.filterValues { it.isNotBlank() }
+        return UiTextKey.entries
+            .associateWith { key -> obj.optString(key.name, "") }
+            .filterValues { it.isNotBlank() }
     }
 
     suspend fun saveUiTexts(code: String, map: Map<UiTextKey, String>) {

@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.model.SpeechResult
+import kotlinx.coroutines.delay
 
 internal class TtsController(
     private val scope: CoroutineScope,
@@ -12,11 +13,7 @@ internal class TtsController(
     private val setSpeechState: (SpeechScreenState) -> Unit,
 ) {
 
-    fun speak(
-        text: String,
-        languageCode: String,
-        isTranslation: Boolean,
-    ) {
+    fun speak(text: String, languageCode: String, isTranslation: Boolean) {
         val state = getSpeechState()
         if (text.isBlank() || state.isTtsRunning) return
 
@@ -24,37 +21,34 @@ internal class TtsController(
             setSpeechState(
                 getSpeechState().copy(
                     isTtsRunning = true,
-                    ttsStatus = if (isTranslation) {
-                        "Speaking translation..."
-                    } else {
-                        "Speaking original..."
-                    },
-                ),
+                    ttsStatus = if (isTranslation) "Speaking translation..." else "Speaking..."
+                )
             )
 
-            when (val result = speakTextUseCase(text, languageCode)) {
-                is SpeechResult.Success -> {
-                    setSpeechState(
-                        getSpeechState().copy(
-                            ttsStatus = "Finished speaking.",
-                        ),
-                    )
+            try {
+                val result = speakTextUseCase(text, languageCode)
+                when (result) {
+                    is SpeechResult.Success -> {
+                        setSpeechState(
+                            getSpeechState().copy(ttsStatus = "✓ Spoken")
+                        )
+                        delay(500)
+                    }
+                    is SpeechResult.Error -> {
+                        setSpeechState(
+                            getSpeechState().copy(ttsStatus = "✗ ${result.message}")
+                        )
+                        delay(3000)
+                    }
                 }
-
-                is SpeechResult.Error -> {
-                    setSpeechState(
-                        getSpeechState().copy(
-                            ttsStatus = "TTS error: ${result.message}",
-                        ),
+            } finally {
+                setSpeechState(
+                    getSpeechState().copy(
+                        isTtsRunning = false,
+                        ttsStatus = ""
                     )
-                }
+                )
             }
-
-            setSpeechState(
-                getSpeechState().copy(
-                    isTtsRunning = false,
-                ),
-            )
         }
     }
 }

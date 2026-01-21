@@ -1,4 +1,4 @@
-package com.example.fyp.di
+package com.example.fyp.data.di
 
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.data.settings.UserSettingsRepositoryImpl

@@ -19,3 +19,29 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep Firebase classes
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+
+# Keep Hilt classes
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
+
+# Keep Retrofit interfaces
+-keep interface retrofit2.** { *; }
+-keepclasseswithmembers class * {
+    @retrofit2.* <methods>;
+}
+
+# Keep serialization classes
+-keep class kotlinx.serialization.** { *; }
+-keepclassmembers class ** {
+    @kotlinx.serialization.SerialName <fields>;
+}
+
+# Keep ViewModel classes
+-keep class androidx.lifecycle.ViewModel { *; }
+
+# Keep annotations
+-keepattributes *Annotation*

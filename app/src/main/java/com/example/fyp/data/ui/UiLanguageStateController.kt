@@ -1,7 +1,7 @@
 package com.example.fyp.data.ui
 
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,37 +34,30 @@ fun rememberUiLanguageState(
         val defaultCode = uiLanguages[0].first
         val selected = cache.getSelectedLanguage(defaultCode)
         val currentHash = baseUiTextsHash()
-        val cachedHash = cache.getBaseHash()
 
         if (selected.startsWith("en")) {
             appLanguageState = appLanguageState.copy(
                 selectedUiLanguage = selected,
-                uiTexts = emptyMap(),
+                uiTexts = emptyMap()
             )
             return@LaunchedEffect
         }
 
+        val cachedHash = cache.getBaseHash(selected)
+
+        // If cache matches current BaseUiTexts => load it; else fallback to English (empty map)
         if (cachedHash == currentHash) {
             val cachedMap = cache.loadUiTexts(selected)
-            if (!cachedMap.isNullOrEmpty()) {
-                appLanguageState = appLanguageState.copy(
-                    selectedUiLanguage = selected,
-                    uiTexts = cachedMap,
-                )
-            } else {
-                // Keep selected language, but no translations yet
-                appLanguageState = appLanguageState.copy(
-                    selectedUiLanguage = selected,
-                    uiTexts = emptyMap(),
-                )
-            }
-        } else {
-            // Base texts changed => invalidate cache, but keep the selected language
-            cache.clearUiTexts(selected)
-            cache.setBaseHash(currentHash)
             appLanguageState = appLanguageState.copy(
                 selectedUiLanguage = selected,
-                uiTexts = emptyMap(),
+                uiTexts = cachedMap.orEmpty()
+            )
+        } else {
+            // Do NOT clear or update hash here (no auto-translate).
+            // This forces: next time user selects this language => AppLanguageDropdown will translate.
+            appLanguageState = appLanguageState.copy(
+                selectedUiLanguage = selected,
+                uiTexts = emptyMap()
             )
         }
     }
@@ -74,7 +67,7 @@ fun rememberUiLanguageState(
     val updateAppLanguage: UpdateAppLanguage = { code, uiTexts ->
         appLanguageState = appLanguageState.copy(
             selectedUiLanguage = code,
-            uiTexts = uiTexts,
+            uiTexts = uiTexts
         )
         pendingSave = code to uiTexts
     }
@@ -85,14 +78,15 @@ fun rememberUiLanguageState(
 
         cache.setSelectedLanguage(code)
 
+        // If english, we store no map (fallback to BaseUiTexts)
         if (code.startsWith("en")) {
-            cache.setBaseHash(baseUiTextsHash())
-            // optional: clear stored english map (usually not needed)
+            cache.setBaseHash(code, baseUiTextsHash())
             return@LaunchedEffect
         }
 
+        // Save whatever we have (can be partial; missing keys fallback to English in UI)
         cache.saveUiTexts(code, uiTexts)
-        cache.setBaseHash(baseUiTextsHash())
+        cache.setBaseHash(code, baseUiTextsHash())
     }
 
     return appLanguageState to updateAppLanguage

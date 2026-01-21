@@ -102,6 +102,38 @@ enum class UiTextKey {
     PaginationPageLabelTemplate,
     ContinuousPreparingMicText,
     ContinuousTranslatingText,
+    // --- Learning ---
+    LearningTitle,
+    LearningPrimaryTemplate,              // "Primary: {language}"
+    LearningHintCount,
+    LearningErrorTemplate,                // "Error: %s"
+    LearningGenerate,
+    LearningRegenerate,
+    LearningGenerating,
+    LearningOpenSheetTemplate,            // "{language} Sheet"
+
+    // --- Learning Sheet ---
+    LearningSheetTitleTemplate,           // "{language} Sheet"
+    LearningSheetPrimaryTemplate,         // "Primary: {language}"
+    LearningSheetHistoryCountTemplate,    // "History count now: {now} (saved at gen: {saved})"
+    LearningSheetNoContent,
+    LearningSheetRegenerate,
+    LearningSheetGenerating,
+
+    // --- Settings ---
+    SettingsTitle,
+    SettingsPrimaryLanguageTitle,
+    SettingsPrimaryLanguageDesc,
+    SettingsPrimaryLanguageLabel,
+    SettingsFontSizeTitle,
+    SettingsFontSizeDesc,
+    SettingsScaleTemplate,                // "Scale: {pct}%"
+    SettingsPreviewHeadline,
+    SettingsPreviewBody,
+    SettingsPreviewLabel,
+    SettingsAboutTitle,
+    SettingsAppVersion,
+    SettingsSyncInfo,
 }
 
 val BaseUiTexts: List<String> = listOf(
@@ -131,7 +163,7 @@ val BaseUiTexts: List<String> = listOf(
     // SpeakTranslationButton
     "Speak",
     // RecognizingStatus
-    "Recording with Azure, SPEAK and please WAIT...(Stop listening after slient.",
+    "Recording with Azure, SPEAK and please WAIT...(Stop listening after slient)",
     // TranslatingStatus
     "Translating, please wait...",
     // SpeakingOriginalStatus
@@ -214,6 +246,7 @@ val BaseUiTexts: List<String> = listOf(
     "Notes",
     // HelpNotes
     "The base language of this app is English, you can use the app UI list to change the languages but it may contain error.\n" +
+            "If some words have not translated, select the language again.\n" +
             "App project goal: build a translator app and store translation history in a database for (future) learning features.\n" +
             "Planned learning part: use saved history to extract frequent vocabulary/phrases and generate practice content.",
     // NavHistory
@@ -330,6 +363,38 @@ val BaseUiTexts: List<String> = listOf(
     "Preparing mic... (Do not speak now)",
     // ContinuousTranslatingText
     "Translating...",
+    // --- Learning ---
+    "Learning",
+    "Primary language: {language}",
+    "(*) Count = number of history records involving this language.",
+    "Error: %s",
+    "Generate",
+    "Re-generate",
+    "Generating...",
+    "{language} Sheet",
+
+// --- Learning Sheet ---
+    "{language} Sheet",
+    "Primary language: {language}",
+    "History count now: {now} (saved at gen: {saved})",
+    "No sheet content yet.",
+    "Re-gen",
+    "Generating...",
+
+// --- Settings ---
+    "Settings",
+    "Primary Language",
+    "Used for learning explanations and recommendations",
+    "Primary language",
+    "Font Size",
+    "Adjust text size for better readability (synced across devices)",
+    "Scale: {pct}%",
+    "Headline: Large text preview",
+    "Body: This is normal text preview",
+    "Label: Small text preview",
+    "About",
+    "Talk & Learn Translator v",
+    "Your preferences are automatically saved and synced to your account.",
 )
 
 fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
@@ -360,6 +425,20 @@ fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
         map[UiTextKey.PaginationPageLabelTemplate] =
             BaseUiTexts[UiTextKey.PaginationPageLabelTemplate.ordinal]
     }
+
+    fun ensureContains(key: UiTextKey, vararg tokens: String) {
+        val v = map[key] ?: BaseUiTexts[key.ordinal]
+        if (tokens.any { !v.contains(it) }) {
+            map[key] = BaseUiTexts[key.ordinal]
+        }
+    }
+
+    ensureContains(UiTextKey.LearningPrimaryTemplate, "{language}")
+    ensureContains(UiTextKey.LearningOpenSheetTemplate, "{language}")
+    ensureContains(UiTextKey.LearningSheetTitleTemplate, "{language}")
+    ensureContains(UiTextKey.LearningSheetPrimaryTemplate, "{language}")
+    ensureContains(UiTextKey.LearningSheetHistoryCountTemplate, "{now}", "{saved}")
+    ensureContains(UiTextKey.SettingsScaleTemplate, "{pct}")
 
     return map
 }
