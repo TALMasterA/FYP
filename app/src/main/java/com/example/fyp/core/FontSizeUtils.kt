@@ -1,42 +1,92 @@
 package com.example.fyp.core
 
+import androidx.compose.material3.Typography
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.unit.sp
 
+const val MIN_SCALE = 0.8f
+const val MAX_SCALE = 1.5f
+
+fun validateScale(scale: Float): Float {
+    return scale.coerceIn(MIN_SCALE, MAX_SCALE)
+}
+
+// CompositionLocal to provide font scale to entire app
+val LocalFontSizeScale = compositionLocalOf { 1.0f }
+
 /**
- * Font size scaling utilities for Task 8 (Font Customization).
- * Supports scaling from 80% to 150% of base size.
+ * Creates a scaled typography based on the provided scale factor
+ * @param baseTypography The original Material3 typography
+ * @param scale Font size multiplier (0.8 to 1.5)
+ * @return Scaled typography with all text styles multiplied by scale
  */
-object FontSizeUtils {
+fun createScaledTypography(baseTypography: Typography, scale: Float): Typography {
+    val validScale = validateScale(scale)
 
-    // Valid font scale range
-    const val MIN_SCALE = 0.8f   // 80%
-    const val MAX_SCALE = 1.5f   // 150%
-    const val DEFAULT_SCALE = 1.0f // 100% (no scaling)
+    return Typography(
+        displayLarge = baseTypography.displayLarge.copy(
+            fontSize = baseTypography.displayLarge.fontSize * validScale,
+            lineHeight = baseTypography.displayLarge.lineHeight * validScale
+        ),
+        displayMedium = baseTypography.displayMedium.copy(
+            fontSize = baseTypography.displayMedium.fontSize * validScale,
+            lineHeight = baseTypography.displayMedium.lineHeight * validScale
+        ),
+        displaySmall = baseTypography.displaySmall.copy(
+            fontSize = baseTypography.displaySmall.fontSize * validScale,
+            lineHeight = baseTypography.displaySmall.lineHeight * validScale
+        ),
 
-    /**
-     * Validate and constrain font scale to valid range.
-     */
-    fun validateScale(scale: Float): Float {
-        return when {
-            scale < MIN_SCALE -> MIN_SCALE
-            scale > MAX_SCALE -> MAX_SCALE
-            else -> scale
-        }
-    }
+        headlineLarge = baseTypography.headlineLarge.copy(
+            fontSize = baseTypography.headlineLarge.fontSize * validScale,
+            lineHeight = baseTypography.headlineLarge.lineHeight * validScale
+        ),
+        headlineMedium = baseTypography.headlineMedium.copy(
+            fontSize = baseTypography.headlineMedium.fontSize * validScale,
+            lineHeight = baseTypography.headlineMedium.lineHeight * validScale
+        ),
+        headlineSmall = baseTypography.headlineSmall.copy(
+            fontSize = baseTypography.headlineSmall.fontSize * validScale,
+            lineHeight = baseTypography.headlineSmall.lineHeight * validScale
+        ),
 
-    /**
-     * Scale a font size by the given factor.
-     * Example: scale(16, 1.2f) → 19 (16 * 1.2)
-     */
-    fun scale(baseFontSize: Int, scaleFactor: Float): Int {
-        val validated = validateScale(scaleFactor)
-        return (baseFontSize * validated).toInt()
-    }
+        titleLarge = baseTypography.titleLarge.copy(
+            fontSize = baseTypography.titleLarge.fontSize * validScale,
+            lineHeight = baseTypography.titleLarge.lineHeight * validScale
+        ),
+        titleMedium = baseTypography.titleMedium.copy(
+            fontSize = baseTypography.titleMedium.fontSize * validScale,
+            lineHeight = baseTypography.titleMedium.lineHeight * validScale
+        ),
+        titleSmall = baseTypography.titleSmall.copy(
+            fontSize = baseTypography.titleSmall.fontSize * validScale,
+            lineHeight = baseTypography.titleSmall.lineHeight * validScale
+        ),
 
-    /**
-     * Get scaled font size with bounds.
-     */
-    fun getScaledSize(baseSizeInt: Int, scaleFactor: Float): Int {
-        return scale(baseSizeInt, scaleFactor)
-    }
+        bodyLarge = baseTypography.bodyLarge.copy(
+            fontSize = baseTypography.bodyLarge.fontSize * validScale,
+            lineHeight = baseTypography.bodyLarge.lineHeight * validScale
+        ),
+        bodyMedium = baseTypography.bodyMedium.copy(
+            fontSize = baseTypography.bodyMedium.fontSize * validScale,
+            lineHeight = baseTypography.bodyMedium.lineHeight * validScale
+        ),
+        bodySmall = baseTypography.bodySmall.copy(
+            fontSize = baseTypography.bodySmall.fontSize * validScale,
+            lineHeight = baseTypography.bodySmall.lineHeight * validScale
+        ),
+
+        labelLarge = baseTypography.labelLarge.copy(
+            fontSize = baseTypography.labelLarge.fontSize * validScale,
+            lineHeight = baseTypography.labelLarge.lineHeight * validScale
+        ),
+        labelMedium = baseTypography.labelMedium.copy(
+            fontSize = baseTypography.labelMedium.fontSize * validScale,
+            lineHeight = baseTypography.labelMedium.lineHeight * validScale
+        ),
+        labelSmall = baseTypography.labelSmall.copy(
+            fontSize = baseTypography.labelSmall.fontSize * validScale,
+            lineHeight = baseTypography.labelSmall.lineHeight * validScale
+        ),
+    )
 }

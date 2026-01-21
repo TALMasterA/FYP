@@ -2,10 +2,11 @@ package com.example.fyp.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.core.validateScale
 import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
-import com.example.fyp.domain.settings.SetPrimaryLanguageUseCase
 import com.example.fyp.domain.settings.SetFontSizeScaleUseCase
+import com.example.fyp.domain.settings.SetPrimaryLanguageUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -82,6 +83,12 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching {
                 setPrimaryLanguage(uid, newCode)
+            }.onSuccess {
+                // Optional: optimistic UI update
+                _uiState.value = _uiState.value.copy(
+                    settings = _uiState.value.settings.copy(primaryLanguageCode = newCode),
+                    error = null
+                )
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Save failed"
@@ -92,9 +99,17 @@ class SettingsViewModel @Inject constructor(
 
     fun updateFontSizeScale(scale: Float) {
         val uid = _uiState.value.uid ?: return
+        val validated = validateScale(scale)
+
         viewModelScope.launch {
             runCatching {
-                setFontSizeScale(uid, scale)
+                setFontSizeScale(uid, validated)
+            }.onSuccess {
+                // CRITICAL: optimistic UI update so slider + app theme update immediately
+                _uiState.value = _uiState.value.copy(
+                    settings = _uiState.value.settings.copy(fontSizeScale = validated),
+                    error = null
+                )
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Font size save failed"
