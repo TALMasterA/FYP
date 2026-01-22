@@ -36,14 +36,12 @@ fun LearningSheetScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+    val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
-    val languageNameMap = remember(uiLanguages) { uiLanguages.toMap() }
-    fun displayName(code: String) = languageNameMap[code] ?: code
-
     StandardScreenScaffold(
-        title = t(UiTextKey.LearningSheetTitleTemplate).replace("{language}", displayName(languageCode)),
+        title = t(UiTextKey.LearningSheetTitleTemplate)
+            .replace("language", uiLanguageNameFor(languageCode)),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack)
     ) { padding ->
@@ -56,14 +54,14 @@ fun LearningSheetScreen(
         ) {
             Text(
                 text = t(UiTextKey.LearningSheetPrimaryTemplate)
-                    .replace("{language}", displayName(uiState.primaryLanguageCode)),
+                    .replace("language", uiLanguageNameFor(uiState.primaryLanguageCode)),
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Text(
                 text = t(UiTextKey.LearningSheetHistoryCountTemplate)
-                    .replace("{now}", uiState.countNow.toString())
-                    .replace("{saved}", (uiState.historyCountAtGenerate?.toString() ?: "-")),
+                    .replace("now", uiState.countNow.toString())
+                    .replace("saved", (uiState.historyCountAtGenerate?.toString() ?: "-")),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -77,7 +75,7 @@ fun LearningSheetScreen(
                 enabled = viewModel.canRegen(),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (uiState.isGenerating) t(UiTextKey.LearningGenerating) else t(UiTextKey.LearningRegenerate))
+                Text(if (uiState.isGenerating) t(UiTextKey.LearningSheetGenerating) else t(UiTextKey.LearningSheetRegenerate))
             }
 
             val content = uiState.content

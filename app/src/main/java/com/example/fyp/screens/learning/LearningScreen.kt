@@ -2,7 +2,6 @@ package com.example.fyp.screens.learning
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +27,11 @@ import com.example.fyp.data.config.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.PaddingValues
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,14 +45,11 @@ fun LearningScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+    val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     val context = LocalContext.current
     val supported = remember { AzureLanguageConfig.loadSupportedLanguages(context).toSet() }
-
-    val languageNameMap = remember(uiLanguages) { uiLanguages.toMap() }
-    fun displayName(code: String) = languageNameMap[code] ?: code
 
     LaunchedEffect(supported) {
         viewModel.setSupportedLanguages(supported)
@@ -67,50 +68,82 @@ fun LearningScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                t(UiTextKey.LearningPrimaryTemplate)
-                    .replace("{language}", displayName(uiState.primaryLanguageCode))
+                t(UiTextKey.LearningPrimaryTemplate).replace(
+                    "language",
+                    uiLanguageNameFor(uiState.primaryLanguageCode)
+                )
             )
 
             Text(t(UiTextKey.LearningHintCount))
             uiState.error?.let { Text(t(UiTextKey.LearningErrorTemplate)) }
 
-            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
                 items(uiState.clusters, key = { it.languageCode }) { c ->
                     val hasSheet = uiState.sheetExistsByLanguage[c.languageCode] == true
                     val isGeneratingThis = uiState.generatingLanguageCode == c.languageCode
                     val isGeneratingAny = uiState.generatingLanguageCode != null
 
                     val lastCount = uiState.sheetCountByLanguage[c.languageCode]
-                    val unchanged = (lastCount != null && lastCount == c.count)
+                    val unchanged = lastCount != null && lastCount == c.count
 
+                    // Disable Generate when ANY language is generating, or no history, or unchanged.
                     val generateEnabled = !isGeneratingAny && c.count > 0 && !unchanged
 
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // You confirmed: other languages' Open Sheet should still be clickable while generating.
+                    val sheetEnabled = hasSheet
+
+                    val langLabel = uiLanguageNameFor(c.languageCode)
+
+                    OutlinedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = MaterialTheme.colorScheme.background
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            // Bubble header: translated language name + count
                             AssistChip(
-                                onClick = { },
-                                label = { Text("${displayName(c.languageCode)} (${c.count})") },
+                                onClick = { /* no-op */ },
+                                label = { Text("$langLabel (${c.count})") },
                                 colors = AssistChipDefaults.assistChipColors()
                             )
 
-                            Button(
-                                onClick = { viewModel.generateFor(c.languageCode) },
-                                enabled = generateEnabled
+                            // Buttons should be inside bubble. Sheet button "right after language":
+                            // put buttons on the NEXT line (not same row as language header).
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text(
-                                    when {
-                                        isGeneratingThis -> t(UiTextKey.LearningGenerating)
-                                        hasSheet -> t(UiTextKey.LearningRegenerate)
-                                        else -> t(UiTextKey.LearningGenerate)
-                                    }
-                                )
-                            }
-
-                            if (hasSheet) {
-                                Button(onClick = { onOpenSheet(c.languageCode) }) {
+                                Button(
+                                    onClick = { viewModel.generateFor(c.languageCode) },
+                                    enabled = generateEnabled,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
                                     Text(
-                                        t(UiTextKey.LearningOpenSheetTemplate)
-                                            .replace("{language}", displayName(c.languageCode))
+                                        when {
+                                            isGeneratingThis -> t(UiTextKey.LearningGenerating)
+                                            hasSheet -> t(UiTextKey.LearningRegenerate)
+                                            else -> t(UiTextKey.LearningGenerate)
+                                        }
+                                    )
+                                }
+
+                                Button(
+                                    onClick = { onOpenSheet(c.languageCode) },
+                                    enabled = sheetEnabled,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        t(UiTextKey.LearningOpenSheetTemplate).replace("language", uiLanguageNameFor(c.languageCode))
                                     )
                                 }
                             }

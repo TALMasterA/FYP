@@ -49,7 +49,7 @@ class SettingsViewModel @Inject constructor(
                     }
                     AuthState.LoggedOut -> {
                         settingsJob?.cancel()
-                        _uiState.value = SettingsUiState(isLoading = false, error = "Not logged in")
+                        _uiState.value = SettingsUiState(isLoading = false, error = "Not logged in, amendments will not take effect / saved.")
                     }
                 }
             }

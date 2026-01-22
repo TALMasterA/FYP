@@ -155,19 +155,19 @@ val BaseUiTexts: List<String> = listOf(
     // must match UiTextKey order exactly
 
     // SpeechInstructions
-    "Select the detect and translate languages below. Only suitable for short pharse." +
-    "Support languages: English, Cantonese, Japanese, Mandarin..." +
-    "Switch button for swiping the languages selected",
+    "Select the detect and translate languages below. Only suitable for short pharse. \n" +
+            "Support languages: English, Cantonese, Japanese, Mandarin... \n" +
+            "Switch button for swiping the languages selected",
 
     // HomeInstructions
-    "You can change the app UI language by the dropdown on top." +
-            "Please look at the ! information before using the app." +
-    "Below is the two mode of speech-to-text. " +
+    "You can change the app UI language by the dropdown on top. \n" +
+            "Please look at the ! information before using the app. \n" +
+            "Below is the two mode of speech-to-text: \n" +
             "First is the discrete recognition for texting, second is the continuous mode for face communication.",
 
     // ContinuousInstructions
-    "Set Speaker A and B languages below." +
-    "Use the toggle to switch who is speaking.",
+    "Set Speaker A and B languages below. \n" +
+            "Use the toggle to switch who is speaking.",
 
     // AzureRecognizeButton
     "Use Microphone",
@@ -263,16 +263,17 @@ val BaseUiTexts: List<String> = listOf(
     "Cautions",
 
     // HelpCurrentFeatures
-    "- Choose UI language, detection language, and target language." +
-    "- Discrete mode: For short sentences translation." +
-    "- Continuous mode: Live conversation capture with user switching." +
-    "- App UI language translation.",
+    "- Choose UI language, detection language, and target language. \n" +
+            "- Discrete mode: For short sentences translation. \n" +
+            "- Continuous mode: Live conversation capture with user switching. \n" +
+            "- Learning: Learning materials generate by AI (use your translation history). \n" +
+            "- App UI language translation. \n",
 
     // HelpCaution
-    "- Requires internet connection." +
-    "- Microphone audio is used for speech recognition; avoid speaking sensitive info in public." +
-    "- Use earphones if using 🔊 during continuous listening to avoid the app re-capturing its own audio." +
-    "- Do not use for medical/legal/safety-critical decisions; recognition/translation may be wrong.",
+    "- Requires internet connection. \n" +
+            "- Microphone audio is used for speech recognition; avoid speaking sensitive info in public. \n" +
+            "- Use earphones if using 🔊 during continuous listening to avoid the app re-capturing its own audio. \n" +
+            "- Do not use for medical/legal/safety-critical decisions; recognition/translation may be wrong. \n",
 
     // ContinuousTitle
     "Continuous mode",
@@ -308,10 +309,8 @@ val BaseUiTexts: List<String> = listOf(
     "Notes",
 
     // HelpNotes
-    "The base language of this app is English, you can use the app UI list to change the languages but it may contain error." +
-    "If some words have not translated, select the language again." +
-    "App project goal: build a translator app and store translation history in a database for (future) learning features." +
-    "Planned learning part: use saved history to extract frequent vocabulary/phrases and generate practice content.",
+    "- The base language of this app is English, you can use the app UI list to change the languages but it may contain error. \n" +
+            "- If some words have not translated, select the language again. \n",
 
     // NavHistory
     "History",
@@ -395,12 +394,12 @@ val BaseUiTexts: List<String> = listOf(
     "Use your registered (provided) email and password.",
 
     // AuthRegisterRules
-    "Register is disabled in development stage." +
-    "Caution: You cannot reset password if you use email that not exist." +
-    "Register rules:" +
-    "• Email must be a valid format (e.g., name@example.com)" +
-    "• Password must be at least 6 characters" +
-    "• Confirm password must match",
+    "Register is disabled in development stage. \n" +
+            "Caution: You cannot reset password if you use email that not exist. \n" +
+            "Register rules: \n" +
+            "• Email must be a valid format (e.g., name@example.com) \n" +
+            "• Password must be at least 6 characters \n" +
+            "• Confirm password must match",
 
     // AuthEmailLabel
     "Email",
@@ -436,8 +435,8 @@ val BaseUiTexts: List<String> = listOf(
     "Forgot password? Reset here",
 
     // ResetPwText
-    "Enter your account email and a reset link will be sent." +
-            "Make sure the email is real & register for the app or no email will be sent.",
+    "Enter your account email and a reset link will be sent. \n" +
+            "Make sure the email is real & register for the app or no email will be sent. \n",
 
     // ResetSendingText
     "Sending...",

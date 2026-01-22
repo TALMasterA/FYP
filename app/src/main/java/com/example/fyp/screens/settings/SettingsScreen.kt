@@ -50,10 +50,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val supportedLanguages = remember { AzureLanguageConfig.loadSupportedLanguages(context) }
 
-    val languageNameMap = remember(uiLanguages) { uiLanguages.toMap() }
-    fun displayName(code: String) = languageNameMap[code] ?: code
-
-    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+    val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     var selected by remember(uiState.settings.primaryLanguageCode) {
@@ -100,7 +97,7 @@ fun SettingsScreen(
                     label = t(UiTextKey.SettingsPrimaryLanguageLabel),
                     selectedCode = selected,
                     options = supportedLanguages,
-                    nameFor = { code -> displayName(code) },
+                    nameFor = { code -> uiLanguageNameFor(code) },
                     onSelected = { code ->
                         selected = code
                         viewModel.updatePrimaryLanguage(code)
