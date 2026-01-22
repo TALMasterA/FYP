@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.text.input.VisualTransformation
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +60,18 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    var updateLogoutMsg by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        val prefs = context.getSharedPreferences("app_update_prefs", Context.MODE_PRIVATE)
+        val reason = prefs.getString("logout_reason", null)
+        if (reason == "updated") {
+            updateLogoutMsg = "App updated, please log in again"
+            prefs.edit().remove("logout_reason").apply()
+        }
+    }
+
     StandardScreenScaffold(
         title = if (isLogin) t(UiTextKey.AuthLoginTitle) else t(UiTextKey.AuthRegisterTitle),
         onBack = onBack,
@@ -74,6 +88,14 @@ fun LoginScreen(
                 onUpdateAppLanguage = onUpdateAppLanguage,
                 uiText = uiText
             )
+
+            updateLogoutMsg?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
 
             Text(
                 text = if (isLogin) t(UiTextKey.AuthLoginHint) else t(UiTextKey.AuthRegisterRules),

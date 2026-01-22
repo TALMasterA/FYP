@@ -39,6 +39,11 @@ import com.example.fyp.model.UiTextKey
 import com.example.fyp.screens.speech.SpeechViewModel
 import com.example.fyp.core.PaginationRow
 import com.example.fyp.core.pageCount
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.LaunchedEffect
+import com.example.fyp.core.LanguageDropdownField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,11 +63,42 @@ fun HistoryScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(t(UiTextKey.HistoryTabDiscrete), t(UiTextKey.HistoryTabContinuous))
 
-    val discreteRecords = uiState.records
+    var showFilterDialog by remember { mutableStateOf(false) }
+    var filterLanguageCode by remember { mutableStateOf("") }
+    var filterKeyword by remember { mutableStateOf("") }
+
+    val languageCounts = remember(uiState.records) {
+        uiState.records
+            .flatMap { listOf(it.sourceLang, it.targetLang) }
+            .filter { it.isNotBlank() }
+            .groupingBy { it }
+            .eachCount()
+    }
+
+    val languageOptions = remember(languageCounts) {
+        languageCounts.entries
+            .sortedByDescending { it.value }
+            .map { it.key }
+    }
+
+    val keyword = filterKeyword.trim()
+
+    val filteredRecords = uiState.records.filter { rec ->
+        val langOk = filterLanguageCode.isBlank() ||
+                rec.sourceLang == filterLanguageCode || rec.targetLang == filterLanguageCode
+
+        val keywordOk = keyword.isBlank() ||
+                rec.sourceText.contains(keyword, ignoreCase = true) ||
+                rec.targetText.contains(keyword, ignoreCase = true)
+
+        langOk && keywordOk
+    }
+
+    val discreteRecords = filteredRecords
         .filter { it.mode == "discrete" }
         .sortedByDescending { it.timestamp }
 
-    val sessions = groupContinuousSessions(uiState.records)
+    val sessions = groupContinuousSessions(filteredRecords)
 
     var selectedSessionId by remember { mutableStateOf<String?>(null) }
 
@@ -88,6 +124,13 @@ fun HistoryScreen(
 
     // Session detail pagination
     var sessionPage by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(sessions, selectedSessionId) {
+        val sid = selectedSessionId
+        if (sid != null && sessions.none { it.sessionId == sid }) {
+            selectedSessionId = null
+        }
+    }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -147,6 +190,55 @@ fun HistoryScreen(
         )
     }
 
+    if (showFilterDialog) {
+        var draftLang by remember { mutableStateOf(filterLanguageCode) }
+        var draftKeyword by remember { mutableStateOf(filterKeyword) }
+
+        val nameForFilter: (String) -> String = { code ->
+            if (code.isBlank()) t(UiTextKey.FilterDropdownDefault)
+            else "${uiLanguageNameFor(code)} (${languageCounts[code] ?: 0})"
+        }
+
+        AlertDialog(
+            onDismissRequest = { showFilterDialog = false },
+            title = { Text(t(UiTextKey.FilterTitle)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    LanguageDropdownField(
+                        label = t(UiTextKey.FilterLangDrop),
+                        selectedCode = draftLang,
+                        options = listOf("") + languageOptions,
+                        nameFor = nameForFilter,
+                        onSelected = { draftLang = it },
+                        enabled = true
+                    )
+
+                    OutlinedTextField(
+                        value = draftKeyword,
+                        onValueChange = { draftKeyword = it },
+                        label = { Text(t(UiTextKey.FilterKeyword)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    filterLanguageCode = draftLang
+                    filterKeyword = draftKeyword
+                    showFilterDialog = false
+
+                    // reset pagination
+                    discretePage = 0
+                    sessionsPage = 0
+                    sessionPage = 0
+                }) { Text(t(UiTextKey.FilterApply)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showFilterDialog = false }) { Text(t(UiTextKey.FilterCancel)) }
+            }
+        )
+    }
+
     val showUiDropdown = (selectedTab == 0) || (selectedTab == 1 && selectedSessionId == null)
 
     StandardScreenScaffold(
@@ -156,6 +248,9 @@ fun HistoryScreen(
             else onBack()
         },
         backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            TextButton(onClick = { showFilterDialog = true }) { Text(t(UiTextKey.FilterHistoryScreenTitle)) }
+        },
     ) { innerPadding ->
         StandardScreenBody(
             innerPadding = innerPadding,

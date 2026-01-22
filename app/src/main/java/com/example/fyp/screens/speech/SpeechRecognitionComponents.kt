@@ -16,7 +16,6 @@ import com.example.fyp.core.LanguageDropdownField
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.ui.unit.sp
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CardDefaults
@@ -46,7 +45,7 @@ fun SpeechLanguagePickers(
                 modifier = Modifier.size(28.dp),
                 contentPadding = PaddingValues(0.dp),
             ) {
-                Text("⇄", fontSize = 16.sp)
+                Text("⇄", style = MaterialTheme.typography.labelMedium)
             }
         }
 

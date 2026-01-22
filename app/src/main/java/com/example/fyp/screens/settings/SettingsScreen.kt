@@ -35,6 +35,7 @@ import com.example.fyp.data.config.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
+import com.example.fyp.core.AppLanguageDropdown
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,6 +77,14 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            AppLanguageDropdown(
+                uiLanguages = uiLanguages,
+                appLanguageState = appLanguageState,
+                onUpdateAppLanguage = onUpdateAppLanguage,
+                uiText = uiText,
+                enabled = true
+            )
+
             uiState.error?.let { errorMsg ->
                 Text(
                     text = "Error: $errorMsg",

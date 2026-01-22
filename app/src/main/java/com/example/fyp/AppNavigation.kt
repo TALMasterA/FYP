@@ -36,6 +36,7 @@ import com.example.fyp.screens.speech.ContinuousConversationScreen
 import com.example.fyp.screens.speech.SpeechRecognitionScreen
 import com.example.fyp.ui.theme.FYPTheme
 import com.example.fyp.ui.theme.Typography as AppTypography
+import com.example.fyp.screens.learning.LearningViewModel
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
@@ -69,6 +70,8 @@ fun AppNavigation() {
     // IMPORTANT: Create ONE SettingsViewModel here and reuse it everywhere.
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val settingsUiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+
+    val learningViewModel: LearningViewModel = hiltViewModel()
 
     val fontSizeScale = validateScale(settingsUiState.settings.fontSizeScale)
     val scaledTypography = createScaledTypography(AppTypography, fontSizeScale)
@@ -182,9 +185,8 @@ fun AppNavigation() {
                                     appLanguageState = appLanguageState,
                                     onUpdateAppLanguage = updateAppLanguage,
                                     onBack = { navController.popBackStack() },
-                                    onOpenSheet = { lang ->
-                                        navController.navigate(AppScreen.LearningSheet.routeFor(lang))
-                                    }
+                                    viewModel = learningViewModel,
+                                    onOpenSheet = { lang -> navController.navigate(AppScreen.LearningSheet.routeFor(lang)) },
                                 )
                             },
                             onNeedLogin = {
@@ -217,7 +219,8 @@ fun AppNavigation() {
                                     appLanguageState = appLanguageState,
                                     onUpdateAppLanguage = updateAppLanguage,
                                     languageCode = languageCode,
-                                    onBack = { navController.popBackStack() }
+                                    onBack = { navController.popBackStack() },
+                                    learningViewModel = learningViewModel,
                                 )
                             },
                             onNeedLogin = {

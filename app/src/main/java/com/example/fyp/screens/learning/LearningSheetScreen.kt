@@ -23,6 +23,7 @@ import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.UiTextKey
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.core.rememberUiTextFunctions
+import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +33,7 @@ fun LearningSheetScreen(
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     languageCode: String,
     onBack: () -> Unit,
+    learningViewModel: LearningViewModel,
     viewModel: LearningSheetViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -39,9 +41,22 @@ fun LearningSheetScreen(
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
+    val learningUiState by learningViewModel.uiState.collectAsState()
+    val isGeneratingAny = learningUiState.generatingLanguageCode != null
+    val isGeneratingThis = learningUiState.generatingLanguageCode == languageCode
+
+    val targetName = uiLanguageNameFor(languageCode)
+
+    LaunchedEffect(learningUiState.generatingLanguageCode) {
+        if (learningUiState.generatingLanguageCode == null) {
+            viewModel.loadSheet()
+        }
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.LearningSheetTitleTemplate)
-            .replace("language", uiLanguageNameFor(languageCode)),
+            .replace("{language}", targetName)
+            .replace("language", targetName),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack)
     ) { padding ->
@@ -54,7 +69,8 @@ fun LearningSheetScreen(
         ) {
             Text(
                 text = t(UiTextKey.LearningSheetPrimaryTemplate)
-                    .replace("language", uiLanguageNameFor(uiState.primaryLanguageCode)),
+                    .replace("{language}", targetName)
+                    .replace("language", targetName),
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -71,11 +87,11 @@ fun LearningSheetScreen(
             }
 
             Button(
-                onClick = { viewModel.regen() },
-                enabled = viewModel.canRegen(),
+                onClick = { learningViewModel.generateFor(languageCode) },
+                enabled = viewModel.canRegen() && !isGeneratingAny,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (uiState.isGenerating) t(UiTextKey.LearningSheetGenerating) else t(UiTextKey.LearningSheetRegenerate))
+                Text(if (isGeneratingThis) t(UiTextKey.LearningSheetGenerating) else t(UiTextKey.LearningSheetRegenerate))
             }
 
             val content = uiState.content

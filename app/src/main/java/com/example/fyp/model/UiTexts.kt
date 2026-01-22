@@ -149,6 +149,14 @@ enum class UiTextKey {
     SettingsAboutTitle,
     SettingsAppVersion,                   // "Talk & Learn Translator v"
     SettingsSyncInfo,                     // "Your preferences are automatically saved..."
+    FilterDropdownDefault,
+    FilterTitle,
+    FilterLangDrop,
+    FilterKeyword,
+    FilterApply,
+    FilterCancel,
+    FilterHistoryScreenTitle,
+
 }
 
 val BaseUiTexts: List<String> = listOf(
@@ -509,6 +517,13 @@ val BaseUiTexts: List<String> = listOf(
     "About",
     "Talk & Learn Translator v",
     "Your preferences are automatically saved and synced to your account.",
+    "All languages",
+    "Filter history",
+    "Language",
+    "Keyword",
+    "Apply",
+    "Cancel",
+    "Filter",
 )
 
 fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {

@@ -48,6 +48,8 @@ fun LearningScreen(
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
+    val primaryName = uiLanguageNameFor(uiState.primaryLanguageCode)
+
     val context = LocalContext.current
     val supported = remember { AzureLanguageConfig.loadSupportedLanguages(context).toSet() }
 
@@ -68,10 +70,9 @@ fun LearningScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                t(UiTextKey.LearningPrimaryTemplate).replace(
-                    "language",
-                    uiLanguageNameFor(uiState.primaryLanguageCode)
-                )
+                t(UiTextKey.LearningPrimaryTemplate)
+                    .replace("{language}", primaryName)
+                    .replace("language", primaryName)
             )
 
             Text(t(UiTextKey.LearningHintCount))
@@ -143,7 +144,9 @@ fun LearningScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Text(
-                                        t(UiTextKey.LearningOpenSheetTemplate).replace("language", uiLanguageNameFor(c.languageCode))
+                                        t(UiTextKey.LearningOpenSheetTemplate)
+                                            .replace("{language}", langLabel)
+                                            .replace("language", langLabel)
                                     )
                                 }
                             }
