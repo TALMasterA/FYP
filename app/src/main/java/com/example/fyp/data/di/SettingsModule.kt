@@ -1,7 +1,7 @@
 package com.example.fyp.data.di
 
+import com.example.fyp.data.settings.FirestoreUserSettingsRepository
 import com.example.fyp.data.settings.UserSettingsRepository
-import com.example.fyp.data.settings.UserSettingsRepositoryImpl
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
@@ -13,11 +13,11 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object SettingsModule {
 
-    @Singleton
     @Provides
+    @Singleton
     fun provideUserSettingsRepository(
         firestore: FirebaseFirestore
     ): UserSettingsRepository {
-        return UserSettingsRepositoryImpl(firestore)
+        return FirestoreUserSettingsRepository(firestore)
     }
 }

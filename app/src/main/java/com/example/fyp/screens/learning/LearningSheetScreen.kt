@@ -77,7 +77,7 @@ fun LearningSheetScreen(
                 enabled = viewModel.canRegen(),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (uiState.isGenerating) t(UiTextKey.LearningSheetGenerating) else t(UiTextKey.LearningSheetRegenerate))
+                Text(if (uiState.isGenerating) t(UiTextKey.LearningGenerating) else t(UiTextKey.LearningRegenerate))
             }
 
             val content = uiState.content

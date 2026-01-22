@@ -8,5 +8,5 @@ import javax.inject.Inject
 class ObserveUserSettingsUseCase @Inject constructor(
     private val repo: FirestoreUserSettingsRepository
 ) {
-    operator fun invoke(uid: String): Flow<UserSettings> = repo.observe(uid)
+    operator fun invoke(uid: String): Flow<UserSettings> = repo.observeUserSettings(uid)
 }

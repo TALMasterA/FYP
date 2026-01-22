@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,15 +26,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.fyp.BuildConfig
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.StandardScreenScaffold
+import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.core.validateScale
 import com.example.fyp.data.config.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.UiTextKey
-import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.BuildConfig
+import com.example.fyp.model.UiTextKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,29 +46,28 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val context = LocalContext.current
     val supportedLanguages = remember { AzureLanguageConfig.loadSupportedLanguages(context) }
+
     val languageNameMap = remember(uiLanguages) { uiLanguages.toMap() }
+    fun displayName(code: String) = languageNameMap[code] ?: code
 
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
-
-    fun displayName(code: String) = languageNameMap[code] ?: code
 
     var selected by remember(uiState.settings.primaryLanguageCode) {
         mutableStateOf(uiState.settings.primaryLanguageCode.ifBlank { "en-US" })
     }
 
-    // Local slider state for live preview
-    var sliderValue by remember { mutableStateOf(validateScale(uiState.settings.fontSizeScale)) }
+    var sliderValue by remember { mutableFloatStateOf(validateScale(uiState.settings.fontSizeScale)) }
 
-    // Keep local slider in sync with actual saved value (Firestore / VM updates)
     LaunchedEffect(uiState.settings.fontSizeScale) {
         sliderValue = validateScale(uiState.settings.fontSizeScale)
     }
 
     StandardScreenScaffold(
-        title = t(UiTextKey.SettingsPrimaryLanguageTitle),
+        title = t(UiTextKey.SettingsTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack)
     ) { padding ->
@@ -87,11 +87,11 @@ fun SettingsScreen(
                 )
             }
 
-            // ==================== SECTION 1: PRIMARY LANGUAGE ====================
+            // Primary Language
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(t(UiTextKey.SettingsPrimaryLanguageLabel), style = MaterialTheme.typography.titleMedium)
+                Text(t(UiTextKey.SettingsPrimaryLanguageTitle), style = MaterialTheme.typography.titleMedium)
                 Text(
-                    t(UiTextKey.SettingsFontSizeDesc),
+                    text = t(UiTextKey.SettingsPrimaryLanguageDesc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -101,19 +101,18 @@ fun SettingsScreen(
                     selectedCode = selected,
                     options = supportedLanguages,
                     nameFor = { code -> displayName(code) },
-                    onSelected = {
-                        selected = it
-                        viewModel.updatePrimaryLanguage(it)
+                    onSelected = { code ->
+                        selected = code
+                        viewModel.updatePrimaryLanguage(code)
                     }
                 )
             }
 
-            // ==================== SECTION 2: FONT SIZE ====================
+            // Font size
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(t(UiTextKey.SettingsFontSizeTitle), style = MaterialTheme.typography.titleMedium)
-
                 Text(
-                    t(UiTextKey.SettingsFontSizeDesc),
+                    text = t(UiTextKey.SettingsFontSizeDesc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -123,35 +122,28 @@ fun SettingsScreen(
                         .replace("{pct}", (sliderValue * 100).toInt().toString())
                 )
 
-                // Preview card (local preview)
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            t(UiTextKey.SettingsPreviewHeadline),
+                            text = t(UiTextKey.SettingsPreviewHeadline),
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontSize = MaterialTheme.typography.headlineSmall.fontSize * sliderValue
                             )
                         )
                         Text(
-                            t(UiTextKey.SettingsPreviewBody),
+                            text = t(UiTextKey.SettingsPreviewBody),
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontSize = MaterialTheme.typography.bodyMedium.fontSize * sliderValue
                             )
                         )
                         Text(
-                            t(UiTextKey.SettingsPreviewLabel),
+                            text = t(UiTextKey.SettingsPreviewLabel),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = MaterialTheme.typography.labelSmall.fontSize * sliderValue
                             )
@@ -161,21 +153,15 @@ fun SettingsScreen(
 
                 Slider(
                     value = sliderValue,
-                    onValueChange = { newScale ->
-                        sliderValue = validateScale(newScale)
-                    },
-                    onValueChangeFinished = {
-                        viewModel.updateFontSizeScale(sliderValue)
-                    },
+                    onValueChange = { newScale -> sliderValue = validateScale(newScale) },
+                    onValueChangeFinished = { viewModel.updateFontSizeScale(sliderValue) },
                     valueRange = 0.8f..1.5f,
                     steps = 6,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("80%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -185,12 +171,18 @@ fun SettingsScreen(
                 }
             }
 
-            // ==================== SECTION 3: APP INFO ====================
+            // About
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(t(UiTextKey.SettingsAboutTitle), style = MaterialTheme.typography.titleMedium)
-                Text(t(UiTextKey.SettingsAppVersion), style = MaterialTheme.typography.bodyMedium)
+
+                // AMENDMENT 1 (correct interpolation)
                 Text(
-                    t(UiTextKey.SettingsSyncInfo) + {BuildConfig.VERSION_NAME},
+                    text = "${t(UiTextKey.SettingsAppVersion)}${BuildConfig.VERSION_NAME}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Text(
+                    text = t(UiTextKey.SettingsSyncInfo),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

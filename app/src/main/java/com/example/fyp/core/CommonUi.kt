@@ -1,32 +1,31 @@
 package com.example.fyp.core
 
 import android.util.Log
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.data.config.LanguageDisplayNames
-import com.example.fyp.data.clients.CloudTranslatorClient
-import com.example.fyp.model.UiTextKey
-import com.example.fyp.model.buildUiTextMap
-import kotlinx.coroutines.launch
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.example.fyp.data.clients.CloudTranslatorClient
+import com.example.fyp.data.config.LanguageDisplayNames
 import com.example.fyp.data.ui.UiLanguageCacheStore
+import com.example.fyp.model.AppLanguageState
+import com.example.fyp.model.BaseUiTexts
+import com.example.fyp.model.UiTextKey
 import com.example.fyp.model.baseUiTextsHash
+import com.example.fyp.model.buildUiTextMap
+import kotlinx.coroutines.launch
 
 @Composable
 fun rememberUiTextFunctions(
     appLanguageState: AppLanguageState
 ): Pair<(UiTextKey, String) -> String, (String) -> String> {
+
     val uiTexts = appLanguageState.uiTexts
 
     val uiText: (UiTextKey, String) -> String = { key, default ->
@@ -46,12 +45,8 @@ fun rememberUiTextFunctions(
             else -> null
         }
 
-        if (key == null) {
-            LanguageDisplayNames.displayName(code)
-        } else {
-            val fallback = LanguageDisplayNames.displayName(code)
-            uiTexts[key] ?: fallback
-        }
+        val fallback = LanguageDisplayNames.displayName(code)
+        key?.let { uiTexts[it] } ?: fallback
     }
 
     return uiText to uiLanguageNameFor
@@ -68,7 +63,6 @@ fun AppLanguageDropdown(
 ) {
     val scope = rememberCoroutineScope()
     val (_, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
-
     val context = LocalContext.current
     val cache = remember { UiLanguageCacheStore(context) }
 
@@ -76,7 +70,8 @@ fun AppLanguageDropdown(
         label = uiText(UiTextKey.AppUiLanguageLabel, "App UI language"),
         selectedCode = appLanguageState.selectedUiLanguage,
         options = uiLanguages.map { it.first },
-        nameFor = { code -> uiLanguageNameFor(code) },
+        nameFor = uiLanguageNameFor,
+        enabled = enabled,
         onSelected = { code ->
             if (!enabled) return@LanguageDropdownField
 
@@ -86,7 +81,6 @@ fun AppLanguageDropdown(
                     if (code.startsWith("en")) {
                         onUpdateAppLanguage(code, emptyMap())
                         cache.setSelectedLanguage(code)
-                        // optional: store a hash for english, but not required
                         cache.setBaseHash(code, baseUiTextsHash())
                         return@launch
                     }
@@ -94,7 +88,7 @@ fun AppLanguageDropdown(
                     val currentHash = baseUiTextsHash()
                     val cachedHash = cache.getBaseHash(code)
 
-                    // If same version and we have cached map => use it (NO API call)
+                    // Same base version + cached map => no API call
                     if (cachedHash == currentHash) {
                         val cachedMap = cache.loadUiTexts(code)
                         if (!cachedMap.isNullOrEmpty()) {
@@ -104,7 +98,7 @@ fun AppLanguageDropdown(
                         }
                     }
 
-                    // Otherwise => call API (only happens on user selection)
+                    // Otherwise call API
                     val cloud = CloudTranslatorClient()
                     val translatedList = cloud.translateTexts(
                         texts = BaseUiTexts,
@@ -116,7 +110,6 @@ fun AppLanguageDropdown(
                     val map = buildUiTextMap(joined)
 
                     onUpdateAppLanguage(code, map)
-
                     cache.setSelectedLanguage(code)
                     cache.saveUiTexts(code, map)
                     cache.setBaseHash(code, currentHash)
@@ -125,8 +118,7 @@ fun AppLanguageDropdown(
                     onUpdateAppLanguage("en-US", emptyMap())
                 }
             }
-        },
-        enabled = enabled
+        }
     )
 }
 
@@ -153,9 +145,7 @@ fun LanguageDropdownField(
             readOnly = true,
             enabled = enabled,
             label = { Text(label) },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth()
@@ -237,8 +227,7 @@ fun StandardScreenBody(
         .padding(16.dp)
         .fillMaxSize()
 
-    val finalModifier =
-        if (scrollable) base.verticalScroll(rememberScrollState()) else base
+    val finalModifier = if (scrollable) base.verticalScroll(rememberScrollState()) else base
 
     Column(
         modifier = finalModifier,

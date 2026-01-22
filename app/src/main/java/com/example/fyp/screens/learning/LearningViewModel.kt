@@ -152,6 +152,9 @@ class LearningViewModel @Inject constructor(
         if (countNow == 0) return
         if (lastCount != null && lastCount == countNow) return
 
+        // ADDED: prevent multiple simultaneous generations
+        if (current.generatingLanguageCode != null) return
+
         viewModelScope.launch {
             _uiState.value = current.copy(generatingLanguageCode = languageCode, error = null)
 

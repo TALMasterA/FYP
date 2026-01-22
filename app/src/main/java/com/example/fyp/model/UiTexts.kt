@@ -21,6 +21,8 @@ enum class UiTextKey {
     FinishedSpeakingOriginal,
     FinishedSpeakingTranslation,
     TtsErrorTemplate,
+
+    // Language names
     LangEnUs,
     LangZhHk,
     LangJaJp,
@@ -29,6 +31,7 @@ enum class UiTextKey {
     LangDeDe,
     LangKoKr,
     LangEsEs,
+
     HomeTitle,
     HelpTitle,
     SpeechTitle,
@@ -49,30 +52,37 @@ enum class UiTextKey {
     ContinuousTranslationSuffix,
     HelpNotesTitle,
     HelpNotes,
+
     NavHistory,
     NavLogin,
     NavLogout,
     NavBack,
+
     ActionCancel,
     ActionDelete,
     ActionOpen,
     ActionName,
     ActionSave,
+
     DialogLogoutTitle,
     DialogLogoutMessage,
+
     HistoryTitle,
     HistoryTabDiscrete,
     HistoryTabContinuous,
     HistoryNoContinuousSessions,
+
     DialogDeleteRecordTitle,
     DialogDeleteRecordMessage,
     DialogDeleteSessionTitle,
     DialogDeleteSessionMessage,
     HistoryDeleteSessionButton,
+
     HistoryNameSessionTitle,
     HistorySessionNameLabel,
     HistorySessionTitleTemplate,
     HistoryItemsCountTemplate,
+
     AuthLoginTitle,
     AuthRegisterTitle,
     AuthLoginHint,
@@ -86,22 +96,27 @@ enum class UiTextKey {
     AuthToggleToLogin,
     AuthErrorPasswordsMismatch,
     AuthErrorPasswordTooShort,
+
     DisableText,
     ForgotPwText,
     ResetPwText,
     ResetSendingText,
     ResetSendText,
+
     SpeechInputPlaceholder,
     StatusAzureErrorTemplate,
     StatusTranslationErrorTemplate,
     StatusLoginRequiredTranslation,
     StatusRecognizePreparing,
     StatusRecognizeListening,
+
     PaginationPrevLabel,
     PaginationNextLabel,
     PaginationPageLabelTemplate,
+
     ContinuousPreparingMicText,
     ContinuousTranslatingText,
+
     // --- Learning ---
     LearningTitle,
     LearningPrimaryTemplate,              // "Primary: {language}"
@@ -132,237 +147,337 @@ enum class UiTextKey {
     SettingsPreviewBody,
     SettingsPreviewLabel,
     SettingsAboutTitle,
-    SettingsAppVersion,
-    SettingsSyncInfo,
+    SettingsAppVersion,                   // "Talk & Learn Translator v"
+    SettingsSyncInfo,                     // "Your preferences are automatically saved..."
 }
 
 val BaseUiTexts: List<String> = listOf(
     // must match UiTextKey order exactly
 
     // SpeechInstructions
-    "Select the detect and translate languages below. Only suitable for short pharse.\n" +
-            "Support languages: English, Cantonese, Japanese, Mandarin... \n" +
-            "Switch button for swiping the languages selected",
+    "Select the detect and translate languages below. Only suitable for short pharse." +
+    "Support languages: English, Cantonese, Japanese, Mandarin..." +
+    "Switch button for swiping the languages selected",
+
     // HomeInstructions
-    "You can change the app UI language by the dropdown on top.\nPlease look at the ! information before using the app.\n" +
-            "Below is the two mode of speech-to-text. " +
+    "You can change the app UI language by the dropdown on top." +
+            "Please look at the ! information before using the app." +
+    "Below is the two mode of speech-to-text. " +
             "First is the discrete recognition for texting, second is the continuous mode for face communication.",
+
     // ContinuousInstructions
-    "Set Speaker A and B languages below.\n" +
-            "Use the toggle to switch who is speaking.",
+    "Set Speaker A and B languages below." +
+    "Use the toggle to switch who is speaking.",
+
     // AzureRecognizeButton
     "Use Microphone",
+
     // CopyButton
     "Copy",
+
     // SpeakScriptButton
     "Speak",
+
     // TranslateButton
     "Translate",
+
     // CopyTranslationButton
     "Copy",
+
     // SpeakTranslationButton
     "Speak",
+
     // RecognizingStatus
     "Recording with Azure, SPEAK and please WAIT...(Stop listening after slient)",
+
     // TranslatingStatus
     "Translating, please wait...",
+
     // SpeakingOriginalStatus
     "Speaking original text, please wait...",
+
     // SpeakingTranslationStatus
     "Speaking translation, please wait...",
+
     // AppUiLanguageLabel
     "App UI language",
+
     // DetectLanguageLabel
     "Detect",
+
     // TranslateToLabel
     "Translate",
+
     // SpeakingLabel
     "Speaking...",
+
     // FinishedSpeakingOriginal
     "Finished speaking original text.",
+
     // FinishedSpeakingTranslation
     "Finished speaking translation.",
+
     // TtsErrorTemplate
     "TTS error: %s",
+
     // LangEnUs
     "English",
+
     // LangZhHk
     "Cantonese",
+
     // LangJaJp
     "Japanese",
+
     // LangZhCn
     "Mandarin",
+
     // LangFrFr
     "French",
+
     // LangDeDe
     "German",
+
     // LangKoKr
     "Korean",
+
     // LangEsEs
     "Spanish",
+
     // HomeTitle
     "Translator",
+
     // HelpTitle
     "Notes & Cautions",
+
     // SpeechTitle
     "Discrete mode",
+
     // HomeStartButton
     "Discrete speech translation",
+
     // HelpCurrentTitle
     "Current features",
+
     // HelpCautionTitle
     "Cautions",
+
     // HelpCurrentFeatures
-    "- Choose UI language, detection language, and target language.\n" +
-            "- Discrete mode: For short sentences translation.\n" +
-            "- Continuous mode: Live conversation capture with user switching.\n" +
-            "- App UI language translation.",
+    "- Choose UI language, detection language, and target language." +
+    "- Discrete mode: For short sentences translation." +
+    "- Continuous mode: Live conversation capture with user switching." +
+    "- App UI language translation.",
+
     // HelpCaution
-    "- Requires internet connection.\n" +
-            "- Microphone audio is used for speech recognition; avoid speaking sensitive info in public.\n" +
-            "- Use earphones if using 🔊 during continuous listening to avoid the app re-capturing its own audio.\n" +
-            "- Do not use for medical/legal/safety-critical decisions; recognition/translation may be wrong.",
+    "- Requires internet connection." +
+    "- Microphone audio is used for speech recognition; avoid speaking sensitive info in public." +
+    "- Use earphones if using 🔊 during continuous listening to avoid the app re-capturing its own audio." +
+    "- Do not use for medical/legal/safety-critical decisions; recognition/translation may be wrong.",
+
     // ContinuousTitle
     "Continuous mode",
+
     // ContinuousStartButton
     "Start conversation",
+
     // ContinuousStopButton
     "Stop listening",
+
     // ContinuousStartScreenButton
     "Continuous translation mode",
+
     // ContinuousPersonALabel
     "A speaking",
+
     // ContinuousPersonBLabel
     "B speaking",
+
     // ContinuousCurrentStringLabel
     "Current string: ",
+
     // ContinuousSpeakerAName
     "Person A",
+
     // ContinuousSpeakerBName
     "Person B",
+
     // ContinuousTranslationSuffix
     " · translation",
+
     // HelpNotesTitle
     "Notes",
+
     // HelpNotes
-    "The base language of this app is English, you can use the app UI list to change the languages but it may contain error.\n" +
-            "If some words have not translated, select the language again.\n" +
-            "App project goal: build a translator app and store translation history in a database for (future) learning features.\n" +
-            "Planned learning part: use saved history to extract frequent vocabulary/phrases and generate practice content.",
+    "The base language of this app is English, you can use the app UI list to change the languages but it may contain error." +
+    "If some words have not translated, select the language again." +
+    "App project goal: build a translator app and store translation history in a database for (future) learning features." +
+    "Planned learning part: use saved history to extract frequent vocabulary/phrases and generate practice content.",
+
     // NavHistory
     "History",
+
     // NavLogin
     "Login",
+
     // NavLogout
     "Logout",
+
     // NavBack
     "Back",
+
     // ActionCancel
     "Cancel",
+
     // ActionDelete
     "Delete",
+
     // ActionOpen
     "Open",
+
     // ActionName
     "Name",
+
     // ActionSave
     "Save",
+
     // DialogLogoutTitle
     "Logout?",
+
     // DialogLogoutMessage
     "You will need to login again to use translation function / store + view your history.",
+
     // HistoryTitle
     "History",
+
     // HistoryTabDiscrete
     "Discrete",
+
     // HistoryTabContinuous
     "Continuous",
+
     // HistoryNoContinuousSessions
     "No record(s) yet.",
+
     // DialogDeleteRecordTitle
     "Delete record?",
+
     // DialogDeleteRecordMessage
     "This action cannot be undone.",
+
     // DialogDeleteSessionTitle
     "Delete session?",
+
     // DialogDeleteSessionMessage
     "All record(s) in this session will be deleted. This action cannot be undone.",
+
     // HistoryDeleteSessionButton
     "Delete",
+
     // HistoryNameSessionTitle
     "Name",
+
     // HistorySessionNameLabel
     "Session name",
+
     // HistorySessionTitleTemplate
     "Session {id}",
+
     // HistoryItemsCountTemplate
     "{count} item(s)",
+
     // AuthLoginTitle
     "Login",
+
     // AuthRegisterTitle
     "Register (Disabled)",
+
     // AuthLoginHint
     "Use your registered (provided) email and password.",
+
     // AuthRegisterRules
-    "Register is disabled in development stage.\n" +
-            "Caution: You cannot reset password if you use email that not exist\n" +
-            "Register rules:\n" +
-            "• Email must be a valid format (e.g., name@example.com)\n" +
-            "• Password must be at least 6 characters\n" +
-            "• Confirm password must match",
+    "Register is disabled in development stage." +
+    "Caution: You cannot reset password if you use email that not exist." +
+    "Register rules:" +
+    "• Email must be a valid format (e.g., name@example.com)" +
+    "• Password must be at least 6 characters" +
+    "• Confirm password must match",
+
     // AuthEmailLabel
     "Email",
+
     // AuthPasswordLabel
     "Password",
+
     // AuthConfirmPasswordLabel
     "Confirm password",
+
     // AuthLoginButton
     "Login",
+
     // AuthRegisterButton
     "Register",
+
     // AuthToggleToRegister
     "Don't have account? Register (Disabled)",
+
     // AuthToggleToLogin
     "Have account? Login",
+
     // AuthErrorPasswordsMismatch
     "Passwords do not match.",
+
     // AuthErrorPasswordTooShort
     "Password must be at least 6 characters.",
+
     // DisableText
     "Login is required to use translation features & storing translation history.",
+
     // ForgotPwText
     "Forgot password? Reset here",
+
     // ResetPwText
     "Enter your account email and a reset link will be sent." +
             "Make sure the email is real & register for the app or no email will be sent.",
+
     // ResetSendingText
     "Sending...",
+
     // ResetSendText
     "Send reset email",
 
     // SpeechInputPlaceholder
     "Type here or use microphone...",
+
     // StatusAzureErrorTemplate
     "Azure error: %s",
+
     // StatusTranslationErrorTemplate
     "Translation error: %s",
+
     // StatusLoginRequiredTranslation
     "Login is required to use translation.",
+
     // StatusRecognizePreparing
     "Preparing mic... (Do not speak now)",
+
     // StatusRecognizeListening
     "Listening... Please speak now.",
+
     // PaginationPrevLabel
     "< Prev",
+
     // PaginationNextLabel
     "Next >",
+
     // PaginationPageLabelTemplate
     "Page {page} / {total}",
 
     // ContinuousPreparingMicText
     "Preparing mic... (Do not speak now)",
+
     // ContinuousTranslatingText
     "Translating...",
+
     // --- Learning ---
     "Learning",
     "Primary language: {language}",
@@ -373,7 +488,7 @@ val BaseUiTexts: List<String> = listOf(
     "Generating...",
     "{language} Sheet",
 
-// --- Learning Sheet ---
+    // --- Learning Sheet ---
     "{language} Sheet",
     "Primary language: {language}",
     "History count now: {now} (saved at gen: {saved})",
@@ -381,7 +496,7 @@ val BaseUiTexts: List<String> = listOf(
     "Re-gen",
     "Generating...",
 
-// --- Settings ---
+    // --- Settings ---
     "Settings",
     "Primary Language",
     "Used for learning explanations and recommendations",
@@ -405,33 +520,16 @@ fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
     }.toMap().toMutableMap()
 
     // Ensure tokens exist (translation sometimes breaks/removes them)
-    val sessionTemplate =
-        map[UiTextKey.HistorySessionTitleTemplate] ?: BaseUiTexts[UiTextKey.HistorySessionTitleTemplate.ordinal]
-    if (!sessionTemplate.contains("{id}")) {
-        map[UiTextKey.HistorySessionTitleTemplate] =
-            BaseUiTexts[UiTextKey.HistorySessionTitleTemplate.ordinal]
-    }
-
-    val countTemplate =
-        map[UiTextKey.HistoryItemsCountTemplate] ?: BaseUiTexts[UiTextKey.HistoryItemsCountTemplate.ordinal]
-    if (!countTemplate.contains("{count}")) {
-        map[UiTextKey.HistoryItemsCountTemplate] =
-            BaseUiTexts[UiTextKey.HistoryItemsCountTemplate.ordinal]
-    }
-
-    val pageTemplate =
-        map[UiTextKey.PaginationPageLabelTemplate] ?: BaseUiTexts[UiTextKey.PaginationPageLabelTemplate.ordinal]
-    if (!pageTemplate.contains("{page}") || !pageTemplate.contains("{total}")) {
-        map[UiTextKey.PaginationPageLabelTemplate] =
-            BaseUiTexts[UiTextKey.PaginationPageLabelTemplate.ordinal]
-    }
-
     fun ensureContains(key: UiTextKey, vararg tokens: String) {
         val v = map[key] ?: BaseUiTexts[key.ordinal]
         if (tokens.any { !v.contains(it) }) {
             map[key] = BaseUiTexts[key.ordinal]
         }
     }
+
+    ensureContains(UiTextKey.HistorySessionTitleTemplate, "{id}")
+    ensureContains(UiTextKey.HistoryItemsCountTemplate, "{count}")
+    ensureContains(UiTextKey.PaginationPageLabelTemplate, "{page}", "{total}")
 
     ensureContains(UiTextKey.LearningPrimaryTemplate, "{language}")
     ensureContains(UiTextKey.LearningOpenSheetTemplate, "{language}")

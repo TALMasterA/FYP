@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -21,13 +23,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fyp.core.StandardScreenScaffold
+import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.data.config.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.UiTextKey
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.BaseUiTexts
+import com.example.fyp.model.UiTextKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,19 +70,19 @@ fun LearningScreen(
                 t(UiTextKey.LearningPrimaryTemplate)
                     .replace("{language}", displayName(uiState.primaryLanguageCode))
             )
+
             Text(t(UiTextKey.LearningHintCount))
             uiState.error?.let { Text(t(UiTextKey.LearningErrorTemplate)) }
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
+            LazyColumn(modifier = Modifier.fillMaxWidth()) {
                 items(uiState.clusters, key = { it.languageCode }) { c ->
                     val hasSheet = uiState.sheetExistsByLanguage[c.languageCode] == true
                     val isGeneratingThis = uiState.generatingLanguageCode == c.languageCode
                     val isGeneratingAny = uiState.generatingLanguageCode != null
+
                     val lastCount = uiState.sheetCountByLanguage[c.languageCode]
                     val unchanged = (lastCount != null && lastCount == c.count)
+
                     val generateEnabled = !isGeneratingAny && c.count > 0 && !unchanged
 
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -105,14 +105,14 @@ fun LearningScreen(
                                     }
                                 )
                             }
-                        }
 
-                        if (hasSheet) {
-                            Button(onClick = { onOpenSheet(c.languageCode) }) {
-                                Text(
-                                    t(UiTextKey.LearningOpenSheetTemplate)
-                                        .replace("{language}", displayName(c.languageCode))
-                                )
+                            if (hasSheet) {
+                                Button(onClick = { onOpenSheet(c.languageCode) }) {
+                                    Text(
+                                        t(UiTextKey.LearningOpenSheetTemplate)
+                                            .replace("{language}", displayName(c.languageCode))
+                                    )
+                                }
                             }
                         }
                     }
