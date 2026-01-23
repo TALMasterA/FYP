@@ -7,6 +7,7 @@ import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.domain.settings.SetFontSizeScaleUseCase
 import com.example.fyp.domain.settings.SetPrimaryLanguageUseCase
+import com.example.fyp.domain.settings.SetThemeModeUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,7 +31,8 @@ class SettingsViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val observeSettings: ObserveUserSettingsUseCase,
     private val setPrimaryLanguage: SetPrimaryLanguageUseCase,
-    private val setFontSizeScale: SetFontSizeScaleUseCase
+    private val setFontSizeScale: SetFontSizeScaleUseCase,
+    private val setThemeMode: SetThemeModeUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -113,6 +115,24 @@ class SettingsViewModel @Inject constructor(
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
                     error = e.message ?: "Font size save failed"
+                )
+            }
+        }
+    }
+
+    fun updateThemeMode(newMode: String) {
+        val uid = _uiState.value.uid ?: return
+        viewModelScope.launch {
+            runCatching {
+                setThemeMode(uid, newMode)
+            }.onSuccess {
+                _uiState.value = _uiState.value.copy(
+                    settings = _uiState.value.settings.copy(themeMode = newMode),
+                    error = null
+                )
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(
+                    error = e.message ?: "Theme save failed"
                 )
             }
         }

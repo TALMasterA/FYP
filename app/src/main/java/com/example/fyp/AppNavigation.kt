@@ -37,6 +37,7 @@ import com.example.fyp.screens.speech.SpeechRecognitionScreen
 import com.example.fyp.ui.theme.FYPTheme
 import com.example.fyp.ui.theme.Typography as AppTypography
 import com.example.fyp.screens.learning.LearningViewModel
+import androidx.compose.foundation.isSystemInDarkTheme
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
@@ -76,6 +77,13 @@ fun AppNavigation() {
     val fontSizeScale = validateScale(settingsUiState.settings.fontSizeScale)
     val scaledTypography = createScaledTypography(AppTypography, fontSizeScale)
 
+    val themeMode = settingsUiState.settings.themeMode
+    val darkTheme = when (themeMode) {
+        "dark" -> true
+        "light" -> false
+        else -> isSystemInDarkTheme()
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -83,7 +91,7 @@ fun AppNavigation() {
         CompositionLocalProvider(
             LocalFontSizeScale provides fontSizeScale
         ) {
-            FYPTheme(typography = scaledTypography) {
+            FYPTheme(darkTheme = darkTheme, typography = scaledTypography) {
                 NavHost(
                     navController = navController,
                     startDestination = AppScreen.Home.route

@@ -94,9 +94,13 @@ fun TextActionsRow(
 @Composable
 fun TranslatedResultBox(
     text: String,
+    placeholder: String,
     modifier: Modifier = Modifier,
 ) {
     Spacer(modifier = Modifier.height(8.dp))
+
+    val showPlaceholder = text.isBlank()
+    val displayText = if (showPlaceholder) placeholder else text
 
     OutlinedCard(
         modifier = modifier.fillMaxWidth(),
@@ -105,9 +109,16 @@ fun TranslatedResultBox(
         ),
     ) {
         Text(
-            text = text,
-            modifier = Modifier.padding(12.dp),
-            style = MaterialTheme.typography.titleMedium
+            text = displayText,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            style = MaterialTheme.typography.titleMedium,
+            color = if (showPlaceholder)
+                MaterialTheme.colorScheme.onSurfaceVariant
+            else
+                MaterialTheme.colorScheme.onSurface,
+            minLines = 3
         )
     }
 }

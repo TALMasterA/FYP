@@ -71,6 +71,7 @@ enum class UiTextKey {
     HistoryTabDiscrete,
     HistoryTabContinuous,
     HistoryNoContinuousSessions,
+    HistoryNoDiscreteRecords,
 
     DialogDeleteRecordTitle,
     DialogDeleteRecordMessage,
@@ -99,11 +100,13 @@ enum class UiTextKey {
 
     DisableText,
     ForgotPwText,
+    ResetPwTitle,
     ResetPwText,
     ResetSendingText,
     ResetSendText,
 
     SpeechInputPlaceholder,
+    SpeechTranslatedPlaceholder,
     StatusAzureErrorTemplate,
     StatusTranslationErrorTemplate,
     StatusLoginRequiredTranslation,
@@ -119,7 +122,6 @@ enum class UiTextKey {
 
     // --- Learning ---
     LearningTitle,
-    LearningPrimaryTemplate,              // "Primary: {language}"
     LearningHintCount,
     LearningErrorTemplate,                // "Error: %s"
     LearningGenerate,
@@ -130,7 +132,7 @@ enum class UiTextKey {
     // --- Learning Sheet ---
     LearningSheetTitleTemplate,           // "{language} Sheet"
     LearningSheetPrimaryTemplate,         // "Primary: {language}"
-    LearningSheetHistoryCountTemplate,    // "History count now: {now} (saved at gen: {saved})"
+    LearningSheetHistoryCountTemplate,    // "History count now: {nowCount} (saved at gen: {savedCount})"
     LearningSheetNoContent,
     LearningSheetRegenerate,
     LearningSheetGenerating,
@@ -155,7 +157,13 @@ enum class UiTextKey {
     FilterKeyword,
     FilterApply,
     FilterCancel,
+    FilterClear,
     FilterHistoryScreenTitle,
+    SettingsThemeTitle,
+    SettingsThemeDesc,
+    SettingsThemeSystem,
+    SettingsThemeLight,
+    SettingsThemeDark,
 
 }
 
@@ -363,6 +371,9 @@ val BaseUiTexts: List<String> = listOf(
     "Continuous",
 
     // HistoryNoContinuousSessions
+    "No session(s) yet.",
+
+    //HistoryNoDiscreteRecords
     "No record(s) yet.",
 
     // DialogDeleteRecordTitle
@@ -442,6 +453,9 @@ val BaseUiTexts: List<String> = listOf(
     // ForgotPwText
     "Forgot password? Reset here",
 
+    //ResetPwTitle
+    "Reset Password",
+
     // ResetPwText
     "Enter your account email and a reset link will be sent. \n" +
             "Make sure the email is real & register for the app or no email will be sent. \n",
@@ -454,6 +468,9 @@ val BaseUiTexts: List<String> = listOf(
 
     // SpeechInputPlaceholder
     "Type here or use microphone...",
+
+    //SpeechTranslatedPlaceholder
+    "The translated result will be show here.",
 
     // StatusAzureErrorTemplate
     "Azure error: %s",
@@ -487,18 +504,17 @@ val BaseUiTexts: List<String> = listOf(
 
     // --- Learning ---
     "Learning",
-    "Primary language: {language}",
     "(*) Count = number of history records involving this language.",
     "Error: %s",
     "Generate",
     "Re-generate",
     "Generating...",
-    "{language} Sheet",
+    "{speclanguage} Sheet",
 
     // --- Learning Sheet ---
-    "{language} Sheet",
-    "Primary language: {language}",
-    "History count now: {now} (saved at gen: {saved})",
+    "{speclanguage} Sheet",
+    "Primary language: {speclanguage}",
+    "History count now: {nowCount} (saved at gen: {savedCount})",
     "No sheet content yet.",
     "Re-gen",
     "Generating...",
@@ -523,7 +539,13 @@ val BaseUiTexts: List<String> = listOf(
     "Keyword",
     "Apply",
     "Cancel",
+    "Clear",
     "Filter",
+    "Theme",
+    "Follow system / Light / Dark",
+    "Follow system",
+    "Light",
+    "Dark",
 )
 
 fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
@@ -545,11 +567,10 @@ fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
     ensureContains(UiTextKey.HistoryItemsCountTemplate, "{count}")
     ensureContains(UiTextKey.PaginationPageLabelTemplate, "{page}", "{total}")
 
-    ensureContains(UiTextKey.LearningPrimaryTemplate, "{language}")
-    ensureContains(UiTextKey.LearningOpenSheetTemplate, "{language}")
-    ensureContains(UiTextKey.LearningSheetTitleTemplate, "{language}")
-    ensureContains(UiTextKey.LearningSheetPrimaryTemplate, "{language}")
-    ensureContains(UiTextKey.LearningSheetHistoryCountTemplate, "{now}", "{saved}")
+    ensureContains(UiTextKey.LearningOpenSheetTemplate, "{speclanguage}")
+    ensureContains(UiTextKey.LearningSheetTitleTemplate, "{speclanguage}")
+    ensureContains(UiTextKey.LearningSheetPrimaryTemplate, "{speclanguage}")
+    ensureContains(UiTextKey.LearningSheetHistoryCountTemplate, "{nowCount}", "{savedCount}")
     ensureContains(UiTextKey.SettingsScaleTemplate, "{pct}")
 
     return map

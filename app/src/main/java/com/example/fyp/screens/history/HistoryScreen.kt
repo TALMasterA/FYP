@@ -234,7 +234,27 @@ fun HistoryScreen(
                 }) { Text(t(UiTextKey.FilterApply)) }
             },
             dismissButton = {
-                TextButton(onClick = { showFilterDialog = false }) { Text(t(UiTextKey.FilterCancel)) }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TextButton(
+                        onClick = {
+                            draftLang = ""
+                            draftKeyword = ""
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(t(UiTextKey.FilterClear))
+                    }
+
+                    TextButton(
+                        onClick = { showFilterDialog = false },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(t(UiTextKey.FilterCancel))
+                    }
+                }
             }
         )
     }
@@ -307,6 +327,7 @@ fun HistoryScreen(
                                 speakingType = speakingType,
                                 isTtsRunning = speechVm.isTtsRunning,
                                 ttsStatus = speechVm.ttsStatus,
+                                noRecordsText = t(UiTextKey.HistoryNoDiscreteRecords),
                                 onSpeakOriginal = { rec ->
                                     speakingRecordId = rec.id
                                     speakingType = "O"

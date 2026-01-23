@@ -174,6 +174,7 @@ fun SpeechRecognitionScreen(
                     ) {
                         TranslatedResultBox(
                             text = translatedText,
+                            placeholder = t(UiTextKey.SpeechTranslatedPlaceholder),
                             modifier = Modifier.bringIntoViewRequester(bringIntoViewRequester),
                         )
 

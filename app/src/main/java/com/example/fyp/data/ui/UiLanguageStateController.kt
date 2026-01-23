@@ -53,10 +53,11 @@ fun rememberUiLanguageState(
                 uiTexts = cachedMap.orEmpty()
             )
         } else {
-            // Do NOT clear or update hash here (no auto-translate).
-            // This forces: next time user selects this language => AppLanguageDropdown will translate.
+            // Cached UI texts belong to an older BaseUiTexts version.
+            // Reset dropdown to default (English) so UI + dropdown are consistent.
+            cache.setSelectedLanguage(defaultCode)
             appLanguageState = appLanguageState.copy(
-                selectedUiLanguage = selected,
+                selectedUiLanguage = defaultCode,
                 uiTexts = emptyMap()
             )
         }

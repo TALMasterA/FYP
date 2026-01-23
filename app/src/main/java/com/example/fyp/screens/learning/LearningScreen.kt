@@ -27,11 +27,11 @@ import com.example.fyp.data.config.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.PaddingValues
+import com.example.fyp.core.LanguageDropdownField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,8 +47,6 @@ fun LearningScreen(
 
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
-
-    val primaryName = uiLanguageNameFor(uiState.primaryLanguageCode)
 
     val context = LocalContext.current
     val supported = remember { AzureLanguageConfig.loadSupportedLanguages(context).toSet() }
@@ -69,10 +67,13 @@ fun LearningScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                t(UiTextKey.LearningPrimaryTemplate)
-                    .replace("{language}", primaryName)
-                    .replace("language", primaryName)
+            LanguageDropdownField(
+                label = t(UiTextKey.SettingsPrimaryLanguageLabel),
+                selectedCode = uiState.primaryLanguageCode,
+                options = supported.toList(),
+                nameFor = uiLanguageNameFor,
+                onSelected = { viewModel.setPrimaryLanguage(it) },
+                enabled = true
             )
 
             Text(t(UiTextKey.LearningHintCount))
@@ -145,8 +146,7 @@ fun LearningScreen(
                                 ) {
                                     Text(
                                         t(UiTextKey.LearningOpenSheetTemplate)
-                                            .replace("{language}", langLabel)
-                                            .replace("language", langLabel)
+                                            .replace("{speclanguage}", langLabel)
                                     )
                                 }
                             }

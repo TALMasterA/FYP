@@ -7,4 +7,5 @@ interface UserSettingsRepository {
     fun observeUserSettings(userId: String): Flow<UserSettings>
     suspend fun setFontSizeScale(userId: String, scale: Float)
     suspend fun setPrimaryLanguage(userId: String, languageCode: String)
+    suspend fun setThemeMode(userId: String, themeMode: String)
 }

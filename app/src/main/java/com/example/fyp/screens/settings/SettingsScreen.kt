@@ -1,5 +1,6 @@
 package com.example.fyp.screens.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.BuildConfig
+import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
@@ -35,7 +37,6 @@ import com.example.fyp.data.config.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
-import com.example.fyp.core.AppLanguageDropdown
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,7 +96,10 @@ fun SettingsScreen(
 
             // Primary Language
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(t(UiTextKey.SettingsPrimaryLanguageTitle), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    t(UiTextKey.SettingsPrimaryLanguageTitle),
+                    style = MaterialTheme.typography.titleMedium
+                )
                 Text(
                     text = t(UiTextKey.SettingsPrimaryLanguageDesc),
                     style = MaterialTheme.typography.bodySmall,
@@ -133,7 +137,9 @@ fun SettingsScreen(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
@@ -167,13 +173,108 @@ fun SettingsScreen(
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("80%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("100%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("120%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("150%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "80%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        "100%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        "120%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        "150%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Theme
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(t(UiTextKey.SettingsThemeTitle), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = t(UiTextKey.SettingsThemeDesc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                val currentMode = uiState.settings.themeMode
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { viewModel.updateThemeMode("system") },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (currentMode == "system")
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Text(
+                            text = t(UiTextKey.SettingsThemeSystem),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { viewModel.updateThemeMode("light") },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (currentMode == "light")
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Text(
+                            text = t(UiTextKey.SettingsThemeLight),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { viewModel.updateThemeMode("dark") },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (currentMode == "dark")
+                                MaterialTheme.colorScheme.primaryContainer
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Text(
+                            text = t(UiTextKey.SettingsThemeDark),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
 
@@ -181,7 +282,6 @@ fun SettingsScreen(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(t(UiTextKey.SettingsAboutTitle), style = MaterialTheme.typography.titleMedium)
 
-                // AMENDMENT 1 (correct interpolation)
                 Text(
                     text = "${t(UiTextKey.SettingsAppVersion)}${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.bodyMedium

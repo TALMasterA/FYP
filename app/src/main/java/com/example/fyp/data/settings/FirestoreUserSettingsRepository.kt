@@ -26,11 +26,13 @@ class FirestoreUserSettingsRepository @Inject constructor(
 
             val code = snap?.getString("primaryLanguageCode").orEmpty()
             val scale = snap?.getDouble("fontSizeScale")?.toFloat() ?: 1.0f
+            val themeMode = snap?.getString("themeMode") ?: "system"
 
             trySend(
                 UserSettings(
                     primaryLanguageCode = code.ifBlank { "en-US" },
-                    fontSizeScale = scale
+                    fontSizeScale = scale,
+                    themeMode = themeMode
                 )
             )
         }
@@ -47,6 +49,12 @@ class FirestoreUserSettingsRepository @Inject constructor(
     override suspend fun setFontSizeScale(userId: String, scale: Float) {
         docRef(userId)
             .set(mapOf("fontSizeScale" to scale), SetOptions.merge())
+            .await()
+    }
+
+    override suspend fun setThemeMode(userId: String, themeMode: String) {
+        docRef(userId)
+            .set(mapOf("themeMode" to themeMode), SetOptions.merge())
             .await()
     }
 }

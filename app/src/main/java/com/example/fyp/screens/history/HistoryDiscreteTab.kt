@@ -34,8 +34,14 @@ fun HistoryDiscreteTab(
     onSpeakOriginal: (TranslationRecord) -> Unit,
     onSpeakTranslation: (TranslationRecord) -> Unit,
     deleteLabel: String,
+    noRecordsText: String,
     modifier: Modifier = Modifier,
 ) {
+    if (records.isEmpty()) {
+        Text(noRecordsText, modifier = Modifier.padding(8.dp))
+        return
+    }
+
     HistoryList(
         records = records,
         languageNameFor = languageNameFor,

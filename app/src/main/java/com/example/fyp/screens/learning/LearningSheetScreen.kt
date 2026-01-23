@@ -14,7 +14,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -46,6 +45,7 @@ fun LearningSheetScreen(
     val isGeneratingThis = learningUiState.generatingLanguageCode == languageCode
 
     val targetName = uiLanguageNameFor(languageCode)
+    val primaryName = uiLanguageNameFor(learningUiState.primaryLanguageCode)
 
     LaunchedEffect(learningUiState.generatingLanguageCode) {
         if (learningUiState.generatingLanguageCode == null) {
@@ -55,8 +55,7 @@ fun LearningSheetScreen(
 
     StandardScreenScaffold(
         title = t(UiTextKey.LearningSheetTitleTemplate)
-            .replace("{language}", targetName)
-            .replace("language", targetName),
+            .replace("{speclanguage}", targetName),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack)
     ) { padding ->
@@ -69,15 +68,14 @@ fun LearningSheetScreen(
         ) {
             Text(
                 text = t(UiTextKey.LearningSheetPrimaryTemplate)
-                    .replace("{language}", targetName)
-                    .replace("language", targetName),
+                    .replace("{speclanguage}", primaryName),
                 style = MaterialTheme.typography.bodyMedium
             )
 
             Text(
                 text = t(UiTextKey.LearningSheetHistoryCountTemplate)
-                    .replace("now", uiState.countNow.toString())
-                    .replace("saved", (uiState.historyCountAtGenerate?.toString() ?: "-")),
+                    .replace("nowCount", uiState.countNow.toString())
+                    .replace("savedCount", (uiState.historyCountAtGenerate?.toString() ?: "-")),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

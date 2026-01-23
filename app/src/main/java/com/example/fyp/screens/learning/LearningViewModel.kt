@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.fyp.data.settings.UserSettingsRepository
 
 data class LearningUiState(
     val isLoading: Boolean = true,
@@ -38,7 +39,8 @@ class LearningViewModel @Inject constructor(
     private val sheetsRepo: FirestoreLearningSheetsRepository,
     private val observeUserHistory: ObserveUserHistoryUseCase,
     private val observeUserSettings: ObserveUserSettingsUseCase,
-    private val generateLearningMaterials: GenerateLearningMaterialsUseCase
+    private val generateLearningMaterials: GenerateLearningMaterialsUseCase,
+    private val userSettingsRepo: UserSettingsRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LearningUiState())
@@ -87,7 +89,18 @@ class LearningViewModel @Inject constructor(
         settingsJob = viewModelScope.launch {
             observeUserSettings(uid).collect { s ->
                 val primary = s.primaryLanguageCode.ifBlank { "en-US" }
-                _uiState.value = _uiState.value.copy(primaryLanguageCode = primary, isLoading = false)
+
+                val prevPrimary = _uiState.value.primaryLanguageCode
+                val primaryChanged = prevPrimary != primary
+
+                _uiState.value = _uiState.value.copy(
+                    primaryLanguageCode = primary,
+                    isLoading = false,
+                    // Critical: reset meta when switching primary language
+                    generatingLanguageCode = if (primaryChanged) null else _uiState.value.generatingLanguageCode,
+                    sheetExistsByLanguage = if (primaryChanged) emptyMap() else _uiState.value.sheetExistsByLanguage,
+                    sheetCountByLanguage = if (primaryChanged) emptyMap() else _uiState.value.sheetCountByLanguage,
+                )
                 recomputeClusters()
             }
         }
@@ -121,13 +134,15 @@ class LearningViewModel @Inject constructor(
         if (languages.isEmpty()) return
 
         viewModelScope.launch {
-            var existsMap = s.sheetExistsByLanguage
-            var countMap = s.sheetCountByLanguage
+            val existsMap = mutableMapOf<String, Boolean>()
+            val countMap = mutableMapOf<String, Int>()
 
             for (lang in languages) {
                 val doc = sheetsRepo.getSheet(uid, primary, lang)
-                existsMap = existsMap + (lang to (doc != null))
-                if (doc != null) countMap = countMap + (lang to doc.historyCountAtGenerate)
+                existsMap[lang] = (doc != null)
+                if (doc != null) {
+                    countMap[lang] = doc.historyCountAtGenerate
+                }
             }
 
             _uiState.value = _uiState.value.copy(
@@ -185,6 +200,13 @@ class LearningViewModel @Inject constructor(
                     error = e.message ?: "Generate failed"
                 )
             }
+        }
+    }
+
+    fun setPrimaryLanguage(languageCode: String) {
+        val uid = this.uid ?: return
+        viewModelScope.launch {
+            userSettingsRepo.setPrimaryLanguage(uid, languageCode)
         }
     }
 }

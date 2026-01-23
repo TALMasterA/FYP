@@ -35,7 +35,7 @@ fun ResetPasswordScreen(
     var email by remember { mutableStateOf("") }
 
     StandardScreenScaffold(
-        title = "Reset password",
+        title = t(UiTextKey.ResetPwTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack)
     ) { innerPadding ->
