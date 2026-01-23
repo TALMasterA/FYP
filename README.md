@@ -33,6 +33,13 @@
  
  git pull --ff-only  :  For update the main branch after pushed work on another computer (Same branch)
 
+ --------------------------------------------------------------
+
+ Register to try this app!
+
+ Link: https://appdistribution.firebase.dev/i/1cdd05e2dde89fa9
+
+
 
 
 
