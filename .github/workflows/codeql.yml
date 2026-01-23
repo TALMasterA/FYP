@@ -102,12 +102,24 @@ jobs:
     # to build your code.
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
+    # Create google-services.json from GitHub Secret
+    - name: Setup Firebase Config
+      if: matrix.language == 'java-kotlin'
+      shell: bash
+      run: |
+        echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+
+    # Run manual build steps for Java/Kotlin (Android app)
     - name: Build Android App
       if: matrix.language == 'java-kotlin'
       shell: bash
       run: |
         chmod +x ./gradlew
         ./gradlew assemble --no-daemon -S
+
+    # No manual build needed for JavaScript/TypeScript
+    # CodeQL 'none' mode analyzes source without compilation
+
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
