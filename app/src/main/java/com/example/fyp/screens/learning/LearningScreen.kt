@@ -32,6 +32,11 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.PaddingValues
 import com.example.fyp.core.LanguageDropdownField
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Row
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +56,8 @@ fun LearningScreen(
     val context = LocalContext.current
     val supported = remember { AzureLanguageConfig.loadSupportedLanguages(context).toSet() }
 
+    var pendingGenerateLang by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(supported) {
         viewModel.setSupportedLanguages(supported)
     }
@@ -60,6 +67,32 @@ fun LearningScreen(
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack)
     ) { padding ->
+        pendingGenerateLang?.let { langCode ->
+            val langName = uiLanguageNameFor(langCode)
+
+            AlertDialog(
+                onDismissRequest = { pendingGenerateLang = null },
+                title = { Text(t(UiTextKey.DialogGenerateOverwriteTitle)) },
+                text = {
+                    Text(
+                        t(UiTextKey.DialogGenerateOverwriteMessageTemplate)
+                            .replace("{speclanguage}", langName)
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        pendingGenerateLang = null
+                        viewModel.generateFor(langCode)
+                    }) { Text(t(UiTextKey.ActionConfirm)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingGenerateLang = null }) {
+                        Text(t(UiTextKey.ActionCancel))
+                    }
+                }
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -77,7 +110,7 @@ fun LearningScreen(
             )
 
             Text(t(UiTextKey.LearningHintCount))
-            uiState.error?.let { Text(t(UiTextKey.LearningErrorTemplate)) }
+            uiState.error?.let { Text(t(UiTextKey.LearningErrorTemplate).format(it)) }
 
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
@@ -95,7 +128,6 @@ fun LearningScreen(
                     // Disable Generate when ANY language is generating, or no history, or unchanged.
                     val generateEnabled = !isGeneratingAny && c.count > 0 && !unchanged
 
-                    // You confirmed: other languages' Open Sheet should still be clickable while generating.
                     val sheetEnabled = hasSheet
 
                     val langLabel = uiLanguageNameFor(c.languageCode)
@@ -125,18 +157,28 @@ fun LearningScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Button(
-                                    onClick = { viewModel.generateFor(c.languageCode) },
-                                    enabled = generateEnabled,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        when {
-                                            isGeneratingThis -> t(UiTextKey.LearningGenerating)
-                                            hasSheet -> t(UiTextKey.LearningRegenerate)
-                                            else -> t(UiTextKey.LearningGenerate)
-                                        }
-                                    )
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(
+                                        onClick = { pendingGenerateLang = c.languageCode },
+                                        enabled = generateEnabled,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            when {
+                                                isGeneratingThis -> t(UiTextKey.LearningGenerating)
+                                                hasSheet -> t(UiTextKey.LearningRegenerate)
+                                                else -> t(UiTextKey.LearningGenerate)
+                                            }
+                                        )
+                                    }
+
+                                    Button(
+                                        onClick = { viewModel.cancelGenerate() },
+                                        enabled = isGeneratingThis,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(t(UiTextKey.ActionCancel))
+                                    }
                                 }
 
                                 Button(

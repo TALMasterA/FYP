@@ -16,7 +16,8 @@ data class LearningSheetDoc(
 class FirestoreLearningSheetsRepository @Inject constructor(
     private val db: FirebaseFirestore
 ) {
-    private fun docId(primary: String, target: String) = "${primary}__${target}"
+    private fun norm(code: String) = code.trim()
+    private fun docId(primary: String, target: String) = "${norm(primary)}__${norm(target)}"
 
     private fun docRef(uid: String, primary: String, target: String) =
         db.collection("users")
@@ -25,7 +26,7 @@ class FirestoreLearningSheetsRepository @Inject constructor(
             .document(docId(primary, target))
 
     suspend fun getSheet(uid: String, primary: String, target: String): LearningSheetDoc? {
-        val snap = docRef(uid, primary, target).get().await()
+        val snap = docRef(uid, norm(primary), norm(target)).get().await()
         return if (snap.exists()) snap.toObject(LearningSheetDoc::class.java) else null
     }
 
@@ -36,13 +37,15 @@ class FirestoreLearningSheetsRepository @Inject constructor(
         content: String,
         historyCountAtGenerate: Int
     ) {
+        val p = norm(primary)
+        val t = norm(target)
         val data = mapOf(
-            "primaryLanguageCode" to primary,
-            "targetLanguageCode" to target,
+            "primaryLanguageCode" to p,
+            "targetLanguageCode" to t,
             "content" to content,
             "historyCountAtGenerate" to historyCountAtGenerate,
             "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
         )
-        docRef(uid, primary, target).set(data).await()
+        docRef(uid, p, t).set(data).await()
     }
 }

@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
 import com.example.fyp.domain.history.ObserveUserHistoryUseCase
-import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.TranslationRecord
@@ -36,7 +35,6 @@ class LearningSheetViewModel @Inject constructor(
     private val sheetsRepo: FirestoreLearningSheetsRepository,
     private val observeUserHistory: ObserveUserHistoryUseCase,
     private val observeUserSettings: ObserveUserSettingsUseCase,
-    private val generateLearningMaterials: GenerateLearningMaterialsUseCase
 ) : ViewModel() {
 
     private val languageCode: String = savedStateHandle.get<String>("languageCode").orEmpty()
@@ -126,58 +124,6 @@ class LearningSheetViewModel @Inject constructor(
                         error = e.message ?: "Load sheet failed"
                     )
                 }
-        }
-    }
-
-    fun canRegen(): Boolean {
-        val s = _uiState.value
-        val last = s.historyCountAtGenerate
-        if (s.isGenerating) return false
-        if (s.countNow == 0) return false
-        if (last != null && last == s.countNow) return false
-        return true
-    }
-
-    fun regen() {
-        val uid = this.uid ?: run {
-            _uiState.value = _uiState.value.copy(error = "Not logged in")
-            return
-        }
-        val current = _uiState.value
-        val primary = current.primaryLanguageCode
-        val target = current.targetLanguageCode
-
-        if (!canRegen()) return
-
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isGenerating = true, error = null)
-
-            runCatching {
-                generateLearningMaterials(
-                    deployment = "gpt-5-mini",
-                    primaryLanguageCode = primary,
-                    targetLanguageCode = target,
-                    records = latestRecords
-                )
-            }.onSuccess { content ->
-                sheetsRepo.upsertSheet(
-                    uid = uid,
-                    primary = primary,
-                    target = target,
-                    content = content,
-                    historyCountAtGenerate = current.countNow
-                )
-                _uiState.value = _uiState.value.copy(
-                    isGenerating = false,
-                    content = content,
-                    historyCountAtGenerate = current.countNow
-                )
-            }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(
-                    isGenerating = false,
-                    error = e.message ?: "Re-gen failed"
-                )
-            }
         }
     }
 }

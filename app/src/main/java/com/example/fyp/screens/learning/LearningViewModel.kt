@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.example.fyp.data.settings.UserSettingsRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 
 data class LearningUiState(
     val isLoading: Boolean = true,
@@ -50,6 +52,7 @@ class LearningViewModel @Inject constructor(
     private var historyJob: Job? = null
     private var settingsJob: Job? = null
     private var supportedLanguages: Set<String> = emptySet()
+    private var generationJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -77,8 +80,10 @@ class LearningViewModel @Inject constructor(
     private fun stopJobs() {
         historyJob?.cancel()
         settingsJob?.cancel()
+        generationJob?.cancel()
         historyJob = null
         settingsJob = null
+        generationJob = null
     }
 
     private fun start(uid: String) {
@@ -130,57 +135,62 @@ class LearningViewModel @Inject constructor(
         val s = _uiState.value
         val primary = s.primaryLanguageCode
         val languages = s.clusters.map { it.languageCode }
-
         if (languages.isEmpty()) return
 
         viewModelScope.launch {
             val existsMap = mutableMapOf<String, Boolean>()
             val countMap = mutableMapOf<String, Int>()
+            var firstError: String? = null
 
             for (lang in languages) {
-                val doc = sheetsRepo.getSheet(uid, primary, lang)
-                existsMap[lang] = (doc != null)
-                if (doc != null) {
-                    countMap[lang] = doc.historyCountAtGenerate
+                try {
+                    val doc = sheetsRepo.getSheet(uid, primary, lang)
+                    existsMap[lang] = (doc != null)
+                    if (doc != null) countMap[lang] = doc.historyCountAtGenerate
+                } catch (ce: CancellationException) {
+                    throw ce
+                } catch (e: Exception) {
+                    if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
+                    existsMap[lang] = false
                 }
             }
 
             _uiState.value = _uiState.value.copy(
                 sheetExistsByLanguage = existsMap,
-                sheetCountByLanguage = countMap
+                sheetCountByLanguage = countMap,
+                error = firstError
             )
         }
     }
 
     fun generateFor(languageCode: String) {
         val uid = this.uid ?: run {
-            _uiState.value = _uiState.value.copy(error = "Not logged in")
+            _uiState.value = uiState.value.copy(error = "Not logged in")
             return
         }
 
-        val current = _uiState.value
+        val current = uiState.value
         val primary = current.primaryLanguageCode
         val countNow = current.clusters.firstOrNull { it.languageCode == languageCode }?.count ?: 0
         val lastCount = current.sheetCountByLanguage[languageCode]
 
-        // Disable rule: unchanged count (also disable if count==0)
         if (countNow == 0) return
         if (lastCount != null && lastCount == countNow) return
-
-        // ADDED: prevent multiple simultaneous generations
         if (current.generatingLanguageCode != null) return
 
-        viewModelScope.launch {
-            _uiState.value = current.copy(generatingLanguageCode = languageCode, error = null)
+        generationJob = viewModelScope.launch {
+            _uiState.value = uiState.value.copy(generatingLanguageCode = languageCode, error = null)
 
-            runCatching {
-                generateLearningMaterials(
+            try {
+                val content = generateLearningMaterials(
                     deployment = "gpt-5-mini",
                     primaryLanguageCode = primary,
                     targetLanguageCode = languageCode,
                     records = current.records
                 )
-            }.onSuccess { content ->
+
+                ensureActive() // if cancelled, do not overwrite
+
                 sheetsRepo.upsertSheet(
                     uid = uid,
                     primary = primary,
@@ -189,16 +199,20 @@ class LearningViewModel @Inject constructor(
                     historyCountAtGenerate = countNow
                 )
 
-                _uiState.value = _uiState.value.copy(
+                _uiState.value = uiState.value.copy(
                     generatingLanguageCode = null,
-                    sheetExistsByLanguage = _uiState.value.sheetExistsByLanguage + (languageCode to true),
-                    sheetCountByLanguage = _uiState.value.sheetCountByLanguage + (languageCode to countNow)
+                    sheetExistsByLanguage = uiState.value.sheetExistsByLanguage + (languageCode to true),
+                    sheetCountByLanguage = uiState.value.sheetCountByLanguage + (languageCode to countNow)
                 )
-            }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(
+            } catch (ce: CancellationException) {
+                _uiState.value = uiState.value.copy(generatingLanguageCode = null)
+            } catch (e: Exception) {
+                _uiState.value = uiState.value.copy(
                     generatingLanguageCode = null,
                     error = e.message ?: "Generate failed"
                 )
+            } finally {
+                generationJob = null
             }
         }
     }
@@ -208,5 +222,11 @@ class LearningViewModel @Inject constructor(
         viewModelScope.launch {
             userSettingsRepo.setPrimaryLanguage(uid, languageCode)
         }
+    }
+
+    fun cancelGenerate() {
+        generationJob?.cancel()
+        generationJob = null
+        _uiState.value = uiState.value.copy(generatingLanguageCode = null)
     }
 }

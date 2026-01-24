@@ -164,6 +164,10 @@ enum class UiTextKey {
     SettingsThemeSystem,
     SettingsThemeLight,
     SettingsThemeDark,
+    DialogGenerateOverwriteTitle,
+    DialogGenerateOverwriteMessageTemplate,
+    ActionConfirm,
+    ToastCopied,
 
 }
 
@@ -546,6 +550,11 @@ val BaseUiTexts: List<String> = listOf(
     "Follow system",
     "Light",
     "Dark",
+    "Overwrite materials?",
+    "Previous materials will be overwritten. \n" +
+    "Generate materials for {speclanguage}?",
+    "Confirm",
+    "Copied to clipboard",
 )
 
 fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
@@ -572,6 +581,7 @@ fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
     ensureContains(UiTextKey.LearningSheetPrimaryTemplate, "{speclanguage}")
     ensureContains(UiTextKey.LearningSheetHistoryCountTemplate, "{nowCount}", "{savedCount}")
     ensureContains(UiTextKey.SettingsScaleTemplate, "{pct}")
+    ensureContains(UiTextKey.DialogGenerateOverwriteMessageTemplate, "{speclanguage}")
 
     return map
 }
