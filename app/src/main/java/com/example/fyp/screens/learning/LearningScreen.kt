@@ -46,7 +46,7 @@ fun LearningScreen(
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     onBack: () -> Unit,
     viewModel: LearningViewModel = hiltViewModel(),
-    onOpenSheet: (String) -> Unit,
+    onOpenSheet: (primaryCode: String, targetCode: String) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -182,7 +182,7 @@ fun LearningScreen(
                                 }
 
                                 Button(
-                                    onClick = { onOpenSheet(c.languageCode) },
+                                    onClick = { onOpenSheet(uiState.primaryLanguageCode, c.languageCode) },
                                     enabled = sheetEnabled,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {

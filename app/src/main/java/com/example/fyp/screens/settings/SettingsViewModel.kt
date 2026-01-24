@@ -9,6 +9,7 @@ import com.example.fyp.domain.settings.SetFontSizeScaleUseCase
 import com.example.fyp.domain.settings.SetPrimaryLanguageUseCase
 import com.example.fyp.domain.settings.SetThemeModeUseCase
 import com.example.fyp.model.AuthState
+import com.example.fyp.model.UiTextKey
 import com.example.fyp.model.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -21,7 +22,8 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val errorKey: UiTextKey? = null,
+    val errorRaw: String? = null,
     val uid: String? = null,
     val settings: UserSettings = UserSettings(),
 )
@@ -51,7 +53,10 @@ class SettingsViewModel @Inject constructor(
                     }
                     AuthState.LoggedOut -> {
                         settingsJob?.cancel()
-                        _uiState.value = SettingsUiState(isLoading = false, error = "Not logged in, amendments will not take effect / saved.")
+                        _uiState.value = SettingsUiState(
+                            isLoading = false,
+                            errorKey = UiTextKey.SettingsNotLoggedInWarning
+                        )
                     }
                 }
             }
@@ -60,81 +65,104 @@ class SettingsViewModel @Inject constructor(
 
     private fun start(uid: String) {
         settingsJob?.cancel()
-        _uiState.value = _uiState.value.copy(isLoading = true, error = null, uid = uid)
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            errorKey = null,
+            errorRaw = null,
+            uid = uid
+        )
 
         settingsJob = viewModelScope.launch {
             observeSettings(uid)
                 .catch { e ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = e.message ?: "Load failed"
+                        errorKey = null,
+                        errorRaw = e.message ?: "Load failed"
                     )
                 }
                 .collect { s ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         settings = s,
-                        error = null
+                        errorKey = null,
+                        errorRaw = null
                     )
                 }
         }
     }
 
     fun updatePrimaryLanguage(newCode: String) {
-        val uid = _uiState.value.uid ?: return
+        val uid = _uiState.value.uid ?: run {
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            return
+        }
+
         viewModelScope.launch {
-            runCatching {
-                setPrimaryLanguage(uid, newCode)
-            }.onSuccess {
-                // Optional: optimistic UI update
-                _uiState.value = _uiState.value.copy(
-                    settings = _uiState.value.settings.copy(primaryLanguageCode = newCode),
-                    error = null
-                )
-            }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Save failed"
-                )
-            }
+            runCatching { setPrimaryLanguage(uid, newCode) }
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        settings = _uiState.value.settings.copy(primaryLanguageCode = newCode),
+                        errorKey = null,
+                        errorRaw = null
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        errorKey = null,
+                        errorRaw = e.message ?: "Save failed"
+                    )
+                }
         }
     }
 
     fun updateFontSizeScale(scale: Float) {
-        val uid = _uiState.value.uid ?: return
+        val uid = _uiState.value.uid ?: run {
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            return
+        }
+
         val validated = validateScale(scale)
 
         viewModelScope.launch {
-            runCatching {
-                setFontSizeScale(uid, validated)
-            }.onSuccess {
-                // CRITICAL: optimistic UI update so slider + app theme update immediately
-                _uiState.value = _uiState.value.copy(
-                    settings = _uiState.value.settings.copy(fontSizeScale = validated),
-                    error = null
-                )
-            }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Font size save failed"
-                )
-            }
+            runCatching { setFontSizeScale(uid, validated) }
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        settings = _uiState.value.settings.copy(fontSizeScale = validated),
+                        errorKey = null,
+                        errorRaw = null
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        errorKey = null,
+                        errorRaw = e.message ?: "Font size save failed"
+                    )
+                }
         }
     }
 
     fun updateThemeMode(newMode: String) {
-        val uid = _uiState.value.uid ?: return
+        val uid = _uiState.value.uid ?: run {
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            return
+        }
+
         viewModelScope.launch {
-            runCatching {
-                setThemeMode(uid, newMode)
-            }.onSuccess {
-                _uiState.value = _uiState.value.copy(
-                    settings = _uiState.value.settings.copy(themeMode = newMode),
-                    error = null
-                )
-            }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Theme save failed"
-                )
-            }
+            runCatching { setThemeMode(uid, newMode) }
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        settings = _uiState.value.settings.copy(themeMode = newMode),
+                        errorKey = null,
+                        errorRaw = null
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        errorKey = null,
+                        errorRaw = e.message ?: "Theme save failed"
+                    )
+                }
         }
     }
 }

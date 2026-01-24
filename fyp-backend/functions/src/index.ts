@@ -118,7 +118,7 @@ export const translateTexts = onCall(
     const texts: unknown[] =
     Array.isArray(request.data?.texts) ? request.data.texts : [];
 
-    if (texts.length > 150) {
+    if (texts.length > 250) {
       throw new HttpsError("resource-exhausted", "Too many UI strings.");
     }
 

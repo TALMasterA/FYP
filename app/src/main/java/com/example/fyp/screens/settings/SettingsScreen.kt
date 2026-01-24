@@ -37,6 +37,7 @@ import com.example.fyp.data.config.AzureLanguageConfig
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
+import androidx.compose.material3.TextButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +46,7 @@ fun SettingsScreen(
     appLanguageState: AppLanguageState,
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     onBack: () -> Unit,
+    onOpenResetPassword: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -86,9 +88,14 @@ fun SettingsScreen(
                 enabled = true
             )
 
-            uiState.error?.let { errorMsg ->
+            TextButton(onClick = onOpenResetPassword) {
+                Text(t(UiTextKey.SettingsResetPW))
+            }
+
+            val settingsErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+            settingsErrorText?.let { errorMsg ->
                 Text(
-                    text = "Error: $errorMsg",
+                    text = errorMsg,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium
                 )

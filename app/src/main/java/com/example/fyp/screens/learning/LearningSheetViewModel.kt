@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
 import com.example.fyp.domain.history.ObserveUserHistoryUseCase
-import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.TranslationRecord
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +24,6 @@ data class LearningSheetUiState(
     val content: String? = null,
     val historyCountAtGenerate: Int? = null,
     val countNow: Int = 0,
-    val isGenerating: Boolean = false
 )
 
 @HiltViewModel
@@ -34,17 +32,20 @@ class LearningSheetViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val sheetsRepo: FirestoreLearningSheetsRepository,
     private val observeUserHistory: ObserveUserHistoryUseCase,
-    private val observeUserSettings: ObserveUserSettingsUseCase,
 ) : ViewModel() {
 
-    private val languageCode: String = savedStateHandle.get<String>("languageCode").orEmpty()
+    private val primaryCode: String = savedStateHandle.get<String>("primaryCode").orEmpty()
+    private val targetCode: String = savedStateHandle.get<String>("targetCode").orEmpty()
 
-    private val _uiState = MutableStateFlow(LearningSheetUiState(targetLanguageCode = languageCode))
+    private val _uiState = MutableStateFlow(
+        LearningSheetUiState(
+            primaryLanguageCode = primaryCode,
+            targetLanguageCode = targetCode
+        )
+    )
     val uiState: StateFlow<LearningSheetUiState> = _uiState.asStateFlow()
 
     private var uid: String? = null
-    private var latestRecords: List<TranslationRecord> = emptyList()
-    private var settingsJob: Job? = null
     private var historyJob: Job? = null
 
     init {
@@ -66,32 +67,22 @@ class LearningSheetViewModel @Inject constructor(
     }
 
     private fun stopJobs() {
-        settingsJob?.cancel()
         historyJob?.cancel()
-        settingsJob = null
         historyJob = null
     }
 
     private fun start(uid: String) {
         this.uid = uid
         stopJobs()
-
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-        settingsJob = viewModelScope.launch {
-            observeUserSettings(uid).collect { s ->
-                val primary = s.primaryLanguageCode.ifBlank { "en-US" }
-                _uiState.value = _uiState.value.copy(primaryLanguageCode = primary, isLoading = false)
-                loadSheet()
-            }
-        }
+        // Load sheet once when screen starts
+        loadSheet()
 
         historyJob = viewModelScope.launch {
             observeUserHistory(uid).collect { records ->
-                latestRecords = records
-                val countNow = countInvolvingLanguage(records, languageCode)
+                val countNow = countInvolvingLanguage(records, targetCode)
                 _uiState.value = _uiState.value.copy(countNow = countNow)
-                // Do not overwrite content here; content comes from Firestore
             }
         }
     }
@@ -103,14 +94,11 @@ class LearningSheetViewModel @Inject constructor(
 
     fun loadSheet() {
         val uid = this.uid ?: return
-        val s = _uiState.value
-        val primary = s.primaryLanguageCode
-        val target = s.targetLanguageCode
-        if (target.isBlank()) return
+        if (primaryCode.isBlank() || targetCode.isBlank()) return
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            runCatching { sheetsRepo.getSheet(uid, primary, target) }
+            runCatching { sheetsRepo.getSheet(uid, primaryCode, targetCode) }
                 .onSuccess { doc ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,

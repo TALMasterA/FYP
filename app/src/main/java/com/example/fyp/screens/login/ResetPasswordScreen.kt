@@ -72,13 +72,11 @@ fun ResetPasswordScreen(
                 Text(if (uiState.isLoading) t(UiTextKey.ResetSendingText) else t(UiTextKey.ResetSendText))
             }
 
-            uiState.message?.let {
-                Text(text = it, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp))
-            }
+            val msg = uiState.messageKey?.let { t(it) } ?: uiState.messageRaw
+            msg?.let { Text(text = it, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 4.dp)) }
 
-            uiState.error?.let {
-                Text(text = it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 4.dp))
-            }
+            val err = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+            err?.let { Text(text = it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 4.dp)) }
         }
     }
 }

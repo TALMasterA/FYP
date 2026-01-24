@@ -36,7 +36,8 @@ fun LearningSheetScreen(
     uiLanguages: List<Pair<String, String>>,
     appLanguageState: AppLanguageState,
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
-    languageCode: String,
+    primaryCode: String,
+    targetCode: String,
     onBack: () -> Unit,
     learningViewModel: LearningViewModel,
     viewModel: LearningSheetViewModel = hiltViewModel(),
@@ -46,21 +47,26 @@ fun LearningSheetScreen(
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
-    val targetName = uiLanguageNameFor(languageCode)
-    val primaryName = uiLanguageNameFor(uiState.primaryLanguageCode)
+    val targetName = uiLanguageNameFor(targetCode)
+    val primaryName = uiLanguageNameFor(primaryCode)
 
     var showConfirm by remember { mutableStateOf(false) }
 
     val learningUiState by learningViewModel.uiState.collectAsState()
     val isGeneratingAny = learningUiState.generatingLanguageCode != null
-    val isGeneratingThis = learningUiState.generatingLanguageCode == languageCode
+    val isGeneratingThis = learningUiState.generatingLanguageCode == targetCode
 
     val unchanged = uiState.historyCountAtGenerate != null && uiState.historyCountAtGenerate == uiState.countNow
     val regenEnabled = !uiState.isLoading && !isGeneratingAny && uiState.countNow > 0 && !unchanged
 
+    // Load when entering
+    LaunchedEffect(primaryCode, targetCode) {
+        viewModel.loadSheet()
+    }
 
-    // Ensure we load once on entering the screen (safe even if loadSheet() already runs elsewhere)
-    LaunchedEffect(languageCode, uiState.primaryLanguageCode) {
+    // Reload after generation finishes for this target (so content updates immediately)
+    val lastSavedCount = learningUiState.sheetCountByLanguage[targetCode]
+    LaunchedEffect(primaryCode, targetCode, lastSavedCount) {
         viewModel.loadSheet()
     }
 
@@ -106,7 +112,7 @@ fun LearningSheetScreen(
                     confirmButton = {
                         TextButton(onClick = {
                             showConfirm = false
-                            learningViewModel.generateFor(languageCode)
+                            learningViewModel.generateFor(targetCode)
                         }) { Text(t(UiTextKey.ActionConfirm)) }
                     },
                     dismissButton = {

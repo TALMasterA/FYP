@@ -168,7 +168,10 @@ enum class UiTextKey {
     DialogGenerateOverwriteMessageTemplate,
     ActionConfirm,
     ToastCopied,
-
+    SettingsResetPW,
+    AuthRegistrationDisabled,
+    AuthResetEmailSent,
+    SettingsNotLoggedInWarning,
 }
 
 val BaseUiTexts: List<String> = listOf(
@@ -546,15 +549,19 @@ val BaseUiTexts: List<String> = listOf(
     "Clear",
     "Filter",
     "Theme",
-    "Follow system / Light / Dark",
+    "Follow system / Light / Dark (Locked when not logged in)",
     "Follow system",
     "Light",
     "Dark",
     "Overwrite materials?",
-    "Previous materials will be overwritten. \n" +
+    "Previous materials will be overwritten (if exist). \n" +
     "Generate materials for {speclanguage}?",
     "Confirm",
     "Copied to clipboard",
+    "Reset password here",
+    "Registration is disabled during development.",
+    "Reset email sent (if email is real & exists). Please check your inbox.",
+    "Not logged in, amendments below will not take effect/saved.",
 )
 
 fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {

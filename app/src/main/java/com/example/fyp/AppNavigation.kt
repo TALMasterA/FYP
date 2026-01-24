@@ -1,5 +1,6 @@
 package com.example.fyp
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -28,6 +29,7 @@ import com.example.fyp.screens.history.HistoryScreen
 import com.example.fyp.screens.home.HomeScreen
 import com.example.fyp.screens.learning.LearningScreen
 import com.example.fyp.screens.learning.LearningSheetScreen
+import com.example.fyp.screens.learning.LearningViewModel
 import com.example.fyp.screens.login.LoginScreen
 import com.example.fyp.screens.login.ResetPasswordScreen
 import com.example.fyp.screens.settings.SettingsScreen
@@ -36,8 +38,6 @@ import com.example.fyp.screens.speech.ContinuousConversationScreen
 import com.example.fyp.screens.speech.SpeechRecognitionScreen
 import com.example.fyp.ui.theme.FYPTheme
 import com.example.fyp.ui.theme.Typography as AppTypography
-import com.example.fyp.screens.learning.LearningViewModel
-import androidx.compose.foundation.isSystemInDarkTheme
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
@@ -49,8 +49,10 @@ sealed class AppScreen(val route: String) {
     object ResetPassword : AppScreen("reset_password")
     object Learning : AppScreen("learning")
     object Settings : AppScreen("settings")
-    object LearningSheet : AppScreen("learning_sheet/{languageCode}") {
-        fun routeFor(languageCode: String) = "learning_sheet/$languageCode"
+
+    object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
+        fun routeFor(primaryCode: String, targetCode: String) =
+            "learning_sheet/$primaryCode/$targetCode"
     }
 }
 
@@ -68,10 +70,11 @@ fun AppNavigation() {
 
     val (appLanguageState, updateAppLanguage) = rememberUiLanguageState(uiLanguages)
 
-    // IMPORTANT: Create ONE SettingsViewModel here and reuse it everywhere.
+    // One SettingsViewModel shared across app
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val settingsUiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
 
+    // One LearningViewModel shared for Learning + Sheet
     val learningViewModel: LearningViewModel = hiltViewModel()
 
     val fontSizeScale = validateScale(settingsUiState.settings.fontSizeScale)
@@ -88,9 +91,7 @@ fun AppNavigation() {
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        CompositionLocalProvider(
-            LocalFontSizeScale provides fontSizeScale
-        ) {
+        CompositionLocalProvider(LocalFontSizeScale provides fontSizeScale) {
             FYPTheme(darkTheme = darkTheme, typography = scaledTypography) {
                 NavHost(
                     navController = navController,
@@ -104,21 +105,11 @@ fun AppNavigation() {
                             onStartSpeech = { navController.navigate(AppScreen.Speech.route) },
                             onOpenHelp = { navController.navigate(AppScreen.Help.route) },
                             onStartContinuous = { navController.navigate(AppScreen.Continuous.route) },
-                            onOpenHistory = {
-                                navController.navigate(AppScreen.History.route) { launchSingleTop = true }
-                            },
-                            onOpenLogin = {
-                                navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
-                            },
-                            onOpenResetPassword = {
-                                navController.navigate(AppScreen.ResetPassword.route) { launchSingleTop = true }
-                            },
-                            onOpenLearning = {
-                                navController.navigate(AppScreen.Learning.route) { launchSingleTop = true }
-                            },
-                            onOpenSettings = {
-                                navController.navigate(AppScreen.Settings.route) { launchSingleTop = true }
-                            },
+                            onOpenHistory = { navController.navigate(AppScreen.History.route) { launchSingleTop = true } },
+                            onOpenLogin = { navController.navigate(AppScreen.Login.route) { launchSingleTop = true } },
+                            onOpenResetPassword = { navController.navigate(AppScreen.ResetPassword.route) { launchSingleTop = true } },
+                            onOpenLearning = { navController.navigate(AppScreen.Learning.route) { launchSingleTop = true } },
+                            onOpenSettings = { navController.navigate(AppScreen.Settings.route) { launchSingleTop = true } },
                         )
                     }
 
@@ -194,7 +185,9 @@ fun AppNavigation() {
                                     onUpdateAppLanguage = updateAppLanguage,
                                     onBack = { navController.popBackStack() },
                                     viewModel = learningViewModel,
-                                    onOpenSheet = { lang -> navController.navigate(AppScreen.LearningSheet.routeFor(lang)) },
+                                    onOpenSheet = { primary, target ->
+                                        navController.navigate(AppScreen.LearningSheet.routeFor(primary, target))
+                                    }
                                 )
                             },
                             onNeedLogin = {
@@ -204,21 +197,25 @@ fun AppNavigation() {
                     }
 
                     composable(AppScreen.Settings.route) {
-                        // IMPORTANT: pass the SAME settingsViewModel into SettingsScreen
                         SettingsScreen(
                             uiLanguages = uiLanguages,
                             appLanguageState = appLanguageState,
                             onUpdateAppLanguage = updateAppLanguage,
                             onBack = { navController.popBackStack() },
+                            onOpenResetPassword = { navController.navigate(AppScreen.ResetPassword.route) },
                             viewModel = settingsViewModel
                         )
                     }
 
                     composable(
                         route = AppScreen.LearningSheet.route,
-                        arguments = listOf(navArgument("languageCode") { type = NavType.StringType })
+                        arguments = listOf(
+                            navArgument("primaryCode") { type = NavType.StringType },
+                            navArgument("targetCode") { type = NavType.StringType },
+                        )
                     ) { backStackEntry ->
-                        val languageCode = backStackEntry.arguments?.getString("languageCode").orEmpty()
+                        val primaryCode = backStackEntry.arguments?.getString("primaryCode").orEmpty()
+                        val targetCode = backStackEntry.arguments?.getString("targetCode").orEmpty()
 
                         RequireLoginGate(
                             content = {
@@ -226,9 +223,10 @@ fun AppNavigation() {
                                     uiLanguages = uiLanguages,
                                     appLanguageState = appLanguageState,
                                     onUpdateAppLanguage = updateAppLanguage,
-                                    languageCode = languageCode,
+                                    primaryCode = primaryCode,
+                                    targetCode = targetCode,
                                     onBack = { navController.popBackStack() },
-                                    learningViewModel = learningViewModel,
+                                    learningViewModel = learningViewModel
                                 )
                             },
                             onNeedLogin = {

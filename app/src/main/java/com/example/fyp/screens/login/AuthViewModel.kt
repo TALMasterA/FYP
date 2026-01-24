@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.model.AuthState
+import com.example.fyp.model.UiTextKey
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,9 +15,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class LoginUiState(
-    val error: String? = null,
-    val message: String? = null,
+data class AuthUiState(
+    val errorKey: UiTextKey? = null,
+    val errorRaw: String? = null,
+    val messageKey: UiTextKey? = null,
+    val messageRaw: String? = null,
     val isLoading: Boolean = false
 )
 
@@ -31,41 +34,57 @@ class AuthViewModel @Inject constructor(
         AuthState.Loading
     )
 
-    private val _uiState = MutableStateFlow(LoginUiState())
-    val uiState: StateFlow<LoginUiState> = _uiState
+    private val _uiState = MutableStateFlow(AuthUiState())
+    val uiState: StateFlow<AuthUiState> = _uiState
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null, message = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                errorKey = null,
+                errorRaw = null,
+                messageKey = null,
+                messageRaw = null
+            )
+
             val result = authRepository.login(email, password)
+
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                error = result.exceptionOrNull()?.message
+                errorRaw = result.exceptionOrNull()?.message
             )
         }
     }
 
     fun register(email: String, password: String) {
-        _uiState.value = LoginUiState(
-            error = "Registration is disabled during development.",
+        _uiState.value = AuthUiState(
+            errorKey = UiTextKey.AuthRegistrationDisabled,
             isLoading = false
         )
     }
 
     fun resetPassword(email: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null, message = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                errorKey = null,
+                errorRaw = null,
+                messageKey = null,
+                messageRaw = null
+            )
+
             val result = authRepository.sendPasswordResetEmail(email.trim())
+
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                error = result.exceptionOrNull()?.message,
-                message = if (result.isSuccess) "Reset email sent (if email is real & exist). Please check your inbox." else null
+                errorRaw = result.exceptionOrNull()?.message,
+                messageKey = if (result.isSuccess) UiTextKey.AuthResetEmailSent else null
             )
         }
     }
 
     fun logout() {
         authRepository.logout()
-        _uiState.value = LoginUiState()
+        _uiState.value = AuthUiState()
     }
 }

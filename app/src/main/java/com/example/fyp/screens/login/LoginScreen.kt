@@ -38,7 +38,6 @@ fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel(),
     onLoginSuccess: () -> Unit = {},
     onOpenResetPassword: () -> Unit = {},
-
     ) {
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -180,7 +179,8 @@ fun LoginScreen(
                 Text(t(UiTextKey.ForgotPwText))
             }
 
-            (localError ?: uiState.error)?.let {
+            val vmErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+            (localError ?: vmErrorText)?.let {
                 Text(text = it, color = MaterialTheme.colorScheme.error)
             }
         }
