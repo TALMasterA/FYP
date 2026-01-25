@@ -56,7 +56,6 @@ fun HomeScreen(
     onStartContinuous: () -> Unit,
     onOpenLogin: () -> Unit,
     onOpenHistory: () -> Unit,
-    onOpenResetPassword: () -> Unit,
     onOpenLearning: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {

@@ -92,7 +92,6 @@ class FirestoreHistoryRepository @Inject constructor(
             batch.commit().await()
         }
 
-        // delete the session meta doc too
         firestore.collection("users")
             .document(userId)
             .collection("sessions")

@@ -23,11 +23,13 @@ class LearningContentRepositoryImpl @Inject constructor(
         val prompt = """
 Create learning material for target language: $targetLanguageCode.
 Explain in: $primaryLanguageCode.
+Display the language code in language name.
 
 User translation history (recent):
 $recent
 
 Return concise study material.
+Include  5 quiz questions about words & grammars appear in the history, and 5 for knowledge in materials, be practical, not theory.
 Do not suggest the next prompt, e.g. "If you want..."
 """.trimIndent()
 

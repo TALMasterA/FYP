@@ -2,7 +2,6 @@ package com.example.fyp.core
 
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.ui.unit.sp
 
 const val MIN_SCALE = 0.8f
 const val MAX_SCALE = 1.5f

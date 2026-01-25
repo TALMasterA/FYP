@@ -205,7 +205,9 @@ class LearningViewModel @Inject constructor(
                     sheetCountByLanguage = uiState.value.sheetCountByLanguage + (languageCode to countNow)
                 )
             } catch (ce: CancellationException) {
-                _uiState.value = uiState.value.copy(generatingLanguageCode = null)
+                _uiState.value = uiState.value.copy(
+                    generatingLanguageCode = null,
+                    error = ce.message ?: "Generate cancelled")
             } catch (e: Exception) {
                 _uiState.value = uiState.value.copy(
                     generatingLanguageCode = null,

@@ -107,7 +107,6 @@ fun AppNavigation() {
                             onStartContinuous = { navController.navigate(AppScreen.Continuous.route) },
                             onOpenHistory = { navController.navigate(AppScreen.History.route) { launchSingleTop = true } },
                             onOpenLogin = { navController.navigate(AppScreen.Login.route) { launchSingleTop = true } },
-                            onOpenResetPassword = { navController.navigate(AppScreen.ResetPassword.route) { launchSingleTop = true } },
                             onOpenLearning = { navController.navigate(AppScreen.Learning.route) { launchSingleTop = true } },
                             onOpenSettings = { navController.navigate(AppScreen.Settings.route) { launchSingleTop = true } },
                         )
