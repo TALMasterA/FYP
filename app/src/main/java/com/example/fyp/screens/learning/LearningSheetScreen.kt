@@ -124,37 +124,44 @@ fun LearningSheetScreen(
                 )
             }
 
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
-                    onClick = { showConfirm = true },
-                    enabled = regenEnabled,
-                    modifier = Modifier.weight(1f)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(if (isGeneratingThis) t(UiTextKey.LearningSheetGenerating) else t(UiTextKey.LearningSheetRegenerate))
+                    Button(
+                        onClick = { showConfirm = true },
+                        enabled = regenEnabled,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(if (isGeneratingThis) t(UiTextKey.LearningSheetGenerating) else t(UiTextKey.LearningSheetRegenerate))
+                    }
+
+                    Button(
+                        onClick = { learningViewModel.cancelGenerate() },
+                        enabled = isGeneratingThis,
+                        modifier = Modifier.weight(1f)
+                    ) { Text(t(UiTextKey.ActionCancel)) }
                 }
 
                 Button(
-                    onClick = { learningViewModel.cancelGenerate() },
-                    enabled = isGeneratingThis,
-                    modifier = Modifier.weight(1f)
-                ) { Text(t(UiTextKey.ActionCancel)) }
-
-                /*Button(
                     onClick = onOpenQuiz,
                     enabled = !uiState.content.isNullOrBlank(),
-                    modifier = Modifier.weight(1f)
-                ) { Text("Quiz") }*/
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Quiz") }
             }
 
             val content = uiState.content
             if (content.isNullOrBlank()) {
                 Text(t(UiTextKey.LearningSheetNoContent))
             } else {
+                // Separate and display only the learning material (no quiz)
+                val material = com.example.fyp.data.learning.ContentCleaner.removeQuizFromContent(content)
                 Text(
-                    text = content,
+                    text = material,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())

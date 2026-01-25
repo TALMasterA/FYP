@@ -1,5 +1,6 @@
 package com.example.fyp.screens.learning
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -131,10 +132,41 @@ class LearningSheetViewModel @Inject constructor(
     fun initializeQuiz() {
         val content = _uiState.value.content ?: return
 
+        Log.d("QuizDebug", "initializeQuiz called")
+        Log.d("QuizDebug", "Content length: ${content.length}")
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(quizLoading = true, quizError = null)
             try {
-                val questions = parseAndStoreQuiz.parseQuestionsFromContent(content)
+                // Extract quiz section from content
+                val quizSection = com.example.fyp.data.learning.ContentCleaner.extractQuizSection(content)
+                Log.d("QuizDebug", "Quiz section length: ${quizSection.length}")
+
+                if (quizSection.isBlank()) {
+                    Log.w("QuizDebug", "No quiz section found in content")
+                    _uiState.value = _uiState.value.copy(
+                        quizLoading = false,
+                        quizError = "No quiz section found. Please re-generate the materials."
+                    )
+                    return@launch
+                }
+
+                // Parse questions from quiz section
+                Log.d("QuizDebug", "Starting quiz parsing")
+                val questions = com.example.fyp.data.learning.QuizParser.parseQuizFromContent(quizSection)
+
+                Log.d("QuizDebug", "Parsed ${questions.size} questions")
+
+                // Validate that we got questions
+                if (questions.isEmpty()) {
+                    Log.w("QuizDebug", "No questions parsed from quiz section")
+                    _uiState.value = _uiState.value.copy(
+                        quizLoading = false,
+                        quizError = "No quiz questions found. Please re-generate the materials."
+                    )
+                    return@launch
+                }
+
                 val attempt = parseAndStoreQuiz.createAttempt(
                     userId = uid ?: "",
                     primaryLanguageCode = primaryCode,
@@ -142,17 +174,19 @@ class LearningSheetViewModel @Inject constructor(
                     questions = questions
                 )
 
+                Log.d("QuizDebug", "Quiz attempt created successfully with ${questions.size} questions")
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,
                     quizQuestions = questions,
                     currentAttempt = attempt,
                     isQuizTaken = false,
-                    quizError = if (questions.isEmpty()) "No quiz questions found in content" else null
+                    quizError = null
                 )
             } catch (e: Exception) {
+                Log.e("QuizDebug", "Exception in initializeQuiz: ${e.message}", e)
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,
-                    quizError = e.message ?: "Failed to parse quiz"
+                    quizError = "Failed to load quiz: ${e.message ?: "Unknown error"}"
                 )
             }
         }

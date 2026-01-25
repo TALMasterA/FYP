@@ -19,18 +19,61 @@ class LearningContentRepositoryImpl @Inject constructor(
             "- [${r.sourceLang}→${r.targetLang}] ${r.sourceText} => ${r.targetText}"
         }
 
-        //Prompt will type and modify here
         val prompt = """
 Create learning material for target language: $targetLanguageCode.
 Explain in: $primaryLanguageCode.
-Display the language code in language name.
+
+Show language name instead of language code.
 
 User translation history (recent):
 $recent
 
-Return concise study material.
-Include  5 quiz questions about words & grammars appear in the history, and 5 for knowledge in materials, be practical, not theory.
-Do not suggest the next prompt, e.g. "If you want..."
+Create TWO sections:
+1. STUDY MATERIAL about vocabulary and grammar from the history above
+    Please use a beautiful format to present the study material. Change line if needed.
+    
+2. QUIZ SECTION with 10 multiple choice questions
+
+Use this EXACT format for the QUIZ SECTION: [
+
+QUIZ SECTION:
+
+1. What is the question text here?
+A) Wrong answer
+B) Correct answer
+C) Wrong answer
+D) Wrong answer
+Correct: B
+Explanation: Brief one-sentence explanation
+
+2. Another question text?
+A) Option A
+B) Option B
+C) Option C
+D) Option D
+Correct: C
+Explanation: Explanation for this question
+
+3. Continue with question 3...
+A) Choice 1
+B) Choice 2
+C) Choice 3
+D) Choice 4
+Correct: D
+Explanation: Explanation text
+
+[Continue with questions 4-10 following the exact same format as above]
+]
+
+IMPORTANT RULES:
+- Start with "QUIZ SECTION:" header
+- Exactly 10 questions total (numbered 1-10)
+- Each question must have exactly A) B) C) D) options on separate lines
+- Each option starts with A), B), C), or D) followed by space and the option text
+- One "Correct: A/B/C/D" line per question (Correct: followed by the letter only)
+- One "Explanation:" line per question (Explanation: followed by the explanation text)
+- No extra text after question 10
+- The questions should test vocabulary/grammar from the material
 """.trimIndent()
 
         return genAi.generateLearningContent(

@@ -1,7 +1,6 @@
 package com.example.fyp.screens.learning
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +43,6 @@ import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.model.QuizQuestion
 import com.example.fyp.model.UiTextKey
 
 @Composable
@@ -94,10 +92,27 @@ fun QuizScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        "Error: ${uiState.quizError}",
+                        "⚠️ Quiz Error",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium
+                        modifier = Modifier.padding(bottom = 12.dp)
                     )
+
+                    Text(
+                        uiState.quizError ?: "Unknown error occurred",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 24.dp)
+                    )
+
+                    Text(
+                        "Suggestion: Go back and try re-generating the learning materials.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 24.dp)
+                    )
+
                     Button(onClick = onBack, modifier = Modifier.padding(top = 16.dp)) {
                         Text("Go Back")
                     }
@@ -120,6 +135,22 @@ fun QuizScreen(
                     isLoading = uiState.quizLoading,
                     appLanguageState = appLanguageState
                 )
+            }
+
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        "Loading quiz... (You may need to re-generate the materials, if there is no response for a long time.)",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
     }
