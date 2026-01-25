@@ -10,6 +10,7 @@ plugins {
     id("com.google.firebase.firebase-perf")
 
     kotlin("kapt")
+    kotlin("plugin.serialization")
 }
 
 android {
@@ -94,6 +95,7 @@ dependencies {
 
     // Hilt DI
     implementation("com.google.dagger:hilt-android:2.52")
+    implementation(libs.espresso.core)
     kapt("com.google.dagger:hilt-compiler:2.52")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 

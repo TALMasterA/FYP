@@ -30,6 +30,7 @@ import com.example.fyp.screens.home.HomeScreen
 import com.example.fyp.screens.learning.LearningScreen
 import com.example.fyp.screens.learning.LearningSheetScreen
 import com.example.fyp.screens.learning.LearningViewModel
+import com.example.fyp.screens.learning.QuizScreen
 import com.example.fyp.screens.login.LoginScreen
 import com.example.fyp.screens.login.ResetPasswordScreen
 import com.example.fyp.screens.settings.SettingsScreen
@@ -53,6 +54,11 @@ sealed class AppScreen(val route: String) {
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
         fun routeFor(primaryCode: String, targetCode: String) =
             "learning_sheet/$primaryCode/$targetCode"
+    }
+
+    object Quiz : AppScreen("quiz/{primaryCode}/{targetCode}") {
+        fun routeFor(primaryCode: String, targetCode: String) =
+            "quiz/$primaryCode/$targetCode"
     }
 }
 
@@ -225,7 +231,35 @@ fun AppNavigation() {
                                     primaryCode = primaryCode,
                                     targetCode = targetCode,
                                     onBack = { navController.popBackStack() },
-                                    learningViewModel = learningViewModel
+                                    learningViewModel = learningViewModel,
+                                    onOpenQuiz = {
+                                        navController.navigate(AppScreen.Quiz.routeFor(primaryCode, targetCode))
+                                    }
+                                )
+                            },
+                            onNeedLogin = {
+                                navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
+                            }
+                        )
+                    }
+
+                    composable(
+                        route = AppScreen.Quiz.route,
+                        arguments = listOf(
+                            navArgument("primaryCode") { type = NavType.StringType },
+                            navArgument("targetCode") { type = NavType.StringType },
+                        )
+                    ) { backStackEntry ->
+                        val primaryCode = backStackEntry.arguments?.getString("primaryCode").orEmpty()
+                        val targetCode = backStackEntry.arguments?.getString("targetCode").orEmpty()
+
+                        RequireLoginGate(
+                            content = {
+                                QuizScreen(
+                                    appLanguageState = appLanguageState,
+                                    primaryCode = primaryCode,
+                                    targetCode = targetCode,
+                                    onBack = { navController.popBackStack() }
                                 )
                             },
                             onNeedLogin = {

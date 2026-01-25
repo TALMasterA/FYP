@@ -40,6 +40,7 @@ fun LearningSheetScreen(
     targetCode: String,
     onBack: () -> Unit,
     learningViewModel: LearningViewModel,
+    onOpenQuiz: () -> Unit,
     viewModel: LearningSheetViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -140,6 +141,12 @@ fun LearningSheetScreen(
                     enabled = isGeneratingThis,
                     modifier = Modifier.weight(1f)
                 ) { Text(t(UiTextKey.ActionCancel)) }
+
+                /*Button(
+                    onClick = onOpenQuiz,
+                    enabled = !uiState.content.isNullOrBlank(),
+                    modifier = Modifier.weight(1f)
+                ) { Text("Quiz") }*/
             }
 
             val content = uiState.content
