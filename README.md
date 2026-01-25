@@ -1,7 +1,15 @@
 ﻿# FYP (Developing Gen-AI learning part)
  Develop in Android Studio, Android ONLY.
 
- Tools: Android Studio, Firebase, Github.
+ --------------------------------------------------------------
+
+ Register to try this app!
+
+ Link: https://appdistribution.firebase.dev/i/5ebf3d592700b0f7
+
+ --------------------------------------------------------------
+
+ Tools: Android Studio, Firebase, GitHub.
 
  Caution:
  When testing the app, connect the phone and the Computer with the USB.
@@ -18,7 +26,7 @@
 
  Require your own Firebase project and the related SDK for testing. (google-services.json).
  Using android studio to open the project will required you to add the above file to app folder by yourself.
- Firebase log in is required.
+ Firebase login is required.
 
  Using Firebase for login authentication. control, able to create accounts with email/password. 
  Translation history will be recorded to Firebase Firestore when the user logs into an account.
@@ -31,13 +39,10 @@
  
  Commands:
  
- git pull --ff-only  :  For update the main branch after pushed work on another computer (Same branch)
+ git pull --ff-only : For updating the main branch after pushing work on another computer (Same branch)
 
- --------------------------------------------------------------
+ firebase deploy --only functions : After updating the index.ts (backend main file) function(s), deploy it to take effect
 
- Register to try this app!
-
- Link: https://appdistribution.firebase.dev/i/1cdd05e2dde89fa9
 
 
 
