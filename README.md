@@ -32,6 +32,7 @@
  Translation history will be recorded to Firebase Firestore when the user logs into an account.
  The history is use for develop the learning part of the app. 
  Using gen ai API to generate learning materials.
+ Quiz is available per learning sheets, generate when sheet content updated.
 
  Using Firebase Cloud functions to protect API keys (backend).
 
