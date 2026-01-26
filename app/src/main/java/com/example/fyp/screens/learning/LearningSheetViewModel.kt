@@ -1,6 +1,5 @@
 package com.example.fyp.screens.learning
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +7,7 @@ import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
 import com.example.fyp.domain.history.ObserveUserHistoryUseCase
 import com.example.fyp.domain.learning.ParseAndStoreQuizUseCase
+import com.example.fyp.domain.learning.GenerateQuizUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.QuizAttempt
 import com.example.fyp.model.QuizQuestion
@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.example.fyp.data.learning.FirestoreQuizRepository
+import com.example.fyp.data.learning.QuizParser
 
 data class LearningSheetUiState(
     val isLoading: Boolean = true,
@@ -28,7 +30,6 @@ data class LearningSheetUiState(
     val content: String? = null,
     val historyCountAtGenerate: Int? = null,
     val countNow: Int = 0,
-    // Quiz related
     val quizQuestions: List<QuizQuestion> = emptyList(),
     val isQuizTaken: Boolean = false,
     val currentAttempt: QuizAttempt? = null,
@@ -43,10 +44,14 @@ class LearningSheetViewModel @Inject constructor(
     private val sheetsRepo: FirestoreLearningSheetsRepository,
     private val observeUserHistory: ObserveUserHistoryUseCase,
     private val parseAndStoreQuiz: ParseAndStoreQuizUseCase,
+    private val generateQuiz: GenerateQuizUseCase,
+    private val quizRepo: FirestoreQuizRepository,
 ) : ViewModel() {
 
     private val primaryCode: String = savedStateHandle.get<String>("primaryCode").orEmpty()
     private val targetCode: String = savedStateHandle.get<String>("targetCode").orEmpty()
+
+    private var latestRelatedRecords: List<TranslationRecord> = emptyList()
 
     private val _uiState = MutableStateFlow(
         LearningSheetUiState(
@@ -58,6 +63,8 @@ class LearningSheetViewModel @Inject constructor(
 
     private var uid: String? = null
     private var historyJob: Job? = null
+    private var pendingInitQuiz: Boolean = false
+
 
     init {
         viewModelScope.launch {
@@ -71,8 +78,17 @@ class LearningSheetViewModel @Inject constructor(
 
                     AuthState.LoggedOut -> {
                         stopJobs()
-                        _uiState.value =
-                            _uiState.value.copy(isLoading = false, error = "Not logged in")
+                        uid = null
+                        pendingInitQuiz = false
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            error = "Not logged in",
+                            quizQuestions = emptyList(),
+                            currentAttempt = null,
+                            isQuizTaken = false,
+                            quizLoading = false,
+                            quizError = null
+                        )
                     }
                 }
             }
@@ -85,24 +101,25 @@ class LearningSheetViewModel @Inject constructor(
     }
 
     private fun start(uid: String) {
-        this.uid = uid
         stopJobs()
+        this.uid = uid
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         // Load sheet once when screen starts
         loadSheet()
 
+        if (pendingInitQuiz) {
+            pendingInitQuiz = false
+            initializeQuiz()
+        }
+
         historyJob = viewModelScope.launch {
             observeUserHistory(uid).collect { records ->
-                val countNow = countInvolvingLanguage(records, targetCode)
-                _uiState.value = _uiState.value.copy(countNow = countNow)
+                val related = records.filter { it.sourceLang == targetCode || it.targetLang == targetCode }
+                latestRelatedRecords = related
+                _uiState.value = _uiState.value.copy(countNow = related.size)
             }
         }
-    }
-
-    private fun countInvolvingLanguage(records: List<TranslationRecord>, lang: String): Int {
-        if (lang.isBlank()) return 0
-        return records.count { it.sourceLang == lang || it.targetLang == lang }
     }
 
     fun loadSheet() {
@@ -130,66 +147,37 @@ class LearningSheetViewModel @Inject constructor(
 
     // Quiz methods
     fun initializeQuiz() {
-        val content = _uiState.value.content ?: return
-
-        Log.d("QuizDebug", "initializeQuiz called")
-        Log.d("QuizDebug", "Content length: ${content.length}")
+        val uidNow = this.uid
+        if (uidNow == null) {
+            pendingInitQuiz = true
+            return
+        }
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(quizLoading = true, quizError = null)
+
             try {
-                // Perform extraction + parsing off the main thread to avoid blocking UI
-                val extractedQuizSection = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-                    com.example.fyp.data.learning.ContentCleaner.extractQuizSection(content)
-                }
-                Log.d("QuizDebug", "Extracted quiz section length: ${extractedQuizSection.length}")
-
-                // Fall back to parsing whole content if extraction fails (AI may omit header/colon)
-                val textToParse = if (extractedQuizSection.isBlank()) {
-                    Log.w("QuizDebug", "No quiz section extracted; falling back to parse whole content")
-                    content
-                } else {
-                    extractedQuizSection
-                }
-
-                // Parse questions from quiz section on background dispatcher
-                Log.d("QuizDebug", "Starting quiz parsing (background)")
-                var questions = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-                    com.example.fyp.data.learning.QuizParser.parseQuizFromContent(textToParse)
-                }
-
-                Log.d("QuizDebug", "Parsed ${questions.size} questions (first pass)")
-
-                // If no questions parsed, try a single retry with a short delay
-                if (questions.isEmpty()) {
-                    Log.w("QuizDebug", "No questions parsed, will attempt a single retry after delay")
-                    kotlinx.coroutines.delay(500)
-                    questions = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-                        com.example.fyp.data.learning.QuizParser.parseQuizFromContent(textToParse)
-                    }
-                    Log.d("QuizDebug", "Parsed ${questions.size} questions (second pass)")
-                }
+                val questions = quizRepo.getGeneratedQuizQuestions(
+                    uid = uidNow,
+                    primaryLanguageCode = primaryCode,
+                    targetLanguageCode = targetCode
+                )
 
                 if (questions.isEmpty()) {
-                    Log.w("QuizDebug", "No questions parsed from quiz section after retry")
                     _uiState.value = _uiState.value.copy(
                         quizLoading = false,
-                        quizError = "No quiz questions found in the saved materials. Please re-generate the materials."
+                        quizError = "No quiz generated yet. Go back and press Quiz to generate."
                     )
                     return@launch
                 }
 
-                // Create attempt (lightweight) on Default as well
-                val attempt = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-                    parseAndStoreQuiz.createAttempt(
-                        userId = uid ?: "",
-                        primaryLanguageCode = primaryCode,
-                        targetLanguageCode = targetCode,
-                        questions = questions
-                    )
-                }
+                val attempt = parseAndStoreQuiz.createAttempt(
+                    userId = uidNow,
+                    primaryLanguageCode = primaryCode,
+                    targetLanguageCode = targetCode,
+                    questions = questions
+                )
 
-                Log.d("QuizDebug", "Quiz attempt created successfully with ${questions.size} questions")
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,
                     quizQuestions = questions,
@@ -198,10 +186,9 @@ class LearningSheetViewModel @Inject constructor(
                     quizError = null
                 )
             } catch (e: Exception) {
-                Log.e("QuizDebug", "Exception in initializeQuiz: ${e.message}", e)
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,
-                    quizError = "Failed to load quiz: ${e.message ?: "Unknown error"}"
+                    quizError = e.message ?: "Failed to load quiz"
                 )
             }
         }
@@ -248,5 +235,71 @@ class LearningSheetViewModel @Inject constructor(
             isQuizTaken = false,
             quizError = null
         )
+    }
+
+    fun generateQuizAndSave() {
+        if (_uiState.value.quizLoading) return
+
+        val uid = this.uid ?: run {
+            _uiState.value = _uiState.value.copy(quizError = "Not logged in")
+            return
+        }
+
+        val content = _uiState.value.content.orEmpty()
+        if (content.isBlank()) {
+            _uiState.value = _uiState.value.copy(quizError = "No learning materials found. Generate the sheet first.")
+            return
+        }
+
+        // Use material-only text as prompt input
+        val materialOnly = com.example.fyp.data.learning.ContentCleaner.removeQuizFromContent(content).trim()
+        if (materialOnly.isBlank()) {
+            _uiState.value = _uiState.value.copy(quizError = "Learning materials are empty.")
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(quizLoading = true, quizError = null)
+
+            try {
+                val quizText = generateQuiz(
+                    deployment = "gpt-5-mini",
+                    primaryLanguageCode = primaryCode,
+                    targetLanguageCode = targetCode,
+                    records = latestRelatedRecords,
+                    learningMaterial = materialOnly
+                )
+
+                val questions = QuizParser.parseQuizFromContent(quizText)
+
+                if (questions.size < 10) {
+                    _uiState.value = _uiState.value.copy(
+                        quizLoading = false,
+                        quizError = "Quiz generated but only parsed ${questions.size}/10 questions. Try again. (You may need to regen the learning materials)"
+                    )
+                    return@launch
+                }
+
+                // Save latest generated quiz for this pair
+                quizRepo.upsertGeneratedQuiz(
+                    uid = uid,
+                    primaryLanguageCode = primaryCode,
+                    targetLanguageCode = targetCode,
+                    questions = questions.take(10),
+                    historyCountAtGenerate = _uiState.value.countNow
+                )
+
+                _uiState.value = _uiState.value.copy(
+                    quizLoading = false,
+                    quizQuestions = questions.take(10),
+                    quizError = null
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    quizLoading = false,
+                    quizError = e.message ?: "Failed to generate quiz"
+                )
+            }
+        }
     }
 }

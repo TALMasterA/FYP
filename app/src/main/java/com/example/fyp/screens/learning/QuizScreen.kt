@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fyp.core.StandardScreenScaffold
@@ -62,20 +63,11 @@ fun QuizScreen(
 
     val targetName = targetCode
 
-    // Ensure initializeQuiz runs if content already present when composing
-    LaunchedEffect(Unit) {
-        if (!uiState.content.isNullOrBlank() && uiState.quizQuestions.isEmpty()) {
-            Log.d("QuizDebug", "Initial composition: content present; initializing quiz")
-            viewModel.initializeQuiz()
-        }
-    }
+    // Debug-only: allow expanding to view full saved content
+    var debugShowFullContent by remember { mutableStateOf(false) }
 
-    // If the content becomes available later (loaded async), run initializeQuiz
-    LaunchedEffect(uiState.content) {
-        if (!uiState.content.isNullOrBlank() && uiState.quizQuestions.isEmpty()) {
-            Log.d("QuizDebug", "Content arrived in UI; initializing quiz")
-            viewModel.initializeQuiz()
-        }
+    LaunchedEffect(Unit) {
+        viewModel.initializeQuiz()
     }
 
     StandardScreenScaffold(
@@ -140,20 +132,6 @@ fun QuizScreen(
                         Button(onClick = onBack, modifier = Modifier.padding(top = 16.dp)) {
                             Text("Go Back")
                         }
-                    }
-
-                    // Debug panel (visible in debug builds) to aid diagnosis on device
-                    if (com.example.fyp.BuildConfig.DEBUG) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("-- DEBUG INFO --", style = MaterialTheme.typography.labelSmall)
-                        Text("content length: ${uiState.content?.length ?: 0}", style = MaterialTheme.typography.bodySmall)
-                        Text("quizLoading: ${uiState.quizLoading}", style = MaterialTheme.typography.bodySmall)
-                        Text("quizError: ${uiState.quizError ?: "<none>"}", style = MaterialTheme.typography.bodySmall)
-                        Text("quizQuestions: ${uiState.quizQuestions.size}", style = MaterialTheme.typography.bodySmall)
-                        Text("currentAttempt: ${if (uiState.currentAttempt == null) "null" else "present"}", style = MaterialTheme.typography.bodySmall)
-                        val preview = uiState.content?.let { if (it.length > 1000) it.substring(0, 1000) + "..." else it } ?: "<no content>"
-                        Text("\n---CONTENT PREVIEW (first 1000 chars)---", style = MaterialTheme.typography.labelSmall)
-                        Text(preview.replace("\n", "\\n"), style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -221,26 +199,11 @@ fun QuizScreen(
                         "Loading quiz... (You may need to re-generate the materials, if there is no response for a long time.)",
                         style = MaterialTheme.typography.bodyMedium
                     )
-
-                    // Debug panel (visible in debug builds) to aid diagnosis on device
-                    if (com.example.fyp.BuildConfig.DEBUG) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text("-- DEBUG INFO --", style = MaterialTheme.typography.labelSmall)
-                        Text("content length: ${uiState.content?.length ?: 0}", style = MaterialTheme.typography.bodySmall)
-                        Text("quizLoading: ${uiState.quizLoading}", style = MaterialTheme.typography.bodySmall)
-                        Text("quizError: ${uiState.quizError ?: "<none>"}", style = MaterialTheme.typography.bodySmall)
-                        Text("quizQuestions: ${uiState.quizQuestions.size}", style = MaterialTheme.typography.bodySmall)
-                        Text("currentAttempt: ${if (uiState.currentAttempt == null) "null" else "present"}", style = MaterialTheme.typography.bodySmall)
-                        // show small preview of content to help debugging formatting issues
-                        val preview = uiState.content?.let { if (it.length > 1000) it.substring(0, 1000) + "..." else it } ?: "<no content>"
-                        Text("\n---CONTENT PREVIEW (first 1000 chars)---", style = MaterialTheme.typography.labelSmall)
-                        Text(preview.replace("\n", "\\n"), style = MaterialTheme.typography.bodySmall)
-                     }
-                 }
-             }
-         }
-     }
- }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun QuizTakingScreen(

@@ -60,6 +60,22 @@ fun LearningSheetScreen(
     val unchanged = uiState.historyCountAtGenerate != null && uiState.historyCountAtGenerate == uiState.countNow
     val regenEnabled = !uiState.isLoading && !isGeneratingAny && uiState.countNow > 0 && !unchanged
 
+    var pendingOpenQuiz by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.quizLoading, uiState.quizError, uiState.quizQuestions.size) {
+        if (!pendingOpenQuiz) return@LaunchedEffect
+
+        if (!uiState.quizLoading && uiState.quizError != null) {
+            pendingOpenQuiz = false
+            return@LaunchedEffect
+        }
+
+        if (!uiState.quizLoading && uiState.quizError == null && uiState.quizQuestions.isNotEmpty()) {
+            pendingOpenQuiz = false
+            onOpenQuiz()
+        }
+    }
+
     // Load when entering
     LaunchedEffect(primaryCode, targetCode) {
         viewModel.loadSheet()
@@ -148,20 +164,27 @@ fun LearningSheetScreen(
                 }
 
                 Button(
-                    onClick = onOpenQuiz,
-                    enabled = !uiState.content.isNullOrBlank(),
+                    onClick = {
+                        pendingOpenQuiz = true
+                        viewModel.generateQuizAndSave()
+                    },
+                    enabled = !uiState.content.isNullOrBlank() && !uiState.isLoading && !uiState.quizLoading,
                     modifier = Modifier.fillMaxWidth()
-                ) { Text("Quiz") }
+                ) {
+                    Text(if (uiState.quizLoading) "Quiz Generating..." else "Quiz")
+                }
+
+                uiState.quizError?.let { err ->
+                    Text(err, color = MaterialTheme.colorScheme.error)
+                }
             }
 
             val content = uiState.content
             if (content.isNullOrBlank()) {
                 Text(t(UiTextKey.LearningSheetNoContent))
             } else {
-                // Separate and display only the learning material (no quiz)
-                val material = com.example.fyp.data.learning.ContentCleaner.removeQuizFromContent(content)
                 Text(
-                    text = material,
+                    text = content,
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())

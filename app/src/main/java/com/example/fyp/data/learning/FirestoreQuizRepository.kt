@@ -9,6 +9,10 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
+import com.example.fyp.model.QuizQuestion
+import kotlinx.serialization.decodeFromString
+
+
 
 class FirestoreQuizRepository @Inject constructor(
     private val db: FirebaseFirestore
@@ -193,7 +197,7 @@ class FirestoreQuizRepository @Inject constructor(
                 averageScore = newAverage,
                 highestScore = maxOf(current.highestScore, attempt.totalScore),
                 lowestScore = if (current.lowestScore == 0) attempt.totalScore
-                              else minOf(current.lowestScore, attempt.totalScore),
+                else minOf(current.lowestScore, attempt.totalScore),
                 lastAttemptAt = attempt.completedAt
             )
         } else {
@@ -209,5 +213,52 @@ class FirestoreQuizRepository @Inject constructor(
         }
 
         statsRef.set(stats).await()
+    }
+
+    private fun generatedQuizDocRef(uid: String, primaryCode: String, targetCode: String) =
+        db.collection("users")
+            .document(uid)
+            .collection("generated_quizzes")
+            .document("${primaryCode}__${targetCode}")
+
+    data class GeneratedQuizDoc(
+        val primaryLanguageCode: String = "",
+        val targetLanguageCode: String = "",
+        val questionsJson: String = "",
+        val generatedAt: Timestamp = Timestamp.now(),
+        val historyCountAtGenerate: Int = 0
+    )
+
+    suspend fun upsertGeneratedQuiz(
+        uid: String,
+        primaryLanguageCode: String,
+        targetLanguageCode: String,
+        questions: List<QuizQuestion>,
+        historyCountAtGenerate: Int
+    ) {
+        val doc = GeneratedQuizDoc(
+            primaryLanguageCode = primaryLanguageCode,
+            targetLanguageCode = targetLanguageCode,
+            questionsJson = Json.encodeToString(questions),
+            generatedAt = Timestamp.now(),
+            historyCountAtGenerate = historyCountAtGenerate
+        )
+        generatedQuizDocRef(uid, primaryLanguageCode, targetLanguageCode).set(doc).await()
+    }
+
+    suspend fun getGeneratedQuizQuestions(
+        uid: String,
+        primaryLanguageCode: String,
+        targetLanguageCode: String
+    ): List<QuizQuestion> {
+        val snap = generatedQuizDocRef(uid, primaryLanguageCode, targetLanguageCode).get().await()
+        if (!snap.exists()) return emptyList()
+        val doc = snap.toObject(GeneratedQuizDoc::class.java) ?: return emptyList()
+
+        return try {
+            Json.decodeFromString(doc.questionsJson)
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 }

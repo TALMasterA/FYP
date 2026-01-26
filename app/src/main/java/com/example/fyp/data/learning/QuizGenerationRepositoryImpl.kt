@@ -37,25 +37,23 @@ RECENT TRANSLATION HISTORY (reference):
 $recent
 
 OUTPUT REQUIREMENTS (STRICT):
-- Output ONLY the quiz block.
-- Start with the exact header: QUIZ SECTION:
-- Exactly 10 questions total.
-- Questions numbered 1-10.
-- Each question has exactly 4 options, one per line, formatted A) ... B) ... C) ... D) ...
-- Then one line: Correct: <A|B|C|D>
-- Then one line: Explanation: <one sentence>
-- No extra commentary text.
-
-QUIZ SECTION:
-1. ...
-A) ...
-B) ...
-C) ...
-D) ...
-Correct: A
-Explanation: ...
-
-[Continue until question 10]
+- Output ONLY valid JSON. No markdown, no code fences, no extra text.
+- Must be a JSON object with this shape:
+{
+  "version": 1,
+  "questions": [
+    {
+      "question": "string",
+      "options": ["string","string","string","string"],
+      "correctIndex": 0,
+      "explanation": "string"
+    }
+  ]
+}
+- Exactly 10 questions in the array.
+- options must be exactly 4 strings.
+- correctIndex must be 0,1,2,or 3.
+- Questions 1-5 based mainly on RECENT TRANSLATION HISTORY (use STUDY MATERIAL only if insufficient data in history) ; 6-10 based mainly on STUDY MATERIAL.
 """.trimIndent()
 
         return genAi.generateLearningContent(

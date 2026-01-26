@@ -182,39 +182,30 @@ class LearningViewModel @Inject constructor(
             _uiState.value = uiState.value.copy(generatingLanguageCode = languageCode, error = null)
 
             try {
-                val content = generateLearningMaterials(
+                val raw = generateLearningMaterials(
                     deployment = "gpt-5-mini",
                     primaryLanguageCode = primary,
                     targetLanguageCode = languageCode,
                     records = current.records
                 )
 
-                ensureActive() // if cancelled, do not overwrite
+                ensureActive()
 
-                // Validate whether the generated content includes a parseable quiz.
-                // IMPORTANT: do not block saving, otherwise the sheet won't overwrite and savedCount won't update.
-                val quizSection = com.example.fyp.data.learning.ContentCleaner.extractQuizSection(content)
-                val parsedQuestions = com.example.fyp.data.learning.QuizParser.parseQuizFromContent(
-                    if (quizSection.isBlank()) content else quizSection
-                )
+                val materialOnly = com.example.fyp.data.learning.ContentCleaner.removeQuizFromContent(raw)
 
                 sheetsRepo.upsertSheet(
                     uid = uid,
                     primary = primary,
                     target = languageCode,
-                    content = content,
+                    content = materialOnly,
                     historyCountAtGenerate = countNow
                 )
-
-                val warning = if (parsedQuestions.isEmpty()) {
-                    "Generated materials were saved, but quiz questions could not be parsed. Try re-generating."
-                } else null
 
                 _uiState.value = uiState.value.copy(
                     generatingLanguageCode = null,
                     sheetExistsByLanguage = uiState.value.sheetExistsByLanguage + (languageCode to true),
                     sheetCountByLanguage = uiState.value.sheetCountByLanguage + (languageCode to countNow),
-                    error = warning
+                    error = null
                 )
             } catch (ce: CancellationException) {
                 _uiState.value = uiState.value.copy(
