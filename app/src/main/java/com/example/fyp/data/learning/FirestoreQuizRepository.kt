@@ -1,13 +1,12 @@
 package com.example.fyp.data.learning
 
-import com.example.fyp.model.QuizAnswer
-import com.example.fyp.model.QuizAttempt
-import com.example.fyp.model.QuizAttemptDoc
-import com.example.fyp.model.QuizQuestion
-import com.example.fyp.model.QuizStats
+import com.example.fyp.model.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -35,6 +34,16 @@ class FirestoreQuizRepository @Inject constructor(
             .collection("quiz_stats")
             .document("${primaryCode}__${targetCode}")
 
+    private fun coinStatsDoc(uid: String) =
+        db.collection("users").document(uid)
+            .collection("user_stats")
+            .document("coins")
+
+    private fun coinAwardDoc(uid: String, versionKey: String) =
+        db.collection("users").document(uid)
+            .collection("coin_awards")
+            .document(versionKey)
+
     suspend fun saveAttempt(uid: String, attempt: QuizAttempt): String {
         val attemptId = attempt.id.ifEmpty { db.collection("dummy").document().id }
 
@@ -48,7 +57,8 @@ class FirestoreQuizRepository @Inject constructor(
             completedAt = attempt.completedAt ?: Timestamp.now(),
             totalScore = attempt.totalScore,
             maxScore = attempt.maxScore,
-            percentage = attempt.percentage
+            percentage = attempt.percentage,
+            generatedHistoryCountAtGenerate = attempt.generatedHistoryCountAtGenerate
         )
 
         docRef(uid, attemptId).set(doc).await()
@@ -80,7 +90,8 @@ class FirestoreQuizRepository @Inject constructor(
             completedAt = doc.completedAt,
             totalScore = doc.totalScore,
             maxScore = doc.maxScore,
-            percentage = doc.percentage
+            percentage = doc.percentage,
+            generatedHistoryCountAtGenerate = doc.generatedHistoryCountAtGenerate
         )
     }
 
@@ -117,7 +128,8 @@ class FirestoreQuizRepository @Inject constructor(
                 completedAt = data.completedAt,
                 totalScore = data.totalScore,
                 maxScore = data.maxScore,
-                percentage = data.percentage
+                percentage = data.percentage,
+                generatedHistoryCountAtGenerate = data.generatedHistoryCountAtGenerate
             )
         }
     }
@@ -151,7 +163,8 @@ class FirestoreQuizRepository @Inject constructor(
                 completedAt = data.completedAt,
                 totalScore = data.totalScore,
                 maxScore = data.maxScore,
-                percentage = data.percentage
+                percentage = data.percentage,
+                generatedHistoryCountAtGenerate = data.generatedHistoryCountAtGenerate
             )
         }
     }
@@ -242,5 +255,103 @@ class FirestoreQuizRepository @Inject constructor(
         } catch (_: Exception) {
             emptyList()
         }
+    }
+
+    // ---- Coins (first-attempt rewards) ----
+
+    fun observeUserCoinStats(uid: String): Flow<UserCoinStats> = callbackFlow {
+        val reg = coinStatsDoc(uid).addSnapshotListener { snap, _ ->
+            if (snap != null && snap.exists()) {
+                val stats = snap.toObject(UserCoinStats::class.java) ?: UserCoinStats()
+                trySend(stats)
+            } else {
+                trySend(UserCoinStats())
+            }
+        }
+        awaitClose { reg.remove() }
+    }
+
+    suspend fun fetchUserCoinStats(uid: String): UserCoinStats? {
+        val snap = coinStatsDoc(uid).get().await()
+        return if (snap.exists()) snap.toObject(UserCoinStats::class.java) else null
+    }
+
+    // Track last awarded quiz count per language pair
+    private fun lastAwardedCountDoc(uid: String, primaryCode: String, targetCode: String) =
+        db.collection("users").document(uid)
+            .collection("last_awarded_quiz")
+            .document("${primaryCode}__${targetCode}")
+
+    /**
+     * Award coins for first attempt of a generated quiz version.
+     * Returns true if coins were awarded, false otherwise.
+     *
+     * Anti-Cheat Rules:
+     * 1. 1 coin per correct answer on first attempt only
+     * 2. Quiz version (historyCountAtGenerate) must EQUAL current sheet version (prevents retaking old quiz after adding history)
+     * 3. Quiz count must be at least 10 HIGHER than the previous awarded quiz count (prevents farming)
+     * 4. First quiz for a language pair is always eligible (no minimum threshold)
+     * 5. Each quiz version can only be awarded once (tracked by versionKey)
+     */
+    suspend fun awardCoinsIfEligible(
+        uid: String,
+        attempt: QuizAttempt,
+        latestHistoryCount: Int?
+    ): Boolean {
+        if (attempt.generatedHistoryCountAtGenerate <= 0) return false
+        if (attempt.totalScore <= 0) return false // No coins to award
+
+        val versionKey = "${attempt.primaryLanguageCode}__${attempt.targetLanguageCode}__${attempt.generatedHistoryCountAtGenerate}"
+
+        return db.runTransaction { tx ->
+            // Check 1: Already awarded for this exact version?
+            val awardDoc = tx.get(coinAwardDoc(uid, versionKey))
+            if (awardDoc.exists()) return@runTransaction false // already awarded
+
+            // Check 2: Quiz count must EQUAL current sheet count
+            // This prevents: user takes quiz at count=50, adds history to count=60, retakes same quiz to earn coins
+            val currentCount = latestHistoryCount ?: return@runTransaction false
+            if (currentCount != attempt.generatedHistoryCountAtGenerate) return@runTransaction false
+
+            // Check 3: Anti-cheat - quiz count must be at least 10 HIGHER than last awarded quiz count
+            // (First quiz for a language pair is always eligible)
+            val lastAwardedDoc = tx.get(lastAwardedCountDoc(uid, attempt.primaryLanguageCode, attempt.targetLanguageCode))
+            if (lastAwardedDoc.exists()) {
+                val lastCount = lastAwardedDoc.getLong("count")?.toInt() ?: 0
+                val minRequired = lastCount + 10
+                if (attempt.generatedHistoryCountAtGenerate < minRequired) {
+                    // User needs at least 10 more records than previous awarded quiz to earn coins
+                    return@runTransaction false
+                }
+            }
+
+            // All checks passed - award coins
+            val statsSnap = tx.get(coinStatsDoc(uid))
+            val current = if (statsSnap.exists()) statsSnap.toObject(UserCoinStats::class.java) ?: UserCoinStats() else UserCoinStats()
+
+            val newTotal = current.coinTotal + attempt.totalScore
+            val perLang = current.coinByLang.toMutableMap()
+            val langKey = attempt.targetLanguageCode
+            perLang[langKey] = (perLang[langKey] ?: 0) + attempt.totalScore
+
+            // Update coin stats
+            tx.set(coinStatsDoc(uid), UserCoinStats(coinTotal = newTotal, coinByLang = perLang))
+
+            // Mark this version as awarded
+            tx.set(coinAwardDoc(uid, versionKey), mapOf(
+                "awarded" to true,
+                "attemptId" to attempt.id,
+                "coinsAwarded" to attempt.totalScore,
+                "awardedAt" to Timestamp.now()
+            ))
+
+            // Update last awarded count for this language pair (for anti-cheat)
+            tx.set(lastAwardedCountDoc(uid, attempt.primaryLanguageCode, attempt.targetLanguageCode), mapOf(
+                "count" to attempt.generatedHistoryCountAtGenerate,
+                "lastAwardedAt" to Timestamp.now()
+            ))
+
+            true
+        }.await()
     }
 }

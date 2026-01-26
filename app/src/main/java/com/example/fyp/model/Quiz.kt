@@ -35,7 +35,9 @@ data class QuizAttempt(
     val completedAt: Timestamp? = null,
     val totalScore: Int = 0,
     val maxScore: Int = 0,
-    val percentage: Float = 0f
+    val percentage: Float = 0f,
+    // Link back to generated quiz version for first-attempt coin rules
+    val generatedHistoryCountAtGenerate: Int = 0
 )
 
 // Simplified model for Firestore storage
@@ -49,7 +51,8 @@ data class QuizAttemptDoc(
     val completedAt: Timestamp? = null,
     val totalScore: Int = 0,
     val maxScore: Int = 0,
-    val percentage: Float = 0f
+    val percentage: Float = 0f,
+    val generatedHistoryCountAtGenerate: Int = 0
 )
 
 // Summary statistics for a language pair
@@ -61,4 +64,10 @@ data class QuizStats(
     val highestScore: Int = 0,
     val lowestScore: Int = 0,
     val lastAttemptAt: Timestamp? = null
+)
+
+// Global coin stats (user-level)
+data class UserCoinStats(
+    val coinTotal: Int = 0,
+    val coinByLang: Map<String, Int> = emptyMap()
 )

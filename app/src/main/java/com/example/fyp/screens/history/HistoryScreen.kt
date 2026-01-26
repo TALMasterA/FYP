@@ -2,28 +2,12 @@
 
 package com.example.fyp.screens.history
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MonetizationOn
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -66,6 +50,7 @@ fun HistoryScreen(
     var showFilterDialog by remember { mutableStateOf(false) }
     var filterLanguageCode by remember { mutableStateOf("") }
     var filterKeyword by remember { mutableStateOf("") }
+    var showCoinRulesDialog by remember { mutableStateOf(false) }
 
     val languageCounts = remember(uiState.records) {
         uiState.records
@@ -269,9 +254,57 @@ fun HistoryScreen(
         },
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
-            TextButton(onClick = { showFilterDialog = true }) { Text(t(UiTextKey.FilterHistoryScreenTitle)) }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Coin display with info button
+                IconButton(onClick = { showCoinRulesDialog = true }) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.MonetizationOn, contentDescription = "Coins")
+                        Text("${uiState.coinStats.coinTotal}", modifier = Modifier.padding(start = 4.dp))
+                        Icon(Icons.Default.Info, contentDescription = "Coin Rules", modifier = Modifier.padding(start = 2.dp))
+                    }
+                }
+
+                TextButton(onClick = { showFilterDialog = true }) { Text(t(UiTextKey.FilterHistoryScreenTitle)) }
+            }
         },
     ) { innerPadding ->
+        // Coin Rules Dialog
+        if (showCoinRulesDialog) {
+            AlertDialog(
+                onDismissRequest = { showCoinRulesDialog = false },
+                title = { Text("🪙 Coin Earning Rules") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "Earn coins by completing quizzes! Here are the rules:",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        Text("✅ How to Earn:", style = MaterialTheme.typography.titleSmall)
+                        Text("• 1 coin per correct answer", style = MaterialTheme.typography.bodySmall)
+                        Text("• Only first attempt of each quiz version counts", style = MaterialTheme.typography.bodySmall)
+                        Text("• Quiz must match current learning materials", style = MaterialTheme.typography.bodySmall)
+
+                        Text("🔒 Anti-Cheat Rules:", style = MaterialTheme.typography.titleSmall)
+                        Text("• Need 10+ new translations to earn coins again", style = MaterialTheme.typography.bodySmall)
+                        Text("• Quiz version must equal materials version", style = MaterialTheme.typography.bodySmall)
+                        Text("• Deleting history blocks coin earning", style = MaterialTheme.typography.bodySmall)
+                        Text("• Retaking same quiz earns no coins", style = MaterialTheme.typography.bodySmall)
+
+                        Text("💡 Tips:", style = MaterialTheme.typography.titleSmall)
+                        Text("• Add more translations regularly", style = MaterialTheme.typography.bodySmall)
+                        Text("• Regenerate quiz after adding 10+ records", style = MaterialTheme.typography.bodySmall)
+                        Text("• Study well before first attempt!", style = MaterialTheme.typography.bodySmall)
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = { showCoinRulesDialog = false }) {
+                        Text("Got it!")
+                    }
+                }
+            )
+        }
+
         StandardScreenBody(
             innerPadding = innerPadding,
             scrollable = false,

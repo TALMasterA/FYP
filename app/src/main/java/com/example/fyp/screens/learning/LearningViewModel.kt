@@ -4,8 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
+import com.example.fyp.data.learning.FirestoreQuizRepository
+import com.example.fyp.data.learning.QuizParser
 import com.example.fyp.domain.history.ObserveUserHistoryUseCase
 import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
+import com.example.fyp.domain.learning.GenerateQuizUseCase
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.TranslationRecord
@@ -33,6 +36,11 @@ data class LearningUiState(
 
     // languageCode -> count saved in Firestore when sheet was generated (for unchanged-count rule)
     val sheetCountByLanguage: Map<String, Int> = emptyMap(),
+
+    // Quiz generation state (survives navigation)
+    val generatingQuizLanguageCode: String? = null,
+    // languageCode -> history count when quiz was generated
+    val quizCountByLanguage: Map<String, Int> = emptyMap(),
 )
 
 @HiltViewModel
@@ -43,6 +51,8 @@ class LearningViewModel @Inject constructor(
     private val observeUserSettings: ObserveUserSettingsUseCase,
     private val generateLearningMaterials: GenerateLearningMaterialsUseCase,
     private val userSettingsRepo: UserSettingsRepository,
+    private val generateQuizUseCase: GenerateQuizUseCase,
+    private val quizRepo: FirestoreQuizRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LearningUiState())
@@ -53,6 +63,7 @@ class LearningViewModel @Inject constructor(
     private var settingsJob: Job? = null
     private var supportedLanguages: Set<String> = emptySet()
     private var generationJob: Job? = null
+    private var quizGenerationJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -81,9 +92,11 @@ class LearningViewModel @Inject constructor(
         historyJob?.cancel()
         settingsJob?.cancel()
         generationJob?.cancel()
+        quizGenerationJob?.cancel()
         historyJob = null
         settingsJob = null
         generationJob = null
+        quizGenerationJob = null
     }
 
     private fun start(uid: String) {
@@ -103,8 +116,10 @@ class LearningViewModel @Inject constructor(
                     isLoading = false,
                     // Critical: reset meta when switching primary language
                     generatingLanguageCode = if (primaryChanged) null else _uiState.value.generatingLanguageCode,
+                    generatingQuizLanguageCode = if (primaryChanged) null else _uiState.value.generatingQuizLanguageCode,
                     sheetExistsByLanguage = if (primaryChanged) emptyMap() else _uiState.value.sheetExistsByLanguage,
                     sheetCountByLanguage = if (primaryChanged) emptyMap() else _uiState.value.sheetCountByLanguage,
+                    quizCountByLanguage = if (primaryChanged) emptyMap() else _uiState.value.quizCountByLanguage,
                 )
                 recomputeClusters()
             }
@@ -140,6 +155,7 @@ class LearningViewModel @Inject constructor(
         viewModelScope.launch {
             val existsMap = mutableMapOf<String, Boolean>()
             val countMap = mutableMapOf<String, Int>()
+            val quizCountMap = mutableMapOf<String, Int>()
             var firstError: String? = null
 
             for (lang in languages) {
@@ -147,6 +163,10 @@ class LearningViewModel @Inject constructor(
                     val doc = sheetsRepo.getSheet(uid, primary, lang)
                     existsMap[lang] = (doc != null)
                     if (doc != null) countMap[lang] = doc.historyCountAtGenerate
+
+                    // Also fetch quiz metadata
+                    val quizDoc = quizRepo.getGeneratedQuizDoc(uid, primary, lang)
+                    if (quizDoc != null) quizCountMap[lang] = quizDoc.historyCountAtGenerate
                 } catch (ce: CancellationException) {
                     throw ce
                 } catch (e: Exception) {
@@ -158,6 +178,7 @@ class LearningViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(
                 sheetExistsByLanguage = existsMap,
                 sheetCountByLanguage = countMap,
+                quizCountByLanguage = quizCountMap,
                 error = firstError
             )
         }
@@ -221,6 +242,85 @@ class LearningViewModel @Inject constructor(
                 generationJob = null
             }
         }
+    }
+
+    /** Generate quiz in background (survives navigation like materials generation) */
+    fun generateQuizFor(languageCode: String, sheetContent: String, sheetHistoryCount: Int) {
+        val uid = this.uid ?: run {
+            _uiState.value = uiState.value.copy(error = "Not logged in")
+            return
+        }
+
+        val current = uiState.value
+        val primary = current.primaryLanguageCode
+        val lastQuizCount = current.quizCountByLanguage[languageCode]
+
+        // Disable if count unchanged (same sheet version = same quiz)
+        if (lastQuizCount != null && lastQuizCount == sheetHistoryCount) return
+        if (current.generatingQuizLanguageCode != null) return
+
+        val materialOnly = com.example.fyp.data.learning.ContentCleaner
+            .removeQuizFromContent(sheetContent).trim()
+        if (materialOnly.isBlank()) return
+
+        val relatedRecords = current.records.filter { it.sourceLang == languageCode || it.targetLang == languageCode }
+
+        quizGenerationJob = viewModelScope.launch {
+            _uiState.value = uiState.value.copy(generatingQuizLanguageCode = languageCode, error = null)
+
+            try {
+                val quizText = generateQuizUseCase(
+                    deployment = "gpt-5-mini",
+                    primaryLanguageCode = primary,
+                    targetLanguageCode = languageCode,
+                    records = relatedRecords,
+                    learningMaterial = materialOnly
+                )
+
+                ensureActive()
+
+                val questions = QuizParser.parseQuizFromContent(quizText)
+                if (questions.size < 10) {
+                    _uiState.value = uiState.value.copy(
+                        generatingQuizLanguageCode = null,
+                        error = "Quiz generated but only parsed ${questions.size}/10 questions. Try regenerate."
+                    )
+                    return@launch
+                }
+
+                quizRepo.upsertGeneratedQuiz(
+                    uid = uid,
+                    primaryLanguageCode = primary,
+                    targetLanguageCode = languageCode,
+                    questions = questions.take(10),
+                    historyCountAtGenerate = sheetHistoryCount
+                )
+
+                _uiState.value = uiState.value.copy(
+                    generatingQuizLanguageCode = null,
+                    quizCountByLanguage = uiState.value.quizCountByLanguage + (languageCode to sheetHistoryCount),
+                    error = null
+                )
+            } catch (ce: CancellationException) {
+                _uiState.value = uiState.value.copy(
+                    generatingQuizLanguageCode = null,
+                    error = "Quiz generation cancelled"
+                )
+            } catch (e: Exception) {
+                _uiState.value = uiState.value.copy(
+                    generatingQuizLanguageCode = null,
+                    error = e.message ?: "Quiz generation failed"
+                )
+            } finally {
+                quizGenerationJob = null
+            }
+        }
+    }
+
+    fun cancelQuizGenerate() {
+        quizGenerationJob?.cancel()
+        quizGenerationJob = null
+        _uiState.value = uiState.value.copy(generatingQuizLanguageCode = null)
     }
 
     fun setPrimaryLanguage(languageCode: String) {

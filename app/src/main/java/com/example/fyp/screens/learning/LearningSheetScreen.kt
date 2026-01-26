@@ -30,6 +30,7 @@ import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
 
+@Suppress("UNUSED_PARAMETER")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LearningSheetScreen(
@@ -54,27 +55,14 @@ fun LearningSheetScreen(
     var showConfirm by remember { mutableStateOf(false) }
 
     val learningUiState by learningViewModel.uiState.collectAsState()
-    val isGeneratingAny = learningUiState.generatingLanguageCode != null
+    val isGeneratingMaterials = learningUiState.generatingLanguageCode != null
     val isGeneratingThis = learningUiState.generatingLanguageCode == targetCode
+    val isGeneratingAnyQuiz = learningUiState.generatingQuizLanguageCode != null
+    val isAnyGenerationOngoing = isGeneratingMaterials || isGeneratingAnyQuiz
 
     val unchanged = uiState.historyCountAtGenerate != null && uiState.historyCountAtGenerate == uiState.countNow
-    val regenEnabled = !uiState.isLoading && !isGeneratingAny && uiState.countNow > 0 && !unchanged
+    val regenEnabled = !uiState.isLoading && !isAnyGenerationOngoing && uiState.countNow > 0 && !unchanged
 
-    var pendingOpenQuiz by remember { mutableStateOf(false) }
-
-    LaunchedEffect(uiState.quizLoading, uiState.quizError, uiState.quizQuestions.size) {
-        if (!pendingOpenQuiz) return@LaunchedEffect
-
-        if (!uiState.quizLoading && uiState.quizError != null) {
-            pendingOpenQuiz = false
-            return@LaunchedEffect
-        }
-
-        if (!uiState.quizLoading && uiState.quizError == null && uiState.quizQuestions.isNotEmpty()) {
-            pendingOpenQuiz = false
-            onOpenQuiz()
-        }
-    }
 
     // Load when entering
     LaunchedEffect(primaryCode, targetCode) {
@@ -90,7 +78,15 @@ fun LearningSheetScreen(
     StandardScreenScaffold(
         title = t(UiTextKey.LearningSheetTitleTemplate).replace("{speclanguage}", targetName),
         onBack = onBack,
-        backContentDescription = t(UiTextKey.NavBack)
+        backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            TextButton(
+                onClick = { onOpenQuiz() },
+                enabled = !uiState.content.isNullOrBlank() && !uiState.isLoading
+            ) {
+                Text("📝 Quiz")
+            }
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -140,6 +136,7 @@ fun LearningSheetScreen(
                 )
             }
 
+
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -153,7 +150,13 @@ fun LearningSheetScreen(
                         enabled = regenEnabled,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(if (isGeneratingThis) t(UiTextKey.LearningSheetGenerating) else t(UiTextKey.LearningSheetRegenerate))
+                        Text(
+                            when {
+                                isGeneratingThis -> t(UiTextKey.LearningSheetGenerating)
+                                isAnyGenerationOngoing -> "⏳ Wait..."
+                                else -> t(UiTextKey.LearningSheetRegenerate)
+                            }
+                        )
                     }
 
                     Button(
@@ -163,16 +166,6 @@ fun LearningSheetScreen(
                     ) { Text(t(UiTextKey.ActionCancel)) }
                 }
 
-                Button(
-                    onClick = {
-                        pendingOpenQuiz = true
-                        viewModel.generateQuizAndSave()
-                    },
-                    enabled = !uiState.content.isNullOrBlank() && !uiState.isLoading && !uiState.quizLoading,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(if (uiState.quizLoading) "Quiz Generating..." else "Quiz (Generate when materials updated)")
-                }
 
                 uiState.quizError?.let { err ->
                     Text(err, color = MaterialTheme.colorScheme.error)

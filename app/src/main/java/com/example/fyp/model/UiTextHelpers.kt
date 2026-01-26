@@ -41,6 +41,20 @@ fun buildUiTextMap(translatedJoined: String): Map<UiTextKey, String> {
     ensureContains(UiTextKey.SettingsScaleTemplate, "{pct}")
     ensureContains(UiTextKey.DialogGenerateOverwriteMessageTemplate, "{speclanguage}")
 
+    // Quiz templates
+    ensureContains(UiTextKey.QuizTitleTemplate, "{language}")
+    ensureContains(UiTextKey.QuizMaterialsQuizTemplate, "{materials}", "{quiz}")
+    ensureContains(UiTextKey.QuizNeedMoreRecordsTemplate, "{count}")
+    ensureContains(UiTextKey.QuizYourAnswerTemplate, "{answer}")
+    ensureContains(UiTextKey.QuizCorrectAnswerTemplate, "{answer}")
+    ensureContains(UiTextKey.QuizQuestionTemplate, "{current}", "{total}")
+    ensureContains(UiTextKey.QuizCannotRegenTemplate, "{materials}", "{quiz}")
+    ensureContains(UiTextKey.QuizCoinRulesNeedMoreTemplate, "{count}")
+    ensureContains(UiTextKey.QuizCoinRuleMaterialsTemplate, "{count}")
+    ensureContains(UiTextKey.QuizCoinRuleQuizTemplate, "{count}")
+    ensureContains(UiTextKey.QuizRegenNeedMoreTemplate, "{count}")
+    ensureContains(UiTextKey.QuizCoinsEarnedMessageTemplate, "{coins}")
+
     return map
 }
 

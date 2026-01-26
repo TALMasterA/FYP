@@ -331,6 +331,184 @@ val ScreenUiTexts: List<String> = listOf(
     // LearningSheetGenerating
     "Generating...",
 
+    // --- Quiz ---
+    // QuizTitleTemplate
+    "Quiz: {language}",
+
+    // QuizOpenButton
+    "📝 Quiz",
+
+    // QuizGenerateButton
+    "🔄 Generate Quiz",
+
+    // QuizGenerating
+    "⏳ Generating...",
+
+    // QuizUpToDate
+    "✓ Up-to-date",
+
+    // QuizBlocked
+    "🚫 Blocked",
+
+    // QuizWait
+    "⏳ Wait...",
+
+    // QuizMaterialsQuizTemplate
+    "Materials: {materials} | Quiz: {quiz}",
+
+    // QuizCanEarnCoins
+    "🪙 Can earn coins!",
+
+    // QuizNeedMoreRecordsTemplate
+    "🪙 Need {count} more records for coins",
+
+    // QuizCancelButton
+    "Cancel",
+
+    // QuizPreviousButton
+    "Previous",
+
+    // QuizNextButton
+    "Next",
+
+    // QuizSubmitButton
+    "Submit",
+
+    // QuizRetakeButton
+    "Retake Quiz",
+
+    // QuizBackButton
+    "Back",
+
+    // QuizLoadingText
+    "Loading quiz...",
+
+    // QuizGeneratingText
+    "Generating quiz...",
+
+    // QuizNoMaterialsTitle
+    "No learning materials found",
+
+    // QuizNoMaterialsMessage
+    "Please go back and generate the learning materials before viewing the quiz.",
+
+    // QuizErrorTitle
+    "⚠️ Quiz Error",
+
+    // QuizErrorSuggestion
+    "Suggestion: Generate the quiz using the button above.",
+
+    // QuizCompletedTitle
+    "Quiz Completed!",
+
+    // QuizAnswerReviewTitle
+    "Answer Review",
+
+    // QuizYourAnswerTemplate
+    "Your answer: {answer}",
+
+    // QuizCorrectAnswerTemplate
+    "Correct: {answer}",
+
+    // QuizQuestionTemplate
+    "Question {current} of {total}",
+
+    // QuizCannotRegenTemplate
+    "⚠️ Cannot regenerate: Materials ({materials}) < Quiz ({quiz}). Add more translations.",
+
+    // QuizAnotherGenInProgress
+    "⏳ Another generation is in progress. Please wait.",
+
+    // QuizCoinRulesTitle
+    "🪙 Coin Earning Rules",
+
+    // QuizCoinRulesHowToEarn
+    "✅ How to Earn:",
+
+    // QuizCoinRulesRequirements
+    "🔒 Requirements:",
+
+    // QuizCoinRulesCurrentStatus
+    "📊 Current Status:",
+
+    // QuizCoinRulesCanEarn
+    "• ✅ Can earn coins on next quiz!",
+
+    // QuizCoinRulesNeedMoreTemplate
+    "• Need {count} more records for coins",
+
+    // QuizCoinRule1Coin
+    "• 1 coin per correct answer",
+
+    // QuizCoinRuleFirstAttempt
+    "• Only first attempt of each quiz version",
+
+    // QuizCoinRuleMatchMaterials
+    "• Quiz must match materials version",
+
+    // QuizCoinRulePlus10
+    "• Need 10+ more records than last awarded quiz",
+
+    // QuizCoinRuleNoDelete
+    "• Cannot delete history to re-earn",
+
+    // QuizCoinRuleMaterialsTemplate
+    "• Materials: {count} records",
+
+    // QuizCoinRuleQuizTemplate
+    "• Quiz: {count} records",
+
+    // QuizCoinRuleGotIt
+    "Got it!",
+
+    // QuizRegenConfirmTitle
+    "🔄 Generate New Quiz?",
+
+    // QuizRegenCanEarnCoins
+    "✅ You can earn coins on this quiz!",
+
+    // QuizRegenCannotEarnCoins
+    "⚠️ You cannot earn coins on this quiz yet.",
+
+    // QuizRegenNeedMoreTemplate
+    "You need {count} more translation records to earn coins.",
+
+    // QuizRegenReminder
+    "📜 Reminder: You can still practice and retake quizzes for learning, but coins are only awarded on first attempts with sufficient new records.",
+
+    // QuizRegenGenerateButton
+    "Generate",
+
+    // QuizCoinsEarnedTitle
+    "✨ Coins Earned!",
+
+    // QuizCoinsEarnedMessageTemplate
+    "Congratulations! You earned {coins} coins!",
+
+    // QuizCoinsRule1
+    "• 1 coin per correct answer on first attempt only",
+
+    // QuizCoinsRule2
+    "• Retaking the same quiz earns no coins",
+
+    // QuizCoinsRule3
+    "• New quiz must have 10+ more records than previous",
+
+    // QuizCoinsRule4
+    "• Quiz must match current materials version",
+
+    // QuizCoinsRule5
+    "• View total coins in History screen",
+
+    // QuizCoinsGreatButton
+    "Great!",
+
+    // QuizOutdatedMessage
+    "This quiz is based on an old sheet version.",
+
+    // QuizRecordsLabel
+    "records",
+
     // --- Dialogs ---
     // DialogLogoutTitle
     "Logout?",

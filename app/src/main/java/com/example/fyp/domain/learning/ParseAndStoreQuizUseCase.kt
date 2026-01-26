@@ -32,7 +32,8 @@ class ParseAndStoreQuizUseCase @Inject constructor(
         userId: String,
         primaryLanguageCode: String,
         targetLanguageCode: String,
-        questions: List<QuizQuestion>
+        questions: List<QuizQuestion>,
+        generatedHistoryCountAtGenerate: Int
     ): QuizAttempt {
         return QuizAttempt(
             id = "", // Will be generated on save
@@ -45,7 +46,8 @@ class ParseAndStoreQuizUseCase @Inject constructor(
             completedAt = null,
             totalScore = 0,
             maxScore = questions.size,
-            percentage = 0f
+            percentage = 0f,
+            generatedHistoryCountAtGenerate = generatedHistoryCountAtGenerate
         )
     }
 

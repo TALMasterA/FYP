@@ -3,6 +3,7 @@ package com.example.fyp.screens.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.data.learning.FirestoreQuizRepository
 import com.example.fyp.domain.history.DeleteHistoryRecordUseCase
 import com.example.fyp.domain.history.DeleteSessionUseCase
 import com.example.fyp.domain.history.ObserveSessionNamesUseCase
@@ -10,6 +11,7 @@ import com.example.fyp.domain.history.ObserveUserHistoryUseCase
 import com.example.fyp.domain.history.RenameSessionUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.TranslationRecord
+import com.example.fyp.model.UserCoinStats
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +25,8 @@ data class HistoryUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val records: List<TranslationRecord> = emptyList(),
-    val sessionNames: Map<String, String> = emptyMap()
+    val sessionNames: Map<String, String> = emptyMap(),
+    val coinStats: UserCoinStats = UserCoinStats()
 )
 
 @HiltViewModel
@@ -33,7 +36,8 @@ class HistoryViewModel @Inject constructor(
     private val observeSessionNames: ObserveSessionNamesUseCase,
     private val deleteHistoryRecord: DeleteHistoryRecordUseCase,
     private val renameSession: RenameSessionUseCase,
-    private val deleteSession: DeleteSessionUseCase
+    private val deleteSession: DeleteSessionUseCase,
+    private val quizRepo: FirestoreQuizRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryUiState())
@@ -42,6 +46,7 @@ class HistoryViewModel @Inject constructor(
     private var currentUserId: String? = null
     private var historyJob: Job? = null
     private var sessionsJob: Job? = null
+    private var coinJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -117,8 +122,7 @@ class HistoryViewModel @Inject constructor(
     }
 
     private fun startListening(userId: String) {
-        historyJob?.cancel()
-        sessionsJob?.cancel()
+        historyJob?.cancel(); sessionsJob?.cancel(); coinJob?.cancel()
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         historyJob = viewModelScope.launch {
@@ -144,6 +148,14 @@ class HistoryViewModel @Inject constructor(
                 .catch { /* optional: ignore */ }
                 .collect { map ->
                     _uiState.value = _uiState.value.copy(sessionNames = map)
+                }
+        }
+
+        coinJob = viewModelScope.launch {
+            quizRepo.observeUserCoinStats(userId)
+                .catch { /* ignore coin errors */ }
+                .collect { stats ->
+                    _uiState.value = _uiState.value.copy(coinStats = stats)
                 }
         }
     }

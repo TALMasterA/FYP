@@ -6,9 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
 import com.example.fyp.data.learning.FirestoreQuizRepository
-import com.example.fyp.data.learning.QuizParser
 import com.example.fyp.domain.history.ObserveUserHistoryUseCase
-import com.example.fyp.domain.learning.GenerateQuizUseCase
 import com.example.fyp.domain.learning.ParseAndStoreQuizUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.QuizAttempt
@@ -52,7 +50,6 @@ class LearningSheetViewModel @Inject constructor(
     private val sheetsRepo: FirestoreLearningSheetsRepository,
     private val observeUserHistory: ObserveUserHistoryUseCase,
     private val parseAndStoreQuiz: ParseAndStoreQuizUseCase,
-    private val generateQuiz: GenerateQuizUseCase,
     private val quizRepo: FirestoreQuizRepository,
 ) : ViewModel() {
 
@@ -203,7 +200,8 @@ class LearningSheetViewModel @Inject constructor(
                     userId = uidNow,
                     primaryLanguageCode = primaryCode,
                     targetLanguageCode = targetCode,
-                    questions = questions
+                    questions = questions,
+                    generatedHistoryCountAtGenerate = doc.historyCountAtGenerate
                 )
 
                 _uiState.value = _uiState.value.copy(
@@ -239,10 +237,17 @@ class LearningSheetViewModel @Inject constructor(
             try {
                 val completedAttempt = parseAndStoreQuiz.completeAttempt(attempt)
                 val attemptId = parseAndStoreQuiz.saveAttempt(uidNow, completedAttempt)
+                val finalAttempt = completedAttempt.copy(id = attemptId)
+
+                // Award coins (first-attempt only) if sheet count matches
+                val latestSheetCount = _uiState.value.historyCountAtGenerate
+                val coinsAwarded = quizRepo.awardCoinsIfEligible(uidNow, finalAttempt, latestSheetCount)
+
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,
-                    currentAttempt = completedAttempt.copy(id = attemptId),
-                    isQuizTaken = true
+                    currentAttempt = finalAttempt,
+                    isQuizTaken = true,
+                    quizError = if (coinsAwarded) "✨ You earned ${finalAttempt.totalScore} coins! Coins reward correct answers on first quiz attempt for each generated quiz." else null
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -260,80 +265,5 @@ class LearningSheetViewModel @Inject constructor(
             isQuizTaken = false,
             quizError = null
         )
-    }
-
-    fun generateQuizAndSave(force: Boolean = false) {
-        if (_uiState.value.quizLoading) return
-
-        val uidNow = uid ?: run {
-            _uiState.value = _uiState.value.copy(quizError = "Not logged in")
-            return
-        }
-
-        // sheet regenerated marker MUST exist
-        val sheetVersion = _uiState.value.historyCountAtGenerate ?: run {
-            _uiState.value = _uiState.value.copy(quizError = "Sheet not loaded yet. Please wait and try again.")
-            return
-        }
-
-        val content = _uiState.value.content.orEmpty()
-        if (content.isBlank()) {
-            _uiState.value = _uiState.value.copy(quizError = "No learning materials found. Generate the sheet first.")
-            return
-        }
-
-        val materialOnly = com.example.fyp.data.learning.ContentCleaner
-            .removeQuizFromContent(content).trim()
-        if (materialOnly.isBlank()) {
-            _uiState.value = _uiState.value.copy(quizError = "Learning materials are empty.")
-            return
-        }
-
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(quizLoading = true, quizError = null)
-
-            try {
-                val existing = quizRepo.getGeneratedQuizDoc(uidNow, primaryCode, targetCode)
-                if (!force && existing != null && existing.historyCountAtGenerate == sheetVersion) {
-                    _uiState.value = _uiState.value.copy(quizLoading = false)
-                    initializeQuiz()
-                    return@launch
-                }
-
-                val quizText = generateQuiz(
-                    deployment = "gpt-5-mini",
-                    primaryLanguageCode = primaryCode,
-                    targetLanguageCode = targetCode,
-                    records = latestRelatedRecords,
-                    learningMaterial = materialOnly
-                )
-
-                val questions = QuizParser.parseQuizFromContent(quizText)
-                if (questions.size < 10) {
-                    _uiState.value = _uiState.value.copy(
-                        quizLoading = false,
-                        quizError = "Quiz generated but only parsed ${questions.size}/10 questions. Try regenerate."
-                    )
-                    return@launch
-                }
-
-                // IMPORTANT: save the SHEET version
-                quizRepo.upsertGeneratedQuiz(
-                    uid = uidNow,
-                    primaryLanguageCode = primaryCode,
-                    targetLanguageCode = targetCode,
-                    questions = questions.take(10),
-                    historyCountAtGenerate = sheetVersion
-                )
-
-                _uiState.value = _uiState.value.copy(quizLoading = false)
-                initializeQuiz()
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    quizLoading = false,
-                    quizError = e.message ?: "Failed to generate quiz"
-                )
-            }
-        }
     }
 }

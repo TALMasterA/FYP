@@ -259,7 +259,8 @@ fun AppNavigation() {
                                     appLanguageState = appLanguageState,
                                     primaryCode = primaryCode,
                                     targetCode = targetCode,
-                                    onBack = { navController.popBackStack() }
+                                    onBack = { navController.popBackStack() },
+                                    learningViewModel = learningViewModel
                                 )
                             },
                             onNeedLogin = {
