@@ -138,41 +138,56 @@ class LearningSheetViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(quizLoading = true, quizError = null)
             try {
-                // Extract quiz section from content
-                val quizSection = com.example.fyp.data.learning.ContentCleaner.extractQuizSection(content)
-                Log.d("QuizDebug", "Quiz section length: ${quizSection.length}")
+                // Perform extraction + parsing off the main thread to avoid blocking UI
+                val extractedQuizSection = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                    com.example.fyp.data.learning.ContentCleaner.extractQuizSection(content)
+                }
+                Log.d("QuizDebug", "Extracted quiz section length: ${extractedQuizSection.length}")
 
-                if (quizSection.isBlank()) {
-                    Log.w("QuizDebug", "No quiz section found in content")
-                    _uiState.value = _uiState.value.copy(
-                        quizLoading = false,
-                        quizError = "No quiz section found. Please re-generate the materials."
-                    )
-                    return@launch
+                // Fall back to parsing whole content if extraction fails (AI may omit header/colon)
+                val textToParse = if (extractedQuizSection.isBlank()) {
+                    Log.w("QuizDebug", "No quiz section extracted; falling back to parse whole content")
+                    content
+                } else {
+                    extractedQuizSection
                 }
 
-                // Parse questions from quiz section
-                Log.d("QuizDebug", "Starting quiz parsing")
-                val questions = com.example.fyp.data.learning.QuizParser.parseQuizFromContent(quizSection)
+                // Parse questions from quiz section on background dispatcher
+                Log.d("QuizDebug", "Starting quiz parsing (background)")
+                var questions = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                    com.example.fyp.data.learning.QuizParser.parseQuizFromContent(textToParse)
+                }
 
-                Log.d("QuizDebug", "Parsed ${questions.size} questions")
+                Log.d("QuizDebug", "Parsed ${questions.size} questions (first pass)")
 
-                // Validate that we got questions
+                // If no questions parsed, try a single retry with a short delay
                 if (questions.isEmpty()) {
-                    Log.w("QuizDebug", "No questions parsed from quiz section")
+                    Log.w("QuizDebug", "No questions parsed, will attempt a single retry after delay")
+                    kotlinx.coroutines.delay(500)
+                    questions = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                        com.example.fyp.data.learning.QuizParser.parseQuizFromContent(textToParse)
+                    }
+                    Log.d("QuizDebug", "Parsed ${questions.size} questions (second pass)")
+                }
+
+                if (questions.isEmpty()) {
+                    Log.w("QuizDebug", "No questions parsed from quiz section after retry")
                     _uiState.value = _uiState.value.copy(
                         quizLoading = false,
-                        quizError = "No quiz questions found. Please re-generate the materials."
+                        quizError = "No quiz questions found in the saved materials. Please re-generate the materials."
                     )
                     return@launch
                 }
 
-                val attempt = parseAndStoreQuiz.createAttempt(
-                    userId = uid ?: "",
-                    primaryLanguageCode = primaryCode,
-                    targetLanguageCode = targetCode,
-                    questions = questions
-                )
+                // Create attempt (lightweight) on Default as well
+                val attempt = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                    parseAndStoreQuiz.createAttempt(
+                        userId = uid ?: "",
+                        primaryLanguageCode = primaryCode,
+                        targetLanguageCode = targetCode,
+                        questions = questions
+                    )
+                }
 
                 Log.d("QuizDebug", "Quiz attempt created successfully with ${questions.size} questions")
                 _uiState.value = _uiState.value.copy(

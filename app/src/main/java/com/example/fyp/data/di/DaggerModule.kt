@@ -21,7 +21,10 @@ import javax.inject.Singleton
 import com.example.fyp.data.genai.CloudGenAiClient
 import com.example.fyp.data.learning.LearningContentRepositoryImpl
 import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
+import com.example.fyp.domain.learning.GenerateQuizUseCase
 import com.example.fyp.domain.learning.LearningContentRepository
+import com.example.fyp.domain.learning.QuizGenerationRepository
+import com.example.fyp.data.learning.QuizGenerationRepositoryImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -75,7 +78,16 @@ object AppModule {
         LearningContentRepositoryImpl(genAi)
 
     @Provides
+    @Singleton
+    fun provideQuizGenerationRepository(genAi: CloudGenAiClient): QuizGenerationRepository =
+        QuizGenerationRepositoryImpl(genAi)
+
+    @Provides
     fun provideGenerateLearningMaterialsUseCase(repo: LearningContentRepository) =
         GenerateLearningMaterialsUseCase(repo)
+
+    @Provides
+    fun provideGenerateQuizUseCase(repo: QuizGenerationRepository) =
+        GenerateQuizUseCase(repo)
 
 }

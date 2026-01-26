@@ -29,14 +29,14 @@ User translation history (recent):
 $recent
 
 Create TWO sections:
-1. STUDY MATERIAL about vocabulary and grammar from the history above
+1. STUDY MATERIAL about vocabulary and grammar from the history above, using the $primaryLanguageCode language.
     Please use a beautiful format to present the study material. Change line if needed.
     
 2. QUIZ SECTION with 10 multiple choice questions
 
-Use this EXACT format for the QUIZ SECTION: [
+Use this EXACT format for the QUIZ SECTION:
 
-QUIZ SECTION:
+QUIZ SECTION: //After materials, state quiz session start (in english, no matter the $primaryLanguageCode)
 
 1. What is the question text here?
 A) Wrong answer
@@ -68,6 +68,7 @@ Explanation: Explanation text
 IMPORTANT RULES:
 - Start with "QUIZ SECTION:" header
 - Exactly 10 questions total (numbered 1-10)
+- Questions in $primaryLanguageCode, but usinf the format
 - Each question must have exactly A) B) C) D) options on separate lines
 - Each option starts with A), B), C), or D) followed by space and the option text
 - One "Correct: A/B/C/D" line per question (Correct: followed by the letter only)

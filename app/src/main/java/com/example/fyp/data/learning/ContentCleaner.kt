@@ -4,17 +4,22 @@ import android.util.Log
 
 /**
  * Utility to clean learning content by removing quiz section.
- * Removes everything from "QUIZ SECTION:" onwards.
+ * Removes everything from "QUIZ SECTION" onwards.
  */
 object ContentCleaner {
+
+    private fun findQuizStart(content: String): Int {
+        // Accept both "QUIZ SECTION:" and "QUIZ SECTION" (with or without colon)
+        return content.indexOf("QUIZ SECTION", ignoreCase = true)
+    }
 
     /**
      * Remove quiz section from content for display
      */
     fun removeQuizFromContent(content: String): String {
-        val quizStart = content.indexOf("QUIZ SECTION:", ignoreCase = true)
+        val quizStart = findQuizStart(content)
         return if (quizStart > 0) {
-            Log.d("ContentCleaner", "Removed quiz section from content")
+            Log.d("ContentCleaner", "Removed quiz section from content (start=$quizStart)")
             content.substring(0, quizStart).trim()
         } else {
             content
@@ -25,9 +30,9 @@ object ContentCleaner {
      * Extract only the quiz section from content
      */
     fun extractQuizSection(content: String): String {
-        val quizStart = content.indexOf("QUIZ SECTION:", ignoreCase = true)
+        val quizStart = findQuizStart(content)
         return if (quizStart >= 0) {
-            Log.d("ContentCleaner", "Extracted quiz section from content")
+            Log.d("ContentCleaner", "Extracted quiz section from content (start=$quizStart)")
             content.substring(quizStart)
         } else {
             ""

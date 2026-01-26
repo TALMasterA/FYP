@@ -1,5 +1,6 @@
 package com.example.fyp.screens.learning
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +37,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -59,8 +62,18 @@ fun QuizScreen(
 
     val targetName = targetCode
 
+    // Ensure initializeQuiz runs if content already present when composing
     LaunchedEffect(Unit) {
-        if (uiState.quizQuestions.isEmpty()) {
+        if (!uiState.content.isNullOrBlank() && uiState.quizQuestions.isEmpty()) {
+            Log.d("QuizDebug", "Initial composition: content present; initializing quiz")
+            viewModel.initializeQuiz()
+        }
+    }
+
+    // If the content becomes available later (loaded async), run initializeQuiz
+    LaunchedEffect(uiState.content) {
+        if (!uiState.content.isNullOrBlank() && uiState.quizQuestions.isEmpty()) {
+            Log.d("QuizDebug", "Content arrived in UI; initializing quiz")
             viewModel.initializeQuiz()
         }
     }
@@ -92,7 +105,7 @@ fun QuizScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        "⚠️ Quiz Error",
+                        "\u26A0\uFE0F Quiz Error",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error,
@@ -113,8 +126,34 @@ fun QuizScreen(
                         modifier = Modifier.padding(bottom = 24.dp)
                     )
 
-                    Button(onClick = onBack, modifier = Modifier.padding(top = 16.dp)) {
-                        Text("Go Back")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = {
+                                Log.d("QuizDebug", "User tapped Retry")
+                                viewModel.initializeQuiz()
+                            },
+                            modifier = Modifier.padding(top = 16.dp)
+                        ) {
+                            Text("Retry")
+                        }
+
+                        Button(onClick = onBack, modifier = Modifier.padding(top = 16.dp)) {
+                            Text("Go Back")
+                        }
+                    }
+
+                    // Debug panel (visible in debug builds) to aid diagnosis on device
+                    if (com.example.fyp.BuildConfig.DEBUG) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("-- DEBUG INFO --", style = MaterialTheme.typography.labelSmall)
+                        Text("content length: ${uiState.content?.length ?: 0}", style = MaterialTheme.typography.bodySmall)
+                        Text("quizLoading: ${uiState.quizLoading}", style = MaterialTheme.typography.bodySmall)
+                        Text("quizError: ${uiState.quizError ?: "<none>"}", style = MaterialTheme.typography.bodySmall)
+                        Text("quizQuestions: ${uiState.quizQuestions.size}", style = MaterialTheme.typography.bodySmall)
+                        Text("currentAttempt: ${if (uiState.currentAttempt == null) "null" else "present"}", style = MaterialTheme.typography.bodySmall)
+                        val preview = uiState.content?.let { if (it.length > 1000) it.substring(0, 1000) + "..." else it } ?: "<no content>"
+                        Text("\n---CONTENT PREVIEW (first 1000 chars)---", style = MaterialTheme.typography.labelSmall)
+                        Text(preview.replace("\n", "\\n"), style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -137,6 +176,38 @@ fun QuizScreen(
                 )
             }
 
+            // If the sheet content is missing (and not currently loading), show a clear message
+            uiState.content.isNullOrBlank() && !uiState.isLoading -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        "No learning materials found",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    Text(
+                        "Please go back and generate the learning materials before viewing the quiz.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 24.dp)
+                    )
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = onBack, modifier = Modifier.padding(top = 16.dp)) {
+                            Text("Back")
+                        }
+                    }
+                }
+            }
+
+            // Default loading state (content is being loaded)
             else -> {
                 Column(
                     modifier = Modifier
@@ -150,11 +221,26 @@ fun QuizScreen(
                         "Loading quiz... (You may need to re-generate the materials, if there is no response for a long time.)",
                         style = MaterialTheme.typography.bodyMedium
                     )
-                }
-            }
-        }
-    }
-}
+
+                    // Debug panel (visible in debug builds) to aid diagnosis on device
+                    if (com.example.fyp.BuildConfig.DEBUG) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("-- DEBUG INFO --", style = MaterialTheme.typography.labelSmall)
+                        Text("content length: ${uiState.content?.length ?: 0}", style = MaterialTheme.typography.bodySmall)
+                        Text("quizLoading: ${uiState.quizLoading}", style = MaterialTheme.typography.bodySmall)
+                        Text("quizError: ${uiState.quizError ?: "<none>"}", style = MaterialTheme.typography.bodySmall)
+                        Text("quizQuestions: ${uiState.quizQuestions.size}", style = MaterialTheme.typography.bodySmall)
+                        Text("currentAttempt: ${if (uiState.currentAttempt == null) "null" else "present"}", style = MaterialTheme.typography.bodySmall)
+                        // show small preview of content to help debugging formatting issues
+                        val preview = uiState.content?.let { if (it.length > 1000) it.substring(0, 1000) + "..." else it } ?: "<no content>"
+                        Text("\n---CONTENT PREVIEW (first 1000 chars)---", style = MaterialTheme.typography.labelSmall)
+                        Text(preview.replace("\n", "\\n"), style = MaterialTheme.typography.bodySmall)
+                     }
+                 }
+             }
+         }
+     }
+ }
 
 @Composable
 private fun QuizTakingScreen(

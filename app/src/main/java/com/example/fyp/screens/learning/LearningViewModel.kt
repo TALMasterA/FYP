@@ -191,6 +191,13 @@ class LearningViewModel @Inject constructor(
 
                 ensureActive() // if cancelled, do not overwrite
 
+                // Validate whether the generated content includes a parseable quiz.
+                // IMPORTANT: do not block saving, otherwise the sheet won't overwrite and savedCount won't update.
+                val quizSection = com.example.fyp.data.learning.ContentCleaner.extractQuizSection(content)
+                val parsedQuestions = com.example.fyp.data.learning.QuizParser.parseQuizFromContent(
+                    if (quizSection.isBlank()) content else quizSection
+                )
+
                 sheetsRepo.upsertSheet(
                     uid = uid,
                     primary = primary,
@@ -199,15 +206,21 @@ class LearningViewModel @Inject constructor(
                     historyCountAtGenerate = countNow
                 )
 
+                val warning = if (parsedQuestions.isEmpty()) {
+                    "Generated materials were saved, but quiz questions could not be parsed. Try re-generating."
+                } else null
+
                 _uiState.value = uiState.value.copy(
                     generatingLanguageCode = null,
                     sheetExistsByLanguage = uiState.value.sheetExistsByLanguage + (languageCode to true),
-                    sheetCountByLanguage = uiState.value.sheetCountByLanguage + (languageCode to countNow)
+                    sheetCountByLanguage = uiState.value.sheetCountByLanguage + (languageCode to countNow),
+                    error = warning
                 )
             } catch (ce: CancellationException) {
                 _uiState.value = uiState.value.copy(
                     generatingLanguageCode = null,
-                    error = ce.message ?: "Generate cancelled")
+                    error = ce.message ?: "Generate cancelled"
+                )
             } catch (e: Exception) {
                 _uiState.value = uiState.value.copy(
                     generatingLanguageCode = null,
