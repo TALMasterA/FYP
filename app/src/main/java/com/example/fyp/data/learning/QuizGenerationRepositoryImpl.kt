@@ -23,7 +23,7 @@ class QuizGenerationRepositoryImpl @Inject constructor(
         val prompt = """
 You are generating ONLY a quiz.
 
-Target language: $targetLanguageCode
+Testing language: $targetLanguageCode
 Explain / question language: $primaryLanguageCode
 
 Context:
@@ -53,7 +53,13 @@ OUTPUT REQUIREMENTS (STRICT):
 - Exactly 10 questions in the array.
 - options must be exactly 4 strings.
 - correctIndex must be 0,1,2,or 3.
-- Questions 1-5 based mainly on RECENT TRANSLATION HISTORY (use STUDY MATERIAL only if insufficient data in history) ; 6-10 based mainly on STUDY MATERIAL.
+- 5 Questions based on TRANSLATION HISTORY (use STUDY MATERIAL only if insufficient data in history)
+- 5 Questions based on STUDY MATERIAL.
+- Questions based on them is in random order.
+- Questions based on them to create, but ensure:
+    1. The answer is correct. (Because the translation history is transalte by translator API, it may contain error, please check)
+    2. Questions is practical.
+    3. Sentences is natural, will be use by native speaker (better in spoken, if data is not enough then written is acceptable)
 """.trimIndent()
 
         return genAi.generateLearningContent(
