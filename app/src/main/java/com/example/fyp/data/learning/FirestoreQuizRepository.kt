@@ -1,22 +1,23 @@
 package com.example.fyp.data.learning
 
+import com.example.fyp.model.QuizAnswer
 import com.example.fyp.model.QuizAttempt
 import com.example.fyp.model.QuizAttemptDoc
+import com.example.fyp.model.QuizQuestion
 import com.example.fyp.model.QuizStats
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
-import com.example.fyp.model.QuizQuestion
 import kotlinx.serialization.decodeFromString
-
-
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import javax.inject.Inject
 
 class FirestoreQuizRepository @Inject constructor(
     private val db: FirebaseFirestore
 ) {
+    private val json = Json { ignoreUnknownKeys = true }
+
     private fun docRef(uid: String, attemptId: String) =
         db.collection("users")
             .document(uid)
@@ -34,9 +35,6 @@ class FirestoreQuizRepository @Inject constructor(
             .collection("quiz_stats")
             .document("${primaryCode}__${targetCode}")
 
-    /**
-     * Save a completed quiz attempt to Firestore
-     */
     suspend fun saveAttempt(uid: String, attempt: QuizAttempt): String {
         val attemptId = attempt.id.ifEmpty { db.collection("dummy").document().id }
 
@@ -44,8 +42,8 @@ class FirestoreQuizRepository @Inject constructor(
             userId = uid,
             primaryLanguageCode = attempt.primaryLanguageCode,
             targetLanguageCode = attempt.targetLanguageCode,
-            questionsJson = Json.encodeToString(attempt.questions),
-            answersJson = Json.encodeToString(attempt.answers),
+            questionsJson = json.encodeToString<List<QuizQuestion>>(attempt.questions),
+            answersJson = json.encodeToString<List<QuizAnswer>>(attempt.answers),
             startedAt = attempt.startedAt,
             completedAt = attempt.completedAt ?: Timestamp.now(),
             totalScore = attempt.totalScore,
@@ -54,50 +52,38 @@ class FirestoreQuizRepository @Inject constructor(
         )
 
         docRef(uid, attemptId).set(doc).await()
-
-        // Update stats
         updateStats(uid, attempt)
-
         return attemptId
     }
 
-    /**
-     * Retrieve a specific quiz attempt
-     */
     suspend fun getAttempt(uid: String, attemptId: String): QuizAttempt? {
         val snap = docRef(uid, attemptId).get().await()
-        return if (snap.exists()) {
-            val doc = snap.toObject(QuizAttemptDoc::class.java) ?: return null
-            // Convert back from JSON if needed
-            QuizAttempt(
-                id = attemptId,
-                userId = uid,
-                primaryLanguageCode = doc.primaryLanguageCode,
-                targetLanguageCode = doc.targetLanguageCode,
-                questions = try {
-                    Json.decodeFromString(doc.questionsJson)
-                } catch (e: Exception) {
-                    emptyList()
-                },
-                answers = try {
-                    Json.decodeFromString(doc.answersJson)
-                } catch (e: Exception) {
-                    emptyList()
-                },
-                startedAt = doc.startedAt,
-                completedAt = doc.completedAt,
-                totalScore = doc.totalScore,
-                maxScore = doc.maxScore,
-                percentage = doc.percentage
-            )
-        } else {
-            null
-        }
+        if (!snap.exists()) return null
+
+        val doc = snap.toObject(QuizAttemptDoc::class.java) ?: return null
+        return QuizAttempt(
+            id = attemptId,
+            userId = uid,
+            primaryLanguageCode = doc.primaryLanguageCode,
+            targetLanguageCode = doc.targetLanguageCode,
+            questions = try {
+                json.decodeFromString<List<QuizQuestion>>(doc.questionsJson)
+            } catch (_: Exception) {
+                emptyList()
+            },
+            answers = try {
+                json.decodeFromString<List<QuizAnswer>>(doc.answersJson)
+            } catch (_: Exception) {
+                emptyList()
+            },
+            startedAt = doc.startedAt,
+            completedAt = doc.completedAt,
+            totalScore = doc.totalScore,
+            maxScore = doc.maxScore,
+            percentage = doc.percentage
+        )
     }
 
-    /**
-     * Get all quiz attempts for a specific language pair
-     */
     suspend fun getAttemptsByLanguagePair(
         uid: String,
         primaryLanguageCode: String,
@@ -110,21 +96,21 @@ class FirestoreQuizRepository @Inject constructor(
             .get()
             .await()
 
-        return snap.documents.mapNotNull { doc ->
-            val data = doc.toObject(QuizAttemptDoc::class.java) ?: return@mapNotNull null
+        return snap.documents.mapNotNull { docSnap ->
+            val data = docSnap.toObject(QuizAttemptDoc::class.java) ?: return@mapNotNull null
             QuizAttempt(
-                id = doc.id,
+                id = docSnap.id,
                 userId = uid,
                 primaryLanguageCode = data.primaryLanguageCode,
                 targetLanguageCode = data.targetLanguageCode,
                 questions = try {
-                    Json.decodeFromString(data.questionsJson)
-                } catch (e: Exception) {
+                    json.decodeFromString<List<QuizQuestion>>(data.questionsJson)
+                } catch (_: Exception) {
                     emptyList()
                 },
                 answers = try {
-                    Json.decodeFromString(data.answersJson)
-                } catch (e: Exception) {
+                    json.decodeFromString<List<QuizAnswer>>(data.answersJson)
+                } catch (_: Exception) {
                     emptyList()
                 },
                 startedAt = data.startedAt,
@@ -136,25 +122,15 @@ class FirestoreQuizRepository @Inject constructor(
         }
     }
 
-    /**
-     * Get quiz statistics for a language pair
-     */
     suspend fun getQuizStats(
         uid: String,
         primaryLanguageCode: String,
         targetLanguageCode: String
     ): QuizStats? {
         val snap = statsDocRef(uid, primaryLanguageCode, targetLanguageCode).get().await()
-        return if (snap.exists()) {
-            snap.toObject(QuizStats::class.java)
-        } else {
-            null
-        }
+        return if (snap.exists()) snap.toObject(QuizStats::class.java) else null
     }
 
-    /**
-     * Get recent quiz attempts (for dashboard/history)
-     */
     suspend fun getRecentAttempts(uid: String, limit: Long = 10): List<QuizAttempt> {
         val snap = collectionRef(uid)
             .orderBy("completedAt")
@@ -162,14 +138,14 @@ class FirestoreQuizRepository @Inject constructor(
             .get()
             .await()
 
-        return snap.documents.mapNotNull { doc ->
-            val data = doc.toObject(QuizAttemptDoc::class.java) ?: return@mapNotNull null
+        return snap.documents.mapNotNull { docSnap ->
+            val data = docSnap.toObject(QuizAttemptDoc::class.java) ?: return@mapNotNull null
             QuizAttempt(
-                id = doc.id,
+                id = docSnap.id,
                 userId = uid,
                 primaryLanguageCode = data.primaryLanguageCode,
                 targetLanguageCode = data.targetLanguageCode,
-                questions = emptyList(), // Don't load full questions for recent attempts
+                questions = emptyList(),
                 answers = emptyList(),
                 startedAt = data.startedAt,
                 completedAt = data.completedAt,
@@ -180,9 +156,6 @@ class FirestoreQuizRepository @Inject constructor(
         }
     }
 
-    /**
-     * Update quiz statistics after a new attempt
-     */
     private suspend fun updateStats(uid: String, attempt: QuizAttempt) {
         val statsRef = statsDocRef(uid, attempt.primaryLanguageCode, attempt.targetLanguageCode)
         val currentStats = statsRef.get().await()
@@ -215,11 +188,7 @@ class FirestoreQuizRepository @Inject constructor(
         statsRef.set(stats).await()
     }
 
-    private fun generatedQuizDocRef(uid: String, primaryCode: String, targetCode: String) =
-        db.collection("users")
-            .document(uid)
-            .collection("generated_quizzes")
-            .document("${primaryCode}__${targetCode}")
+    // ---- Generated quiz (cached per sheet version) ----
 
     data class GeneratedQuizDoc(
         val primaryLanguageCode: String = "",
@@ -228,6 +197,22 @@ class FirestoreQuizRepository @Inject constructor(
         val generatedAt: Timestamp = Timestamp.now(),
         val historyCountAtGenerate: Int = 0
     )
+
+    private fun generatedQuizDocRef(uid: String, primaryCode: String, targetCode: String) =
+        db.collection("users")
+            .document(uid)
+            .collection("generated_quizzes")
+            .document("${primaryCode}__${targetCode}")
+
+    suspend fun getGeneratedQuizDoc(
+        uid: String,
+        primaryLanguageCode: String,
+        targetLanguageCode: String
+    ): GeneratedQuizDoc? {
+        val snap = generatedQuizDocRef(uid, primaryLanguageCode, targetLanguageCode).get().await()
+        if (!snap.exists()) return null
+        return snap.toObject(GeneratedQuizDoc::class.java)
+    }
 
     suspend fun upsertGeneratedQuiz(
         uid: String,
@@ -239,7 +224,7 @@ class FirestoreQuizRepository @Inject constructor(
         val doc = GeneratedQuizDoc(
             primaryLanguageCode = primaryLanguageCode,
             targetLanguageCode = targetLanguageCode,
-            questionsJson = Json.encodeToString(questions),
+            questionsJson = json.encodeToString<List<QuizQuestion>>(questions),
             generatedAt = Timestamp.now(),
             historyCountAtGenerate = historyCountAtGenerate
         )
@@ -251,12 +236,9 @@ class FirestoreQuizRepository @Inject constructor(
         primaryLanguageCode: String,
         targetLanguageCode: String
     ): List<QuizQuestion> {
-        val snap = generatedQuizDocRef(uid, primaryLanguageCode, targetLanguageCode).get().await()
-        if (!snap.exists()) return emptyList()
-        val doc = snap.toObject(GeneratedQuizDoc::class.java) ?: return emptyList()
-
+        val doc = getGeneratedQuizDoc(uid, primaryLanguageCode, targetLanguageCode) ?: return emptyList()
         return try {
-            Json.decodeFromString(doc.questionsJson)
+            json.decodeFromString<List<QuizQuestion>>(doc.questionsJson)
         } catch (_: Exception) {
             emptyList()
         }

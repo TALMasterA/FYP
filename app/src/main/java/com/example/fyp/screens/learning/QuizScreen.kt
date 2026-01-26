@@ -5,7 +5,6 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +21,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -37,10 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fyp.core.StandardScreenScaffold
@@ -48,6 +43,7 @@ import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
+import androidx.compose.foundation.layout.navigationBarsPadding
 
 @Composable
 fun QuizScreen(
@@ -76,15 +72,31 @@ fun QuizScreen(
         backContentDescription = t(UiTextKey.NavBack)
     ) { padding ->
         when {
-            uiState.quizLoading && uiState.currentAttempt == null -> {
-                Box(
+            uiState.isQuizTaken && uiState.currentAttempt != null -> {
+                QuizResultsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                    attempt = uiState.currentAttempt!!,
+                    onRetake = { viewModel.resetQuiz(); viewModel.initializeQuiz() },
+                    onBack = onBack
+                )
+            }
+
+            uiState.currentAttempt != null -> {
+                QuizTakingScreen(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    attempt = uiState.currentAttempt!!,
+                    onAnswerSelected = viewModel::recordQuizAnswer,
+                    onSubmit = viewModel::submitQuiz,
+                    isLoading = uiState.quizLoading,
+                    appLanguageState = appLanguageState,
+                    errorMessage = uiState.quizError,
+                    isQuizOutdated = uiState.isQuizOutdated,
+                    onRegenerate = { viewModel.generateQuizAndSave(force = true) }
+                )
             }
 
             uiState.quizError != null && uiState.quizQuestions.isEmpty() -> {
@@ -121,37 +133,34 @@ fun QuizScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
                             onClick = {
-                                Log.d("QuizDebug", "User tapped Retry")
-                                viewModel.initializeQuiz()
+                                Log.d("QuizDebug", "User tapped Generate")
+                                viewModel.generateQuizAndSave(force = false)
                             },
+                            enabled = !uiState.quizLoading,
                             modifier = Modifier.padding(top = 16.dp)
                         ) {
-                            Text("Retry")
+                            Text("Generate")
                         }
 
-                        Button(onClick = onBack, modifier = Modifier.padding(top = 16.dp)) {
+                        Button(
+                            onClick = {
+                                Log.d("QuizDebug", "User tapped Regenerate")
+                                viewModel.generateQuizAndSave(force = true)
+                            },
+                            enabled = !uiState.quizLoading,
+                            modifier = Modifier.padding(top = 16.dp)
+                        ) {
+                            Text("Regenerate")
+                        }
+
+                        Button(
+                            onClick = onBack,
+                            modifier = Modifier.padding(top = 16.dp)
+                        ) {
                             Text("Go Back")
                         }
                     }
                 }
-            }
-
-            uiState.isQuizTaken && uiState.currentAttempt != null -> {
-                QuizResultsScreen(
-                    attempt = uiState.currentAttempt!!,
-                    onRetake = { viewModel.resetQuiz(); viewModel.initializeQuiz() },
-                    onBack = onBack
-                )
-            }
-
-            uiState.currentAttempt != null -> {
-                QuizTakingScreen(
-                    attempt = uiState.currentAttempt!!,
-                    onAnswerSelected = viewModel::recordQuizAnswer,
-                    onSubmit = viewModel::submitQuiz,
-                    isLoading = uiState.quizLoading,
-                    appLanguageState = appLanguageState
-                )
             }
 
             // If the sheet content is missing (and not currently loading), show a clear message
@@ -207,19 +216,59 @@ fun QuizScreen(
 
 @Composable
 private fun QuizTakingScreen(
+    modifier: Modifier = Modifier,
     attempt: com.example.fyp.model.QuizAttempt,
     onAnswerSelected: (String, Int) -> Unit,
     onSubmit: () -> Unit,
     isLoading: Boolean,
     appLanguageState: AppLanguageState,
+    errorMessage: String? = null,
+    isQuizOutdated: Boolean,
+    onRegenerate: () -> Unit,
 ) {
     var currentQuestionIndex by remember { mutableStateOf(0) }
     val currentQuestion = attempt.questions.getOrNull(currentQuestionIndex)
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        if (!errorMessage.isNullOrBlank()) {
+            Text(
+                errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+
+        if (isQuizOutdated) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "This quiz is based on an old sheet version.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Button(
+                        onClick = onRegenerate,
+                        enabled = !isLoading
+                    ) {
+                        Text("Regenerate")
+                    }
+                }
+            }
+        }
+
         // Progress bar
         if (attempt.questions.isNotEmpty()) {
             val progress = (currentQuestionIndex + 1).toFloat() / attempt.questions.size.toFloat()
@@ -271,6 +320,7 @@ private fun QuizTakingScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .navigationBarsPadding()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -363,12 +413,13 @@ private fun QuestionOptionButton(
 
 @Composable
 private fun QuizResultsScreen(
+    modifier: Modifier = Modifier,
     attempt: com.example.fyp.model.QuizAttempt,
     onRetake: () -> Unit,
     onBack: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),

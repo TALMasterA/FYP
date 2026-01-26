@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
+import com.example.fyp.data.learning.FirestoreQuizRepository
+import com.example.fyp.data.learning.QuizParser
 import com.example.fyp.domain.history.ObserveUserHistoryUseCase
-import com.example.fyp.domain.learning.ParseAndStoreQuizUseCase
 import com.example.fyp.domain.learning.GenerateQuizUseCase
+import com.example.fyp.domain.learning.ParseAndStoreQuizUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.QuizAttempt
 import com.example.fyp.model.QuizQuestion
@@ -19,8 +21,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.example.fyp.data.learning.FirestoreQuizRepository
-import com.example.fyp.data.learning.QuizParser
 
 data class LearningSheetUiState(
     val isLoading: Boolean = true,
@@ -28,13 +28,21 @@ data class LearningSheetUiState(
     val primaryLanguageCode: String = "en-US",
     val targetLanguageCode: String = "",
     val content: String? = null,
+
+    // Sheet regeneration marker (version)
     val historyCountAtGenerate: Int? = null,
+
     val countNow: Int = 0,
+
     val quizQuestions: List<QuizQuestion> = emptyList(),
     val isQuizTaken: Boolean = false,
     val currentAttempt: QuizAttempt? = null,
     val quizLoading: Boolean = false,
     val quizError: String? = null,
+
+    // Generated quiz metadata
+    val generatedQuizHistoryCountAtGenerate: Int? = null,
+    val isQuizOutdated: Boolean = false,
 )
 
 @HiltViewModel
@@ -65,7 +73,6 @@ class LearningSheetViewModel @Inject constructor(
     private var historyJob: Job? = null
     private var pendingInitQuiz: Boolean = false
 
-
     init {
         viewModelScope.launch {
             authRepo.currentUserState.collect { auth ->
@@ -75,7 +82,6 @@ class LearningSheetViewModel @Inject constructor(
                         stopJobs()
                         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
                     }
-
                     AuthState.LoggedOut -> {
                         stopJobs()
                         uid = null
@@ -87,7 +93,9 @@ class LearningSheetViewModel @Inject constructor(
                             currentAttempt = null,
                             isQuizTaken = false,
                             quizLoading = false,
-                            quizError = null
+                            quizError = null,
+                            generatedQuizHistoryCountAtGenerate = null,
+                            isQuizOutdated = false
                         )
                     }
                 }
@@ -105,7 +113,6 @@ class LearningSheetViewModel @Inject constructor(
         this.uid = uid
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-        // Load sheet once when screen starts
         loadSheet()
 
         if (pendingInitQuiz) {
@@ -123,17 +130,24 @@ class LearningSheetViewModel @Inject constructor(
     }
 
     fun loadSheet() {
-        val uid = this.uid ?: return
+        val uidNow = uid ?: return
         if (primaryCode.isBlank() || targetCode.isBlank()) return
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            runCatching { sheetsRepo.getSheet(uid, primaryCode, targetCode) }
+
+            runCatching { sheetsRepo.getSheet(uidNow, primaryCode, targetCode) }
                 .onSuccess { doc ->
+                    val newSheetVersion = doc?.historyCountAtGenerate
+                    val generatedVersion = _uiState.value.generatedQuizHistoryCountAtGenerate
+                    val newOutdated =
+                        (newSheetVersion != null && generatedVersion != null && generatedVersion != newSheetVersion)
+
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         content = doc?.content,
-                        historyCountAtGenerate = doc?.historyCountAtGenerate
+                        historyCountAtGenerate = newSheetVersion,
+                        isQuizOutdated = newOutdated
                     )
                 }
                 .onFailure { e ->
@@ -145,9 +159,8 @@ class LearningSheetViewModel @Inject constructor(
         }
     }
 
-    // Quiz methods
     fun initializeQuiz() {
-        val uidNow = this.uid
+        val uidNow = uid
         if (uidNow == null) {
             pendingInitQuiz = true
             return
@@ -157,19 +170,34 @@ class LearningSheetViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(quizLoading = true, quizError = null)
 
             try {
-                val questions = quizRepo.getGeneratedQuizQuestions(
-                    uid = uidNow,
-                    primaryLanguageCode = primaryCode,
-                    targetLanguageCode = targetCode
-                )
-
-                if (questions.isEmpty()) {
+                val doc = quizRepo.getGeneratedQuizDoc(uidNow, primaryCode, targetCode)
+                if (doc == null) {
                     _uiState.value = _uiState.value.copy(
                         quizLoading = false,
-                        quizError = "No quiz generated yet. Go back and press Quiz to generate."
+                        quizError = "No quiz generated yet.",
+                        quizQuestions = emptyList(),
+                        currentAttempt = null,
+                        generatedQuizHistoryCountAtGenerate = null,
+                        isQuizOutdated = false
                     )
                     return@launch
                 }
+
+                val questions = quizRepo.getGeneratedQuizQuestions(uidNow, primaryCode, targetCode)
+                if (questions.isEmpty()) {
+                    _uiState.value = _uiState.value.copy(
+                        quizLoading = false,
+                        quizError = "Stored quiz is corrupted. Please regenerate.",
+                        quizQuestions = emptyList(),
+                        currentAttempt = null,
+                        generatedQuizHistoryCountAtGenerate = doc.historyCountAtGenerate,
+                        isQuizOutdated = true
+                    )
+                    return@launch
+                }
+
+                val sheetVersion = _uiState.value.historyCountAtGenerate
+                val isOutdated = (sheetVersion != null && doc.historyCountAtGenerate != sheetVersion)
 
                 val attempt = parseAndStoreQuiz.createAttempt(
                     userId = uidNow,
@@ -183,7 +211,9 @@ class LearningSheetViewModel @Inject constructor(
                     quizQuestions = questions,
                     currentAttempt = attempt,
                     isQuizTaken = false,
-                    quizError = null
+                    quizError = null,
+                    generatedQuizHistoryCountAtGenerate = doc.historyCountAtGenerate,
+                    isQuizOutdated = isOutdated
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -196,24 +226,19 @@ class LearningSheetViewModel @Inject constructor(
 
     fun recordQuizAnswer(questionId: String, selectedOptionIndex: Int) {
         val attempt = _uiState.value.currentAttempt ?: return
-        val updatedAttempt = parseAndStoreQuiz.recordAnswer(
-            attempt,
-            questionId,
-            selectedOptionIndex
-        )
+        val updatedAttempt = parseAndStoreQuiz.recordAnswer(attempt, questionId, selectedOptionIndex)
         _uiState.value = _uiState.value.copy(currentAttempt = updatedAttempt)
     }
 
     fun submitQuiz() {
-        val uid = this.uid ?: return
+        val uidNow = uid ?: return
         val attempt = _uiState.value.currentAttempt ?: return
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(quizLoading = true)
             try {
                 val completedAttempt = parseAndStoreQuiz.completeAttempt(attempt)
-                val attemptId = parseAndStoreQuiz.saveAttempt(uid, completedAttempt)
-
+                val attemptId = parseAndStoreQuiz.saveAttempt(uidNow, completedAttempt)
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,
                     currentAttempt = completedAttempt.copy(id = attemptId),
@@ -237,11 +262,17 @@ class LearningSheetViewModel @Inject constructor(
         )
     }
 
-    fun generateQuizAndSave() {
+    fun generateQuizAndSave(force: Boolean = false) {
         if (_uiState.value.quizLoading) return
 
-        val uid = this.uid ?: run {
+        val uidNow = uid ?: run {
             _uiState.value = _uiState.value.copy(quizError = "Not logged in")
+            return
+        }
+
+        // sheet regenerated marker MUST exist
+        val sheetVersion = _uiState.value.historyCountAtGenerate ?: run {
+            _uiState.value = _uiState.value.copy(quizError = "Sheet not loaded yet. Please wait and try again.")
             return
         }
 
@@ -251,8 +282,8 @@ class LearningSheetViewModel @Inject constructor(
             return
         }
 
-        // Use material-only text as prompt input
-        val materialOnly = com.example.fyp.data.learning.ContentCleaner.removeQuizFromContent(content).trim()
+        val materialOnly = com.example.fyp.data.learning.ContentCleaner
+            .removeQuizFromContent(content).trim()
         if (materialOnly.isBlank()) {
             _uiState.value = _uiState.value.copy(quizError = "Learning materials are empty.")
             return
@@ -262,6 +293,13 @@ class LearningSheetViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(quizLoading = true, quizError = null)
 
             try {
+                val existing = quizRepo.getGeneratedQuizDoc(uidNow, primaryCode, targetCode)
+                if (!force && existing != null && existing.historyCountAtGenerate == sheetVersion) {
+                    _uiState.value = _uiState.value.copy(quizLoading = false)
+                    initializeQuiz()
+                    return@launch
+                }
+
                 val quizText = generateQuiz(
                     deployment = "gpt-5-mini",
                     primaryLanguageCode = primaryCode,
@@ -271,29 +309,25 @@ class LearningSheetViewModel @Inject constructor(
                 )
 
                 val questions = QuizParser.parseQuizFromContent(quizText)
-
                 if (questions.size < 10) {
                     _uiState.value = _uiState.value.copy(
                         quizLoading = false,
-                        quizError = "Quiz generated but only parsed ${questions.size}/10 questions. Try again. (You may need to regen the learning materials)"
+                        quizError = "Quiz generated but only parsed ${questions.size}/10 questions. Try regenerate."
                     )
                     return@launch
                 }
 
-                // Save latest generated quiz for this pair
+                // IMPORTANT: save the SHEET version
                 quizRepo.upsertGeneratedQuiz(
-                    uid = uid,
+                    uid = uidNow,
                     primaryLanguageCode = primaryCode,
                     targetLanguageCode = targetCode,
                     questions = questions.take(10),
-                    historyCountAtGenerate = _uiState.value.countNow
+                    historyCountAtGenerate = sheetVersion
                 )
 
-                _uiState.value = _uiState.value.copy(
-                    quizLoading = false,
-                    quizQuestions = questions.take(10),
-                    quizError = null
-                )
+                _uiState.value = _uiState.value.copy(quizLoading = false)
+                initializeQuiz()
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,

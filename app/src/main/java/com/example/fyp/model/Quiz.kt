@@ -15,6 +15,7 @@ data class QuizQuestion(
 )
 
 // User's answer to a single question
+@Serializable
 data class QuizAnswer(
     val questionId: String = "",
     val selectedOptionIndex: Int = -1,

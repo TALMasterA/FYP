@@ -171,7 +171,7 @@ fun LearningSheetScreen(
                     enabled = !uiState.content.isNullOrBlank() && !uiState.isLoading && !uiState.quizLoading,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (uiState.quizLoading) "Quiz Generating..." else "Quiz")
+                    Text(if (uiState.quizLoading) "Quiz Generating..." else "Quiz (Generate when materials updated)")
                 }
 
                 uiState.quizError?.let { err ->
