@@ -4,7 +4,6 @@ package com.example.fyp.screens.history
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -268,7 +267,7 @@ fun HistoryScreen(
         if (showCoinRulesDialog) {
             AlertDialog(
                 onDismissRequest = { showCoinRulesDialog = false },
-                title = { Text("🪙 Your Coins") },
+                title = { Text(t(UiTextKey.HistoryCoinsDialogTitle)) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         // Coin count display at top
@@ -300,32 +299,32 @@ fun HistoryScreen(
                             }
                         }
 
-                        Divider()
+                        HorizontalDivider()
 
                         Text(
-                            "Coin Earning Rules:",
+                            t(UiTextKey.HistoryCoinRulesTitle),
                             style = MaterialTheme.typography.titleMedium
                         )
 
-                        Text("✅ How to Earn:", style = MaterialTheme.typography.titleSmall)
-                        Text("• 1 coin per correct answer", style = MaterialTheme.typography.bodySmall)
-                        Text("• Only first attempt of each quiz version counts", style = MaterialTheme.typography.bodySmall)
-                        Text("• Quiz must match current learning materials", style = MaterialTheme.typography.bodySmall)
+                        Text(t(UiTextKey.HistoryCoinHowToEarnTitle), style = MaterialTheme.typography.titleSmall)
+                        Text(t(UiTextKey.HistoryCoinHowToEarnRule1), style = MaterialTheme.typography.bodySmall)
+                        Text(t(UiTextKey.HistoryCoinHowToEarnRule2), style = MaterialTheme.typography.bodySmall)
+                        Text(t(UiTextKey.HistoryCoinHowToEarnRule3), style = MaterialTheme.typography.bodySmall)
 
-                        Text("🔒 Anti Cheat/Farming Rules:", style = MaterialTheme.typography.titleSmall)
-                        Text("• Need 10+ new translations compare to previous earned coin quiz to earn again", style = MaterialTheme.typography.bodySmall)
-                        Text("• Quiz version must equal materials version", style = MaterialTheme.typography.bodySmall)
-                        Text("• Deleting history blocks quiz regenerate (unless the count is higher than previous record)", style = MaterialTheme.typography.bodySmall)
-                        Text("• Retaking same quiz earns no coins", style = MaterialTheme.typography.bodySmall)
+                        Text(t(UiTextKey.HistoryCoinAntiCheatTitle), style = MaterialTheme.typography.titleSmall)
+                        Text(t(UiTextKey.HistoryCoinAntiCheatRule1), style = MaterialTheme.typography.bodySmall)
+                        Text(t(UiTextKey.HistoryCoinAntiCheatRule2), style = MaterialTheme.typography.bodySmall)
+                        Text(t(UiTextKey.HistoryCoinAntiCheatRule3), style = MaterialTheme.typography.bodySmall)
+                        Text(t(UiTextKey.HistoryCoinAntiCheatRule4), style = MaterialTheme.typography.bodySmall)
 
-                        Text("💡 Tips:", style = MaterialTheme.typography.titleSmall)
-                        Text("• Add more translations regularly", style = MaterialTheme.typography.bodySmall)
-                        Text("• Study well before first attempt!", style = MaterialTheme.typography.bodySmall)
+                        Text(t(UiTextKey.HistoryCoinTipsTitle), style = MaterialTheme.typography.titleSmall)
+                        Text(t(UiTextKey.HistoryCoinTipsRule1), style = MaterialTheme.typography.bodySmall)
+                        Text(t(UiTextKey.HistoryCoinTipsRule2), style = MaterialTheme.typography.bodySmall)
                     }
                 },
                 confirmButton = {
                     Button(onClick = { showCoinRulesDialog = false }) {
-                        Text("Got it!")
+                        Text(t(UiTextKey.HistoryCoinGotItButton))
                     }
                 }
             )

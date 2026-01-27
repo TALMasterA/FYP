@@ -84,7 +84,7 @@ fun LearningSheetScreen(
                 onClick = { onOpenQuiz() },
                 enabled = !uiState.content.isNullOrBlank() && !uiState.isLoading
             ) {
-                Text("📝 Quiz")
+                Text(t(UiTextKey.QuizOpenButton))
             }
         }
     ) { padding ->

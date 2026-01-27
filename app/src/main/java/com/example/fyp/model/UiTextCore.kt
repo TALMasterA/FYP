@@ -245,6 +245,24 @@ enum class UiTextKey {
     QuizOutdatedMessage,
     QuizRecordsLabel,
 
+    // --- History Screen Coins ---
+    HistoryCoinsDialogTitle,
+    HistoryCoinRulesTitle,
+    HistoryCoinHowToEarnTitle,
+    HistoryCoinHowToEarnRule1,
+    HistoryCoinHowToEarnRule2,
+    HistoryCoinHowToEarnRule3,
+    HistoryCoinAntiCheatTitle,
+    HistoryCoinAntiCheatRule1,
+    HistoryCoinAntiCheatRule2,
+    HistoryCoinAntiCheatRule3,
+    HistoryCoinAntiCheatRule4,
+    HistoryCoinTipsTitle,
+    HistoryCoinTipsRule1,
+    HistoryCoinTipsRule2,
+    HistoryCoinGotItButton,
+
+
     // --- Dialogs ---
     DialogLogoutTitle,
     DialogLogoutMessage,

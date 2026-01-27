@@ -509,6 +509,52 @@ val ScreenUiTexts: List<String> = listOf(
     // QuizRecordsLabel
     "records",
 
+    // --- History Screen Coins ---
+    // HistoryCoinsDialogTitle
+    "🪙 Your Coins",
+
+    // HistoryCoinRulesTitle
+    "Coin Earning Rules:",
+
+    // HistoryCoinHowToEarnTitle
+    "✅ How to Earn:",
+
+    // HistoryCoinHowToEarnRule1
+    "• 1 coin per correct answer",
+
+    // HistoryCoinHowToEarnRule2
+    "• Only first attempt of each quiz version counts",
+
+    // HistoryCoinHowToEarnRule3
+    "• Quiz must match current learning materials",
+
+    // HistoryCoinAntiCheatTitle
+    "🔒 Anti Cheat/Farming Rules:",
+
+    // HistoryCoinAntiCheatRule1
+    "• Need 10+ new translations compare to previous earned coin quiz to earn again",
+
+    // HistoryCoinAntiCheatRule2
+    "• Quiz version must equal materials version",
+
+    // HistoryCoinAntiCheatRule3
+    "• Deleting history blocks quiz regenerate (unless the count is higher than previous record)",
+
+    // HistoryCoinAntiCheatRule4
+    "• Retaking same quiz earns no coins",
+
+    // HistoryCoinTipsTitle
+    "💡 Tips:",
+
+    // HistoryCoinTipsRule1
+    "• Add more translations regularly",
+
+    // HistoryCoinTipsRule2
+    "• Study well before first attempt!",
+
+    // HistoryCoinGotItButton
+    "Got it!",
+
     // --- Dialogs ---
     // DialogLogoutTitle
     "Logout?",
