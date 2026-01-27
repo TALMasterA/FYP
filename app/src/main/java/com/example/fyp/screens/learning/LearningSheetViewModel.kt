@@ -239,15 +239,23 @@ class LearningSheetViewModel @Inject constructor(
                 val attemptId = parseAndStoreQuiz.saveAttempt(uidNow, completedAttempt)
                 val finalAttempt = completedAttempt.copy(id = attemptId)
 
-                // Award coins (first-attempt only) if sheet count matches
+                // Award coins (first-attempt only) if all conditions are met
+                // The latestSheetCount must match the quiz's generatedHistoryCountAtGenerate
                 val latestSheetCount = _uiState.value.historyCountAtGenerate
                 val coinsAwarded = quizRepo.awardCoinsIfEligible(uidNow, finalAttempt, latestSheetCount)
+
+                // Only show coins alert if coins were actually awarded
+                val coinMessage = if (coinsAwarded && finalAttempt.totalScore > 0) {
+                    "✨ You earned ${finalAttempt.totalScore} coins!"
+                } else {
+                    null
+                }
 
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,
                     currentAttempt = finalAttempt,
                     isQuizTaken = true,
-                    quizError = if (coinsAwarded) "✨ You earned ${finalAttempt.totalScore} coins! Coins reward correct answers on first quiz attempt for each generated quiz." else null
+                    quizError = coinMessage
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(

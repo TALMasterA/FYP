@@ -283,6 +283,15 @@ class FirestoreQuizRepository @Inject constructor(
             .document("${primaryCode}__${targetCode}")
 
     /**
+     * Get the last awarded quiz count for a language pair.
+     * Returns null if no quiz has been awarded coins yet.
+     */
+    suspend fun getLastAwardedQuizCount(uid: String, primaryCode: String, targetCode: String): Int? {
+        val snap = lastAwardedCountDoc(uid, primaryCode, targetCode).get().await()
+        return if (snap.exists()) snap.getLong("count")?.toInt() else null
+    }
+
+    /**
      * Award coins for first attempt of a generated quiz version.
      * Returns true if coins were awarded, false otherwise.
      *

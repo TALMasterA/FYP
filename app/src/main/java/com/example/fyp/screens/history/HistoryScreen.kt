@@ -255,29 +255,56 @@ fun HistoryScreen(
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Coin display with info button
+                // Coin button - opens dialog with coin count and rules
                 IconButton(onClick = { showCoinRulesDialog = true }) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.MonetizationOn, contentDescription = "Coins")
-                        Text("${uiState.coinStats.coinTotal}", modifier = Modifier.padding(start = 4.dp))
-                        Icon(Icons.Default.Info, contentDescription = "Coin Rules", modifier = Modifier.padding(start = 2.dp))
-                    }
+                    Icon(Icons.Default.MonetizationOn, contentDescription = "Coins")
                 }
 
                 TextButton(onClick = { showFilterDialog = true }) { Text(t(UiTextKey.FilterHistoryScreenTitle)) }
             }
         },
     ) { innerPadding ->
-        // Coin Rules Dialog
+        // Coin Rules Dialog with coin count at top
         if (showCoinRulesDialog) {
             AlertDialog(
                 onDismissRequest = { showCoinRulesDialog = false },
-                title = { Text("🪙 Coin Earning Rules") },
+                title = { Text("🪙 Your Coins") },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        // Coin count display at top
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.MonetizationOn,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(32.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "${uiState.coinStats.coinTotal}",
+                                    style = MaterialTheme.typography.headlineLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        Divider()
+
                         Text(
-                            "Earn coins by completing quizzes! Here are the rules:",
-                            style = MaterialTheme.typography.bodyMedium
+                            "Coin Earning Rules:",
+                            style = MaterialTheme.typography.titleMedium
                         )
 
                         Text("✅ How to Earn:", style = MaterialTheme.typography.titleSmall)
@@ -285,15 +312,14 @@ fun HistoryScreen(
                         Text("• Only first attempt of each quiz version counts", style = MaterialTheme.typography.bodySmall)
                         Text("• Quiz must match current learning materials", style = MaterialTheme.typography.bodySmall)
 
-                        Text("🔒 Anti-Cheat Rules:", style = MaterialTheme.typography.titleSmall)
-                        Text("• Need 10+ new translations to earn coins again", style = MaterialTheme.typography.bodySmall)
+                        Text("🔒 Anti Cheat/Farming Rules:", style = MaterialTheme.typography.titleSmall)
+                        Text("• Need 10+ new translations compare to previous earned coin quiz to earn again", style = MaterialTheme.typography.bodySmall)
                         Text("• Quiz version must equal materials version", style = MaterialTheme.typography.bodySmall)
-                        Text("• Deleting history blocks coin earning", style = MaterialTheme.typography.bodySmall)
+                        Text("• Deleting history blocks quiz regenerate (unless the count is higher than previous record)", style = MaterialTheme.typography.bodySmall)
                         Text("• Retaking same quiz earns no coins", style = MaterialTheme.typography.bodySmall)
 
                         Text("💡 Tips:", style = MaterialTheme.typography.titleSmall)
                         Text("• Add more translations regularly", style = MaterialTheme.typography.bodySmall)
-                        Text("• Regenerate quiz after adding 10+ records", style = MaterialTheme.typography.bodySmall)
                         Text("• Study well before first attempt!", style = MaterialTheme.typography.bodySmall)
                     }
                 },

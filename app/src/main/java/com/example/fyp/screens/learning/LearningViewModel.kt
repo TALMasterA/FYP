@@ -41,6 +41,8 @@ data class LearningUiState(
     val generatingQuizLanguageCode: String? = null,
     // languageCode -> history count when quiz was generated
     val quizCountByLanguage: Map<String, Int> = emptyMap(),
+    // languageCode -> history count when last coins were awarded (for anti-cheat)
+    val lastAwardedQuizCountByLanguage: Map<String, Int> = emptyMap(),
 )
 
 @HiltViewModel
@@ -156,6 +158,7 @@ class LearningViewModel @Inject constructor(
             val existsMap = mutableMapOf<String, Boolean>()
             val countMap = mutableMapOf<String, Int>()
             val quizCountMap = mutableMapOf<String, Int>()
+            val lastAwardedCountMap = mutableMapOf<String, Int>()
             var firstError: String? = null
 
             for (lang in languages) {
@@ -167,6 +170,10 @@ class LearningViewModel @Inject constructor(
                     // Also fetch quiz metadata
                     val quizDoc = quizRepo.getGeneratedQuizDoc(uid, primary, lang)
                     if (quizDoc != null) quizCountMap[lang] = quizDoc.historyCountAtGenerate
+
+                    // Fetch last awarded quiz count (for anti-cheat coin logic)
+                    val lastAwarded = quizRepo.getLastAwardedQuizCount(uid, primary, lang)
+                    if (lastAwarded != null) lastAwardedCountMap[lang] = lastAwarded
                 } catch (ce: CancellationException) {
                     throw ce
                 } catch (e: Exception) {
@@ -179,6 +186,7 @@ class LearningViewModel @Inject constructor(
                 sheetExistsByLanguage = existsMap,
                 sheetCountByLanguage = countMap,
                 quizCountByLanguage = quizCountMap,
+                lastAwardedQuizCountByLanguage = lastAwardedCountMap,
                 error = firstError
             )
         }
