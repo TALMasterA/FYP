@@ -42,7 +42,10 @@ val ScreenUiTexts: List<String> = listOf(
             "- Discrete mode: For short sentences translation. \n" +
             "- Continuous mode: Live conversation capture with user switching. \n" +
             "- Learning: Learning materials generate by AI (use your translation history). \n" +
-            "- App UI language translation. \n",
+            "- History: View your translation history. (Recent 200 records)\n" +
+            "- Quiz: Test your ability! \n" +
+            "- Word bank (Next to the setting): Generate/Refresh the word bank for study words appear in your history. \n" +
+            "- App UI language translation function. \n",
 
     // HelpCaution
     "- Requires internet connection. \n" +
@@ -55,7 +58,8 @@ val ScreenUiTexts: List<String> = listOf(
 
     // HelpNotes
     "- The base language of this app is English, you can use the app UI list to change the languages but it may contain error. \n" +
-            "- If some words have not translated, select the language again. \n",
+            "- If some words have not translated, select the language again. \n" +
+            "- If you encounter any lagging/bug, restart the app.",
 
     // --- Continuous Mode ---
     // ContinuousTitle
@@ -594,6 +598,24 @@ val ScreenUiTexts: List<String> = listOf(
 
     // WordBankDifficulty
     "Difficulty:",
+
+    // WordBankFilterCategory
+    "Category",
+
+    // WordBankFilterCategoryAll
+    "All Categories",
+
+    // WordBankFilterDifficultyLabel
+    "Difficulty Level:",
+
+    // WordBankFilterNoResults
+    "No words match your filter",
+
+    // WordBankRefreshAvailable
+    "✅ New records - refresh available",
+
+    // WordBankRecordsNeeded
+    "📊 Records needed to refresh",
 
     // --- Dialogs ---
     // DialogLogoutTitle

@@ -276,6 +276,12 @@ enum class UiTextKey {
     WordBankEmptyHint,
     WordBankExample,
     WordBankDifficulty,
+    WordBankFilterCategory,
+    WordBankFilterCategoryAll,
+    WordBankFilterDifficultyLabel,
+    WordBankFilterNoResults,
+    WordBankRefreshAvailable,
+    WordBankRecordsNeeded,
 
     // --- Dialogs ---
     DialogLogoutTitle,
