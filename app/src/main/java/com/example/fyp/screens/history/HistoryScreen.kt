@@ -40,6 +40,11 @@ fun HistoryScreen(
     val speechVm: SpeechViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
+    // Refresh coin stats when screen becomes visible (on-demand instead of real-time listener)
+    LaunchedEffect(Unit) {
+        viewModel.refreshCoinStats()
+    }
+
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 

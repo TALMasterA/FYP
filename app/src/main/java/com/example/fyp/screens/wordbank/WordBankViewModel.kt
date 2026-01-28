@@ -3,9 +3,9 @@ package com.example.fyp.screens.wordbank
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.wordbank.FirestoreWordBankRepository
 import com.example.fyp.data.wordbank.WordBankGenerationRepository
-import com.example.fyp.domain.history.ObserveUserHistoryUseCase
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.SpeechResult
@@ -18,7 +18,6 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -30,7 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 class WordBankViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
-    private val observeUserHistory: ObserveUserHistoryUseCase,
+    private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val wordBankRepo: FirestoreWordBankRepository,
     private val wordBankGenRepo: WordBankGenerationRepository,
     private val speakTextUseCase: SpeakTextUseCase
@@ -44,6 +43,10 @@ class WordBankViewModel @Inject constructor(
     private var generationJob: Job? = null
     private var records: List<TranslationRecord> = emptyList()
     private var primaryLanguageCode: String = "en-US"
+
+    // Cache for word bank existence to avoid repeated Firestore reads
+    private val wordBankExistsCache: MutableMap<String, Boolean> = mutableMapOf()
+    private var lastPrimaryForCache: String? = null
 
     // Minimum records needed to regenerate word bank
     companion object {
@@ -61,6 +64,7 @@ class WordBankViewModel @Inject constructor(
                     AuthState.LoggedOut -> {
                         currentUserId = null
                         historyJob?.cancel()
+                        sharedHistoryDataSource.stopObserving()
                         _uiState.value = WordBankUiState(
                             isLoading = false,
                             error = "Not logged in"
@@ -92,14 +96,11 @@ class WordBankViewModel @Inject constructor(
         historyJob?.cancel()
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
+        // Use shared history data source (single listener shared across ViewModels)
+        sharedHistoryDataSource.startObserving(userId)
+
         historyJob = viewModelScope.launch {
-            observeUserHistory(userId)
-                .catch { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = e.message
-                    )
-                }
+            sharedHistoryDataSource.historyRecords
                 .collect { list ->
                     records = list
                     refreshClusters()
@@ -107,20 +108,40 @@ class WordBankViewModel @Inject constructor(
         }
     }
 
+
     private fun refreshClusters() {
         viewModelScope.launch {
             val uid = currentUserId ?: return@launch
 
+            // Clear cache if primary language changed
+            if (lastPrimaryForCache != primaryLanguageCode) {
+                wordBankExistsCache.clear()
+                lastPrimaryForCache = primaryLanguageCode
+            }
+
             // Group records by target language (excluding primary)
-            val clusters = records
+            val languageGroups = records
                 .filter { it.targetLang != primaryLanguageCode && it.targetLang.isNotBlank() }
                 .groupBy { it.targetLang }
+
+            // Only check wordBankExists for languages not in cache
+            val languagesToCheck = languageGroups.keys.filter { it !in wordBankExistsCache }
+
+            // Batch check for new languages only
+            for (lang in languagesToCheck) {
+                try {
+                    wordBankExistsCache[lang] = wordBankRepo.wordBankExists(uid, primaryLanguageCode, lang)
+                } catch (_: Exception) {
+                    wordBankExistsCache[lang] = false
+                }
+            }
+
+            val clusters = languageGroups
                 .map { (lang, recs) ->
-                    val hasWordBank = wordBankRepo.wordBankExists(uid, primaryLanguageCode, lang)
                     WordBankLanguageCluster(
                         languageCode = lang,
                         recordCount = recs.size,
-                        hasWordBank = hasWordBank
+                        hasWordBank = wordBankExistsCache[lang] ?: false
                     )
                 }
                 .sortedByDescending { it.recordCount }
@@ -131,6 +152,13 @@ class WordBankViewModel @Inject constructor(
                 languageClusters = clusters
             )
         }
+    }
+
+    /**
+     * Invalidate cache for a specific language (e.g., after generating word bank)
+     */
+    private fun invalidateWordBankCache(languageCode: String) {
+        wordBankExistsCache.remove(languageCode)
     }
 
     fun selectLanguage(languageCode: String) {
@@ -193,7 +221,7 @@ class WordBankViewModel @Inject constructor(
         generationJob = null
         _uiState.value = _uiState.value.copy(
             isGenerating = false,
-            error = "Generation cancelled"
+            error = null
         )
     }
 
@@ -261,7 +289,8 @@ class WordBankViewModel @Inject constructor(
                 // Refresh the word bank
                 val wordBank = wordBankRepo.getWordBank(uid, primaryLanguageCode, targetLanguageCode)
 
-                // Refresh clusters to update hasWordBank status
+                // Invalidate cache and refresh clusters to update hasWordBank status
+                invalidateWordBankCache(targetLanguageCode)
                 refreshClusters()
 
                 _uiState.value = _uiState.value.copy(

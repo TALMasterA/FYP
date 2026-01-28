@@ -3,10 +3,10 @@ package com.example.fyp.screens.learning
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
 import com.example.fyp.data.learning.FirestoreQuizRepository
 import com.example.fyp.data.learning.QuizParser
-import com.example.fyp.domain.history.ObserveUserHistoryUseCase
 import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
 import com.example.fyp.domain.learning.GenerateQuizUseCase
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
@@ -49,7 +49,7 @@ data class LearningUiState(
 class LearningViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val sheetsRepo: FirestoreLearningSheetsRepository,
-    private val observeUserHistory: ObserveUserHistoryUseCase,
+    private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val observeUserSettings: ObserveUserSettingsUseCase,
     private val generateLearningMaterials: GenerateLearningMaterialsUseCase,
     private val userSettingsRepo: UserSettingsRepository,
@@ -78,6 +78,7 @@ class LearningViewModel @Inject constructor(
                     }
                     AuthState.LoggedOut -> {
                         stopJobs()
+                        sharedHistoryDataSource.stopObserving()
                         _uiState.value = LearningUiState(isLoading = false, error = "Not logged in")
                     }
                 }
@@ -127,8 +128,11 @@ class LearningViewModel @Inject constructor(
             }
         }
 
+        // Use shared history data source (single listener shared across ViewModels)
+        sharedHistoryDataSource.startObserving(uid)
+
         historyJob = viewModelScope.launch {
-            observeUserHistory(uid).collect { records ->
+            sharedHistoryDataSource.historyRecords.collect { records ->
                 _uiState.value = _uiState.value.copy(records = records, isLoading = false)
                 recomputeClusters()
             }
@@ -147,12 +151,29 @@ class LearningViewModel @Inject constructor(
         refreshSheetMetaForClusters()
     }
 
+    // Cache for sheet metadata to avoid repeated Firestore reads
+    private val sheetMetaCache = mutableMapOf<String, SheetMetaCache>()
+    private var lastPrimaryForCache: String? = null
+
+    private data class SheetMetaCache(
+        val exists: Boolean,
+        val sheetCount: Int?,
+        val quizCount: Int?,
+        val lastAwardedCount: Int?
+    )
+
     private fun refreshSheetMetaForClusters() {
         val uid = this.uid ?: return
         val s = _uiState.value
         val primary = s.primaryLanguageCode
         val languages = s.clusters.map { it.languageCode }
         if (languages.isEmpty()) return
+
+        // Clear cache if primary language changed
+        if (lastPrimaryForCache != primary) {
+            sheetMetaCache.clear()
+            lastPrimaryForCache = primary
+        }
 
         viewModelScope.launch {
             val existsMap = mutableMapOf<String, Boolean>()
@@ -161,24 +182,37 @@ class LearningViewModel @Inject constructor(
             val lastAwardedCountMap = mutableMapOf<String, Int>()
             var firstError: String? = null
 
-            for (lang in languages) {
+            // Only fetch metadata for languages not in cache
+            val languagesToFetch = languages.filter { it !in sheetMetaCache }
+
+            for (lang in languagesToFetch) {
                 try {
                     val doc = sheetsRepo.getSheet(uid, primary, lang)
-                    existsMap[lang] = (doc != null)
-                    if (doc != null) countMap[lang] = doc.historyCountAtGenerate
-
-                    // Also fetch quiz metadata
                     val quizDoc = quizRepo.getGeneratedQuizDoc(uid, primary, lang)
-                    if (quizDoc != null) quizCountMap[lang] = quizDoc.historyCountAtGenerate
-
-                    // Fetch last awarded quiz count (for anti-cheat coin logic)
                     val lastAwarded = quizRepo.getLastAwardedQuizCount(uid, primary, lang)
-                    if (lastAwarded != null) lastAwardedCountMap[lang] = lastAwarded
+
+                    sheetMetaCache[lang] = SheetMetaCache(
+                        exists = doc != null,
+                        sheetCount = doc?.historyCountAtGenerate,
+                        quizCount = quizDoc?.historyCountAtGenerate,
+                        lastAwardedCount = lastAwarded
+                    )
                 } catch (ce: CancellationException) {
                     throw ce
                 } catch (e: Exception) {
                     if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
-                    existsMap[lang] = false
+                    sheetMetaCache[lang] = SheetMetaCache(false, null, null, null)
+                }
+            }
+
+            // Build result maps from cache
+            for (lang in languages) {
+                val cached = sheetMetaCache[lang]
+                if (cached != null) {
+                    existsMap[lang] = cached.exists
+                    cached.sheetCount?.let { countMap[lang] = it }
+                    cached.quizCount?.let { quizCountMap[lang] = it }
+                    cached.lastAwardedCount?.let { lastAwardedCountMap[lang] = it }
                 }
             }
 
@@ -190,6 +224,13 @@ class LearningViewModel @Inject constructor(
                 error = firstError
             )
         }
+    }
+
+    /**
+     * Invalidate cache for a specific language (e.g., after generating materials/quiz)
+     */
+    fun invalidateSheetCache(languageCode: String) {
+        sheetMetaCache.remove(languageCode)
     }
 
     fun generateFor(languageCode: String) {
@@ -229,6 +270,9 @@ class LearningViewModel @Inject constructor(
                     content = materialOnly,
                     historyCountAtGenerate = countNow
                 )
+
+                // Invalidate cache so next refresh fetches fresh data
+                invalidateSheetCache(languageCode)
 
                 _uiState.value = uiState.value.copy(
                     generatingLanguageCode = null,

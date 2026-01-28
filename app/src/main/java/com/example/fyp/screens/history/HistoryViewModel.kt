@@ -3,11 +3,11 @@ package com.example.fyp.screens.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.learning.FirestoreQuizRepository
 import com.example.fyp.domain.history.DeleteHistoryRecordUseCase
 import com.example.fyp.domain.history.DeleteSessionUseCase
 import com.example.fyp.domain.history.ObserveSessionNamesUseCase
-import com.example.fyp.domain.history.ObserveUserHistoryUseCase
 import com.example.fyp.domain.history.RenameSessionUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.TranslationRecord
@@ -32,7 +32,7 @@ data class HistoryUiState(
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
-    private val observeUserHistory: ObserveUserHistoryUseCase,
+    private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val observeSessionNames: ObserveSessionNamesUseCase,
     private val deleteHistoryRecord: DeleteHistoryRecordUseCase,
     private val renameSession: RenameSessionUseCase,
@@ -46,7 +46,6 @@ class HistoryViewModel @Inject constructor(
     private var currentUserId: String? = null
     private var historyJob: Job? = null
     private var sessionsJob: Job? = null
-    private var coinJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -61,6 +60,7 @@ class HistoryViewModel @Inject constructor(
                         currentUserId = null
                         historyJob?.cancel()
                         sessionsJob?.cancel()
+                        sharedHistoryDataSource.stopObserving()
                         _uiState.value = HistoryUiState(
                             isLoading = false,
                             error = "Not logged in",
@@ -121,23 +121,37 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Refresh coin stats on demand (e.g., when screen becomes visible).
+     * This replaces the real-time listener to reduce database reads.
+     */
+    fun refreshCoinStats() {
+        val uid = currentUserId ?: return
+        viewModelScope.launch {
+            try {
+                val stats = quizRepo.fetchUserCoinStats(uid) ?: UserCoinStats()
+                _uiState.value = _uiState.value.copy(coinStats = stats)
+            } catch (_: Exception) {
+                // Ignore coin fetch errors
+            }
+        }
+    }
+
     private fun startListening(userId: String) {
-        historyJob?.cancel(); sessionsJob?.cancel(); coinJob?.cancel()
+        historyJob?.cancel()
+        sessionsJob?.cancel()
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
+        // Use shared history data source (single listener shared across ViewModels)
+        sharedHistoryDataSource.startObserving(userId)
+
         historyJob = viewModelScope.launch {
-            observeUserHistory(userId)
-                .catch { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = e.message,
-                        records = emptyList()
-                    )
-                }
+            // Observe from shared data source instead of creating new listener
+            sharedHistoryDataSource.historyRecords
                 .collect { list ->
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = null,
+                        isLoading = sharedHistoryDataSource.isLoading.value,
+                        error = sharedHistoryDataSource.error.value,
                         records = list
                     )
                 }
@@ -151,12 +165,7 @@ class HistoryViewModel @Inject constructor(
                 }
         }
 
-        coinJob = viewModelScope.launch {
-            quizRepo.observeUserCoinStats(userId)
-                .catch { /* ignore coin errors */ }
-                .collect { stats ->
-                    _uiState.value = _uiState.value.copy(coinStats = stats)
-                }
-        }
+        // Fetch coin stats once instead of real-time listener
+        refreshCoinStats()
     }
 }

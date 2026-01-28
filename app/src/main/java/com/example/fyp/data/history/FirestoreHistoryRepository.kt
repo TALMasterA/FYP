@@ -2,6 +2,7 @@ package com.example.fyp.data.history
 
 import com.example.fyp.model.TranslationRecord
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -15,6 +16,11 @@ import com.google.firebase.Timestamp
 class FirestoreHistoryRepository @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
+    companion object {
+        // Default limit for history queries to reduce read costs
+        const val DEFAULT_HISTORY_LIMIT = 200L
+    }
+
     suspend fun save(record: TranslationRecord) {
         firestore.collection("users")
             .document(record.userId)
@@ -33,12 +39,16 @@ class FirestoreHistoryRepository @Inject constructor(
             .await()
     }
 
-    fun getHistory(userId: String): Flow<List<TranslationRecord>> = callbackFlow {
+    /**
+     * Observe history with a limit to reduce Firestore reads.
+     * Returns most recent records first (descending by timestamp).
+     */
+    fun getHistory(userId: String, limit: Long = DEFAULT_HISTORY_LIMIT): Flow<List<TranslationRecord>> = callbackFlow {
         val listener = firestore.collection("users")
             .document(userId)
             .collection("history")
-            .orderBy("timestamp")
-            //.limit(50)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .limit(limit)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
@@ -48,6 +58,25 @@ class FirestoreHistoryRepository @Inject constructor(
                 trySend(records)
             }
         awaitClose { listener.remove() }
+    }
+
+    /**
+     * Get history count without fetching all documents (uses aggregation).
+     * This is much cheaper than fetching all documents just to count them.
+     */
+    suspend fun getHistoryCount(userId: String): Int {
+        return try {
+            val snapshot = firestore.collection("users")
+                .document(userId)
+                .collection("history")
+                .count()
+                .get(com.google.firebase.firestore.AggregateSource.SERVER)
+                .await()
+            snapshot.count.toInt()
+        } catch (e: Exception) {
+            // Fallback: if count aggregation fails, return -1 to indicate unknown
+            -1
+        }
     }
 
     fun listenSessions(userId: String): Flow<List<HistorySession>> = callbackFlow {
