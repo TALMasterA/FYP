@@ -555,6 +555,46 @@ val ScreenUiTexts: List<String> = listOf(
     // HistoryCoinGotItButton
     "Got it!",
 
+    // --- Word Bank ---
+    // WordBankTitle
+    "Word Bank",
+
+    // WordBankSelectLanguage
+    "Select a language to view or generate word bank:",
+
+    // WordBankNoHistory
+    "No Translation History",
+
+    // WordBankNoHistoryHint
+    "Start translating to build your word bank!",
+
+    // WordBankWordsCount
+    "words",
+
+    // WordBankGenerating
+    "Generating...",
+
+    // WordBankGenerate
+    "Generate Word Bank",
+
+    // WordBankRegenerate
+    "Regenerate Word Bank",
+
+    // WordBankRefresh
+    "🔄 Refresh Word Bank",
+
+    // WordBankEmpty
+    "No Word Bank Yet",
+
+    // WordBankEmptyHint
+    "Tap the button above to generate a word bank from your translation history.",
+
+    // WordBankExample
+    "Example:",
+
+    // WordBankDifficulty
+    "Difficulty:",
+
     // --- Dialogs ---
     // DialogLogoutTitle
     "Logout?",

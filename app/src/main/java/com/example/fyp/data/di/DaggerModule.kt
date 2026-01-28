@@ -25,6 +25,8 @@ import com.example.fyp.domain.learning.GenerateQuizUseCase
 import com.example.fyp.domain.learning.LearningContentRepository
 import com.example.fyp.domain.learning.QuizGenerationRepository
 import com.example.fyp.data.learning.QuizGenerationRepositoryImpl
+import com.example.fyp.data.wordbank.WordBankGenerationRepository
+import com.example.fyp.data.wordbank.FirestoreWordBankRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -89,5 +91,15 @@ object AppModule {
     @Provides
     fun provideGenerateQuizUseCase(repo: QuizGenerationRepository) =
         GenerateQuizUseCase(repo)
+
+    @Provides
+    @Singleton
+    fun provideWordBankGenerationRepository(genAi: CloudGenAiClient): WordBankGenerationRepository =
+        WordBankGenerationRepository(genAi)
+
+    @Provides
+    @Singleton
+    fun provideFirestoreWordBankRepository(db: FirebaseFirestore): FirestoreWordBankRepository =
+        FirestoreWordBankRepository(db)
 
 }

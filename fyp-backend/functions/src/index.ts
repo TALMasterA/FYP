@@ -165,7 +165,10 @@ export const translateTexts = onCall(
 );
 
 export const generateLearningContent = onCall(
-  { secrets: [GENAI_BASE_URL, GENAI_API_VERSION, GENAI_API_KEY] },
+  {
+    secrets: [GENAI_BASE_URL, GENAI_API_VERSION, GENAI_API_KEY],
+    timeoutSeconds: 300, // 5 minutes timeout for AI generation
+  },
   async (request) => {
     requireAuth(request.auth);
 

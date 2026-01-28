@@ -38,6 +38,7 @@ import com.example.fyp.model.UiTextKey
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.Alignment
@@ -58,6 +59,7 @@ fun HomeScreen(
     onOpenHistory: () -> Unit,
     onOpenLearning: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenWordBank: () -> Unit,
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
@@ -181,6 +183,23 @@ fun HomeScreen(
                     .padding(16.dp)
             ) {
                 Icon(Icons.Filled.Settings, contentDescription = "Settings")
+            }
+
+            // Word Bank FAB on the left side (only show when logged in)
+            if (isLoggedIn) {
+                FloatingActionButton(
+                    onClick = onOpenWordBank,
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .imePadding()
+                        .systemBarsPadding()
+                        .offset(y = (-28).dp)
+                        .padding(16.dp),
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Word Bank")
+                }
             }
         }
     }

@@ -37,6 +37,8 @@ import com.example.fyp.screens.settings.SettingsScreen
 import com.example.fyp.screens.settings.SettingsViewModel
 import com.example.fyp.screens.speech.ContinuousConversationScreen
 import com.example.fyp.screens.speech.SpeechRecognitionScreen
+import com.example.fyp.screens.wordbank.WordBankScreen
+import com.example.fyp.screens.wordbank.WordBankViewModel
 import com.example.fyp.ui.theme.FYPTheme
 import com.example.fyp.ui.theme.Typography as AppTypography
 
@@ -50,6 +52,7 @@ sealed class AppScreen(val route: String) {
     object ResetPassword : AppScreen("reset_password")
     object Learning : AppScreen("learning")
     object Settings : AppScreen("settings")
+    object WordBank : AppScreen("word_bank")
 
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
         fun routeFor(primaryCode: String, targetCode: String) =
@@ -83,6 +86,9 @@ fun AppNavigation() {
     // One LearningViewModel shared for Learning + Sheet
     val learningViewModel: LearningViewModel = hiltViewModel()
 
+    // One WordBankViewModel shared across app (so generation continues when leaving page)
+    val wordBankViewModel: WordBankViewModel = hiltViewModel()
+
     val fontSizeScale = validateScale(settingsUiState.settings.fontSizeScale)
     val scaledTypography = createScaledTypography(AppTypography, fontSizeScale)
 
@@ -115,6 +121,7 @@ fun AppNavigation() {
                             onOpenLogin = { navController.navigate(AppScreen.Login.route) { launchSingleTop = true } },
                             onOpenLearning = { navController.navigate(AppScreen.Learning.route) { launchSingleTop = true } },
                             onOpenSettings = { navController.navigate(AppScreen.Settings.route) { launchSingleTop = true } },
+                            onOpenWordBank = { navController.navigate(AppScreen.WordBank.route) { launchSingleTop = true } },
                         )
                     }
 
@@ -261,6 +268,22 @@ fun AppNavigation() {
                                     targetCode = targetCode,
                                     onBack = { navController.popBackStack() },
                                     learningViewModel = learningViewModel
+                                )
+                            },
+                            onNeedLogin = {
+                                navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
+                            }
+                        )
+                    }
+
+                    composable(AppScreen.WordBank.route) {
+                        RequireLoginGate(
+                            content = {
+                                WordBankScreen(
+                                    viewModel = wordBankViewModel,
+                                    appLanguageState = appLanguageState,
+                                    primaryLanguageCode = settingsUiState.settings.primaryLanguageCode,
+                                    onBack = { navController.popBackStack() }
                                 )
                             },
                             onNeedLogin = {

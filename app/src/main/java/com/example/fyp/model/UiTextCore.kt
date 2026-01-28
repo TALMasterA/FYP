@@ -262,6 +262,20 @@ enum class UiTextKey {
     HistoryCoinTipsRule2,
     HistoryCoinGotItButton,
 
+    // --- Word Bank ---
+    WordBankTitle,
+    WordBankSelectLanguage,
+    WordBankNoHistory,
+    WordBankNoHistoryHint,
+    WordBankWordsCount,
+    WordBankGenerating,
+    WordBankGenerate,
+    WordBankRegenerate,
+    WordBankRefresh,
+    WordBankEmpty,
+    WordBankEmptyHint,
+    WordBankExample,
+    WordBankDifficulty,
 
     // --- Dialogs ---
     DialogLogoutTitle,
