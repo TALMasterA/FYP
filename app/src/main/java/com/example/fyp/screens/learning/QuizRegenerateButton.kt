@@ -15,9 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.core.rememberTranslator
 import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
 
 @Composable
@@ -34,8 +33,7 @@ fun QuizRegenerateButton(
     onCancelGenerate: () -> Unit,
     appLanguageState: AppLanguageState,
 ) {
-    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
-    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+    val t = rememberTranslator(appLanguageState)
 
     Column(
         modifier = Modifier.fillMaxWidth(),

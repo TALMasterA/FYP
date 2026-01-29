@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.fyp.core.ConfirmationDialog
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.data.config.AzureLanguageConfig
@@ -32,8 +33,6 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.PaddingValues
 import com.example.fyp.core.LanguageDropdownField
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Row
@@ -70,26 +69,17 @@ fun LearningScreen(
         pendingGenerateLang?.let { langCode ->
             val langName = uiLanguageNameFor(langCode)
 
-            AlertDialog(
-                onDismissRequest = { pendingGenerateLang = null },
-                title = { Text(t(UiTextKey.DialogGenerateOverwriteTitle)) },
-                text = {
-                    Text(
-                        t(UiTextKey.DialogGenerateOverwriteMessageTemplate)
-                            .replace("{speclanguage}", langName)
-                    )
+            ConfirmationDialog(
+                title = t(UiTextKey.DialogGenerateOverwriteTitle),
+                message = t(UiTextKey.DialogGenerateOverwriteMessageTemplate)
+                    .replace("{speclanguage}", langName),
+                confirmText = t(UiTextKey.ActionConfirm),
+                cancelText = t(UiTextKey.ActionCancel),
+                onConfirm = {
+                    pendingGenerateLang = null
+                    viewModel.generateFor(langCode)
                 },
-                confirmButton = {
-                    TextButton(onClick = {
-                        pendingGenerateLang = null
-                        viewModel.generateFor(langCode)
-                    }) { Text(t(UiTextKey.ActionConfirm)) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { pendingGenerateLang = null }) {
-                        Text(t(UiTextKey.ActionCancel))
-                    }
-                }
+                onDismiss = { pendingGenerateLang = null }
             )
         }
 

@@ -268,72 +268,13 @@ fun HistoryScreen(
             }
         },
     ) { innerPadding ->
-        // Coin Rules Dialog with coin count at top
-        if (showCoinRulesDialog) {
-            AlertDialog(
-                onDismissRequest = { showCoinRulesDialog = false },
-                title = { Text(t(UiTextKey.HistoryCoinsDialogTitle)) },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        // Coin count display at top
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    Icons.Default.MonetizationOn,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(32.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = "${uiState.coinStats.coinTotal}",
-                                    style = MaterialTheme.typography.headlineLarge,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-
-                        HorizontalDivider()
-
-                        Text(
-                            t(UiTextKey.HistoryCoinRulesTitle),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-
-                        Text(t(UiTextKey.HistoryCoinHowToEarnTitle), style = MaterialTheme.typography.titleSmall)
-                        Text(t(UiTextKey.HistoryCoinHowToEarnRule1), style = MaterialTheme.typography.bodySmall)
-                        Text(t(UiTextKey.HistoryCoinHowToEarnRule2), style = MaterialTheme.typography.bodySmall)
-                        Text(t(UiTextKey.HistoryCoinHowToEarnRule3), style = MaterialTheme.typography.bodySmall)
-
-                        Text(t(UiTextKey.HistoryCoinAntiCheatTitle), style = MaterialTheme.typography.titleSmall)
-                        Text(t(UiTextKey.HistoryCoinAntiCheatRule1), style = MaterialTheme.typography.bodySmall)
-                        Text(t(UiTextKey.HistoryCoinAntiCheatRule2), style = MaterialTheme.typography.bodySmall)
-                        Text(t(UiTextKey.HistoryCoinAntiCheatRule3), style = MaterialTheme.typography.bodySmall)
-                        Text(t(UiTextKey.HistoryCoinAntiCheatRule4), style = MaterialTheme.typography.bodySmall)
-
-                        Text(t(UiTextKey.HistoryCoinTipsTitle), style = MaterialTheme.typography.titleSmall)
-                        Text(t(UiTextKey.HistoryCoinTipsRule1), style = MaterialTheme.typography.bodySmall)
-                        Text(t(UiTextKey.HistoryCoinTipsRule2), style = MaterialTheme.typography.bodySmall)
-                    }
-                },
-                confirmButton = {
-                    Button(onClick = { showCoinRulesDialog = false }) {
-                        Text(t(UiTextKey.HistoryCoinGotItButton))
-                    }
-                }
-            )
-        }
+        // Coin Rules Dialog - extracted to separate component
+        CoinRulesDialog(
+            isVisible = showCoinRulesDialog,
+            onDismiss = { showCoinRulesDialog = false },
+            coinTotal = uiState.coinStats.coinTotal,
+            t = t
+        )
 
         StandardScreenBody(
             innerPadding = innerPadding,

@@ -52,6 +52,16 @@ fun rememberUiTextFunctions(
     return uiText to uiLanguageNameFor
 }
 
+/**
+ * Simplified helper that returns just the translation function.
+ * Useful for dialogs and components that only need text translation.
+ */
+@Composable
+fun rememberTranslator(appLanguageState: AppLanguageState): (UiTextKey) -> String {
+    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+    return { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppLanguageDropdown(
@@ -234,4 +244,55 @@ fun StandardScreenBody(
         verticalArrangement = verticalArrangement,
         content = content
     )
+}
+
+/**
+ * Reusable confirmation dialog for common confirm/cancel patterns.
+ * Reduces boilerplate across screens.
+ */
+@Composable
+fun ConfirmationDialog(
+    title: String,
+    message: String,
+    confirmText: String,
+    cancelText: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    confirmColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary,
+    messageContent: (@Composable () -> Unit)? = null
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            if (messageContent != null) {
+                messageContent()
+            } else {
+                Text(message)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(confirmText, color = confirmColor)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(cancelText)
+            }
+        }
+    )
+}
+
+/**
+ * JSON decode helper with fallback to default value.
+ * Reduces try-catch boilerplate in repositories.
+ */
+inline fun <reified T> kotlinx.serialization.json.Json.decodeOrDefault(
+    jsonString: String,
+    default: T
+): T = try {
+    decodeFromString<T>(jsonString)
+} catch (_: Exception) {
+    default
 }

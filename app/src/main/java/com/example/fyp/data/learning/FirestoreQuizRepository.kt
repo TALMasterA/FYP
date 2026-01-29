@@ -1,5 +1,6 @@
 package com.example.fyp.data.learning
 
+import com.example.fyp.core.decodeOrDefault
 import com.example.fyp.model.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -7,7 +8,6 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -76,16 +76,8 @@ class FirestoreQuizRepository @Inject constructor(
             userId = uid,
             primaryLanguageCode = doc.primaryLanguageCode,
             targetLanguageCode = doc.targetLanguageCode,
-            questions = try {
-                json.decodeFromString<List<QuizQuestion>>(doc.questionsJson)
-            } catch (_: Exception) {
-                emptyList()
-            },
-            answers = try {
-                json.decodeFromString<List<QuizAnswer>>(doc.answersJson)
-            } catch (_: Exception) {
-                emptyList()
-            },
+            questions = json.decodeOrDefault<List<QuizQuestion>>(doc.questionsJson, emptyList()),
+            answers = json.decodeOrDefault<List<QuizAnswer>>(doc.answersJson, emptyList()),
             startedAt = doc.startedAt,
             completedAt = doc.completedAt,
             totalScore = doc.totalScore,
@@ -114,16 +106,8 @@ class FirestoreQuizRepository @Inject constructor(
                 userId = uid,
                 primaryLanguageCode = data.primaryLanguageCode,
                 targetLanguageCode = data.targetLanguageCode,
-                questions = try {
-                    json.decodeFromString<List<QuizQuestion>>(data.questionsJson)
-                } catch (_: Exception) {
-                    emptyList()
-                },
-                answers = try {
-                    json.decodeFromString<List<QuizAnswer>>(data.answersJson)
-                } catch (_: Exception) {
-                    emptyList()
-                },
+                questions = json.decodeOrDefault<List<QuizQuestion>>(data.questionsJson, emptyList()),
+                answers = json.decodeOrDefault<List<QuizAnswer>>(data.answersJson, emptyList()),
                 startedAt = data.startedAt,
                 completedAt = data.completedAt,
                 totalScore = data.totalScore,
@@ -250,11 +234,7 @@ class FirestoreQuizRepository @Inject constructor(
         targetLanguageCode: String
     ): List<QuizQuestion> {
         val doc = getGeneratedQuizDoc(uid, primaryLanguageCode, targetLanguageCode) ?: return emptyList()
-        return try {
-            json.decodeFromString<List<QuizQuestion>>(doc.questionsJson)
-        } catch (_: Exception) {
-            emptyList()
-        }
+        return json.decodeOrDefault<List<QuizQuestion>>(doc.questionsJson, emptyList())
     }
 
     // ---- Coins (first-attempt rewards) ----

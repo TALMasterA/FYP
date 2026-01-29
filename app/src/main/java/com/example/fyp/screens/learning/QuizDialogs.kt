@@ -9,9 +9,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.core.rememberTranslator
 import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
 
 @Composable
@@ -25,8 +24,7 @@ fun CoinRulesDialog(
 ) {
     if (!isVisible) return
 
-    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
-    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+    val t = rememberTranslator(appLanguageState)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -85,8 +83,7 @@ fun QuizRegenConfirmDialog(
 ) {
     if (!isVisible) return
 
-    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
-    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+    val t = rememberTranslator(appLanguageState)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -139,8 +136,7 @@ fun CoinsEarnedDialog(
 ) {
     if (!isVisible) return
 
-    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
-    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+    val t = rememberTranslator(appLanguageState)
 
     AlertDialog(
         onDismissRequest = onDismiss,

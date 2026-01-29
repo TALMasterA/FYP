@@ -2,13 +2,16 @@ package com.example.fyp.screens.history
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.example.fyp.core.ConfirmationDialog
 
+/**
+ * Delete record confirmation dialog using shared ConfirmationDialog.
+ */
 @Composable
 fun DeleteRecordDialog(
     title: String,
@@ -18,25 +21,20 @@ fun DeleteRecordDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = { Text(message) },
-        confirmButton = {
-            Button(
-                onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
-                )
-            ) { Text(confirmText) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(cancelText) }
-        }
+    ConfirmationDialog(
+        title = title,
+        message = message,
+        confirmText = confirmText,
+        cancelText = cancelText,
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        confirmColor = MaterialTheme.colorScheme.error
     )
 }
 
+/**
+ * Delete session confirmation dialog using shared ConfirmationDialog.
+ */
 @Composable
 fun DeleteSessionDialog(
     title: String,
@@ -46,22 +44,14 @@ fun DeleteSessionDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = { Text(message) },
-        confirmButton = {
-            Button(
-                onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
-                )
-            ) { Text(confirmText) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(cancelText) }
-        }
+    ConfirmationDialog(
+        title = title,
+        message = message,
+        confirmText = confirmText,
+        cancelText = cancelText,
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        confirmColor = MaterialTheme.colorScheme.error
     )
 }
 
