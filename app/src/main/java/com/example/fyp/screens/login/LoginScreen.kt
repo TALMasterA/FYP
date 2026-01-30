@@ -85,7 +85,8 @@ fun LoginScreen(
                 uiLanguages = uiLanguages,
                 appLanguageState = appLanguageState,
                 onUpdateAppLanguage = onUpdateAppLanguage,
-                uiText = uiText
+                uiText = uiText,
+                isLoggedIn = false
             )
 
             updateLogoutMsg?.let {

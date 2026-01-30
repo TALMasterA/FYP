@@ -67,37 +67,37 @@ dependencies {
 
     // Core UI
     implementation(libs.ui)
-    implementation("androidx.compose.material3:material3:1.3.0")
-    implementation("androidx.activity:activity-compose:1.9.2")
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
 
     // Networking
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(libs.okhttp)
 
     // Azure/Speech
-    implementation("com.microsoft.cognitiveservices.speech:client-sdk:1.47.0")
-    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
-    implementation("androidx.navigation:navigation-compose:2.8.3")
+    implementation(libs.azure.speech.sdk)
+    implementation(libs.accompanist.permissions)
+    implementation(libs.androidx.navigation.compose)
 
     // Lifecycle
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // Firebase - BOM + explicit KTX
-    implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-crashlytics")
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-functions")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
-    implementation("com.google.firebase:firebase-perf")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.functions)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.firebase.perf)
 
     // Hilt DI
-    implementation("com.google.dagger:hilt-android:2.52")
+    implementation(libs.hilt.android)
     implementation(libs.espresso.core)
-    kapt("com.google.dagger:hilt-compiler:2.52")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    kapt(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 
     // Tests
     testImplementation(libs.junit)
@@ -108,12 +108,12 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation(libs.androidx.datastore.preferences)
 
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.compose.material.icons.extended)
 
-    implementation("androidx.preference:preference:1.2.1")
+    implementation(libs.androidx.preference)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation(libs.kotlinx.serialization.json)
 }
 

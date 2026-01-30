@@ -115,6 +115,7 @@ fun SpeechRecognitionScreen(
                         onUpdateAppLanguage = onUpdateAppLanguage,
                         uiText = uiText,
                         enabled = isLoggedIn,
+                        isLoggedIn = isLoggedIn
                     )
 
                     Text(text = t(UiTextKey.SpeechInstructions))

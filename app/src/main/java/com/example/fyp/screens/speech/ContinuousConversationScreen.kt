@@ -207,6 +207,7 @@ fun ContinuousConversationScreen(
                                 onUpdateAppLanguage = onUpdateAppLanguage,
                                 uiText = uiText,
                                 enabled = isLoggedIn,
+                                isLoggedIn = isLoggedIn
                             )
 
                             Text(

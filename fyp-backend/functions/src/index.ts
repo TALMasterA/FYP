@@ -25,6 +25,48 @@ function requireAuth(auth: unknown) {
   }
 }
 
+// ============ Reusable Validation Helpers ============
+
+/**
+ * Validates that a required string parameter is present and non-empty.
+ * @param value The value to validate
+ * @param paramName The parameter name for error messages
+ * @returns The trimmed string value
+ */
+function requireString(value: unknown, paramName: string): string {
+  const str = String(value ?? "").trim();
+  if (!str) {
+    throw new HttpsError("invalid-argument", `${paramName} is required`);
+  }
+  return str;
+}
+
+/**
+ * Validates an optional string parameter, returning empty string if not provided.
+ * @param value The value to validate
+ * @returns The trimmed string value or empty string
+ */
+function optionalString(value: unknown): string {
+  return value ? String(value).trim() : "";
+}
+
+/**
+ * Validates array parameter with optional max length check.
+ * @param value The value to validate
+ * @param paramName The parameter name for error messages
+ * @param maxLength Optional maximum array length
+ * @returns The validated array
+ */
+function requireArray<T>(value: unknown, paramName: string, maxLength?: number): T[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new HttpsError("invalid-argument", `${paramName} is required`);
+  }
+  if (maxLength && value.length > maxLength) {
+    throw new HttpsError("resource-exhausted", `${paramName} exceeds maximum of ${maxLength} items`);
+  }
+  return value as T[];
+}
+
 export const getSpeechToken = onCall(
   {secrets: [AZURE_SPEECH_KEY, AZURE_SPEECH_REGION]},
   async (request) => {
@@ -67,20 +109,9 @@ export const translateText = onCall(
   async (request) => {
     requireAuth(request.auth);
 
-    const text = String(request.data?.text ?? "");
-    const to = String(request.data?.to ?? "");
-    const from = request.data?.from ? String(request.data.from) : "";
-
-    if (!text.trim()) {
-      throw new HttpsError(
-        "invalid-argument", "text is required"
-      );
-    }
-    if (!to.trim()) {
-      throw new HttpsError(
-        "invalid-argument", "to is required"
-      );
-    }
+    const text = requireString(request.data?.text, "text");
+    const to = requireString(request.data?.to, "to");
+    const from = optionalString(request.data?.from);
 
     const key = AZURE_TRANSLATOR_KEY.value();
     const region = AZURE_TRANSLATOR_REGION.value();
@@ -113,24 +144,11 @@ export const translateText = onCall(
 export const translateTexts = onCall(
   {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
   async (request) => {
-    // requireAuth(request.auth);
-
-    const texts: unknown[] =
-    Array.isArray(request.data?.texts) ? request.data.texts : [];
-
-    if (texts.length > 250) {
-      throw new HttpsError("resource-exhausted", "Too many UI strings.");
-    }
-
-    const to = String(request.data?.to ?? "");
-    const from = request.data?.from ? String(request.data.from) : "";
-
-    if (texts.length === 0) {
-      throw new HttpsError(
-        "invalid-argument", "texts is required"
-      );
-    }
-    if (!to.trim()) throw new HttpsError("invalid-argument", "to is required");
+    // No auth required - allows UI language translation for all users
+    // Using validation helpers with max limit (250) for rate protection
+    const texts = requireArray<unknown>(request.data?.texts, "texts", 250);
+    const to = requireString(request.data?.to, "to");
+    const from = optionalString(request.data?.from);
 
     const key = AZURE_TRANSLATOR_KEY.value();
     const region = AZURE_TRANSLATOR_REGION.value();
@@ -172,15 +190,8 @@ export const generateLearningContent = onCall(
   async (request) => {
     requireAuth(request.auth);
 
-    const deployment = String(request.data?.deployment ?? "");
-    const prompt = String(request.data?.prompt ?? "");
-
-    if (!deployment.trim()) {
-      throw new HttpsError("invalid-argument", "deployment is required");
-    }
-    if (!prompt.trim()) {
-      throw new HttpsError("invalid-argument", "prompt is required");
-    }
+    const deployment = requireString(request.data?.deployment, "deployment");
+    const prompt = requireString(request.data?.prompt, "prompt");
 
     const baseUrl = GENAI_BASE_URL.value();
     const apiVersion = GENAI_API_VERSION.value();

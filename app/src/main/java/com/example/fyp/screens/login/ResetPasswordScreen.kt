@@ -19,6 +19,7 @@ import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.AuthState
 
 @Composable
 fun ResetPasswordScreen(
@@ -29,6 +30,8 @@ fun ResetPasswordScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val authState by viewModel.authState.collectAsStateWithLifecycle()
+    val isLoggedIn = authState is AuthState.LoggedIn
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
@@ -48,7 +51,8 @@ fun ResetPasswordScreen(
                 uiLanguages = uiLanguages,
                 appLanguageState = appLanguageState,
                 onUpdateAppLanguage = onUpdateAppLanguage,
-                uiText = uiText
+                uiText = uiText,
+                isLoggedIn = isLoggedIn
             )
 
             Text(

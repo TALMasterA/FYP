@@ -69,12 +69,31 @@ fun AppLanguageDropdown(
     appLanguageState: AppLanguageState,
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     uiText: (UiTextKey, String) -> String,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    isLoggedIn: Boolean = false
 ) {
     val scope = rememberCoroutineScope()
     val (_, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val context = LocalContext.current
     val cache = remember { UiLanguageCacheStore(context) }
+
+    // State for showing guest limit dialog
+    var showGuestLimitDialog by remember { mutableStateOf(false) }
+
+    // Show guest limit alert dialog
+    if (showGuestLimitDialog) {
+        AlertDialog(
+            onDismissRequest = { showGuestLimitDialog = false },
+            title = { Text(uiText(UiTextKey.GuestTranslationLimitTitle, "Login Required")) },
+            text = { Text(uiText(UiTextKey.GuestTranslationLimitMessage,
+                "You have already changed the UI language once. Please login to change it again. Logged-in users have unlimited language changes with local cache support.")) },
+            confirmButton = {
+                TextButton(onClick = { showGuestLimitDialog = false }) {
+                    Text(uiText(UiTextKey.ActionConfirm, "OK"))
+                }
+            }
+        )
+    }
 
     LanguageDropdownField(
         label = uiText(UiTextKey.AppUiLanguageLabel, "App UI language"),
@@ -87,7 +106,7 @@ fun AppLanguageDropdown(
 
             scope.launch {
                 try {
-                    // English: no translated map, always fallback to BaseUiTexts
+                    // English: no translated map, always fallback to BaseUiTexts (no API call needed)
                     if (code.startsWith("en")) {
                         onUpdateAppLanguage(code, emptyMap())
                         cache.setSelectedLanguage(code)
@@ -98,7 +117,7 @@ fun AppLanguageDropdown(
                     val currentHash = baseUiTextsHash()
                     val cachedHash = cache.getBaseHash(code)
 
-                    // Same base version + cached map => no API call
+                    // Same base version + cached map => no API call (works for both logged-in and guests)
                     if (cachedHash == currentHash) {
                         val cachedMap = cache.loadUiTexts(code)
                         if (!cachedMap.isNullOrEmpty()) {
@@ -108,7 +127,17 @@ fun AppLanguageDropdown(
                         }
                     }
 
-                    // Otherwise call API
+                    // API call needed - check guest limit if not logged in
+                    if (!isLoggedIn) {
+                        val guestAlreadyUsed = cache.hasGuestUsedTranslation()
+                        if (guestAlreadyUsed) {
+                            // Show dialog and don't proceed
+                            showGuestLimitDialog = true
+                            return@launch
+                        }
+                    }
+
+                    // Call API for translation
                     val cloud = CloudTranslatorClient()
                     val translatedList = cloud.translateTexts(
                         texts = BaseUiTexts,
@@ -123,6 +152,11 @@ fun AppLanguageDropdown(
                     cache.setSelectedLanguage(code)
                     cache.saveUiTexts(code, map)
                     cache.setBaseHash(code, currentHash)
+
+                    // Mark guest as having used their one-time translation (only if not logged in)
+                    if (!isLoggedIn) {
+                        cache.setGuestTranslationUsed()
+                    }
                 } catch (e: Exception) {
                     Log.e("UITranslation", "Error: ${e.message}", e)
                     onUpdateAppLanguage("en-US", emptyMap())

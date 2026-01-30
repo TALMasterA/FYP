@@ -132,7 +132,8 @@ fun HomeScreen(
                     appLanguageState = appLanguageState,
                     onUpdateAppLanguage = onUpdateAppLanguage,
                     uiText = uiText,
-                    enabled = true
+                    enabled = true,
+                    isLoggedIn = isLoggedIn
                 )
 
                 if (!isLoggedIn) {

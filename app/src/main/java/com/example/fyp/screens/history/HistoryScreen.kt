@@ -287,6 +287,7 @@ fun HistoryScreen(
                     appLanguageState = appLanguageState,
                     onUpdateAppLanguage = onUpdateAppLanguage,
                     uiText = uiText,
+                    isLoggedIn = true
                 )
             }
 

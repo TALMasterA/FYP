@@ -50,6 +50,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isLoggedIn = uiState.uid != null
 
     val context = LocalContext.current
     val supportedLanguages = remember { AzureLanguageConfig.loadSupportedLanguages(context) }
@@ -85,7 +86,8 @@ fun SettingsScreen(
                 appLanguageState = appLanguageState,
                 onUpdateAppLanguage = onUpdateAppLanguage,
                 uiText = uiText,
-                enabled = true
+                enabled = true,
+                isLoggedIn = isLoggedIn
             )
 
             TextButton(onClick = onOpenResetPassword) {

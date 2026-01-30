@@ -12,13 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import com.example.fyp.core.LocalAppLanguageState
 import com.example.fyp.core.LocalFontSizeScale
-import com.example.fyp.core.RequireLoginGate
+import com.example.fyp.core.LocalUiLanguages
+import com.example.fyp.core.LocalUpdateAppLanguage
+import com.example.fyp.core.composableRequireLogin
+import com.example.fyp.core.composableRequireLoginWithArgs
 import com.example.fyp.core.createScaledTypography
 import com.example.fyp.core.validateScale
 import com.example.fyp.data.config.AzureLanguageConfig
@@ -103,8 +105,18 @@ fun AppNavigation() {
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        CompositionLocalProvider(LocalFontSizeScale provides fontSizeScale) {
+        CompositionLocalProvider(
+            LocalFontSizeScale provides fontSizeScale,
+            LocalAppLanguageState provides appLanguageState,
+            LocalUiLanguages provides uiLanguages,
+            LocalUpdateAppLanguage provides updateAppLanguage
+        ) {
             FYPTheme(darkTheme = darkTheme, typography = scaledTypography) {
+                // Helper for navigating to login
+                val navigateToLogin: () -> Unit = {
+                    navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
+                }
+
                 NavHost(
                     navController = navController,
                     startDestination = AppScreen.Home.route
@@ -172,38 +184,30 @@ fun AppNavigation() {
                         )
                     }
 
-                    composable(AppScreen.History.route) {
-                        RequireLoginGate(
-                            content = {
-                                HistoryScreen(
-                                    uiLanguages = uiLanguages,
-                                    appLanguageState = appLanguageState,
-                                    onUpdateAppLanguage = updateAppLanguage,
-                                    onBack = { navController.popBackStack() }
-                                )
-                            },
-                            onNeedLogin = {
-                                navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
-                            }
+                    composableRequireLogin(
+                        route = AppScreen.History.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        HistoryScreen(
+                            uiLanguages = uiLanguages,
+                            appLanguageState = appLanguageState,
+                            onUpdateAppLanguage = updateAppLanguage,
+                            onBack = { navController.popBackStack() }
                         )
                     }
 
-                    composable(AppScreen.Learning.route) {
-                        RequireLoginGate(
-                            content = {
-                                LearningScreen(
-                                    uiLanguages = uiLanguages,
-                                    appLanguageState = appLanguageState,
-                                    onUpdateAppLanguage = updateAppLanguage,
-                                    onBack = { navController.popBackStack() },
-                                    viewModel = learningViewModel,
-                                    onOpenSheet = { primary, target ->
-                                        navController.navigate(AppScreen.LearningSheet.routeFor(primary, target))
-                                    }
-                                )
-                            },
-                            onNeedLogin = {
-                                navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
+                    composableRequireLogin(
+                        route = AppScreen.Learning.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        LearningScreen(
+                            uiLanguages = uiLanguages,
+                            appLanguageState = appLanguageState,
+                            onUpdateAppLanguage = updateAppLanguage,
+                            onBack = { navController.popBackStack() },
+                            viewModel = learningViewModel,
+                            onOpenSheet = { primary, target ->
+                                navController.navigate(AppScreen.LearningSheet.routeFor(primary, target))
                             }
                         )
                     }
@@ -219,76 +223,54 @@ fun AppNavigation() {
                         )
                     }
 
-                    composable(
+                    composableRequireLoginWithArgs(
                         route = AppScreen.LearningSheet.route,
-                        arguments = listOf(
-                            navArgument("primaryCode") { type = NavType.StringType },
-                            navArgument("targetCode") { type = NavType.StringType },
-                        )
+                        argNames = listOf("primaryCode", "targetCode"),
+                        onNeedLogin = navigateToLogin
                     ) { backStackEntry ->
                         val primaryCode = backStackEntry.arguments?.getString("primaryCode").orEmpty()
                         val targetCode = backStackEntry.arguments?.getString("targetCode").orEmpty()
 
-                        RequireLoginGate(
-                            content = {
-                                LearningSheetScreen(
-                                    uiLanguages = uiLanguages,
-                                    appLanguageState = appLanguageState,
-                                    onUpdateAppLanguage = updateAppLanguage,
-                                    primaryCode = primaryCode,
-                                    targetCode = targetCode,
-                                    onBack = { navController.popBackStack() },
-                                    learningViewModel = learningViewModel,
-                                    onOpenQuiz = {
-                                        navController.navigate(AppScreen.Quiz.routeFor(primaryCode, targetCode))
-                                    }
-                                )
-                            },
-                            onNeedLogin = {
-                                navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
+                        LearningSheetScreen(
+                            uiLanguages = uiLanguages,
+                            appLanguageState = appLanguageState,
+                            onUpdateAppLanguage = updateAppLanguage,
+                            primaryCode = primaryCode,
+                            targetCode = targetCode,
+                            onBack = { navController.popBackStack() },
+                            learningViewModel = learningViewModel,
+                            onOpenQuiz = {
+                                navController.navigate(AppScreen.Quiz.routeFor(primaryCode, targetCode))
                             }
                         )
                     }
 
-                    composable(
+                    composableRequireLoginWithArgs(
                         route = AppScreen.Quiz.route,
-                        arguments = listOf(
-                            navArgument("primaryCode") { type = NavType.StringType },
-                            navArgument("targetCode") { type = NavType.StringType },
-                        )
+                        argNames = listOf("primaryCode", "targetCode"),
+                        onNeedLogin = navigateToLogin
                     ) { backStackEntry ->
                         val primaryCode = backStackEntry.arguments?.getString("primaryCode").orEmpty()
                         val targetCode = backStackEntry.arguments?.getString("targetCode").orEmpty()
 
-                        RequireLoginGate(
-                            content = {
-                                QuizScreen(
-                                    appLanguageState = appLanguageState,
-                                    primaryCode = primaryCode,
-                                    targetCode = targetCode,
-                                    onBack = { navController.popBackStack() },
-                                    learningViewModel = learningViewModel
-                                )
-                            },
-                            onNeedLogin = {
-                                navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
-                            }
+                        QuizScreen(
+                            appLanguageState = appLanguageState,
+                            primaryCode = primaryCode,
+                            targetCode = targetCode,
+                            onBack = { navController.popBackStack() },
+                            learningViewModel = learningViewModel
                         )
                     }
 
-                    composable(AppScreen.WordBank.route) {
-                        RequireLoginGate(
-                            content = {
-                                WordBankScreen(
-                                    viewModel = wordBankViewModel,
-                                    appLanguageState = appLanguageState,
-                                    primaryLanguageCode = settingsUiState.settings.primaryLanguageCode,
-                                    onBack = { navController.popBackStack() }
-                                )
-                            },
-                            onNeedLogin = {
-                                navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
-                            }
+                    composableRequireLogin(
+                        route = AppScreen.WordBank.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        WordBankScreen(
+                            viewModel = wordBankViewModel,
+                            appLanguageState = appLanguageState,
+                            primaryLanguageCode = settingsUiState.settings.primaryLanguageCode,
+                            onBack = { navController.popBackStack() }
                         )
                     }
                 }
