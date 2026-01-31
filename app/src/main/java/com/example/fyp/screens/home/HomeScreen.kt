@@ -4,7 +4,9 @@ package com.example.fyp.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
@@ -37,14 +39,12 @@ import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.UiTextKey
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -136,11 +136,17 @@ fun HomeScreen(
                     isLoggedIn = isLoggedIn
                 )
 
+                // Guest warning messages - compact display
                 if (!isLoggedIn) {
                     Text(
                         text = t(UiTextKey.DisableText),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = t(UiTextKey.GuestTranslationLimitMessage),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
 
@@ -149,39 +155,48 @@ fun HomeScreen(
                     style = MaterialTheme.typography.bodyMedium
                 )
 
+                // Consistent spacing - use smaller spacer when extra text is shown
+                Spacer(modifier = Modifier.height(if (isLoggedIn) 48.dp else 8.dp))
+
                 Button(
                     onClick = onStartSpeech,
                     enabled = isLoggedIn,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                 ) {
                     Text(t(UiTextKey.HomeStartButton))
                 }
 
+                Spacer(modifier = Modifier.height(6.dp))
+
                 Button(
                     onClick = onStartContinuous,
                     enabled = isLoggedIn,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                 ) {
                     Text(t(UiTextKey.ContinuousStartScreenButton))
                 }
 
+                Spacer(modifier = Modifier.height(6.dp))
+
                 Button(
                     onClick = onOpenLearning,
                     enabled = isLoggedIn,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                 ) {
                     Text(t(UiTextKey.LearningTitle))
                 }
             }
 
+            // FABs positioned to avoid overlap on all screen sizes
             FloatingActionButton(
                 onClick = onOpenSettings,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .imePadding()
-                    .systemBarsPadding()
-                    .offset(y = (-28).dp)
                     .padding(16.dp)
+                    .navigationBarsPadding()
             ) {
                 Icon(Icons.Filled.Settings, contentDescription = "Settings")
             }
@@ -192,10 +207,8 @@ fun HomeScreen(
                     onClick = onOpenWordBank,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
-                        .imePadding()
-                        .systemBarsPadding()
-                        .offset(y = (-28).dp)
-                        .padding(16.dp),
+                        .padding(16.dp)
+                        .navigationBarsPadding(),
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ) {

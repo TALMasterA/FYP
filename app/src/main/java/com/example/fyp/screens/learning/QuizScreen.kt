@@ -3,9 +3,14 @@ package com.example.fyp.screens.learning
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -122,125 +127,167 @@ fun QuizScreen(
     StandardScreenScaffold(
         title = t(UiTextKey.QuizTitleTemplate).replace("{language}", targetName),
         onBack = onBack,
-        backContentDescription = t(UiTextKey.NavBack)
+        backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            // Info icon in top right corner for coin rules
+            IconButton(onClick = { showCoinRulesDialog = true }) {
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = "Coin Rules",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Regenerate button with coin info
-            QuizRegenerateButton(
-                isGeneratingQuiz = isGeneratingQuiz,
-                isAnyGenerationOngoing = isAnyGenerationOngoing,
-                lastQuizCount = currentQuizCount,
-                sheetHistoryCount = sheetHistoryCount,
-                sheetLowerThanQuiz = sheetLowerThanQuiz,
-                quizGenEnabled = quizGenEnabled,
-                canEarnCoinsOnRegen = canEarnCoinsOnRegen,
-                onShowCoinRules = { showCoinRulesDialog = true },
-                onShowRegenConfirm = { showRegenCoinAlert = true },
-                onCancelGenerate = { learningViewModel.cancelQuizGenerate() },
-                appLanguageState = appLanguageState
-            )
-
-            // Quiz content based on state
-            when {
-                uiState.isQuizTaken && uiState.currentAttempt != null -> {
-                    QuizResultsScreen(
-                        modifier = Modifier.weight(1f),
-                        attempt = uiState.currentAttempt!!,
-                        onRetake = { viewModel.resetQuiz(); viewModel.initializeQuiz() },
-                        onBack = onBack,
+        // For QuizTakingScreen, we need it to fill the entire area so navigation can be at true bottom
+        if (uiState.currentAttempt != null && !uiState.isQuizTaken) {
+            // Only apply top padding from scaffold, let QuizTakingScreen handle bottom with navigationBarsPadding
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        PaddingValues(
+                            top = padding.calculateTopPadding(),
+                            start = 0.dp,
+                            end = 0.dp,
+                            bottom = 0.dp
+                        )
+                    )
+            ) {
+                // Regenerate button at top
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 16.dp)
+                ) {
+                    QuizRegenerateButton(
+                        isGeneratingQuiz = isGeneratingQuiz,
+                        isAnyGenerationOngoing = isAnyGenerationOngoing,
+                        sheetLowerThanQuiz = sheetLowerThanQuiz,
+                        quizGenEnabled = quizGenEnabled,
+                        canEarnCoinsOnRegen = canEarnCoinsOnRegen,
+                        onShowRegenConfirm = { showRegenCoinAlert = true },
+                        onCancelGenerate = { learningViewModel.cancelQuizGenerate() },
                         appLanguageState = appLanguageState
                     )
                 }
 
-                uiState.currentAttempt != null -> {
-                    QuizTakingScreen(
-                        modifier = Modifier.weight(1f),
-                        attempt = uiState.currentAttempt!!,
-                        onAnswerSelected = viewModel::recordQuizAnswer,
-                        onSubmit = viewModel::submitQuiz,
-                        isLoading = uiState.quizLoading || isGeneratingQuiz,
-                        appLanguageState = appLanguageState,
-                        errorMessage = uiState.quizError,
-                        isQuizOutdated = uiState.isQuizOutdated,
-                        onRegenerate = {
-                            val content = uiState.content.orEmpty()
-                            val historyCount = uiState.historyCountAtGenerate ?: 0
-                            learningViewModel.generateQuizFor(targetCode, content, historyCount)
-                        },
-                        regenEnabled = quizGenEnabled
-                    )
-                }
+                QuizTakingScreen(
+                    modifier = Modifier.weight(1f),
+                    attempt = uiState.currentAttempt!!,
+                    onAnswerSelected = viewModel::recordQuizAnswer,
+                    onSubmit = viewModel::submitQuiz,
+                    isLoading = uiState.quizLoading || isGeneratingQuiz,
+                    appLanguageState = appLanguageState,
+                    errorMessage = uiState.quizError,
+                    isQuizOutdated = uiState.isQuizOutdated,
+                    onRegenerate = {
+                        val content = uiState.content.orEmpty()
+                        val historyCount = uiState.historyCountAtGenerate ?: 0
+                        learningViewModel.generateQuizFor(targetCode, content, historyCount)
+                    },
+                    regenEnabled = quizGenEnabled
+                )
+            }
+        } else {
+            // Other states use the original layout with padding
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Regenerate button (simplified - info moved to top bar)
+                QuizRegenerateButton(
+                    isGeneratingQuiz = isGeneratingQuiz,
+                    isAnyGenerationOngoing = isAnyGenerationOngoing,
+                    sheetLowerThanQuiz = sheetLowerThanQuiz,
+                    quizGenEnabled = quizGenEnabled,
+                    canEarnCoinsOnRegen = canEarnCoinsOnRegen,
+                    onShowRegenConfirm = { showRegenCoinAlert = true },
+                    onCancelGenerate = { learningViewModel.cancelQuizGenerate() },
+                    appLanguageState = appLanguageState
+                )
 
-                uiState.quizError != null && uiState.quizQuestions.isEmpty() -> {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                // Quiz content based on state
+                when {
+                    uiState.isQuizTaken && uiState.currentAttempt != null -> {
+                        QuizResultsScreen(
+                            modifier = Modifier.weight(1f),
+                            attempt = uiState.currentAttempt!!,
+                            onRetake = { viewModel.resetQuiz(); viewModel.initializeQuiz() },
+                            onBack = onBack,
+                            appLanguageState = appLanguageState
+                        )
+                    }
+
+                    uiState.quizError != null && uiState.quizQuestions.isEmpty() -> {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    t(UiTextKey.QuizErrorTitle),
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+                                Text(
+                                    uiState.quizError ?: "Unknown error",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(bottom = 24.dp),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                if (uiState.quizError?.contains("No quiz") == true) {
+                                    Text(
+                                        t(UiTextKey.QuizErrorSuggestion),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    uiState.content.isNullOrBlank() && !uiState.isLoading -> {
                         Column(
+                            modifier = Modifier.weight(1f),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                t(UiTextKey.QuizErrorTitle),
+                                t(UiTextKey.QuizNoMaterialsTitle),
                                 style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
                             Text(
-                                uiState.quizError ?: "Unknown error",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(bottom = 24.dp),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                t(UiTextKey.QuizNoMaterialsMessage),
+                                style = MaterialTheme.typography.bodyMedium
                             )
-                            if (uiState.quizError?.contains("No quiz") == true) {
-                                Text(
-                                    t(UiTextKey.QuizErrorSuggestion),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                            }
                         }
                     }
-                }
 
-                uiState.content.isNullOrBlank() && !uiState.isLoading -> {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            t(UiTextKey.QuizNoMaterialsTitle),
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-                        Text(
-                            t(UiTextKey.QuizNoMaterialsMessage),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-
-                else -> {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            if (uiState.quizLoading) t(UiTextKey.QuizGeneratingText) else t(UiTextKey.QuizLoadingText),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                    else -> {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                if (uiState.quizLoading) t(UiTextKey.QuizGeneratingText) else t(UiTextKey.QuizLoadingText),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
                 }
             }

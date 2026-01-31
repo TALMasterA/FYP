@@ -1,5 +1,6 @@
 package com.example.fyp.screens.wordbank
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -122,138 +123,172 @@ private fun WordBankHeader(
     onShowFilterDialog: () -> Unit = {},
     hasActiveFilters: Boolean = false
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         tonalElevation = 2.dp
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = if (isExpanded) 16.dp else 8.dp)
         ) {
-            // Language name with filter button
+            // Always visible: Language name with filter button and expand/collapse toggle
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = languageName,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
+                // Language name (clickable to toggle expand)
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { isExpanded = !isExpanded },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = languageName,
+                        style = if (isExpanded) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
-                if (wordBank != null && wordBank.words.isNotEmpty()) {
-                    TextButton(onClick = onShowFilterDialog) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = "Filter",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(t(UiTextKey.FilterHistoryScreenTitle))
-                        if (hasActiveFilters) {
-                            Spacer(modifier = Modifier.width(4.dp))
+                // Filter and Refresh buttons (always visible)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (wordBank != null && wordBank.words.isNotEmpty()) {
+                        IconButton(onClick = onShowFilterDialog) {
                             Icon(
-                                imageVector = Icons.Default.Circle,
-                                contentDescription = "Active filters",
-                                modifier = Modifier.size(8.dp),
-                                tint = MaterialTheme.colorScheme.primary
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = "Filter",
+                                tint = if (hasActiveFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
+
+                    // Compact refresh/generate button when collapsed
+                    if (!isExpanded && !isGenerating) {
+                        val isFirstGeneration = wordBank == null
+                        val buttonEnabled = isFirstGeneration || canRegenerate
+                        IconButton(
+                            onClick = onGenerate,
+                            enabled = buttonEnabled
+                        ) {
+                            Icon(
+                                imageVector = if (isFirstGeneration) Icons.Default.AutoAwesome else Icons.Default.Refresh,
+                                contentDescription = if (isFirstGeneration) t(UiTextKey.WordBankGenerate) else t(UiTextKey.WordBankRefresh),
+                                tint = if (buttonEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                        }
+                    } else if (!isExpanded && isGenerating) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
                 }
             }
 
-            if (wordBank != null) {
-                Text(
-                    text = "${wordBank.words.size} ${t(UiTextKey.WordBankWordsCount)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Show regeneration status for existing word banks
-            if (wordBank != null && !isGenerating) {
-                if (canRegenerate) {
+            // Expanded content
+            if (isExpanded) {
+                if (wordBank != null) {
                     Text(
-                        text = "+$newRecordCount new records - ${t(UiTextKey.WordBankRefreshAvailable)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    Text(
-                        text = "+$newRecordCount / $minRecordsForRegen ${t(UiTextKey.WordBankRecordsNeeded)}",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = "${wordBank.words.size} ${t(UiTextKey.WordBankWordsCount)}",
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
 
-            // Generate/Refresh button
-            if (isGenerating) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = {},
-                        enabled = false,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Show regeneration status for existing word banks
+                if (wordBank != null && !isGenerating) {
+                    if (canRegenerate) {
+                        Text(
+                            text = "+$newRecordCount new records - ${t(UiTextKey.WordBankRefreshAvailable)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(t(UiTextKey.WordBankGenerating))
+                    } else {
+                        Text(
+                            text = "+$newRecordCount / $minRecordsForRegen ${t(UiTextKey.WordBankRecordsNeeded)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
-                    OutlinedButton(
-                        onClick = onCancel,
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
+                // Generate/Refresh button (full width when expanded)
+                if (isGenerating) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {},
+                            enabled = false,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(t(UiTextKey.WordBankGenerating))
+                        }
+
+                        OutlinedButton(
+                            onClick = onCancel,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cancel",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                } else {
+                    val isFirstGeneration = wordBank == null
+                    val buttonEnabled = isFirstGeneration || canRegenerate
+
+                    Button(
+                        onClick = onGenerate,
+                        enabled = buttonEnabled,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Cancel",
+                            imageVector = if (isFirstGeneration) Icons.Default.AutoAwesome else Icons.Default.Refresh,
+                            contentDescription = null,
                             modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            if (isFirstGeneration) t(UiTextKey.WordBankGenerate)
+                            else t(UiTextKey.WordBankRefresh)
                         )
                     }
                 }
-            } else {
-                val isFirstGeneration = wordBank == null
-                val buttonEnabled = isFirstGeneration || canRegenerate
 
-                Button(
-                    onClick = onGenerate,
-                    enabled = buttonEnabled,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = if (isFirstGeneration) Icons.Default.AutoAwesome else Icons.Default.Refresh,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                if (error != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        if (isFirstGeneration) t(UiTextKey.WordBankGenerate)
-                        else t(UiTextKey.WordBankRefresh)
+                        text = error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
-            }
-
-            if (error != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = error,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
             }
         }
     }

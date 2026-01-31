@@ -12,8 +12,14 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -89,10 +95,34 @@ fun SpeechRecognitionScreen(
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val isLoggedIn = authState is AuthState.LoggedIn
 
+    // Info dialog state
+    var showInfoDialog by remember { mutableStateOf(false) }
+
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text(t(UiTextKey.SpeechTitle)) },
+            text = { Text(t(UiTextKey.SpeechInstructions)) },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text(t(UiTextKey.ActionConfirm))
+                }
+            }
+        )
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.SpeechTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            IconButton(onClick = { showInfoDialog = true }) {
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = "Instructions"
+                )
+            }
+        }
     ) { innerPadding ->
         RecordAudioPermissionRequest {
             Column(
@@ -117,8 +147,6 @@ fun SpeechRecognitionScreen(
                         enabled = isLoggedIn,
                         isLoggedIn = isLoggedIn
                     )
-
-                    Text(text = t(UiTextKey.SpeechInstructions))
 
                     SpeechLanguagePickers(
                         detectLabel = t(UiTextKey.DetectLanguageLabel),

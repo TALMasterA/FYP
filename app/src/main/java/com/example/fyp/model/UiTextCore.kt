@@ -411,7 +411,7 @@ val CoreUiTexts: List<String> = listOf(
     "Login Required",
 
     // GuestTranslationLimitMessage
-    "You have already changed the UI language once. Please login to change it again. Logged-in users have unlimited language changes with local cache support.",
+    "You can only changed the UI language once.",
 
     // --- Placeholders & Input ---
     // SpeechInputPlaceholder

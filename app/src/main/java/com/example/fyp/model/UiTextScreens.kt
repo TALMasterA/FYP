@@ -10,9 +10,7 @@ val ScreenUiTexts: List<String> = listOf(
 
     // HomeInstructions
     "You can change the app UI language by the dropdown on top. \n" +
-            "Please look at the ! information before using the app. \n" +
-            "Below is the two mode of speech-to-text: \n" +
-            "First is the discrete recognition for texting, second is the continuous mode for face communication.",
+            "Please look at the ! information before using the app.",
 
     // ContinuousInstructions
     "Set Speaker A and B languages below. \n" +
