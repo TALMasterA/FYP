@@ -1,4 +1,4 @@
-package com.example.fyp.model
+package com.example.fyp.model.user
 
 import com.google.firebase.Timestamp
 

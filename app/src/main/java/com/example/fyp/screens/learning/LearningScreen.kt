@@ -24,10 +24,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fyp.core.ConfirmationDialog
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.data.config.AzureLanguageConfig
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.data.azure.AzureLanguageConfig
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.BaseUiTexts
+import com.example.fyp.model.ui.UiTextKey
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.MaterialTheme

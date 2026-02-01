@@ -2,7 +2,7 @@ package com.example.fyp.data.repositories
 
 import android.util.Log
 import com.example.fyp.data.clients.CloudSpeechTokenClient
-import com.example.fyp.data.providers.AzureSpeechProvider
+import com.example.fyp.data.azure.AzureSpeechProvider
 import com.example.fyp.model.SpeechResult
 import com.microsoft.cognitiveservices.speech.AutoDetectSourceLanguageConfig
 import com.microsoft.cognitiveservices.speech.CancellationDetails

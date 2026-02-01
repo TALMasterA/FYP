@@ -21,8 +21,8 @@ android {
         applicationId = "com.example.fyp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 18
-        versionName = "1.4.5"
+        versionCode = 19
+        versionName = "1.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

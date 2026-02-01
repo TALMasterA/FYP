@@ -17,10 +17,10 @@ import com.example.fyp.core.StandardScreenBody
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.data.history.FirestoreHistoryRepository
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.BaseUiTexts
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.TranslationRecord
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.screens.speech.SpeechViewModel
 import com.example.fyp.core.PaginationRow
 import com.example.fyp.core.pageCount
@@ -284,28 +284,28 @@ fun HistoryScreen(
             AlertDialog(
                 onDismissRequest = { showHistoryInfoDialog = false },
                 icon = { Icon(Icons.Default.Info, contentDescription = null) },
-                title = { Text("History Information") },
+                title = { Text(t(UiTextKey.HistoryInfoTitle)) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(
-                            text = "📊 History shows your most recent $historyLimit records only.",
+                            text = t(UiTextKey.HistoryInfoLimitMessage).replace("{limit}", historyLimit.toString()),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = "💾 Older records are still stored but not displayed here to optimize performance.",
+                            text = t(UiTextKey.HistoryInfoOlderRecordsMessage),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = "⭐ To keep important translations permanently accessible, add them to your Favorites by tapping the heart ❤️ icon on any record.",
+                            text = t(UiTextKey.HistoryInfoFavoritesMessage),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = "📖 View your saved Favorites in Settings → Favorites.",
+                            text = t(UiTextKey.HistoryInfoViewFavoritesMessage),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "🔍 Use the Filter button to search within the displayed $historyLimit records.",
+                            text = t(UiTextKey.HistoryInfoFilterMessage).replace("{limit}", historyLimit.toString()),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -313,7 +313,7 @@ fun HistoryScreen(
                 },
                 confirmButton = {
                     TextButton(onClick = { showHistoryInfoDialog = false }) {
-                        Text("Got it")
+                        Text(t(UiTextKey.HistoryInfoGotItButton))
                     }
                 }
             )

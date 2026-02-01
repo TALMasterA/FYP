@@ -12,13 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.fyp.data.clients.CloudTranslatorClient
-import com.example.fyp.data.config.LanguageDisplayNames
+import com.example.fyp.data.azure.LanguageDisplayNames
 import com.example.fyp.data.ui.UiLanguageCacheStore
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.model.UiTextKey
-import com.example.fyp.model.baseUiTextsHash
-import com.example.fyp.model.buildUiTextMap
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.BaseUiTexts
+import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.model.ui.baseUiTextsHash
+import com.example.fyp.model.ui.buildUiTextMap
 import kotlinx.coroutines.launch
 
 @Composable

@@ -1,7 +1,8 @@
-package com.example.fyp.data.profile
+package com.example.fyp.data.user
 
-import com.example.fyp.model.UserProfile
+import com.example.fyp.model.user.UserProfile
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
@@ -115,7 +116,7 @@ class FirestoreProfileRepository @Inject constructor(
      * Re-authenticate user before sensitive operations like account deletion
      */
     suspend fun reauthenticate(email: String, password: String): Result<Unit> = try {
-        val credential = com.google.firebase.auth.EmailAuthProvider
+        val credential = EmailAuthProvider
             .getCredential(email, password)
         auth.currentUser?.reauthenticate(credential)?.await()
         Result.success(Unit)

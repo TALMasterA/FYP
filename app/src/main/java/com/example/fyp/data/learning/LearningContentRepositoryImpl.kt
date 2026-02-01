@@ -1,6 +1,6 @@
 package com.example.fyp.data.learning
 
-import com.example.fyp.data.genai.CloudGenAiClient
+import com.example.fyp.data.cloud.CloudGenAiClient
 import com.example.fyp.domain.learning.LearningContentRepository
 import com.example.fyp.model.TranslationRecord
 import javax.inject.Inject

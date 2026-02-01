@@ -3,7 +3,7 @@ package com.example.fyp.core
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.example.fyp.data.ui.UpdateAppLanguage
-import com.example.fyp.model.AppLanguageState
+import com.example.fyp.model.ui.AppLanguageState
 
 /**
  * CompositionLocal for app language state.

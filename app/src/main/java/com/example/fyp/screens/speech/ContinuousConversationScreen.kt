@@ -43,11 +43,11 @@ import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.RecordAudioPermissionRequest
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.data.config.AzureLanguageConfig
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.AuthState
-import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.data.azure.AzureLanguageConfig
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.user.AuthState
+import com.example.fyp.model.ui.BaseUiTexts
+import com.example.fyp.model.ui.UiTextKey
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)

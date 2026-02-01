@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.fyp.core.PaginationRow
 import com.example.fyp.core.pageCount
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.UiTextKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.PaginationRow
 import com.example.fyp.core.pageCount
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.UiTextKey
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -196,7 +196,8 @@ fun CustomWordBankView(
                         speakingType = if (speakingItemId == word.id) speakingType else null,
                         onSpeakOriginal = { onSpeakWord(word, SpeakingType.ORIGINAL) },
                         onSpeakTranslated = { onSpeakWord(word, SpeakingType.TRANSLATED) },
-                        onDelete = { onDeleteWord(word) }
+                        onDelete = { onDeleteWord(word) },
+                        uiLanguageNameFor = uiLanguageNameFor
                     )
                 }
             }
@@ -225,9 +226,22 @@ private fun CustomWordCard(
     speakingType: SpeakingType?,
     onSpeakOriginal: () -> Unit,
     onSpeakTranslated: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    uiLanguageNameFor: (String) -> String
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    // Parse language codes from category and convert to names
+    val languagePairDisplay = remember(word.category) {
+        val parts = word.category.split(" → ")
+        if (parts.size == 2) {
+            val sourceName = uiLanguageNameFor(parts[0].trim())
+            val targetName = uiLanguageNameFor(parts[1].trim())
+            "$sourceName → $targetName"
+        } else {
+            word.category // Fallback to original if format is unexpected
+        }
+    }
 
     if (showDeleteConfirm) {
         AlertDialog(
@@ -268,7 +282,7 @@ private fun CustomWordCard(
                 Column(modifier = Modifier.weight(1f)) {
                     // Language pair indicator
                     Text(
-                        text = word.category, // Contains "sourceLang → targetLang"
+                        text = languagePairDisplay,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -389,7 +403,7 @@ private fun AddCustomWordFullDialog(
             ) {
                 // Source language
                 LanguageDropdownField(
-                    label = "Original Language",
+                    label = t(UiTextKey.CustomWordsOriginalLanguageLabel),
                     selectedCode = sourceLang,
                     options = supportedLanguages,
                     nameFor = uiLanguageNameFor,
@@ -426,7 +440,7 @@ private fun AddCustomWordFullDialog(
 
                 // Target language
                 LanguageDropdownField(
-                    label = "Translation Language",
+                    label = t(UiTextKey.CustomWordsTranslationLanguageLabel),
                     selectedCode = targetLang,
                     options = supportedLanguages,
                     nameFor = uiLanguageNameFor,
@@ -469,12 +483,12 @@ private fun AddCustomWordFullDialog(
                 },
                 enabled = canSave
             ) {
-                Text("Save")
+                Text(t(UiTextKey.CustomWordsSaveButton))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(t(UiTextKey.CustomWordsCancelButton))
             }
         }
     )

@@ -1,4 +1,4 @@
-package com.example.fyp.model
+package com.example.fyp.model.ui
 
 /**
  * Combined BaseUiTexts that merges Core and Screen-specific strings.

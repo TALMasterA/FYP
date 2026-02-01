@@ -1,12 +1,10 @@
-@file:Suppress("unused")
-
 package com.example.fyp.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fyp.data.auth.FirebaseAuthRepository
-import com.example.fyp.model.AuthState
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.model.user.AuthState
+import com.example.fyp.model.ui.UiTextKey
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.history.FirestoreHistoryRepository
 import com.example.fyp.domain.speech.DetectLanguageUseCase
 import com.example.fyp.domain.speech.RecognizeFromMicUseCase
@@ -13,7 +13,7 @@ import com.example.fyp.domain.speech.RecognizeWithAutoDetectUseCase
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.StartContinuousConversationUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
-import com.example.fyp.model.AuthState
+import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -20,8 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.fyp.core.rememberTranslator
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.UiTextKey
 
 @Composable
 fun QuizResultsScreen(

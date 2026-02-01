@@ -1,6 +1,6 @@
 package com.example.fyp.domain.auth
 
-import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.data.user.FirebaseAuthRepository
 import javax.inject.Inject
 
 class LoginUseCase @Inject constructor(

@@ -1,4 +1,4 @@
-package com.example.fyp.data.providers
+package com.example.fyp.data.azure
 
 import com.microsoft.cognitiveservices.speech.SpeechConfig
 

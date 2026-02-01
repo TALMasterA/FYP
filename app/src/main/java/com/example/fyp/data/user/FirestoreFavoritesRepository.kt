@@ -1,4 +1,6 @@
-package com.example.fyp.data.favorites
+@file:Suppress("unused")
+
+package com.example.fyp.data.user
 
 import com.example.fyp.model.FavoriteRecord
 import com.google.firebase.Timestamp

@@ -1,6 +1,6 @@
 package com.example.fyp.data.repositories
 
-import com.example.fyp.data.cache.TranslationCache
+import com.example.fyp.data.cloud.TranslationCache
 import com.example.fyp.data.clients.CloudTranslatorClient
 import com.example.fyp.data.clients.DetectedLanguage
 import com.example.fyp.model.SpeechResult

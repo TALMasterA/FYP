@@ -38,8 +38,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import com.example.fyp.core.rememberTranslator
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.UiTextKey
 
 @Composable
 fun QuizTakingScreen(

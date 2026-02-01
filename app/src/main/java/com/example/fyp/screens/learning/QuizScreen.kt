@@ -26,11 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.BaseUiTexts
+import com.example.fyp.model.ui.UiTextKey
 
-@Suppress("UNUSED_PARAMETER")
 @Composable
 fun QuizScreen(
     appLanguageState: AppLanguageState,

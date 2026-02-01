@@ -2,10 +2,10 @@ package com.example.fyp.screens.favorites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fyp.data.auth.FirebaseAuthRepository
-import com.example.fyp.data.favorites.FirestoreFavoritesRepository
+import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
-import com.example.fyp.model.AuthState
+import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.FavoriteRecord
 import com.example.fyp.model.SpeechResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -85,9 +85,9 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 
-    fun speak(text: String, languageCode: String) {
+    fun speak(text: String, languageCode: String, speakingId: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(speakingId = text.hashCode().toString())
+            _uiState.value = _uiState.value.copy(speakingId = speakingId)
             when (val result = speakTextUseCase(text, languageCode)) {
                 is SpeechResult.Success -> {
                     _uiState.value = _uiState.value.copy(speakingId = null)

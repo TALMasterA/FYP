@@ -1,4 +1,4 @@
-package com.example.fyp.model
+package com.example.fyp.model.ui
 
 enum class UiTextKey {
     // --- Basic UI Controls ---
@@ -266,6 +266,15 @@ enum class UiTextKey {
     HistoryCoinTipsRule2,
     HistoryCoinGotItButton,
 
+    // --- History Info Dialog ---
+    HistoryInfoTitle,
+    HistoryInfoLimitMessage,
+    HistoryInfoOlderRecordsMessage,
+    HistoryInfoFavoritesMessage,
+    HistoryInfoViewFavoritesMessage,
+    HistoryInfoFilterMessage,
+    HistoryInfoGotItButton,
+
     // --- Word Bank ---
     WordBankTitle,
     WordBankSelectLanguage,
@@ -333,6 +342,10 @@ enum class UiTextKey {
     CustomWordsSaveSuccess,
     CustomWordsDeleteSuccess,
     CustomWordsAlreadyExists,
+    CustomWordsOriginalLanguageLabel,
+    CustomWordsTranslationLanguageLabel,
+    CustomWordsSaveButton,
+    CustomWordsCancelButton,
 
     // --- Language Detection ---
     LanguageDetectAuto,

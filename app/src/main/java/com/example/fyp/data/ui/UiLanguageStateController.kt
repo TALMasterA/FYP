@@ -7,9 +7,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.UiTextKey
-import com.example.fyp.model.baseUiTextsHash
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.model.ui.baseUiTextsHash
 
 typealias UiTextMap = Map<UiTextKey, String>
 typealias UpdateAppLanguage = (String, UiTextMap) -> Unit

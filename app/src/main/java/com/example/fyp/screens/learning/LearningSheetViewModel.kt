@@ -3,12 +3,12 @@ package com.example.fyp.screens.learning
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
 import com.example.fyp.data.learning.FirestoreQuizRepository
 import com.example.fyp.domain.history.ObserveUserHistoryUseCase
 import com.example.fyp.domain.learning.ParseAndStoreQuizUseCase
-import com.example.fyp.model.AuthState
+import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.QuizAttempt
 import com.example.fyp.model.QuizQuestion
 import com.example.fyp.model.TranslationRecord

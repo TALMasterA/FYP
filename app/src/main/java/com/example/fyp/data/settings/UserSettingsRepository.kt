@@ -1,6 +1,6 @@
 package com.example.fyp.data.settings
 
-import com.example.fyp.model.UserSettings
+import com.example.fyp.model.user.UserSettings
 import kotlinx.coroutines.flow.Flow
 
 interface UserSettingsRepository {

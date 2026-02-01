@@ -24,7 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.UiTextKey
 
 @Composable
 fun AddCustomWordDialog(

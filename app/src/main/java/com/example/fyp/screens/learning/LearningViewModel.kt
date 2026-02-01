@@ -2,7 +2,7 @@ package com.example.fyp.screens.learning
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
 import com.example.fyp.data.learning.FirestoreQuizRepository
@@ -10,7 +10,7 @@ import com.example.fyp.data.learning.QuizParser
 import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
 import com.example.fyp.domain.learning.GenerateQuizUseCase
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
-import com.example.fyp.model.AuthState
+import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.TranslationRecord
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job

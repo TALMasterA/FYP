@@ -7,7 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.UiTextKey
 import kotlinx.coroutines.flow.first
 import org.json.JSONObject
 

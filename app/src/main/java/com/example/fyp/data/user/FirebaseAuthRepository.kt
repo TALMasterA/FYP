@@ -1,7 +1,9 @@
-package com.example.fyp.data.auth
+@file:Suppress("unused")
 
-import com.example.fyp.model.AuthState
-import com.example.fyp.model.User
+package com.example.fyp.data.user
+
+import com.example.fyp.model.user.AuthState
+import com.example.fyp.model.user.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.channels.awaitClose

@@ -26,9 +26,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fyp.core.ConfirmationDialog
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.BaseUiTexts
+import com.example.fyp.model.ui.UiTextKey
 
 @Suppress("UNUSED_PARAMETER")
 @OptIn(ExperimentalMaterial3Api::class)

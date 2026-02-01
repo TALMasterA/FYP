@@ -10,8 +10,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import com.example.fyp.core.rememberTranslator
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.UiTextKey
 
 @Composable
 fun CoinRulesDialog(

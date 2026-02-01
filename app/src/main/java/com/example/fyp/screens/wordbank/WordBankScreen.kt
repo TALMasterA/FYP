@@ -1,5 +1,3 @@
-@file:Suppress("AssignedValueIsNeverRead")
-
 package com.example.fyp.screens.wordbank
 
 import androidx.compose.foundation.layout.*
@@ -14,10 +12,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.data.config.AzureLanguageConfig
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.data.azure.AzureLanguageConfig
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.BaseUiTexts
+import com.example.fyp.model.ui.UiTextKey
 
 // Word Bank Screen - Main entry point for word bank feature
 @OptIn(ExperimentalMaterial3Api::class)

@@ -22,7 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.UiTextKey
 
 /**
  * Reusable coin rules dialog extracted from HistoryScreen.

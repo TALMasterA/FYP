@@ -11,10 +11,10 @@ import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.StandardScreenBody
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.model.AppLanguageState
-import com.example.fyp.model.AuthState
-import com.example.fyp.model.BaseUiTexts
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.user.AuthState
+import com.example.fyp.model.ui.BaseUiTexts
+import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.screens.login.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

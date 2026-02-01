@@ -23,8 +23,8 @@ import com.example.fyp.core.composableRequireLogin
 import com.example.fyp.core.composableRequireLoginWithArgs
 import com.example.fyp.core.createScaledTypography
 import com.example.fyp.core.validateScale
-import com.example.fyp.data.config.AzureLanguageConfig
-import com.example.fyp.data.config.LanguageDisplayNames
+import com.example.fyp.data.azure.AzureLanguageConfig
+import com.example.fyp.data.azure.LanguageDisplayNames
 import com.example.fyp.data.ui.rememberUiLanguageState
 import com.example.fyp.screens.help.HelpScreen
 import com.example.fyp.screens.history.HistoryScreen

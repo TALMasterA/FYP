@@ -1,11 +1,12 @@
 package com.example.fyp.data.di
 
 import android.content.Context
-import com.example.fyp.data.cache.TranslationCache
+import com.example.fyp.data.cloud.TranslationCache
 import com.example.fyp.data.clients.CloudSpeechTokenClient
 import com.example.fyp.data.clients.CloudTranslatorClient
-import com.example.fyp.data.favorites.FirestoreFavoritesRepository
-import com.example.fyp.data.profile.FirestoreProfileRepository
+import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.data.user.FirestoreFavoritesRepository
+import com.example.fyp.data.user.FirestoreProfileRepository
 import com.example.fyp.data.repositories.AzureSpeechRepository
 import com.example.fyp.data.repositories.FirebaseTranslationRepository
 import com.example.fyp.data.repositories.SpeechRepository
@@ -25,7 +26,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import com.example.fyp.data.genai.CloudGenAiClient
+import com.example.fyp.data.cloud.CloudGenAiClient
 import com.example.fyp.data.learning.LearningContentRepositoryImpl
 import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
 import com.example.fyp.domain.learning.GenerateQuizUseCase
@@ -48,6 +49,10 @@ object AppModule {
 
     @Provides @Singleton
     fun provideFirebaseFunctions(): FirebaseFunctions = FirebaseFunctions.getInstance()
+
+    @Provides @Singleton
+    fun provideFirebaseAuthRepository(auth: FirebaseAuth): FirebaseAuthRepository =
+        FirebaseAuthRepository(auth)
 
     @Provides @Singleton
     fun provideCloudSpeechTokenClient(functions: FirebaseFunctions): CloudSpeechTokenClient =

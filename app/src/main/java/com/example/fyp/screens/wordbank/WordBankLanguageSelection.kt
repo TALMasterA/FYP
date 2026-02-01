@@ -17,7 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.fyp.core.LanguageDropdownField
-import com.example.fyp.model.UiTextKey
+import com.example.fyp.model.ui.UiTextKey
 
 @Composable
 fun LanguageSelectionView(

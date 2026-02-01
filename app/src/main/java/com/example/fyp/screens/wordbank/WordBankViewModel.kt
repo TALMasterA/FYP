@@ -2,14 +2,14 @@ package com.example.fyp.screens.wordbank
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
 import com.example.fyp.data.wordbank.FirestoreWordBankRepository
 import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
-import com.example.fyp.model.AuthState
+import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -562,9 +562,20 @@ class WordBankViewModel @Inject constructor(
             SpeakingType.TRANSLATED -> word.translatedWord
         }
 
-        val languageCode = when (type) {
-            SpeakingType.ORIGINAL -> state.currentWordBank?.targetLanguageCode ?: return
-            SpeakingType.TRANSLATED -> state.currentWordBank?.primaryLanguageCode ?: return
+        // For custom words, extract language codes from category field
+        val languageCode = if (state.isCustomWordBankSelected && word.category.contains(" → ")) {
+            // Custom word: category format is "sourceLang → targetLang"
+            val parts = word.category.split(" → ")
+            when (type) {
+                SpeakingType.ORIGINAL -> parts.getOrNull(0)?.trim() ?: return
+                SpeakingType.TRANSLATED -> parts.getOrNull(1)?.trim() ?: return
+            }
+        } else {
+            // Generated word bank: use the word bank's language codes
+            when (type) {
+                SpeakingType.ORIGINAL -> state.currentWordBank?.targetLanguageCode ?: return
+                SpeakingType.TRANSLATED -> state.currentWordBank?.primaryLanguageCode ?: return
+            }
         }
 
         viewModelScope.launch {
@@ -598,7 +609,16 @@ class WordBankViewModel @Inject constructor(
         val state = _uiState.value
         if (state.isSpeaking || word.example.isBlank()) return
 
-        val languageCode = state.currentWordBank?.targetLanguageCode ?: return
+        // For custom words, extract language code from category field
+        val languageCode = if (state.isCustomWordBankSelected && word.category.contains(" → ")) {
+            // Custom word: category format is "sourceLang → targetLang"
+            // Example is in the source language
+            val parts = word.category.split(" → ")
+            parts.getOrNull(0)?.trim() ?: return
+        } else {
+            // Generated word bank: example is in the target language
+            state.currentWordBank?.targetLanguageCode ?: return
+        }
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(

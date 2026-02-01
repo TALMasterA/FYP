@@ -1,4 +1,4 @@
-package com.example.fyp.model
+package com.example.fyp.model.ui
 
 // Screen-specific UI texts - used by individual screens
 val ScreenUiTexts: List<String> = listOf(
@@ -557,6 +557,28 @@ val ScreenUiTexts: List<String> = listOf(
     // HistoryCoinGotItButton
     "Got it!",
 
+    // --- History Info Dialog ---
+    // HistoryInfoTitle
+    "History Information",
+
+    // HistoryInfoLimitMessage
+    "📊 History shows your most recent {limit} records only.",
+
+    // HistoryInfoOlderRecordsMessage
+    "💾 Older records are still stored but not displayed here to optimize performance.",
+
+    // HistoryInfoFavoritesMessage
+    "⭐ To keep important translations permanently accessible, add them to your Favorites by tapping the heart ❤️ icon on any record.",
+
+    // HistoryInfoViewFavoritesMessage
+    "📖 View your saved Favorites in Settings → Favorites.",
+
+    // HistoryInfoFilterMessage
+    "🔍 Use the Filter button to search within the displayed {limit} records.",
+
+    // HistoryInfoGotItButton
+    "Got it",
+
     // --- Word Bank ---
     // WordBankTitle
     "Word Bank",
@@ -731,6 +753,18 @@ val ScreenUiTexts: List<String> = listOf(
 
     // CustomWordsAlreadyExists
     "This word already exists",
+
+    // CustomWordsOriginalLanguageLabel
+    "Original Language",
+
+    // CustomWordsTranslationLanguageLabel
+    "Translation Language",
+
+    // CustomWordsSaveButton
+    "Save",
+
+    // CustomWordsCancelButton
+    "Cancel",
 
     // --- Language Detection ---
     // LanguageDetectAuto

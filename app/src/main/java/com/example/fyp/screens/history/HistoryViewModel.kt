@@ -2,15 +2,15 @@ package com.example.fyp.screens.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fyp.data.auth.FirebaseAuthRepository
-import com.example.fyp.data.favorites.FirestoreFavoritesRepository
+import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.learning.FirestoreQuizRepository
 import com.example.fyp.domain.history.DeleteHistoryRecordUseCase
 import com.example.fyp.domain.history.DeleteSessionUseCase
 import com.example.fyp.domain.history.ObserveSessionNamesUseCase
 import com.example.fyp.domain.history.RenameSessionUseCase
-import com.example.fyp.model.AuthState
+import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.UserCoinStats
 import dagger.hilt.android.lifecycle.HiltViewModel

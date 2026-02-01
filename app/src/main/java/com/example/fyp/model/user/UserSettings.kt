@@ -1,4 +1,4 @@
-package com.example.fyp.model
+package com.example.fyp.model.user
 
 import kotlinx.serialization.Serializable
 

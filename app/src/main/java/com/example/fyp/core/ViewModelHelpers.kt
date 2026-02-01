@@ -3,8 +3,8 @@
 
 package com.example.fyp.core
 
-import com.example.fyp.data.auth.FirebaseAuthRepository
-import com.example.fyp.model.AuthState
+import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.model.user.AuthState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
