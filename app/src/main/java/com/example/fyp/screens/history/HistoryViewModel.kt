@@ -3,6 +3,7 @@ package com.example.fyp.screens.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.data.favorites.FirestoreFavoritesRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.learning.FirestoreQuizRepository
 import com.example.fyp.domain.history.DeleteHistoryRecordUseCase
@@ -26,7 +27,10 @@ data class HistoryUiState(
     val error: String? = null,
     val records: List<TranslationRecord> = emptyList(),
     val sessionNames: Map<String, String> = emptyMap(),
-    val coinStats: UserCoinStats = UserCoinStats()
+    val coinStats: UserCoinStats = UserCoinStats(),
+    val favoriteIds: Set<String> = emptySet(), // Track which record IDs are favorited (session-only)
+    val favoritedTexts: Set<String> = emptySet(), // Track favorited content "sourceText|targetText" (persisted)
+    val addingFavoriteId: String? = null // Track which record is being added/removed
 )
 
 @HiltViewModel
@@ -37,7 +41,8 @@ class HistoryViewModel @Inject constructor(
     private val deleteHistoryRecord: DeleteHistoryRecordUseCase,
     private val renameSession: RenameSessionUseCase,
     private val deleteSession: DeleteSessionUseCase,
-    private val quizRepo: FirestoreQuizRepository
+    private val quizRepo: FirestoreQuizRepository,
+    private val favoritesRepo: FirestoreFavoritesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryUiState())
@@ -122,6 +127,97 @@ class HistoryViewModel @Inject constructor(
     }
 
     /**
+     * Add a translation record to favorites (or remove if already favorited)
+     */
+    fun toggleFavorite(record: TranslationRecord) {
+        val uid = currentUserId ?: return
+        val recordKey = "${record.sourceText}|${record.targetText}"
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(addingFavoriteId = record.id)
+
+            // Check if already favorited
+            val existingFavoriteId = favoritesRepo.getFavoriteId(uid, record.sourceText, record.targetText)
+
+            if (existingFavoriteId != null) {
+                // Remove from favorites
+                favoritesRepo.removeFavorite(uid, existingFavoriteId)
+                    .onSuccess {
+                        _uiState.value = _uiState.value.copy(
+                            addingFavoriteId = null,
+                            favoriteIds = _uiState.value.favoriteIds - record.id,
+                            favoritedTexts = _uiState.value.favoritedTexts - recordKey
+                        )
+                    }
+                    .onFailure {
+                        _uiState.value = _uiState.value.copy(
+                            addingFavoriteId = null,
+                            error = "Failed to remove from favorites"
+                        )
+                    }
+            } else {
+                // Add to favorites
+                favoritesRepo.addFavorite(
+                    userId = uid,
+                    sourceText = record.sourceText,
+                    targetText = record.targetText,
+                    sourceLang = record.sourceLang,
+                    targetLang = record.targetLang
+                ).onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        addingFavoriteId = null,
+                        favoriteIds = _uiState.value.favoriteIds + record.id,
+                        favoritedTexts = _uiState.value.favoritedTexts + recordKey
+                    )
+                }.onFailure {
+                    _uiState.value = _uiState.value.copy(
+                        addingFavoriteId = null,
+                        error = "Failed to add to favorites"
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Legacy method - redirects to toggle
+     */
+    fun addToFavorites(record: TranslationRecord) = toggleFavorite(record)
+
+    /**
+     * Check if a record is already favorited (by text content)
+     */
+    fun isRecordFavorited(record: TranslationRecord): Boolean {
+        val recordKey = "${record.sourceText}|${record.targetText}"
+        return _uiState.value.favoritedTexts.contains(recordKey)
+    }
+
+    /**
+     * Load all favorited texts to check against history records
+     */
+    private fun loadFavoritedTexts(userId: String) {
+        viewModelScope.launch {
+            val favorites = favoritesRepo.getAllFavoritesOnce(userId)
+            val favoritedTexts = favorites.map { "${it.sourceText}|${it.targetText}" }.toSet()
+            _uiState.value = _uiState.value.copy(favoritedTexts = favoritedTexts)
+        }
+    }
+
+    /**
+     * Check if a record is already favorited
+     */
+    fun checkIfFavorited(record: TranslationRecord, onResult: (Boolean) -> Unit) {
+        val recordKey = "${record.sourceText}|${record.targetText}"
+        val isFavorited = _uiState.value.favoritedTexts.contains(recordKey)
+        if (isFavorited) {
+            _uiState.value = _uiState.value.copy(
+                favoriteIds = _uiState.value.favoriteIds + record.id
+            )
+        }
+        onResult(isFavorited)
+    }
+
+    /**
      * Refresh coin stats on demand (e.g., when screen becomes visible).
      * This replaces the real-time listener to reduce database reads.
      */
@@ -167,5 +263,8 @@ class HistoryViewModel @Inject constructor(
 
         // Fetch coin stats once instead of real-time listener
         refreshCoinStats()
+
+        // Load favorited texts to show correct bookmark state
+        loadFavoritedTexts(userId)
     }
 }

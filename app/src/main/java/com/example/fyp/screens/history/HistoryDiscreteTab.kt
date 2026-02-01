@@ -9,15 +9,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.fyp.model.TranslationRecord
@@ -33,6 +41,9 @@ fun HistoryDiscreteTab(
     onDelete: (TranslationRecord) -> Unit,
     onSpeakOriginal: (TranslationRecord) -> Unit,
     onSpeakTranslation: (TranslationRecord) -> Unit,
+    onToggleFavorite: (TranslationRecord) -> Unit,
+    favoritedTexts: Set<String>,
+    addingFavoriteId: String?,
     deleteLabel: String,
     noRecordsText: String,
     modifier: Modifier = Modifier,
@@ -52,6 +63,9 @@ fun HistoryDiscreteTab(
         onSpeakOriginal = onSpeakOriginal,
         onSpeakTranslation = onSpeakTranslation,
         onDelete = onDelete,
+        onToggleFavorite = onToggleFavorite,
+        favoritedTexts = favoritedTexts,
+        addingFavoriteId = addingFavoriteId,
         deleteLabel = deleteLabel,
         modifier = modifier
     )
@@ -68,6 +82,9 @@ fun HistoryList(
     onSpeakOriginal: (TranslationRecord) -> Unit,
     onSpeakTranslation: (TranslationRecord) -> Unit,
     onDelete: (TranslationRecord) -> Unit,
+    onToggleFavorite: (TranslationRecord) -> Unit,
+    favoritedTexts: Set<String>,
+    addingFavoriteId: String?,
     deleteLabel: String,
     modifier: Modifier = Modifier
 ) {
@@ -80,13 +97,45 @@ fun HistoryList(
             val busyOriginal = isTtsRunning && speakingRecordId == rec.id && speakingType == "O"
             val busyTranslation = isTtsRunning && speakingRecordId == rec.id && speakingType == "T"
             val busyAny = busyOriginal || busyTranslation
+            val recordKey = "${rec.sourceText}|${rec.targetText}"
+            val isFavorited = favoritedTexts.contains(recordKey)
+            val isAddingThis = addingFavoriteId == rec.id
 
             OutlinedCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.background)
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(text = "${languageNameFor(rec.sourceLang)} → ${languageNameFor(rec.targetLang)}")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "${languageNameFor(rec.sourceLang)} → ${languageNameFor(rec.targetLang)}")
+
+                        // Favorite toggle button (add or remove)
+                        IconButton(
+                            onClick = { onToggleFavorite(rec) },
+                            enabled = !isAddingThis
+                        ) {
+                            when {
+                                isAddingThis -> CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                                isFavorited -> Icon(
+                                    imageVector = Icons.Filled.Favorite,
+                                    contentDescription = "Remove from Favorites",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                else -> Icon(
+                                    imageVector = Icons.Filled.FavoriteBorder,
+                                    contentDescription = "Add to Favorites",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
                     Spacer(Modifier.height(6.dp))
                     Text(text = rec.sourceText)
                     Spacer(Modifier.height(4.dp))

@@ -51,7 +51,7 @@ fun WordBankScreen(
     StandardScreenScaffold(
         title = t(UiTextKey.WordBankTitle),
         onBack = {
-            if (selectedLanguage != null) {
+            if (selectedLanguage != null || uiState.isCustomWordBankSelected) {
                 viewModel.clearSelection()
             } else {
                 onBack()
@@ -70,7 +70,7 @@ fun WordBankScreen(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-                uiState.error != null && selectedLanguage == null && !uiState.isGenerating -> {
+                uiState.error != null && selectedLanguage == null && !uiState.isCustomWordBankSelected && !uiState.isGenerating -> {
                     Column(
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -90,6 +90,37 @@ fun WordBankScreen(
                             color = MaterialTheme.colorScheme.error
                         )
                     }
+                }
+                uiState.isCustomWordBankSelected -> {
+                    // Show custom word bank view
+                    CustomWordBankView(
+                        customWords = uiState.customWords,
+                        isSpeaking = uiState.isSpeaking,
+                        speakingItemId = uiState.speakingItemId,
+                        speakingType = uiState.speakingType,
+                        isTranslating = uiState.isTranslatingCustomWord,
+                        onSpeakWord = { word, type -> viewModel.speakWord(word, type) },
+                        onDeleteWord = { word ->
+                            val realId = word.id.removePrefix("custom_")
+                            viewModel.deleteCustomWord(realId)
+                        },
+                        onAddWord = { original, translated, pronunciation, example, sourceLang, targetLang ->
+                            viewModel.addCustomWord(
+                                originalWord = original,
+                                translatedWord = translated,
+                                pronunciation = pronunciation,
+                                example = example,
+                                sourceLang = sourceLang,
+                                targetLang = targetLang
+                            )
+                        },
+                        onTranslate = { text, sourceLang, targetLang, onResult ->
+                            viewModel.translateForCustomWord(text, sourceLang, targetLang, onResult)
+                        },
+                        supportedLanguages = supportedLanguages,
+                        uiLanguageNameFor = uiLanguageNameFor,
+                        t = t
+                    )
                 }
                 selectedLanguage != null -> {
                     val canRegen = viewModel.canRegenerate(selectedLanguage)
@@ -117,6 +148,9 @@ fun WordBankScreen(
                         onCancel = { viewModel.cancelGeneration() },
                         onSpeakWord = { word, type -> viewModel.speakWord(word, type) },
                         onSpeakExample = { word -> viewModel.speakExample(word) },
+                        onDeleteWord = { word ->
+                            viewModel.deleteWordFromBank(word.id, selectedLanguage)
+                        },
                         t = t,
                         filterKeyword = filterKeyword,
                         onFilterKeywordChange = { filterKeyword = it },
@@ -140,6 +174,8 @@ fun WordBankScreen(
                             currentPrimaryCode = newCode
                             viewModel.setPrimaryLanguageCode(newCode)
                         },
+                        customWordsCount = uiState.customWordsCount,
+                        onSelectCustomWordBank = { viewModel.selectCustomWordBank() },
                         t = t
                     )
                 }

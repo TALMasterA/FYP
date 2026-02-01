@@ -145,8 +145,8 @@ export const translateTexts = onCall(
   {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
   async (request) => {
     // No auth required - allows UI language translation for all users
-    // Using validation helpers with max limit (250) for rate protection
-    const texts = requireArray<unknown>(request.data?.texts, "texts", 250);
+    // Non-logged-in users can only call this once (enforced client-side)
+    const texts = requireArray<unknown>(request.data?.texts, "texts");
     const to = requireString(request.data?.to, "to");
     const from = optionalString(request.data?.from);
 
@@ -228,5 +228,51 @@ export const generateLearningContent = onCall(
     const json = JSON.parse(text);
     const content = json?.choices?.[0]?.message?.content ?? "";
     return { content };
+  }
+);
+
+/**
+ * Detect language of given text using Azure Translator API.
+ * Returns detected language code and confidence score.
+ */
+export const detectLanguage = onCall(
+  {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
+  async (request) => {
+    requireAuth(request.auth);
+
+    const text = requireString(request.data?.text, "text");
+
+    const key = AZURE_TRANSLATOR_KEY.value();
+    const region = AZURE_TRANSLATOR_REGION.value();
+
+    const url = new URL(`${ENDPOINT}/detect`);
+    url.searchParams.set("api-version", API_VERSION);
+
+    const resp = await fetch(url.toString(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Ocp-Apim-Subscription-Key": key,
+        "Ocp-Apim-Subscription-Region": region,
+      },
+      body: JSON.stringify([{Text: text}]),
+    });
+
+    const bodyText = await resp.text();
+    if (!resp.ok) {
+      throw new HttpsError(
+        "internal", `Detect language HTTP ${resp.status}: ${bodyText}`
+      );
+    }
+
+    const json = JSON.parse(bodyText);
+    const detected = json?.[0];
+
+    return {
+      language: detected?.language ?? "",
+      score: detected?.score ?? 0,
+      isTranslationSupported: detected?.isTranslationSupported ?? false,
+      alternatives: detected?.alternatives ?? []
+    };
   }
 );

@@ -69,6 +69,7 @@ fun ContinuousConversationScreen(
     var toLanguage by remember { mutableStateOf(supportedLanguages.getOrNull(1) ?: "zh-HK") }
     var isPersonATalking by remember { mutableStateOf(true) }
 
+
     val isRunning = viewModel.isContinuousRunning
     val isPreparing = viewModel.isContinuousPreparing
     val isProcessing = viewModel.isContinuousProcessing

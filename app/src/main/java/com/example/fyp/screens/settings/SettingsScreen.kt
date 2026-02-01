@@ -47,6 +47,8 @@ fun SettingsScreen(
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     onBack: () -> Unit,
     onOpenResetPassword: () -> Unit = {},
+    onOpenProfile: () -> Unit = {},
+    onOpenFavorites: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -89,6 +91,27 @@ fun SettingsScreen(
                 enabled = true,
                 isLoggedIn = isLoggedIn
             )
+
+            // Quick Links for logged in users
+            if (isLoggedIn) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    TextButton(
+                        onClick = onOpenProfile,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(t(UiTextKey.ProfileTitle))
+                    }
+                    TextButton(
+                        onClick = onOpenFavorites,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(t(UiTextKey.FavoritesTitle))
+                    }
+                }
+            }
 
             TextButton(onClick = onOpenResetPassword) {
                 Text(t(UiTextKey.SettingsResetPW))

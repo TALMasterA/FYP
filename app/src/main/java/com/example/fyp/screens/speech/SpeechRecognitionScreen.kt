@@ -84,12 +84,28 @@ fun SpeechRecognitionScreen(
         mutableStateOf(AzureLanguageConfig.loadSupportedLanguages(context))
     }
 
+    // Add "auto" option only for source language detection
+    val sourceLanguageOptions = remember(supportedLanguages) {
+        listOf("auto") + supportedLanguages
+    }
+
     var selectedLanguage by remember {
-        mutableStateOf(supportedLanguages.firstOrNull() ?: "en-US")
+        mutableStateOf("auto") // Default to auto-detect
     }
 
     var selectedTargetLanguage by remember {
         mutableStateOf(supportedLanguages.getOrNull(1) ?: "zh-HK")
+    }
+
+    // Track detected source language for history
+    var detectedSourceLanguage by remember { mutableStateOf<String?>(null) }
+
+    // Custom name function that handles "auto"
+    val sourceLanguageNameFor: (String) -> String = { code ->
+        when {
+            code == "auto" -> t(UiTextKey.LanguageDetectAuto)
+            else -> uiLanguageNameFor(code)
+        }
     }
 
     val authState by viewModel.authState.collectAsStateWithLifecycle()
@@ -153,25 +169,63 @@ fun SpeechRecognitionScreen(
                         translateToLabel = t(UiTextKey.TranslateToLabel),
                         selectedLanguage = selectedLanguage,
                         selectedTargetLanguage = selectedTargetLanguage,
-                        supportedLanguages = supportedLanguages,
-                        languageNameFor = uiLanguageNameFor,
-                        onSelectedLanguage = { selectedLanguage = it },
+                        sourceLanguageOptions = sourceLanguageOptions,
+                        targetLanguageOptions = supportedLanguages,
+                        sourceLanguageNameFor = sourceLanguageNameFor,
+                        targetLanguageNameFor = uiLanguageNameFor,
+                        onSelectedLanguage = {
+                            selectedLanguage = it
+                            if (it != "auto") detectedSourceLanguage = null
+                        },
                         onSelectedTargetLanguage = { selectedTargetLanguage = it },
                         onSwapLanguages = {
-                            val tmp = selectedLanguage
-                            selectedLanguage = selectedTargetLanguage
-                            selectedTargetLanguage = tmp
+                            // Only swap if source is not auto
+                            if (selectedLanguage != "auto") {
+                                val tmp = selectedLanguage
+                                selectedLanguage = selectedTargetLanguage
+                                selectedTargetLanguage = tmp
+                            }
                         },
                     )
 
                     val isRecognizing = recognizePhase != RecognizePhase.Idle
+
+                    // Default candidate languages for auto-detect (Azure supports max 4)
+                    // Include the target language and common languages
+                    val autoDetectCandidates = remember(selectedTargetLanguage, supportedLanguages) {
+                        // Build candidates: target language + common languages (English, Chinese, Japanese, Spanish)
+                        val commonLanguages = listOf("en-US", "zh-CN", "ja-JP", "ko-KR")
+                        val candidates = mutableListOf<String>()
+
+                        // Add languages that differ from target (to detect what user is speaking)
+                        commonLanguages.forEach { lang ->
+                            if (candidates.size < 4 && lang != selectedTargetLanguage) {
+                                candidates.add(lang)
+                            }
+                        }
+
+                        candidates.take(4)
+                    }
 
                     RecognizeButton(
                         recognizePhase = recognizePhase,
                         idleLabel = t(UiTextKey.AzureRecognizeButton),
                         preparingLabel = t(UiTextKey.StatusRecognizePreparing),
                         listeningLabel = t(UiTextKey.StatusRecognizeListening),
-                        onClick = { viewModel.recognize(selectedLanguage) },
+                        onClick = {
+                            if (selectedLanguage == "auto") {
+                                // Use auto-detect recognition
+                                viewModel.recognizeWithAutoDetect(
+                                    candidateLanguages = autoDetectCandidates,
+                                    onDetectedLanguage = { detected ->
+                                        detectedSourceLanguage = detected
+                                    }
+                                )
+                            } else {
+                                // Use specific language recognition
+                                viewModel.recognize(selectedLanguage)
+                            }
+                        },
                         enabled = !isRecognizing && !AudioRecorder.isRecording,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -186,7 +240,15 @@ fun SpeechRecognitionScreen(
                         enableCopy = recognizedText.isNotBlank(),
                         enableSpeak = recognizedText.isNotBlank() && !isTtsRunning,
                         onCopy = { clipboardManager.setText(AnnotatedString(recognizedText)) },
-                        onSpeak = { viewModel.speakOriginal(selectedLanguage) },
+                        onSpeak = {
+                            // Use detected language for speaking if auto was selected
+                            val speakLang = if (selectedLanguage == "auto" && detectedSourceLanguage != null) {
+                                detectedSourceLanguage!!
+                            } else {
+                                selectedLanguage
+                            }
+                            viewModel.speakOriginal(speakLang)
+                        },
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -194,7 +256,15 @@ fun SpeechRecognitionScreen(
                     TranslateButton(
                         label = t(UiTextKey.TranslateButton),
                         enabled = isLoggedIn && recognizedText.isNotBlank(),
-                        onClick = { viewModel.translate(fromLanguage = selectedLanguage, toLanguage = selectedTargetLanguage) },
+                        onClick = {
+                            viewModel.translate(
+                                fromLanguage = selectedLanguage,
+                                toLanguage = selectedTargetLanguage,
+                                onDetectedSourceLanguage = { detected ->
+                                    detectedSourceLanguage = detected
+                                }
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
                     )
 

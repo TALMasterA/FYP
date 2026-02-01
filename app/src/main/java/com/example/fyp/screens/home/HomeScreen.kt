@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +46,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +71,29 @@ fun HomeScreen(
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     val isLoggedIn = authState is AuthState.LoggedIn
+
+    // Alternating title logic
+    val defaultTitle = t(UiTextKey.HomeTitle)
+    val userName = (authState as? AuthState.LoggedIn)?.user?.displayName?.takeIf { it.isNotBlank() }
+    var showUserName by remember { mutableStateOf(false) }
+
+    // Toggle between title and username every 3 seconds if user has a display name
+    LaunchedEffect(userName) {
+        if (userName != null) {
+            while (true) {
+                delay(3000)
+                showUserName = !showUserName
+            }
+        } else {
+            showUserName = false
+        }
+    }
+
+    val displayTitle = if (userName != null && showUserName) {
+        "👋 $userName"
+    } else {
+        defaultTitle
+    }
 
     if (showLogoutDialog) {
         AlertDialog(
@@ -96,7 +121,7 @@ fun HomeScreen(
     }
 
     StandardScreenScaffold(
-        title = t(UiTextKey.HomeTitle),
+        title = displayTitle,
         onBack = null,
         actions = {
             when (authState) {

@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.data.history.FirestoreHistoryRepository
+import com.example.fyp.domain.speech.DetectLanguageUseCase
 import com.example.fyp.domain.speech.RecognizeFromMicUseCase
+import com.example.fyp.domain.speech.RecognizeWithAutoDetectUseCase
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.StartContinuousConversationUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
@@ -26,8 +28,10 @@ import javax.inject.Inject
 @HiltViewModel
 class SpeechViewModel @Inject constructor(
     private val recognizeFromMic: RecognizeFromMicUseCase,
+    private val autoDetectRecognizeUseCase: RecognizeWithAutoDetectUseCase,
     private val translateTextUseCase: TranslateTextUseCase,
     private val speakTextUseCase: SpeakTextUseCase,
+    private val detectLanguageUseCase: DetectLanguageUseCase,
     continuousUseCase: StartContinuousConversationUseCase,
     private val authRepo: FirebaseAuthRepository,
     private val historyRepo: FirestoreHistoryRepository,
@@ -139,7 +143,47 @@ class SpeechViewModel @Inject constructor(
         }
     }
 
-    fun translate(fromLanguage: String, toLanguage: String) {
+    /**
+     * Recognize speech with auto-detect language.
+     * Uses Azure's auto-detect feature with a list of candidate languages.
+     * @param candidateLanguages List of possible languages (max 4 for Azure)
+     * @param onDetectedLanguage Callback with the detected language code
+     */
+    fun recognizeWithAutoDetect(
+        candidateLanguages: List<String>,
+        onDetectedLanguage: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            speechState = speechState.copy(
+                statusMessage = "Auto-detecting language...",
+                recognizePhase = RecognizePhase.Preparing,
+            )
+            delay(200)
+            speechState = speechState.copy(recognizePhase = RecognizePhase.Listening)
+
+            autoDetectRecognizeUseCase(candidateLanguages)
+                .onSuccess { result ->
+                    speechState = speechState.copy(
+                        recognizedText = result.text,
+                        recognizePhase = RecognizePhase.Idle,
+                        statusMessage = "Detected: ${result.detectedLanguage}",
+                    )
+                    onDetectedLanguage(result.detectedLanguage)
+                }
+                .onFailure { error ->
+                    speechState = speechState.copy(
+                        recognizePhase = RecognizePhase.Idle,
+                        statusMessage = "Recognition error: ${error.message}",
+                    )
+                }
+        }
+    }
+
+    fun translate(
+        fromLanguage: String,
+        toLanguage: String,
+        onDetectedSourceLanguage: ((String) -> Unit)? = null
+    ) {
         if (recognizedText.isBlank()) return
 
         if (!isLoggedIn()) {
@@ -150,19 +194,38 @@ class SpeechViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
+            var actualFromLanguage = fromLanguage
+
+            // If source is auto-detect, detect the source language
+            if (fromLanguage == "auto") {
+                speechState = speechState.copy(statusMessage = "Detecting source language...")
+                val detected = detectLanguageUseCase(recognizedText)
+                if (detected != null && detected.language.isNotBlank()) {
+                    // Azure returns short codes like "ja", "en", "zh-Hans"
+                    // Use the detected language directly as Azure Translator accepts them
+                    actualFromLanguage = detected.language
+                    onDetectedSourceLanguage?.invoke(detected.language)
+                    speechState = speechState.copy(statusMessage = "Detected: ${detected.language} (${(detected.score * 100).toInt()}% confidence)")
+                } else {
+                    speechState = speechState.copy(statusMessage = "Could not detect source language. Please select manually.")
+                    return@launch
+                }
+            }
+
             speechState = speechState.copy(statusMessage = "Translating...")
 
-            when (val tr = translateTextUseCase(recognizedText, fromLanguage, toLanguage)) {
+            when (val tr = translateTextUseCase(recognizedText, actualFromLanguage, toLanguage)) {
                 is SpeechResult.Success -> {
                     speechState = speechState.copy(
                         translatedText = tr.text,
                         statusMessage = "",
                     )
+                    // Save history with ACTUAL detected language for source
                     saveHistory(
                         mode = "discrete",
                         sourceText = recognizedText,
                         targetText = tr.text,
-                        sourceLang = fromLanguage,
+                        sourceLang = actualFromLanguage,
                         targetLang = toLanguage,
                         sessionId = "",
                     )

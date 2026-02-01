@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,6 +34,7 @@ fun WordBankDetailView(
     onCancel: () -> Unit,
     onSpeakWord: (WordBankItem, SpeakingType) -> Unit,
     onSpeakExample: (WordBankItem) -> Unit,
+    onDeleteWord: (WordBankItem) -> Unit,
     t: (UiTextKey) -> String,
     filterKeyword: String,
     onFilterKeywordChange: (String) -> Unit,
@@ -101,6 +103,7 @@ fun WordBankDetailView(
                 speakingType = speakingType,
                 onSpeakWord = onSpeakWord,
                 onSpeakExample = onSpeakExample,
+                onDeleteWord = onDeleteWord,
                 t = t
             )
         }
@@ -138,7 +141,7 @@ private fun WordBankHeader(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Language name (clickable to toggle expand)
+                // Language name and word count (clickable to toggle expand)
                 Row(
                     modifier = Modifier
                         .weight(1f)
@@ -150,6 +153,14 @@ private fun WordBankHeader(
                         style = if (isExpanded) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
+                    // Show word count in collapsed state
+                    if (!isExpanded && wordBank != null) {
+                        Text(
+                            text = " (${wordBank.words.size})",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = if (isExpanded) "Collapse" else "Expand",
@@ -163,6 +174,7 @@ private fun WordBankHeader(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
                     if (wordBank != null && wordBank.words.isNotEmpty()) {
                         IconButton(onClick = onShowFilterDialog) {
                             Icon(
@@ -306,7 +318,7 @@ private fun WordBankEmptyState(t: (UiTextKey) -> String) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                imageVector = Icons.Default.LibraryBooks,
+                imageVector = Icons.AutoMirrored.Filled.LibraryBooks,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -341,6 +353,7 @@ private fun WordBankList(
     speakingType: SpeakingType?,
     onSpeakWord: (WordBankItem, SpeakingType) -> Unit,
     onSpeakExample: (WordBankItem) -> Unit,
+    onDeleteWord: (WordBankItem) -> Unit,
     t: (UiTextKey) -> String
 ) {
     // Apply filters
@@ -395,6 +408,7 @@ private fun WordBankList(
                         onSpeakOriginal = { onSpeakWord(word, SpeakingType.ORIGINAL) },
                         onSpeakTranslated = { onSpeakWord(word, SpeakingType.TRANSLATED) },
                         onSpeakExample = { onSpeakExample(word) },
+                        onDelete = { onDeleteWord(word) },
                         t = t
                     )
                 }

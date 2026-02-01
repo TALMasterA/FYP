@@ -4,6 +4,7 @@ package com.example.fyp.screens.history
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,6 +16,7 @@ import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.StandardScreenBody
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.data.history.FirestoreHistoryRepository
 import com.example.fyp.model.AppLanguageState
 import com.example.fyp.model.BaseUiTexts
 import com.example.fyp.model.TranslationRecord
@@ -55,6 +57,10 @@ fun HistoryScreen(
     var filterLanguageCode by remember { mutableStateOf("") }
     var filterKeyword by remember { mutableStateOf("") }
     var showCoinRulesDialog by remember { mutableStateOf(false) }
+    var showHistoryInfoDialog by remember { mutableStateOf(false) }
+
+    // History limit from repository constant
+    val historyLimit = FirestoreHistoryRepository.DEFAULT_HISTORY_LIMIT.toInt()
 
     val languageCounts = remember(uiState.records) {
         uiState.records
@@ -259,6 +265,11 @@ fun HistoryScreen(
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                // Info button - shows history limit info
+                IconButton(onClick = { showHistoryInfoDialog = true }) {
+                    Icon(Icons.Default.Info, contentDescription = "History Info")
+                }
+
                 // Coin button - opens dialog with coin count and rules
                 IconButton(onClick = { showCoinRulesDialog = true }) {
                     Icon(Icons.Default.MonetizationOn, contentDescription = "Coins")
@@ -268,6 +279,46 @@ fun HistoryScreen(
             }
         },
     ) { innerPadding ->
+        // History Info Dialog - shows limit and bookmark reminder
+        if (showHistoryInfoDialog) {
+            AlertDialog(
+                onDismissRequest = { showHistoryInfoDialog = false },
+                icon = { Icon(Icons.Default.Info, contentDescription = null) },
+                title = { Text("History Information") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(
+                            text = "📊 History shows your most recent $historyLimit records only.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "💾 Older records are still stored but not displayed here to optimize performance.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "⭐ To keep important translations permanently accessible, add them to your Favorites by tapping the heart ❤️ icon on any record.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "📖 View your saved Favorites in Settings → Favorites.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "🔍 Use the Filter button to search within the displayed $historyLimit records.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showHistoryInfoDialog = false }) {
+                        Text("Got it")
+                    }
+                }
+            )
+        }
+
         // Coin Rules Dialog - extracted to separate component
         CoinRulesDialog(
             isVisible = showCoinRulesDialog,
@@ -344,6 +395,9 @@ fun HistoryScreen(
                                     speechVm.speakText(rec.targetLang, rec.targetText)
                                 },
                                 onDelete = { rec -> pendingDeleteRecord = rec },
+                                onToggleFavorite = { rec -> viewModel.toggleFavorite(rec) },
+                                favoritedTexts = uiState.favoritedTexts,
+                                addingFavoriteId = uiState.addingFavoriteId,
                                 deleteLabel = t(UiTextKey.ActionDelete),
                                 modifier = Modifier.weight(1f),
                             )
@@ -430,6 +484,9 @@ fun HistoryScreen(
                                         speechVm.speakText(rec.targetLang, rec.targetText)
                                     },
                                     onDelete = { rec -> pendingDeleteRecord = rec },
+                                    onToggleFavorite = { rec -> viewModel.toggleFavorite(rec) },
+                                    favoritedTexts = uiState.favoritedTexts,
+                                    addingFavoriteId = uiState.addingFavoriteId,
                                     deleteLabel = t(UiTextKey.ActionDelete),
                                     modifier = Modifier.weight(1f),
                                 )

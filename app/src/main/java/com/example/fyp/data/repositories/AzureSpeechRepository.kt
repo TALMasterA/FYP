@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.fyp.data.clients.CloudSpeechTokenClient
 import com.example.fyp.data.providers.AzureSpeechProvider
 import com.example.fyp.model.SpeechResult
+import com.microsoft.cognitiveservices.speech.AutoDetectSourceLanguageConfig
 import com.microsoft.cognitiveservices.speech.CancellationDetails
 import com.microsoft.cognitiveservices.speech.ResultReason
 import com.microsoft.cognitiveservices.speech.SpeechConfig
@@ -82,6 +83,61 @@ class AzureSpeechRepository(
                 )
             }
         }
+
+    /**
+     * Recognize speech with auto-detect language from a list of candidate languages.
+     * Azure Speech SDK supports up to 4 candidate languages for auto-detection.
+     */
+    override suspend fun recognizeOnceWithAutoDetect(
+        candidateLanguages: List<String>
+    ): Result<AutoDetectRecognitionResult> = withContext(Dispatchers.IO) {
+        try {
+            val speechConfig = getSpeechConfig()
+
+            // Azure supports up to 4 languages for auto-detect
+            val languages = candidateLanguages.take(4)
+            if (languages.isEmpty()) {
+                return@withContext Result.failure(IllegalArgumentException("At least one candidate language is required"))
+            }
+
+            val autoDetectConfig = AutoDetectSourceLanguageConfig.fromLanguages(languages)
+            val audioConfig = AudioConfig.fromDefaultMicrophoneInput()
+
+            val recognizer = SpeechRecognizer(speechConfig, autoDetectConfig, audioConfig)
+
+            try {
+                val result = recognizer.recognizeOnceAsync().get()
+
+                if (result.reason == ResultReason.RecognizedSpeech) {
+                    // Get the detected language from the result
+                    val autoDetectResult = com.microsoft.cognitiveservices.speech.AutoDetectSourceLanguageResult.fromResult(result)
+                    val detectedLanguage = autoDetectResult.language ?: languages.first()
+
+                    Log.i("AzureSpeech", "Auto-detect recognized: ${result.text}, language: $detectedLanguage")
+
+                    Result.success(AutoDetectRecognitionResult(
+                        text = result.text,
+                        detectedLanguage = detectedLanguage
+                    ))
+                } else {
+                    val errorDetails = if (result.reason == ResultReason.Canceled) {
+                        val cancellation = CancellationDetails.fromResult(result)
+                        "Canceled: ${cancellation.reason}. Error details: ${cancellation.errorDetails}"
+                    } else {
+                        result.reason.toString()
+                    }
+
+                    Log.e("AzureSpeech", "Auto-detect recognition failed: $errorDetails")
+                    Result.failure(Exception("Speech not recognized: $errorDetails"))
+                }
+            } finally {
+                recognizer.close()
+            }
+        } catch (ex: Exception) {
+            Log.e("AzureSpeech", "Error in auto-detect recognition", ex)
+            Result.failure(ex)
+        }
+    }
 
     override suspend fun speak(text: String, languageCode: String): SpeechResult =
         withContext(Dispatchers.IO) {

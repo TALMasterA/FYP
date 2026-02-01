@@ -38,7 +38,12 @@ data class WordBankUiState(
     val isGenerating: Boolean = false,
     val isSpeaking: Boolean = false,
     val speakingItemId: String? = null,
-    val speakingType: SpeakingType? = null // "original" or "translated"
+    val speakingType: SpeakingType? = null,
+    val isTranslatingCustomWord: Boolean = false,
+    // Custom word bank specific state
+    val isCustomWordBankSelected: Boolean = false,
+    val customWords: List<WordBankItem> = emptyList(),
+    val customWordsCount: Int = 0
 )
 
 /**

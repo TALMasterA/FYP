@@ -1,0 +1,176 @@
+package com.example.fyp.data.cache
+
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import javax.inject.Inject
+import javax.inject.Singleton
+
+private val Context.translationCacheDataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "translation_cache"
+)
+
+@Serializable
+data class CachedTranslation(
+    val sourceText: String,
+    val translatedText: String,
+    val sourceLang: String,
+    val targetLang: String,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+@Serializable
+data class TranslationCacheData(
+    val entries: Map<String, CachedTranslation> = emptyMap()
+)
+
+/**
+ * Local translation cache using DataStore.
+ * Caches translations to reduce API calls and improve responsiveness.
+ */
+@Singleton
+class TranslationCache @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
+    companion object {
+        private val CACHE_KEY = stringPreferencesKey("translation_cache")
+        private const val MAX_CACHE_SIZE = 500
+        private const val CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000L // 7 days
+    }
+
+    private val json = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Generate cache key from source text and language pair
+     */
+    private fun cacheKey(sourceText: String, sourceLang: String, targetLang: String): String {
+        return "${sourceLang}|${targetLang}|${sourceText.trim().lowercase()}"
+    }
+
+    /**
+     * Get cached translation if available and not expired
+     */
+    suspend fun getCached(
+        sourceText: String,
+        sourceLang: String,
+        targetLang: String
+    ): String? {
+        val key = cacheKey(sourceText, sourceLang, targetLang)
+        val cacheData = loadCache()
+        val entry = cacheData.entries[key] ?: return null
+
+        // Check if expired
+        if (System.currentTimeMillis() - entry.timestamp > CACHE_TTL_MS) {
+            // Remove expired entry
+            removeEntry(key)
+            return null
+        }
+
+        return entry.translatedText
+    }
+
+    /**
+     * Cache a translation result
+     */
+    suspend fun cache(
+        sourceText: String,
+        translatedText: String,
+        sourceLang: String,
+        targetLang: String
+    ) {
+        val key = cacheKey(sourceText, sourceLang, targetLang)
+        val entry = CachedTranslation(
+            sourceText = sourceText.trim(),
+            translatedText = translatedText,
+            sourceLang = sourceLang,
+            targetLang = targetLang
+        )
+
+        val cacheData = loadCache()
+        val newEntries = cacheData.entries.toMutableMap()
+        newEntries[key] = entry
+
+        // Evict old entries if cache is full
+        if (newEntries.size > MAX_CACHE_SIZE) {
+            val sortedEntries = newEntries.entries.sortedBy { it.value.timestamp }
+            val entriesToRemove = sortedEntries.take(newEntries.size - MAX_CACHE_SIZE)
+            entriesToRemove.forEach { newEntries.remove(it.key) }
+        }
+
+        saveCache(TranslationCacheData(newEntries))
+    }
+
+    /**
+     * Clear all cached translations
+     */
+    suspend fun clearAll() {
+        context.translationCacheDataStore.edit { prefs ->
+            prefs.remove(CACHE_KEY)
+        }
+    }
+
+    /**
+     * Get cache statistics
+     */
+    suspend fun getStats(): CacheStats {
+        val cacheData = loadCache()
+        val now = System.currentTimeMillis()
+        val validEntries = cacheData.entries.values.filter {
+            now - it.timestamp <= CACHE_TTL_MS
+        }
+        return CacheStats(
+            totalEntries = cacheData.entries.size,
+            validEntries = validEntries.size,
+            expiredEntries = cacheData.entries.size - validEntries.size
+        )
+    }
+
+    private suspend fun loadCache(): TranslationCacheData {
+        return try {
+            context.translationCacheDataStore.data
+                .map { prefs ->
+                    val jsonString = prefs[CACHE_KEY]
+                    if (jsonString != null) {
+                        json.decodeFromString<TranslationCacheData>(jsonString)
+                    } else {
+                        TranslationCacheData()
+                    }
+                }
+                .first()
+        } catch (e: Exception) {
+            TranslationCacheData()
+        }
+    }
+
+    private suspend fun saveCache(data: TranslationCacheData) {
+        try {
+            context.translationCacheDataStore.edit { prefs ->
+                prefs[CACHE_KEY] = json.encodeToString(data)
+            }
+        } catch (e: Exception) {
+            // Ignore cache save errors
+        }
+    }
+
+    private suspend fun removeEntry(key: String) {
+        val cacheData = loadCache()
+        val newEntries = cacheData.entries.toMutableMap()
+        newEntries.remove(key)
+        saveCache(TranslationCacheData(newEntries))
+    }
+}
+
+data class CacheStats(
+    val totalEntries: Int,
+    val validEntries: Int,
+    val expiredEntries: Int
+)

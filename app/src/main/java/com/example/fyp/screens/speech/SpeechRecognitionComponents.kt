@@ -27,8 +27,10 @@ fun SpeechLanguagePickers(
     translateToLabel: String,
     selectedLanguage: String,
     selectedTargetLanguage: String,
-    supportedLanguages: List<String>,
-    languageNameFor: (String) -> String,
+    sourceLanguageOptions: List<String>,
+    targetLanguageOptions: List<String>,
+    sourceLanguageNameFor: (String) -> String,
+    targetLanguageNameFor: (String) -> String,
     onSelectedLanguage: (String) -> Unit,
     onSelectedTargetLanguage: (String) -> Unit,
     onSwapLanguages: () -> Unit,
@@ -44,6 +46,7 @@ fun SpeechLanguagePickers(
                 onClick = onSwapLanguages,
                 modifier = Modifier.size(28.dp),
                 contentPadding = PaddingValues(0.dp),
+                enabled = selectedLanguage != "auto" // Disable swap when auto-detect
             ) {
                 Text("⇄", style = MaterialTheme.typography.labelMedium)
             }
@@ -57,8 +60,8 @@ fun SpeechLanguagePickers(
                 LanguageDropdownField(
                     label = detectLabel,
                     selectedCode = selectedLanguage,
-                    options = supportedLanguages,
-                    nameFor = languageNameFor,
+                    options = sourceLanguageOptions,
+                    nameFor = sourceLanguageNameFor,
                     onSelected = onSelectedLanguage,
                 )
             }
@@ -67,8 +70,8 @@ fun SpeechLanguagePickers(
                 LanguageDropdownField(
                     label = translateToLabel,
                     selectedCode = selectedTargetLanguage,
-                    options = supportedLanguages,
-                    nameFor = languageNameFor,
+                    options = targetLanguageOptions,
+                    nameFor = targetLanguageNameFor,
                     onSelected = onSelectedTargetLanguage,
                 )
             }

@@ -29,12 +29,14 @@ import com.example.fyp.data.ui.rememberUiLanguageState
 import com.example.fyp.screens.help.HelpScreen
 import com.example.fyp.screens.history.HistoryScreen
 import com.example.fyp.screens.home.HomeScreen
+import com.example.fyp.screens.favorites.FavoritesScreen
 import com.example.fyp.screens.learning.LearningScreen
 import com.example.fyp.screens.learning.LearningSheetScreen
 import com.example.fyp.screens.learning.LearningViewModel
 import com.example.fyp.screens.learning.QuizScreen
 import com.example.fyp.screens.login.LoginScreen
 import com.example.fyp.screens.login.ResetPasswordScreen
+import com.example.fyp.screens.settings.ProfileScreen
 import com.example.fyp.screens.settings.SettingsScreen
 import com.example.fyp.screens.settings.SettingsViewModel
 import com.example.fyp.screens.speech.ContinuousConversationScreen
@@ -55,6 +57,8 @@ sealed class AppScreen(val route: String) {
     object Learning : AppScreen("learning")
     object Settings : AppScreen("settings")
     object WordBank : AppScreen("word_bank")
+    object Profile : AppScreen("profile")
+    object Favorites : AppScreen("favorites")
 
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
         fun routeFor(primaryCode: String, targetCode: String) =
@@ -219,6 +223,8 @@ fun AppNavigation() {
                             onUpdateAppLanguage = updateAppLanguage,
                             onBack = { navController.popBackStack() },
                             onOpenResetPassword = { navController.navigate(AppScreen.ResetPassword.route) },
+                            onOpenProfile = { navController.navigate(AppScreen.Profile.route) },
+                            onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) },
                             viewModel = settingsViewModel
                         )
                     }
@@ -270,6 +276,31 @@ fun AppNavigation() {
                             viewModel = wordBankViewModel,
                             appLanguageState = appLanguageState,
                             primaryLanguageCode = settingsUiState.settings.primaryLanguageCode,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composableRequireLogin(
+                        route = AppScreen.Profile.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        ProfileScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() },
+                            onAccountDeleted = {
+                                navController.navigate(AppScreen.Home.route) {
+                                    popUpTo(AppScreen.Home.route) { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+
+                    composableRequireLogin(
+                        route = AppScreen.Favorites.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        FavoritesScreen(
+                            appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
                         )
                     }

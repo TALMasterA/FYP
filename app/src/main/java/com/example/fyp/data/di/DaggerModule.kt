@@ -1,12 +1,18 @@
 package com.example.fyp.data.di
 
+import android.content.Context
+import com.example.fyp.data.cache.TranslationCache
 import com.example.fyp.data.clients.CloudSpeechTokenClient
 import com.example.fyp.data.clients.CloudTranslatorClient
+import com.example.fyp.data.favorites.FirestoreFavoritesRepository
+import com.example.fyp.data.profile.FirestoreProfileRepository
 import com.example.fyp.data.repositories.AzureSpeechRepository
 import com.example.fyp.data.repositories.FirebaseTranslationRepository
 import com.example.fyp.data.repositories.SpeechRepository
 import com.example.fyp.data.repositories.TranslationRepository
+import com.example.fyp.domain.speech.DetectLanguageUseCase
 import com.example.fyp.domain.speech.RecognizeFromMicUseCase
+import com.example.fyp.domain.speech.RecognizeWithAutoDetectUseCase
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.StartContinuousConversationUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
@@ -16,6 +22,7 @@ import com.google.firebase.functions.FirebaseFunctions
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import com.example.fyp.data.genai.CloudGenAiClient
@@ -25,6 +32,7 @@ import com.example.fyp.domain.learning.GenerateQuizUseCase
 import com.example.fyp.domain.learning.LearningContentRepository
 import com.example.fyp.domain.learning.QuizGenerationRepository
 import com.example.fyp.data.learning.QuizGenerationRepositoryImpl
+import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
 import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.data.wordbank.FirestoreWordBankRepository
 
@@ -53,6 +61,9 @@ object AppModule {
     fun provideRecognizeUseCase(repo: SpeechRepository) = RecognizeFromMicUseCase(repo)
 
     @Provides
+    fun provideRecognizeWithAutoDetectUseCase(repo: SpeechRepository) = RecognizeWithAutoDetectUseCase(repo)
+
+    @Provides
     fun provideSpeakUseCase(repo: SpeechRepository) = SpeakTextUseCase(repo)
 
     @Provides
@@ -61,13 +72,23 @@ object AppModule {
     @Provides
     fun provideTranslateUseCase(repo: TranslationRepository) = TranslateTextUseCase(repo)
 
+    @Provides
+    fun provideDetectLanguageUseCase(repo: TranslationRepository) = DetectLanguageUseCase(repo)
+
     @Provides @Singleton
     fun provideCloudTranslatorClient(functions: FirebaseFunctions): CloudTranslatorClient =
         CloudTranslatorClient(functions)
 
     @Provides @Singleton
-    fun provideTranslationRepository(client: CloudTranslatorClient): TranslationRepository =
-        FirebaseTranslationRepository(client)
+    fun provideTranslationCache(@ApplicationContext context: Context): TranslationCache =
+        TranslationCache(context)
+
+    @Provides @Singleton
+    fun provideTranslationRepository(
+        client: CloudTranslatorClient,
+        cache: TranslationCache
+    ): TranslationRepository =
+        FirebaseTranslationRepository(client, cache)
 
     @Provides
     @Singleton
@@ -102,4 +123,21 @@ object AppModule {
     fun provideFirestoreWordBankRepository(db: FirebaseFirestore): FirestoreWordBankRepository =
         FirestoreWordBankRepository(db)
 
+    @Provides
+    @Singleton
+    fun provideFirestoreProfileRepository(
+        db: FirebaseFirestore,
+        auth: FirebaseAuth
+    ): FirestoreProfileRepository =
+        FirestoreProfileRepository(db, auth)
+
+    @Provides
+    @Singleton
+    fun provideFirestoreFavoritesRepository(db: FirebaseFirestore): FirestoreFavoritesRepository =
+        FirestoreFavoritesRepository(db)
+
+    @Provides
+    @Singleton
+    fun provideFirestoreCustomWordsRepository(db: FirebaseFirestore): FirestoreCustomWordsRepository =
+        FirestoreCustomWordsRepository(db)
 }

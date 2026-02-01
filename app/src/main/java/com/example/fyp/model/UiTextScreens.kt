@@ -628,4 +628,130 @@ val ScreenUiTexts: List<String> = listOf(
     // DialogGenerateOverwriteMessageTemplate
     "Previous materials will be overwritten (if exist). \n" +
             "Generate materials for {speclanguage}?",
+
+    // --- Profile Management ---
+    // ProfileTitle
+    "Profile",
+
+    // ProfileDisplayNameLabel
+    "Display Name",
+
+    // ProfileDisplayNameHint
+    "Enter your display name",
+
+    // ProfileUpdateButton
+    "Update Profile",
+
+    // ProfileUpdateSuccess
+    "Profile updated successfully",
+
+    // ProfileUpdateError
+    "Failed to update profile",
+
+    // --- Account Deletion ---
+    // AccountDeleteTitle
+    "Delete Account",
+
+    // AccountDeleteWarning
+    "⚠️ This action is permanent and cannot be undone!",
+
+    // AccountDeleteConfirmMessage
+    "All your data including history, word banks, learning materials, and settings will be permanently deleted. Enter your password to confirm.",
+
+    // AccountDeletePasswordLabel
+    "Password",
+
+    // AccountDeleteButton
+    "Delete My Account",
+
+    // AccountDeleteSuccess
+    "Account deleted successfully",
+
+    // AccountDeleteError
+    "Failed to delete account",
+
+    // AccountDeleteReauthRequired
+    "Please re-enter your password to confirm deletion",
+
+    // --- Favorites ---
+    // FavoritesTitle
+    "Favorites",
+
+    // FavoritesEmpty
+    "No favorites yet",
+
+    // FavoritesAddSuccess
+    "Added to favorites",
+
+    // FavoritesRemoveSuccess
+    "Removed from favorites",
+
+    // FavoritesAddButton
+    "Add to Favorites",
+
+    // FavoritesRemoveButton
+    "Remove from Favorites",
+
+    // FavoritesNoteLabel
+    "Note",
+
+    // FavoritesNoteHint
+    "Add a note (optional)",
+
+    // --- Custom Words ---
+    // CustomWordsTitle
+    "Custom Words",
+
+    // CustomWordsAdd
+    "Add Word",
+
+    // CustomWordsEdit
+    "Edit Word",
+
+    // CustomWordsDelete
+    "Delete Word",
+
+    // CustomWordsOriginalLabel
+    "Original Word",
+
+    // CustomWordsTranslatedLabel
+    "Translation",
+
+    // CustomWordsPronunciationLabel
+    "Pronunciation (optional)",
+
+    // CustomWordsExampleLabel
+    "Example (optional)",
+
+    // CustomWordsSaveSuccess
+    "Word saved successfully",
+
+    // CustomWordsDeleteSuccess
+    "Word deleted successfully",
+
+    // CustomWordsAlreadyExists
+    "This word already exists",
+
+    // --- Language Detection ---
+    // LanguageDetectAuto
+    "Auto-detect",
+
+    // LanguageDetectDetecting
+    "Detecting...",
+
+    // LanguageDetectedTemplate
+    "Detected: {language}",
+
+    // LanguageDetectFailed
+    "Detection failed",
+
+    // --- Cache ---
+    // CacheClearButton
+    "Clear Cache",
+
+    // CacheClearSuccess
+    "Cache cleared successfully",
+
+    // CacheStatsTemplate
+    "Cache: {count} translations stored",
 )

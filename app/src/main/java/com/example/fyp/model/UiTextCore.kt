@@ -292,6 +292,58 @@ enum class UiTextKey {
     DialogLogoutMessage,
     DialogGenerateOverwriteTitle,
     DialogGenerateOverwriteMessageTemplate,
+
+    // --- Profile Management ---
+    ProfileTitle,
+    ProfileDisplayNameLabel,
+    ProfileDisplayNameHint,
+    ProfileUpdateButton,
+    ProfileUpdateSuccess,
+    ProfileUpdateError,
+
+    // --- Account Deletion ---
+    AccountDeleteTitle,
+    AccountDeleteWarning,
+    AccountDeleteConfirmMessage,
+    AccountDeletePasswordLabel,
+    AccountDeleteButton,
+    AccountDeleteSuccess,
+    AccountDeleteError,
+    AccountDeleteReauthRequired,
+
+    // --- Favorites ---
+    FavoritesTitle,
+    FavoritesEmpty,
+    FavoritesAddSuccess,
+    FavoritesRemoveSuccess,
+    FavoritesAddButton,
+    FavoritesRemoveButton,
+    FavoritesNoteLabel,
+    FavoritesNoteHint,
+
+    // --- Custom Words ---
+    CustomWordsTitle,
+    CustomWordsAdd,
+    CustomWordsEdit,
+    CustomWordsDelete,
+    CustomWordsOriginalLabel,
+    CustomWordsTranslatedLabel,
+    CustomWordsPronunciationLabel,
+    CustomWordsExampleLabel,
+    CustomWordsSaveSuccess,
+    CustomWordsDeleteSuccess,
+    CustomWordsAlreadyExists,
+
+    // --- Language Detection ---
+    LanguageDetectAuto,
+    LanguageDetectDetecting,
+    LanguageDetectedTemplate,
+    LanguageDetectFailed,
+
+    // --- Cache ---
+    CacheClearButton,
+    CacheClearSuccess,
+    CacheStatsTemplate,
 }
 
 // Core UI texts - used throughout the app

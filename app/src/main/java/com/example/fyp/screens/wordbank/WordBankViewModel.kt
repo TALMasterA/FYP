@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.auth.FirebaseAuthRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
+import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
 import com.example.fyp.data.wordbank.FirestoreWordBankRepository
 import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
+import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.example.fyp.model.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
@@ -32,7 +34,9 @@ class WordBankViewModel @Inject constructor(
     private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val wordBankRepo: FirestoreWordBankRepository,
     private val wordBankGenRepo: WordBankGenerationRepository,
-    private val speakTextUseCase: SpeakTextUseCase
+    private val speakTextUseCase: SpeakTextUseCase,
+    private val customWordsRepo: FirestoreCustomWordsRepository,
+    private val translateTextUseCase: TranslateTextUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WordBankUiState())
@@ -78,6 +82,189 @@ class WordBankViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Add a custom word to the custom word bank
+     */
+    fun addCustomWord(
+        originalWord: String,
+        translatedWord: String,
+        pronunciation: String = "",
+        example: String = "",
+        sourceLang: String,
+        targetLang: String
+    ) {
+        val uid = currentUserId ?: return
+
+        viewModelScope.launch {
+            customWordsRepo.addCustomWord(
+                userId = uid,
+                originalWord = originalWord,
+                translatedWord = translatedWord,
+                pronunciation = pronunciation,
+                example = example,
+                sourceLang = sourceLang,
+                targetLang = targetLang
+            ).onSuccess {
+                // Refresh custom words if we're viewing the custom word bank
+                if (_uiState.value.isCustomWordBankSelected) {
+                    loadCustomWords()
+                }
+            }.onFailure {
+                _uiState.value = _uiState.value.copy(error = "Failed to add word")
+            }
+        }
+    }
+
+    /**
+     * Load all custom words for the custom word bank view
+     */
+    private fun loadCustomWords() {
+        val uid = currentUserId ?: return
+
+        viewModelScope.launch {
+            try {
+                val customWords = customWordsRepo.getAllCustomWordsOnce(uid)
+                val customWordItems = customWords.map { cw ->
+                    WordBankItem(
+                        id = "custom_${cw.id}",
+                        originalWord = cw.originalWord,
+                        translatedWord = cw.translatedWord,
+                        pronunciation = cw.pronunciation,
+                        example = cw.example,
+                        category = "${cw.sourceLang} → ${cw.targetLang}",
+                        difficulty = ""
+                    )
+                }
+                _uiState.value = _uiState.value.copy(
+                    customWords = customWordItems,
+                    customWordsCount = customWordItems.size,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Failed to load custom words"
+                )
+            }
+        }
+    }
+
+    /**
+     * Select the custom word bank view
+     */
+    fun selectCustomWordBank() {
+        _uiState.value = _uiState.value.copy(
+            isCustomWordBankSelected = true,
+            selectedLanguageCode = null,
+            currentWordBank = null,
+            isLoading = true
+        )
+        loadCustomWords()
+    }
+
+    /**
+     * Translate a word from source language to target language
+     */
+    fun translateCustomWord(
+        text: String,
+        targetLanguageCode: String,
+        onResult: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isTranslatingCustomWord = true)
+
+            when (val result = translateTextUseCase(text, primaryLanguageCode, targetLanguageCode)) {
+                is SpeechResult.Success -> {
+                    onResult(result.text)
+                }
+                is SpeechResult.Error -> {
+                    _uiState.value = _uiState.value.copy(error = "Translation failed: ${result.message}")
+                }
+            }
+
+            _uiState.value = _uiState.value.copy(isTranslatingCustomWord = false)
+        }
+    }
+
+    /**
+     * Translate a word for custom word bank (with custom source and target languages)
+     */
+    fun translateForCustomWord(
+        text: String,
+        sourceLang: String,
+        targetLang: String,
+        onResult: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isTranslatingCustomWord = true)
+
+            when (val result = translateTextUseCase(text, sourceLang, targetLang)) {
+                is SpeechResult.Success -> {
+                    onResult(result.text)
+                }
+                is SpeechResult.Error -> {
+                    _uiState.value = _uiState.value.copy(error = "Translation failed: ${result.message}")
+                }
+            }
+
+            _uiState.value = _uiState.value.copy(isTranslatingCustomWord = false)
+        }
+    }
+
+    /**
+     * Get primary language code for display
+     */
+    fun getPrimaryLanguageCode(): String = primaryLanguageCode
+
+    /**
+     * Delete a custom word
+     */
+    fun deleteCustomWord(wordId: String) {
+        val uid = currentUserId ?: return
+
+        viewModelScope.launch {
+            customWordsRepo.deleteCustomWord(uid, wordId).onSuccess {
+                // Refresh the custom word bank if we're viewing it
+                if (_uiState.value.isCustomWordBankSelected) {
+                    loadCustomWords()
+                }
+            }
+        }
+    }
+
+    /**
+     * Delete a word from the generated word bank
+     */
+    fun deleteWordFromBank(wordId: String, targetLanguageCode: String) {
+        val uid = currentUserId ?: return
+
+        viewModelScope.launch {
+            try {
+                // Get current word bank
+                val currentWordBank = _uiState.value.currentWordBank ?: return@launch
+
+                // Filter out the word to delete
+                val updatedWords = currentWordBank.words.filter { it.id != wordId }
+
+                // Save updated word bank
+                wordBankRepo.saveWordBank(
+                    uid = uid,
+                    primary = primaryLanguageCode,
+                    target = targetLanguageCode,
+                    words = updatedWords,
+                    historyCount = currentWordBank.historyCountAtGenerate
+                )
+
+                // Update UI state immediately
+                _uiState.value = _uiState.value.copy(
+                    currentWordBank = currentWordBank.copy(words = updatedWords)
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = "Failed to delete word")
+            }
+        }
+    }
+
     fun setPrimaryLanguageCode(code: String) {
         if (primaryLanguageCode != code) {
             primaryLanguageCode = code
@@ -89,8 +276,6 @@ class WordBankViewModel @Inject constructor(
             refreshClusters()
         }
     }
-
-    fun getPrimaryLanguageCode(): String = primaryLanguageCode
 
     private fun startListening(userId: String) {
         historyJob?.cancel()
@@ -108,7 +293,6 @@ class WordBankViewModel @Inject constructor(
         }
     }
 
-
     private fun refreshClusters() {
         viewModelScope.launch {
             val uid = currentUserId ?: return@launch
@@ -117,6 +301,14 @@ class WordBankViewModel @Inject constructor(
             if (lastPrimaryForCache != primaryLanguageCode) {
                 wordBankExistsCache.clear()
                 lastPrimaryForCache = primaryLanguageCode
+            }
+
+            // Load custom words count
+            try {
+                val customWords = customWordsRepo.getAllCustomWordsOnce(uid)
+                _uiState.value = _uiState.value.copy(customWordsCount = customWords.size)
+            } catch (_: Exception) {
+                // Ignore error, just keep previous count
             }
 
             // Group records by target language (excluding primary)
@@ -167,11 +359,14 @@ class WordBankViewModel @Inject constructor(
 
             _uiState.value = _uiState.value.copy(
                 selectedLanguageCode = languageCode,
+                isCustomWordBankSelected = false,
                 isLoading = true
             )
 
             try {
+                // Fetch generated word bank only (no more custom word merging)
                 val wordBank = wordBankRepo.getWordBank(uid, primaryLanguageCode, languageCode)
+
                 _uiState.value = _uiState.value.copy(
                     currentWordBank = wordBank,
                     isLoading = false
@@ -188,7 +383,8 @@ class WordBankViewModel @Inject constructor(
     fun clearSelection() {
         _uiState.value = _uiState.value.copy(
             selectedLanguageCode = null,
-            currentWordBank = null
+            currentWordBank = null,
+            isCustomWordBankSelected = false
         )
     }
 
