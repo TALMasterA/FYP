@@ -13,7 +13,7 @@ internal class TtsController(
     private val setSpeechState: (SpeechScreenState) -> Unit,
 ) {
 
-    fun speak(text: String, languageCode: String, isTranslation: Boolean) {
+    fun speak(text: String, languageCode: String, isTranslation: Boolean, voiceName: String? = null) {
         val state = getSpeechState()
         if (text.isBlank() || state.isTtsRunning) return
 
@@ -26,7 +26,7 @@ internal class TtsController(
             )
 
             try {
-                val result = speakTextUseCase(text, languageCode)
+                val result = speakTextUseCase(text, languageCode, voiceName)
                 when (result) {
                     is SpeechResult.Success -> {
                         setSpeechState(

@@ -13,9 +13,11 @@ import com.example.fyp.domain.speech.RecognizeWithAutoDetectUseCase
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.StartContinuousConversationUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
+import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
+import com.example.fyp.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,10 +37,14 @@ class SpeechViewModel @Inject constructor(
     continuousUseCase: StartContinuousConversationUseCase,
     private val authRepo: FirebaseAuthRepository,
     private val historyRepo: FirestoreHistoryRepository,
+    private val observeSettings: ObserveUserSettingsUseCase,
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.LoggedOut)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
+
+    private val _userSettings = MutableStateFlow(UserSettings())
+    private val userSettings: StateFlow<UserSettings> = _userSettings.asStateFlow()
 
     private var speechState by mutableStateOf(SpeechScreenState())
 
@@ -76,7 +82,17 @@ class SpeechViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            authRepo.currentUserState.collect { _authState.value = it }
+            authRepo.currentUserState.collect { authState ->
+                _authState.value = authState
+                // Observe settings when user is logged in
+                if (authState is AuthState.LoggedIn) {
+                    observeSettings(authState.user.uid).collect { settings ->
+                        _userSettings.value = settings
+                    }
+                } else {
+                    _userSettings.value = UserSettings()
+                }
+            }
         }
     }
 
@@ -242,17 +258,25 @@ class SpeechViewModel @Inject constructor(
 
     // ---- TTS ----
 
-    fun speakOriginal(languageCode: String) =
-        ttsController.speak(text = recognizedText, languageCode = languageCode, isTranslation = false)
+    fun speakOriginal(languageCode: String) {
+        val voiceName = userSettings.value.voiceSettings[languageCode]
+        ttsController.speak(text = recognizedText, languageCode = languageCode, isTranslation = false, voiceName = voiceName)
+    }
 
-    fun speakTranslation(languageCode: String) =
-        ttsController.speak(text = translatedText, languageCode = languageCode, isTranslation = true)
+    fun speakTranslation(languageCode: String) {
+        val voiceName = userSettings.value.voiceSettings[languageCode]
+        ttsController.speak(text = translatedText, languageCode = languageCode, isTranslation = true, voiceName = voiceName)
+    }
 
-    fun speakText(languageCode: String, text: String) =
-        ttsController.speak(text = text, languageCode = languageCode, isTranslation = true)
+    fun speakText(languageCode: String, text: String) {
+        val voiceName = userSettings.value.voiceSettings[languageCode]
+        ttsController.speak(text = text, languageCode = languageCode, isTranslation = true, voiceName = voiceName)
+    }
 
-    fun speakTextOriginal(languageCode: String, text: String) =
-        ttsController.speak(text = text, languageCode = languageCode, isTranslation = false)
+    fun speakTextOriginal(languageCode: String, text: String) {
+        val voiceName = userSettings.value.voiceSettings[languageCode]
+        ttsController.speak(text = text, languageCode = languageCode, isTranslation = false, voiceName = voiceName)
+    }
 
     // ---- Continuous mode ----
 

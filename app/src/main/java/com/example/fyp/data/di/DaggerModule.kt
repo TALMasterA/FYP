@@ -36,6 +36,8 @@ import com.example.fyp.data.learning.QuizGenerationRepositoryImpl
 import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
 import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.data.wordbank.FirestoreWordBankRepository
+import com.example.fyp.data.settings.UserSettingsRepository
+import com.example.fyp.domain.settings.SetVoiceForLanguageUseCase
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -145,4 +147,8 @@ object AppModule {
     @Singleton
     fun provideFirestoreCustomWordsRepository(db: FirebaseFirestore): FirestoreCustomWordsRepository =
         FirestoreCustomWordsRepository(db)
+
+    @Provides
+    fun provideSetVoiceForLanguageUseCase(repo: UserSettingsRepository) =
+        SetVoiceForLanguageUseCase(repo)
 }

@@ -9,4 +9,5 @@ data class UserSettings(
     val themeMode: String = "system", // "system" | "light" | "dark"
     val colorPaletteId: String = "default", // Color palette selection
     val unlockedPalettes: List<String> = listOf("default"), // List of unlocked color palettes
+    val voiceSettings: Map<String, String> = emptyMap(), // language code -> voice name
 )

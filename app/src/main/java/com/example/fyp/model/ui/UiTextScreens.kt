@@ -323,6 +323,21 @@ val ScreenUiTexts: List<String> = listOf(
     // SettingsNotLoggedInWarning
     "Not logged in, amendments below will not take effect/saved.",
 
+    // SettingsVoiceTitle
+    "Voice Settings",
+
+    // SettingsVoiceDesc
+    "Choose a voice for text-to-speech output per language.",
+
+    // SettingsVoiceLanguageLabel
+    "Language",
+
+    // SettingsVoiceSelectLabel
+    "Voice",
+
+    // SettingsVoiceDefault
+    "Default",
+
     // --- Learning ---
     // LearningTitle
     "Learning",

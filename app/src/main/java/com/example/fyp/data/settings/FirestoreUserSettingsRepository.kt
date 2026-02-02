@@ -30,6 +30,8 @@ class FirestoreUserSettingsRepository @Inject constructor(
             val colorPaletteId = snap?.getString("colorPaletteId") ?: "default"
             @Suppress("UNCHECKED_CAST")
             val unlockedPalettes = snap?.get("unlockedPalettes") as? List<String> ?: listOf("default")
+            @Suppress("UNCHECKED_CAST")
+            val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
 
             trySend(
                 UserSettings(
@@ -37,7 +39,8 @@ class FirestoreUserSettingsRepository @Inject constructor(
                     fontSizeScale = scale,
                     themeMode = themeMode,
                     colorPaletteId = colorPaletteId,
-                    unlockedPalettes = unlockedPalettes
+                    unlockedPalettes = unlockedPalettes,
+                    voiceSettings = voiceSettings
                 )
             )
         }
@@ -80,6 +83,21 @@ class FirestoreUserSettingsRepository @Inject constructor(
 
         docRef(userId)
             .set(mapOf("unlockedPalettes" to updated), SetOptions.merge())
+            .await()
+    }
+
+    override suspend fun setVoiceForLanguage(userId: String, languageCode: String, voiceName: String) {
+        // First, get current voice settings
+        val current = docRef(userId).get().await()
+        @Suppress("UNCHECKED_CAST")
+        val currentVoices = current?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
+
+        // Update with new voice for this language
+        val updated = currentVoices.toMutableMap()
+        updated[languageCode] = voiceName
+
+        docRef(userId)
+            .set(mapOf("voiceSettings" to updated), SetOptions.merge())
             .await()
     }
 }

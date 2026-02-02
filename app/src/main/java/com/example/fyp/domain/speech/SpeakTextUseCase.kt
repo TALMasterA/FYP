@@ -8,11 +8,13 @@ class SpeakTextUseCase(
 ) {
     suspend operator fun invoke(
         text: String,
-        languageCode: String
+        languageCode: String,
+        voiceName: String? = null
     ): SpeechResult {
         return speechRepository.speak(
             text = text,
-            languageCode = languageCode
+            languageCode = languageCode,
+            voiceName = voiceName
         )
     }
 }

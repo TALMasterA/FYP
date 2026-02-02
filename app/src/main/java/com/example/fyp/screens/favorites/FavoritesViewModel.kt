@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
+import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.FavoriteRecord
 import com.example.fyp.model.SpeechResult
+import com.example.fyp.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +30,8 @@ data class FavoritesUiState(
 class FavoritesViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val favoritesRepo: FirestoreFavoritesRepository,
-    private val speakTextUseCase: SpeakTextUseCase
+    private val speakTextUseCase: SpeakTextUseCase,
+    private val observeSettings: ObserveUserSettingsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FavoritesUiState())
@@ -36,6 +39,7 @@ class FavoritesViewModel @Inject constructor(
 
     private var favoritesJob: Job? = null
     private var currentUserId: String? = null
+    private var userSettings = UserSettings()
 
     init {
         viewModelScope.launch {
@@ -44,10 +48,17 @@ class FavoritesViewModel @Inject constructor(
                     is AuthState.LoggedIn -> {
                         currentUserId = auth.user.uid
                         observeFavorites(auth.user.uid)
+                        // Observe user settings for voice preferences
+                        launch {
+                            observeSettings(auth.user.uid).collect { settings ->
+                                userSettings = settings
+                            }
+                        }
                     }
                     AuthState.LoggedOut -> {
                         favoritesJob?.cancel()
                         currentUserId = null
+                        userSettings = UserSettings()
                         _uiState.value = FavoritesUiState(isLoading = false)
                     }
                     AuthState.Loading -> {
@@ -88,7 +99,8 @@ class FavoritesViewModel @Inject constructor(
     fun speak(text: String, languageCode: String, speakingId: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(speakingId = speakingId)
-            when (val result = speakTextUseCase(text, languageCode)) {
+            val voiceName = userSettings.voiceSettings[languageCode]
+            when (val result = speakTextUseCase(text, languageCode, voiceName)) {
                 is SpeechResult.Success -> {
                     _uiState.value = _uiState.value.copy(speakingId = null)
                 }

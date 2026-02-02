@@ -21,7 +21,7 @@ interface SpeechRepository {
      */
     suspend fun recognizeOnceWithAutoDetect(candidateLanguages: List<String>): Result<AutoDetectRecognitionResult>
 
-    suspend fun speak(text: String, languageCode: String): SpeechResult
+    suspend fun speak(text: String, languageCode: String, voiceName: String? = null): SpeechResult
 
     suspend fun startContinuous(
         languageCode: String,

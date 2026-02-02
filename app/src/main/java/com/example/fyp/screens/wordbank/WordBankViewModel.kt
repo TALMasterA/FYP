@@ -9,9 +9,11 @@ import com.example.fyp.data.wordbank.FirestoreWordBankRepository
 import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
+import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
+import com.example.fyp.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
@@ -36,13 +38,15 @@ class WordBankViewModel @Inject constructor(
     private val wordBankGenRepo: WordBankGenerationRepository,
     private val speakTextUseCase: SpeakTextUseCase,
     private val customWordsRepo: FirestoreCustomWordsRepository,
-    private val translateTextUseCase: TranslateTextUseCase
+    private val translateTextUseCase: TranslateTextUseCase,
+    private val observeSettings: ObserveUserSettingsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WordBankUiState())
     val uiState: StateFlow<WordBankUiState> = _uiState.asStateFlow()
 
     private var currentUserId: String? = null
+    private var userSettings = UserSettings()
     private var historyJob: Job? = null
     private var generationJob: Job? = null
     private var records: List<TranslationRecord> = emptyList()
@@ -64,9 +68,16 @@ class WordBankViewModel @Inject constructor(
                     is AuthState.LoggedIn -> {
                         currentUserId = auth.user.uid
                         startListening(auth.user.uid)
+                        // Observe user settings for voice preferences
+                        launch {
+                            observeSettings(auth.user.uid).collect { settings ->
+                                userSettings = settings
+                            }
+                        }
                     }
                     AuthState.LoggedOut -> {
                         currentUserId = null
+                        userSettings = UserSettings()
                         historyJob?.cancel()
                         sharedHistoryDataSource.stopObserving()
                         _uiState.value = WordBankUiState(
@@ -586,7 +597,8 @@ class WordBankViewModel @Inject constructor(
             )
 
             try {
-                val result = speakTextUseCase(text, languageCode)
+                val voiceName = userSettings.voiceSettings[languageCode]
+                val result = speakTextUseCase(text, languageCode, voiceName)
                 when (result) {
                     is SpeechResult.Success -> {
                         delay(300)
@@ -628,7 +640,8 @@ class WordBankViewModel @Inject constructor(
             )
 
             try {
-                speakTextUseCase(word.example, languageCode)
+                val voiceName = userSettings.voiceSettings[languageCode]
+                speakTextUseCase(word.example, languageCode, voiceName)
             } finally {
                 _uiState.value = _uiState.value.copy(
                     isSpeaking = false,

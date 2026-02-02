@@ -182,6 +182,11 @@ enum class UiTextKey {
     SettingsThemeDark,
     SettingsResetPW,
     SettingsNotLoggedInWarning,
+    SettingsVoiceTitle,
+    SettingsVoiceDesc,
+    SettingsVoiceLanguageLabel,
+    SettingsVoiceSelectLabel,
+    SettingsVoiceDefault,
 
     // --- Learning ---
     LearningTitle,

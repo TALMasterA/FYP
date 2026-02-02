@@ -11,6 +11,7 @@ import com.example.fyp.domain.settings.SetThemeModeUseCase
 import com.example.fyp.domain.settings.SetColorPaletteUseCase
 import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase
 import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase.Result as UnlockResult
+import com.example.fyp.domain.settings.SetVoiceForLanguageUseCase
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.user.UserSettings
@@ -44,6 +45,7 @@ class SettingsViewModel @Inject constructor(
     private val setThemeMode: SetThemeModeUseCase,
     private val setColorPalette: SetColorPaletteUseCase,
     private val unlockColorPaletteWithCoins: UnlockColorPaletteWithCoinsUseCase,
+    private val setVoiceForLanguage: SetVoiceForLanguageUseCase,
     private val quizRepo: com.example.fyp.data.learning.FirestoreQuizRepository
 ) : ViewModel() {
 
@@ -248,6 +250,34 @@ class SettingsViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         unlockError = e.message ?: "Failed to unlock palette",
                         unlockingPaletteId = null
+                    )
+                }
+        }
+    }
+
+    fun updateVoiceForLanguage(languageCode: String, voiceName: String) {
+        val uid = _uiState.value.uid ?: run {
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            return
+        }
+
+        viewModelScope.launch {
+            runCatching { setVoiceForLanguage(uid, languageCode, voiceName) }
+                .onSuccess {
+                    // Update local state optimistically
+                    val currentSettings = _uiState.value.settings
+                    val updatedVoices = currentSettings.voiceSettings.toMutableMap()
+                    updatedVoices[languageCode] = voiceName
+                    _uiState.value = _uiState.value.copy(
+                        settings = currentSettings.copy(voiceSettings = updatedVoices),
+                        errorKey = null,
+                        errorRaw = null
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        errorKey = null,
+                        errorRaw = e.message ?: "Failed to update voice"
                     )
                 }
         }

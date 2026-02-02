@@ -10,4 +10,5 @@ interface UserSettingsRepository {
     suspend fun setThemeMode(userId: String, themeMode: String)
     suspend fun setColorPalette(userId: String, paletteId: String)
     suspend fun unlockColorPalette(userId: String, paletteId: String)
+    suspend fun setVoiceForLanguage(userId: String, languageCode: String, voiceName: String)
 }

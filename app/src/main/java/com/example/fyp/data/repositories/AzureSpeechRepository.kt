@@ -139,13 +139,18 @@ class AzureSpeechRepository(
         }
     }
 
-    override suspend fun speak(text: String, languageCode: String): SpeechResult =
+    override suspend fun speak(text: String, languageCode: String, voiceName: String?): SpeechResult =
         withContext(Dispatchers.IO) {
             if (text.isBlank()) return@withContext SpeechResult.Error("No text to speak")
 
             try {
                 val speechConfig = getSpeechConfig()
                 speechConfig.speechSynthesisLanguage = languageCode
+
+                // Set voice name if provided, otherwise Azure will use default for the language
+                if (!voiceName.isNullOrBlank()) {
+                    speechConfig.speechSynthesisVoiceName = voiceName
+                }
 
                 val synthesizer = SpeechSynthesizer(speechConfig)
                 try {

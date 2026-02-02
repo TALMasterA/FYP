@@ -92,6 +92,10 @@ fun SettingsScreen(
                 isLoggedIn = isLoggedIn
             )
 
+            TextButton(onClick = onOpenResetPassword) {
+                Text(t(UiTextKey.SettingsResetPW))
+            }
+
             // Quick Links for logged in users
             if (isLoggedIn) {
                 Row(
@@ -110,6 +114,31 @@ fun SettingsScreen(
                     ) {
                         Text(t(UiTextKey.FavoritesTitle))
                     }
+                }
+            }
+
+            // Voice Settings (only for logged in users)
+            if (isLoggedIn) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        t(UiTextKey.SettingsVoiceTitle),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = t(UiTextKey.SettingsVoiceDesc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    VoiceSettingsSelector(
+                        voiceSettings = uiState.settings.voiceSettings,
+                        supportedLanguages = supportedLanguages,
+                        onVoiceSelected = { lang, voice -> viewModel.updateVoiceForLanguage(lang, voice) },
+                        languageNameFor = uiLanguageNameFor,
+                        t = t
+                    )
                 }
             }
 
@@ -140,9 +169,6 @@ fun SettingsScreen(
                 }
             }
 
-            TextButton(onClick = onOpenResetPassword) {
-                Text(t(UiTextKey.SettingsResetPW))
-            }
 
             val settingsErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
             settingsErrorText?.let { errorMsg ->
