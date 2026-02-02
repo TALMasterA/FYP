@@ -27,12 +27,17 @@ class FirestoreUserSettingsRepository @Inject constructor(
             val code = snap?.getString("primaryLanguageCode").orEmpty()
             val scale = snap?.getDouble("fontSizeScale")?.toFloat() ?: 1.0f
             val themeMode = snap?.getString("themeMode") ?: "system"
+            val colorPaletteId = snap?.getString("colorPaletteId") ?: "default"
+            @Suppress("UNCHECKED_CAST")
+            val unlockedPalettes = snap?.get("unlockedPalettes") as? List<String> ?: listOf("default")
 
             trySend(
                 UserSettings(
                     primaryLanguageCode = code.ifBlank { "en-US" },
                     fontSizeScale = scale,
-                    themeMode = themeMode
+                    themeMode = themeMode,
+                    colorPaletteId = colorPaletteId,
+                    unlockedPalettes = unlockedPalettes
                 )
             )
         }
@@ -55,6 +60,26 @@ class FirestoreUserSettingsRepository @Inject constructor(
     override suspend fun setThemeMode(userId: String, themeMode: String) {
         docRef(userId)
             .set(mapOf("themeMode" to themeMode), SetOptions.merge())
+            .await()
+    }
+
+    override suspend fun setColorPalette(userId: String, paletteId: String) {
+        docRef(userId)
+            .set(mapOf("colorPaletteId" to paletteId), SetOptions.merge())
+            .await()
+    }
+
+    override suspend fun unlockColorPalette(userId: String, paletteId: String) {
+        // First, get current unlockedPalettes
+        val current = docRef(userId).get().await()
+        @Suppress("UNCHECKED_CAST")
+        val currentUnlocked = current?.get("unlockedPalettes") as? List<String> ?: listOf("default")
+
+        // Add new palette if not already unlocked
+        val updated = (currentUnlocked + paletteId).distinct()
+
+        docRef(userId)
+            .set(mapOf("unlockedPalettes" to updated), SetOptions.merge())
             .await()
     }
 }

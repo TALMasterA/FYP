@@ -8,9 +8,13 @@ import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.domain.settings.SetFontSizeScaleUseCase
 import com.example.fyp.domain.settings.SetPrimaryLanguageUseCase
 import com.example.fyp.domain.settings.SetThemeModeUseCase
+import com.example.fyp.domain.settings.SetColorPaletteUseCase
+import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase
+import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase.Result as UnlockResult
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.user.UserSettings
+import com.example.fyp.model.UserCoinStats
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +30,9 @@ data class SettingsUiState(
     val errorRaw: String? = null,
     val uid: String? = null,
     val settings: UserSettings = UserSettings(),
+    val coinStats: UserCoinStats = UserCoinStats(),
+    val unlockingPaletteId: String? = null,
+    val unlockError: String? = null,
 )
 
 @HiltViewModel
@@ -34,13 +41,17 @@ class SettingsViewModel @Inject constructor(
     private val observeSettings: ObserveUserSettingsUseCase,
     private val setPrimaryLanguage: SetPrimaryLanguageUseCase,
     private val setFontSizeScale: SetFontSizeScaleUseCase,
-    private val setThemeMode: SetThemeModeUseCase
+    private val setThemeMode: SetThemeModeUseCase,
+    private val setColorPalette: SetColorPaletteUseCase,
+    private val unlockColorPaletteWithCoins: UnlockColorPaletteWithCoinsUseCase,
+    private val quizRepo: com.example.fyp.data.learning.FirestoreQuizRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     private var settingsJob: Job? = null
+    private var coinsJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -49,10 +60,12 @@ class SettingsViewModel @Inject constructor(
                     is AuthState.LoggedIn -> start(auth.user.uid)
                     AuthState.Loading -> {
                         settingsJob?.cancel()
+                        coinsJob?.cancel()
                         _uiState.value = SettingsUiState(isLoading = true)
                     }
                     AuthState.LoggedOut -> {
                         settingsJob?.cancel()
+                        coinsJob?.cancel()
                         _uiState.value = SettingsUiState(
                             isLoading = false,
                             errorKey = UiTextKey.SettingsNotLoggedInWarning
@@ -65,6 +78,7 @@ class SettingsViewModel @Inject constructor(
 
     private fun start(uid: String) {
         settingsJob?.cancel()
+        coinsJob?.cancel()
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             errorKey = null,
@@ -88,6 +102,15 @@ class SettingsViewModel @Inject constructor(
                         errorKey = null,
                         errorRaw = null
                     )
+                }
+        }
+
+        // Observe coin stats for color palette unlocking
+        coinsJob = viewModelScope.launch {
+            quizRepo.observeUserCoinStats(uid)
+                .catch { /* Ignore coin stats errors */ }
+                .collect { stats ->
+                    _uiState.value = _uiState.value.copy(coinStats = stats)
                 }
         }
     }
@@ -161,6 +184,70 @@ class SettingsViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         errorKey = null,
                         errorRaw = e.message ?: "Theme save failed"
+                    )
+                }
+        }
+    }
+
+    fun updateColorPalette(paletteId: String) {
+        val uid = _uiState.value.uid ?: run {
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            return
+        }
+
+        viewModelScope.launch {
+            runCatching { setColorPalette(uid, paletteId) }
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        settings = _uiState.value.settings.copy(colorPaletteId = paletteId),
+                        errorKey = null,
+                        errorRaw = null
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        errorKey = null,
+                        errorRaw = e.message ?: "Color palette save failed"
+                    )
+                }
+        }
+    }
+
+    fun unlockPaletteWithCoins(paletteId: String, cost: Int) {
+        val uid = _uiState.value.uid ?: run {
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(unlockingPaletteId = paletteId, unlockError = null)
+
+        viewModelScope.launch {
+            runCatching { unlockColorPaletteWithCoins(uid, paletteId, cost) }
+                .onSuccess { result ->
+                    when (result) {
+                        UnlockResult.Success -> {
+                            val currentSettings = _uiState.value.settings
+                            val updated = currentSettings.unlockedPalettes + paletteId
+                            _uiState.value = _uiState.value.copy(
+                                settings = currentSettings.copy(unlockedPalettes = updated),
+                                errorKey = null,
+                                errorRaw = null,
+                                unlockingPaletteId = null,
+                                unlockError = null
+                            )
+                        }
+                        UnlockResult.InsufficientCoins -> {
+                            _uiState.value = _uiState.value.copy(
+                                unlockError = "Insufficient coins",
+                                unlockingPaletteId = null
+                            )
+                        }
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        unlockError = e.message ?: "Failed to unlock palette",
+                        unlockingPaletteId = null
                     )
                 }
         }

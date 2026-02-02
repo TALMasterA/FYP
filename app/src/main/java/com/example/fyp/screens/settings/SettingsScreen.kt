@@ -113,6 +113,33 @@ fun SettingsScreen(
                 }
             }
 
+            // Color Palette (only for logged in users)
+            if (isLoggedIn) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        t(UiTextKey.SettingsColorPaletteTitle),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = t(UiTextKey.SettingsColorPaletteDesc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    ColorPaletteSelector(
+                        currentPaletteId = uiState.settings.colorPaletteId,
+                        unlockedPalettes = uiState.settings.unlockedPalettes,
+                        coinBalance = uiState.coinStats.coinTotal,
+                        onPaletteSelected = { viewModel.updateColorPalette(it) },
+                        onUnlockClicked = { paletteId, cost -> viewModel.unlockPaletteWithCoins(paletteId, cost) },
+                        unlockError = uiState.unlockError,
+                        t = t
+                    )
+                }
+            }
+
             TextButton(onClick = onOpenResetPassword) {
                 Text(t(UiTextKey.SettingsResetPW))
             }

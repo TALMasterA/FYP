@@ -166,7 +166,10 @@ fun QuizTakingScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                            bottom = 80.dp
+                        )
                     ) {
                         item {
                             Card(

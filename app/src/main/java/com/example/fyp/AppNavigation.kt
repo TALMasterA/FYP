@@ -104,6 +104,7 @@ fun AppNavigation() {
         "light" -> false
         else -> isSystemInDarkTheme()
     }
+    val colorPaletteId = settingsUiState.settings.colorPaletteId
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -115,7 +116,7 @@ fun AppNavigation() {
             LocalUiLanguages provides uiLanguages,
             LocalUpdateAppLanguage provides updateAppLanguage
         ) {
-            FYPTheme(darkTheme = darkTheme, typography = scaledTypography) {
+            FYPTheme(darkTheme = darkTheme, colorPaletteId = colorPaletteId, typography = scaledTypography) {
                 // Helper for navigating to login
                 val navigateToLogin: () -> Unit = {
                     navController.navigate(AppScreen.Login.route) { launchSingleTop = true }

@@ -108,7 +108,7 @@ fun LoginScreen(
 
             Text(
                 text = if (isLogin) t(UiTextKey.AuthLoginHint) else t(UiTextKey.AuthRegisterRules),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 

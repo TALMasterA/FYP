@@ -29,6 +29,18 @@ val ScreenUiTexts: List<String> = listOf(
     // HomeStartButton
     "Discrete speech translation",
 
+    // HomeFeaturesTitle
+    "Features",
+
+    // HomeDiscreteDescription
+    "Real-time voice translation",
+
+    // HomeContinuousDescription
+    "Multi-turn conversation mode",
+
+    // HomeLearningDescription
+    "Study vocabulary and take quizzes",
+
     // HelpCurrentTitle
     "Current features",
 
@@ -253,6 +265,24 @@ val ScreenUiTexts: List<String> = listOf(
 
     // SettingsScaleTemplate
     "Scale: {pct}%",
+
+    // SettingsColorPaletteTitle
+    "Color Palette",
+
+    // SettingsColorPaletteDesc
+    "Choose your app's color theme. Unlock new palettes for 10 coins each!",
+
+    // SettingsColorCostTemplate
+    "{cost} coins",
+
+    // SettingsColorUnlockButton
+    "Unlock",
+
+    // SettingsColorSelectButton
+    "Select",
+
+    // SettingsColorAlreadyUnlocked
+    "Unlocked",
 
     // SettingsPreviewHeadline
     "Headline: Large text preview",

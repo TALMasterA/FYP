@@ -206,18 +206,16 @@ fun HomeScreen(
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
                             text = t(UiTextKey.HomeInstructions),
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
                 // Main Features Section
                 Text(
-                    text = "Features",
-                    style = MaterialTheme.typography.titleLarge,
+                    text = t(UiTextKey.HomeFeaturesTitle),
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -225,7 +223,7 @@ fun HomeScreen(
                 // Speech Translation Card
                 FeatureCard(
                     title = t(UiTextKey.HomeStartButton),
-                    description = "Real-time voice translation",
+                    description = t(UiTextKey.HomeDiscreteDescription),
                     icon = Icons.Filled.Mic,
                     enabled = isLoggedIn,
                     onClick = onStartSpeech,
@@ -235,7 +233,7 @@ fun HomeScreen(
                 // Continuous Conversation Card
                 FeatureCard(
                     title = t(UiTextKey.ContinuousStartScreenButton),
-                    description = "Multi-turn conversation mode",
+                    description = t(UiTextKey.HomeContinuousDescription),
                     icon = Icons.Filled.RecordVoiceOver,
                     enabled = isLoggedIn,
                     onClick = onStartContinuous,
@@ -245,7 +243,7 @@ fun HomeScreen(
                 // Learning Card
                 FeatureCard(
                     title = t(UiTextKey.LearningTitle),
-                    description = "Study vocabulary and take quizzes",
+                    description = t(UiTextKey.HomeLearningDescription),
                     icon = Icons.Filled.School,
                     enabled = isLoggedIn,
                     onClick = onOpenLearning,
@@ -333,7 +331,7 @@ private fun FeatureCard(
                 )
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.labelMedium,
                     color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
             }

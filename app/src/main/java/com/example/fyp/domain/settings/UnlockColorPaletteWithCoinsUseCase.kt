@@ -1,0 +1,33 @@
+package com.example.fyp.domain.settings
+
+import com.example.fyp.data.learning.FirestoreQuizRepository
+import com.example.fyp.data.settings.UserSettingsRepository
+import javax.inject.Inject
+
+class UnlockColorPaletteWithCoinsUseCase @Inject constructor(
+    private val settingsRepo: UserSettingsRepository,
+    private val quizRepo: FirestoreQuizRepository
+) {
+    suspend operator fun invoke(userId: String, paletteId: String, cost: Int): Result {
+        // Free palette (default), just unlock it
+        if (cost == 0) {
+            settingsRepo.unlockColorPalette(userId, paletteId)
+            return Result.Success
+        }
+
+        // Deduct coins
+        val success = quizRepo.deductCoins(userId, cost)
+        if (!success) {
+            return Result.InsufficientCoins
+        }
+
+        // Unlock the palette
+        settingsRepo.unlockColorPalette(userId, paletteId)
+        return Result.Success
+    }
+
+    sealed class Result {
+        data object Success : Result()
+        data object InsufficientCoins : Result()
+    }
+}

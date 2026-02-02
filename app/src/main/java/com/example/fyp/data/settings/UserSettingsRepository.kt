@@ -8,4 +8,6 @@ interface UserSettingsRepository {
     suspend fun setFontSizeScale(userId: String, scale: Float)
     suspend fun setPrimaryLanguage(userId: String, languageCode: String)
     suspend fun setThemeMode(userId: String, themeMode: String)
+    suspend fun setColorPalette(userId: String, paletteId: String)
+    suspend fun unlockColorPalette(userId: String, paletteId: String)
 }

@@ -85,51 +85,52 @@ fun LearningScreen(
             )
         }
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            LanguageDropdownField(
-                label = t(UiTextKey.SettingsPrimaryLanguageLabel),
-                selectedCode = uiState.primaryLanguageCode,
-                options = supported.toList(),
-                nameFor = uiLanguageNameFor,
-                onSelected = { viewModel.setPrimaryLanguage(it) },
-                enabled = true
-            )
+            item {
+                LanguageDropdownField(
+                    label = t(UiTextKey.SettingsPrimaryLanguageLabel),
+                    selectedCode = uiState.primaryLanguageCode,
+                    options = supported.toList(),
+                    nameFor = uiLanguageNameFor,
+                    onSelected = { viewModel.setPrimaryLanguage(it) },
+                    enabled = true
+                )
+            }
 
-            Text(
-                t(UiTextKey.LearningHintCount),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
+            item {
+                Text(
+                    t(UiTextKey.LearningHintCount),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            }
 
             uiState.error?.let { errorMsg ->
-                androidx.compose.material3.Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = t(UiTextKey.LearningErrorTemplate).format(errorMsg),
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(16.dp)
-                    )
+                item {
+                    androidx.compose.material3.Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = t(UiTextKey.LearningErrorTemplate).format(errorMsg),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
                 }
             }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                items(uiState.clusters, key = { it.languageCode }) { c ->
+            items(uiState.clusters, key = { it.languageCode }) { c ->
                     val hasSheet = uiState.sheetExistsByLanguage[c.languageCode] == true
                     val isGeneratingThis = uiState.generatingLanguageCode == c.languageCode
                     val isGeneratingAny = uiState.generatingLanguageCode != null
@@ -149,7 +150,7 @@ fun LearningScreen(
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
                         )
                     ) {
                         Column(
@@ -215,7 +216,6 @@ fun LearningScreen(
                             }
                         }
                     }
-                }
             }
         }
     }

@@ -60,7 +60,7 @@ fun ResetPasswordScreen(
 
             Text(
                 text = t(UiTextKey.ResetPwText),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
