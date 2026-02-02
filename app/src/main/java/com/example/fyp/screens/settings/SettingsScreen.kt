@@ -81,7 +81,7 @@ fun SettingsScreen(
                 .padding(padding)
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             AppLanguageDropdown(
                 uiLanguages = uiLanguages,
@@ -119,18 +119,29 @@ fun SettingsScreen(
 
             val settingsErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
             settingsErrorText?.let { errorMsg ->
-                Text(
-                    text = errorMsg,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    ),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = errorMsg,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
 
             // Primary Language
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     t(UiTextKey.SettingsPrimaryLanguageTitle),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = t(UiTextKey.SettingsPrimaryLanguageDesc),
@@ -152,7 +163,12 @@ fun SettingsScreen(
 
             // Font size
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(t(UiTextKey.SettingsFontSizeTitle), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    t(UiTextKey.SettingsFontSizeTitle),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
                 Text(
                     text = t(UiTextKey.SettingsFontSizeDesc),
                     style = MaterialTheme.typography.bodySmall,
@@ -235,7 +251,12 @@ fun SettingsScreen(
 
             // Theme
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(t(UiTextKey.SettingsThemeTitle), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    t(UiTextKey.SettingsThemeTitle),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
                 Text(
                     text = t(UiTextKey.SettingsThemeDesc),
                     style = MaterialTheme.typography.bodySmall,
@@ -312,7 +333,12 @@ fun SettingsScreen(
 
             // About
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(t(UiTextKey.SettingsAboutTitle), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    t(UiTextKey.SettingsAboutTitle),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
 
                 Text(
                     text = "${t(UiTextKey.SettingsAppVersion)}${BuildConfig.VERSION_NAME}",

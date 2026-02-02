@@ -1,9 +1,11 @@
 package com.example.fyp.screens.help
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,7 +42,7 @@ fun HelpScreen(
         StandardScreenBody(
             innerPadding = innerPadding,
             scrollable = true,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             AppLanguageDropdown(
                 uiLanguages = uiLanguages,
@@ -50,14 +52,44 @@ fun HelpScreen(
                 isLoggedIn = isLoggedIn
             )
 
-            Text(text = t(UiTextKey.HelpCautionTitle), style = MaterialTheme.typography.titleMedium)
-            Text(text = t(UiTextKey.HelpCaution))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = t(UiTextKey.HelpCautionTitle),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = t(UiTextKey.HelpCaution),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
 
-            Text(text = t(UiTextKey.HelpCurrentTitle), style = MaterialTheme.typography.titleMedium)
-            Text(text = t(UiTextKey.HelpCurrentFeatures))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = t(UiTextKey.HelpCurrentTitle),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = t(UiTextKey.HelpCurrentFeatures),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
 
-            Text(text = t(UiTextKey.HelpNotesTitle), style = MaterialTheme.typography.titleMedium)
-            Text(text = t(UiTextKey.HelpNotes))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = t(UiTextKey.HelpNotesTitle),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = t(UiTextKey.HelpNotes),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
         }
     }
 }

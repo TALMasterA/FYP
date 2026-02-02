@@ -29,13 +29,15 @@ import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.fyp.core.LanguageDropdownField
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.text.font.FontWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,7 +90,7 @@ fun LearningScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             LanguageDropdownField(
                 label = t(UiTextKey.SettingsPrimaryLanguageLabel),
@@ -99,12 +101,32 @@ fun LearningScreen(
                 enabled = true
             )
 
-            Text(t(UiTextKey.LearningHintCount))
-            uiState.error?.let { Text(t(UiTextKey.LearningErrorTemplate).format(it)) }
+            Text(
+                t(UiTextKey.LearningHintCount),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+
+            uiState.error?.let { errorMsg ->
+                androidx.compose.material3.Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = t(UiTextKey.LearningErrorTemplate).format(errorMsg),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
 
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
                 items(uiState.clusters, key = { it.languageCode }) { c ->
@@ -122,27 +144,36 @@ fun LearningScreen(
 
                     val langLabel = uiLanguageNameFor(c.languageCode)
 
-                    OutlinedCard(
+                    ElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.outlinedCardColors(
-                            containerColor = MaterialTheme.colorScheme.background
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
                         )
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // Bubble header: translated language name + count
+                            // Language name + count chip
                             AssistChip(
                                 onClick = { /* no-op */ },
-                                label = { Text("$langLabel (${c.count})") },
-                                colors = AssistChipDefaults.assistChipColors()
+                                label = {
+                                    Text(
+                                        "$langLabel (${c.count})",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                )
                             )
 
-                            // Buttons should be inside bubble. Sheet button "right after language":
-                            // put buttons on the NEXT line (not same row as language header).
+                            // Buttons
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
