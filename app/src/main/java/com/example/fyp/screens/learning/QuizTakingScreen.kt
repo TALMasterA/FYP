@@ -1,6 +1,14 @@
 package com.example.fyp.screens.learning
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -77,51 +86,115 @@ fun QuizTakingScreen(
                 )
             }
 
-            // Progress bar
+            // Progress bar with animation
             if (attempt.questions.isNotEmpty()) {
                 val progress = (currentQuestionIndex + 1).toFloat() / attempt.questions.size.toFloat()
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
+                val animatedProgress by animateFloatAsState(
+                    targetValue = progress,
+                    animationSpec = tween(durationMillis = 300),
+                    label = "progress"
                 )
 
-                Text(
-                    t(UiTextKey.QuizQuestionTemplate)
-                        .replace("{current}", (currentQuestionIndex + 1).toString())
-                        .replace("{total}", attempt.questions.size.toString()),
+                Column(
                     modifier = Modifier.padding(horizontal = 16.dp),
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-
-            // Question content
-            if (currentQuestion != null) {
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    item {
+                    LinearProgressIndicator(
+                        progress = { animatedProgress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp)),
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         Text(
-                            currentQuestion.question,
-                            style = MaterialTheme.typography.headlineSmall,
+                            t(UiTextKey.QuizQuestionTemplate)
+                                .replace("{current}", (currentQuestionIndex + 1).toString())
+                                .replace("{total}", attempt.questions.size.toString()),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            "${(progress * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp)
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
+                }
+            }
 
-                    itemsIndexed(currentQuestion.options) { index, option ->
-                        QuestionOptionButton(
-                            option = option,
-                            isSelected = attempt.answers.find { it.questionId == currentQuestion.id }
-                                ?.selectedOptionIndex == index,
-                            isCorrect = null,
-                            onClick = { onAnswerSelected(currentQuestion.id, index) }
-                        )
+            // Question content with slide animation
+            AnimatedContent(
+                targetState = currentQuestionIndex,
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        // Sliding to next question
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(300)
+                        ) + fadeIn(animationSpec = tween(300)) togetherWith
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = tween(300)
+                                ) + fadeOut(animationSpec = tween(300))
+                    } else {
+                        // Sliding to previous question
+                        slideInHorizontally(
+                            initialOffsetX = { -it },
+                            animationSpec = tween(300)
+                        ) + fadeIn(animationSpec = tween(300)) togetherWith
+                                slideOutHorizontally(
+                                    targetOffsetX = { it },
+                                    animationSpec = tween(300)
+                                ) + fadeOut(animationSpec = tween(300))
+                    }
+                },
+                label = "question_transition",
+                modifier = Modifier.weight(1f)
+            ) { questionIndex ->
+                val question = attempt.questions.getOrNull(questionIndex)
+
+                if (question != null) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                                )
+                            ) {
+                                Text(
+                                    question.question,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(20.dp),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        itemsIndexed(question.options) { index, option ->
+                            QuestionOptionButton(
+                                option = option,
+                                isSelected = attempt.answers.find { it.questionId == question.id }
+                                    ?.selectedOptionIndex == index,
+                                isCorrect = null,
+                                onClick = { onAnswerSelected(question.id, index) }
+                            )
+                        }
                     }
                 }
             }
@@ -186,50 +259,64 @@ private fun QuestionOptionButton(
     val backgroundColor = when {
         isCorrect == true -> MaterialTheme.colorScheme.primaryContainer
         isCorrect == false -> MaterialTheme.colorScheme.errorContainer
-        isSelected -> MaterialTheme.colorScheme.surfaceVariant
+        isSelected -> MaterialTheme.colorScheme.secondaryContainer
         else -> MaterialTheme.colorScheme.surface
     }
 
     val borderColor = when {
         isCorrect == true -> MaterialTheme.colorScheme.primary
         isCorrect == false -> MaterialTheme.colorScheme.error
-        isSelected -> MaterialTheme.colorScheme.primary
+        isSelected -> MaterialTheme.colorScheme.secondary
         else -> MaterialTheme.colorScheme.outline
     }
+
+    val borderWidth = if (isSelected || isCorrect != null) 2.dp else 1.dp
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = isCorrect == null) { onClick() }
             .animateContentSize()
-            .border(2.dp, borderColor, RoundedCornerShape(8.dp)),
-        shape = RoundedCornerShape(8.dp),
+            .border(borderWidth, borderColor, RoundedCornerShape(12.dp)),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected) 4.dp else 1.dp
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 option,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                modifier = Modifier.weight(1f),
+                color = when {
+                    isCorrect == true -> MaterialTheme.colorScheme.onPrimaryContainer
+                    isCorrect == false -> MaterialTheme.colorScheme.onErrorContainer
+                    isSelected -> MaterialTheme.colorScheme.onSecondaryContainer
+                    else -> MaterialTheme.colorScheme.onSurface
+                }
             )
 
             if (isCorrect == true) {
                 Icon(
                     Icons.Default.CheckCircle,
                     contentDescription = "Correct",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(4.dp)
                 )
             } else if (isCorrect == false) {
                 Icon(
                     Icons.Default.Close,
                     contentDescription = "Incorrect",
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(4.dp)
                 )
             }
         }

@@ -3,16 +3,25 @@
 package com.example.fyp.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -150,7 +160,7 @@ fun HomeScreen(
             StandardScreenBody(
                 innerPadding = innerPadding,
                 scrollable = true,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 AppLanguageDropdown(
                     uiLanguages = uiLanguages,
@@ -161,58 +171,86 @@ fun HomeScreen(
                     isLoggedIn = isLoggedIn
                 )
 
-                // Guest warning messages - compact display
+                // Guest warning messages - styled card
                 if (!isLoggedIn) {
-                    Text(
-                        text = t(UiTextKey.DisableText),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = t(UiTextKey.GuestTranslationLimitMessage),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = t(UiTextKey.DisableText),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = t(UiTextKey.GuestTranslationLimitMessage),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                    }
                 }
 
+                // Welcome message card
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Text(
+                            text = t(UiTextKey.HomeInstructions),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Main Features Section
                 Text(
-                    text = t(UiTextKey.HomeInstructions),
-                    style = MaterialTheme.typography.bodyMedium
+                    text = "Features",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                 )
 
-                // Consistent spacing - use smaller spacer when extra text is shown
-                Spacer(modifier = Modifier.height(if (isLoggedIn) 48.dp else 8.dp))
-
-                Button(
+                // Speech Translation Card
+                FeatureCard(
+                    title = t(UiTextKey.HomeStartButton),
+                    description = "Real-time voice translation",
+                    icon = Icons.Filled.Mic,
+                    enabled = isLoggedIn,
                     onClick = onStartSpeech,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+
+                // Continuous Conversation Card
+                FeatureCard(
+                    title = t(UiTextKey.ContinuousStartScreenButton),
+                    description = "Multi-turn conversation mode",
+                    icon = Icons.Filled.RecordVoiceOver,
                     enabled = isLoggedIn,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Text(t(UiTextKey.HomeStartButton))
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Button(
                     onClick = onStartContinuous,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+
+                // Learning Card
+                FeatureCard(
+                    title = t(UiTextKey.LearningTitle),
+                    description = "Study vocabulary and take quizzes",
+                    icon = Icons.Filled.School,
                     enabled = isLoggedIn,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Text(t(UiTextKey.ContinuousStartScreenButton))
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Button(
                     onClick = onOpenLearning,
-                    enabled = isLoggedIn,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Text(t(UiTextKey.LearningTitle))
-                }
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                )
             }
 
             // FABs positioned to avoid overlap on all screen sizes
@@ -239,6 +277,65 @@ fun HomeScreen(
                 ) {
                     Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Word Bank")
                 }
+            }
+        }
+    }
+}
+
+// Feature Card Component - Reusable card for main features
+@Composable
+private fun FeatureCard(
+    title: String,
+    description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    containerColor: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = if (enabled) 4.dp else 1.dp
+        ),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = if (enabled) containerColor else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icon
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+                tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            )
+
+            // Text content
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
             }
         }
     }

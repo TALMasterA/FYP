@@ -59,39 +59,59 @@ fun WordBankItemCard(
         )
     }
 
-    Card(
+    ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { expanded = !expanded },
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = 3.dp,
+            pressedElevation = 6.dp
+        ),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
             // Main content row with delete icon at top-right
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    // Original word
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = word.originalWord,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f, fill = false)
-                        )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Original word with badge
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.padding(end = 4.dp)
+                        ) {
+                            Text(
+                                text = word.originalWord,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
 
                         IconButton(
                             onClick = onSpeakOriginal,
                             enabled = !isSpeaking,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                                 contentDescription = "Speak original",
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(22.dp),
                                 tint = if (speakingType == SpeakingType.ORIGINAL)
                                     MaterialTheme.colorScheme.primary
                                 else
@@ -104,34 +124,38 @@ fun WordBankItemCard(
                     if (word.pronunciation.isNotBlank()) {
                         Text(
                             text = "[${word.pronunciation}]",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodyMedium,
                             fontStyle = FontStyle.Italic,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Translated word
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Text(
                             text = word.translatedWord,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.weight(1f, fill = false)
                         )
 
                         IconButton(
                             onClick = onSpeakTranslated,
                             enabled = !isSpeaking,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(36.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                                 contentDescription = "Speak translation",
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(22.dp),
                                 tint = if (speakingType == SpeakingType.TRANSLATED)
-                                    MaterialTheme.colorScheme.primary
+                                    MaterialTheme.colorScheme.secondary
                                 else
                                     MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -142,7 +166,7 @@ fun WordBankItemCard(
                 // Delete icon button at top-right
                 IconButton(
                     onClick = { showDeleteConfirm = true },
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
