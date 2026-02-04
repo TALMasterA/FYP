@@ -2,12 +2,16 @@ package com.example.fyp.screens.learning
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.fyp.core.rememberTranslator
 import com.example.fyp.model.ui.AppLanguageState
@@ -30,7 +34,12 @@ fun CoinRulesDialog(
         onDismissRequest = onDismiss,
         title = { Text(t(UiTextKey.QuizCoinRulesTitle)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 400.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Text(t(UiTextKey.QuizCoinRulesHowToEarn), style = MaterialTheme.typography.titleSmall)
                 Text(t(UiTextKey.QuizCoinRule1Coin), style = MaterialTheme.typography.bodySmall)
                 Text(t(UiTextKey.QuizCoinRuleFirstAttempt), style = MaterialTheme.typography.bodySmall)
@@ -89,7 +98,12 @@ fun QuizRegenConfirmDialog(
         onDismissRequest = onDismiss,
         title = { Text(t(UiTextKey.QuizRegenConfirmTitle)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 300.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Text(
                     if (canEarnCoins)
                         t(UiTextKey.QuizRegenCanEarnCoins)
@@ -142,7 +156,12 @@ fun CoinsEarnedDialog(
         onDismissRequest = onDismiss,
         title = { Text(t(UiTextKey.QuizCoinsEarnedTitle)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 300.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 Text(
                     t(UiTextKey.QuizCoinsEarnedMessageTemplate).replace("{coins}", coinsEarned.toString()),
                     style = MaterialTheme.typography.bodyMedium

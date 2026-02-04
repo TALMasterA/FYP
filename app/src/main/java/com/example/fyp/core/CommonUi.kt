@@ -283,6 +283,7 @@ fun StandardScreenBody(
 /**
  * Reusable confirmation dialog for common confirm/cancel patterns.
  * Reduces boilerplate across screens.
+ * Content is scrollable to handle long translated messages.
  */
 @Composable
 fun ConfirmationDialog(
@@ -299,10 +300,16 @@ fun ConfirmationDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            if (messageContent != null) {
-                messageContent()
-            } else {
-                Text(message)
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 300.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                if (messageContent != null) {
+                    messageContent()
+                } else {
+                    Text(message)
+                }
             }
         },
         confirmButton = {

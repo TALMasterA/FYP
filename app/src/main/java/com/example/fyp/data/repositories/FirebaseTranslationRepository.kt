@@ -1,5 +1,6 @@
 package com.example.fyp.data.repositories
 
+import com.example.fyp.data.cloud.LanguageDetectionCache
 import com.example.fyp.data.cloud.TranslationCache
 import com.example.fyp.data.clients.CloudTranslatorClient
 import com.example.fyp.data.clients.DetectedLanguage
@@ -8,7 +9,8 @@ import javax.inject.Inject
 
 class FirebaseTranslationRepository @Inject constructor(
     private val cloudTranslatorClient: CloudTranslatorClient,
-    private val translationCache: TranslationCache
+    private val translationCache: TranslationCache,
+    private val languageDetectionCache: LanguageDetectionCache
 ) : TranslationRepository {
 
     override suspend fun translate(
@@ -41,10 +43,20 @@ class FirebaseTranslationRepository @Inject constructor(
 
     override suspend fun detectLanguage(text: String): DetectedLanguage? {
         return try {
+            // Check cache first
+            val cached = languageDetectionCache.getCached(text)
+            if (cached != null) {
+                android.util.Log.d("DetectLanguage", "Cache hit: ${cached.language}, score: ${cached.score}")
+                return cached
+            }
+
+            // Call API if not cached
             val result = cloudTranslatorClient.detectLanguage(text)
-            // Azure returns short codes like "ja", we might need "ja-JP" for some APIs
-            // Log the detected language for debugging
-            android.util.Log.d("DetectLanguage", "Detected: ${result.language}, score: ${result.score}")
+            android.util.Log.d("DetectLanguage", "API call - Detected: ${result.language}, score: ${result.score}")
+
+            // Cache the result
+            languageDetectionCache.cache(text, result)
+
             result
         } catch (e: Exception) {
             android.util.Log.e("DetectLanguage", "Detection failed", e)

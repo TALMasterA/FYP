@@ -198,7 +198,10 @@ fun ProfileScreen(
             },
             title = { Text(t(UiTextKey.AccountDeleteTitle)) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     Text(t(UiTextKey.AccountDeleteConfirmMessage))
 
                     OutlinedTextField(

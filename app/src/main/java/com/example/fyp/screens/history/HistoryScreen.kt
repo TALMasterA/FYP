@@ -3,6 +3,8 @@
 package com.example.fyp.screens.history
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MonetizationOn
@@ -198,7 +200,12 @@ fun HistoryScreen(
             onDismissRequest = { showFilterDialog = false },
             title = { Text(t(UiTextKey.FilterTitle)) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 300.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     LanguageDropdownField(
                         label = t(UiTextKey.FilterLangDrop),
                         selectedCode = draftLang,

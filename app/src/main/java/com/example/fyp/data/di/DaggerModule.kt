@@ -1,6 +1,7 @@
 package com.example.fyp.data.di
 
 import android.content.Context
+import com.example.fyp.data.cloud.LanguageDetectionCache
 import com.example.fyp.data.cloud.TranslationCache
 import com.example.fyp.data.clients.CloudSpeechTokenClient
 import com.example.fyp.data.clients.CloudTranslatorClient
@@ -91,11 +92,16 @@ object AppModule {
         TranslationCache(context)
 
     @Provides @Singleton
+    fun provideLanguageDetectionCache(@ApplicationContext context: Context): LanguageDetectionCache =
+        LanguageDetectionCache(context)
+
+    @Provides @Singleton
     fun provideTranslationRepository(
         client: CloudTranslatorClient,
-        cache: TranslationCache
+        cache: TranslationCache,
+        detectionCache: LanguageDetectionCache
     ): TranslationRepository =
-        FirebaseTranslationRepository(client, cache)
+        FirebaseTranslationRepository(client, cache, detectionCache)
 
     @Provides
     @Singleton

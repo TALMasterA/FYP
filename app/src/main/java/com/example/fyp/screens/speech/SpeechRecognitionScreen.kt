@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -118,7 +119,15 @@ fun SpeechRecognitionScreen(
         AlertDialog(
             onDismissRequest = { showInfoDialog = false },
             title = { Text(t(UiTextKey.SpeechTitle)) },
-            text = { Text(t(UiTextKey.SpeechInstructions)) },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 300.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(t(UiTextKey.SpeechInstructions))
+                }
+            },
             confirmButton = {
                 TextButton(onClick = { showInfoDialog = false }) {
                     Text(t(UiTextKey.ActionConfirm))
