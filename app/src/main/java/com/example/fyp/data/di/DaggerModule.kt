@@ -17,6 +17,7 @@ import com.example.fyp.domain.speech.RecognizeFromMicUseCase
 import com.example.fyp.domain.speech.RecognizeWithAutoDetectUseCase
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.StartContinuousConversationUseCase
+import com.example.fyp.domain.speech.TranslateBatchUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -81,6 +82,9 @@ object AppModule {
     fun provideTranslateUseCase(repo: TranslationRepository) = TranslateTextUseCase(repo)
 
     @Provides
+    fun provideTranslateBatchUseCase(repo: TranslationRepository) = TranslateBatchUseCase(repo)
+
+    @Provides
     fun provideDetectLanguageUseCase(repo: TranslationRepository) = DetectLanguageUseCase(repo)
 
     @Provides @Singleton
@@ -94,6 +98,10 @@ object AppModule {
     @Provides @Singleton
     fun provideLanguageDetectionCache(@ApplicationContext context: Context): LanguageDetectionCache =
         LanguageDetectionCache(context)
+
+    @Provides @Singleton
+    fun provideWordBankCacheDataStore(@ApplicationContext context: Context): com.example.fyp.data.wordbank.WordBankCacheDataStore =
+        com.example.fyp.data.wordbank.WordBankCacheDataStore(context)
 
     @Provides @Singleton
     fun provideTranslationRepository(

@@ -41,6 +41,62 @@ class FirebaseTranslationRepository @Inject constructor(
         }
     }
 
+    /**
+     * Batch translate multiple texts efficiently.
+     * 1. Checks cache for already translated texts
+     * 2. Only calls API for texts not in cache
+     * 3. Caches new translations
+     *
+     * This significantly reduces API calls when translating UI strings
+     * or multiple items at once.
+     */
+    override suspend fun translateBatch(
+        texts: List<String>,
+        fromLanguage: String,
+        toLanguage: String
+    ): Result<Map<String, String>> {
+        return try {
+            if (texts.isEmpty()) {
+                return Result.success(emptyMap())
+            }
+
+            // Check cache for already translated texts
+            val cacheResult = translationCache.getBatchCached(texts, fromLanguage, toLanguage)
+            val result = cacheResult.found.toMutableMap()
+
+            // If all texts are cached, return immediately
+            if (cacheResult.notFound.isEmpty()) {
+                android.util.Log.d("BatchTranslate", "All ${texts.size} texts found in cache")
+                return Result.success(result)
+            }
+
+            android.util.Log.d("BatchTranslate", "Cache: ${cacheResult.found.size} hits, ${cacheResult.notFound.size} misses")
+
+            // Call API for texts not in cache
+            val apiTranslations = cloudTranslatorClient.translateTexts(
+                texts = cacheResult.notFound,
+                from = fromLanguage,
+                to = toLanguage
+            )
+
+            // Map results back to source texts
+            val newTranslations = mutableMapOf<String, String>()
+            cacheResult.notFound.forEachIndexed { index, sourceText ->
+                val translated = apiTranslations.getOrElse(index) { "" }
+                result[sourceText] = translated
+                newTranslations[sourceText] = translated
+            }
+
+            // Cache new translations in batch
+            translationCache.cacheBatch(newTranslations, fromLanguage, toLanguage)
+
+            Result.success(result)
+        } catch (e: Exception) {
+            android.util.Log.e("BatchTranslate", "Batch translation failed", e)
+            Result.failure(e)
+        }
+    }
+
     override suspend fun detectLanguage(text: String): DetectedLanguage? {
         return try {
             // Check cache first

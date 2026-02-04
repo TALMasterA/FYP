@@ -6,6 +6,7 @@ import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
 import com.example.fyp.data.wordbank.FirestoreWordBankRepository
+import com.example.fyp.data.wordbank.WordBankCacheDataStore
 import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
@@ -39,7 +40,8 @@ class WordBankViewModel @Inject constructor(
     private val speakTextUseCase: SpeakTextUseCase,
     private val customWordsRepo: FirestoreCustomWordsRepository,
     private val translateTextUseCase: TranslateTextUseCase,
-    private val observeSettings: ObserveUserSettingsUseCase
+    private val observeSettings: ObserveUserSettingsUseCase,
+    private val wordBankCacheDataStore: WordBankCacheDataStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WordBankUiState())
@@ -52,7 +54,7 @@ class WordBankViewModel @Inject constructor(
     private var records: List<TranslationRecord> = emptyList()
     private var primaryLanguageCode: String = "en-US"
 
-    // Cache for word bank existence to avoid repeated Firestore reads
+    // In-memory cache backed by persistent DataStore
     private val wordBankExistsCache: MutableMap<String, Boolean> = mutableMapOf()
     private var lastPrimaryForCache: String? = null
 
@@ -67,6 +69,8 @@ class WordBankViewModel @Inject constructor(
                 when (auth) {
                     is AuthState.LoggedIn -> {
                         currentUserId = auth.user.uid
+                        // Load persisted cache on login
+                        loadPersistedCache(auth.user.uid)
                         startListening(auth.user.uid)
                         // Observe user settings for voice preferences
                         launch {
@@ -80,6 +84,7 @@ class WordBankViewModel @Inject constructor(
                         userSettings = UserSettings()
                         historyJob?.cancel()
                         sharedHistoryDataSource.stopObserving()
+                        wordBankExistsCache.clear()
                         _uiState.value = WordBankUiState(
                             isLoading = false,
                             error = "Not logged in"
@@ -91,6 +96,14 @@ class WordBankViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Load persisted cache into memory on startup
+     */
+    private fun loadPersistedCache(userId: String) {
+        // Cache will be loaded on-demand when checking word bank existence
+        // This avoids loading all cache entries at once
     }
 
     /**
@@ -308,7 +321,7 @@ class WordBankViewModel @Inject constructor(
         viewModelScope.launch {
             val uid = currentUserId ?: return@launch
 
-            // Clear cache if primary language changed
+            // Clear in-memory cache if primary language changed
             if (lastPrimaryForCache != primaryLanguageCode) {
                 wordBankExistsCache.clear()
                 lastPrimaryForCache = primaryLanguageCode
@@ -327,13 +340,27 @@ class WordBankViewModel @Inject constructor(
                 .filter { it.targetLang != primaryLanguageCode && it.targetLang.isNotBlank() }
                 .groupBy { it.targetLang }
 
-            // Only check wordBankExists for languages not in cache
+            // Check cache (in-memory first, then persisted DataStore, then Firestore)
             val languagesToCheck = languageGroups.keys.filter { it !in wordBankExistsCache }
 
-            // Batch check for new languages only
             for (lang in languagesToCheck) {
                 try {
-                    wordBankExistsCache[lang] = wordBankRepo.wordBankExists(uid, primaryLanguageCode, lang)
+                    // First check persisted cache
+                    val cachedExists = wordBankCacheDataStore.getWordBankExists(uid, primaryLanguageCode, lang)
+                    if (cachedExists != null) {
+                        wordBankExistsCache[lang] = cachedExists
+                    } else {
+                        // Not in persisted cache, check Firestore
+                        val exists = wordBankRepo.wordBankExists(uid, primaryLanguageCode, lang)
+                        wordBankExistsCache[lang] = exists
+                        // Save to persisted cache
+                        wordBankCacheDataStore.cacheWordBank(
+                            userId = uid,
+                            primaryLang = primaryLanguageCode,
+                            targetLang = lang,
+                            exists = exists
+                        )
+                    }
                 } catch (_: Exception) {
                     wordBankExistsCache[lang] = false
                 }
@@ -362,6 +389,11 @@ class WordBankViewModel @Inject constructor(
      */
     private fun invalidateWordBankCache(languageCode: String) {
         wordBankExistsCache.remove(languageCode)
+        // Also invalidate persisted cache
+        viewModelScope.launch {
+            val uid = currentUserId ?: return@launch
+            wordBankCacheDataStore.invalidate(uid, primaryLanguageCode, languageCode)
+        }
     }
 
     fun selectLanguage(languageCode: String) {

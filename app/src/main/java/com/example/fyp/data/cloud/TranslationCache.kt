@@ -134,6 +134,70 @@ class TranslationCache @Inject constructor(
         )
     }
 
+    /**
+     * Batch get cached translations.
+     * Returns a map of text -> translation for found entries, and list of texts not in cache.
+     */
+    suspend fun getBatchCached(
+        texts: List<String>,
+        sourceLang: String,
+        targetLang: String
+    ): BatchCacheResult {
+        val cacheData = loadCache()
+        val now = System.currentTimeMillis()
+        val found = mutableMapOf<String, String>()
+        val notFound = mutableListOf<String>()
+
+        for (text in texts) {
+            val key = cacheKey(text, sourceLang, targetLang)
+            val entry = cacheData.entries[key]
+
+            if (entry != null && (now - entry.timestamp <= CACHE_TTL_MS)) {
+                found[text] = entry.translatedText
+            } else {
+                notFound.add(text)
+            }
+        }
+
+        return BatchCacheResult(found, notFound)
+    }
+
+    /**
+     * Batch cache multiple translations at once.
+     * More efficient than caching one at a time.
+     */
+    suspend fun cacheBatch(
+        translations: Map<String, String>, // sourceText -> translatedText
+        sourceLang: String,
+        targetLang: String
+    ) {
+        if (translations.isEmpty()) return
+
+        val cacheData = loadCache()
+        val newEntries = cacheData.entries.toMutableMap()
+        val now = System.currentTimeMillis()
+
+        for ((sourceText, translatedText) in translations) {
+            val key = cacheKey(sourceText, sourceLang, targetLang)
+            newEntries[key] = CachedTranslation(
+                sourceText = sourceText.trim(),
+                translatedText = translatedText,
+                sourceLang = sourceLang,
+                targetLang = targetLang,
+                timestamp = now
+            )
+        }
+
+        // Evict old entries if cache is full
+        if (newEntries.size > MAX_CACHE_SIZE) {
+            val sortedEntries = newEntries.entries.sortedBy { it.value.timestamp }
+            val entriesToRemove = sortedEntries.take(newEntries.size - MAX_CACHE_SIZE)
+            entriesToRemove.forEach { newEntries.remove(it.key) }
+        }
+
+        saveCache(TranslationCacheData(newEntries))
+    }
+
     private suspend fun loadCache(): TranslationCacheData {
         return try {
             context.translationCacheDataStore.data
@@ -174,3 +238,14 @@ data class CacheStats(
     val validEntries: Int,
     val expiredEntries: Int
 )
+
+/**
+ * Result of batch cache lookup.
+ * @param found Map of sourceText -> translatedText for cached entries
+ * @param notFound List of texts not found in cache (need API call)
+ */
+data class BatchCacheResult(
+    val found: Map<String, String>,
+    val notFound: List<String>
+)
+
