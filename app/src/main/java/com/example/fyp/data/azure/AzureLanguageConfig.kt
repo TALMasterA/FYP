@@ -25,7 +25,15 @@ object LanguageDisplayNames {
         "fr-FR" to "French",
         "de-DE" to "German",
         "ko-KR" to "Korean",
-        "es-ES" to "Spanish"
+        "es-ES" to "Spanish",
+        "id-ID" to "Indonesian",
+        "vi-VN" to "Vietnamese",
+        "th-TH" to "Thai",
+        "fil-PH" to "Filipino",
+        "ms-MY" to "Malay",
+        "pt-BR" to "Portuguese",
+        "it-IT" to "Italian",
+        "ru-RU" to "Russian"
     )
 
     fun displayName(code: String): String = map[code] ?: code

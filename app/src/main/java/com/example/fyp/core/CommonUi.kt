@@ -42,6 +42,14 @@ fun rememberUiTextFunctions(
             "de-DE" -> UiTextKey.LangDeDe
             "ko-KR" -> UiTextKey.LangKoKr
             "es-ES" -> UiTextKey.LangEsEs
+            "id-ID" -> UiTextKey.LangIdId
+            "vi-VN" -> UiTextKey.LangViVn
+            "th-TH" -> UiTextKey.LangThTh
+            "fil-PH" -> UiTextKey.LangFilPh
+            "ms-MY" -> UiTextKey.LangMsMy
+            "pt-BR" -> UiTextKey.LangPtBr
+            "it-IT" -> UiTextKey.LangItIt
+            "ru-RU" -> UiTextKey.LangRuRu
             else -> null
         }
 

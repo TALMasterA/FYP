@@ -131,6 +131,74 @@ object AzureVoiceConfig {
             VoiceOption("es-ES-TrianaNeural", "Triana (Female)", "Female"),
             VoiceOption("es-ES-VeraNeural", "Vera (Female)", "Female"),
         ),
+        // Indonesian
+        "id-ID" to listOf(
+            VoiceOption("id-ID-GadisNeural", "Gadis (Female)", "Female"),
+            VoiceOption("id-ID-ArdiNeural", "Ardi (Male)", "Male"),
+        ),
+        // Vietnamese
+        "vi-VN" to listOf(
+            VoiceOption("vi-VN-HoaiMyNeural", "HoaiMy (Female)", "Female"),
+            VoiceOption("vi-VN-NamMinhNeural", "NamMinh (Male)", "Male"),
+        ),
+        // Thai
+        "th-TH" to listOf(
+            VoiceOption("th-TH-PremwadeeNeural", "Premwadee (Female)", "Female"),
+            VoiceOption("th-TH-NiwatNeural", "Niwat (Male)", "Male"),
+            VoiceOption("th-TH-AcharaNeural", "Achara (Female)", "Female"),
+        ),
+        // Filipino
+        "fil-PH" to listOf(
+            VoiceOption("fil-PH-BlessicaNeural", "Blessica (Female)", "Female"),
+            VoiceOption("fil-PH-AngeloNeural", "Angelo (Male)", "Male"),
+        ),
+        // Malay
+        "ms-MY" to listOf(
+            VoiceOption("ms-MY-YasminNeural", "Yasmin (Female)", "Female"),
+            VoiceOption("ms-MY-OsmanNeural", "Osman (Male)", "Male"),
+        ),
+        // Portuguese (Brazil)
+        "pt-BR" to listOf(
+            VoiceOption("pt-BR-FranciscaNeural", "Francisca (Female)", "Female"),
+            VoiceOption("pt-BR-AntonioNeural", "Antonio (Male)", "Male"),
+            VoiceOption("pt-BR-BrendaNeural", "Brenda (Female)", "Female"),
+            VoiceOption("pt-BR-DonatoNeural", "Donato (Male)", "Male"),
+            VoiceOption("pt-BR-ElzaNeural", "Elza (Female)", "Female"),
+            VoiceOption("pt-BR-FabioNeural", "Fabio (Male)", "Male"),
+            VoiceOption("pt-BR-GiovannaNeural", "Giovanna (Female)", "Female"),
+            VoiceOption("pt-BR-HumbertoNeural", "Humberto (Male)", "Male"),
+            VoiceOption("pt-BR-JulioNeural", "Julio (Male)", "Male"),
+            VoiceOption("pt-BR-LeilaNeural", "Leila (Female)", "Female"),
+            VoiceOption("pt-BR-LeticiaNeural", "Leticia (Female)", "Female"),
+            VoiceOption("pt-BR-ManuelaNeural", "Manuela (Female)", "Female"),
+            VoiceOption("pt-BR-NicolauNeural", "Nicolau (Male)", "Male"),
+            VoiceOption("pt-BR-ValerioNeural", "Valerio (Male)", "Male"),
+            VoiceOption("pt-BR-YaraNeural", "Yara (Female)", "Female"),
+        ),
+        // Italian
+        "it-IT" to listOf(
+            VoiceOption("it-IT-ElsaNeural", "Elsa (Female)", "Female"),
+            VoiceOption("it-IT-DiegoNeural", "Diego (Male)", "Male"),
+            VoiceOption("it-IT-IsabellaNeural", "Isabella (Female)", "Female"),
+            VoiceOption("it-IT-BenignoNeural", "Benigno (Male)", "Male"),
+            VoiceOption("it-IT-CalimeroNeural", "Calimero (Male)", "Male"),
+            VoiceOption("it-IT-CataldoNeural", "Cataldo (Male)", "Male"),
+            VoiceOption("it-IT-FabiolaNeural", "Fabiola (Female)", "Female"),
+            VoiceOption("it-IT-FiammaNeural", "Fiamma (Female)", "Female"),
+            VoiceOption("it-IT-GianniNeural", "Gianni (Male)", "Male"),
+            VoiceOption("it-IT-ImeldaNeural", "Imelda (Female)", "Female"),
+            VoiceOption("it-IT-IrmaNeural", "Irma (Female)", "Female"),
+            VoiceOption("it-IT-LisandroNeural", "Lisandro (Male)", "Male"),
+            VoiceOption("it-IT-PalmiraNeural", "Palmira (Female)", "Female"),
+            VoiceOption("it-IT-PierinaNeural", "Pierina (Female)", "Female"),
+            VoiceOption("it-IT-RinaldoNeural", "Rinaldo (Male)", "Male"),
+        ),
+        // Russian
+        "ru-RU" to listOf(
+            VoiceOption("ru-RU-SvetlanaNeural", "Svetlana (Female)", "Female"),
+            VoiceOption("ru-RU-DmitryNeural", "Dmitry (Male)", "Male"),
+            VoiceOption("ru-RU-DariyaNeural", "Dariya (Female)", "Female"),
+        ),
     )
 
     /**

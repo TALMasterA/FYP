@@ -33,6 +33,14 @@ enum class UiTextKey {
     LangDeDe,
     LangKoKr,
     LangEsEs,
+    LangIdId,
+    LangViVn,
+    LangThTh,
+    LangFilPh,
+    LangMsMy,
+    LangPtBr,
+    LangItIt,
+    LangRuRu,
 
     // --- Navigation & Common Actions ---
     NavHistory,
@@ -454,6 +462,30 @@ val CoreUiTexts: List<String> = listOf(
 
     // LangEsEs
     "Spanish",
+
+    // LangIdId
+    "Indonesian",
+
+    // LangViVn
+    "Vietnamese",
+
+    // LangThTh
+    "Thai",
+
+    // LangFilPh
+    "Filipino",
+
+    // LangMsMy
+    "Malay",
+
+    // LangPtBr
+    "Portuguese",
+
+    // LangItIt
+    "Italian",
+
+    // LangRuRu
+    "Russian",
 
     // --- Navigation & Common Actions ---
     // NavHistory
