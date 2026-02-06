@@ -18,4 +18,9 @@ interface UserSettingsRepository {
     suspend fun setColorPalette(userId: String, paletteId: String)
     suspend fun unlockColorPalette(userId: String, paletteId: String)
     suspend fun setVoiceForLanguage(userId: String, languageCode: String, voiceName: String)
+
+    /**
+     * Expand history view limit by increment (costs coins).
+     */
+    suspend fun expandHistoryViewLimit(userId: String, newLimit: Int)
 }

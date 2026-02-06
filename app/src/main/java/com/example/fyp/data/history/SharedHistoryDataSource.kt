@@ -1,6 +1,7 @@
 package com.example.fyp.data.history
 
 import com.example.fyp.model.TranslationRecord
+import com.example.fyp.model.user.UserSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,6 +29,7 @@ class SharedHistoryDataSource @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private var currentUserId: String? = null
+    private var currentLimit: Long = UserSettings.BASE_HISTORY_LIMIT.toLong()
     private var historyJob: kotlinx.coroutines.Job? = null
 
     // Cached history records - shared across all subscribers
@@ -45,24 +47,29 @@ class SharedHistoryDataSource @Inject constructor(
     private val _historyCount = MutableStateFlow(0)
     val historyCount: StateFlow<Int> = _historyCount.asStateFlow()
 
+    // Total language counts (ALL records, not limited) - used for generation eligibility
+    private val _languageCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val languageCounts: StateFlow<Map<String, Int>> = _languageCounts.asStateFlow()
+
     /**
-     * Start observing history for a user.
-     * If already observing the same user, does nothing (reuses existing listener).
+     * Start observing history for a user with optional limit.
+     * If already observing the same user with the same limit, does nothing (reuses existing listener).
      */
-    fun startObserving(userId: String) {
-        if (userId == currentUserId && historyJob?.isActive == true) {
-            // Already observing this user, no need to create new listener
+    fun startObserving(userId: String, limit: Long = UserSettings.BASE_HISTORY_LIMIT.toLong()) {
+        if (userId == currentUserId && limit == currentLimit && historyJob?.isActive == true) {
+            // Already observing this user with same limit, no need to create new listener
             return
         }
 
         // Cancel previous listener if any
         historyJob?.cancel()
         currentUserId = userId
+        currentLimit = limit
         _isLoading.value = true
         _error.value = null
 
         historyJob = scope.launch {
-            historyRepo.getHistory(userId)
+            historyRepo.getHistory(userId, limit)
                 .catch { e ->
                     _isLoading.value = false
                     _error.value = e.message
@@ -75,6 +82,30 @@ class SharedHistoryDataSource @Inject constructor(
                     _historyRecords.value = records
                     _historyCount.value = records.size
                 }
+        }
+    }
+
+    /**
+     * Refresh total language counts (for generation eligibility).
+     * This fetches counts from ALL records, not just the limited display records.
+     */
+    suspend fun refreshLanguageCounts(primaryLanguageCode: String) {
+        val uid = currentUserId ?: return
+        try {
+            val counts = historyRepo.getLanguageCounts(uid, primaryLanguageCode)
+            _languageCounts.value = counts
+        } catch (e: Exception) {
+            // Keep existing counts on error
+        }
+    }
+
+    /**
+     * Update the limit and restart observing if needed
+     */
+    fun updateLimit(newLimit: Long) {
+        val uid = currentUserId ?: return
+        if (newLimit != currentLimit) {
+            startObserving(uid, newLimit)
         }
     }
 

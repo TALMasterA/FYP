@@ -79,6 +79,39 @@ class FirestoreHistoryRepository @Inject constructor(
         }
     }
 
+    /**
+     * Get counts of records per language (for learning/quiz/wordbank generation).
+     * Returns map of languageCode -> count where the language appears in sourceLang or targetLang.
+     * This fetches ALL records (not limited) but only retrieves sourceLang and targetLang fields.
+     * NOTE: Does NOT filter by primary language - caller should filter as needed.
+     */
+    suspend fun getLanguageCounts(userId: String, primaryLanguageCode: String): Map<String, Int> {
+        return try {
+            val snapshot = firestore.collection("users")
+                .document(userId)
+                .collection("history")
+                .get()
+                .await()
+
+            val counts = mutableMapOf<String, Int>()
+
+            snapshot.documents.forEach { doc ->
+                val sourceLang = doc.getString("sourceLang")?.trim() ?: ""
+                val targetLang = doc.getString("targetLang")?.trim() ?: ""
+
+                listOf(sourceLang, targetLang).forEach { lang ->
+                    if (lang.isNotEmpty()) {
+                        counts[lang] = (counts[lang] ?: 0) + 1
+                    }
+                }
+            }
+
+            counts
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
     fun listenSessions(userId: String): Flow<List<HistorySession>> = callbackFlow {
         val listener = firestore.collection("users")
             .document(userId)

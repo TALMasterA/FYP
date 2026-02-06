@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.azure.LanguageDisplayNames
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.history.FirestoreHistoryRepository
 import com.example.fyp.domain.speech.DetectLanguageUseCase
@@ -218,10 +219,15 @@ class SpeechViewModel @Inject constructor(
                 val detected = detectLanguageUseCase(recognizedText)
                 if (detected != null && detected.language.isNotBlank()) {
                     // Azure returns short codes like "ja", "en", "zh-Hans"
-                    // Use the detected language directly as Azure Translator accepts them
-                    actualFromLanguage = detected.language
-                    onDetectedSourceLanguage?.invoke(detected.language)
-                    speechState = speechState.copy(statusMessage = "Detected: ${detected.language} (${(detected.score * 100).toInt()}% confidence)")
+                    // Map to supported full codes so they count in learning records
+                    val mappedCode = LanguageDisplayNames.mapDetectedToSupportedCode(detected.language)
+                    actualFromLanguage = mappedCode
+                    onDetectedSourceLanguage?.invoke(mappedCode)
+
+                    // Show display name if it's a supported language
+                    val displayName = LanguageDisplayNames.displayName(mappedCode)
+                    val displayText = if (displayName != mappedCode) displayName else detected.language
+                    speechState = speechState.copy(statusMessage = "Detected: $displayText (${(detected.score * 100).toInt()}% confidence)")
                 } else {
                     speechState = speechState.copy(statusMessage = "Could not detect source language. Please select manually.")
                     return@launch

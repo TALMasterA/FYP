@@ -88,7 +88,7 @@ class LearningViewModel @Inject constructor(
 
     fun setSupportedLanguages(codes: Set<String>) {
         supportedLanguages = codes
-        recomputeClusters()
+        refreshClusters()
     }
 
     private fun stopJobs() {
@@ -124,31 +124,57 @@ class LearningViewModel @Inject constructor(
                     sheetCountByLanguage = if (primaryChanged) emptyMap() else _uiState.value.sheetCountByLanguage,
                     quizCountByLanguage = if (primaryChanged) emptyMap() else _uiState.value.quizCountByLanguage,
                 )
-                recomputeClusters()
+
+                // When primary language changes, refresh language counts with the NEW primary
+                if (primaryChanged) {
+                    sharedHistoryDataSource.refreshLanguageCounts(primary)
+                    refreshClusters()
+                }
             }
         }
 
         // Use shared history data source (single listener shared across ViewModels)
         sharedHistoryDataSource.startObserving(uid)
 
+        // Same pattern as WordBank: refresh counts then clusters in same collect block
         historyJob = viewModelScope.launch {
             sharedHistoryDataSource.historyRecords.collect { records ->
                 _uiState.value = _uiState.value.copy(records = records, isLoading = false)
-                recomputeClusters()
+                // Refresh total language counts for generation eligibility
+                sharedHistoryDataSource.refreshLanguageCounts(_uiState.value.primaryLanguageCode)
+                // Then refresh clusters (same as WordBank pattern)
+                refreshClusters()
             }
         }
     }
 
-    private fun recomputeClusters() {
-        val s = _uiState.value
-        val clusters = if (supportedLanguages.isEmpty()) {
-            emptyList()
-        } else {
-            buildLanguageClusters(s.records, s.primaryLanguageCode, supportedLanguages)
-        }
-        _uiState.value = s.copy(clusters = clusters)
+    private fun refreshClusters() {
+        viewModelScope.launch {
+            val s = _uiState.value
+            // Use TOTAL language counts from all records, not limited display records
+            val languageCounts = sharedHistoryDataSource.languageCounts.value
+            val clusters = buildLanguageClustersFromCounts(languageCounts, s.primaryLanguageCode)
+            _uiState.value = s.copy(clusters = clusters)
 
-        refreshSheetMetaForClusters()
+            refreshSheetMetaForClusters()
+        }
+    }
+
+    /**
+     * Build language clusters from total counts (not limited records).
+     * Excludes the primary language (like WordBank does).
+     */
+    private fun buildLanguageClustersFromCounts(
+        languageCounts: Map<String, Int>,
+        primaryLanguageCode: String
+    ): List<LanguageClusterUi> {
+        return languageCounts
+            .filter { (code, _) ->
+                // Show all languages from history except the primary language
+                code != primaryLanguageCode && code.isNotBlank()
+            }
+            .map { (code, count) -> LanguageClusterUi(code, count) }
+            .sortedWith(compareByDescending<LanguageClusterUi> { it.count }.thenBy { it.languageCode })
     }
 
     // Cache for sheet metadata to avoid repeated Firestore reads

@@ -52,7 +52,7 @@ val ScreenUiTexts: List<String> = listOf(
             "- Discrete mode: For short sentences translation. \n" +
             "- Continuous mode: Live conversation capture with user switching. \n" +
             "- Learning: Learning materials generate by AI (use your translation history). \n" +
-            "- History: View your translation history. (Recent 200 records)\n" +
+            "- History: View your translation history. (Recent 100 records, expandable to 150 in Shop)\n" +
             "- Quiz: Test your ability! \n" +
             "- Word bank (Next to the setting): Generate/Refresh the word bank for study words appear in your history. \n" +
             "- App UI language translation function. \n",
@@ -607,7 +607,7 @@ val ScreenUiTexts: List<String> = listOf(
     "History Information",
 
     // HistoryInfoLimitMessage
-    "📊 History shows your most recent {limit} records only.",
+    "📊 History shows your most recent {limit} records. You can expand this limit in the Shop!",
 
     // HistoryInfoOlderRecordsMessage
     "💾 Older records are still stored but not displayed here to optimize performance.",

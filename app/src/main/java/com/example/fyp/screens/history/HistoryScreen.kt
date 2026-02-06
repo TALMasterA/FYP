@@ -18,7 +18,6 @@ import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.StandardScreenBody
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.data.history.FirestoreHistoryRepository
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.TranslationRecord
@@ -61,8 +60,8 @@ fun HistoryScreen(
     var showCoinRulesDialog by remember { mutableStateOf(false) }
     var showHistoryInfoDialog by remember { mutableStateOf(false) }
 
-    // History limit from repository constant
-    val historyLimit = FirestoreHistoryRepository.DEFAULT_HISTORY_LIMIT.toInt()
+    // History limit from user settings (default if not available)
+    val historyLimit = uiState.historyViewLimit
 
     val languageCounts = remember(uiState.records) {
         uiState.records

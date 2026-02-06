@@ -6,11 +6,13 @@ import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.learning.FirestoreQuizRepository
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.domain.history.DeleteHistoryRecordUseCase
 import com.example.fyp.domain.history.DeleteSessionUseCase
 import com.example.fyp.domain.history.ObserveSessionNamesUseCase
 import com.example.fyp.domain.history.RenameSessionUseCase
 import com.example.fyp.model.user.AuthState
+import com.example.fyp.model.user.UserSettings
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.UserCoinStats
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,13 +32,15 @@ data class HistoryUiState(
     val coinStats: UserCoinStats = UserCoinStats(),
     val favoriteIds: Set<String> = emptySet(), // Track which record IDs are favorited (session-only)
     val favoritedTexts: Set<String> = emptySet(), // Track favorited content "sourceText|targetText" (persisted)
-    val addingFavoriteId: String? = null // Track which record is being added/removed
+    val addingFavoriteId: String? = null, // Track which record is being added/removed
+    val historyViewLimit: Int = UserSettings.BASE_HISTORY_LIMIT // Current history view limit
 )
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val sharedHistoryDataSource: SharedHistoryDataSource,
+    private val sharedSettings: SharedSettingsDataSource,
     private val observeSessionNames: ObserveSessionNamesUseCase,
     private val deleteHistoryRecord: DeleteHistoryRecordUseCase,
     private val renameSession: RenameSessionUseCase,
@@ -51,6 +55,7 @@ class HistoryViewModel @Inject constructor(
     private var currentUserId: String? = null
     private var historyJob: Job? = null
     private var sessionsJob: Job? = null
+    private var settingsJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -65,6 +70,7 @@ class HistoryViewModel @Inject constructor(
                         currentUserId = null
                         historyJob?.cancel()
                         sessionsJob?.cancel()
+                        settingsJob?.cancel()
                         sharedHistoryDataSource.stopObserving()
                         _uiState.value = HistoryUiState(
                             isLoading = false,
@@ -78,6 +84,7 @@ class HistoryViewModel @Inject constructor(
                         currentUserId = null
                         historyJob?.cancel()
                         sessionsJob?.cancel()
+                        settingsJob?.cancel()
                         _uiState.value = HistoryUiState(
                             isLoading = true,
                             error = null,
@@ -236,10 +243,23 @@ class HistoryViewModel @Inject constructor(
     private fun startListening(userId: String) {
         historyJob?.cancel()
         sessionsJob?.cancel()
+        settingsJob?.cancel()
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
+        // Observe settings for history limit
+        sharedSettings.startObserving(userId)
+        settingsJob = viewModelScope.launch {
+            sharedSettings.settings.collect { settings ->
+                val newLimit = settings.historyViewLimit
+                _uiState.value = _uiState.value.copy(historyViewLimit = newLimit)
+                // Update shared history data source with new limit
+                sharedHistoryDataSource.updateLimit(newLimit.toLong())
+            }
+        }
+
         // Use shared history data source (single listener shared across ViewModels)
-        sharedHistoryDataSource.startObserving(userId)
+        val initialLimit = _uiState.value.historyViewLimit.toLong()
+        sharedHistoryDataSource.startObserving(userId, initialLimit)
 
         historyJob = viewModelScope.launch {
             // Observe from shared data source instead of creating new listener

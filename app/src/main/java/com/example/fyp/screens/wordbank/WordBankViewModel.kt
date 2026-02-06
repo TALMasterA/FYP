@@ -316,6 +316,8 @@ class WordBankViewModel @Inject constructor(
             sharedHistoryDataSource.historyRecords
                 .collect { list ->
                     records = list
+                    // Refresh total language counts for word bank generation
+                    sharedHistoryDataSource.refreshLanguageCounts(primaryLanguageCode)
                     refreshClusters()
                 }
         }
@@ -339,13 +341,12 @@ class WordBankViewModel @Inject constructor(
                 // Ignore error, just keep previous count
             }
 
-            // Group records by target language (excluding primary)
-            val languageGroups = records
-                .filter { it.targetLang != primaryLanguageCode && it.targetLang.isNotBlank() }
-                .groupBy { it.targetLang }
+            // Use TOTAL language counts from all records, not limited display records
+            val languageCounts = sharedHistoryDataSource.languageCounts.value
+                .filter { (lang, _) -> lang != primaryLanguageCode && lang.isNotBlank() }
 
             // Check cache (in-memory first, then persisted DataStore, then Firestore)
-            val languagesToCheck = languageGroups.keys.filter { it !in wordBankExistsCache }
+            val languagesToCheck = languageCounts.keys.filter { it !in wordBankExistsCache }
 
             for (lang in languagesToCheck) {
                 try {
@@ -370,11 +371,11 @@ class WordBankViewModel @Inject constructor(
                 }
             }
 
-            val clusters = languageGroups
-                .map { (lang, recs) ->
+            val clusters = languageCounts
+                .map { (lang, count) ->
                     WordBankLanguageCluster(
                         languageCode = lang,
-                        recordCount = recs.size,
+                        recordCount = count,
                         hasWordBank = wordBankExistsCache[lang] ?: false
                     )
                 }

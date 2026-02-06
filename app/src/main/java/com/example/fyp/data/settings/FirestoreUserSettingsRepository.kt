@@ -32,6 +32,7 @@ class FirestoreUserSettingsRepository @Inject constructor(
             val unlockedPalettes = snap?.get("unlockedPalettes") as? List<String> ?: listOf("default")
             @Suppress("UNCHECKED_CAST")
             val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
+            val historyViewLimit = snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT
 
             trySend(
                 UserSettings(
@@ -40,7 +41,8 @@ class FirestoreUserSettingsRepository @Inject constructor(
                     themeMode = themeMode,
                     colorPaletteId = colorPaletteId,
                     unlockedPalettes = unlockedPalettes,
-                    voiceSettings = voiceSettings
+                    voiceSettings = voiceSettings,
+                    historyViewLimit = historyViewLimit
                 )
             )
         }
@@ -59,6 +61,7 @@ class FirestoreUserSettingsRepository @Inject constructor(
         val unlockedPalettes = snap?.get("unlockedPalettes") as? List<String> ?: listOf("default")
         @Suppress("UNCHECKED_CAST")
         val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
+        val historyViewLimit = snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT
 
         return UserSettings(
             primaryLanguageCode = code.ifBlank { "en-US" },
@@ -66,7 +69,8 @@ class FirestoreUserSettingsRepository @Inject constructor(
             themeMode = themeMode,
             colorPaletteId = colorPaletteId,
             unlockedPalettes = unlockedPalettes,
-            voiceSettings = voiceSettings
+            voiceSettings = voiceSettings,
+            historyViewLimit = historyViewLimit
         )
     }
 
@@ -120,6 +124,13 @@ class FirestoreUserSettingsRepository @Inject constructor(
 
         docRef(userId)
             .set(mapOf("voiceSettings" to updated), SetOptions.merge())
+            .await()
+    }
+
+    override suspend fun expandHistoryViewLimit(userId: String, newLimit: Int) {
+        val clampedLimit = newLimit.coerceIn(UserSettings.BASE_HISTORY_LIMIT, UserSettings.MAX_HISTORY_LIMIT)
+        docRef(userId)
+            .set(mapOf("historyViewLimit" to clampedLimit), SetOptions.merge())
             .await()
     }
 }

@@ -39,6 +39,8 @@ import com.example.fyp.screens.login.ResetPasswordScreen
 import com.example.fyp.screens.settings.ProfileScreen
 import com.example.fyp.screens.settings.SettingsScreen
 import com.example.fyp.screens.settings.SettingsViewModel
+import com.example.fyp.screens.settings.ShopScreen
+import com.example.fyp.screens.settings.VoiceSettingsScreen
 import com.example.fyp.screens.speech.ContinuousConversationScreen
 import com.example.fyp.screens.speech.SpeechRecognitionScreen
 import com.example.fyp.screens.wordbank.WordBankScreen
@@ -59,6 +61,8 @@ sealed class AppScreen(val route: String) {
     object WordBank : AppScreen("word_bank")
     object Profile : AppScreen("profile")
     object Favorites : AppScreen("favorites")
+    object Shop : AppScreen("shop")
+    object VoiceSettings : AppScreen("voice_settings")
 
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
         fun routeFor(primaryCode: String, targetCode: String) =
@@ -226,6 +230,29 @@ fun AppNavigation() {
                             onOpenResetPassword = { navController.navigate(AppScreen.ResetPassword.route) },
                             onOpenProfile = { navController.navigate(AppScreen.Profile.route) },
                             onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) },
+                            onOpenShop = { navController.navigate(AppScreen.Shop.route) },
+                            onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) },
+                            viewModel = settingsViewModel
+                        )
+                    }
+
+                    composableRequireLogin(
+                        route = AppScreen.Shop.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        ShopScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composableRequireLogin(
+                        route = AppScreen.VoiceSettings.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        VoiceSettingsScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() },
                             viewModel = settingsViewModel
                         )
                     }

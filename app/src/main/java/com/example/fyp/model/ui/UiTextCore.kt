@@ -76,6 +76,24 @@ enum class UiTextKey {
     ToastCopied,
     DisableText,
 
+    // --- Shop ---
+    ShopTitle,
+    ShopCoinBalance,
+    ShopHistoryExpansionTitle,
+    ShopHistoryExpansionDesc,
+    ShopCurrentLimit,
+    ShopMaxLimit,
+    ShopBuyHistoryExpansion,
+    ShopInsufficientCoins,
+    ShopMaxLimitReached,
+    ShopColorPaletteTitle,
+    ShopColorPaletteDesc,
+    ShopEntry,
+
+    // --- Voice Settings Screen ---
+    VoiceSettingsTitle,
+    VoiceSettingsDesc,
+
     // ========== SCREEN-SPECIFIC KEYS (Start) ==========
 
     // --- Speech/Home Instructions ---
@@ -382,185 +400,170 @@ enum class UiTextKey {
     CacheStatsTemplate,
 }
 
-// Core UI texts - used throughout the app
+// Core UI texts - used throughout the app (basic controls + common UI elements)
 val CoreUiTexts: List<String> = listOf(
     // --- Basic UI Controls ---
     // AzureRecognizeButton
     "Use Microphone",
-
     // CopyButton
     "Copy",
-
     // SpeakScriptButton
     "Speak",
-
     // TranslateButton
     "Translate",
-
     // CopyTranslationButton
     "Copy",
-
     // SpeakTranslationButton
     "Speak",
 
     // --- Status Messages ---
     // RecognizingStatus
     "Recording with Azure, SPEAK and please WAIT...(Stop listening after slient)",
-
     // TranslatingStatus
     "Translating, please wait...",
-
     // SpeakingOriginalStatus
     "Speaking original text, please wait...",
-
     // SpeakingTranslationStatus
     "Speaking translation, please wait...",
-
     // SpeakingLabel
     "Speaking...",
-
     // FinishedSpeakingOriginal
     "Finished speaking original text.",
-
     // FinishedSpeakingTranslation
     "Finished speaking translation.",
-
     // TtsErrorTemplate
     "TTS error: %s",
 
     // --- Dropdowns & Labels ---
     // AppUiLanguageLabel
     "App UI language",
-
     // DetectLanguageLabel
     "Detect",
-
     // TranslateToLabel
     "Translate",
 
     // --- Language Names ---
     // LangEnUs
     "English",
-
     // LangZhHk
     "Cantonese",
-
     // LangJaJp
     "Japanese",
-
     // LangZhCn
     "Mandarin",
-
     // LangFrFr
     "French",
-
     // LangDeDe
     "German",
-
     // LangKoKr
     "Korean",
-
     // LangEsEs
     "Spanish",
-
     // LangIdId
     "Indonesian",
-
     // LangViVn
     "Vietnamese",
-
     // LangThTh
     "Thai",
-
     // LangFilPh
     "Filipino",
-
     // LangMsMy
     "Malay",
-
     // LangPtBr
     "Portuguese",
-
     // LangItIt
     "Italian",
-
     // LangRuRu
     "Russian",
 
     // --- Navigation & Common Actions ---
     // NavHistory
     "History",
-
     // NavLogin
     "Login",
-
     // NavLogout
     "Logout",
-
     // NavBack
     "Back",
-
     // ActionCancel
     "Cancel",
-
     // ActionDelete
     "Delete",
-
     // ActionOpen
     "Open",
-
     // ActionName
     "Name",
-
     // ActionSave
     "Save",
-
     // ActionConfirm
     "Confirm",
 
     // --- Guest Translation Limit ---
     // GuestTranslationLimitTitle
     "Login Required",
-
     // GuestTranslationLimitMessage
     "You can only changed the UI language once.",
 
     // --- Placeholders & Input ---
     // SpeechInputPlaceholder
     "Type here or use microphone...",
-
     // SpeechTranslatedPlaceholder
     "The translated result will be show here.",
-
     // StatusAzureErrorTemplate
     "Azure error: %s",
-
     // StatusTranslationErrorTemplate
     "Translation error: %s",
-
     // StatusLoginRequiredTranslation
     "Login is required to use translation.",
-
     // StatusRecognizePreparing
     "Preparing mic... (Do not speak now)",
-
     // StatusRecognizeListening
     "Listening... Please speak now.",
 
     // --- Pagination ---
     // PaginationPrevLabel
     "< Prev",
-
     // PaginationNextLabel
     "Next >",
-
     // PaginationPageLabelTemplate
     "Page {page} / {total}",
 
     // --- Toast & Messages ---
     // ToastCopied
     "Copied to clipboard",
-
     // DisableText
     "Login is required to use translation features & storing translation history.",
+
+    // --- Shop ---
+    // ShopTitle
+    "Shop",
+    // ShopCoinBalance
+    "Your Coins",
+    // ShopHistoryExpansionTitle
+    "History View Expansion",
+    // ShopHistoryExpansionDesc
+    "Expand your history view limit to see more recent translation records.",
+    // ShopCurrentLimit
+    "Current limit: {limit} records",
+    // ShopMaxLimit
+    "Max:",
+    // ShopBuyHistoryExpansion
+    "Buy +{increment} records ({cost} coins)",
+    // ShopInsufficientCoins
+    "Not enough coins for this purchase.",
+    // ShopMaxLimitReached
+    "Maximum limit reached!",
+    // ShopColorPaletteTitle
+    "Color Palettes",
+    // ShopColorPaletteDesc
+    "Unlock new color themes for your app.",
+    // ShopEntry
+    "Shop",
+
+    // --- Voice Settings Screen ---
+    // VoiceSettingsTitle
+    "Voice Settings",
+    // VoiceSettingsDesc
+    "Choose a voice for text-to-speech output per language.",
 )
+

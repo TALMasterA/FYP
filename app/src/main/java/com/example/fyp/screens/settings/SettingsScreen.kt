@@ -49,6 +49,8 @@ fun SettingsScreen(
     onOpenResetPassword: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
     onOpenFavorites: () -> Unit = {},
+    onOpenShop: () -> Unit = {},
+    onOpenVoiceSettings: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -115,32 +117,27 @@ fun SettingsScreen(
                         Text(t(UiTextKey.FavoritesTitle))
                     }
                 }
-            }
 
-            // Voice Settings (only for logged in users)
-            if (isLoggedIn) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        t(UiTextKey.SettingsVoiceTitle),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = t(UiTextKey.SettingsVoiceDesc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    VoiceSettingsSelector(
-                        voiceSettings = uiState.settings.voiceSettings,
-                        supportedLanguages = supportedLanguages,
-                        onVoiceSelected = { lang, voice -> viewModel.updateVoiceForLanguage(lang, voice) },
-                        languageNameFor = uiLanguageNameFor,
-                        t = t
-                    )
+                // Shop and Voice Settings buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    TextButton(
+                        onClick = onOpenShop,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(t(UiTextKey.ShopEntry))
+                    }
+                    TextButton(
+                        onClick = onOpenVoiceSettings,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(t(UiTextKey.VoiceSettingsTitle))
+                    }
                 }
             }
+
 
             // Color Palette (only for logged in users)
             if (isLoggedIn) {
