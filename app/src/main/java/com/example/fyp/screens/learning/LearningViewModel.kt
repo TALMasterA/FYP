@@ -264,8 +264,15 @@ class LearningViewModel @Inject constructor(
         val countNow = current.clusters.firstOrNull { it.languageCode == languageCode }?.count ?: 0
         val lastCount = current.sheetCountByLanguage[languageCode]
 
+        // Minimum 5 more records for regeneration (first time is always allowed)
+        val minRecordsForRegen = 5
+
         if (countNow == 0) return
         if (lastCount != null && lastCount == countNow) return
+        // ANTI-CHEAT: Require 5+ more records for regeneration (first gen always allowed)
+        if (lastCount != null && countNow < lastCount + minRecordsForRegen) return
+        // ANTI-CHEAT: Count must be higher than previous (no regen if count went down)
+        if (lastCount != null && countNow <= lastCount) return
         if (current.generatingLanguageCode != null) return
 
         generationJob = viewModelScope.launch {
@@ -327,8 +334,14 @@ class LearningViewModel @Inject constructor(
         val primary = current.primaryLanguageCode
         val lastQuizCount = current.quizCountByLanguage[languageCode]
 
-        // Disable if count unchanged (same sheet version = same quiz)
-        if (lastQuizCount != null && lastQuizCount == sheetHistoryCount) return
+        // ANTI-CHEAT Rule 1: Quiz can ONLY be generated when material version changes
+        // If a quiz already exists for the current material version, NO regen allowed
+        if (lastQuizCount != null && lastQuizCount == sheetHistoryCount) {
+            _uiState.value = current.copy(
+                generatingQuizLanguageCode = null
+            )
+            return
+        }
         if (current.generatingQuizLanguageCode != null) return
 
         val materialOnly = com.example.fyp.data.learning.ContentCleaner

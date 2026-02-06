@@ -224,15 +224,22 @@ private fun WordBankHeader(
 
                 // Show regeneration status for existing word banks
                 if (wordBank != null && !isGenerating) {
+                    // Format record count with proper sign (+ for positive, - for negative, nothing for zero)
+                    val recordCountText = when {
+                        newRecordCount > 0 -> "+$newRecordCount"
+                        newRecordCount < 0 -> "$newRecordCount" // Already has minus sign
+                        else -> "0"
+                    }
+
                     if (canRegenerate) {
                         Text(
-                            text = "+$newRecordCount new records - ${t(UiTextKey.WordBankRefreshAvailable)}",
+                            text = "$recordCountText new records - ${t(UiTextKey.WordBankRefreshAvailable)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
                     } else {
                         Text(
-                            text = "+$newRecordCount / $minRecordsForRegen ${t(UiTextKey.WordBankRecordsNeeded)}",
+                            text = "$recordCountText / $minRecordsForRegen ${t(UiTextKey.WordBankRecordsNeeded)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

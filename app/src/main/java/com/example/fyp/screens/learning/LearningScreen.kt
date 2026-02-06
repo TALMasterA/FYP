@@ -90,7 +90,6 @@ fun LearningScreen(
                 text = {
                     Text(
                         t(UiTextKey.LearningRegenBlockedMessage)
-                            .replace("{minRecords}", "5")
                             .replace("{needed}", recordsNeeded.toString())
                     )
                 },
@@ -206,13 +205,15 @@ fun LearningScreen(
                             ) {
                                 // Show hint when regeneration requires more records
                                 if (!isFirstTime && !hasEnoughNewRecords && c.count > 0 && countHigherThanPrevious) {
-                                    val recordsNeeded = (lastCount ?: 0) + minRecordsForRegen - c.count
-                                    Text(
-                                        text = t(UiTextKey.LearningRegenNeedMoreRecords)
-                                            .replace("{needed}", recordsNeeded.toString()),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.error
-                                    )
+                                    val recordsNeeded = ((lastCount ?: 0) + minRecordsForRegen - c.count).coerceAtLeast(0)
+                                    if (recordsNeeded > 0) {
+                                        Text(
+                                            text = t(UiTextKey.LearningRegenNeedMoreRecords)
+                                                .replace("{needed}", recordsNeeded.toString()),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
                                 }
 
                                 // Show hint when count is not higher than previous

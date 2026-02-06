@@ -385,13 +385,16 @@ val ScreenUiTexts: List<String> = listOf(
     "Cannot Regenerate Yet",
 
     // LearningRegenBlockedMessage
-    "You need at least {minRecords} more translation records to regenerate the learning sheet. You need {needed} more records.",
+    "Regeneration requires at least 5 more records than the previous generation. You currently need {needed} more records.",
 
     // LearningRegenNeedMoreRecords
-    "Need {needed} more records to regenerate",
+    "⚠️ Need {needed} more records to regenerate (minimum 5)",
 
     // LearningRegenCountNotHigher
-    "Record count must be higher than the previous generation",
+    "⚠️ Record count must be higher than the previous generation",
+
+    // QuizRegenBlockedSameMaterial
+    "❌ Quiz already generated for this material version. Generate a new learning sheet to create a new quiz.",
 
     // --- Quiz ---
     // QuizTitleTemplate
@@ -527,13 +530,13 @@ val ScreenUiTexts: List<String> = listOf(
     "🔄 Generate New Quiz?",
 
     // QuizRegenCanEarnCoins
-    "✅ You can earn coins on this quiz!",
+    "✅ You can earn coins on this quiz! (First attempt only)",
 
     // QuizRegenCannotEarnCoins
     "⚠️ You cannot earn coins on this quiz yet.",
 
     // QuizRegenNeedMoreTemplate
-    "You need {count} more translation records to earn coins.",
+    "📊 Need {count} more translation records to be eligible for coins (minimum 10 more than last earned quiz).",
 
     // QuizRegenReminder
     "📜 Reminder: You can still practice and retake quizzes for learning, but coins are only awarded on first attempts with sufficient new records.",
@@ -692,10 +695,10 @@ val ScreenUiTexts: List<String> = listOf(
     "No words match your filter",
 
     // WordBankRefreshAvailable
-    "✅ New records - refresh available",
+    "✅ Refresh available!",
 
     // WordBankRecordsNeeded
-    "📊 Records needed to refresh",
+    "records (need 20 to refresh)",
 
     // --- Dialogs ---
     // DialogLogoutTitle

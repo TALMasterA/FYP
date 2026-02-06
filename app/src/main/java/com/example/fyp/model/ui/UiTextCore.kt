@@ -235,6 +235,7 @@ enum class UiTextKey {
     LearningRegenBlockedMessage,
     LearningRegenNeedMoreRecords,
     LearningRegenCountNotHigher,
+    QuizRegenBlockedSameMaterial,
 
     // --- Quiz ---
     QuizTitleTemplate,

@@ -438,11 +438,11 @@ class WordBankViewModel @Inject constructor(
 
     /**
      * Check if regeneration is allowed (need at least MIN_RECORDS_FOR_REGEN more records)
-     * Uses unified count from sharedHistoryDataSource (same source as UI clusters)
+     * Uses same counting method as Learning Materials (counts per language, not language pair)
      */
     fun canRegenerate(targetLanguageCode: String): Boolean {
         val currentWordBank = _uiState.value.currentWordBank ?: return true // First gen always allowed
-        // Use unified count from sharedHistoryDataSource instead of filtering records
+        // Use same counting method as Learning Materials
         val currentCount = sharedHistoryDataSource.getCountForLanguage(targetLanguageCode)
         val savedCount = currentWordBank.historyCountAtGenerate
         return (currentCount - savedCount) >= MIN_RECORDS_FOR_REGEN
@@ -450,11 +450,11 @@ class WordBankViewModel @Inject constructor(
 
     /**
      * Get the number of new records since last generation
-     * Uses unified count from sharedHistoryDataSource (same source as UI clusters)
+     * Uses same counting method as Learning Materials (counts per language, not language pair)
      */
     fun getNewRecordCount(targetLanguageCode: String): Int {
         val currentWordBank = _uiState.value.currentWordBank ?: return 0
-        // Use unified count from sharedHistoryDataSource instead of filtering records
+        // Use same counting method as Learning Materials
         val currentCount = sharedHistoryDataSource.getCountForLanguage(targetLanguageCode)
         return currentCount - currentWordBank.historyCountAtGenerate
     }
@@ -470,6 +470,16 @@ class WordBankViewModel @Inject constructor(
 
     fun generateWordBank(targetLanguageCode: String) {
         val uid = currentUserId ?: return
+
+        // ANTI-CHEAT: Verify regeneration is allowed (need 20+ more records)
+        // First generation is always allowed (no existing word bank)
+        val existingWordBank = _uiState.value.currentWordBank
+        if (existingWordBank != null && !canRegenerate(targetLanguageCode)) {
+            _uiState.value = _uiState.value.copy(
+                error = "Need $MIN_RECORDS_FOR_REGEN more records to refresh word bank"
+            )
+            return
+        }
 
         // Cancel any existing generation
         generationJob?.cancel()
@@ -520,7 +530,7 @@ class WordBankViewModel @Inject constructor(
                 // Check if cancelled before saving
                 ensureActive()
 
-                // Get unified count from sharedHistoryDataSource (same as UI display)
+                // Use same counting method as Learning Materials (counts per language)
                 val unifiedCount = sharedHistoryDataSource.getCountForLanguage(targetLanguageCode)
 
                 // Append new words to Firestore (merges with existing, avoids duplicates)

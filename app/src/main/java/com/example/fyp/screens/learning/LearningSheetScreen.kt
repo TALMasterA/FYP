@@ -145,7 +145,7 @@ fun LearningSheetScreen(
             if (showRegenBlockedAlert) {
                 val recordsNeeded = if (previousSheetCount != null) {
                     val required = previousSheetCount + minRecordsForRegen
-                    required - countNowFromCluster
+                    (required - countNowFromCluster).coerceAtLeast(0)
                 } else 0
 
                 AlertDialog(
@@ -154,7 +154,6 @@ fun LearningSheetScreen(
                     text = {
                         Text(
                             t(UiTextKey.LearningRegenBlockedMessage)
-                                .replace("{minRecords}", minRecordsForRegen.toString())
                                 .replace("{needed}", recordsNeeded.toString())
                         )
                     },
@@ -173,13 +172,15 @@ fun LearningSheetScreen(
             ) {
                 // Show hint when regeneration requires more records
                 if (!isFirstTime && !hasEnoughNewRecords && countNowFromCluster > 0 && countHigherThanPrevious) {
-                    val recordsNeeded = (previousSheetCount ?: 0) + minRecordsForRegen - countNowFromCluster
-                    Text(
-                        text = t(UiTextKey.LearningRegenNeedMoreRecords)
-                            .replace("{needed}", recordsNeeded.toString()),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    val recordsNeeded = ((previousSheetCount ?: 0) + minRecordsForRegen - countNowFromCluster).coerceAtLeast(0)
+                    if (recordsNeeded > 0) {
+                        Text(
+                            text = t(UiTextKey.LearningRegenNeedMoreRecords)
+                                .replace("{needed}", recordsNeeded.toString()),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
 
                 // Show hint when count is not higher than previous
