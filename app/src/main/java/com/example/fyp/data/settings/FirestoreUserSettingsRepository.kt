@@ -93,11 +93,11 @@ class FirestoreUserSettingsRepository @Inject constructor(
     }
 
     override suspend fun setVoiceForLanguage(userId: String, languageCode: String, voiceName: String) {
-        // Use dot-notation to update a single key in the voiceSettings map
-        // without reading the entire document first.
+        // Use dot-notation field path to update only the specific language key
+        // within the voiceSettings map, without reading the entire document first.
         // This eliminates one Firestore read per voice change.
         docRef(userId)
-            .set(mapOf("voiceSettings" to mapOf(languageCode to voiceName)), SetOptions.merge())
+            .update("voiceSettings.$languageCode", voiceName)
             .await()
     }
 
