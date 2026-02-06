@@ -101,14 +101,18 @@ class ShopViewModel @Inject constructor(
                 val newLimit = (current.currentHistoryLimit + UserSettings.HISTORY_EXPANSION_INCREMENT)
                     .coerceAtMost(UserSettings.MAX_HISTORY_LIMIT)
 
-                // Deduct coins
-                quizRepo.deductCoins(uid, UserSettings.HISTORY_EXPANSION_COST)
+                // Deduct coins (returns new balance, avoiding a separate fetch)
+                val newBalance = quizRepo.deductCoins(uid, UserSettings.HISTORY_EXPANSION_COST)
+                if (newBalance < 0) {
+                    _uiState.value = _uiState.value.copy(
+                        isPurchasing = false,
+                        purchaseError = "Insufficient coins"
+                    )
+                    return@launch
+                }
 
                 // Update history limit
                 settingsRepo.expandHistoryViewLimit(uid, newLimit)
-
-                // Refresh balance
-                val newBalance = quizRepo.fetchUserCoinStats(uid)?.coinTotal ?: 0
 
                 _uiState.value = _uiState.value.copy(
                     isPurchasing = false,
@@ -152,14 +156,18 @@ class ShopViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                // Deduct coins
-                quizRepo.deductCoins(uid, cost)
+                // Deduct coins (returns new balance, avoiding a separate fetch)
+                val newBalance = quizRepo.deductCoins(uid, cost)
+                if (newBalance < 0) {
+                    _uiState.value = _uiState.value.copy(
+                        isPurchasing = false,
+                        unlockError = "Insufficient coins"
+                    )
+                    return@launch
+                }
 
                 // Unlock palette
                 settingsRepo.unlockColorPalette(uid, paletteId)
-
-                // Refresh balance
-                val newBalance = quizRepo.fetchUserCoinStats(uid)?.coinTotal ?: 0
 
                 _uiState.value = _uiState.value.copy(
                     isPurchasing = false,

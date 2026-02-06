@@ -345,24 +345,25 @@ class FirestoreQuizRepository @Inject constructor(
     }
 
     /**
-     * Deduct coins from user's balance
-     * Returns true if successful, false if insufficient coins
+     * Deduct coins from user's balance.
+     * Returns the new coin balance if successful, or -1 if insufficient coins.
+     * This avoids a separate fetchUserCoinStats call after deduction.
      */
-    suspend fun deductCoins(uid: String, amount: Int): Boolean {
+    suspend fun deductCoins(uid: String, amount: Int): Int {
         return db.runTransaction { tx ->
             val statsSnap = tx.get(coinStatsDoc(uid))
             val current = if (statsSnap.exists()) statsSnap.toObject(UserCoinStats::class.java) ?: UserCoinStats() else UserCoinStats()
 
             // Check if user has enough coins
             if (current.coinTotal < amount) {
-                return@runTransaction false
+                return@runTransaction -1
             }
 
             // Deduct coins
             val newTotal = current.coinTotal - amount
             tx.set(coinStatsDoc(uid), current.copy(coinTotal = newTotal))
 
-            true
+            newTotal
         }.await()
     }
 }
