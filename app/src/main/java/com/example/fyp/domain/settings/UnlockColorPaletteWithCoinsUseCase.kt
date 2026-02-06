@@ -16,8 +16,8 @@ class UnlockColorPaletteWithCoinsUseCase @Inject constructor(
         }
 
         // Deduct coins
-        val success = quizRepo.deductCoins(userId, cost)
-        if (!success) {
+        val newBalance = quizRepo.deductCoins(userId, cost)
+        if (newBalance < 0) {
             return Result.InsufficientCoins
         }
 

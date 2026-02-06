@@ -1,6 +1,7 @@
 package com.example.fyp.data.settings
 
 import com.example.fyp.model.user.UserSettings
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.channels.awaitClose
@@ -17,49 +18,17 @@ class FirestoreUserSettingsRepository @Inject constructor(
         db.collection("users").document(uid)
             .collection("profile").document("settings")
 
-    override fun observeUserSettings(userId: String): Flow<UserSettings> = callbackFlow {
-        val reg = docRef(userId).addSnapshotListener { snap, err ->
-            if (err != null) {
-                close(err)
-                return@addSnapshotListener
-            }
-
-            val code = snap?.getString("primaryLanguageCode").orEmpty()
-            val scale = snap?.getDouble("fontSizeScale")?.toFloat() ?: 1.0f
-            val themeMode = snap?.getString("themeMode") ?: "system"
-            val colorPaletteId = snap?.getString("colorPaletteId") ?: "default"
-            @Suppress("UNCHECKED_CAST")
-            val unlockedPalettes = snap?.get("unlockedPalettes") as? List<String> ?: listOf("default")
-            @Suppress("UNCHECKED_CAST")
-            val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
-            val historyViewLimit = snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT
-
-            trySend(
-                UserSettings(
-                    primaryLanguageCode = code.ifBlank { "en-US" },
-                    fontSizeScale = scale,
-                    themeMode = themeMode,
-                    colorPaletteId = colorPaletteId,
-                    unlockedPalettes = unlockedPalettes,
-                    voiceSettings = voiceSettings,
-                    historyViewLimit = historyViewLimit
-                )
-            )
-        }
-
-        awaitClose { reg.remove() }
-    }
-
-    override suspend fun fetchUserSettings(userId: String): UserSettings {
-        val snap = docRef(userId).get().await()
-
+    /**
+     * Parse a Firestore document snapshot into UserSettings.
+     * Shared by both observeUserSettings and fetchUserSettings to avoid duplication.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun parseSettings(snap: com.google.firebase.firestore.DocumentSnapshot?): UserSettings {
         val code = snap?.getString("primaryLanguageCode").orEmpty()
         val scale = snap?.getDouble("fontSizeScale")?.toFloat() ?: 1.0f
         val themeMode = snap?.getString("themeMode") ?: "system"
         val colorPaletteId = snap?.getString("colorPaletteId") ?: "default"
-        @Suppress("UNCHECKED_CAST")
         val unlockedPalettes = snap?.get("unlockedPalettes") as? List<String> ?: listOf("default")
-        @Suppress("UNCHECKED_CAST")
         val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
         val historyViewLimit = snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT
 
@@ -72,6 +41,23 @@ class FirestoreUserSettingsRepository @Inject constructor(
             voiceSettings = voiceSettings,
             historyViewLimit = historyViewLimit
         )
+    }
+
+    override fun observeUserSettings(userId: String): Flow<UserSettings> = callbackFlow {
+        val reg = docRef(userId).addSnapshotListener { snap, err ->
+            if (err != null) {
+                close(err)
+                return@addSnapshotListener
+            }
+            trySend(parseSettings(snap))
+        }
+
+        awaitClose { reg.remove() }
+    }
+
+    override suspend fun fetchUserSettings(userId: String): UserSettings {
+        val snap = docRef(userId).get().await()
+        return parseSettings(snap)
     }
 
     override suspend fun setPrimaryLanguage(userId: String, languageCode: String) {
@@ -99,31 +85,19 @@ class FirestoreUserSettingsRepository @Inject constructor(
     }
 
     override suspend fun unlockColorPalette(userId: String, paletteId: String) {
-        // First, get current unlockedPalettes
-        val current = docRef(userId).get().await()
-        @Suppress("UNCHECKED_CAST")
-        val currentUnlocked = current?.get("unlockedPalettes") as? List<String> ?: listOf("default")
-
-        // Add new palette if not already unlocked
-        val updated = (currentUnlocked + paletteId).distinct()
-
+        // Use arrayUnion to atomically add palette without reading current list first.
+        // This eliminates one Firestore read per palette unlock.
         docRef(userId)
-            .set(mapOf("unlockedPalettes" to updated), SetOptions.merge())
+            .set(mapOf("unlockedPalettes" to FieldValue.arrayUnion(paletteId)), SetOptions.merge())
             .await()
     }
 
     override suspend fun setVoiceForLanguage(userId: String, languageCode: String, voiceName: String) {
-        // First, get current voice settings
-        val current = docRef(userId).get().await()
-        @Suppress("UNCHECKED_CAST")
-        val currentVoices = current?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
-
-        // Update with new voice for this language
-        val updated = currentVoices.toMutableMap()
-        updated[languageCode] = voiceName
-
+        // Use dot-notation to update a single key in the voiceSettings map
+        // without reading the entire document first.
+        // This eliminates one Firestore read per voice change.
         docRef(userId)
-            .set(mapOf("voiceSettings" to updated), SetOptions.merge())
+            .set(mapOf("voiceSettings" to mapOf(languageCode to voiceName)), SetOptions.merge())
             .await()
     }
 
