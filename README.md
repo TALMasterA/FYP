@@ -1,4 +1,4 @@
-﻿# FYP (Developing Gen-AI learning part)
+﻿# FYP (Reviewing)
  Develop in Android Studio, Android ONLY.
 
  --------------------------------------------------------------
@@ -43,6 +43,14 @@
  git pull --ff-only : For updating the main branch after pushing work on another computer (Same branch)
 
  firebase deploy --only functions : After updating the index.ts (backend main file) function(s), deploy it to take effect
+
+ Handle pull request : Checkout to pr branch to test the app :
+
+ Use GitHub CLI : Install : winget install --id GitHub.cli
+
+ Verify GitHub CLI version : gh --version
+
+ Checkout to PR branch for testing : gh pr checkout <PR number>
 
 
 
