@@ -85,11 +85,13 @@ fun CustomWordBankView(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
     ) {
         // Header
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -111,7 +113,8 @@ fun CustomWordBankView(
         Text(
             text = "${customWords.size} ${t(UiTextKey.WordBankWordsCount)}",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -129,7 +132,9 @@ fun CustomWordBankView(
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             singleLine = true
         )
 
@@ -192,6 +197,7 @@ fun CustomWordBankView(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
+                contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(paginatedWords, key = { it.id }) { word ->
@@ -217,7 +223,7 @@ fun CustomWordBankView(
                     pageLabelTemplate = "Page {page} of {total}",
                     onPrev = { if (currentPage > 0) currentPage-- },
                     onNext = { if (currentPage < totalPages - 1) currentPage++ },
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
         }

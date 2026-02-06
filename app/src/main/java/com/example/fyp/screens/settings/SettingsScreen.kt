@@ -100,40 +100,56 @@ fun SettingsScreen(
 
             // Quick Links for logged in users
             if (isLoggedIn) {
-                Row(
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
                 ) {
-                    TextButton(
-                        onClick = onOpenProfile,
-                        modifier = Modifier.weight(1f)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(t(UiTextKey.ProfileTitle))
-                    }
-                    TextButton(
-                        onClick = onOpenFavorites,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(t(UiTextKey.FavoritesTitle))
-                    }
-                }
 
-                // Shop and Voice Settings buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    TextButton(
-                        onClick = onOpenShop,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(t(UiTextKey.ShopEntry))
-                    }
-                    TextButton(
-                        onClick = onOpenVoiceSettings,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(t(UiTextKey.VoiceSettingsTitle))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            TextButton(
+                                onClick = onOpenProfile,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(t(UiTextKey.ProfileTitle))
+                            }
+                            TextButton(
+                                onClick = onOpenFavorites,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(t(UiTextKey.FavoritesTitle))
+                            }
+                        }
+
+                        // Shop and Voice Settings buttons
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            TextButton(
+                                onClick = onOpenShop,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(t(UiTextKey.ShopEntry))
+                            }
+                            TextButton(
+                                onClick = onOpenVoiceSettings,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(t(UiTextKey.VoiceSettingsTitle))
+                            }
+                        }
                     }
                 }
             }

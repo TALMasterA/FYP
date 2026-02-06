@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +31,7 @@ import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 
-@Suppress("UNUSED_PARAMETER")
+@Suppress("UNUSED_PARAMETER", "SENSELESS_COMPARISON")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LearningSheetScreen(
@@ -53,6 +54,7 @@ fun LearningSheetScreen(
     val primaryName = uiLanguageNameFor(primaryCode)
 
     var showConfirm by remember { mutableStateOf(false) }
+    var showRegenBlockedAlert by remember { mutableStateOf(false) }
 
     val learningUiState by learningViewModel.uiState.collectAsState()
     val isGeneratingMaterials = learningUiState.generatingLanguageCode != null
@@ -60,8 +62,20 @@ fun LearningSheetScreen(
     val isGeneratingAnyQuiz = learningUiState.generatingQuizLanguageCode != null
     val isAnyGenerationOngoing = isGeneratingMaterials || isGeneratingAnyQuiz
 
-    val unchanged = uiState.historyCountAtGenerate != null && uiState.historyCountAtGenerate == uiState.countNow
-    val regenEnabled = !uiState.isLoading && !isAnyGenerationOngoing && uiState.countNow > 0 && !unchanged
+    // Get count from learning view model clusters (same source as LearningScreen) instead of separate listener
+    val countNowFromCluster = learningUiState.clusters.firstOrNull { it.languageCode == targetCode }?.count ?: 0
+
+    // Previous sheet count (null = first time)
+    val previousSheetCount = uiState.historyCountAtGenerate
+    // Minimum 5 more records for regeneration
+    val minRecordsForRegen = 5
+    // Check if count is higher than previous (or first time)
+    val isFirstTime = previousSheetCount == null
+    val hasEnoughNewRecords = isFirstTime || countNowFromCluster >= (previousSheetCount ?: 0) + minRecordsForRegen
+    val countHigherThanPrevious = isFirstTime || countNowFromCluster > (previousSheetCount ?: 0)
+
+    val unchanged = previousSheetCount != null && previousSheetCount == countNowFromCluster
+    val regenEnabled = !uiState.isLoading && !isAnyGenerationOngoing && countNowFromCluster > 0 && !unchanged && countHigherThanPrevious && hasEnoughNewRecords
 
 
     // Load when entering
@@ -102,7 +116,7 @@ fun LearningSheetScreen(
 
             Text(
                 text = t(UiTextKey.LearningSheetHistoryCountTemplate)
-                    .replace("{nowCount}", uiState.countNow.toString())
+                    .replace("{nowCount}", countNowFromCluster.toString())
                     .replace("{savedCount}", (uiState.historyCountAtGenerate?.toString() ?: "-")),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -127,18 +141,74 @@ fun LearningSheetScreen(
                 )
             }
 
+            // Alert dialog when regeneration is blocked due to insufficient records
+            if (showRegenBlockedAlert) {
+                val recordsNeeded = if (previousSheetCount != null) {
+                    val required = previousSheetCount + minRecordsForRegen
+                    required - countNowFromCluster
+                } else 0
+
+                AlertDialog(
+                    onDismissRequest = { showRegenBlockedAlert = false },
+                    title = { Text(t(UiTextKey.LearningRegenBlockedTitle)) },
+                    text = {
+                        Text(
+                            t(UiTextKey.LearningRegenBlockedMessage)
+                                .replace("{minRecords}", minRecordsForRegen.toString())
+                                .replace("{needed}", recordsNeeded.toString())
+                        )
+                    },
+                    confirmButton = {
+                        Button(onClick = { showRegenBlockedAlert = false }) {
+                            Text(t(UiTextKey.ActionConfirm))
+                        }
+                    }
+                )
+            }
+
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Show hint when regeneration requires more records
+                if (!isFirstTime && !hasEnoughNewRecords && countNowFromCluster > 0 && countHigherThanPrevious) {
+                    val recordsNeeded = (previousSheetCount ?: 0) + minRecordsForRegen - countNowFromCluster
+                    Text(
+                        text = t(UiTextKey.LearningRegenNeedMoreRecords)
+                            .replace("{needed}", recordsNeeded.toString()),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                // Show hint when count is not higher than previous
+                if (!isFirstTime && !countHigherThanPrevious && countNowFromCluster > 0) {
+                    Text(
+                        text = t(UiTextKey.LearningRegenCountNotHigher),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // Allow button to be clickable to show alert when conditions are partially met
+                    val canShowBlockedAlert = !isFirstTime && countNowFromCluster > 0 &&
+                        (!hasEnoughNewRecords || !countHigherThanPrevious) &&
+                        !isAnyGenerationOngoing && !uiState.isLoading
+
                     Button(
-                        onClick = { showConfirm = true },
-                        enabled = regenEnabled,
+                        onClick = {
+                            if (regenEnabled) {
+                                showConfirm = true
+                            } else if (canShowBlockedAlert) {
+                                showRegenBlockedAlert = true
+                            }
+                        },
+                        enabled = regenEnabled || canShowBlockedAlert,
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(

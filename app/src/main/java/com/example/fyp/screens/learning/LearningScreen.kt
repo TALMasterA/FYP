@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -30,7 +31,6 @@ import com.example.fyp.model.ui.UiTextKey
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.fyp.core.LanguageDropdownField
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.text.font.FontWeight
 
+@Suppress("UNUSED_PARAMETER", "SENSELESS_COMPARISON")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LearningScreen(
@@ -57,6 +58,7 @@ fun LearningScreen(
     val supported = remember { AzureLanguageConfig.loadSupportedLanguages(context).toSet() }
 
     var pendingGenerateLang by remember { mutableStateOf<String?>(null) }
+    var showRegenBlockedAlert by remember { mutableStateOf<Pair<String, Int>?>(null) } // (languageCode, recordsNeeded)
 
     StandardScreenScaffold(
         title = t(UiTextKey.LearningTitle),
@@ -77,6 +79,26 @@ fun LearningScreen(
                     viewModel.generateFor(langCode)
                 },
                 onDismiss = { pendingGenerateLang = null }
+            )
+        }
+
+        // Alert dialog when regeneration is blocked due to insufficient records
+        showRegenBlockedAlert?.let { (langCode, recordsNeeded) ->
+            AlertDialog(
+                onDismissRequest = { showRegenBlockedAlert = null },
+                title = { Text(t(UiTextKey.LearningRegenBlockedTitle)) },
+                text = {
+                    Text(
+                        t(UiTextKey.LearningRegenBlockedMessage)
+                            .replace("{minRecords}", "5")
+                            .replace("{needed}", recordsNeeded.toString())
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = { showRegenBlockedAlert = null }) {
+                        Text(t(UiTextKey.ActionConfirm))
+                    }
+                }
             )
         }
 
@@ -133,8 +155,16 @@ fun LearningScreen(
                     val lastCount = uiState.sheetCountByLanguage[c.languageCode]
                     val unchanged = lastCount != null && lastCount == c.count
 
-                    // Disable Generate when ANY language is generating, or no history, or unchanged.
-                    val generateEnabled = !isGeneratingAny && c.count > 0 && !unchanged
+                    // Regeneration constraints: need at least 5 more records than last generation
+                    val minRecordsForRegen = 5
+                    val isFirstTime = lastCount == null
+                    val hasEnoughNewRecords = isFirstTime || c.count >= (lastCount ?: 0) + minRecordsForRegen
+                    val countHigherThanPrevious = isFirstTime || c.count > (lastCount ?: 0)
+
+                    // Disable Generate when ANY language is generating, or no history, or unchanged,
+                    // or count not higher than previous, or not enough new records for regen
+                    val generateEnabled = !isGeneratingAny && c.count > 0 && !unchanged &&
+                        countHigherThanPrevious && hasEnoughNewRecords
 
                     val sheetEnabled = hasSheet
 
@@ -174,10 +204,44 @@ fun LearningScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                // Show hint when regeneration requires more records
+                                if (!isFirstTime && !hasEnoughNewRecords && c.count > 0 && countHigherThanPrevious) {
+                                    val recordsNeeded = (lastCount ?: 0) + minRecordsForRegen - c.count
+                                    Text(
+                                        text = t(UiTextKey.LearningRegenNeedMoreRecords)
+                                            .replace("{needed}", recordsNeeded.toString()),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+
+                                // Show hint when count is not higher than previous
+                                if (!isFirstTime && !countHigherThanPrevious && c.count > 0) {
+                                    Text(
+                                        text = t(UiTextKey.LearningRegenCountNotHigher),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+
                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    // Allow button to be clickable to show alert when conditions are partially met
+                                    val canShowBlockedAlert = !isFirstTime && c.count > 0 &&
+                                        (!hasEnoughNewRecords || !countHigherThanPrevious) &&
+                                        !isGeneratingAny
+                                    val recordsNeededForAlert = if (!hasEnoughNewRecords && lastCount != null) {
+                                        (lastCount + minRecordsForRegen) - c.count
+                                    } else 0
+
                                     Button(
-                                        onClick = { pendingGenerateLang = c.languageCode },
-                                        enabled = generateEnabled,
+                                        onClick = {
+                                            if (generateEnabled) {
+                                                pendingGenerateLang = c.languageCode
+                                            } else if (canShowBlockedAlert) {
+                                                showRegenBlockedAlert = c.languageCode to recordsNeededForAlert
+                                            }
+                                        },
+                                        enabled = generateEnabled || canShowBlockedAlert,
                                         modifier = Modifier.weight(1f)
                                     ) {
                                         Text(

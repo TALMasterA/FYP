@@ -438,26 +438,25 @@ class WordBankViewModel @Inject constructor(
 
     /**
      * Check if regeneration is allowed (need at least MIN_RECORDS_FOR_REGEN more records)
+     * Uses unified count from sharedHistoryDataSource (same source as UI clusters)
      */
     fun canRegenerate(targetLanguageCode: String): Boolean {
         val currentWordBank = _uiState.value.currentWordBank ?: return true // First gen always allowed
-        val relevantRecords = records.filter {
-            it.sourceLang == targetLanguageCode || it.targetLang == targetLanguageCode
-        }
-        val currentCount = relevantRecords.size
+        // Use unified count from sharedHistoryDataSource instead of filtering records
+        val currentCount = sharedHistoryDataSource.getCountForLanguage(targetLanguageCode)
         val savedCount = currentWordBank.historyCountAtGenerate
         return (currentCount - savedCount) >= MIN_RECORDS_FOR_REGEN
     }
 
     /**
      * Get the number of new records since last generation
+     * Uses unified count from sharedHistoryDataSource (same source as UI clusters)
      */
     fun getNewRecordCount(targetLanguageCode: String): Int {
         val currentWordBank = _uiState.value.currentWordBank ?: return 0
-        val relevantRecords = records.filter {
-            it.sourceLang == targetLanguageCode || it.targetLang == targetLanguageCode
-        }
-        return relevantRecords.size - currentWordBank.historyCountAtGenerate
+        // Use unified count from sharedHistoryDataSource instead of filtering records
+        val currentCount = sharedHistoryDataSource.getCountForLanguage(targetLanguageCode)
+        return currentCount - currentWordBank.historyCountAtGenerate
     }
 
     fun cancelGeneration() {
@@ -521,13 +520,16 @@ class WordBankViewModel @Inject constructor(
                 // Check if cancelled before saving
                 ensureActive()
 
+                // Get unified count from sharedHistoryDataSource (same as UI display)
+                val unifiedCount = sharedHistoryDataSource.getCountForLanguage(targetLanguageCode)
+
                 // Append new words to Firestore (merges with existing, avoids duplicates)
                 wordBankRepo.appendWords(
                     uid = uid,
                     primary = primaryLanguageCode,
                     target = targetLanguageCode,
                     newWords = words,
-                    historyCount = relevantRecords.size
+                    historyCount = unifiedCount
                 )
 
                 // Refresh the word bank

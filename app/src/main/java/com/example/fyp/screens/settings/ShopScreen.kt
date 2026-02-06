@@ -28,9 +28,39 @@ fun ShopScreen(
     viewModel: ShopViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showPurchaseConfirmDialog by remember { mutableStateOf(false) }
 
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+
+    // Purchase confirmation dialog - shown before purchase
+    if (showPurchaseConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showPurchaseConfirmDialog = false },
+            title = { Text(t(UiTextKey.ShopHistoryExpandedTitle)) },
+            text = {
+                Text(
+                    t(UiTextKey.ShopHistoryExpandedMessage).replace(
+                        "{limit}",
+                        (uiState.currentHistoryLimit + UserSettings.HISTORY_EXPANSION_INCREMENT).coerceAtMost(UserSettings.MAX_HISTORY_LIMIT).toString()
+                    )
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showPurchaseConfirmDialog = false
+                    viewModel.expandHistoryLimit()
+                }) {
+                    Text(t(UiTextKey.ActionConfirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPurchaseConfirmDialog = false }) {
+                    Text(t(UiTextKey.ActionCancel))
+                }
+            }
+        )
+    }
 
     StandardScreenScaffold(
         title = t(UiTextKey.ShopTitle),
@@ -120,7 +150,7 @@ fun ShopScreen(
                         val canAfford = uiState.coinBalance >= UserSettings.HISTORY_EXPANSION_COST
 
                         Button(
-                            onClick = { viewModel.expandHistoryLimit() },
+                            onClick = { showPurchaseConfirmDialog = true },
                             enabled = canAfford && !uiState.isPurchasing,
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -214,23 +244,6 @@ fun ShopScreen(
                     Text(
                         text = error,
                         color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-
-            // Purchase Success
-            uiState.purchaseSuccess?.let { success ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                    )
-                ) {
-                    Text(
-                        text = success,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(16.dp)
                     )

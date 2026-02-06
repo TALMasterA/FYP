@@ -86,6 +86,8 @@ enum class UiTextKey {
     ShopBuyHistoryExpansion,
     ShopInsufficientCoins,
     ShopMaxLimitReached,
+    ShopHistoryExpandedTitle,
+    ShopHistoryExpandedMessage,
     ShopColorPaletteTitle,
     ShopColorPaletteDesc,
     ShopEntry,
@@ -207,6 +209,7 @@ enum class UiTextKey {
     SettingsThemeLight,
     SettingsThemeDark,
     SettingsResetPW,
+    SettingsQuickLinks,
     SettingsNotLoggedInWarning,
     SettingsVoiceTitle,
     SettingsVoiceDesc,
@@ -228,6 +231,10 @@ enum class UiTextKey {
     LearningSheetNoContent,
     LearningSheetRegenerate,
     LearningSheetGenerating,
+    LearningRegenBlockedTitle,
+    LearningRegenBlockedMessage,
+    LearningRegenNeedMoreRecords,
+    LearningRegenCountNotHigher,
 
     // --- Quiz ---
     QuizTitleTemplate,
@@ -553,6 +560,10 @@ val CoreUiTexts: List<String> = listOf(
     "Not enough coins for this purchase.",
     // ShopMaxLimitReached
     "Maximum limit reached!",
+    // ShopHistoryExpandedTitle
+    "History Expand?",
+    // ShopHistoryExpandedMessage
+    "Your history limit has been expanded to {limit} records. You can now view more of your translation history!",
     // ShopColorPaletteTitle
     "Color Palettes",
     // ShopColorPaletteDesc

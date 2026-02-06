@@ -320,6 +320,9 @@ val ScreenUiTexts: List<String> = listOf(
     // SettingsResetPW
     "Reset password here",
 
+    // SettingsQuickLinks
+    "Quick Links",
+
     // SettingsNotLoggedInWarning
     "Not logged in, amendments below will not take effect/saved.",
 
@@ -377,6 +380,18 @@ val ScreenUiTexts: List<String> = listOf(
 
     // LearningSheetGenerating
     "Generating...",
+
+    // LearningRegenBlockedTitle
+    "Cannot Regenerate Yet",
+
+    // LearningRegenBlockedMessage
+    "You need at least {minRecords} more translation records to regenerate the learning sheet. You need {needed} more records.",
+
+    // LearningRegenNeedMoreRecords
+    "Need {needed} more records to regenerate",
+
+    // LearningRegenCountNotHigher
+    "Record count must be higher than the previous generation",
 
     // --- Quiz ---
     // QuizTitleTemplate
