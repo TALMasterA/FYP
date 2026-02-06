@@ -86,6 +86,7 @@ class SharedHistoryDataSource @Inject constructor(
     }
 
     // Debounce cache to prevent excessive Firestore reads when multiple ViewModels trigger refresh
+    @Volatile
     private var lastCountRefreshTime: Long = 0
 
     companion object {
@@ -102,10 +103,11 @@ class SharedHistoryDataSource @Inject constructor(
         val now = System.currentTimeMillis()
         // Skip if refreshed recently (multiple ViewModels may trigger this simultaneously)
         if (now - lastCountRefreshTime < COUNT_REFRESH_DEBOUNCE_MS) return
+        // Update timestamp immediately to prevent retry storms on transient failures
+        lastCountRefreshTime = now
         try {
             val counts = historyRepo.getLanguageCounts(uid, primaryLanguageCode)
             _languageCounts.value = counts
-            lastCountRefreshTime = System.currentTimeMillis()
         } catch (e: Exception) {
             // Keep existing counts on error
         }
