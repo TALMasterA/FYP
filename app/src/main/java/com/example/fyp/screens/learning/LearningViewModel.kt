@@ -63,7 +63,6 @@ class LearningViewModel @Inject constructor(
     private var uid: String? = null
     private var historyJob: Job? = null
     private var settingsJob: Job? = null
-    private var supportedLanguages: Set<String> = emptySet()
     private var generationJob: Job? = null
     private var quizGenerationJob: Job? = null
 
@@ -84,11 +83,6 @@ class LearningViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun setSupportedLanguages(codes: Set<String>) {
-        supportedLanguages = codes
-        refreshClusters()
     }
 
     private fun stopJobs() {
@@ -125,9 +119,9 @@ class LearningViewModel @Inject constructor(
                     quizCountByLanguage = if (primaryChanged) emptyMap() else _uiState.value.quizCountByLanguage,
                 )
 
-                // When primary language changes, refresh language counts with the NEW primary
+                // When primary language changes, force refresh (bypass debounce)
                 if (primaryChanged) {
-                    sharedHistoryDataSource.refreshLanguageCounts(primary)
+                    sharedHistoryDataSource.forceRefreshLanguageCounts(primary)
                     refreshClusters()
                 }
             }

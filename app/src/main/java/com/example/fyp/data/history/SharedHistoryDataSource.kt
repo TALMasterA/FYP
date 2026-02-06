@@ -85,18 +85,39 @@ class SharedHistoryDataSource @Inject constructor(
         }
     }
 
+    // Debounce cache to prevent excessive Firestore reads when multiple ViewModels trigger refresh
+    private var lastCountRefreshTime: Long = 0
+
+    companion object {
+        private const val COUNT_REFRESH_DEBOUNCE_MS = 5_000L // 5-second debounce
+    }
+
     /**
      * Refresh total language counts (for generation eligibility).
      * This fetches counts from ALL records, not just the limited display records.
+     * Debounced to prevent excessive reads when multiple ViewModels trigger refreshes.
      */
     suspend fun refreshLanguageCounts(primaryLanguageCode: String) {
         val uid = currentUserId ?: return
+        val now = System.currentTimeMillis()
+        // Skip if refreshed recently (multiple ViewModels may trigger this simultaneously)
+        if (now - lastCountRefreshTime < COUNT_REFRESH_DEBOUNCE_MS) return
         try {
             val counts = historyRepo.getLanguageCounts(uid, primaryLanguageCode)
             _languageCounts.value = counts
+            lastCountRefreshTime = System.currentTimeMillis()
         } catch (e: Exception) {
             // Keep existing counts on error
         }
+    }
+
+    /**
+     * Force refresh language counts, bypassing the debounce.
+     * Use when the user explicitly changes primary language.
+     */
+    suspend fun forceRefreshLanguageCounts(primaryLanguageCode: String) {
+        lastCountRefreshTime = 0
+        refreshLanguageCounts(primaryLanguageCode)
     }
 
     /**

@@ -13,7 +13,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -58,10 +57,6 @@ fun LearningScreen(
     val supported = remember { AzureLanguageConfig.loadSupportedLanguages(context).toSet() }
 
     var pendingGenerateLang by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(supported) {
-        viewModel.setSupportedLanguages(supported)
-    }
 
     StandardScreenScaffold(
         title = t(UiTextKey.LearningTitle),
