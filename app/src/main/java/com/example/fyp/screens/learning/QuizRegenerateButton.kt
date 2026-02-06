@@ -37,7 +37,7 @@ fun QuizRegenerateButton(
                 if (canEarnCoinsOnRegen)
                     t(UiTextKey.QuizCanEarnCoins)
                 else
-                    "⚠️ " + t(UiTextKey.QuizCanEarnCoins).replace("✨", ""),
+                    t(UiTextKey.QuizRegenCannotEarnCoins),
                 style = MaterialTheme.typography.labelSmall,
                 color = if (canEarnCoinsOnRegen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
