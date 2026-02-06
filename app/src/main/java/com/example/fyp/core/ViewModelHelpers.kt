@@ -131,3 +131,63 @@ class LanguagePairCache<T> {
         lastPrimaryCode = null
     }
 }
+
+/**
+ * Reusable auth state handler for ViewModels.
+ * Reduces boilerplate for common auth state observation patterns.
+ *
+ * Usage:
+ * ```
+ * class MyViewModel @Inject constructor(
+ *     authRepo: FirebaseAuthRepository,
+ *     sharedSettings: SharedSettingsDataSource
+ * ) : ViewModel() {
+ *     private val authHandler = AuthStateHandler(
+ *         scope = viewModelScope,
+ *         authRepo = authRepo,
+ *         onLoading = { _uiState.value = MyUiState(isLoading = true) },
+ *         onLoggedOut = { _uiState.value = MyUiState(isLoading = false, error = "Not logged in") },
+ *         onLoggedIn = { uid -> startObserving(uid) }
+ *     )
+ *
+ *     val currentUserId: String? get() = authHandler.currentUserId
+ * }
+ * ```
+ */
+class AuthStateHandler(
+    private val scope: CoroutineScope,
+    private val authRepo: FirebaseAuthRepository,
+    private val onLoading: () -> Unit = {},
+    private val onLoggedOut: () -> Unit = {},
+    private val onLoggedIn: suspend (uid: String) -> Unit
+) {
+    var currentUserId: String? = null
+        private set
+
+    private var authJob: Job? = null
+
+    init {
+        start()
+    }
+
+    private fun start() {
+        authJob = scope.launch {
+            authRepo.currentUserState.collectLatest { auth ->
+                when (auth) {
+                    is AuthState.LoggedIn -> {
+                        currentUserId = auth.user.uid
+                        onLoggedIn(auth.user.uid)
+                    }
+                    AuthState.Loading -> {
+                        currentUserId = null
+                        onLoading()
+                    }
+                    AuthState.LoggedOut -> {
+                        currentUserId = null
+                        onLoggedOut()
+                    }
+                }
+            }
+        }
+    }
+}

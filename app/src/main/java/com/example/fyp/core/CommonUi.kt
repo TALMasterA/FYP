@@ -19,7 +19,30 @@ import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.ui.baseUiTextsHash
 import com.example.fyp.model.ui.buildUiTextMap
+import com.example.fyp.model.ui.LanguageNameTranslations
+import com.example.fyp.model.ui.LanguageNameKeys
 import kotlinx.coroutines.launch
+
+/**
+ * Apply predefined language name corrections to a UI text map.
+ * This fixes translation API errors where language names are incorrectly translated.
+ */
+private fun applyLanguageNameCorrections(
+    map: Map<UiTextKey, String>,
+    uiLanguageCode: String
+): Map<UiTextKey, String> {
+    if (uiLanguageCode == "en-US") return map
+
+    val langNameTranslations = LanguageNameTranslations[uiLanguageCode] ?: return map
+
+    val correctedMap = map.toMutableMap()
+    LanguageNameKeys.forEach { key ->
+        langNameTranslations[key]?.let { correctTranslation ->
+            correctedMap[key] = correctTranslation
+        }
+    }
+    return correctedMap
+}
 
 @Composable
 fun rememberUiTextFunctions(
@@ -129,7 +152,9 @@ fun AppLanguageDropdown(
                     if (cachedHash == currentHash) {
                         val cachedMap = cache.loadUiTexts(code)
                         if (!cachedMap.isNullOrEmpty()) {
-                            onUpdateAppLanguage(code, cachedMap)
+                            // Apply language name corrections to cached map
+                            val correctedMap = applyLanguageNameCorrections(cachedMap, code)
+                            onUpdateAppLanguage(code, correctedMap)
                             cache.setSelectedLanguage(code)
                             return@launch
                         }
@@ -154,7 +179,7 @@ fun AppLanguageDropdown(
                     )
 
                     val joined = translatedList.joinToString("\u0001")
-                    val map = buildUiTextMap(joined)
+                    val map = buildUiTextMap(joined, code)
 
                     onUpdateAppLanguage(code, map)
                     cache.setSelectedLanguage(code)

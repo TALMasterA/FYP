@@ -10,9 +10,32 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.ui.baseUiTextsHash
+import com.example.fyp.model.ui.LanguageNameTranslations
+import com.example.fyp.model.ui.LanguageNameKeys
 
 typealias UiTextMap = Map<UiTextKey, String>
 typealias UpdateAppLanguage = (String, UiTextMap) -> Unit
+
+/**
+ * Apply predefined language name corrections to a UI text map.
+ * This fixes translation API errors where language names are incorrectly translated.
+ */
+private fun applyLanguageNameCorrections(
+    map: Map<UiTextKey, String>,
+    uiLanguageCode: String
+): Map<UiTextKey, String> {
+    if (uiLanguageCode.startsWith("en")) return map
+
+    val langNameTranslations = LanguageNameTranslations[uiLanguageCode] ?: return map
+
+    val correctedMap = map.toMutableMap()
+    LanguageNameKeys.forEach { key ->
+        langNameTranslations[key]?.let { correctTranslation ->
+            correctedMap[key] = correctTranslation
+        }
+    }
+    return correctedMap
+}
 
 @Composable
 fun rememberUiLanguageState(
@@ -48,9 +71,15 @@ fun rememberUiLanguageState(
         // If cache matches current BaseUiTexts => load it; else fallback to English (empty map)
         if (cachedHash == currentHash) {
             val cachedMap = cache.loadUiTexts(selected)
+            // Apply language name corrections to fix any translation API errors
+            val correctedMap = if (cachedMap != null) {
+                applyLanguageNameCorrections(cachedMap, selected)
+            } else {
+                emptyMap()
+            }
             appLanguageState = appLanguageState.copy(
                 selectedUiLanguage = selected,
-                uiTexts = cachedMap.orEmpty()
+                uiTexts = correctedMap
             )
         } else {
             // Cached UI texts belong to an older BaseUiTexts version.

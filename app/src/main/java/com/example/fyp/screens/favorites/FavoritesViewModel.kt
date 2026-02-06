@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
-import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.FavoriteRecord
 import com.example.fyp.model.SpeechResult
@@ -15,7 +15,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,13 +30,13 @@ class FavoritesViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val favoritesRepo: FirestoreFavoritesRepository,
     private val speakTextUseCase: SpeakTextUseCase,
-    private val observeSettings: ObserveUserSettingsUseCase
+    private val sharedSettings: SharedSettingsDataSource
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FavoritesUiState())
     val uiState: StateFlow<FavoritesUiState> = _uiState.asStateFlow()
 
-    private var favoritesJob: Job? = null
+    private var settingsJob: Job? = null
     private var currentUserId: String? = null
     private var userSettings = UserSettings()
 
@@ -47,16 +46,18 @@ class FavoritesViewModel @Inject constructor(
                 when (auth) {
                     is AuthState.LoggedIn -> {
                         currentUserId = auth.user.uid
-                        observeFavorites(auth.user.uid)
-                        // Observe user settings for voice preferences
-                        launch {
-                            observeSettings(auth.user.uid).collect { settings ->
+                        loadFavorites(auth.user.uid)
+                        // Use shared settings instead of creating new listener
+                        sharedSettings.startObserving(auth.user.uid)
+                        settingsJob?.cancel()
+                        settingsJob = launch {
+                            sharedSettings.settings.collect { settings ->
                                 userSettings = settings
                             }
                         }
                     }
                     AuthState.LoggedOut -> {
-                        favoritesJob?.cancel()
+                        settingsJob?.cancel()
                         currentUserId = null
                         userSettings = UserSettings()
                         _uiState.value = FavoritesUiState(isLoading = false)
@@ -69,30 +70,44 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 
-    private fun observeFavorites(userId: String) {
-        favoritesJob?.cancel()
-        favoritesJob = viewModelScope.launch {
-            favoritesRepo.observeFavorites(userId)
-                .catch { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "Failed to load favorites"
-                    )
-                }
-                .collect { favorites ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        favorites = favorites,
-                        error = null
-                    )
-                }
+    /**
+     * Load favorites once (on-demand) instead of real-time listener.
+     * Call refresh() to reload when screen becomes visible.
+     */
+    private fun loadFavorites(userId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val favorites = favoritesRepo.getAllFavoritesOnce(userId)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    favorites = favorites,
+                    error = null
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Failed to load favorites"
+                )
+            }
         }
+    }
+
+    /**
+     * Refresh favorites - call when screen becomes visible.
+     */
+    fun refresh() {
+        currentUserId?.let { loadFavorites(it) }
     }
 
     fun removeFavorite(favoriteId: String) {
         val userId = currentUserId ?: return
         viewModelScope.launch {
             favoritesRepo.removeFavorite(userId, favoriteId)
+            // Update local state immediately instead of waiting for listener
+            _uiState.value = _uiState.value.copy(
+                favorites = _uiState.value.favorites.filter { it.id != favoriteId }
+            )
         }
     }
 

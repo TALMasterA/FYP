@@ -1,6 +1,7 @@
 package com.example.fyp.data.di
 
 import com.example.fyp.data.settings.FirestoreUserSettingsRepository
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -19,5 +20,13 @@ object SettingsModule {
         firestore: FirebaseFirestore
     ): UserSettingsRepository {
         return FirestoreUserSettingsRepository(firestore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSharedSettingsDataSource(
+        settingsRepo: UserSettingsRepository
+    ): SharedSettingsDataSource {
+        return SharedSettingsDataSource(settingsRepo)
     }
 }

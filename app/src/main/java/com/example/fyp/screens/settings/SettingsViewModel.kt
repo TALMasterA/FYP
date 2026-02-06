@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.core.validateScale
 import com.example.fyp.data.user.FirebaseAuthRepository
-import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.domain.settings.SetFontSizeScaleUseCase
 import com.example.fyp.domain.settings.SetPrimaryLanguageUseCase
 import com.example.fyp.domain.settings.SetThemeModeUseCase
@@ -21,7 +21,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,7 +38,7 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
-    private val observeSettings: ObserveUserSettingsUseCase,
+    private val sharedSettings: SharedSettingsDataSource,
     private val setPrimaryLanguage: SetPrimaryLanguageUseCase,
     private val setFontSizeScale: SetFontSizeScaleUseCase,
     private val setThemeMode: SetThemeModeUseCase,
@@ -53,7 +52,6 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     private var settingsJob: Job? = null
-    private var coinsJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -62,12 +60,10 @@ class SettingsViewModel @Inject constructor(
                     is AuthState.LoggedIn -> start(auth.user.uid)
                     AuthState.Loading -> {
                         settingsJob?.cancel()
-                        coinsJob?.cancel()
                         _uiState.value = SettingsUiState(isLoading = true)
                     }
                     AuthState.LoggedOut -> {
                         settingsJob?.cancel()
-                        coinsJob?.cancel()
                         _uiState.value = SettingsUiState(
                             isLoading = false,
                             errorKey = UiTextKey.SettingsNotLoggedInWarning
@@ -80,7 +76,6 @@ class SettingsViewModel @Inject constructor(
 
     private fun start(uid: String) {
         settingsJob?.cancel()
-        coinsJob?.cancel()
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             errorKey = null,
@@ -88,32 +83,35 @@ class SettingsViewModel @Inject constructor(
             uid = uid
         )
 
+        // Use shared settings instead of creating new listener
+        sharedSettings.startObserving(uid)
         settingsJob = viewModelScope.launch {
-            observeSettings(uid)
-                .catch { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorKey = null,
-                        errorRaw = e.message ?: "Load failed"
-                    )
-                }
-                .collect { s ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        settings = s,
-                        errorKey = null,
-                        errorRaw = null
-                    )
-                }
+            sharedSettings.settings.collect { s ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = sharedSettings.isLoading.value,
+                    settings = s,
+                    errorKey = null,
+                    errorRaw = null
+                )
+            }
         }
 
-        // Observe coin stats for color palette unlocking
-        coinsJob = viewModelScope.launch {
-            quizRepo.observeUserCoinStats(uid)
-                .catch { /* Ignore coin stats errors */ }
-                .collect { stats ->
-                    _uiState.value = _uiState.value.copy(coinStats = stats)
-                }
+        // Fetch coin stats once instead of real-time listener
+        refreshCoinStats(uid)
+    }
+
+    /**
+     * Refresh coin stats on demand (e.g., when screen becomes visible).
+     */
+    fun refreshCoinStats(uid: String? = _uiState.value.uid) {
+        val userId = uid ?: return
+        viewModelScope.launch {
+            try {
+                val stats = quizRepo.fetchUserCoinStats(userId) ?: UserCoinStats()
+                _uiState.value = _uiState.value.copy(coinStats = stats)
+            } catch (_: Exception) {
+                // Ignore coin fetch errors
+            }
         }
     }
 

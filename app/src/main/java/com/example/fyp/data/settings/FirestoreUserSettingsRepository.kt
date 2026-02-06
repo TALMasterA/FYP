@@ -48,6 +48,28 @@ class FirestoreUserSettingsRepository @Inject constructor(
         awaitClose { reg.remove() }
     }
 
+    override suspend fun fetchUserSettings(userId: String): UserSettings {
+        val snap = docRef(userId).get().await()
+
+        val code = snap?.getString("primaryLanguageCode").orEmpty()
+        val scale = snap?.getDouble("fontSizeScale")?.toFloat() ?: 1.0f
+        val themeMode = snap?.getString("themeMode") ?: "system"
+        val colorPaletteId = snap?.getString("colorPaletteId") ?: "default"
+        @Suppress("UNCHECKED_CAST")
+        val unlockedPalettes = snap?.get("unlockedPalettes") as? List<String> ?: listOf("default")
+        @Suppress("UNCHECKED_CAST")
+        val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
+
+        return UserSettings(
+            primaryLanguageCode = code.ifBlank { "en-US" },
+            fontSizeScale = scale,
+            themeMode = themeMode,
+            colorPaletteId = colorPaletteId,
+            unlockedPalettes = unlockedPalettes,
+            voiceSettings = voiceSettings
+        )
+    }
+
     override suspend fun setPrimaryLanguage(userId: String, languageCode: String) {
         docRef(userId)
             .set(mapOf("primaryLanguageCode" to languageCode), SetOptions.merge())

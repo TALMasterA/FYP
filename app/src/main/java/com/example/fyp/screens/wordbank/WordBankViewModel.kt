@@ -10,7 +10,7 @@ import com.example.fyp.data.wordbank.WordBankCacheDataStore
 import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
-import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
@@ -40,7 +40,7 @@ class WordBankViewModel @Inject constructor(
     private val speakTextUseCase: SpeakTextUseCase,
     private val customWordsRepo: FirestoreCustomWordsRepository,
     private val translateTextUseCase: TranslateTextUseCase,
-    private val observeSettings: ObserveUserSettingsUseCase,
+    private val sharedSettings: SharedSettingsDataSource,
     private val wordBankCacheDataStore: WordBankCacheDataStore
 ) : ViewModel() {
 
@@ -50,6 +50,7 @@ class WordBankViewModel @Inject constructor(
     private var currentUserId: String? = null
     private var userSettings = UserSettings()
     private var historyJob: Job? = null
+    private var settingsJob: Job? = null
     private var generationJob: Job? = null
     private var records: List<TranslationRecord> = emptyList()
     private var primaryLanguageCode: String = "en-US"
@@ -72,9 +73,11 @@ class WordBankViewModel @Inject constructor(
                         // Load persisted cache on login
                         loadPersistedCache(auth.user.uid)
                         startListening(auth.user.uid)
-                        // Observe user settings for voice preferences
-                        launch {
-                            observeSettings(auth.user.uid).collect { settings ->
+                        // Use shared settings instead of creating new listener
+                        sharedSettings.startObserving(auth.user.uid)
+                        settingsJob?.cancel()
+                        settingsJob = launch {
+                            sharedSettings.settings.collect { settings ->
                                 userSettings = settings
                             }
                         }
@@ -83,6 +86,7 @@ class WordBankViewModel @Inject constructor(
                         currentUserId = null
                         userSettings = UserSettings()
                         historyJob?.cancel()
+                        settingsJob?.cancel()
                         sharedHistoryDataSource.stopObserving()
                         wordBankExistsCache.clear()
                         _uiState.value = WordBankUiState(

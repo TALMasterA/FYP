@@ -36,6 +36,7 @@ data class TranslationCacheData(
 /**
  * Local translation cache using DataStore.
  * Caches translations to reduce API calls and improve responsiveness.
+ * Uses a two-tier cache: in-memory for fast access, DataStore for persistence.
  */
 @Singleton
 class TranslationCache @Inject constructor(
@@ -43,11 +44,21 @@ class TranslationCache @Inject constructor(
 ) {
     companion object {
         private val CACHE_KEY = stringPreferencesKey("translation_cache")
-        private const val MAX_CACHE_SIZE = 500
-        private const val CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000L // 7 days
+        private const val MAX_CACHE_SIZE = 1000 // Increased from 500 for better cache coverage
+        private const val CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000L // 30 days (increased from 7)
+        private const val IN_MEMORY_CACHE_SIZE = 200 // Fast in-memory cache
     }
 
     private val json = Json { ignoreUnknownKeys = true }
+
+    // In-memory cache for frequently accessed translations (LRU-style)
+    private val inMemoryCache = object : LinkedHashMap<String, CachedTranslation>(
+        IN_MEMORY_CACHE_SIZE, 0.75f, true
+    ) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, CachedTranslation>?): Boolean {
+            return size > IN_MEMORY_CACHE_SIZE
+        }
+    }
 
     /**
      * Generate cache key from source text and language pair
@@ -57,7 +68,8 @@ class TranslationCache @Inject constructor(
     }
 
     /**
-     * Get cached translation if available and not expired
+     * Get cached translation if available and not expired.
+     * Checks in-memory cache first, then DataStore.
      */
     suspend fun getCached(
         sourceText: String,
@@ -65,14 +77,30 @@ class TranslationCache @Inject constructor(
         targetLang: String
     ): String? {
         val key = cacheKey(sourceText, sourceLang, targetLang)
+        val now = System.currentTimeMillis()
+
+        // Check in-memory cache first (fast path)
+        synchronized(inMemoryCache) {
+            val memEntry = inMemoryCache[key]
+            if (memEntry != null && (now - memEntry.timestamp <= CACHE_TTL_MS)) {
+                return memEntry.translatedText
+            }
+        }
+
+        // Fall back to DataStore
         val cacheData = loadCache()
         val entry = cacheData.entries[key] ?: return null
 
         // Check if expired
-        if (System.currentTimeMillis() - entry.timestamp > CACHE_TTL_MS) {
+        if (now - entry.timestamp > CACHE_TTL_MS) {
             // Remove expired entry
             removeEntry(key)
             return null
+        }
+
+        // Add to in-memory cache for future fast access
+        synchronized(inMemoryCache) {
+            inMemoryCache[key] = entry
         }
 
         return entry.translatedText
@@ -95,6 +123,11 @@ class TranslationCache @Inject constructor(
             targetLang = targetLang
         )
 
+        // Update in-memory cache immediately
+        synchronized(inMemoryCache) {
+            inMemoryCache[key] = entry
+        }
+
         val cacheData = loadCache()
         val newEntries = cacheData.entries.toMutableMap()
         newEntries[key] = entry
@@ -113,6 +146,9 @@ class TranslationCache @Inject constructor(
      * Clear all cached translations
      */
     suspend fun clearAll() {
+        synchronized(inMemoryCache) {
+            inMemoryCache.clear()
+        }
         context.translationCacheDataStore.edit { prefs ->
             prefs.remove(CACHE_KEY)
         }

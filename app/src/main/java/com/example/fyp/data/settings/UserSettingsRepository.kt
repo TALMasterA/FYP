@@ -5,6 +5,13 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserSettingsRepository {
     fun observeUserSettings(userId: String): Flow<UserSettings>
+
+    /**
+     * Fetch user settings once (on-demand).
+     * More efficient than observeUserSettings when real-time updates aren't needed.
+     */
+    suspend fun fetchUserSettings(userId: String): UserSettings
+
     suspend fun setFontSizeScale(userId: String, scale: Float)
     suspend fun setPrimaryLanguage(userId: String, languageCode: String)
     suspend fun setThemeMode(userId: String, themeMode: String)
