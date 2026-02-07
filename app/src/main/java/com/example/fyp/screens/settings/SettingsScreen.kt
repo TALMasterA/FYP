@@ -38,6 +38,7 @@ import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import androidx.compose.material3.TextButton
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +71,23 @@ fun SettingsScreen(
 
     LaunchedEffect(uiState.settings.fontSizeScale) {
         sliderValue = validateScale(uiState.settings.fontSizeScale)
+    }
+
+    // Auto-dismiss error after 3 seconds
+    val settingsErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+    LaunchedEffect(settingsErrorText) {
+        if (settingsErrorText != null) {
+            delay(3000)
+            viewModel.clearError()
+        }
+    }
+
+    // Auto-dismiss unlock error after 3 seconds
+    LaunchedEffect(uiState.unlockError) {
+        if (uiState.unlockError != null) {
+            delay(3000)
+            viewModel.clearUnlockError()
+        }
     }
 
     StandardScreenScaffold(

@@ -184,5 +184,17 @@ class ShopViewModel @Inject constructor(
             }
         }
     }
+
+    fun clearPurchaseError() {
+        _uiState.value = _uiState.value.copy(purchaseError = null)
+    }
+
+    fun clearUnlockError() {
+        _uiState.value = _uiState.value.copy(unlockError = null)
+    }
+
+    fun clearPurchaseSuccess() {
+        _uiState.value = _uiState.value.copy(purchaseSuccess = null)
+    }
 }
 

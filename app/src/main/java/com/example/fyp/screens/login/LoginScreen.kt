@@ -26,6 +26,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.ui.text.input.VisualTransformation
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +69,15 @@ fun LoginScreen(
         if (reason == "updated") {
             updateLogoutMsg = "App updated, please log in again"
             prefs.edit().remove("logout_reason").apply()
+        }
+    }
+
+    // Auto-dismiss error after 3 seconds
+    val vmErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+    LaunchedEffect(vmErrorText) {
+        if (vmErrorText != null) {
+            delay(3000)
+            viewModel.clearError()
         }
     }
 

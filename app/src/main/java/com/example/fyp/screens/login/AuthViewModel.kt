@@ -85,4 +85,12 @@ class AuthViewModel @Inject constructor(
         authRepository.logout()
         _uiState.value = AuthUiState()
     }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(errorKey = null, errorRaw = null)
+    }
+
+    fun clearMessage() {
+        _uiState.value = _uiState.value.copy(messageKey = null, messageRaw = null)
+    }
 }

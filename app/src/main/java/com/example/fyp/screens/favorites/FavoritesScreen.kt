@@ -1,7 +1,9 @@
 package com.example.fyp.screens.favorites
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -24,6 +27,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,12 +40,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.fyp.core.PaginationRow
 import com.example.fyp.core.StandardScreenScaffold
+import com.example.fyp.core.pageCount
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.FavoriteRecord
 import com.example.fyp.model.ui.UiTextKey
+import kotlinx.coroutines.delay
 
 @Composable
 fun FavoritesScreen(
@@ -52,50 +60,105 @@ fun FavoritesScreen(
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
+    // Pagination state
+    var currentPage by remember { mutableIntStateOf(0) }
+    val pageSize = 10
+    val totalPages = pageCount(uiState.favorites.size, pageSize)
+    val pagedFavorites = uiState.favorites
+        .drop(currentPage * pageSize)
+        .take(pageSize)
+
+    // Auto-dismiss error after 3 seconds
+    LaunchedEffect(uiState.error) {
+        if (uiState.error != null) {
+            delay(3000)
+            viewModel.clearError()
+        }
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.FavoritesTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack)
     ) { padding ->
-        if (uiState.favorites.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = t(UiTextKey.FavoritesEmpty),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item { Spacer(modifier = Modifier.height(8.dp)) }
-
-                items(uiState.favorites, key = { it.id }) { favorite ->
-                    FavoriteCard(
-                        favorite = favorite,
-                        languageNameFor = uiLanguageNameFor,
-                        onSpeakSource = { viewModel.speak(favorite.sourceText, favorite.sourceLang, favorite.id + "_source") },
-                        onSpeakTarget = { viewModel.speak(favorite.targetText, favorite.targetLang, favorite.id + "_target") },
-                        onDelete = { viewModel.removeFavorite(favorite.id) },
-                        isSpeakingSource = uiState.speakingId == (favorite.id + "_source"),
-                        isSpeakingTarget = uiState.speakingId == (favorite.id + "_target"),
-                        t = t
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            // Error message card (auto-dismisses after 3 seconds)
+            uiState.error?.let { errorMsg ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = errorMsg,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(16.dp)
                     )
                 }
+            }
 
-                item { Spacer(modifier = Modifier.height(8.dp)) }
+            if (uiState.favorites.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = t(UiTextKey.FavoritesEmpty),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                // Favorites list with pagination
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(pagedFavorites, key = { it.id }) { favorite ->
+                        FavoriteCard(
+                            favorite = favorite,
+                            languageNameFor = uiLanguageNameFor,
+                            onSpeakSource = { viewModel.speak(favorite.sourceText, favorite.sourceLang, favorite.id + "_source") },
+                            onSpeakTarget = { viewModel.speak(favorite.targetText, favorite.targetLang, favorite.id + "_target") },
+                            onDelete = { viewModel.removeFavorite(favorite.id) },
+                            isSpeakingSource = uiState.speakingId == (favorite.id + "_source"),
+                            isSpeakingTarget = uiState.speakingId == (favorite.id + "_target"),
+                            t = t
+                        )
+                    }
+                }
+
+                // Pagination controls
+                if (totalPages > 1) {
+                    PaginationRow(
+                        page = currentPage,
+                        totalPages = totalPages,
+                        prevLabel = uiText(UiTextKey.PaginationPrevLabel, BaseUiTexts[UiTextKey.PaginationPrevLabel.ordinal]),
+                        nextLabel = uiText(UiTextKey.PaginationNextLabel, BaseUiTexts[UiTextKey.PaginationNextLabel.ordinal]),
+                        pageLabelTemplate = uiText(
+                            UiTextKey.PaginationPageLabelTemplate,
+                            BaseUiTexts[UiTextKey.PaginationPageLabelTemplate.ordinal]
+                        ),
+                        onPrev = { if (currentPage > 0) currentPage-- },
+                        onNext = { if (currentPage < totalPages - 1) currentPage++ },
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
         }
     }

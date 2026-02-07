@@ -23,6 +23,7 @@ import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.user.AuthState
+import kotlinx.coroutines.delay
 
 @Composable
 fun ResetPasswordScreen(
@@ -39,6 +40,24 @@ fun ResetPasswordScreen(
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     var email by remember { mutableStateOf("") }
+
+    // Auto-dismiss error after 3 seconds
+    val err = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+    LaunchedEffect(err) {
+        if (err != null) {
+            delay(3000)
+            viewModel.clearError()
+        }
+    }
+
+    // Auto-dismiss message after 5 seconds
+    val msg = uiState.messageKey?.let { t(it) } ?: uiState.messageRaw
+    LaunchedEffect(msg) {
+        if (msg != null) {
+            delay(5000)
+            viewModel.clearMessage()
+        }
+    }
 
     StandardScreenScaffold(
         title = t(UiTextKey.ResetPwTitle),

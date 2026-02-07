@@ -280,4 +280,12 @@ class SettingsViewModel @Inject constructor(
                 }
         }
     }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(errorKey = null, errorRaw = null)
+    }
+
+    fun clearUnlockError() {
+        _uiState.value = _uiState.value.copy(unlockError = null)
+    }
 }

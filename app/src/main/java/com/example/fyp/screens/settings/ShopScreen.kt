@@ -19,6 +19,7 @@ import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.user.UserSettings
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +61,30 @@ fun ShopScreen(
                 }
             }
         )
+    }
+
+    // Auto-dismiss purchase error after 3 seconds
+    LaunchedEffect(uiState.purchaseError) {
+        if (uiState.purchaseError != null) {
+            delay(3000)
+            viewModel.clearPurchaseError()
+        }
+    }
+
+    // Auto-dismiss unlock error after 3 seconds
+    LaunchedEffect(uiState.unlockError) {
+        if (uiState.unlockError != null) {
+            delay(3000)
+            viewModel.clearUnlockError()
+        }
+    }
+
+    // Auto-dismiss success message after 5 seconds
+    LaunchedEffect(uiState.purchaseSuccess) {
+        if (uiState.purchaseSuccess != null) {
+            delay(5000)
+            viewModel.clearPurchaseSuccess()
+        }
     }
 
     StandardScreenScaffold(

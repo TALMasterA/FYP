@@ -19,6 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -42,6 +43,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.fyp.core.LanguageDropdownField
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.delay
 
 @Suppress("UNUSED_PARAMETER", "SENSELESS_COMPARISON")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +66,14 @@ fun LearningScreen(
 
     var pendingGenerateLang by remember { mutableStateOf<String?>(null) }
     var showRegenInfo by remember { mutableStateOf(false) }
+
+    // Auto-dismiss error after 3 seconds
+    LaunchedEffect(uiState.error) {
+        if (uiState.error != null) {
+            delay(3000)
+            viewModel.clearError()
+        }
+    }
 
     StandardScreenScaffold(
         title = t(UiTextKey.LearningTitle),

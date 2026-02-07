@@ -419,4 +419,8 @@ class LearningViewModel @Inject constructor(
         generationJob = null
         _uiState.value = uiState.value.copy(generatingLanguageCode = null)
     }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
+    }
 }
