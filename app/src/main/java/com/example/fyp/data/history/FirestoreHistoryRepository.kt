@@ -11,6 +11,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import com.example.fyp.model.HistorySession
 import com.google.firebase.Timestamp
+import android.util.Log
 
 @Singleton
 class FirestoreHistoryRepository @Inject constructor(
@@ -28,15 +29,36 @@ class FirestoreHistoryRepository @Inject constructor(
             .document(record.id)
             .set(record)
             .await()
+
+        // Update language counts cache to keep it in sync
+        updateLanguageCountsCache(record.userId, record.sourceLang, record.targetLang, increment = true)
     }
 
     suspend fun delete(userId: String, recordId: String) {
+        // Fetch the record first to get language info for cache update
+        val record = try {
+            firestore.collection("users")
+                .document(userId)
+                .collection("history")
+                .document(recordId)
+                .get()
+                .await()
+                .toObject(TranslationRecord::class.java)
+        } catch (e: Exception) {
+            null
+        }
+
         firestore.collection("users")
             .document(userId)
             .collection("history")
             .document(recordId)
             .delete()
             .await()
+
+        // Update language counts cache if we got the record info
+        record?.let {
+            updateLanguageCountsCache(userId, it.sourceLang, it.targetLang, increment = false)
+        }
     }
 
     /**
@@ -75,6 +97,7 @@ class FirestoreHistoryRepository @Inject constructor(
             snapshot.count.toInt()
         } catch (e: Exception) {
             // Fallback: if count aggregation fails, return -1 to indicate unknown
+            Log.w("FirestoreHistoryRepository", "Failed to get history count for user $userId", e)
             -1
         }
     }
@@ -82,16 +105,88 @@ class FirestoreHistoryRepository @Inject constructor(
     /**
      * Get counts of records per language (for learning/quiz/wordbank generation).
      * Returns map of languageCode -> count where the language appears in sourceLang or targetLang.
-     * Uses field projection (.select) to only retrieve sourceLang and targetLang fields,
-     * significantly reducing data transfer compared to fetching all document fields.
+     *
+     * OPTIMIZATION: Reads from a cached stats document instead of fetching all history records.
+     * The stats document is maintained by updateLanguageCountsCache() which should be called
+     * after each history save/delete operation. This reduces reads from N (all records) to 1.
+     *
      * NOTE: Does NOT filter by primary language - caller should filter as needed.
      */
     suspend fun getLanguageCounts(userId: String, primaryLanguageCode: String): Map<String, Int> {
         return try {
+            // First try to read from the cached stats document (1 read instead of N reads)
+            val statsDoc = firestore.collection("users")
+                .document(userId)
+                .collection("user_stats")
+                .document("language_counts")
+                .get()
+                .await()
+
+            if (statsDoc.exists()) {
+                val counts = mutableMapOf<String, Int>()
+                @Suppress("UNCHECKED_CAST")
+                val data = statsDoc.data as? Map<String, Any?> ?: emptyMap()
+
+                data.forEach { (lang, count) ->
+                    if (lang.isNotEmpty() && count is Number) {
+                        counts[lang] = count.toInt()
+                    }
+                }
+
+                if (counts.isNotEmpty()) {
+                    return counts
+                }
+            }
+
+            // Fallback: if cache doesn't exist, compute from history records and update cache
+            Log.w("FirestoreHistoryRepository", "Language counts cache missing for user $userId, rebuilding...")
+            rebuildLanguageCountsCache(userId)
+        } catch (e: Exception) {
+            Log.w("FirestoreHistoryRepository", "Failed to get language counts for user $userId", e)
+            emptyMap()
+        }
+    }
+
+    /**
+     * Update the language counts cache after saving a new history record.
+     * This increments the counts for both source and target languages.
+     * Call this after save() to keep the cache in sync.
+     */
+    suspend fun updateLanguageCountsCache(userId: String, sourceLang: String, targetLang: String, increment: Boolean = true) {
+        try {
+            val statsRef = firestore.collection("users")
+                .document(userId)
+                .collection("user_stats")
+                .document("language_counts")
+
+            val updates = mutableMapOf<String, Any>()
+            val delta = if (increment) 1 else -1
+
+            if (sourceLang.isNotBlank()) {
+                updates[sourceLang] = com.google.firebase.firestore.FieldValue.increment(delta.toLong())
+            }
+            if (targetLang.isNotBlank() && targetLang != sourceLang) {
+                updates[targetLang] = com.google.firebase.firestore.FieldValue.increment(delta.toLong())
+            }
+
+            if (updates.isNotEmpty()) {
+                statsRef.set(updates, com.google.firebase.firestore.SetOptions.merge()).await()
+            }
+        } catch (e: Exception) {
+            Log.w("FirestoreHistoryRepository", "Failed to update language counts cache for user $userId", e)
+        }
+    }
+
+    /**
+     * Rebuild the language counts cache from all history records.
+     * This is called when the cache is missing or needs to be recalculated.
+     * Should only be needed once per user (on first use) or after data corruption.
+     */
+    private suspend fun rebuildLanguageCountsCache(userId: String): Map<String, Int> {
+        return try {
             val snapshot = firestore.collection("users")
                 .document(userId)
                 .collection("history")
-                .select("sourceLang", "targetLang")
                 .get()
                 .await()
 
@@ -108,8 +203,19 @@ class FirestoreHistoryRepository @Inject constructor(
                 }
             }
 
+            // Save the rebuilt cache
+            if (counts.isNotEmpty()) {
+                firestore.collection("users")
+                    .document(userId)
+                    .collection("user_stats")
+                    .document("language_counts")
+                    .set(counts)
+                    .await()
+            }
+
             counts
         } catch (e: Exception) {
+            Log.w("FirestoreHistoryRepository", "Failed to rebuild language counts cache for user $userId", e)
             emptyMap()
         }
     }
@@ -162,5 +268,9 @@ class FirestoreHistoryRepository @Inject constructor(
             .document(sessionId)
             .delete()
             .await()
+
+        // Rebuild language counts cache after bulk deletion
+        // This is more efficient than tracking each deletion individually
+        rebuildLanguageCountsCache(userId)
     }
 }

@@ -393,6 +393,12 @@ val ScreenUiTexts: List<String> = listOf(
     // LearningRegenCountNotHigher
     "⚠️ Record count must be higher than the previous generation",
 
+    // LearningRegenInfoTitle
+    "Regeneration Rules",
+
+    // LearningRegenInfoMessage
+    "To regenerate learning materials:\n\n• First generation: Always allowed\n• Re-generation: Requires at least 5 MORE translation records than the previous generation\n\nThe button will be enabled (blue) when you have enough new records. If it's disabled (gray), keep translating to unlock regeneration!\n\n💡 Note: If the count doesn't update after translating, please restart the app to refresh.",
+
     // QuizRegenBlockedSameMaterial
     "❌ Quiz already generated for this material version. Generate a new learning sheet to create a new quiz.",
 
@@ -699,6 +705,15 @@ val ScreenUiTexts: List<String> = listOf(
 
     // WordBankRecordsNeeded
     "records (need 20 to refresh)",
+
+    // WordBankRegenInfoTitle
+    "Refresh Rules",
+
+    // WordBankRegenInfoMessage
+    "To refresh your word bank:\n\n• First generation: Always allowed\n• Refresh: Requires at least 20 MORE translation records than the previous generation\n\nThe refresh button will be enabled (blue) when you have enough new records. If it's disabled (gray), keep translating to unlock refresh!\n\n💡 Note: If the count doesn't update after translating, please restart the app to refresh.",
+
+    // WordBankHistoryCountTemplate
+    "History count now: {nowCount} (saved at gen: {savedCount})",
 
     // --- Dialogs ---
     // DialogLogoutTitle
