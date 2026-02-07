@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.core.ConfirmationDialog
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
@@ -72,11 +73,10 @@ fun LearningSheetScreen(
 
     // Previous sheet count (null = first time)
     val previousSheetCount = uiState.historyCountAtGenerate
-    // Minimum 5 more records for regeneration
-    val minRecordsForRegen = 5
-    // Check if count is higher than previous (or first time)
+
+    // Check if regeneration is allowed using domain logic
     val isFirstTime = previousSheetCount == null
-    val hasEnoughNewRecords = isFirstTime || countNowFromCluster >= (previousSheetCount ?: 0) + minRecordsForRegen
+    val hasEnoughNewRecords = isFirstTime || GenerationEligibility.canRegenerateLearningSheet(countNowFromCluster, previousSheetCount ?: 0)
     val countHigherThanPrevious = isFirstTime || countNowFromCluster > (previousSheetCount ?: 0)
 
     val unchanged = previousSheetCount != null && previousSheetCount == countNowFromCluster
@@ -156,7 +156,7 @@ fun LearningSheetScreen(
             // Alert dialog when regeneration is blocked due to insufficient records
             if (showRegenBlockedAlert) {
                 val recordsNeeded = if (previousSheetCount != null) {
-                    val required = previousSheetCount + minRecordsForRegen
+                    val required = previousSheetCount + GenerationEligibility.MIN_RECORDS_FOR_LEARNING_SHEET
                     (required - countNowFromCluster).coerceAtLeast(0)
                 } else 0
 

@@ -9,6 +9,7 @@ import com.example.fyp.data.learning.FirestoreQuizRepository
 import com.example.fyp.data.learning.QuizParser
 import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
 import com.example.fyp.domain.learning.GenerateQuizUseCase
+import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.TranslationRecord
@@ -264,15 +265,13 @@ class LearningViewModel @Inject constructor(
         val countNow = current.clusters.firstOrNull { it.languageCode == languageCode }?.count ?: 0
         val lastCount = current.sheetCountByLanguage[languageCode]
 
-        // Minimum 5 more records for regeneration (first time is always allowed)
-        val minRecordsForRegen = 5
-
         if (countNow == 0) return
         if (lastCount != null && lastCount == countNow) return
-        // ANTI-CHEAT: Require 5+ more records for regeneration (first gen always allowed)
-        if (lastCount != null && countNow < lastCount + minRecordsForRegen) return
-        // ANTI-CHEAT: Count must be higher than previous (no regen if count went down)
-        if (lastCount != null && countNow <= lastCount) return
+
+        // ANTI-CHEAT: Use domain logic for eligibility check
+        // First generation always allowed (lastCount == null)
+        if (lastCount != null && !GenerationEligibility.canRegenerateLearningSheet(countNow, lastCount)) return
+
         if (current.generatingLanguageCode != null) return
 
         generationJob = viewModelScope.launch {

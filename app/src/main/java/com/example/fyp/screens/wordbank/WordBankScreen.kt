@@ -13,6 +13,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.data.azure.AzureLanguageConfig
+import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
@@ -138,7 +139,7 @@ fun WordBankScreen(
                         isGenerating = uiState.isGenerating,
                         canRegenerate = canRegen,
                         newRecordCount = newRecordCount,
-                        minRecordsForRegen = WordBankViewModel.MIN_RECORDS_FOR_REGEN,
+                        minRecordsForRegen = GenerationEligibility.MIN_RECORDS_FOR_REGEN,
                         currentHistoryCount = currentHistoryCount,
                         isSpeaking = uiState.isSpeaking,
                         speakingItemId = uiState.speakingItemId,

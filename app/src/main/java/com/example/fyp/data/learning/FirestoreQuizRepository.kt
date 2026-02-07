@@ -1,6 +1,7 @@
 package com.example.fyp.data.learning
 
 import com.example.fyp.core.decodeOrDefault
+import com.example.fyp.domain.learning.CoinEligibility
 import com.example.fyp.model.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -157,21 +158,25 @@ class FirestoreQuizRepository @Inject constructor(
         val statsRef = statsDocRef(uid, attempt.primaryLanguageCode, attempt.targetLanguageCode)
         val currentStats = statsRef.get().await()
 
-        val stats = if (currentStats.exists()) {
+        // For averageScore, highestScore, and lowestScore, we need current values (read-then-write)
+        // But attemptCount can use atomic increment (FieldValue.increment)
+        if (currentStats.exists()) {
             val current = currentStats.toObject(QuizStats::class.java) ?: QuizStats()
             val newCount = current.attemptCount + 1
             val newAverage = (current.averageScore * current.attemptCount + attempt.percentage) / newCount
 
-            current.copy(
-                attemptCount = newCount,
-                averageScore = newAverage,
-                highestScore = maxOf(current.highestScore, attempt.totalScore),
-                lowestScore = if (current.lowestScore == 0) attempt.totalScore
-                else minOf(current.lowestScore, attempt.totalScore),
-                lastAttemptAt = attempt.completedAt
+            val updates = mapOf(
+                "attemptCount" to com.google.firebase.firestore.FieldValue.increment(1),
+                "averageScore" to newAverage,
+                "highestScore" to maxOf(current.highestScore, attempt.totalScore),
+                "lowestScore" to if (current.lowestScore == 0) attempt.totalScore
+                    else minOf(current.lowestScore, attempt.totalScore),
+                "lastAttemptAt" to attempt.completedAt
             )
+            statsRef.update(updates).await()
         } else {
-            QuizStats(
+            // First attempt - use set instead of update
+            val stats = QuizStats(
                 primaryLanguageCode = attempt.primaryLanguageCode,
                 targetLanguageCode = attempt.targetLanguageCode,
                 attemptCount = 1,
@@ -180,9 +185,8 @@ class FirestoreQuizRepository @Inject constructor(
                 lowestScore = attempt.totalScore,
                 lastAttemptAt = attempt.completedAt
             )
+            statsRef.set(stats).await()
         }
-
-        statsRef.set(stats).await()
     }
 
     // ---- Generated quiz (cached per sheet version) ----
@@ -275,7 +279,7 @@ class FirestoreQuizRepository @Inject constructor(
      * Award coins for first attempt of a generated quiz version.
      * Returns true if coins were awarded, false otherwise.
      *
-     * Anti-Cheat Rules:
+     * Anti-Cheat Rules (enforced by [CoinEligibility] domain logic):
      * 1. 1 coin per correct answer on first attempt only
      * 2. Quiz version (historyCountAtGenerate) must EQUAL current sheet version (prevents retaking old quiz after adding history)
      * 3. Quiz count must be at least 10 HIGHER than the previous awarded quiz count (prevents farming)
@@ -287,9 +291,6 @@ class FirestoreQuizRepository @Inject constructor(
         attempt: QuizAttempt,
         latestHistoryCount: Int?
     ): Boolean {
-        if (attempt.generatedHistoryCountAtGenerate <= 0) return false
-        if (attempt.totalScore <= 0) return false // No coins to award
-
         val versionKey = "${attempt.primaryLanguageCode}__${attempt.targetLanguageCode}__${attempt.generatedHistoryCountAtGenerate}"
 
         return db.runTransaction { tx ->
@@ -297,22 +298,22 @@ class FirestoreQuizRepository @Inject constructor(
             val awardDoc = tx.get(coinAwardDoc(uid, versionKey))
             if (awardDoc.exists()) return@runTransaction false // already awarded
 
-            // Check 2: Quiz count must EQUAL current sheet count
-            // This prevents: user takes quiz at count=50, adds history to count=60, retakes same quiz to earn coins
-            val currentCount = latestHistoryCount ?: return@runTransaction false
-            if (currentCount != attempt.generatedHistoryCountAtGenerate) return@runTransaction false
-
-            // Check 3: Anti-cheat - quiz count must be at least 10 HIGHER than last awarded quiz count
-            // (First quiz for a language pair is always eligible)
+            // Check 2-4: Use pure domain logic for eligibility checks
             val lastAwardedDoc = tx.get(lastAwardedCountDoc(uid, attempt.primaryLanguageCode, attempt.targetLanguageCode))
-            if (lastAwardedDoc.exists()) {
-                val lastCount = lastAwardedDoc.getLong("count")?.toInt() ?: 0
-                val minRequired = lastCount + 10
-                if (attempt.generatedHistoryCountAtGenerate < minRequired) {
-                    // User needs at least 10 more records than previous awarded quiz to earn coins
-                    return@runTransaction false
-                }
+            val lastAwardedCount = if (lastAwardedDoc.exists()) {
+                lastAwardedDoc.getLong("count")?.toInt()
+            } else {
+                null
             }
+
+            val isEligible = CoinEligibility.isEligibleForCoins(
+                attemptScore = attempt.totalScore,
+                generatedHistoryCount = attempt.generatedHistoryCountAtGenerate,
+                currentHistoryCount = latestHistoryCount,
+                lastAwardedCount = lastAwardedCount
+            )
+
+            if (!isEligible) return@runTransaction false
 
             // All checks passed - award coins
             val statsSnap = tx.get(coinStatsDoc(uid))

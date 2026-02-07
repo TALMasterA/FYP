@@ -86,28 +86,16 @@ class FirestoreFavoritesRepository @Inject constructor(
     }
 
     /**
-     * Check if a translation is already favorited
+     * Find a favorite by source and target text.
+     * Consolidates the duplicate query logic from isFavorited(), getFavorite(), and getFavoriteId().
+     * Single method reduces Firestore reads when any of these operations is needed.
+     *
+     * Callers can derive what they need:
+     * - isFavorited: findFavorite(...) != null
+     * - favorite: findFavorite(...)
+     * - favoriteId: findFavorite(...)?.id
      */
-    suspend fun isFavorited(
-        userId: String,
-        sourceText: String,
-        targetText: String
-    ): Boolean = try {
-        val snapshot = colRef(userId)
-            .whereEqualTo("sourceText", sourceText)
-            .whereEqualTo("targetText", targetText)
-            .limit(1)
-            .get()
-            .await()
-        !snapshot.isEmpty
-    } catch (e: Exception) {
-        false
-    }
-
-    /**
-     * Get favorite by source and target text
-     */
-    suspend fun getFavorite(
+    suspend fun findFavorite(
         userId: String,
         sourceText: String,
         targetText: String
@@ -124,23 +112,34 @@ class FirestoreFavoritesRepository @Inject constructor(
     }
 
     /**
-     * Get favorite ID by source and target text (for deletion)
+     * Check if a translation is already favorited.
+     * Delegates to findFavorite() to avoid duplicate queries.
+     */
+    suspend fun isFavorited(
+        userId: String,
+        sourceText: String,
+        targetText: String
+    ): Boolean = findFavorite(userId, sourceText, targetText) != null
+
+    /**
+     * Get favorite by source and target text.
+     * Delegates to findFavorite() to avoid duplicate queries.
+     */
+    suspend fun getFavorite(
+        userId: String,
+        sourceText: String,
+        targetText: String
+    ): FavoriteRecord? = findFavorite(userId, sourceText, targetText)
+
+    /**
+     * Get favorite ID by source and target text (for deletion).
+     * Delegates to findFavorite() to avoid duplicate queries.
      */
     suspend fun getFavoriteId(
         userId: String,
         sourceText: String,
         targetText: String
-    ): String? = try {
-        val snapshot = colRef(userId)
-            .whereEqualTo("sourceText", sourceText)
-            .whereEqualTo("targetText", targetText)
-            .limit(1)
-            .get()
-            .await()
-        snapshot.documents.firstOrNull()?.id
-    } catch (e: Exception) {
-        null
-    }
+    ): String? = findFavorite(userId, sourceText, targetText)?.id
 
     /**
      * Get all favorites once (not real-time) for loading initial state

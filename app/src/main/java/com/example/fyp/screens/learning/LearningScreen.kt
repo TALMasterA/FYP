@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.core.ConfirmationDialog
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
@@ -162,10 +163,9 @@ fun LearningScreen(
                     val lastCount = uiState.sheetCountByLanguage[c.languageCode]
                     val unchanged = lastCount != null && lastCount == c.count
 
-                    // Regeneration constraints: need at least 5 more records than last generation
-                    val minRecordsForRegen = 5
+                    // Regeneration constraints: use domain logic for consistency
                     val isFirstTime = lastCount == null
-                    val hasEnoughNewRecords = isFirstTime || c.count >= (lastCount ?: 0) + minRecordsForRegen
+                    val hasEnoughNewRecords = isFirstTime || GenerationEligibility.canRegenerateLearningSheet(c.count, lastCount ?: 0)
                     val countHigherThanPrevious = isFirstTime || c.count > (lastCount ?: 0)
 
                     // Disable Generate when ANY language is generating, or no history, or unchanged,

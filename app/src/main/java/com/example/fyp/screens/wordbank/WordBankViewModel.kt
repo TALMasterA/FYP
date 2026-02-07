@@ -11,6 +11,7 @@ import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.example.fyp.data.settings.SharedSettingsDataSource
+import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
@@ -59,10 +60,6 @@ class WordBankViewModel @Inject constructor(
     private val wordBankExistsCache: MutableMap<String, Boolean> = mutableMapOf()
     private var lastPrimaryForCache: String? = null
 
-    // Minimum records needed to regenerate word bank
-    companion object {
-        const val MIN_RECORDS_FOR_REGEN = 20
-    }
 
     init {
         viewModelScope.launch {
@@ -437,15 +434,15 @@ class WordBankViewModel @Inject constructor(
     }
 
     /**
-     * Check if regeneration is allowed (need at least MIN_RECORDS_FOR_REGEN more records)
+     * Check if regeneration is allowed (need at least 20 more records)
+     * Uses GenerationEligibility domain logic for consistency across the app.
      * Uses same counting method as Learning Materials (counts per language, not language pair)
      */
     fun canRegenerate(targetLanguageCode: String): Boolean {
         val currentWordBank = _uiState.value.currentWordBank ?: return true // First gen always allowed
-        // Use same counting method as Learning Materials
         val currentCount = sharedHistoryDataSource.getCountForLanguage(targetLanguageCode)
         val savedCount = currentWordBank.historyCountAtGenerate
-        return (currentCount - savedCount) >= MIN_RECORDS_FOR_REGEN
+        return GenerationEligibility.canRegenerateWordBank(currentCount, savedCount)
     }
 
     /**
@@ -483,7 +480,7 @@ class WordBankViewModel @Inject constructor(
         val existingWordBank = _uiState.value.currentWordBank
         if (existingWordBank != null && !canRegenerate(targetLanguageCode)) {
             _uiState.value = _uiState.value.copy(
-                error = "Need $MIN_RECORDS_FOR_REGEN more records to refresh word bank"
+                error = "Need ${GenerationEligibility.MIN_RECORDS_FOR_REGEN} more records to refresh word bank"
             )
             return
         }

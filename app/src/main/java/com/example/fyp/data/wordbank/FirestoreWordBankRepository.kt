@@ -8,6 +8,15 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Metadata for a word bank document.
+ * Used by getWordBankMetadata() to consolidate multiple queries into one.
+ */
+data class WordBankMetadata(
+    val exists: Boolean,
+    val historyCountAtGenerate: Int
+)
+
 @Singleton
 class FirestoreWordBankRepository @Inject constructor(
     private val db: FirebaseFirestore
@@ -107,16 +116,30 @@ class FirestoreWordBankRepository @Inject constructor(
     }
 
     suspend fun wordBankExists(uid: String, primary: String, target: String): Boolean {
-        val doc = docRef(uid, primary, target).get().await()
-        return doc.exists()
+        return getWordBankMetadata(uid, primary, target).exists
     }
 
     suspend fun getWordBankHistoryCount(uid: String, primary: String, target: String): Int {
+        return getWordBankMetadata(uid, primary, target).historyCountAtGenerate
+    }
+
+    /**
+     * Get both existence and history count in a single Firestore read.
+     * This consolidates the logic of wordBankExists() and getWordBankHistoryCount()
+     * which previously made separate document reads.
+     *
+     * Use this method if you need both pieces of metadata, or when adding future code
+     * that requires both pieces of information.
+     */
+    suspend fun getWordBankMetadata(uid: String, primary: String, target: String): WordBankMetadata {
         val doc = docRef(uid, primary, target).get().await()
-        return if (doc.exists()) {
-            (doc.getLong("historyCountAtGenerate") ?: 0).toInt()
-        } else {
-            0
-        }
+        return WordBankMetadata(
+            exists = doc.exists(),
+            historyCountAtGenerate = if (doc.exists()) {
+                (doc.getLong("historyCountAtGenerate") ?: 0).toInt()
+            } else {
+                0
+            }
+        )
     }
 }
