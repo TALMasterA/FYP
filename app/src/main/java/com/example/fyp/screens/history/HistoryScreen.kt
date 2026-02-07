@@ -270,21 +270,7 @@ fun HistoryScreen(
         },
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                // Language selector next to info icon (only show in discrete or continuous main view)
-                if (showUiDropdown) {
-                    AppLanguageDropdown(
-                        uiLanguages = uiLanguages,
-                        appLanguageState = appLanguageState,
-                        onUpdateAppLanguage = onUpdateAppLanguage,
-                        uiText = uiText,
-                        isLoggedIn = true
-                    )
-                }
-                
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 // Info button - shows history limit info
                 IconButton(onClick = { showHistoryInfoDialog = true }) {
                     Icon(Icons.Default.Info, contentDescription = "History Info")
@@ -352,7 +338,15 @@ fun HistoryScreen(
             scrollable = false,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // Language dropdown removed from here - now in action bar
+            if (showUiDropdown) {
+                AppLanguageDropdown(
+                    uiLanguages = uiLanguages,
+                    appLanguageState = appLanguageState,
+                    onUpdateAppLanguage = onUpdateAppLanguage,
+                    uiText = uiText,
+                    isLoggedIn = true
+                )
+            }
 
             TabRow(
                 selectedTabIndex = selectedTab,

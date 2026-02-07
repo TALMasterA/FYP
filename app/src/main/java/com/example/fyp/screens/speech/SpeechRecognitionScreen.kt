@@ -141,6 +141,24 @@ fun SpeechRecognitionScreen(
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
+            // Language swap button (circle button with ⇄)
+            IconButton(
+                onClick = {
+                    // Only swap if source is not auto
+                    if (selectedLanguage != "auto") {
+                        val tmp = selectedLanguage
+                        selectedLanguage = selectedTargetLanguage
+                        selectedTargetLanguage = tmp
+                    }
+                },
+                enabled = selectedLanguage != "auto"
+            ) {
+                Text(
+                    text = "⇄",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+            
             IconButton(onClick = { showInfoDialog = true }) {
                 Icon(
                     imageVector = Icons.Filled.Info,
@@ -187,14 +205,6 @@ fun SpeechRecognitionScreen(
                             if (it != "auto") detectedSourceLanguage = null
                         },
                         onSelectedTargetLanguage = { selectedTargetLanguage = it },
-                        onSwapLanguages = {
-                            // Only swap if source is not auto
-                            if (selectedLanguage != "auto") {
-                                val tmp = selectedLanguage
-                                selectedLanguage = selectedTargetLanguage
-                                selectedTargetLanguage = tmp
-                            }
-                        },
                     )
 
                     val isRecognizing = recognizePhase != RecognizePhase.Idle
