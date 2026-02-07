@@ -101,7 +101,7 @@ val ScreenUiTexts: List<String> = listOf(
             
             "👤 Account & Data:\n" +
             "  • Login required for history, learning, and coin features\n" +
-            "  • Guest mode limited to basic translation (10 translations per session)\n" +
+            "  • Guest mode: unlimited translations, one free UI language change\n" +
             "  • All user data is stored securely in Firebase Firestore\n",
 
     // HelpNotesTitle
