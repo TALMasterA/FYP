@@ -48,28 +48,94 @@ val ScreenUiTexts: List<String> = listOf(
     "Cautions",
 
     // HelpCurrentFeatures
-    "- Choose UI language, detection language, and target language. \n" +
-            "- Discrete mode: For short sentences translation. \n" +
-            "- Continuous mode: Live conversation capture with user switching. \n" +
-            "- Learning: Learning materials generate by AI (use your translation history). \n" +
-            "- History: View your translation history. (Recent 100 records, expandable to 150 in Shop)\n" +
-            "- Quiz: Test your ability! \n" +
-            "- Word bank (Next to the setting): Generate/Refresh the word bank for study words appear in your history. \n" +
-            "- App UI language translation function. \n",
+    "🌐 TRANSLATION FEATURES:\n" +
+            "  • Discrete Mode - Real-time voice translation for short phrases and sentences\n" +
+            "  • Continuous Mode - Live conversation capture with automatic speaker detection\n" +
+            "  • Multi-language support including English, Cantonese, Japanese, Mandarin, and more\n" +
+            "  • Text-to-speech playback for both original and translated text\n\n" +
+            
+            "📚 LEARNING & STUDY:\n" +
+            "  • Learning Sheets - AI-generated study materials based on your translation history\n" +
+            "  • Quiz System - Test your knowledge and earn coins (🪙)\n" +
+            "  • Word Bank - Automatically generated vocabulary list from your translations\n" +
+            "  • Favorites - Bookmark important translations for quick access\n\n" +
+            
+            "⚙️ CUSTOMIZATION:\n" +
+            "  • UI Language - Change app interface language (English, Chinese, Japanese, etc.)\n" +
+            "  • Theme Settings - Switch between light, dark, or system theme\n" +
+            "  • Font Size - Adjust text size from 80% to 150%\n" +
+            "  • Color Palettes - Unlock and apply different color themes using coins\n" +
+            "  • Voice Settings - Customize text-to-speech voices for different languages\n\n" +
+            
+            "💾 HISTORY & ORGANIZATION:\n" +
+            "  • Translation History - Recent 100 records (expandable to 150 via Shop)\n" +
+            "  • Filter & Search - Find translations by language or keyword\n" +
+            "  • Session Management - Organize continuous conversations by session\n" +
+            "  • Cloud Sync - All data synced to your Firebase account\n\n" +
+            
+            "🪙 COINS & REWARDS:\n" +
+            "  • Earn coins by completing quizzes with good performance\n" +
+            "  • Spend coins to unlock color palettes or expand history limit\n" +
+            "  • Anti-cheat system ensures fair coin distribution\n",
 
     // HelpCaution
-    "- Requires internet connection. \n" +
-            "- Microphone audio is used for speech recognition; avoid speaking sensitive info in public. \n" +
-            "- Use earphones if using 🔊 during continuous listening to avoid the app re-capturing its own audio. \n" +
-            "- Do not use for medical/legal/safety-critical decisions; recognition/translation may be wrong. \n",
+    "⚠️ IMPORTANT SAFETY INFORMATION:\n\n" +
+            
+            "🌐 Connectivity:\n" +
+            "  • Requires stable internet connection for translation and speech recognition\n" +
+            "  • Cloud Functions process all translation requests securely\n\n" +
+            
+            "🎤 Microphone & Privacy:\n" +
+            "  • Audio is captured only for speech recognition, not stored permanently\n" +
+            "  • Avoid discussing sensitive or confidential information in public settings\n" +
+            "  • Grant microphone permissions for speech features to work\n\n" +
+            
+            "🔊 Audio Feedback:\n" +
+            "  • Use earphones during continuous mode to prevent audio feedback loops\n" +
+            "  • The app may re-capture its own TTS output if using speakers\n\n" +
+            
+            "⚕️ Accuracy & Limitations:\n" +
+            "  • Do NOT rely on translations for medical, legal, or safety-critical decisions\n" +
+            "  • AI translations may contain errors or cultural misinterpretations\n" +
+            "  • Always verify important translations with professional services\n\n" +
+            
+            "👤 Account & Data:\n" +
+            "  • Login required for history, learning, and coin features\n" +
+            "  • Guest mode: unlimited translations, one free UI language change\n" +
+            "  • All user data is stored securely in Firebase Firestore\n",
 
     // HelpNotesTitle
     "Notes",
 
     // HelpNotes
-    "- The base language of this app is English, you can use the app UI list to change the languages but it may contain error. \n" +
-            "- If some words have not translated, select the language again. \n" +
-            "- If you encounter any lagging/bug, restart the app.",
+    "💡 TIPS & TROUBLESHOOTING:\n\n" +
+            
+            "🗣️ For Best Translation Results:\n" +
+            "  • Speak clearly and at a moderate pace\n" +
+            "  • Minimize background noise for better recognition accuracy\n" +
+            "  • If translation seems incomplete, try selecting the language again\n" +
+            "  • Short, simple sentences work best in discrete mode\n\n" +
+            
+            "🌍 UI Language:\n" +
+            "  • Base language is English; other UI languages are AI-translated\n" +
+            "  • Some translations may contain minor errors\n" +
+            "  • You can help improve translations by reporting issues\n\n" +
+            
+            "🐛 Common Issues:\n" +
+            "  • Lag or freezing → Restart the app\n" +
+            "  • Microphone not working → Check app permissions in device settings\n" +
+            "  • Translation not appearing → Verify internet connection\n" +
+            "  • Voice not playing → Ensure device volume is up and not muted\n\n" +
+            
+            "📱 Performance:\n" +
+            "  • First launch may be slower as resources are loaded\n" +
+            "  • Large translation history may impact loading times\n" +
+            "  • Consider clearing old history or bookmarking favorites\n\n" +
+            
+            "🆕 Updates & Feedback:\n" +
+            "  • App version displayed in Settings → About\n" +
+            "  • Check for updates regularly for new features and fixes\n" +
+            "  • Report bugs or suggest features via GitHub repository\n",
 
     // --- Continuous Mode ---
     // ContinuousTitle
@@ -321,7 +387,7 @@ val ScreenUiTexts: List<String> = listOf(
     "Reset password here",
 
     // SettingsQuickLinks
-    "Quick Links",
+    "Details Settings",
 
     // SettingsNotLoggedInWarning
     "Not logged in, amendments below will not take effect/saved.",

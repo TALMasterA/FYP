@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -40,7 +42,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.AppLanguageDropdown
-import com.example.fyp.core.StandardScreenBody
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.screens.login.AuthViewModel
@@ -157,9 +158,12 @@ fun HomeScreen(
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
 
-            StandardScreenBody(
-                innerPadding = innerPadding,
-                scrollable = true,
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .padding(16.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 AppLanguageDropdown(
@@ -249,6 +253,10 @@ fun HomeScreen(
                     onClick = onOpenLearning,
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer
                 )
+                
+                // Extra bottom spacing to ensure content isn't blocked by FABs
+                // Accounts for FAB height (56dp) + padding (16dp) + navigation bar padding + extra clearance
+                Spacer(modifier = Modifier.height(100.dp))
             }
 
             // FABs positioned to avoid overlap on all screen sizes

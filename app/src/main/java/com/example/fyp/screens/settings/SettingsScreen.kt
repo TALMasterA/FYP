@@ -112,12 +112,25 @@ fun SettingsScreen(
                 isLoggedIn = isLoggedIn
             )
 
+            // Reset Password Button with larger text
             TextButton(onClick = onOpenResetPassword) {
-                Text(t(UiTextKey.SettingsResetPW))
+                Text(
+                    text = t(UiTextKey.SettingsResetPW),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                )
             }
 
             // Quick Links for logged in users
             if (isLoggedIn) {
+                // Details Settings Header
+                Text(
+                    text = t(UiTextKey.SettingsQuickLinks),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -128,8 +141,8 @@ fun SettingsScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
 
                         Row(
@@ -140,13 +153,21 @@ fun SettingsScreen(
                                 onClick = onOpenProfile,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(t(UiTextKey.ProfileTitle))
+                                Text(
+                                    text = t(UiTextKey.ProfileTitle),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
                             }
                             TextButton(
                                 onClick = onOpenFavorites,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(t(UiTextKey.FavoritesTitle))
+                                Text(
+                                    text = t(UiTextKey.FavoritesTitle),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
                             }
                         }
 
@@ -159,13 +180,21 @@ fun SettingsScreen(
                                 onClick = onOpenShop,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(t(UiTextKey.ShopEntry))
+                                Text(
+                                    text = t(UiTextKey.ShopEntry),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
                             }
                             TextButton(
                                 onClick = onOpenVoiceSettings,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(t(UiTextKey.VoiceSettingsTitle))
+                                Text(
+                                    text = t(UiTextKey.VoiceSettingsTitle),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
                             }
                         }
                     }

@@ -19,6 +19,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -141,6 +142,24 @@ fun SpeechRecognitionScreen(
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
+            // Language swap button (circle button with ⇄)
+            IconButton(
+                onClick = {
+                    // Only swap if source is not auto
+                    if (selectedLanguage != "auto") {
+                        val tmp = selectedLanguage
+                        selectedLanguage = selectedTargetLanguage
+                        selectedTargetLanguage = tmp
+                    }
+                },
+                enabled = selectedLanguage != "auto"
+            ) {
+                Text(
+                    text = "⇄",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+            
             IconButton(onClick = { showInfoDialog = true }) {
                 Icon(
                     imageVector = Icons.Filled.Info,
@@ -187,14 +206,6 @@ fun SpeechRecognitionScreen(
                             if (it != "auto") detectedSourceLanguage = null
                         },
                         onSelectedTargetLanguage = { selectedTargetLanguage = it },
-                        onSwapLanguages = {
-                            // Only swap if source is not auto
-                            if (selectedLanguage != "auto") {
-                                val tmp = selectedLanguage
-                                selectedLanguage = selectedTargetLanguage
-                                selectedTargetLanguage = tmp
-                            }
-                        },
                     )
 
                     val isRecognizing = recognizePhase != RecognizePhase.Idle
