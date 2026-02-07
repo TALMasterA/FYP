@@ -33,48 +33,29 @@ fun SpeechLanguagePickers(
     targetLanguageNameFor: (String) -> String,
     onSelectedLanguage: (String) -> Unit,
     onSelectedTargetLanguage: (String) -> Unit,
-    onSwapLanguages: () -> Unit,
 ) {
-    Column(
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                onClick = onSwapLanguages,
-                modifier = Modifier.size(28.dp),
-                contentPadding = PaddingValues(0.dp),
-                enabled = selectedLanguage != "auto" // Disable swap when auto-detect
-            ) {
-                Text("⇄", style = MaterialTheme.typography.labelMedium)
-            }
+        Column(modifier = Modifier.weight(1f)) {
+            LanguageDropdownField(
+                label = detectLabel,
+                selectedCode = selectedLanguage,
+                options = sourceLanguageOptions,
+                nameFor = sourceLanguageNameFor,
+                onSelected = onSelectedLanguage,
+            )
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                LanguageDropdownField(
-                    label = detectLabel,
-                    selectedCode = selectedLanguage,
-                    options = sourceLanguageOptions,
-                    nameFor = sourceLanguageNameFor,
-                    onSelected = onSelectedLanguage,
-                )
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                LanguageDropdownField(
-                    label = translateToLabel,
-                    selectedCode = selectedTargetLanguage,
-                    options = targetLanguageOptions,
-                    nameFor = targetLanguageNameFor,
-                    onSelected = onSelectedTargetLanguage,
-                )
-            }
+        Column(modifier = Modifier.weight(1f)) {
+            LanguageDropdownField(
+                label = translateToLabel,
+                selectedCode = selectedTargetLanguage,
+                options = targetLanguageOptions,
+                nameFor = targetLanguageNameFor,
+                onSelected = onSelectedTargetLanguage,
+            )
         }
     }
 }
