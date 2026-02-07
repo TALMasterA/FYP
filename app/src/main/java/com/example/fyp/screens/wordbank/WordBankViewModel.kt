@@ -459,6 +459,13 @@ class WordBankViewModel @Inject constructor(
         return currentCount - currentWordBank.historyCountAtGenerate
     }
 
+    /**
+     * Get the current history count for the target language
+     */
+    fun getCurrentHistoryCount(targetLanguageCode: String): Int {
+        return sharedHistoryDataSource.getCountForLanguage(targetLanguageCode)
+    }
+
     fun cancelGeneration() {
         generationJob?.cancel()
         generationJob = null

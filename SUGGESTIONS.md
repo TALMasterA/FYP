@@ -31,7 +31,7 @@
 
 ## 2. Code Improvement Suggestions
 
-### 2.1 Add Pagination to `getLanguageCounts()` for Very Large Histories
+### 2.1 Add Pagination to `getLanguag(eCounts)` for Very Large Histories
 Currently `getLanguageCounts()` fetches ALL records (even with field projection). For users with 10,000+ records, consider:
 - Using Firestore aggregation queries per language (if the set of languages is bounded)
 - Storing language counts as a separate document that's updated incrementally on each history write (via Cloud Functions)

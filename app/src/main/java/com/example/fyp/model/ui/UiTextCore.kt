@@ -235,6 +235,8 @@ enum class UiTextKey {
     LearningRegenBlockedMessage,
     LearningRegenNeedMoreRecords,
     LearningRegenCountNotHigher,
+    LearningRegenInfoTitle,
+    LearningRegenInfoMessage,
     QuizRegenBlockedSameMaterial,
 
     // --- Quiz ---
@@ -344,6 +346,9 @@ enum class UiTextKey {
     WordBankFilterNoResults,
     WordBankRefreshAvailable,
     WordBankRecordsNeeded,
+    WordBankRegenInfoTitle,
+    WordBankRegenInfoMessage,
+    WordBankHistoryCountTemplate,
 
     // --- Dialogs ---
     DialogLogoutTitle,

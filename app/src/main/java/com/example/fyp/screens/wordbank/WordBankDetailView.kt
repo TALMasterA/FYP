@@ -28,6 +28,7 @@ fun WordBankDetailView(
     canRegenerate: Boolean,
     newRecordCount: Int,
     minRecordsForRegen: Int,
+    currentHistoryCount: Int,
     isSpeaking: Boolean,
     speakingItemId: String?,
     speakingType: SpeakingType?,
@@ -49,6 +50,7 @@ fun WordBankDetailView(
     pageSize: Int
 ) {
     var showFilterDialog by remember { mutableStateOf(false) }
+    var showRegenInfo by remember { mutableStateOf(false) }
 
     // Filter dialog
     if (showFilterDialog && wordBank != null) {
@@ -69,6 +71,20 @@ fun WordBankDetailView(
         )
     }
 
+    // Regen info dialog
+    if (showRegenInfo) {
+        AlertDialog(
+            onDismissRequest = { showRegenInfo = false },
+            title = { Text(t(UiTextKey.WordBankRegenInfoTitle)) },
+            text = { Text(t(UiTextKey.WordBankRegenInfoMessage)) },
+            confirmButton = {
+                Button(onClick = { showRegenInfo = false }) {
+                    Text(t(UiTextKey.ActionConfirm))
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -80,11 +96,13 @@ fun WordBankDetailView(
             canRegenerate = canRegenerate,
             newRecordCount = newRecordCount,
             minRecordsForRegen = minRecordsForRegen,
+            currentHistoryCount = currentHistoryCount,
             error = error,
             onGenerate = onGenerate,
             onCancel = onCancel,
             t = t,
             onShowFilterDialog = { showFilterDialog = true },
+            onShowRegenInfo = { showRegenInfo = true },
             hasActiveFilters = filterKeyword.isNotBlank() || filterCategory.isNotBlank() || filterDifficulty.isNotBlank()
         )
 
@@ -121,11 +139,13 @@ private fun WordBankHeader(
     canRegenerate: Boolean,
     newRecordCount: Int,
     minRecordsForRegen: Int,
+    currentHistoryCount: Int,
     error: String?,
     onGenerate: () -> Unit,
     onCancel: () -> Unit,
     t: (UiTextKey) -> String,
     onShowFilterDialog: () -> Unit = {},
+    onShowRegenInfo: () -> Unit = {},
     hasActiveFilters: Boolean = false
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -176,6 +196,14 @@ private fun WordBankHeader(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Info icon
+                    IconButton(onClick = onShowRegenInfo) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Refresh Rules",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
 
                     if (wordBank != null && wordBank.words.isNotEmpty()) {
                         IconButton(onClick = onShowFilterDialog) {
@@ -212,6 +240,7 @@ private fun WordBankHeader(
 
             // Expanded content
             if (isExpanded) {
+                // Show word count
                 if (wordBank != null) {
                     Text(
                         text = "${wordBank.words.size} ${t(UiTextKey.WordBankWordsCount)}",
@@ -220,32 +249,16 @@ private fun WordBankHeader(
                     )
                 }
 
+                // Show history count (similar to Learning Sheet)
+                Text(
+                    text = t(UiTextKey.WordBankHistoryCountTemplate)
+                        .replace("{nowCount}", currentHistoryCount.toString())
+                        .replace("{savedCount}", (wordBank?.historyCountAtGenerate?.toString() ?: "-")),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
                 Spacer(modifier = Modifier.height(12.dp))
-
-                // Show regeneration status for existing word banks
-                if (wordBank != null && !isGenerating) {
-                    // Format record count with proper sign (+ for positive, - for negative, nothing for zero)
-                    val recordCountText = when {
-                        newRecordCount > 0 -> "+$newRecordCount"
-                        newRecordCount < 0 -> "$newRecordCount" // Already has minus sign
-                        else -> "0"
-                    }
-
-                    if (canRegenerate) {
-                        Text(
-                            text = "$recordCountText new records - ${t(UiTextKey.WordBankRefreshAvailable)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    } else {
-                        Text(
-                            text = "$recordCountText / $minRecordsForRegen ${t(UiTextKey.WordBankRecordsNeeded)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
 
                 // Generate/Refresh button (full width when expanded)
                 if (isGenerating) {

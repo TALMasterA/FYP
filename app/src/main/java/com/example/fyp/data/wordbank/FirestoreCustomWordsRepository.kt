@@ -1,5 +1,6 @@
 package com.example.fyp.data.wordbank
 
+import android.util.Log
 import com.example.fyp.model.CustomWord
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -138,6 +139,7 @@ class FirestoreCustomWordsRepository @Inject constructor(
             .await()
         snapshot.toObjects(CustomWord::class.java)
     } catch (e: Exception) {
+        Log.w("FirestoreCustomWordsRepository", "Failed to get custom words for user $userId, langs: $sourceLang/$targetLang", e)
         emptyList()
     }
 
@@ -151,6 +153,7 @@ class FirestoreCustomWordsRepository @Inject constructor(
             .await()
         snapshot.toObjects(CustomWord::class.java)
     } catch (e: Exception) {
+        Log.w("FirestoreCustomWordsRepository", "Failed to get all custom words for user $userId", e)
         emptyList()
     }
 
@@ -172,6 +175,7 @@ class FirestoreCustomWordsRepository @Inject constructor(
             .await()
         !snapshot.isEmpty
     } catch (e: Exception) {
+        Log.w("FirestoreCustomWordsRepository", "Failed to check if word exists for user $userId", e)
         false
     }
 }

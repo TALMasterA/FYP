@@ -1,5 +1,6 @@
 package com.example.fyp.data.history
 
+import android.util.Log
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.user.UserSettings
 import kotlinx.coroutines.CoroutineScope
@@ -109,7 +110,8 @@ class SharedHistoryDataSource @Inject constructor(
             val counts = historyRepo.getLanguageCounts(uid, primaryLanguageCode)
             _languageCounts.value = counts
         } catch (e: Exception) {
-            // Keep existing counts on error
+            // Keep existing counts on error, but log for debugging
+            Log.w("SharedHistoryDataSource", "Failed to refresh language counts", e)
         }
     }
 

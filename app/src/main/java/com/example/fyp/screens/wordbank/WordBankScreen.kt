@@ -123,6 +123,7 @@ fun WordBankScreen(
                 selectedLanguage != null -> {
                     val canRegen = viewModel.canRegenerate(selectedLanguage)
                     val newRecordCount = viewModel.getNewRecordCount(selectedLanguage)
+                    val currentHistoryCount = viewModel.getCurrentHistoryCount(selectedLanguage)
 
                     // Filter and pagination state
                     var filterKeyword by remember { mutableStateOf("") }
@@ -138,6 +139,7 @@ fun WordBankScreen(
                         canRegenerate = canRegen,
                         newRecordCount = newRecordCount,
                         minRecordsForRegen = WordBankViewModel.MIN_RECORDS_FOR_REGEN,
+                        currentHistoryCount = currentHistoryCount,
                         isSpeaking = uiState.isSpeaking,
                         speakingItemId = uiState.speakingItemId,
                         speakingType = uiState.speakingType,
