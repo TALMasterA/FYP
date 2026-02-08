@@ -1,4 +1,4 @@
-# FYP - Bilingual Translation & Learning App (Reviewing)
+# FYP - Translation & Learning App (Reviewing)
 
 An Android-based translation and language learning application with AI-powered features.
 
@@ -92,13 +92,12 @@ Following the MVVM (Model–View–ViewModel) structure.
 
 **Key Directories:**
 - `app/src/main/java/com/example/fyp/`
-  - `screens/` - UI screens (Home, Settings, History, Learning, etc.)
-  - `model/` - Data models and UI text definitions
-  - `data/` - Repository pattern implementations
-  - `domain/` - Use cases for business logic
-  - `core/` - Common composables and utilities
+    - `screens/` - UI screens (Home, Settings, History, Learning, etc.)
+    - `model/` - Data models and UI text definitions
+    - `data/` - Repository pattern implementations
+    - `domain/` - Use cases for business logic
+    - `core/` - Common composables and utilities
 - `fyp-backend/functions/` - Firebase Cloud Functions (TypeScript)
-- `app/src/test/` - Unit tests
 
 --------------------------------------------------------------
 
@@ -119,7 +118,6 @@ Following the MVVM (Model–View–ViewModel) structure.
 - Firebase Authentication for user login/registration
 - Firestore Database for storing translation history, user settings, learning materials
 - Cloud Functions for secure API calls to Azure services
-- Firebase Hosting (optional, for web dashboard)
 
 --------------------------------------------------------------
 
@@ -155,7 +153,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 git pull --ff-only
 
 # Check out PR branch for testing
-gh pr checkout <PR number>
+gh pr checkout "PR number"
 ```
 
 **Firebase Deployment:**
@@ -178,38 +176,6 @@ gh --version
 # Authenticate
 gh auth login
 ```
-
-**Android Build:**
-```bash
-# Build debug APK
-./gradlew assembleDebug
-
-# Build release APK (requires signing config)
-./gradlew assembleRelease
-
-# Run tests
-./gradlew test
-```
-
---------------------------------------------------------------
-
-## 🧪 Testing
-
-**Running Tests:**
-- Unit tests: `./gradlew test`
-- Instrumented tests require Android device/emulator
-
-**Manual Testing Checklist:**
-- [ ] Guest mode (limited translations)
-- [ ] Login/Registration flow
-- [ ] Discrete translation mode
-- [ ] Continuous translation mode
-- [ ] History viewing and filtering
-- [ ] Learning sheet generation
-- [ ] Quiz completion and coin awards
-- [ ] Settings customization (theme, font, language)
-- [ ] Favorites add/remove
-- [ ] Shop purchases
 
 --------------------------------------------------------------
 
@@ -248,15 +214,8 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-## 🐛 Known Issues & Limitations
+## 🐛 Common Troubleshooting
 
-**Current Limitations:**
-- Requires internet connection for all features
-- Guest mode limited to 10 translations per session
-- UI language translations may have minor errors (AI-generated)
-- First launch may be slower due to resource loading
-
-**Common Troubleshooting:**
 - Lag/freezing → Restart the app
 - Microphone not working → Check app permissions
 - Translation not appearing → Verify internet connection
@@ -264,41 +223,5 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-## 📝 Contributing
-
-**Before Submitting PR:**
-1. Follow MVVM architecture pattern
-2. Add UI text keys for all user-facing strings
-3. Test on both light and dark themes
-4. Ensure guest and logged-in user flows work
-5. Update documentation if adding new features
-
-**Code Style:**
-- Follow Kotlin coding conventions
-- Use Jetpack Compose best practices
-- Implement proper error handling
-- Add comments for complex logic
-
---------------------------------------------------------------
-
-## 📄 License
-
-All rights reserved. This is a Final Year Project (FYP) and is not open source.
-
---------------------------------------------------------------
-
-## 📞 Support
-
-For issues, bugs, or feature requests:
-- Create an issue in the GitHub repository
-- Check existing issues before creating new ones
-- Provide detailed reproduction steps for bugs
-
---------------------------------------------------------------
-
-**Last Updated:** February 2026
-**Version:** Check `app/build.gradle.kts` for current version
-
-
-
-
+**Last Updated:** February 2026 - Manual checked
+(Some content is by github copilot agent and may contain error)
