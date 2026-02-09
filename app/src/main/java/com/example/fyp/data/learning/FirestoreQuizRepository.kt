@@ -2,6 +2,7 @@ package com.example.fyp.data.learning
 
 import com.example.fyp.core.decodeOrDefault
 import com.example.fyp.domain.learning.CoinEligibility
+import com.example.fyp.domain.learning.GeneratedQuizDoc
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.model.*
 import com.google.firebase.Timestamp
@@ -46,7 +47,7 @@ class FirestoreQuizRepository @Inject constructor(
             .collection("coin_awards")
             .document(versionKey)
 
-    suspend fun saveAttempt(uid: String, attempt: QuizAttempt): String {
+    override suspend fun saveAttempt(uid: String, attempt: QuizAttempt): String {
         val attemptId = attempt.id.ifEmpty { db.collection("dummy").document().id }
 
         val doc = QuizAttemptDoc(
@@ -68,7 +69,7 @@ class FirestoreQuizRepository @Inject constructor(
         return attemptId
     }
 
-    suspend fun getAttempt(uid: String, attemptId: String): QuizAttempt? {
+    override suspend fun getAttempt(uid: String, attemptId: String): QuizAttempt? {
         val snap = docRef(uid, attemptId).get().await()
         if (!snap.exists()) return null
 
@@ -89,15 +90,17 @@ class FirestoreQuizRepository @Inject constructor(
         )
     }
 
-    suspend fun getAttemptsByLanguagePair(
+    override suspend fun getAttemptsByLanguagePair(
         uid: String,
-        primaryLanguageCode: String,
-        targetLanguageCode: String
+        primaryCode: String,
+        targetCode: String,
+        limit: Long
     ): List<QuizAttempt> {
         val snap = collectionRef(uid)
-            .whereEqualTo("primaryLanguageCode", primaryLanguageCode)
-            .whereEqualTo("targetLanguageCode", targetLanguageCode)
+            .whereEqualTo("primaryLanguageCode", primaryCode)
+            .whereEqualTo("targetLanguageCode", targetCode)
             .orderBy("completedAt")
+            .limit(limit)
             .get()
             .await()
 
@@ -120,7 +123,7 @@ class FirestoreQuizRepository @Inject constructor(
         }
     }
 
-    suspend fun getQuizStats(
+    override suspend fun getQuizStats(
         uid: String,
         primaryLanguageCode: String,
         targetLanguageCode: String
@@ -129,7 +132,7 @@ class FirestoreQuizRepository @Inject constructor(
         return if (snap.exists()) snap.toObject(QuizStats::class.java) else null
     }
 
-    suspend fun getRecentAttempts(uid: String, limit: Long = 10): List<QuizAttempt> {
+    override suspend fun getRecentAttempts(uid: String, limit: Long): List<QuizAttempt> {
         val snap = collectionRef(uid)
             .orderBy("completedAt")
             .limit(limit)
@@ -192,21 +195,13 @@ class FirestoreQuizRepository @Inject constructor(
 
     // ---- Generated quiz (cached per sheet version) ----
 
-    data class GeneratedQuizDoc(
-        val primaryLanguageCode: String = "",
-        val targetLanguageCode: String = "",
-        val questionsJson: String = "",
-        val generatedAt: Timestamp = Timestamp.now(),
-        val historyCountAtGenerate: Int = 0
-    )
-
     private fun generatedQuizDocRef(uid: String, primaryCode: String, targetCode: String) =
         db.collection("users")
             .document(uid)
             .collection("generated_quizzes")
             .document("${primaryCode}__${targetCode}")
 
-    suspend fun getGeneratedQuizDoc(
+    override suspend fun getGeneratedQuizDoc(
         uid: String,
         primaryLanguageCode: String,
         targetLanguageCode: String
@@ -216,7 +211,7 @@ class FirestoreQuizRepository @Inject constructor(
         return snap.toObject(GeneratedQuizDoc::class.java)
     }
 
-    suspend fun upsertGeneratedQuiz(
+    override suspend fun upsertGeneratedQuiz(
         uid: String,
         primaryLanguageCode: String,
         targetLanguageCode: String,
@@ -233,7 +228,7 @@ class FirestoreQuizRepository @Inject constructor(
         generatedQuizDocRef(uid, primaryLanguageCode, targetLanguageCode).set(doc).await()
     }
 
-    suspend fun getGeneratedQuizQuestions(
+    override suspend fun getGeneratedQuizQuestions(
         uid: String,
         primaryLanguageCode: String,
         targetLanguageCode: String
@@ -244,7 +239,7 @@ class FirestoreQuizRepository @Inject constructor(
 
     // ---- Coins (first-attempt rewards) ----
 
-    fun observeUserCoinStats(uid: String): Flow<UserCoinStats> = callbackFlow {
+    override fun observeUserCoinStats(uid: String): Flow<UserCoinStats> = callbackFlow {
         val reg = coinStatsDoc(uid).addSnapshotListener { snap, _ ->
             if (snap != null && snap.exists()) {
                 val stats = snap.toObject(UserCoinStats::class.java) ?: UserCoinStats()
@@ -256,7 +251,7 @@ class FirestoreQuizRepository @Inject constructor(
         awaitClose { reg.remove() }
     }
 
-    suspend fun fetchUserCoinStats(uid: String): UserCoinStats? {
+    override suspend fun fetchUserCoinStats(uid: String): UserCoinStats? {
         val snap = coinStatsDoc(uid).get().await()
         return if (snap.exists()) snap.toObject(UserCoinStats::class.java) else null
     }
@@ -271,7 +266,7 @@ class FirestoreQuizRepository @Inject constructor(
      * Get the last awarded quiz count for a language pair.
      * Returns null if no quiz has been awarded coins yet.
      */
-    suspend fun getLastAwardedQuizCount(uid: String, primaryCode: String, targetCode: String): Int? {
+    override suspend fun getLastAwardedQuizCount(uid: String, primaryCode: String, targetCode: String): Int? {
         val snap = lastAwardedCountDoc(uid, primaryCode, targetCode).get().await()
         return if (snap.exists()) snap.getLong("count")?.toInt() else null
     }
@@ -287,7 +282,7 @@ class FirestoreQuizRepository @Inject constructor(
      * 4. First quiz for a language pair is always eligible (no minimum threshold)
      * 5. Each quiz version can only be awarded once (tracked by versionKey)
      */
-    suspend fun awardCoinsIfEligible(
+    override suspend fun awardCoinsIfEligible(
         uid: String,
         attempt: QuizAttempt,
         latestHistoryCount: Int?
@@ -351,7 +346,7 @@ class FirestoreQuizRepository @Inject constructor(
      * Returns the new coin balance if successful, or -1 if insufficient coins.
      * This avoids a separate fetchUserCoinStats call after deduction.
      */
-    suspend fun deductCoins(uid: String, amount: Int): Int {
+    override suspend fun deductCoins(uid: String, amount: Int): Int {
         return db.runTransaction { tx ->
             val statsSnap = tx.get(coinStatsDoc(uid))
             val current = if (statsSnap.exists()) statsSnap.toObject(UserCoinStats::class.java) ?: UserCoinStats() else UserCoinStats()

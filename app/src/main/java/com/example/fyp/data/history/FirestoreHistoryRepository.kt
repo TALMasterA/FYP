@@ -25,7 +25,7 @@ class FirestoreHistoryRepository @Inject constructor(
         const val DEFAULT_HISTORY_LIMIT = 200L
     }
 
-    suspend fun save(record: TranslationRecord) {
+    override suspend fun save(record: TranslationRecord) {
         firestore.collection("users")
             .document(record.userId)
             .collection("history")
@@ -37,7 +37,7 @@ class FirestoreHistoryRepository @Inject constructor(
         updateLanguageCountsCache(record.userId, record.sourceLang, record.targetLang, increment = true)
     }
 
-    suspend fun delete(userId: String, recordId: String) {
+    override suspend fun delete(userId: String, recordId: String) {
         // Fetch the record first to get language info for cache update
         val record = try {
             firestore.collection("users")
@@ -68,7 +68,7 @@ class FirestoreHistoryRepository @Inject constructor(
      * Observe history with a limit to reduce Firestore reads.
      * Returns most recent records first (descending by timestamp).
      */
-    fun getHistory(userId: String, limit: Long = DEFAULT_HISTORY_LIMIT): Flow<List<TranslationRecord>> = callbackFlow {
+    override fun getHistory(userId: String, limit: Long): Flow<List<TranslationRecord>> = callbackFlow {
         val listener = firestore.collection("users")
             .document(userId)
             .collection("history")
@@ -89,7 +89,7 @@ class FirestoreHistoryRepository @Inject constructor(
      * Get history count without fetching all documents (uses aggregation).
      * This is much cheaper than fetching all documents just to count them.
      */
-    suspend fun getHistoryCount(userId: String): Int {
+    override suspend fun getHistoryCount(userId: String): Int {
         return try {
             val snapshot = firestore.collection("users")
                 .document(userId)
@@ -115,7 +115,7 @@ class FirestoreHistoryRepository @Inject constructor(
      *
      * NOTE: Does NOT filter by primary language - caller should filter as needed.
      */
-    suspend fun getLanguageCounts(userId: String, primaryLanguageCode: String): Map<String, Int> {
+    override suspend fun getLanguageCounts(userId: String, primaryLanguageCode: String): Map<String, Int> {
         return try {
             // First try to read from the cached stats document (1 read instead of N reads)
             val statsDoc = firestore.collection("users")
@@ -155,7 +155,7 @@ class FirestoreHistoryRepository @Inject constructor(
      * This increments the counts for both source and target languages.
      * Call this after save() to keep the cache in sync.
      */
-    suspend fun updateLanguageCountsCache(userId: String, sourceLang: String, targetLang: String, increment: Boolean = true) {
+    override suspend fun updateLanguageCountsCache(userId: String, sourceLang: String, targetLang: String, increment: Boolean) {
         try {
             val statsRef = firestore.collection("users")
                 .document(userId)
@@ -223,7 +223,7 @@ class FirestoreHistoryRepository @Inject constructor(
         }
     }
 
-    fun listenSessions(userId: String): Flow<List<HistorySession>> = callbackFlow {
+    override fun listenSessions(userId: String): Flow<List<HistorySession>> = callbackFlow {
         val listener = firestore.collection("users")
             .document(userId)
             .collection("sessions")
@@ -238,7 +238,7 @@ class FirestoreHistoryRepository @Inject constructor(
         awaitClose { listener.remove() }
     }
 
-    suspend fun setSessionName(userId: String, sessionId: String, name: String) {
+    override suspend fun setSessionName(userId: String, sessionId: String, name: String) {
         firestore.collection("users")
             .document(userId)
             .collection("sessions")
@@ -253,7 +253,7 @@ class FirestoreHistoryRepository @Inject constructor(
             .await()
     }
 
-    suspend fun deleteSession(userId: String, sessionId: String) {
+    override suspend fun deleteSession(userId: String, sessionId: String) {
         val col = firestore.collection("users").document(userId).collection("history")
 
         while (true) {

@@ -44,7 +44,6 @@ import com.example.fyp.data.learning.QuizGenerationRepositoryImpl
 import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
 import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.data.wordbank.FirestoreWordBankRepository
-import com.example.fyp.domain.wordbank.WordBankCoordinator
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.domain.settings.SetVoiceForLanguageUseCase
 
@@ -187,13 +186,4 @@ object AppModule {
     @Singleton
     fun provideHistoryRepository(db: FirebaseFirestore): HistoryRepository =
         FirestoreHistoryRepository(db)
-
-    @Provides
-    @Singleton
-    fun provideWordBankCoordinator(
-        wordBankRepo: FirestoreWordBankRepository,
-        wordBankGenRepo: WordBankGenerationRepository,
-        wordBankCache: com.example.fyp.data.wordbank.WordBankCacheDataStore
-    ): WordBankCoordinator =
-        WordBankCoordinator(wordBankRepo, wordBankGenRepo, wordBankCache)
 }
