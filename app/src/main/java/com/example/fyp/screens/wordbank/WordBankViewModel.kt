@@ -8,6 +8,8 @@ import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
 import com.example.fyp.data.wordbank.FirestoreWordBankRepository
 import com.example.fyp.data.wordbank.WordBankCacheDataStore
 import com.example.fyp.data.wordbank.WordBankGenerationRepository
+import com.example.fyp.data.wordbank.WordBankCacheDataStore
+import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.example.fyp.data.settings.SharedSettingsDataSource
