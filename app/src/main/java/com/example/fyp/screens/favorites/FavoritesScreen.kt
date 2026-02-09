@@ -44,6 +44,7 @@ import com.example.fyp.core.PaginationRow
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.pageCount
 import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.core.UiConstants
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.FavoriteRecord
@@ -68,10 +69,10 @@ fun FavoritesScreen(
         .drop(currentPage * pageSize)
         .take(pageSize)
 
-    // Auto-dismiss error after 3 seconds
+    // Auto-dismiss error after delay
     LaunchedEffect(uiState.error) {
         if (uiState.error != null) {
-            delay(3000)
+            delay(UiConstants.ERROR_AUTO_DISMISS_MS)
             viewModel.clearError()
         }
     }

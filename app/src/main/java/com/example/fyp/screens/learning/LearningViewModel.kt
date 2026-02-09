@@ -10,6 +10,7 @@ import com.example.fyp.data.learning.QuizParser
 import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
 import com.example.fyp.domain.learning.GenerateQuizUseCase
 import com.example.fyp.domain.learning.GenerationEligibility
+import com.example.fyp.core.AiConfig
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.TranslationRecord
@@ -283,7 +284,7 @@ class LearningViewModel @Inject constructor(
 
             try {
                 val raw = generateLearningMaterials(
-                    deployment = "gpt-5-mini",
+                    deployment = AiConfig.DEFAULT_DEPLOYMENT,
                     primaryLanguageCode = primary,
                     targetLanguageCode = languageCode,
                     records = current.records
@@ -358,7 +359,7 @@ class LearningViewModel @Inject constructor(
 
             try {
                 val quizText = generateQuizUseCase(
-                    deployment = "gpt-5-mini",
+                    deployment = AiConfig.DEFAULT_DEPLOYMENT,
                     primaryLanguageCode = primary,
                     targetLanguageCode = languageCode,
                     records = relatedRecords,

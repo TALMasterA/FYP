@@ -12,6 +12,8 @@ import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.domain.learning.GenerationEligibility
+import com.example.fyp.core.AiConfig
+import com.example.fyp.core.UiConstants
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
@@ -514,7 +516,7 @@ class WordBankViewModel @Inject constructor(
                 }
 
                 // Generate word bank using AI (use same deployment as learning/quiz)
-                val deployment = "gpt-5-mini"
+                val deployment = AiConfig.DEFAULT_DEPLOYMENT
                 android.util.Log.d("WordBankVM", "Generating word bank for $targetLanguageCode with ${relevantRecords.size} records")
                 val rawContent = wordBankGenRepo.generateWordBank(
                     deployment = deployment,
@@ -662,7 +664,7 @@ class WordBankViewModel @Inject constructor(
                 val result = speakTextUseCase(text, languageCode, voiceName)
                 when (result) {
                     is SpeechResult.Success -> {
-                        delay(300)
+                        delay(UiConstants.TTS_FINISH_DELAY_MS)
                     }
                     is SpeechResult.Error -> {
                         // Optionally show error

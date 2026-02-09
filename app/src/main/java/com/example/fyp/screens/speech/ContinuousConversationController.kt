@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
+import com.example.fyp.core.UiConstants
 
 internal class ContinuousConversationController(
     private val scope: CoroutineScope,
@@ -95,7 +96,7 @@ internal class ContinuousConversationController(
             isContinuousRunning = false
             isContinuousProcessing = false
             setStatus("Preparing mic...")
-            delay(200)
+            delay(UiConstants.SPEECH_PREPARE_DELAY_MS)
 
             val startedAt = System.currentTimeMillis()
 

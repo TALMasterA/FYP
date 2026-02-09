@@ -46,6 +46,7 @@ import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import kotlinx.coroutines.delay
+import com.example.fyp.core.UiConstants
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -69,7 +70,7 @@ fun SpeechRecognitionScreen(
         // Only scroll when translation becomes available
         if (translatedText.isNotBlank()) {
             // small delay helps after recomposition/layout
-            delay(150)
+            delay(UiConstants.SPEECH_LISTENING_DEBOUNCE_MS.toLong())
             bringIntoViewRequester.bringIntoView()
         }
     }

@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.delay
+import com.example.fyp.core.UiConstants
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,11 +73,11 @@ fun LoginScreen(
         }
     }
 
-    // Auto-dismiss error after 3 seconds
+    // Auto-dismiss error after delay
     val vmErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
     LaunchedEffect(vmErrorText) {
         if (vmErrorText != null) {
-            delay(3000)
+            delay(UiConstants.ERROR_AUTO_DISMISS_MS)
             viewModel.clearError()
         }
     }

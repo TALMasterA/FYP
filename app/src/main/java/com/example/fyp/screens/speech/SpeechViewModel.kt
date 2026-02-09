@@ -21,6 +21,7 @@ import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import com.example.fyp.core.UiConstants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -138,7 +139,7 @@ class SpeechViewModel @Inject constructor(
                 statusMessage = "",
                 recognizePhase = RecognizePhase.Preparing,
             )
-            delay(200)
+            delay(UiConstants.SPEECH_PREPARE_DELAY_MS)
             speechState = speechState.copy(recognizePhase = RecognizePhase.Listening)
 
             when (val result = recognizeFromMic(languageCode)) {
@@ -175,7 +176,7 @@ class SpeechViewModel @Inject constructor(
                 statusMessage = "Auto-detecting language...",
                 recognizePhase = RecognizePhase.Preparing,
             )
-            delay(200)
+            delay(UiConstants.SPEECH_PREPARE_DELAY_MS)
             speechState = speechState.copy(recognizePhase = RecognizePhase.Listening)
 
             autoDetectRecognizeUseCase(candidateLanguages)

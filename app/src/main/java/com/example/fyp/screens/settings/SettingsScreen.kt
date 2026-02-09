@@ -33,6 +33,7 @@ import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.core.validateScale
+import com.example.fyp.core.UiConstants
 import com.example.fyp.data.azure.AzureLanguageConfig
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
@@ -73,19 +74,19 @@ fun SettingsScreen(
         sliderValue = validateScale(uiState.settings.fontSizeScale)
     }
 
-    // Auto-dismiss error after 3 seconds
+    // Auto-dismiss error after delay
     val settingsErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
     LaunchedEffect(settingsErrorText) {
         if (settingsErrorText != null) {
-            delay(3000)
+            delay(UiConstants.ERROR_AUTO_DISMISS_MS)
             viewModel.clearError()
         }
     }
 
-    // Auto-dismiss unlock error after 3 seconds
+    // Auto-dismiss unlock error after delay
     LaunchedEffect(uiState.unlockError) {
         if (uiState.unlockError != null) {
-            delay(3000)
+            delay(UiConstants.COIN_UNLOCK_SUCCESS_DURATION_MS)
             viewModel.clearUnlockError()
         }
     }

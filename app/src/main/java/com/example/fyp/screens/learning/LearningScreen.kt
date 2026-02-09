@@ -44,6 +44,7 @@ import com.example.fyp.core.LanguageDropdownField
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.delay
+import com.example.fyp.core.UiConstants
 
 @Suppress("UNUSED_PARAMETER", "SENSELESS_COMPARISON")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,10 +68,10 @@ fun LearningScreen(
     var pendingGenerateLang by remember { mutableStateOf<String?>(null) }
     var showRegenInfo by remember { mutableStateOf(false) }
 
-    // Auto-dismiss error after 3 seconds
+    // Auto-dismiss error after delay
     LaunchedEffect(uiState.error) {
         if (uiState.error != null) {
-            delay(3000)
+            delay(UiConstants.ERROR_AUTO_DISMISS_MS)
             viewModel.clearError()
         }
     }

@@ -5,6 +5,7 @@ import kotlinx.coroutines.launch
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.model.SpeechResult
 import kotlinx.coroutines.delay
+import com.example.fyp.core.UiConstants
 
 internal class TtsController(
     private val scope: CoroutineScope,
@@ -32,13 +33,13 @@ internal class TtsController(
                         setSpeechState(
                             getSpeechState().copy(ttsStatus = "✓ Spoken")
                         )
-                        delay(500)
+                        delay(UiConstants.TTS_START_DELAY_MS)
                     }
                     is SpeechResult.Error -> {
                         setSpeechState(
                             getSpeechState().copy(ttsStatus = "✗ ${result.message}")
                         )
-                        delay(3000)
+                        delay(UiConstants.TTS_ERROR_WAIT_MS)
                     }
                 }
             } finally {
