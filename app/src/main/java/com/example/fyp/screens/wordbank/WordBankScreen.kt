@@ -32,8 +32,8 @@ fun WordBankScreen(
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
-    val context = LocalContext.current
-    val supportedLanguages = remember { AzureLanguageConfig.loadSupportedLanguages(context).toList() }
+    // Use cached languages from ViewModel instead of loading on composition
+    val supportedLanguages = viewModel.supportedLanguages
 
     // Track current primary language in viewModel
     var currentPrimaryCode by remember { mutableStateOf(primaryLanguageCode) }

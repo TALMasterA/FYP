@@ -1,7 +1,9 @@
 package com.example.fyp.screens.wordbank
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.azure.AzureLanguageConfig
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
@@ -19,14 +21,19 @@ import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -36,6 +43,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WordBankViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val authRepo: FirebaseAuthRepository,
     private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val wordBankRepo: FirestoreWordBankRepository,
@@ -46,6 +54,11 @@ class WordBankViewModel @Inject constructor(
     private val sharedSettings: SharedSettingsDataSource,
     private val wordBankCacheDataStore: WordBankCacheDataStore
 ) : ViewModel() {
+
+    // Cached supported languages - loaded once and reused
+    val supportedLanguages: List<Pair<String, String>> by lazy {
+        AzureLanguageConfig.loadSupportedLanguages(context).toList()
+    }
 
     private val _uiState = MutableStateFlow(WordBankUiState())
     val uiState: StateFlow<WordBankUiState> = _uiState.asStateFlow()
@@ -355,26 +368,38 @@ class WordBankViewModel @Inject constructor(
             // Check cache (in-memory first, then persisted DataStore, then Firestore)
             val languagesToCheck = languageCounts.keys.filter { it !in wordBankExistsCache }
 
-            for (lang in languagesToCheck) {
-                try {
-                    // First check persisted cache
-                    val cachedExists = wordBankCacheDataStore.getWordBankExists(uid, primaryLanguageCode, lang)
-                    if (cachedExists != null) {
-                        wordBankExistsCache[lang] = cachedExists
-                    } else {
-                        // Not in persisted cache, check Firestore
-                        val exists = wordBankRepo.wordBankExists(uid, primaryLanguageCode, lang)
-                        wordBankExistsCache[lang] = exists
-                        // Save to persisted cache
-                        wordBankCacheDataStore.cacheWordBank(
-                            userId = uid,
-                            primaryLang = primaryLanguageCode,
-                            targetLang = lang,
-                            exists = exists
-                        )
+            // Parallelize existence checks for better performance
+            if (languagesToCheck.isNotEmpty()) {
+                coroutineScope {
+                    val results = languagesToCheck.map { lang ->
+                        lang to async {
+                            try {
+                                // First check persisted cache
+                                val cachedExists = wordBankCacheDataStore.getWordBankExists(uid, primaryLanguageCode, lang)
+                                if (cachedExists != null) {
+                                    cachedExists
+                                } else {
+                                    // Not in persisted cache, check Firestore
+                                    val exists = wordBankRepo.wordBankExists(uid, primaryLanguageCode, lang)
+                                    // Save to persisted cache
+                                    wordBankCacheDataStore.cacheWordBank(
+                                        userId = uid,
+                                        primaryLang = primaryLanguageCode,
+                                        targetLang = lang,
+                                        exists = exists
+                                    )
+                                    exists
+                                }
+                            } catch (_: Exception) {
+                                false
+                            }
+                        }
                     }
-                } catch (_: Exception) {
-                    wordBankExistsCache[lang] = false
+                    
+                    // Collect results
+                    results.forEach { (lang, deferred) ->
+                        wordBankExistsCache[lang] = deferred.await()
+                    }
                 }
             }
 
@@ -581,49 +606,51 @@ class WordBankViewModel @Inject constructor(
         }
     }
 
-    private fun parseWordBankResponse(content: String): List<WordBankItem> {
-        return try {
-            // Extract JSON from the response - handle various formats
-            var jsonStr = content.trim()
+    private suspend fun parseWordBankResponse(content: String): List<WordBankItem> {
+        return withContext(Dispatchers.Default) {
+            try {
+                // Extract JSON from the response - handle various formats
+                var jsonStr = content.trim()
 
-            // Remove markdown code blocks if present
-            if (jsonStr.contains("```")) {
-                val startIdx = jsonStr.indexOf("{")
-                val endIdx = jsonStr.lastIndexOf("}") + 1
-                if (startIdx >= 0 && endIdx > startIdx) {
-                    jsonStr = jsonStr.substring(startIdx, endIdx)
+                // Remove markdown code blocks if present
+                if (jsonStr.contains("```")) {
+                    val startIdx = jsonStr.indexOf("{")
+                    val endIdx = jsonStr.lastIndexOf("}") + 1
+                    if (startIdx >= 0 && endIdx > startIdx) {
+                        jsonStr = jsonStr.substring(startIdx, endIdx)
+                    }
                 }
-            }
 
-            // Find JSON object boundaries
-            val firstBrace = jsonStr.indexOf("{")
-            val lastBrace = jsonStr.lastIndexOf("}")
-            if (firstBrace >= 0 && lastBrace > firstBrace) {
-                jsonStr = jsonStr.substring(firstBrace, lastBrace + 1)
-            }
+                // Find JSON object boundaries
+                val firstBrace = jsonStr.indexOf("{")
+                val lastBrace = jsonStr.lastIndexOf("}")
+                if (firstBrace >= 0 && lastBrace > firstBrace) {
+                    jsonStr = jsonStr.substring(firstBrace, lastBrace + 1)
+                }
 
-            val json = Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            }
-            val jsonObject = json.parseToJsonElement(jsonStr).jsonObject
-            val wordsArray = jsonObject["words"]?.jsonArray ?: return emptyList()
+                val json = Json {
+                    ignoreUnknownKeys = true
+                    isLenient = true
+                }
+                val jsonObject = json.parseToJsonElement(jsonStr).jsonObject
+                val wordsArray = jsonObject["words"]?.jsonArray ?: return@withContext emptyList()
 
-            wordsArray.map { element ->
-                val wordObj = element.jsonObject
-                WordBankItem(
-                    id = UUID.randomUUID().toString(),
-                    originalWord = wordObj["original"]?.jsonPrimitive?.content ?: "",
-                    translatedWord = wordObj["translated"]?.jsonPrimitive?.content ?: "",
-                    pronunciation = wordObj["pronunciation"]?.jsonPrimitive?.content ?: "",
-                    example = wordObj["example"]?.jsonPrimitive?.content ?: "",
-                    category = wordObj["category"]?.jsonPrimitive?.content ?: "",
-                    difficulty = wordObj["difficulty"]?.jsonPrimitive?.content ?: ""
-                )
-            }.filter { it.originalWord.isNotBlank() && it.translatedWord.isNotBlank() }
-        } catch (e: Exception) {
-            android.util.Log.e("WordBankVM", "Failed to parse word bank: ${e.message}, content: $content")
-            emptyList()
+                wordsArray.map { element ->
+                    val wordObj = element.jsonObject
+                    WordBankItem(
+                        id = UUID.randomUUID().toString(),
+                        originalWord = wordObj["original"]?.jsonPrimitive?.content ?: "",
+                        translatedWord = wordObj["translated"]?.jsonPrimitive?.content ?: "",
+                        pronunciation = wordObj["pronunciation"]?.jsonPrimitive?.content ?: "",
+                        example = wordObj["example"]?.jsonPrimitive?.content ?: "",
+                        category = wordObj["category"]?.jsonPrimitive?.content ?: "",
+                        difficulty = wordObj["difficulty"]?.jsonPrimitive?.content ?: ""
+                    )
+                }.filter { it.originalWord.isNotBlank() && it.translatedWord.isNotBlank() }
+            } catch (e: Exception) {
+                android.util.Log.e("WordBankVM", "Failed to parse word bank: ${e.message}, content: $content")
+                emptyList()
+            }
         }
     }
 

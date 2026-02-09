@@ -45,3 +45,32 @@
 
 # Keep annotations
 -keepattributes *Annotation*
+
+# ============================================================================
+# Performance Optimizations
+# ============================================================================
+
+# Kotlin Coroutines optimization - Remove runtime checks in release builds
+-assumenosideeffects class kotlin.jvm.internal.Intrinsics {
+    public static void checkNotNull(...);
+    public static void checkParameterIsNotNull(...);
+    public static void checkNotNullParameter(...);
+    public static void checkExpressionValueIsNotNull(...);
+    public static void checkNotNullExpressionValue(...);
+    public static void checkReturnedValueIsNotNull(...);
+    public static void checkFieldIsNotNull(...);
+}
+
+# Optimize Compose - Remove debug source information
+-assumenosideeffects class androidx.compose.runtime.ComposerKt {
+    void sourceInformation(...);
+    void sourceInformationMarkerStart(...);
+    void sourceInformationMarkerEnd(...);
+}
+
+# Remove logging in release builds (keep error and warn)
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+}
