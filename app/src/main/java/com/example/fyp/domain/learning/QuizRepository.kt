@@ -1,7 +1,19 @@
 package com.example.fyp.domain.learning
 
 import com.example.fyp.model.*
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.Flow
+
+/**
+ * Data class for generated quiz document
+ */
+data class GeneratedQuizDoc(
+    val primaryLanguageCode: String = "",
+    val targetLanguageCode: String = "",
+    val questionsJson: String = "",
+    val generatedAt: Timestamp = Timestamp.now(),
+    val historyCountAtGenerate: Int = 0
+)
 
 /**
  * Repository interface for managing quizzes and quiz-related data.

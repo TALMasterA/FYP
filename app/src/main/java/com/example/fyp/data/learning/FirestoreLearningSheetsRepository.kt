@@ -26,12 +26,12 @@ class FirestoreLearningSheetsRepository @Inject constructor(
             .collection("learning_sheets")
             .document(docId(primary, target))
 
-    suspend fun getSheet(uid: String, primary: String, target: String): LearningSheetDoc? {
+    override suspend fun getSheet(uid: String, primary: String, target: String): LearningSheetDoc? {
         val snap = docRef(uid, norm(primary), norm(target)).get().await()
         return if (snap.exists()) snap.toObject(LearningSheetDoc::class.java) else null
     }
 
-    suspend fun upsertSheet(
+    override suspend fun upsertSheet(
         uid: String,
         primary: String,
         target: String,
