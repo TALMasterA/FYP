@@ -178,7 +178,16 @@ class LearningViewModel @Inject constructor(
     }
 
     // Cache for sheet metadata to avoid repeated Firestore reads
-    private val sheetMetaCache = mutableMapOf<String, SheetMetaCache>()
+    // Using LRU cache with max 50 entries to prevent memory leaks
+    private val sheetMetaCache = object : LinkedHashMap<String, SheetMetaCache>(
+        16,  // Initial capacity
+        0.75f,  // Load factor
+        true  // Access order (for LRU)
+    ) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SheetMetaCache>): Boolean {
+            return size > 50  // Max 50 entries to prevent unbounded growth
+        }
+    }
     private var lastPrimaryForCache: String? = null
 
     private data class SheetMetaCache(

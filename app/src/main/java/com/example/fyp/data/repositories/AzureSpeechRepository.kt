@@ -19,16 +19,23 @@ class AzureSpeechRepository(
     private val tokenClient: CloudSpeechTokenClient
 ) : SpeechRepository {
 
+    // Token validity constants
+    private companion object {
+        const val TOKEN_VALIDITY_MS = 9 * 60 * 1000L  // 9 minutes
+        const val TOKEN_REFRESH_BUFFER_MS = 30 * 1000L  // 30 seconds buffer before expiry
+    }
+
     private var cachedToken: String? = null
     private var cachedRegion: String? = null
     private var cachedTokenTimeMs: Long = 0L
 
     private suspend fun getSpeechConfig(): SpeechConfig {
         val now = System.currentTimeMillis()
+        // Refresh token 30 seconds before expiry to prevent failures during use
         val tokenValid =
             cachedToken != null &&
                     cachedRegion != null &&
-                    (now - cachedTokenTimeMs) < (9 * 60 * 1000)
+                    (now - cachedTokenTimeMs) < (TOKEN_VALIDITY_MS - TOKEN_REFRESH_BUFFER_MS)
 
         if (!tokenValid) {
             val resp = tokenClient.getSpeechToken()
