@@ -4,8 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
-import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
-import com.example.fyp.data.learning.FirestoreQuizRepository
+import com.example.fyp.domain.learning.LearningSheetsRepository
+import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.domain.history.ObserveUserHistoryUseCase
 import com.example.fyp.domain.learning.ParseAndStoreQuizUseCase
 import com.example.fyp.model.user.AuthState
@@ -47,10 +47,10 @@ data class LearningSheetUiState(
 class LearningSheetViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val authRepo: FirebaseAuthRepository,
-    private val sheetsRepo: FirestoreLearningSheetsRepository,
+    private val sheetsRepo: LearningSheetsRepository,
     private val observeUserHistory: ObserveUserHistoryUseCase,
     private val parseAndStoreQuiz: ParseAndStoreQuizUseCase,
-    private val quizRepo: FirestoreQuizRepository,
+    private val quizRepo: QuizRepository,
 ) : ViewModel() {
 
     private val primaryCode: String = savedStateHandle.get<String>("primaryCode").orEmpty()

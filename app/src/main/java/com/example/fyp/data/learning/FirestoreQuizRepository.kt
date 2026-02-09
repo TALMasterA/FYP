@@ -2,6 +2,7 @@ package com.example.fyp.data.learning
 
 import com.example.fyp.core.decodeOrDefault
 import com.example.fyp.domain.learning.CoinEligibility
+import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.model.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -15,7 +16,7 @@ import javax.inject.Inject
 
 class FirestoreQuizRepository @Inject constructor(
     private val db: FirebaseFirestore
-) {
+) : QuizRepository {
     private val json = Json { ignoreUnknownKeys = true }
 
     private fun docRef(uid: String, attemptId: String) =

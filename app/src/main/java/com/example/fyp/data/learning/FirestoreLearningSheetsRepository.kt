@@ -1,5 +1,6 @@
 package com.example.fyp.data.learning
 
+import com.example.fyp.domain.learning.LearningSheetsRepository
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -15,7 +16,7 @@ data class LearningSheetDoc(
 
 class FirestoreLearningSheetsRepository @Inject constructor(
     private val db: FirebaseFirestore
-) {
+) : LearningSheetsRepository {
     private fun norm(code: String) = code.trim()
     private fun docId(primary: String, target: String) = "${norm(primary)}__${norm(target)}"
 
