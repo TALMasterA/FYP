@@ -24,6 +24,8 @@ import javax.inject.Inject
 import com.example.fyp.data.settings.UserSettingsRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -227,30 +229,32 @@ class LearningViewModel @Inject constructor(
             if (languagesToFetch.isNotEmpty()) {
                 try {
                     // Fetch all sheets, quizzes, and awards concurrently using coroutineScope
-                    val results = languagesToFetch.map { lang ->
-                        lang to kotlinx.coroutines.async {
-                            try {
-                                val doc = sheetsRepo.getSheet(uid, primary, lang)
-                                val quizDoc = quizRepo.getGeneratedQuizDoc(uid, primary, lang)
-                                val lastAwarded = quizRepo.getLastAwardedQuizCount(uid, primary, lang)
-                                SheetMetaCache(
-                                    exists = doc != null,
-                                    sheetCount = doc?.historyCountAtGenerate,
-                                    quizCount = quizDoc?.historyCountAtGenerate,
-                                    lastAwardedCount = lastAwarded
-                                )
-                            } catch (ce: CancellationException) {
-                                throw ce
-                            } catch (e: Exception) {
-                                if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
-                                SheetMetaCache(false, null, null, null)
+                    coroutineScope {
+                        val results = languagesToFetch.map { lang ->
+                            lang to async {
+                                try {
+                                    val doc = sheetsRepo.getSheet(uid, primary, lang)
+                                    val quizDoc = quizRepo.getGeneratedQuizDoc(uid, primary, lang)
+                                    val lastAwarded = quizRepo.getLastAwardedQuizCount(uid, primary, lang)
+                                    SheetMetaCache(
+                                        exists = doc != null,
+                                        sheetCount = doc?.historyCountAtGenerate,
+                                        quizCount = quizDoc?.historyCountAtGenerate,
+                                        lastAwardedCount = lastAwarded
+                                    )
+                                } catch (ce: CancellationException) {
+                                    throw ce
+                                } catch (e: Exception) {
+                                    if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
+                                    SheetMetaCache(false, null, null, null)
+                                }
                             }
                         }
-                    }
 
-                    // Await all results
-                    results.forEach { pair ->
-                        sheetMetaCache[pair.first] = pair.second.await()
+                        // Await all results
+                        results.forEach { pair ->
+                            sheetMetaCache[pair.first] = pair.second.await()
+                        }
                     }
                 } catch (ce: CancellationException) {
                     throw ce

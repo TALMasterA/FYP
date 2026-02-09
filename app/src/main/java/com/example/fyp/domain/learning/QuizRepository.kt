@@ -105,17 +105,13 @@ interface QuizRepository {
 
     /**
      * Awards coins if the user is eligible (with anti-cheat checks).
-     * @return The number of coins awarded, or -1 if not eligible
+     * @return True if coins were awarded, false otherwise
      */
     suspend fun awardCoinsIfEligible(
         uid: String,
-        primaryCode: String,
-        targetCode: String,
-        correctCount: Int,
-        totalCount: Int,
-        currentSheetRecordCount: Int,
-        currentSheetVersion: Int
-    ): Int
+        attempt: QuizAttempt,
+        latestHistoryCount: Int?
+    ): Boolean
 
     /**
      * Deducts coins from user balance.
