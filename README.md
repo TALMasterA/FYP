@@ -19,9 +19,6 @@ Link: https://appdistribution.firebase.dev/i/5ebf3d592700b0f7
 **Frontend:**
 - Android Studio
 - Kotlin
-- Jetpack Compose (UI)
-- Hilt (Dependency Injection)
-- MVVM Architecture
 
 **Backend:**
 - Firebase Authentication (Email/Password)
@@ -30,9 +27,8 @@ Link: https://appdistribution.firebase.dev/i/5ebf3d592700b0f7
 - Azure Speech & Translation Services
 
 **Tools:**
-- GitHub (Version Control)
-- Firebase Console
-- GitHub CLI
+- GitHub
+- Firebase
 
 --------------------------------------------------------------
 
@@ -211,15 +207,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 - Azure Translation API
 - Azure Speech Recognition API
 - Generative AI API for learning materials
-
---------------------------------------------------------------
-
-## 🐛 Common Troubleshooting
-
-- Lag/freezing → Restart the app
-- Microphone not working → Check app permissions
-- Translation not appearing → Verify internet connection
-- Voice not playing → Check device volume
 
 --------------------------------------------------------------
 
