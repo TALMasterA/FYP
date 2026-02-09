@@ -298,7 +298,11 @@ class WordBankViewModel @Inject constructor(
                 selectedLanguageCode = null,
                 currentWordBank = null
             )
-            refreshClusters()
+            // Force refresh to ensure immediate data update
+            viewModelScope.launch {
+                sharedHistoryDataSource.forceRefreshLanguageCounts(code)
+                refreshClusters()
+            }
         }
     }
 
@@ -310,6 +314,10 @@ class WordBankViewModel @Inject constructor(
         sharedHistoryDataSource.startObserving(userId)
 
         historyJob = viewModelScope.launch {
+            // Force refresh on initial load to ensure data is fresh when user enters screen
+            sharedHistoryDataSource.forceRefreshLanguageCounts(primaryLanguageCode)
+            refreshClusters()
+
             sharedHistoryDataSource.historyRecords
                 .collect { list ->
                     records = list

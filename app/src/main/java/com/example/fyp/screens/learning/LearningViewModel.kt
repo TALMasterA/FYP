@@ -133,6 +133,10 @@ class LearningViewModel @Inject constructor(
 
         // Same pattern as WordBank: refresh counts then clusters in same collect block
         historyJob = viewModelScope.launch {
+            // Force refresh on initial load to ensure data is fresh when user enters screen
+            sharedHistoryDataSource.forceRefreshLanguageCounts(_uiState.value.primaryLanguageCode)
+            refreshClusters()
+
             sharedHistoryDataSource.historyRecords.collect { records ->
                 _uiState.value = _uiState.value.copy(records = records, isLoading = false)
                 // Refresh total language counts for generation eligibility
