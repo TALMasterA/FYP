@@ -27,7 +27,7 @@ import javax.inject.Singleton
 class SharedHistoryDataSource @Inject constructor(
     private val historyRepo: FirestoreHistoryRepository
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private var currentUserId: String? = null
     private var currentLimit: Long = UserSettings.BASE_HISTORY_LIMIT.toLong()

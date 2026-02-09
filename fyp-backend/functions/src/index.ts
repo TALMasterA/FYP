@@ -3,7 +3,7 @@ import {defineSecret} from "firebase-functions/params";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import fetch from "node-fetch";
 
-setGlobalOptions({maxInstances: 10});
+setGlobalOptions({maxInstances: 50});
 
 const AZURE_SPEECH_KEY = defineSecret("AZURE_SPEECH_KEY");
 const AZURE_SPEECH_REGION = defineSecret("AZURE_SPEECH_REGION");
