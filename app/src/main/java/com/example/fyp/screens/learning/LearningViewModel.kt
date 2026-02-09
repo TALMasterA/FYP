@@ -24,6 +24,8 @@ import javax.inject.Inject
 import com.example.fyp.data.settings.UserSettingsRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ensureActive
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 data class LearningUiState(
     val isLoading: Boolean = true,
@@ -62,6 +64,7 @@ class LearningViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(LearningUiState())
     val uiState: StateFlow<LearningUiState> = _uiState.asStateFlow()
 
+    private val json = Json { ignoreUnknownKeys = true }
     private var uid: String? = null
     private var historyJob: Job? = null
     private var settingsJob: Job? = null
@@ -246,8 +249,8 @@ class LearningViewModel @Inject constructor(
                     }
 
                     // Await all results
-                    results.forEach { (lang, deferred) ->
-                        sheetMetaCache[lang] = deferred.await()
+                    results.forEach { pair ->
+                        sheetMetaCache[pair.first] = pair.second.await()
                     }
                 } catch (ce: CancellationException) {
                     throw ce
@@ -404,9 +407,9 @@ class LearningViewModel @Inject constructor(
 
                 quizRepo.upsertGeneratedQuiz(
                     uid = uid,
-                    primaryLanguageCode = primary,
-                    targetLanguageCode = languageCode,
-                    questions = questions.take(10),
+                    primaryCode = primary,
+                    targetCode = languageCode,
+                    quizData = json.encodeToString(questions.take(10)),
                     historyCountAtGenerate = sheetHistoryCount
                 )
 
