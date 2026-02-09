@@ -1,10 +1,47 @@
 # 📋 FYP - Comprehensive Code Review & Improvement Recommendations
 
 **Review Date:** February 2026  
+**Last Updated:** February 9, 2026  
 **Project:** Translation & Language Learning Android App  
 **Tech Stack:** Kotlin, Jetpack Compose, Firebase, Azure Services  
 **Lines of Code:** ~20,665 (Kotlin main source)  
 **Files Analyzed:** 154 Kotlin files + TypeScript backend
+
+---
+
+## 🔍 IMPLEMENTATION REVIEW & DECISIONS (February 9, 2026)
+
+### ✅ Safe to Implement (No Logic Changes)
+The following improvements are **pure optimizations** that don't change app behavior:
+- Error response leakage fix ✅ (COMPLETED)
+- Repository interfaces ✅ (COMPLETED)  
+- Parallel async queries ✅ (COMPLETED)
+- Token refresh buffer ✅ (COMPLETED)
+- LRU cache for metadata ✅ (COMPLETED)
+- Sensitive data logging (already fixed) ✅
+- Unnecessary recompositions (optimization only)
+
+### ❌ Rejected (Would Change App Logic)
+The following improvements were **intentionally NOT implemented** because they change app behavior:
+
+#### 1. Real-Time Listener Limit Reduction (200 → 100)
+**Decision:** REVERTED  
+**Reason:** UserSettings.MAX_HISTORY_LIMIT = 150. Repository must fetch ≥ max UI limit. Reducing to 100 breaks users who purchased expanded history viewing.
+
+#### 2. Server-Side Rate Limiting for translateTexts()
+**Decision:** NOT IMPLEMENTED  
+**Reason:** Current client-side enforcement allows 1 free translation for guest users. Server-side enforcement would change this behavior and require additional Firestore writes for tracking.
+
+#### 3. Write Batching in Continuous Conversation
+**Decision:** NOT IMPLEMENTED  
+**Reason:** Immediate save is intentional for data safety. Batching would risk data loss if app crashes before flush. Real-time conversation requires immediate persistence.
+
+#### 4. Real-Time Listener Pagination
+**Decision:** NOT IMPLEMENTED  
+**Reason:** Trade-off decision. Current implementation prioritizes instant updates. Full pagination would require significant UI/UX changes and remove real-time sync benefits.
+
+### 📝 Recommendations Removed from Active List
+The above rejected items have been documented but **removed from implementation recommendations** as they would alter intended app behavior.
 
 ---
 
@@ -443,9 +480,11 @@ throw new HttpsError("internal", "Translation service unavailable. Please try ag
 
 ---
 
-#### 2. Unprotected Public Function
+#### ❌ NOT RECOMMENDED: Unprotected Public Function
 
-**Location:** `fyp-backend/functions/src/index.ts` line 144
+**Location:** `fyp-backend/functions/src/index.ts` line 152
+
+**Status:** REVIEWED - NOT IMPLEMENTING (Would Change App Logic)
 
 **Problem:**
 ```typescript
@@ -456,55 +495,16 @@ export const translateTexts = onCall(
     // Non-logged-in users can only call this once (enforced client-side)
 ```
 
-**Risk:**
-- **No authentication** on this endpoint
-- "Client-side rate limiting" is **NOT secure** - anyone can bypass
-- Direct API calls can drain Azure quota
-- Cost abuse potential
+**Why Not Implementing:**
+- Current behavior: Guest users get 1 free UI language translation (client-side enforcement)
+- Fix Option 1 (Add Auth): Would break guest user functionality entirely
+- Fix Option 2 (Server-side rate limiting): Would require Firestore writes, changing the data model and behavior
+- **Decision:** Client-side enforcement is intentional for guest user experience. Server-side changes would alter app logic.
 
-**Fix Option 1 - Add Authentication:**
-```typescript
-export const translateTexts = onCall(
-  {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
+**Alternative:** Document current behavior and rely on Firebase quota limits for abuse protection.
+
+---
   async (request) => {
-    requireAuth(request.auth); // Add this line
-    // ... rest of code
-```
-
-**Fix Option 2 - Server-Side Rate Limiting:**
-```typescript
-// Use Firestore to track usage
-export const translateTexts = onCall(
-  {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
-  async (request) => {
-    const ipAddress = request.rawRequest.ip;
-    
-    // Check rate limit in Firestore
-    const rateLimitDoc = await admin.firestore()
-      .collection('rateLimits')
-      .doc(ipAddress)
-      .get();
-    
-    const calls = rateLimitDoc.data()?.calls || 0;
-    const lastReset = rateLimitDoc.data()?.lastReset || 0;
-    
-    if (calls >= 1 && Date.now() - lastReset < 86400000) { // 24 hours
-      throw new HttpsError('resource-exhausted', 'Rate limit exceeded');
-    }
-    
-    // ... translation logic
-    
-    // Update rate limit
-    await admin.firestore().collection('rateLimits').doc(ipAddress).set({
-      calls: calls + 1,
-      lastReset: Date.now()
-    });
-```
-
-**Recommendation:** Implement Option 2 for better guest user experience
-
-**Estimated Effort:** 1-2 hours
-
 ---
 
 #### 3. Missing Firestore Security Rules
@@ -663,57 +663,31 @@ val docs = db.getAll(*refs.toTypedArray()).await()
 
 ---
 
-**✅ COMPLETED: Real-Time Listener Optimization**
+#### ❌ NOT RECOMMENDED: Real-Time Listener Pagination
 
-**Status:** OPTIMIZED - Reduced limit from 200 to 100
+**Status:** REVIEWED - NOT IMPLEMENTING (Design Trade-off, Would Change UX)
 
-**Location:** `FirestoreHistoryRepository.kt`
+**Location:** `FirestoreHistoryRepository.kt` line 71
 
+**Current Behavior:**
 ```kotlin
-// Current: Re-fetches all 200 records on every change
+// Real-time listener with limit
 db.collection("users/$uid/history")
     .orderBy("timestamp", Query.Direction.DESCENDING)
-    .limit(limit) // limit = 200
+    .limit(200) // Matches max possible UI limit
     .addSnapshotListener { snapshot, error ->
-        // Processes all 200 records
+        // Processes all records, provides instant updates
     }
 ```
 
-**Impact:**
-- Every new translation triggers re-downloading 200 records
-- High bandwidth usage
-- Battery drain on mobile
+**Why Not Implementing Full Pagination:**
+- Current design: Real-time sync provides instant updates across devices
+- Pagination would require manual refresh, losing real-time sync benefit
+- Would need significant UI/UX changes (load more buttons, pagination controls)
+- Current limit (200) matches UserSettings.MAX_HISTORY_LIMIT (150) with buffer
+- **Decision:** Real-time updates are a core feature. Keep current design.
 
-**Fix - Add Pagination:**
-```kotlin
-// Implement cursor-based pagination
-data class HistoryPage(
-    val records: List<TranslationRecord>,
-    val nextCursor: DocumentSnapshot?
-)
-
-suspend fun getHistoryPage(
-    uid: String,
-    pageSize: Int = 50,
-    cursor: DocumentSnapshot? = null
-): Result<HistoryPage> {
-    var query = db.collection("users/$uid/history")
-        .orderBy("timestamp", Query.Direction.DESCENDING)
-        .limit(pageSize.toLong())
-    
-    if (cursor != null) {
-        query = query.startAfter(cursor)
-    }
-    
-    val snapshot = query.get().await()
-    val records = snapshot.documents.mapNotNull { it.toObject<TranslationRecord>() }
-    val nextCursor = snapshot.documents.lastOrNull()
-    
-    return Result.success(HistoryPage(records, nextCursor))
-}
-```
-
-**Estimated Effort:** 4-6 hours (includes UI changes)
+**Note:** Limit was restored to 200 (from temporary 100 reduction) to support users who purchased expanded history viewing.
 
 ---
 
@@ -802,62 +776,42 @@ val sourceLanguageOptions by remember {
 }
 ```
 
-**Estimated Effort:** 1 hour for all recomposition issues
+**Estimated Effort:** 1 hour for all recomposition issues (safe optimizations)
 
 ---
 
-#### 🟡 MEDIUM: Write Thrashing in Continuous Conversation
+#### ❌ NOT RECOMMENDED: Write Thrashing in Continuous Conversation
 
-**Location:** `ContinuousConversationController.kt`
+**Location:** `ContinuousConversationController.kt` line 130
+
+**Status:** REVIEWED - NOT IMPLEMENTING (Would Change App Logic)
 
 **Problem:**
 ```kotlin
 // Every translation immediately saved to Firestore
-fun processTranslation(text: String) {
-    val translation = translateText(text)
-    saveToFirestore(translation)  // Immediate write
-}
+saveHistory(
+    "continuous",
+    finalText,
+    tr.text,
+    speakingLang,
+    targetLang,
+    continuousSessionId.orEmpty(),
+    speaker,
+    direction,
+    seq,
+)
 ```
 
-**Impact:** Rapid conversation = 10-20 writes/minute = quota exhaustion + cost
+**Impact:** Rapid conversation = 10-20 writes/minute
 
-**Fix:**
-```kotlin
-// Batch writes every 5-10 seconds
-class ConversationBufferWriter(
-    private val repository: HistoryRepository,
-    private val scope: CoroutineScope
-) {
-    private val buffer = mutableListOf<TranslationRecord>()
-    private var flushJob: Job? = null
-    
-    fun add(record: TranslationRecord) {
-        buffer.add(record)
-        scheduleFlush()
-    }
-    
-    private fun scheduleFlush() {
-        flushJob?.cancel()
-        flushJob = scope.launch {
-            delay(5000) // 5-second buffer
-            flush()
-        }
-    }
-    
-    private suspend fun flush() {
-        if (buffer.isEmpty()) return
-        val toSave = buffer.toList()
-        buffer.clear()
-        repository.saveBatch(toSave)
-    }
-    
-    fun flushImmediately() {
-        scope.launch { flush() }
-    }
-}
-```
+**Why Not Implementing:**
+- Current behavior: Immediate save ensures data safety
+- Batching would risk data loss if app crashes before flush
+- Real-time conversation requires immediate persistence for data integrity
+- Users expect each message to be saved as it happens
+- **Decision:** Immediate writes are intentional for data reliability in real-time conversations
 
-**Estimated Effort:** 2-3 hours
+**Alternative:** Current behavior is appropriate. Firestore quota is sufficient for typical usage.
 
 ---
 
