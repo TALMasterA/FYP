@@ -30,9 +30,15 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import com.example.fyp.data.cloud.CloudGenAiClient
 import com.example.fyp.data.learning.LearningContentRepositoryImpl
+import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
+import com.example.fyp.data.learning.FirestoreQuizRepository
+import com.example.fyp.data.history.FirestoreHistoryRepository
+import com.example.fyp.domain.history.HistoryRepository
 import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
 import com.example.fyp.domain.learning.GenerateQuizUseCase
 import com.example.fyp.domain.learning.LearningContentRepository
+import com.example.fyp.domain.learning.LearningSheetsRepository
+import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.domain.learning.QuizGenerationRepository
 import com.example.fyp.data.learning.QuizGenerationRepositoryImpl
 import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
@@ -165,4 +171,19 @@ object AppModule {
     @Provides
     fun provideSetVoiceForLanguageUseCase(repo: UserSettingsRepository) =
         SetVoiceForLanguageUseCase(repo)
+
+    @Provides
+    @Singleton
+    fun provideLearningSheetsRepository(db: FirebaseFirestore): LearningSheetsRepository =
+        FirestoreLearningSheetsRepository(db)
+
+    @Provides
+    @Singleton
+    fun provideQuizRepository(db: FirebaseFirestore): QuizRepository =
+        FirestoreQuizRepository(db)
+
+    @Provides
+    @Singleton
+    fun provideHistoryRepository(db: FirebaseFirestore): HistoryRepository =
+        FirestoreHistoryRepository(db)
 }

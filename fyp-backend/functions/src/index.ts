@@ -87,8 +87,12 @@ export const getSpeechToken = onCall(
 
     const token = await resp.text();
     if (!resp.ok) {
+      console.error("Speech token API error", {
+        status: resp.status,
+        errorPreview: token.substring(0, 200)
+      });
       throw new HttpsError(
-        "internal", `Speech token HTTP ${resp.status}: ${token}`
+        "internal", "Speech service unavailable. Please try again."
       );
     }
 
@@ -130,8 +134,12 @@ export const translateText = onCall(
 
     const bodyText = await resp.text();
     if (!resp.ok) {
+      console.error("Single translation API error", {
+        status: resp.status,
+        errorPreview: bodyText.substring(0, 200)
+      });
       throw new HttpsError(
-        "internal", `Translator HTTP ${resp.status}: ${bodyText}`
+        "internal", "Translation service unavailable. Please try again."
       );
     }
 
@@ -168,8 +176,12 @@ export const translateTexts = onCall(
 
     const bodyText = await resp.text();
     if (!resp.ok) {
+      console.error("Batch translation API error", {
+        status: resp.status,
+        errorPreview: bodyText.substring(0, 200)
+      });
       throw new HttpsError(
-        "internal", `Translator HTTP ${resp.status}: ${bodyText}`
+        "internal", "Translation service unavailable. Please try again."
       );
     }
 
@@ -222,7 +234,13 @@ export const generateLearningContent = onCall(
 
     const text = await resp.text();
     if (!resp.ok) {
-      throw new HttpsError("internal", `GenAI HTTP ${resp.status}: ${text}`);
+      console.error("GenAI API error", {
+        status: resp.status,
+        errorPreview: text.substring(0, 200)
+      });
+      throw new HttpsError(
+        "internal", "AI content generation service unavailable. Please try again."
+      );
     }
 
     const json = JSON.parse(text);
@@ -260,8 +278,12 @@ export const detectLanguage = onCall(
 
     const bodyText = await resp.text();
     if (!resp.ok) {
+      console.error("Language detection API error", {
+        status: resp.status,
+        errorPreview: bodyText.substring(0, 200)
+      });
       throw new HttpsError(
-        "internal", `Detect language HTTP ${resp.status}: ${bodyText}`
+        "internal", "Language detection service unavailable. Please try again."
       );
     }
 

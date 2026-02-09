@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
-import com.example.fyp.data.learning.FirestoreQuizRepository
+import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.domain.history.DeleteHistoryRecordUseCase
 import com.example.fyp.domain.history.DeleteSessionUseCase
@@ -45,7 +45,7 @@ class HistoryViewModel @Inject constructor(
     private val deleteHistoryRecord: DeleteHistoryRecordUseCase,
     private val renameSession: RenameSessionUseCase,
     private val deleteSession: DeleteSessionUseCase,
-    private val quizRepo: FirestoreQuizRepository,
+    private val quizRepo: QuizRepository,
     private val favoritesRepo: FirestoreFavoritesRepository
 ) : ViewModel() {
 

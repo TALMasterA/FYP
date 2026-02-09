@@ -3,7 +3,7 @@ package com.example.fyp.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
-import com.example.fyp.data.learning.FirestoreQuizRepository
+import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.UserSettings
@@ -30,7 +30,7 @@ data class ShopUiState(
 class ShopViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val settingsRepo: UserSettingsRepository,
-    private val quizRepo: FirestoreQuizRepository
+    private val quizRepo: QuizRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ShopUiState())

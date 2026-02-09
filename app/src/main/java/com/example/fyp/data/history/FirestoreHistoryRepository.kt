@@ -1,5 +1,6 @@
 package com.example.fyp.data.history
 
+import com.example.fyp.domain.history.HistoryRepository
 import com.example.fyp.model.TranslationRecord
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -16,7 +17,7 @@ import android.util.Log
 @Singleton
 class FirestoreHistoryRepository @Inject constructor(
     private val firestore: FirebaseFirestore
-) {
+) : HistoryRepository {
     companion object {
         // Default limit for history queries to reduce read costs
         const val DEFAULT_HISTORY_LIMIT = 200L

@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
-import com.example.fyp.data.learning.FirestoreLearningSheetsRepository
-import com.example.fyp.data.learning.FirestoreQuizRepository
+import com.example.fyp.domain.learning.LearningSheetsRepository
+import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.learning.QuizParser
 import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
 import com.example.fyp.domain.learning.GenerateQuizUseCase
@@ -50,13 +50,13 @@ data class LearningUiState(
 @HiltViewModel
 class LearningViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
-    private val sheetsRepo: FirestoreLearningSheetsRepository,
+    private val sheetsRepo: LearningSheetsRepository,
     private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val observeUserSettings: ObserveUserSettingsUseCase,
     private val generateLearningMaterials: GenerateLearningMaterialsUseCase,
     private val userSettingsRepo: UserSettingsRepository,
     private val generateQuizUseCase: GenerateQuizUseCase,
-    private val quizRepo: FirestoreQuizRepository,
+    private val quizRepo: QuizRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LearningUiState())
@@ -211,23 +211,39 @@ class LearningViewModel @Inject constructor(
             // Only fetch metadata for languages not in cache
             val languagesToFetch = languages.filter { it !in sheetMetaCache }
 
-            for (lang in languagesToFetch) {
+            // OPTIMIZATION: Batch all reads together instead of sequential queries
+            if (languagesToFetch.isNotEmpty()) {
                 try {
-                    val doc = sheetsRepo.getSheet(uid, primary, lang)
-                    val quizDoc = quizRepo.getGeneratedQuizDoc(uid, primary, lang)
-                    val lastAwarded = quizRepo.getLastAwardedQuizCount(uid, primary, lang)
+                    // Fetch all sheets, quizzes, and awards concurrently using coroutineScope
+                    val results = languagesToFetch.map { lang ->
+                        lang to kotlinx.coroutines.async {
+                            try {
+                                val doc = sheetsRepo.getSheet(uid, primary, lang)
+                                val quizDoc = quizRepo.getGeneratedQuizDoc(uid, primary, lang)
+                                val lastAwarded = quizRepo.getLastAwardedQuizCount(uid, primary, lang)
+                                SheetMetaCache(
+                                    exists = doc != null,
+                                    sheetCount = doc?.historyCountAtGenerate,
+                                    quizCount = quizDoc?.historyCountAtGenerate,
+                                    lastAwardedCount = lastAwarded
+                                )
+                            } catch (ce: CancellationException) {
+                                throw ce
+                            } catch (e: Exception) {
+                                if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
+                                SheetMetaCache(false, null, null, null)
+                            }
+                        }
+                    }
 
-                    sheetMetaCache[lang] = SheetMetaCache(
-                        exists = doc != null,
-                        sheetCount = doc?.historyCountAtGenerate,
-                        quizCount = quizDoc?.historyCountAtGenerate,
-                        lastAwardedCount = lastAwarded
-                    )
+                    // Await all results
+                    results.forEach { (lang, deferred) ->
+                        sheetMetaCache[lang] = deferred.await()
+                    }
                 } catch (ce: CancellationException) {
                     throw ce
                 } catch (e: Exception) {
                     if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
-                    sheetMetaCache[lang] = SheetMetaCache(false, null, null, null)
                 }
             }
 
