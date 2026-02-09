@@ -22,7 +22,7 @@ interface HistoryRepository {
     /**
      * Observes translation history with a limit.
      */
-    fun getHistory(userId: String, limit: Long): Flow<List<TranslationRecord>>
+    fun getHistory(userId: String, limit: Long = 200): Flow<List<TranslationRecord>>
 
     /**
      * Gets the total count of translation records.
