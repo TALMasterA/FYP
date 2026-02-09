@@ -213,19 +213,25 @@ class FirestoreQuizRepository @Inject constructor(
 
     override suspend fun upsertGeneratedQuiz(
         uid: String,
-        primaryLanguageCode: String,
-        targetLanguageCode: String,
-        questions: List<QuizQuestion>,
+        primaryCode: String,
+        targetCode: String,
+        quizData: String,
         historyCountAtGenerate: Int
     ) {
+        val questions = try {
+            json.decodeFromString<List<QuizQuestion>>(quizData)
+        } catch (e: Exception) {
+            return // Invalid quiz data
+        }
+        
         val doc = GeneratedQuizDoc(
-            primaryLanguageCode = primaryLanguageCode,
-            targetLanguageCode = targetLanguageCode,
-            questionsJson = json.encodeToString<List<QuizQuestion>>(questions),
+            primaryLanguageCode = primaryCode,
+            targetLanguageCode = targetCode,
+            questionsJson = quizData,
             generatedAt = Timestamp.now(),
             historyCountAtGenerate = historyCountAtGenerate
         )
-        generatedQuizDocRef(uid, primaryLanguageCode, targetLanguageCode).set(doc).await()
+        generatedQuizDocRef(uid, primaryCode, targetCode).set(doc).await()
     }
 
     override suspend fun getGeneratedQuizQuestions(
