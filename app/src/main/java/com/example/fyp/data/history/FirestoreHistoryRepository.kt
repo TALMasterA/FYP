@@ -19,11 +19,10 @@ class FirestoreHistoryRepository @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : HistoryRepository {
     companion object {
-        // Default limit for history queries to reduce read costs and improve performance
-        // Note: Using real-time listener provides instant updates but re-fetches on each change.
-        // Trade-off: Real-time updates vs bandwidth. For pagination, consider implementing
-        // cursor-based pagination with manual refresh instead of real-time listener.
-        const val DEFAULT_HISTORY_LIMIT = 100L  // Reduced from 200 to improve performance
+        // Default limit for history queries to reduce read costs
+        // Note: This is separate from UserSettings.historyViewLimit which controls UI display
+        // This fetch limit should be >= the maximum possible UI display limit
+        const val DEFAULT_HISTORY_LIMIT = 200L
     }
 
     suspend fun save(record: TranslationRecord) {
@@ -68,11 +67,6 @@ class FirestoreHistoryRepository @Inject constructor(
     /**
      * Observe history with a limit to reduce Firestore reads.
      * Returns most recent records first (descending by timestamp).
-     * 
-     * Note: This uses a real-time listener which re-fetches all records on each change.
-     * This provides instant updates but uses more bandwidth. The limit is set to reduce
-     * the impact. For better performance with large datasets, consider implementing
-     * cursor-based pagination with manual refresh.
      */
     fun getHistory(userId: String, limit: Long = DEFAULT_HISTORY_LIMIT): Flow<List<TranslationRecord>> = callbackFlow {
         val listener = firestore.collection("users")
