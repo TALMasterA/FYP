@@ -7,12 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.data.azure.AzureLanguageConfig
 import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts

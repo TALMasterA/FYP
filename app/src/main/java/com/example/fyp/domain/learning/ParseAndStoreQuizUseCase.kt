@@ -21,7 +21,7 @@ class ParseAndStoreQuizUseCase @Inject constructor(
     /**
      * Parse questions from AI-generated learning content
      */
-    fun parseQuestionsFromContent(content: String): List<QuizQuestion> {
+    suspend fun parseQuestionsFromContent(content: String): List<QuizQuestion> {
         return QuizParser.parseQuizFromContent(content)
     }
 
