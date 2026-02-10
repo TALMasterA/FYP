@@ -32,8 +32,11 @@ object ContentCleaner {
     fun extractQuizSection(content: String): String {
         val quizStart = findQuizStart(content)
         return if (quizStart >= 0) {
-            Log.d("ContentCleaner", "Extracted quiz section from content (start=$quizStart)")
-            content.substring(quizStart)
+            // Find the end of the "QUIZ SECTION" line
+            val lineEnd = content.indexOf('\n', quizStart)
+            val actualStart = if (lineEnd != -1) lineEnd + 1 else quizStart
+            // Log.d("ContentCleaner", "Extracted quiz section from content (start=$actualStart)")
+            content.substring(actualStart).trim()
         } else {
             ""
         }

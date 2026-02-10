@@ -236,9 +236,9 @@ class LanguageValidationTest {
         val countryCode = parts[1]
 
         return langCode.length in 2..3 &&
-               langCode.all { it.isLowerCase() || it.isLetter() } &&
+               langCode.all { it.isLowerCase() } &&
                countryCode.length == 2 &&
-               countryCode.all { it.isUpperCase() || it.isLetter() }
+               countryCode.all { it.isUpperCase() }
     }
 
     private fun isSupportedLanguage(code: String): Boolean {
