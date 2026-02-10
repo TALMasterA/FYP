@@ -24,7 +24,7 @@ import org.mockito.kotlin.whenever
 class UnlockColorPaletteWithCoinsUseCaseTest {
 
     private lateinit var settingsRepo: UserSettingsRepository
-    private lateinit var quizRepo: FirestoreQuizRepository
+    private lateinit var quizRepo: com.example.fyp.domain.learning.QuizRepository
     private lateinit var useCase: UnlockColorPaletteWithCoinsUseCase
 
     @Before

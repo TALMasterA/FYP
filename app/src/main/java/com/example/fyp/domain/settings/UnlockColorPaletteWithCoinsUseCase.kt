@@ -1,12 +1,12 @@
 package com.example.fyp.domain.settings
 
-import com.example.fyp.data.learning.FirestoreQuizRepository
+import com.example.fyp.domain.learning.QuizRepository // Added import
 import com.example.fyp.data.settings.UserSettingsRepository
 import javax.inject.Inject
 
 class UnlockColorPaletteWithCoinsUseCase @Inject constructor(
     private val settingsRepo: UserSettingsRepository,
-    private val quizRepo: FirestoreQuizRepository
+    private val quizRepo: QuizRepository
 ) {
     suspend operator fun invoke(userId: String, paletteId: String, cost: Int): Result {
         // Free palette (default), just unlock it

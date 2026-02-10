@@ -23,8 +23,7 @@ Explanation: E
         """.trimIndent()
 
         val quiz = ContentCleaner.extractQuizSection(content)
-        assertTrue(quiz.startsWith("QUIZ SECTION", ignoreCase = true))
-        assertTrue(quiz.contains("1."))
+        assertTrue(quiz.startsWith("1. Q?"))
     }
 
     @Test
@@ -45,7 +44,6 @@ Explanation: E
         """.trimIndent()
 
         val quiz = ContentCleaner.extractQuizSection(content)
-        assertTrue(quiz.startsWith("QUIZ SECTION", ignoreCase = true))
-        assertTrue(quiz.contains("1."))
+        assertTrue(quiz.startsWith("1. Q?"))
     }
 }

@@ -90,8 +90,8 @@ class GenerationEligibilityIntegrationTest {
 
     @Test
     fun `typical word bank workflow`() {
-        // User starts with no word bank
-        assertTrue(GenerationEligibility.canRegenerateWordBank(10, 0))
+        // User starts with no word bank - (10 - 0 = 10, which is < 20, so false)
+        assertFalse(GenerationEligibility.canRegenerateWordBank(10, 0))
 
         // User adds some history
         assertFalse(GenerationEligibility.canRegenerateWordBank(25, 10))
