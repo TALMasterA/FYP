@@ -56,8 +56,8 @@ class WordBankViewModel @Inject constructor(
 ) : ViewModel() {
 
     // Cached supported languages - loaded once and reused
-    val supportedLanguages: List<Pair<String, String>> by lazy {
-        AzureLanguageConfig.loadSupportedLanguages(context).toList()
+    val supportedLanguages: List<String> by lazy {
+        AzureLanguageConfig.loadSupportedLanguages(context)
     }
 
     private val _uiState = MutableStateFlow(WordBankUiState())
