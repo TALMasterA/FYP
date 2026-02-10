@@ -22,7 +22,9 @@ data class FavoritesUiState(
     val isLoading: Boolean = true,
     val favorites: List<FavoriteRecord> = emptyList(),
     val error: String? = null,
-    val speakingId: String? = null
+    val speakingId: String? = null,
+    val visibleCount: Int = 20, // Initial visible count for lazy loading
+    val hasMore: Boolean = false // Whether there are more favorites to load
 )
 
 @HiltViewModel
@@ -71,23 +73,53 @@ class FavoritesViewModel @Inject constructor(
     }
 
     /**
-     * Load favorites once (on-demand) instead of real-time listener.
-     * Call refresh() to reload when screen becomes visible.
+     * Load favorites with lazy loading support (Priority 2 #9: Lazy Loading for Favorites).
+     * Initially loads only visibleCount items to improve performance.
      */
     private fun loadFavorites(userId: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val favorites = favoritesRepo.getAllFavoritesOnce(userId)
+                val allFavorites = favoritesRepo.getAllFavoritesOnce(userId)
+                val visibleCount = _uiState.value.visibleCount
+                val visibleFavorites = allFavorites.take(visibleCount)
+                val hasMore = allFavorites.size > visibleCount
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    favorites = favorites,
+                    favorites = visibleFavorites,
+                    hasMore = hasMore,
                     error = null
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = e.message ?: "Failed to load favorites"
+                )
+            }
+        }
+    }
+
+    /**
+     * Load more favorites (for infinite scroll or "Load More" button).
+     */
+    fun loadMoreFavorites() {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            try {
+                val allFavorites = favoritesRepo.getAllFavoritesOnce(userId)
+                val newVisibleCount = _uiState.value.visibleCount + 20
+                val visibleFavorites = allFavorites.take(newVisibleCount)
+                val hasMore = allFavorites.size > newVisibleCount
+
+                _uiState.value = _uiState.value.copy(
+                    favorites = visibleFavorites,
+                    visibleCount = newVisibleCount,
+                    hasMore = hasMore
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = e.message ?: "Failed to load more favorites"
                 )
             }
         }

@@ -74,6 +74,10 @@ dependencies {
     // Networking
     implementation(libs.okhttp)
 
+    // Image caching with Coil
+    implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
+
     // Azure/Speech
     implementation(libs.azure.speech.sdk)
     implementation(libs.accompanist.permissions)

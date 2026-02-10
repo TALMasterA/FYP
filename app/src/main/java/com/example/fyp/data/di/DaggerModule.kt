@@ -46,6 +46,10 @@ import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.data.wordbank.FirestoreWordBankRepository
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.domain.settings.SetVoiceForLanguageUseCase
+import okhttp3.Cache
+import okhttp3.OkHttpClient
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -55,7 +59,42 @@ object AppModule {
     fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
     @Provides @Singleton
-    fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
+    fun provideFirestore(): FirebaseFirestore {
+        val firestore = FirebaseFirestore.getInstance()
+
+        try {
+            val persistentCacheSettings = com.google.firebase.firestore.PersistentCacheSettings.newBuilder()
+                .setSizeBytes(com.google.firebase.firestore.FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
+                .build()
+
+            firestore.firestoreSettings = com.google.firebase.firestore.FirebaseFirestoreSettings.Builder()
+                .setLocalCacheSettings(persistentCacheSettings)
+                .build()
+        } catch (e: Exception) {
+            // Fallback if settings already configured
+            android.util.Log.w("DaggerModule", "Firestore settings already configured", e)
+        }
+
+        return firestore
+    }
+
+    @Provides @Singleton
+    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
+        // Configure disk cache for network assets (Priority 3 #17: Image/Audio Asset Caching)
+        // Cache size: 50 MB for audio/image assets
+        val cacheDir = File(context.cacheDir, "http_cache")
+        val cache = Cache(
+            directory = cacheDir,
+            maxSize = 50L * 1024L * 1024L // 50 MB
+        )
+
+        return OkHttpClient.Builder()
+            .cache(cache)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
 
     @Provides @Singleton
     fun provideFirebaseFunctions(): FirebaseFunctions = FirebaseFunctions.getInstance()

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -141,6 +142,22 @@ fun FavoritesScreen(
                             isSpeakingTarget = uiState.speakingId == (favorite.id + "_target"),
                             t = t
                         )
+                    }
+                }
+
+                // Show "Load More" button if there are more favorites (Lazy Loading - Priority 2 #9)
+                if (uiState.hasMore && currentPage == totalPages - 1) {
+                    Button(
+                        onClick = {
+                            viewModel.loadMoreFavorites()
+                            // Reset to first page to show newly loaded items
+                            currentPage = 0
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text(text = "Load More")
                     }
                 }
 
