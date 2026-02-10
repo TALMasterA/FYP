@@ -83,9 +83,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
-    // Baseline Profile for improved performance
-    implementation("androidx.profileinstaller:profileinstaller:1.3.1")
-
     // Firebase - BOM + explicit KTX
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

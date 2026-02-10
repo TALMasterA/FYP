@@ -260,7 +260,7 @@ Add these rules to `proguard-rules.pro`:
 
 ---
 
-### 7. **Enable Baseline Profile for Compose** ✅ COMPLETED
+### 7. **Enable Baseline Profile for Compose**
 
 **Current Issue**: No baseline profile for faster startup and jank-free scrolling.
 
@@ -305,7 +305,7 @@ Landroidx/compose/runtime/**;
 
 These optimizations require more changes but provide substantial performance gains.
 
-### 8. **Cache Filtered History Results**
+### 8. **Cache Filtered History Results** ✅ COMPLETED
 
 **Current Issue**: `SharedHistoryDataSource.getRecordsForLanguage()` filters the entire history list on every call.
 
@@ -465,7 +465,7 @@ function hashString(str: string): string {
 
 ---
 
-### 11. **Optimize Compose Recomposition with Keys**
+### 11. **Optimize Compose Recomposition with Keys** ✅ COMPLETED
 
 **Current Issue**: Large lists (history, word banks) may recompose unnecessarily.
 
@@ -544,7 +544,7 @@ val historyRecords: StateFlow<List<TranslationRecord>> = historyRepo
 
 ---
 
-### 13. **Add Debouncing to Word Bank Generation Button**
+### 13. **Add Debouncing to Word Bank Generation Button** ✅ COMPLETED
 
 **Current Issue**: Rapid button clicks could trigger multiple expensive AI generation calls.
 
@@ -595,7 +595,7 @@ init {
 
 ---
 
-### 14. **Pre-fetch Learning Sheet Metadata on App Start**
+### 14. **Pre-fetch Learning Sheet Metadata on App Start** ✅ COMPLETED
 
 **Current Issue**: Learning sheet metadata fetched when user navigates to learning screen.
 
@@ -633,7 +633,7 @@ fun prefetchSheetMetadata() {
 
 ---
 
-### 15. **Optimize TtsController Cleanup**
+### 15. **Optimize TtsController Cleanup** ✅ COMPLETED (Already Optimized)
 
 **Current Issue**: `TtsController` created in `SpeechViewModel` init but not cleared properly.
 
