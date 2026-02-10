@@ -68,26 +68,27 @@ pluginManagement {
 Current version in `gradle/libs.versions.toml`:
 ```toml
 [versions]
-agp = "8.7.0"
+agp = "8.13.2"
 ```
 
 **Version History:**
-- Originally downgraded to 8.1.4 due to non-existent version 8.6.0
-- Updated to 8.7.0 (latest stable) compatible with Kotlin 2.0.21
-- AGP 8.7.0 requires Gradle 8.7+ and is compatible with compileSdk 36
+- Main branch: AGP 8.13.2 (original configuration)
+- Previously changed to 8.6.0 (doesn't exist - caused build failure)
+- Temporarily downgraded to 8.1.4
+- Attempted update to 8.7.0
+- **Now restored to: 8.13.2** (matches main branch)
 
 **Compatible versions:**
-- AGP 8.7.x works with Kotlin 2.0.21 and Gradle 8.7+
-- AGP 8.5.x - 8.6.x works with Kotlin 2.0.x
-- AGP 8.1.x - 8.4.x works with Kotlin 2.0.x but may have compatibility issues
+- AGP 8.13.x works with Kotlin 2.0.21 and Gradle 8.7+
+- Compatible with compileSdk 36
 
 ## Gradle Wrapper Version
 
 Current: `8.14` (in `gradle/wrapper/gradle-wrapper.properties`)
 
 **Compatibility:**
-- Gradle 8.14 is compatible with AGP 8.7.0
-- Gradle 8.7+ required for AGP 8.7.x
+- Gradle 8.14 is compatible with AGP 8.13.2
+- Gradle 8.7+ required for AGP 8.7.x+
 - Gradle 8.0+ works with AGP 8.1.x - 8.6.x
 
 ## Verification Steps
