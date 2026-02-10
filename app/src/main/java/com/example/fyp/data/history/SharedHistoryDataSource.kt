@@ -52,6 +52,9 @@ class SharedHistoryDataSource @Inject constructor(
     private val _languageCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
     val languageCounts: StateFlow<Map<String, Int>> = _languageCounts.asStateFlow()
 
+    // Cache for filtered language records (Priority 2 #8: Cache Filtered History Results)
+    private val _languageRecordsCache = mutableMapOf<String, List<TranslationRecord>>()
+
     /**
      * Start observing history for a user with optional limit.
      * If already observing the same user with the same limit, does nothing (reuses existing listener).
@@ -82,6 +85,8 @@ class SharedHistoryDataSource @Inject constructor(
                     _error.value = null
                     _historyRecords.value = records
                     _historyCount.value = records.size
+                    // Clear language records cache when history updates
+                    _languageRecordsCache.clear()
                 }
         }
     }
@@ -145,16 +150,25 @@ class SharedHistoryDataSource @Inject constructor(
         _historyCount.value = 0
         _isLoading.value = false
         _error.value = null
+        // Clear language records cache
+        _languageRecordsCache.clear()
     }
 
     /**
      * Get records filtered by language code.
      * Useful for learning/word bank screens that only need records for specific languages.
+     * Cached to avoid repeated O(n) filtering operations.
      */
     fun getRecordsForLanguage(languageCode: String): List<TranslationRecord> {
-        return _historyRecords.value.filter {
+        // Check cache first
+        _languageRecordsCache[languageCode]?.let { return it }
+        
+        // Cache miss - compute and store
+        val filtered = _historyRecords.value.filter {
             it.sourceLang == languageCode || it.targetLang == languageCode
         }
+        _languageRecordsCache[languageCode] = filtered
+        return filtered
     }
 
     /**

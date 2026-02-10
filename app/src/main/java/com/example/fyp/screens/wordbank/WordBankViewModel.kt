@@ -67,6 +67,10 @@ class WordBankViewModel @Inject constructor(
     private var userSettings = UserSettings()
     private var historyJob: Job? = null
     private var settingsJob: Job? = null
+
+    // Debounce for word bank generation to prevent duplicate API calls (Priority 2 #13)
+    private var lastGenerationTime = 0L
+    private val GENERATION_DEBOUNCE_MS = 2000L  // 2 seconds
     private var generationJob: Job? = null
     private var records: List<TranslationRecord> = emptyList()
     private var primaryLanguageCode: String = "en-US"
@@ -509,6 +513,14 @@ class WordBankViewModel @Inject constructor(
 
     fun generateWordBank(targetLanguageCode: String) {
         val uid = currentUserId ?: return
+
+        // Debounce: Prevent rapid duplicate generation requests (Priority 2 #13)
+        val now = System.currentTimeMillis()
+        if (now - lastGenerationTime < GENERATION_DEBOUNCE_MS) {
+            // Too soon since last generation, ignore
+            return
+        }
+        lastGenerationTime = now
 
         // ANTI-CHEAT: Verify regeneration is allowed (need 20+ more records)
         // First generation is always allowed (no existing word bank)

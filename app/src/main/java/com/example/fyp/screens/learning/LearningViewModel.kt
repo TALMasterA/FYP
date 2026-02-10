@@ -69,6 +69,9 @@ class LearningViewModel @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
     private var uid: String? = null
     private var historyJob: Job? = null
+
+    // Prefetch flag to avoid redundant prefetching (Priority 2 #14)
+    private var isPrefetched = false
     private var settingsJob: Job? = null
     private var generationJob: Job? = null
     private var quizGenerationJob: Job? = null
@@ -442,6 +445,25 @@ class LearningViewModel @Inject constructor(
         quizGenerationJob?.cancel()
         quizGenerationJob = null
         _uiState.value = uiState.value.copy(generatingQuizLanguageCode = null)
+    }
+
+    /**
+     * Pre-fetch learning sheet metadata in background (Priority 2 #14).
+     * Called from MainActivity or HomeScreen after user logs in.
+     * Ensures instant learning screen display when user navigates to it.
+     */
+    fun prefetchSheetMetadata() {
+        if (isPrefetched) return
+        isPrefetched = true
+        
+        viewModelScope.launch {
+            try {
+                refreshSheetMetaForClusters()
+            } catch (e: Exception) {
+                // Ignore errors on prefetch - silent background operation
+                android.util.Log.d("LearningVM", "Prefetch failed (non-critical): ${e.message}")
+            }
+        }
     }
 
     fun setPrimaryLanguage(languageCode: String) {

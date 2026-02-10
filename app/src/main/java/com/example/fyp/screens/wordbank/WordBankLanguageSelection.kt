@@ -106,7 +106,7 @@ fun LanguageSelectionView(
                     )
                 }
 
-                items(clusters) { cluster ->
+                items(clusters, key = { it.languageCode }) { cluster ->
                     LanguageClusterCard(
                         cluster = cluster,
                         languageName = uiLanguageNameFor(cluster.languageCode),
