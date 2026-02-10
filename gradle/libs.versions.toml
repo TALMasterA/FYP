@@ -24,6 +24,7 @@ hiltNavigationCompose = "1.2.0"
 datastorePreferences = "1.1.1"
 preference = "1.2.1"
 kotlinxSerializationJson = "1.7.3"
+coil = "2.5.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -61,6 +62,8 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+coil-gif = { group = "io.coil-kt", name = "coil-gif", version.ref = "coil" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
