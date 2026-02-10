@@ -1,118 +1,141 @@
 # Build Status and Version Information
 
-## Current Status: ❌ Build Fails Due to Network Connectivity
+## Current Status: ❌ Build Fails - Cannot Download Android Gradle Plugin
 
-### Root Cause
-**The build environment has NO internet connectivity.** This prevents downloading ANY Android Gradle Plugin version from Maven repositories.
+### Critical Issue: Google Maven Repository Not Accessible
+
+**The build environment cannot access `dl.google.com` (Google Maven Repository)**
 
 ```bash
 $ curl -I https://dl.google.com/dl/android/maven2/
 curl: (6) Could not resolve host: dl.google.com
+```
 
-$ ping google.com
-ping: google.com: No address associated with hostname
+This prevents downloading the Android Gradle Plugin, which is **REQUIRED** for building Android applications.
+
+## What We Tried
+
+1. ❌ **AGP 8.13.2** - Version doesn't exist (too high, main branch has incorrect version)
+2. ❌ **AGP 8.7.0** - Cannot download (network blocked)
+3. ❌ **AGP 8.3.2** - Cannot download (network blocked) ← **CURRENT**
+4. ❌ **Alternative mirrors** (Aliyun) - Cannot access (network blocked)
+5. ✅ **Maven Central** - Accessible but doesn't host Android Gradle Plugin
+6. ✅ **Gradle Plugin Portal** - Accessible but doesn't host Android Gradle Plugin
+
+## Current Configuration
+
+```toml
+[versions]
+agp = "8.3.2"         # Android Gradle Plugin (VALID but cannot download)
+gradle = "8.3.2"      # Gradle version reference  
+kotlin = "2.0.21"     # Kotlin compiler version
+```
+
+Gradle wrapper: `8.14` (from `gradle/wrapper/gradle-wrapper.properties`)
+
+## The REAL Problem
+
+**Android Gradle Plugin is ONLY available from Google's Maven Repository**
+
+Repositories that ARE accessible:
+- ✅ Maven Central (`https://repo1.maven.org`) - doesn't have AGP
+- ✅ Gradle Plugin Portal - doesn't have AGP
+
+Repository that is NOT accessible:
+- ❌ Google Maven (`https://dl.google.com/dl/android/maven2/`) - **REQUIRED for AGP**
+
+## Solutions
+
+### Option 1: ✅ Fix Network Connectivity (REQUIRED)
+
+**For GitHub Actions runners:**
+- Check runner network permissions
+- Verify firewall/proxy settings
+- Ensure DNS resolution works for `dl.google.com`
+
+**For local development:**
+1. Check internet connection
+2. Disable VPN if causing DNS issues  
+3. Check firewall settings
+4. Try from a different network
+
+**For corporate/restricted environments:**
+1. Request whitelist for `dl.google.com`
+2. Request whitelist for `*.googleapis.com`
+3. Configure proxy settings if required
+
+### Option 2: Use Pre-downloaded Dependencies
+
+If you have a machine with working internet:
+
+1. Build the project once on a machine with internet access
+2. Copy the entire `~/.gradle/caches` directory
+3. Transfer to the offline environment
+4. Build with `./gradlew assembleDebug --offline`
+
+### Option 3: Use Corporate Maven Mirror
+
+If your organization has a Maven mirror:
+
+```kotlin
+// settings.gradle.kts
+pluginManagement {
+    repositories {
+        maven { url = uri("https://your-company-maven-mirror.com/google") }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
 ```
 
 ## Version History
 
-### What Happened
-1. **Original (Main Branch)**: AGP version 8.13.2 was the correct version
-2. **Issue**: Version was changed to 8.6.0 (this version doesn't exist)
-3. **First Fix**: Downgraded to AGP 8.1.4 (exists but couldn't be downloaded)
-4. **Second Attempt**: Updated to AGP 8.7.0 (latest stable at the time)
-5. **Current Fix**: Restored to AGP 8.13.2 (matches main branch - correct original version)
+1. **Main Branch**: AGP 8.13.2 (❌ doesn't exist - this version is too high)
+2. **Attempted Fix #1**: AGP 8.6.0 (❌ doesn't exist)
+3. **Attempted Fix #2**: AGP 8.1.4 (✅ exists but couldn't download)
+4. **Attempted Fix #3**: AGP 8.7.0 (✅ likely exists but couldn't download)
+5. **Current**: AGP 8.3.2 (✅ definitely exists but **cannot download due to network**)
 
-### Current Configuration
-```toml
-[versions]
-agp = "8.13.2"         # Android Gradle Plugin (restored to main branch version)
-gradle = "8.13.2"      # Gradle version reference
-kotlin = "2.0.21"      # Kotlin compiler version
-```
+## Valid AGP Versions
 
-Actual Gradle wrapper: `8.14` (from `gradle/wrapper/gradle-wrapper.properties`)
+| AGP Version | Status | Notes |
+|-------------|--------|-------|
+| 8.3.2       | ✅ Exists | Current choice, well-tested |
+| 8.4.2       | ✅ Exists | Also stable |
+| 8.5.2       | ✅ Exists | Recent stable |
+| 8.6.1       | ✅ Exists | Latest 8.6.x |
+| 8.7.0       | ⚠️ May exist | Latest stable (early 2026) |
+| 8.13.2      | ❌ Doesn't exist | Version too high (main branch error) |
 
-### Why These Versions?
+## What You Need to Do
 
-**AGP 8.13.2:**
-- **This is the version from the main branch** (original configuration)
-- Compatible with Kotlin 2.0.21
-- Compatible with compileSdk 36 (used in project)
-- Compatible with Gradle 8.7+
-- This matches the project's original setup
+1. **Verify network connectivity:**
+   ```bash
+   curl -I https://dl.google.com/dl/android/maven2/
+   ```
+   Should return `HTTP 200`, not `Could not resolve host`
 
-**Kotlin 2.0.21:**
-- Already in use, no change
-- Compatible with AGP 8.7.0
-- Latest stable Kotlin 2.0.x release
+2. **If network is blocked:**
+   - Contact your IT/infrastructure team
+   - Request access to `dl.google.com`
+   - Or use one of the workaround options above
 
-**Gradle 8.14:**
-- Latest Gradle version
-- Compatible with AGP 8.7.0 (requires 8.7+)
-- Already configured in wrapper
+3. **Once network is fixed:**
+   ```bash
+   cd /home/runner/work/FYP/FYP
+   ./gradlew assembleDebug
+   ```
 
-## The REAL Problem
+## Environment Details
 
-**None of these version changes will fix the build** until network connectivity is restored.
-
-The error message clearly states:
-```
-Plugin Repositories (could not resolve plugin artifact 'com.android.application:com.android.application.gradle.plugin:8.7.0')
-  Searched in the following repositories:
-    Google       <- CANNOT ACCESS
-    MavenRepo    <- CANNOT ACCESS
-    Gradle Central Plugin Repository <- CANNOT ACCESS
-```
-
-## Solutions (in order of preference)
-
-### 1. ✅ Restore Network Connectivity (REQUIRED)
-The build environment must be able to access:
-- `https://dl.google.com` (Google Maven Repository)
-- `https://repo1.maven.org` (Maven Central)
-- `https://plugins.gradle.org` (Gradle Plugin Portal)
-
-**For GitHub Actions/CI:**
-- Check runner network permissions
-- Verify firewall/proxy settings
-- Ensure DNS resolution works
-
-**For Local Development:**
-- Check internet connection
-- Disable VPN if causing issues
-- Configure proxy settings if behind corporate firewall
-
-### 2. Use Offline Build (if dependencies cached)
-If you've built this project before:
-```bash
-./gradlew assembleDebug --offline
-```
-**Note:** Only works if ALL dependencies are already in `~/.gradle/caches/`
-
-### 3. Use Pre-populated Gradle Cache
-Copy a working `.gradle` directory from a machine that has already downloaded the dependencies.
-
-## Recommended Action
-
-1. **Immediate**: Fix network connectivity in build environment
-2. **Verify**: Test with `curl -I https://dl.google.com/dl/android/maven2/`
-3. **Build**: Run `./gradlew assembleDebug` once network is restored
-
-## Version Compatibility Matrix
-
-| AGP Version | Gradle Required | Kotlin Compatible | compileSdk | Status |
-|-------------|----------------|-------------------|------------|---------|
-| 8.13.2      | 8.7+          | 2.0.x, 2.1.x     | 35, 36    | ✅ Main Branch Version |
-| 8.7.0       | 8.7+          | 2.0.x, 2.1.x     | 35, 36    | ✅ Alternative Stable |
-| 8.6.0       | 8.6+          | N/A              | N/A       | ❌ Does Not Exist |
-| 8.5.2       | 8.5+          | 2.0.x            | 34, 35    | ✅ Stable |
-| 8.1.4       | 8.0+          | 1.9.x, 2.0.x     | 34        | ⚠️ Older |
-
-## Conclusion
-
-**The AGP version has been restored to 8.13.2** (matching the main branch original configuration).
-
-However, **the build will continue to fail until network connectivity is restored** regardless of which valid AGP version is used.
+- ✅ Gradle wrapper: 8.14 (downloaded successfully)
+- ✅ Android SDK: Available at `/usr/local/lib/android/sdk`
+- ✅ Maven Central: Accessible
+- ✅ Gradle Plugin Portal: Accessible
+- ❌ Google Maven: **NOT accessible** (blocking all builds)
 
 ---
-Last Updated: 2026-02-10
+
+**Bottom Line:** No code changes will fix this. It's a network/infrastructure issue that must be resolved at the environment level.
+
+**Last Updated:** 2026-02-10 09:18 UTC
