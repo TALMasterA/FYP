@@ -71,8 +71,14 @@ fun AddCustomWordDialog(
                     label = { Text("${t(UiTextKey.CustomWordsOriginalLabel)} ($primaryLanguageName)") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    supportingText = if (originalWord.length >= maxWordLength) {
-                        { Text("${originalWord.length}/$maxWordLength", color = MaterialTheme.colorScheme.error) }
+                    supportingText = if (originalWord.length >= maxWordLength * 4 / 5) {
+                        {
+                            Text(
+                                "${originalWord.length}/$maxWordLength",
+                                color = if (originalWord.length >= maxWordLength) MaterialTheme.colorScheme.error
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     } else null
                 )
 
@@ -88,8 +94,14 @@ fun AddCustomWordDialog(
                         label = { Text("${t(UiTextKey.CustomWordsTranslatedLabel)} ($targetLanguageName)") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
-                        supportingText = if (translatedWord.length >= maxWordLength) {
-                            { Text("${translatedWord.length}/$maxWordLength", color = MaterialTheme.colorScheme.error) }
+                        supportingText = if (translatedWord.length >= maxWordLength * 4 / 5) {
+                            {
+                                Text(
+                                    "${translatedWord.length}/$maxWordLength",
+                                    color = if (translatedWord.length >= maxWordLength) MaterialTheme.colorScheme.error
+                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         } else null
                     )
 
@@ -138,8 +150,14 @@ fun AddCustomWordDialog(
                     label = { Text(t(UiTextKey.CustomWordsExampleLabel)) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 2,
-                    supportingText = if (example.length >= maxExampleLength) {
-                        { Text("${example.length}/$maxExampleLength", color = MaterialTheme.colorScheme.error) }
+                    supportingText = if (example.length >= maxExampleLength * 4 / 5) {
+                        {
+                            Text(
+                                "${example.length}/$maxExampleLength",
+                                color = if (example.length >= maxExampleLength) MaterialTheme.colorScheme.error
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     } else null
                 )
             }

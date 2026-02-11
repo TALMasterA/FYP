@@ -99,9 +99,8 @@ class TranslationCache @Inject constructor(
             return null
         }
 
-        // Update lastAccessedAt for LRU tracking
+        // Update lastAccessedAt in memory only (disk write deferred to next cache() call)
         val updatedEntry = entry.copy(lastAccessedAt = now)
-        updateEntry(key, updatedEntry)
 
         // Add to in-memory cache for future fast access
         synchronized(inMemoryCache) {
@@ -270,13 +269,6 @@ class TranslationCache @Inject constructor(
         val cacheData = loadCache()
         val newEntries = cacheData.entries.toMutableMap()
         newEntries.remove(key)
-        saveCache(TranslationCacheData(newEntries))
-    }
-
-    private suspend fun updateEntry(key: String, entry: CachedTranslation) {
-        val cacheData = loadCache()
-        val newEntries = cacheData.entries.toMutableMap()
-        newEntries[key] = entry
         saveCache(TranslationCacheData(newEntries))
     }
 }
