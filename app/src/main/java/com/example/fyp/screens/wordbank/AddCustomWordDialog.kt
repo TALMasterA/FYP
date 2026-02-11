@@ -44,6 +44,9 @@ fun AddCustomWordDialog(
     var pronunciation by remember { mutableStateOf("") }
     var example by remember { mutableStateOf("") }
 
+    val maxWordLength = 200
+    val maxExampleLength = 500
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(t(UiTextKey.CustomWordsAdd)) },
@@ -64,10 +67,13 @@ fun AddCustomWordDialog(
                 // Original word field with language label
                 OutlinedTextField(
                     value = originalWord,
-                    onValueChange = { originalWord = it },
+                    onValueChange = { if (it.length <= maxWordLength) originalWord = it },
                     label = { Text("${t(UiTextKey.CustomWordsOriginalLabel)} ($primaryLanguageName)") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    supportingText = if (originalWord.length >= maxWordLength) {
+                        { Text("${originalWord.length}/$maxWordLength", color = MaterialTheme.colorScheme.error) }
+                    } else null
                 )
 
                 // Translated word field with translate button
@@ -78,10 +84,13 @@ fun AddCustomWordDialog(
                 ) {
                     OutlinedTextField(
                         value = translatedWord,
-                        onValueChange = { translatedWord = it },
+                        onValueChange = { if (it.length <= maxWordLength) translatedWord = it },
                         label = { Text("${t(UiTextKey.CustomWordsTranslatedLabel)} ($targetLanguageName)") },
                         modifier = Modifier.weight(1f),
-                        singleLine = true
+                        singleLine = true,
+                        supportingText = if (translatedWord.length >= maxWordLength) {
+                            { Text("${translatedWord.length}/$maxWordLength", color = MaterialTheme.colorScheme.error) }
+                        } else null
                     )
 
                     // Translate button
@@ -117,7 +126,7 @@ fun AddCustomWordDialog(
 
                 OutlinedTextField(
                     value = pronunciation,
-                    onValueChange = { pronunciation = it },
+                    onValueChange = { if (it.length <= maxWordLength) pronunciation = it },
                     label = { Text(t(UiTextKey.CustomWordsPronunciationLabel)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -125,10 +134,13 @@ fun AddCustomWordDialog(
 
                 OutlinedTextField(
                     value = example,
-                    onValueChange = { example = it },
+                    onValueChange = { if (it.length <= maxExampleLength) example = it },
                     label = { Text(t(UiTextKey.CustomWordsExampleLabel)) },
                     modifier = Modifier.fillMaxWidth(),
-                    maxLines = 2
+                    maxLines = 2,
+                    supportingText = if (example.length >= maxExampleLength) {
+                        { Text("${example.length}/$maxExampleLength", color = MaterialTheme.colorScheme.error) }
+                    } else null
                 )
             }
         },

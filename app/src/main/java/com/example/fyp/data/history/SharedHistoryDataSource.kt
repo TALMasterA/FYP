@@ -53,7 +53,14 @@ class SharedHistoryDataSource @Inject constructor(
     val languageCounts: StateFlow<Map<String, Int>> = _languageCounts.asStateFlow()
 
     // Cache for filtered language records (Priority 2 #8: Cache Filtered History Results)
-    private val _languageRecordsCache = mutableMapOf<String, List<TranslationRecord>>()
+    // Uses LRU eviction with a max of 10 entries to bound memory usage
+    private val _languageRecordsCache = object : LinkedHashMap<String, List<TranslationRecord>>(
+        10, 0.75f, true
+    ) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<TranslationRecord>>?): Boolean {
+            return size > 10
+        }
+    }
 
     /**
      * Start observing history for a user with optional limit.

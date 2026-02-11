@@ -25,7 +25,8 @@ data class CachedTranslation(
     val translatedText: String,
     val sourceLang: String,
     val targetLang: String,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val lastAccessedAt: Long = System.currentTimeMillis()
 )
 
 @Serializable
@@ -98,9 +99,13 @@ class TranslationCache @Inject constructor(
             return null
         }
 
+        // Update lastAccessedAt for LRU tracking
+        val updatedEntry = entry.copy(lastAccessedAt = now)
+        updateEntry(key, updatedEntry)
+
         // Add to in-memory cache for future fast access
         synchronized(inMemoryCache) {
-            inMemoryCache[key] = entry
+            inMemoryCache[key] = updatedEntry
         }
 
         return entry.translatedText
@@ -132,9 +137,9 @@ class TranslationCache @Inject constructor(
         val newEntries = cacheData.entries.toMutableMap()
         newEntries[key] = entry
 
-        // Evict old entries if cache is full
+        // Evict least-recently-used entries if cache is full
         if (newEntries.size > MAX_CACHE_SIZE) {
-            val sortedEntries = newEntries.entries.sortedBy { it.value.timestamp }
+            val sortedEntries = newEntries.entries.sortedBy { it.value.lastAccessedAt }
             val entriesToRemove = sortedEntries.take(newEntries.size - MAX_CACHE_SIZE)
             entriesToRemove.forEach { newEntries.remove(it.key) }
         }
@@ -224,9 +229,9 @@ class TranslationCache @Inject constructor(
             )
         }
 
-        // Evict old entries if cache is full
+        // Evict least-recently-used entries if cache is full
         if (newEntries.size > MAX_CACHE_SIZE) {
-            val sortedEntries = newEntries.entries.sortedBy { it.value.timestamp }
+            val sortedEntries = newEntries.entries.sortedBy { it.value.lastAccessedAt }
             val entriesToRemove = sortedEntries.take(newEntries.size - MAX_CACHE_SIZE)
             entriesToRemove.forEach { newEntries.remove(it.key) }
         }
@@ -265,6 +270,13 @@ class TranslationCache @Inject constructor(
         val cacheData = loadCache()
         val newEntries = cacheData.entries.toMutableMap()
         newEntries.remove(key)
+        saveCache(TranslationCacheData(newEntries))
+    }
+
+    private suspend fun updateEntry(key: String, entry: CachedTranslation) {
+        val cacheData = loadCache()
+        val newEntries = cacheData.entries.toMutableMap()
+        newEntries[key] = entry
         saveCache(TranslationCacheData(newEntries))
     }
 }

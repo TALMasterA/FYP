@@ -1,6 +1,7 @@
 package com.example.fyp
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,9 +20,11 @@ import com.example.fyp.core.LocalAppLanguageState
 import com.example.fyp.core.LocalFontSizeScale
 import com.example.fyp.core.LocalUiLanguages
 import com.example.fyp.core.LocalUpdateAppLanguage
+import com.example.fyp.core.OfflineBanner
 import com.example.fyp.core.composableRequireLogin
 import com.example.fyp.core.composableRequireLoginWithArgs
 import com.example.fyp.core.createScaledTypography
+import com.example.fyp.core.rememberConnectivityState
 import com.example.fyp.core.validateScale
 import com.example.fyp.data.azure.AzureLanguageConfig
 import com.example.fyp.data.azure.LanguageDisplayNames
@@ -110,6 +113,9 @@ fun AppNavigation() {
     }
     val colorPaletteId = settingsUiState.settings.colorPaletteId
 
+    // Observe network connectivity for offline indicator
+    val isConnected by rememberConnectivityState()
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -121,15 +127,20 @@ fun AppNavigation() {
             LocalUpdateAppLanguage provides updateAppLanguage
         ) {
             FYPTheme(darkTheme = darkTheme, colorPaletteId = colorPaletteId, typography = scaledTypography) {
-                // Helper for navigating to login
-                val navigateToLogin: () -> Unit = {
-                    navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
-                }
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Offline banner shown at the top when no internet
+                    OfflineBanner(isConnected = isConnected)
 
-                NavHost(
-                    navController = navController,
-                    startDestination = AppScreen.Home.route
-                ) {
+                    // Helper for navigating to login
+                    val navigateToLogin: () -> Unit = {
+                        navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
+                    }
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = AppScreen.Home.route,
+                        modifier = Modifier.weight(1f)
+                    ) {
                     composable(AppScreen.Home.route) {
                         HomeScreen(
                             uiLanguages = uiLanguages,
@@ -332,6 +343,7 @@ fun AppNavigation() {
                             onBack = { navController.popBackStack() }
                         )
                     }
+                }
                 }
             }
         }

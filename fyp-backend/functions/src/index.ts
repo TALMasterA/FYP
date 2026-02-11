@@ -2,8 +2,12 @@ import {setGlobalOptions} from "firebase-functions";
 import {defineSecret} from "firebase-functions/params";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import fetch from "node-fetch";
+import * as admin from "firebase-admin";
 
-setGlobalOptions({maxInstances: 50});
+admin.initializeApp();
+const firestoreDb = admin.firestore();
+
+setGlobalOptions({maxInstances: 10});
 
 const AZURE_SPEECH_KEY = defineSecret("AZURE_SPEECH_KEY");
 const AZURE_SPEECH_REGION = defineSecret("AZURE_SPEECH_REGION");
@@ -194,6 +198,48 @@ export const translateTexts = onCall(
   }
 );
 
+// ============ Rate Limiting ============
+
+const RATE_LIMIT_MAX_REQUESTS = 10; // max requests per window
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour window
+
+/**
+ * Check and enforce per-user rate limiting for AI generation.
+ * Uses Firestore to track request timestamps per user.
+ * @param uid The authenticated user's UID
+ * @throws HttpsError if rate limit is exceeded
+ */
+async function enforceRateLimit(uid: string): Promise<void> {
+  const rateLimitRef = firestoreDb
+    .collection("rate_limits")
+    .doc(uid);
+
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+
+  const doc = await rateLimitRef.get();
+  let timestamps: number[] = [];
+
+  if (doc.exists) {
+    const data = doc.data();
+    timestamps = (data?.timestamps ?? []) as number[];
+  }
+
+  // Filter to only timestamps within the current window
+  timestamps = timestamps.filter((ts: number) => ts > windowStart);
+
+  if (timestamps.length >= RATE_LIMIT_MAX_REQUESTS) {
+    throw new HttpsError(
+      "resource-exhausted",
+      `Rate limit exceeded. Maximum ${RATE_LIMIT_MAX_REQUESTS} AI generation requests per hour.`
+    );
+  }
+
+  // Add current timestamp and save
+  timestamps.push(now);
+  await rateLimitRef.set({timestamps, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
+}
+
 export const generateLearningContent = onCall(
   {
     secrets: [GENAI_BASE_URL, GENAI_API_VERSION, GENAI_API_KEY],
@@ -201,6 +247,10 @@ export const generateLearningContent = onCall(
   },
   async (request) => {
     requireAuth(request.auth);
+
+    // Enforce per-user rate limiting for AI generation
+    const uid = (request.auth as {uid: string}).uid;
+    await enforceRateLimit(uid);
 
     const deployment = requireString(request.data?.deployment, "deployment");
     const prompt = requireString(request.data?.prompt, "prompt");
