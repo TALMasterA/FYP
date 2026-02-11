@@ -1,25 +1,28 @@
 package com.example.fyp.screens.speech
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.AudioRecorder
 import com.example.fyp.core.RecordAudioPermissionRequest
+import com.example.fyp.core.RequestCameraPermission
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.data.azure.AzureLanguageConfig
@@ -113,6 +117,62 @@ fun SpeechRecognitionScreen(
 
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     val isLoggedIn = authState is AuthState.LoggedIn
+
+    // Image capture state
+    var showImageSourceDialog by remember { mutableStateOf(false) }
+    var showCamera by remember { mutableStateOf(false) }
+    var requestCameraPermission by remember { mutableStateOf(false) }
+    
+    // Image picker launcher
+    val launchImagePicker = rememberImagePickerLauncher { uri ->
+        uri?.let { viewModel.recognizeTextFromImage(it) }
+    }
+
+    // Handle camera permission
+    if (requestCameraPermission) {
+        RequestCameraPermission(
+            onPermissionGranted = {
+                requestCameraPermission = false
+                showCamera = true
+            },
+            onPermissionDenied = {
+                requestCameraPermission = false
+            }
+        )
+    }
+
+    // Show image source selection dialog
+    if (showImageSourceDialog) {
+        ImageSourceDialog(
+            onCamera = {
+                requestCameraPermission = true
+            },
+            onGallery = {
+                launchImagePicker()
+            },
+            onDismiss = {
+                showImageSourceDialog = false
+            }
+        )
+    }
+
+    // Show camera capture screen
+    if (showCamera) {
+        CameraCaptureScreen(
+            onImageCaptured = { uri ->
+                showCamera = false
+                viewModel.recognizeTextFromImage(uri)
+            },
+            onError = { error ->
+                showCamera = false
+                // Error handling could be improved with a toast/snackbar
+            },
+            onCancel = {
+                showCamera = false
+            }
+        )
+        return // Don't show the regular UI when camera is active
+    }
 
     // Info dialog state
     var showInfoDialog by remember { mutableStateOf(false) }
@@ -250,6 +310,22 @@ fun SpeechRecognitionScreen(
                         enabled = !isRecognizing && !AudioRecorder.isRecording,
                         modifier = Modifier.fillMaxWidth(),
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Camera/Image button for OCR
+                    OutlinedButton(
+                        onClick = { showImageSourceDialog = true },
+                        enabled = !isRecognizing,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = null
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Scan Text from Image")
+                    }
 
                     SourceTextEditor(
                         value = recognizedText,

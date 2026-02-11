@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.azure.LanguageDisplayNames
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.history.FirestoreHistoryRepository
+import android.net.Uri
 import com.example.fyp.domain.speech.DetectLanguageUseCase
 import com.example.fyp.domain.speech.RecognizeFromMicUseCase
 import com.example.fyp.domain.speech.RecognizeWithAutoDetectUseCase
@@ -15,10 +16,12 @@ import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.StartContinuousConversationUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
+import com.example.fyp.domain.ocr.RecognizeTextFromImageUseCase
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.user.UserSettings
+import com.example.fyp.model.OcrResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
@@ -36,6 +39,7 @@ class SpeechViewModel @Inject constructor(
     private val translateTextUseCase: TranslateTextUseCase,
     private val speakTextUseCase: SpeakTextUseCase,
     private val detectLanguageUseCase: DetectLanguageUseCase,
+    private val recognizeTextFromImageUseCase: RecognizeTextFromImageUseCase,
     continuousUseCase: StartContinuousConversationUseCase,
     private val authRepo: FirebaseAuthRepository,
     private val historyRepo: FirestoreHistoryRepository,
@@ -257,6 +261,42 @@ class SpeechViewModel @Inject constructor(
                 is SpeechResult.Error -> {
                     speechState = speechState.copy(
                         statusMessage = "Translation error: ${tr.message}",
+                    )
+                }
+            }
+        }
+    }
+
+    // ---- OCR (Image Recognition) ----
+
+    /**
+     * Process an image and extract text using ML Kit OCR
+     * @param imageUri URI of the image to process
+     */
+    fun recognizeTextFromImage(imageUri: Uri) {
+        viewModelScope.launch {
+            speechState = speechState.copy(
+                statusMessage = "Scanning image for text...",
+                recognizePhase = RecognizePhase.Preparing
+            )
+
+            when (val result = recognizeTextFromImageUseCase(imageUri)) {
+                is OcrResult.Success -> {
+                    speechState = speechState.copy(
+                        recognizedText = result.text,
+                        recognizePhase = RecognizePhase.Idle,
+                        statusMessage = "Text extracted successfully"
+                    )
+                    // Auto-clear status after 2 seconds
+                    delay(2000)
+                    if (speechState.statusMessage == "Text extracted successfully") {
+                        speechState = speechState.copy(statusMessage = "")
+                    }
+                }
+                is OcrResult.Error -> {
+                    speechState = speechState.copy(
+                        recognizePhase = RecognizePhase.Idle,
+                        statusMessage = "OCR error: ${result.message}"
                     )
                 }
             }
