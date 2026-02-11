@@ -229,6 +229,8 @@ async function enforceRateLimit(uid: string): Promise<void> {
   timestamps = timestamps.filter((ts: number) => ts > windowStart);
 
   if (timestamps.length >= RATE_LIMIT_MAX_REQUESTS) {
+    // Persist the filtered timestamps to prevent unbounded storage growth
+    await rateLimitRef.set({timestamps, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
     throw new HttpsError(
       "resource-exhausted",
       `Rate limit exceeded. Maximum ${RATE_LIMIT_MAX_REQUESTS} AI generation requests per hour.`
