@@ -3,6 +3,7 @@
 Suggestions ordered by impact on app logic (none → huge).
 Items that do not affect app logic have been implemented and marked ✅.
 Items that affect app logic are marked 🔍 for review — not implemented.
+Items 9-16, 18 have been implemented and marked ✅.
 
 ---
 
@@ -90,7 +91,7 @@ Items that affect app logic are marked 🔍 for review — not implemented.
 
 ## Small Impact on App Logic
 
-### 9. 🔍 Account deletion does not clean up all Firestore subcollections
+### 9. ✅ Account deletion does not clean up all Firestore subcollections
 
 **Problem:** In `FirestoreProfileRepository.kt`, the `deleteAccount()` method deletes these subcollections:
 ```
@@ -105,81 +106,81 @@ However, the actual quiz data is stored in `quiz_attempts` (not `quizzes`), and 
 
 **Impact:** Orphaned data remains in Firestore after account deletion. This is a data cleanup issue, not a functional one, but it affects storage costs and data privacy compliance.
 
-**Suggested fix:** Update the deletion list in `FirestoreProfileRepository.kt` to include all subcollections, and change `"quizzes"` to `"quiz_attempts"`.
+**Fix:** Updated the deletion list in `FirestoreProfileRepository.kt` to include all subcollections (`quiz_attempts`, `quiz_stats`, `generated_quizzes`, `coin_awards`, `last_awarded_quiz`, `user_stats`), and changed `"quizzes"` to `"quiz_attempts"`.
 
 ---
 
-### 10. 🔍 Duplicate app version check and sign-out logic
+### 10. ✅ Duplicate app version check and sign-out logic
 
 **Problem:** Both `FYPApplication.kt` and `MainActivity.kt` independently check for app version updates and sign out the user. They use different SharedPreferences files (`PreferenceManager.getDefaultSharedPreferences` vs `"app_update_prefs"`) and the logic runs twice on every launch.
 
 **Impact:** The dual logic could cause race conditions or unexpected behavior. The `FYPApplication.logoutUserOnUpdate()` only clears preferences without calling `FirebaseAuth.signOut()`, while `MainActivity` does call `auth.signOut()`. This means the Application-level check doesn't actually sign out from Firebase.
 
-**Suggested fix:** Consolidate into a single version-check in `MainActivity.kt` (which properly calls `FirebaseAuth.signOut()`), and remove the redundant check from `FYPApplication.kt`.
+**Fix:** Removed the redundant `checkAndHandleAppUpdate()` and `logoutUserOnUpdate()` from `FYPApplication.kt`. The single version-check in `MainActivity.kt` (which properly calls `FirebaseAuth.signOut()`) handles everything.
 
 ---
 
-### 11. 🔍 `Logger.kt` has unused Crashlytics integration stub
+### 11. ✅ `Logger.kt` has unused Crashlytics integration stub
 
 **Problem:** `AppLogger.kt` has a comment `// You could log to Crashlytics here` but the app already has Firebase Crashlytics integrated (dependency in `build.gradle.kts` and plugin applied). Non-fatal errors in the `e()` method could be forwarded to Crashlytics for production monitoring.
 
 **Impact:** Non-fatal errors logged via `AppLogger.e()` are only visible in logcat, not in the Crashlytics dashboard.
 
-**Suggested fix:** Add `Firebase.crashlytics.recordException(throwable)` in the `AppLogger.e()` method when a throwable is provided, so non-fatal errors appear in the Crashlytics console.
+**Fix:** Added `FirebaseCrashlytics.getInstance().recordException(throwable)` in the `AppLogger.e()` method, plus `crashlytics.log()` for the message context. Wrapped in try-catch to handle early startup before Crashlytics initialization.
 
 ---
 
 ## Medium Impact on App Logic
 
-### 12. 🔍 No input validation on custom word entries
+### 12. ✅ No input validation on custom word entries
 
 **Problem:** `AddCustomWordDialog.kt` and `FirestoreCustomWordsRepository.kt` do not validate input beyond checking if fields are empty. Users can add very long strings, special characters, or whitespace-only entries (after trimming).
 
 **Impact:** Potential for storing unexpected data in Firestore. No character length limits are enforced.
 
-**Suggested fix:** Add maximum length limits (e.g., 200 characters for word, 500 for example) and basic sanitization in the `CustomWord` save flow.
+**Fix:** Added maximum length limits (200 characters for word/pronunciation, 500 for example) enforced both in the UI (`AddCustomWordDialog.kt` — `onValueChange` rejects input beyond limit, shows counter at limit) and in the repository (`FirestoreCustomWordsRepository.kt` — `trim().take(MAX_LENGTH)` on all fields before saving).
 
 ---
 
-### 13. 🔍 No offline handling for Firestore operations
+### 13. ✅ No offline handling for Firestore operations
 
 **Problem:** The app does not explicitly handle offline states. Firestore has built-in offline persistence, but the UI does not inform users when they are offline or when operations are queued.
 
 **Impact:** Users may not realize their changes are only cached locally and not yet synced. If they uninstall the app before syncing, data is lost.
 
-**Suggested fix:** Add a connectivity-aware UI indicator and consider showing pending sync status for operations performed offline.
+**Fix:** Created `ConnectivityObserver.kt` with `rememberConnectivityState()` composable that uses `ConnectivityManager.NetworkCallback` to observe network state in real-time. Added `OfflineBanner` composable that shows an animated error-colored banner ("You are offline. Changes will sync when reconnected.") at the top of the screen. Integrated into `AppNavigation.kt` above the `NavHost` so it appears globally on all screens.
 
 ---
 
-### 14. 🔍 `SharedHistoryDataSource` language records cache has no size limit
+### 14. ✅ `SharedHistoryDataSource` language records cache has no size limit
 
 **Problem:** In `SharedHistoryDataSource.kt`, the `_languageRecordsCache` is a `MutableMap` with no eviction policy. If a user switches between many language pairs, the cache grows unbounded.
 
 **Impact:** Low memory risk in practice (since users typically work with 2-3 language pairs), but violates good caching practice. The LearningViewModel's sheet metadata cache already uses LRU with a 50-entry limit, which is a better pattern.
 
-**Suggested fix:** Convert `_languageRecordsCache` to an LRU cache with a reasonable limit (e.g., 10 entries).
+**Fix:** Converted `_languageRecordsCache` to an LRU `LinkedHashMap` with access-order tracking and a max size of 10 entries. The `removeEldestEntry` override automatically evicts the least-recently-accessed entry when the limit is exceeded.
 
 ---
 
-### 15. 🔍 Translation cache entry limit could use LRU eviction
+### 15. ✅ Translation cache entry limit could use LRU eviction
 
 **Problem:** `TranslationCache.kt` has a `MAX_ENTRIES = 1000` limit but when the limit is reached, it removes the oldest single entry. Over time, frequently-used translations could be evicted while rarely-used ones remain.
 
 **Impact:** Minor impact on cache hit rate. The 30-day TTL handles most staleness, but LRU would be more efficient.
 
-**Suggested fix:** Replace the oldest-first eviction with an LRU strategy using `lastAccessedAt` timestamps.
+**Fix:** Added `lastAccessedAt` field to `CachedTranslation`. On cache hits (in `getCached`), `lastAccessedAt` is updated. Eviction in both `cache()` and `cacheBatch()` now sorts by `lastAccessedAt` (LRU) instead of `timestamp` (oldest-first), ensuring frequently-used translations are retained.
 
 ---
 
 ## Large Impact on App Logic
 
-### 16. 🔍 Cloud Function `maxInstances` set to 50 could cause cost spikes
+### 16. ✅ Cloud Function `maxInstances` set to 50 could cause cost spikes
 
 **Problem:** In `fyp-backend/functions/src/index.ts`, some Cloud Functions have `maxInstances: 50`. Under high load, this could spin up 50 concurrent instances, each incurring Firebase billing.
 
 **Impact:** Unexpected cost increases during usage spikes. For a student project, this is especially important to monitor.
 
-**Suggested fix:** Consider lowering `maxInstances` to 5-10 for non-critical functions, and add Firebase budget alerts. Keep higher limits only for the speech token function which needs low latency.
+**Fix:** Lowered `setGlobalOptions({maxInstances})` from 50 to 10. This applies to all functions (speech token, translation, AI generation, language detection) and provides a reasonable balance between availability and cost control.
 
 ---
 
@@ -193,12 +194,12 @@ However, the actual quiz data is stored in `quiz_attempts` (not `quizzes`), and 
 
 ---
 
-### 18. 🔍 No rate limiting on AI content generation requests
+### 18. ✅ No rate limiting on AI content generation requests
 
 **Problem:** `CloudGenAiClient.kt` calls Firebase Cloud Functions to generate learning materials and quizzes via Azure OpenAI. While there is a 2-second debounce in `WordBankViewModel`, there is no server-side rate limiting per user.
 
 **Impact:** A user could trigger many generation requests, consuming Azure OpenAI API quota and increasing costs.
 
-**Suggested fix:** Add per-user rate limiting in the Cloud Functions (e.g., max 10 generations per hour per user) and return a rate-limit error to the client.
+**Fix:** Added per-user rate limiting in the `generateLearningContent` Cloud Function. Uses a `rate_limits/{uid}` Firestore collection to track request timestamps per user, with a sliding window of 10 requests per hour. Returns a `resource-exhausted` error when the limit is exceeded. Also initialized `firebase-admin` for Firestore access within Cloud Functions.
 
 ---
