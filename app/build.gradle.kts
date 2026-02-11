@@ -123,4 +123,12 @@ dependencies {
     implementation(libs.androidx.preference)
 
     implementation(libs.kotlinx.serialization.json)
+
+    // ML Kit Text Recognition
+    implementation(libs.mlkit.text.recognition)
+
+    // CameraX for image capture
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
 }
