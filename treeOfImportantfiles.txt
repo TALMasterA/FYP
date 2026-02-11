@@ -25,6 +25,7 @@ FYP/
 │           │
 │           ├── core/
 │           │   ├── Constants.kt
+│           │   ├── ConnectivityObserver.kt
 │           │   ├── Logger.kt
 │           │   ├── AudioRecorder.kt
 │           │   ├── PermissionUi.kt
@@ -67,6 +68,7 @@ FYP/
 │           │   │   └── CloudTranslatorClient.kt
 │           │   ├── cloud/
 │           │   │   ├── LanguageDetectionCache.kt
+│           │   │   ├── CloudQuizClient.kt
 │           │   │   ├── CloudGenAiClient.kt
 │           │   │   └── TranslationCache.kt
 │           │   ├── learning/

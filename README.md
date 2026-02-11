@@ -10,7 +10,9 @@ Develop in Android Studio, Android ONLY.
 
 Register to try this app!
 
-Link: https://appdistribution.firebase.dev/i/5ebf3d592700b0f7
+Link: [Click here to register](https://appdistribution.firebase.dev/i/5ebf3d592700b0f7)
+
+Please use your gmail to register.
 
 --------------------------------------------------------------
 
