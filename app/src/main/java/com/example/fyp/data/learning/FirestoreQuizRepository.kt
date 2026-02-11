@@ -1,7 +1,7 @@
 package com.example.fyp.data.learning
 
 import com.example.fyp.core.decodeOrDefault
-import com.example.fyp.domain.learning.CoinEligibility
+import com.example.fyp.data.cloud.CloudQuizClient
 import com.example.fyp.domain.learning.GeneratedQuizDoc
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.model.*
@@ -16,7 +16,8 @@ import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 class FirestoreQuizRepository @Inject constructor(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
+    private val cloudQuizClient: CloudQuizClient
 ) : QuizRepository {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -281,70 +282,30 @@ class FirestoreQuizRepository @Inject constructor(
      * Award coins for first attempt of a generated quiz version.
      * Returns true if coins were awarded, false otherwise.
      *
-     * Anti-Cheat Rules (enforced by [CoinEligibility] domain logic):
+     * Anti-Cheat Rules (enforced SERVER-SIDE via Cloud Function):
      * 1. 1 coin per correct answer on first attempt only
-     * 2. Quiz version (historyCountAtGenerate) must EQUAL current sheet version (prevents retaking old quiz after adding history)
-     * 3. Quiz count must be at least 10 HIGHER than the previous awarded quiz count (prevents farming)
+     * 2. Quiz version must EQUAL current sheet version (read from Firestore server-side)
+     * 3. Quiz count must be at least 10 HIGHER than the previous awarded quiz count
      * 4. First quiz for a language pair is always eligible (no minimum threshold)
      * 5. Each quiz version can only be awarded once (tracked by versionKey)
+     *
+     * Note: The latestHistoryCount parameter is ignored - the server reads the actual
+     * sheet version from Firestore to prevent client-side manipulation.
      */
     override suspend fun awardCoinsIfEligible(
         uid: String,
         attempt: QuizAttempt,
         latestHistoryCount: Int?
     ): Boolean {
-        val versionKey = "${attempt.primaryLanguageCode}__${attempt.targetLanguageCode}__${attempt.generatedHistoryCountAtGenerate}"
-
-        return db.runTransaction { tx ->
-            // Check 1: Already awarded for this exact version?
-            val awardDoc = tx.get(coinAwardDoc(uid, versionKey))
-            if (awardDoc.exists()) return@runTransaction false // already awarded
-
-            // Check 2-4: Use pure domain logic for eligibility checks
-            val lastAwardedDoc = tx.get(lastAwardedCountDoc(uid, attempt.primaryLanguageCode, attempt.targetLanguageCode))
-            val lastAwardedCount = if (lastAwardedDoc.exists()) {
-                lastAwardedDoc.getLong("count")?.toInt()
-            } else {
-                null
-            }
-
-            val isEligible = CoinEligibility.isEligibleForCoins(
-                attemptScore = attempt.totalScore,
-                generatedHistoryCount = attempt.generatedHistoryCountAtGenerate,
-                currentHistoryCount = latestHistoryCount,
-                lastAwardedCount = lastAwardedCount
-            )
-
-            if (!isEligible) return@runTransaction false
-
-            // All checks passed - award coins
-            val statsSnap = tx.get(coinStatsDoc(uid))
-            val current = if (statsSnap.exists()) statsSnap.toObject(UserCoinStats::class.java) ?: UserCoinStats() else UserCoinStats()
-
-            val newTotal = current.coinTotal + attempt.totalScore
-            val perLang = current.coinByLang.toMutableMap()
-            val langKey = attempt.targetLanguageCode
-            perLang[langKey] = (perLang[langKey] ?: 0) + attempt.totalScore
-
-            // Update coin stats
-            tx.set(coinStatsDoc(uid), UserCoinStats(coinTotal = newTotal, coinByLang = perLang))
-
-            // Mark this version as awarded
-            tx.set(coinAwardDoc(uid, versionKey), mapOf(
-                "awarded" to true,
-                "attemptId" to attempt.id,
-                "coinsAwarded" to attempt.totalScore,
-                "awardedAt" to Timestamp.now()
-            ))
-
-            // Update last awarded count for this language pair (for anti-cheat)
-            tx.set(lastAwardedCountDoc(uid, attempt.primaryLanguageCode, attempt.targetLanguageCode), mapOf(
-                "count" to attempt.generatedHistoryCountAtGenerate,
-                "lastAwardedAt" to Timestamp.now()
-            ))
-
-            true
-        }.await()
+        // Use server-side Cloud Function for tamper-proof verification
+        val result = cloudQuizClient.awardQuizCoins(
+            attemptId = attempt.id,
+            primaryLanguageCode = attempt.primaryLanguageCode,
+            targetLanguageCode = attempt.targetLanguageCode,
+            generatedHistoryCountAtGenerate = attempt.generatedHistoryCountAtGenerate,
+            totalScore = attempt.totalScore
+        )
+        return result.awarded
     }
 
     /**

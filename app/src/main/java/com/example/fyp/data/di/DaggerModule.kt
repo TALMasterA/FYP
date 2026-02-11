@@ -163,6 +163,11 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideCloudQuizClient(functions: FirebaseFunctions): com.example.fyp.data.cloud.CloudQuizClient =
+        com.example.fyp.data.cloud.CloudQuizClient(functions)
+
+    @Provides
+    @Singleton
     fun provideLearningContentRepository(genAi: CloudGenAiClient): LearningContentRepository =
         LearningContentRepositoryImpl(genAi)
 
@@ -218,8 +223,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideQuizRepository(db: FirebaseFirestore): QuizRepository =
-        FirestoreQuizRepository(db)
+    fun provideQuizRepository(
+        db: FirebaseFirestore,
+        cloudQuizClient: com.example.fyp.data.cloud.CloudQuizClient
+    ): QuizRepository =
+        FirestoreQuizRepository(db, cloudQuizClient)
 
     @Provides
     @Singleton

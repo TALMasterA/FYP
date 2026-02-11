@@ -350,3 +350,147 @@ export const detectLanguage = onCall(
     };
   }
 );
+
+// ============ Quiz Coin Award (Server-Side Anti-Cheat) ============
+
+const MIN_INCREMENT_FOR_COINS = 10;
+
+interface QuizAttemptData {
+  attemptId: string;
+  primaryLanguageCode: string;
+  targetLanguageCode: string;
+  generatedHistoryCountAtGenerate: number;
+  totalScore: number;
+}
+
+/**
+ * Award coins for a quiz attempt with server-side verification.
+ *
+ * Anti-Cheat Rules (all verified server-side):
+ * 1. 1 coin per correct answer on first attempt only
+ * 2. Quiz version must match current learning sheet version (read from Firestore)
+ * 3. Quiz count must be at least 10 HIGHER than previous awarded quiz count
+ * 4. First quiz for a language pair is always eligible
+ * 5. Each quiz version can only be awarded once
+ */
+export const awardQuizCoins = onCall(
+  {},
+  async (request) => {
+    requireAuth(request.auth);
+
+    const uid = (request.auth as {uid: string}).uid;
+    const data = request.data as QuizAttemptData;
+
+    // Validate input
+    const attemptId = requireString(data?.attemptId, "attemptId");
+    const primaryCode = requireString(data?.primaryLanguageCode, "primaryLanguageCode");
+    const targetCode = requireString(data?.targetLanguageCode, "targetLanguageCode");
+    const generatedCount = data?.generatedHistoryCountAtGenerate;
+    const score = data?.totalScore;
+
+    if (typeof generatedCount !== "number" || generatedCount <= 0) {
+      throw new HttpsError("invalid-argument", "generatedHistoryCountAtGenerate must be a positive number");
+    }
+    if (typeof score !== "number" || score < 0) {
+      throw new HttpsError("invalid-argument", "totalScore must be a non-negative number");
+    }
+
+    // No coins for zero score
+    if (score === 0) {
+      return { awarded: false, reason: "zero_score" };
+    }
+
+    const versionKey = `${primaryCode}__${targetCode}__${generatedCount}`;
+
+    // Document references
+    const coinAwardRef = firestoreDb
+      .collection("users").doc(uid)
+      .collection("coin_awards").doc(versionKey);
+    const lastAwardedRef = firestoreDb
+      .collection("users").doc(uid)
+      .collection("last_awarded_quiz").doc(`${primaryCode}__${targetCode}`);
+    const coinStatsRef = firestoreDb
+      .collection("users").doc(uid)
+      .collection("user_stats").doc("coins");
+    const sheetRef = firestoreDb
+      .collection("users").doc(uid)
+      .collection("learning_sheets").doc(`${primaryCode}__${targetCode}`);
+
+    // Run transaction for atomicity
+    const result = await firestoreDb.runTransaction(async (tx) => {
+      // Check 1: Already awarded for this exact version?
+      const awardDoc = await tx.get(coinAwardRef);
+      if (awardDoc.exists) {
+        return { awarded: false, reason: "already_awarded" };
+      }
+
+      // Check 2: Get CURRENT learning sheet version from server (anti-cheat)
+      const sheetDoc = await tx.get(sheetRef);
+      if (!sheetDoc.exists) {
+        return { awarded: false, reason: "no_sheet" };
+      }
+      const currentSheetVersion = sheetDoc.data()?.historyCountAtGenerate;
+      if (typeof currentSheetVersion !== "number") {
+        return { awarded: false, reason: "invalid_sheet" };
+      }
+
+      // Quiz version must EQUAL current sheet version
+      if (generatedCount !== currentSheetVersion) {
+        return { awarded: false, reason: "version_mismatch" };
+      }
+
+      // Check 3: Anti-cheat - need 10+ more records than last awarded quiz
+      const lastAwardedDoc = await tx.get(lastAwardedRef);
+      let lastAwardedCount: number | null = null;
+      if (lastAwardedDoc.exists) {
+        lastAwardedCount = lastAwardedDoc.data()?.count ?? null;
+      }
+
+      if (lastAwardedCount !== null) {
+        const minRequired = lastAwardedCount + MIN_INCREMENT_FOR_COINS;
+        if (generatedCount < minRequired) {
+          return {
+            awarded: false,
+            reason: "insufficient_records",
+            needed: minRequired - generatedCount
+          };
+        }
+      }
+
+      // All checks passed - award coins
+      const statsDoc = await tx.get(coinStatsRef);
+      let currentTotal = 0;
+      let coinByLang: Record<string, number> = {};
+
+      if (statsDoc.exists) {
+        const statsData = statsDoc.data();
+        currentTotal = statsData?.coinTotal ?? 0;
+        coinByLang = statsData?.coinByLang ?? {};
+      }
+
+      const newTotal = currentTotal + score;
+      coinByLang[targetCode] = (coinByLang[targetCode] ?? 0) + score;
+
+      // Update coin stats
+      tx.set(coinStatsRef, { coinTotal: newTotal, coinByLang });
+
+      // Mark this version as awarded
+      tx.set(coinAwardRef, {
+        awarded: true,
+        attemptId,
+        coinsAwarded: score,
+        awardedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Update last awarded count for anti-cheat
+      tx.set(lastAwardedRef, {
+        count: generatedCount,
+        lastAwardedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      return { awarded: true, coinsAwarded: score, newTotal };
+    });
+
+    return result;
+  }
+);
