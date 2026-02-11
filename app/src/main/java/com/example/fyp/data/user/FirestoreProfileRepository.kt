@@ -78,10 +78,15 @@ class FirestoreProfileRepository @Inject constructor(
         deleteCollection(userId, "history")
         deleteCollection(userId, "word_banks")
         deleteCollection(userId, "learning_sheets")
-        deleteCollection(userId, "quizzes")
+        deleteCollection(userId, "quiz_attempts")
+        deleteCollection(userId, "quiz_stats")
+        deleteCollection(userId, "generated_quizzes")
         deleteCollection(userId, "favorites")
         deleteCollection(userId, "custom_words")
         deleteCollection(userId, "sessions")
+        deleteCollection(userId, "coin_awards")
+        deleteCollection(userId, "last_awarded_quiz")
+        deleteCollection(userId, "user_stats")
 
         // Delete profile subcollection
         db.collection("users").document(userId)

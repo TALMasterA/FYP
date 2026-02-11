@@ -2,11 +2,12 @@ package com.example.fyp.core
 
 import android.util.Log
 import com.example.fyp.BuildConfig
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 /**
  * Centralized logger for the FYP application.
  * Provides consistent logging across the app with support for different log levels.
- * Can be extended to integrate with crash reporting (Crashlytics) or analytics.
+ * Integrates with Firebase Crashlytics for production error tracking.
  */
 object AppLogger {
 
@@ -34,12 +35,19 @@ object AppLogger {
     }
 
     /**
-     * Log error message
+     * Log error message and report to Crashlytics for production monitoring.
      */
     fun e(tag: String, message: String, throwable: Throwable? = null) {
         Log.e("FYP:$tag", message, throwable)
-        // TODO: Integrate with Firebase Crashlytics for production error tracking
-        // FirebaseCrashlytics.getInstance().recordException(throwable)
+        try {
+            val crashlytics = FirebaseCrashlytics.getInstance()
+            crashlytics.log("E/$tag: $message")
+            if (throwable != null) {
+                crashlytics.recordException(throwable)
+            }
+        } catch (_: Exception) {
+            // Crashlytics not initialized yet (e.g., during early startup)
+        }
     }
 }
 
