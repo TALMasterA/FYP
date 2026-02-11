@@ -1,7 +1,5 @@
 package com.example.fyp.data.learning
 
-import android.util.Log
-
 /**
  * Utility to clean learning content by removing quiz section.
  * Removes everything from "QUIZ SECTION" onwards.
@@ -19,7 +17,6 @@ object ContentCleaner {
     fun removeQuizFromContent(content: String): String {
         val quizStart = findQuizStart(content)
         return if (quizStart > 0) {
-            Log.d("ContentCleaner", "Removed quiz section from content (start=$quizStart)")
             content.substring(0, quizStart).trim()
         } else {
             content
@@ -35,7 +32,6 @@ object ContentCleaner {
             // Find the end of the "QUIZ SECTION" line
             val lineEnd = content.indexOf('\n', quizStart)
             val actualStart = if (lineEnd != -1) lineEnd + 1 else quizStart
-            // Log.d("ContentCleaner", "Extracted quiz section from content (start=$actualStart)")
             content.substring(actualStart).trim()
         } else {
             ""

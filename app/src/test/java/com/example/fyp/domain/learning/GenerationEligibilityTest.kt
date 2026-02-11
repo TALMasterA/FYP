@@ -8,8 +8,9 @@ import org.junit.Test
  * Comprehensive unit tests for generation eligibility logic using GenerationEligibility domain object.
  *
  * Tests the anti-cheat rules that prevent abuse of material generation:
- * 1. Word bank regeneration: need MIN_RECORDS_FOR_REGEN (20) more records
+ * 1. Word bank regeneration: need MIN_RECORDS_FOR_REGEN (20) more records, blocked if count decreases
  * 2. Quiz regeneration: sheet version must differ from quiz version
+ * 3. Learning sheet regeneration: need 5 more records, blocked if count decreases
  */
 class GenerationEligibilityIntegrationTest {
 
@@ -48,18 +49,44 @@ class GenerationEligibilityIntegrationTest {
     // --- Quiz Regeneration Eligibility ---
 
     @Test
-    fun `quiz regeneration allowed when versions differ`() {
+    fun `first quiz generation is always allowed`() {
+        assertTrue(GenerationEligibility.canRegenerateQuiz(50, null))
+    }
+
+    @Test
+    fun `quiz regeneration allowed when sheet version differs from quiz version`() {
         assertTrue(GenerationEligibility.canRegenerateQuiz(100, 50))
     }
 
     @Test
-    fun `quiz regeneration not allowed when versions match`() {
+    fun `quiz regeneration not allowed when sheet and quiz versions match`() {
         assertFalse(GenerationEligibility.canRegenerateQuiz(100, 100))
     }
 
     @Test
-    fun `quiz regeneration allowed when sheet version is higher`() {
+    fun `quiz regeneration allowed when sheet version is higher than quiz version`() {
         assertTrue(GenerationEligibility.canRegenerateQuiz(150, 100))
+    }
+
+    @Test
+    fun `quiz regeneration allowed when sheet version is lower than quiz version`() {
+        // This edge case can happen if user regenerates materials at lower count
+        // The rule is simply: sheet version != quiz version
+        assertTrue(GenerationEligibility.canRegenerateQuiz(80, 100))
+    }
+
+    // --- Count Decrease Blocking (Anti-Cheat) ---
+
+    @Test
+    fun `word bank regen blocked when count decreases`() {
+        assertFalse(GenerationEligibility.canRegenerateWordBank(40, 50))
+        assertFalse(GenerationEligibility.canRegenerateWordBank(49, 50))
+    }
+
+    @Test
+    fun `learning sheet regen blocked when count decreases`() {
+        assertFalse(GenerationEligibility.canRegenerateLearningSheet(40, 50))
+        assertFalse(GenerationEligibility.canRegenerateLearningSheet(49, 50))
     }
 
     // --- Edge Cases ---
@@ -102,18 +129,26 @@ class GenerationEligibilityIntegrationTest {
         // After regeneration at count 30
         assertFalse(GenerationEligibility.canRegenerateWordBank(49, 30))
         assertTrue(GenerationEligibility.canRegenerateWordBank(50, 30))
+
+        // User deletes some records - regen blocked
+        assertFalse(GenerationEligibility.canRegenerateWordBank(25, 30))
     }
 
     @Test
     fun `typical quiz workflow`() {
-        val sheetAtGeneration = 50
+        // First quiz - always allowed
+        assertTrue(GenerationEligibility.canRegenerateQuiz(50, null))
+
+        // Quiz generated at sheet version 50
         val quizVersion = 50
 
-        // User hasn't added new records
-        assertFalse(GenerationEligibility.canRegenerateQuiz(sheetAtGeneration, quizVersion))
+        // User hasn't regenerated learning sheet
+        assertFalse(GenerationEligibility.canRegenerateQuiz(50, quizVersion))
 
-        // User adds new records
+        // User regenerates learning sheet at version 55
         assertTrue(GenerationEligibility.canRegenerateQuiz(55, quizVersion))
+
+        // User regenerates learning sheet at version 70
         assertTrue(GenerationEligibility.canRegenerateQuiz(70, quizVersion))
     }
 
@@ -163,6 +198,12 @@ class GenerationEligibilityIntegrationTest {
 
         // First generation always allowed
         assertTrue(GenerationEligibility.canRegenerateLearningSheet(10, 0))
+    }
+
+    @Test
+    fun `learning sheet regen blocked when count decreases even with large previous count`() {
+        // Had 100 records, deleted some, now at 80
+        assertFalse(GenerationEligibility.canRegenerateLearningSheet(80, 100))
     }
 }
 
