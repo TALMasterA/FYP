@@ -75,33 +75,35 @@ class FirestoreCustomWordsRepository @Inject constructor(
         example: String = "",
         sourceLang: String,
         targetLang: String
-    ): Result<CustomWord> = try {
-        // Validate input lengths
-        val trimmedOriginal = originalWord.trim().take(MAX_WORD_LENGTH)
-        val trimmedTranslated = translatedWord.trim().take(MAX_WORD_LENGTH)
-        val trimmedPronunciation = pronunciation.trim().take(MAX_WORD_LENGTH)
-        val trimmedExample = example.trim().take(MAX_EXAMPLE_LENGTH)
+    ): Result<CustomWord> {
+        return try {
+            // Validate input lengths
+            val trimmedOriginal = originalWord.trim().take(MAX_WORD_LENGTH)
+            val trimmedTranslated = translatedWord.trim().take(MAX_WORD_LENGTH)
+            val trimmedPronunciation = pronunciation.trim().take(MAX_WORD_LENGTH)
+            val trimmedExample = example.trim().take(MAX_EXAMPLE_LENGTH)
 
-        if (trimmedOriginal.isBlank() || trimmedTranslated.isBlank()) {
-            return Result.failure(IllegalArgumentException("Word and translation are required"))
+            if (trimmedOriginal.isBlank() || trimmedTranslated.isBlank()) {
+                return Result.failure(IllegalArgumentException("Word and translation are required"))
+            }
+
+            val docRef = colRef(userId).document()
+            val word = CustomWord(
+                id = docRef.id,
+                userId = userId,
+                originalWord = trimmedOriginal,
+                translatedWord = trimmedTranslated,
+                pronunciation = trimmedPronunciation,
+                example = trimmedExample,
+                sourceLang = sourceLang,
+                targetLang = targetLang,
+                createdAt = Timestamp.now()
+            )
+            docRef.set(word).await()
+            Result.success(word)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
-        val docRef = colRef(userId).document()
-        val word = CustomWord(
-            id = docRef.id,
-            userId = userId,
-            originalWord = trimmedOriginal,
-            translatedWord = trimmedTranslated,
-            pronunciation = trimmedPronunciation,
-            example = trimmedExample,
-            sourceLang = sourceLang,
-            targetLang = targetLang,
-            createdAt = Timestamp.now()
-        )
-        docRef.set(word).await()
-        Result.success(word)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
     /**

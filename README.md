@@ -1,4 +1,4 @@
-# FYP - Translation & Learning App
+# FYP - Translation & Learning App (Reviewing)
 
 An Android-based translation and language learning application with AI-powered features.
 
@@ -17,10 +17,8 @@ Link: https://appdistribution.firebase.dev/i/5ebf3d592700b0f7
 ## 🛠️ Tech Stack
 
 **Frontend:**
-- Android Studio (Jetpack Compose)
-- Kotlin 2.0.21
-- Compose BOM 2024.09.00
-- Material 3
+- Android Studio
+- Kotlin
 
 **Backend:**
 - Firebase Authentication (Email/Password)
@@ -70,14 +68,14 @@ Firebase login is required.
 - Favorites system for bookmarking important translations
 
 **Customization:**
-- UI language translation (supports 16+ languages including Chinese, Japanese, Korean, Vietnamese, Thai, French, German, Spanish, Portuguese, Italian, Russian, Filipino, Malay)
+- UI language translation (supports 16+ languages)
 - Theme settings (Light/Dark/System)
 - Font size adjustment (80%-150%)
 - 6 color palettes (1 free default + 5 unlockable at 10 coins each: Ocean, Sunset, Lavender, Rose, Mint)
 - Voice settings per language
 
 **History & Organization:**
-- Translation history (default 50 records displayed, base limit 100, expandable up to 150)
+- Translation history
 - Filter by language or keyword
 - Session management for continuous conversations (rename, delete)
 - Cloud sync via Firestore
@@ -91,7 +89,6 @@ Firebase login is required.
 
 **User Accounts:**
 - Email/password authentication via Firebase
-- Guest mode with limited features (1 free UI language change)
 - Profile management (display name, account deletion)
 - Password reset via email
 - Auto sign-out on app version update
@@ -146,7 +143,7 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
 **Prerequisites:**
 1. Android Studio (latest stable version)
 2. JDK 11 or higher
-3. Android SDK (compileSdk 36, minSdk 26, targetSdk 36)
+3. Android SDK
 4. Firebase project with Authentication, Firestore, Cloud Functions, Crashlytics enabled
 5. Azure Speech/Translation API keys
 6. Azure OpenAI deployment for learning content generation
@@ -282,13 +279,5 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-## 📋 App Info
-
-- **App Version:** 1.6.7 (versionCode 26)
-- **Compile SDK:** 36
-- **Min SDK:** 26
-- **Target SDK:** 36
-
---------------------------------------------------------------
-
 **Last Updated:** February 2026 - Manual checked
+(Some content is by github copilot agent and may contain error)
