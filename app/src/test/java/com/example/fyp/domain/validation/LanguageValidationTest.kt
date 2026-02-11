@@ -235,6 +235,9 @@ class LanguageValidationTest {
         val langCode = parts[0]
         val countryCode = parts[1]
 
+        // Reject empty parts explicitly
+        if (langCode.isEmpty() || countryCode.isEmpty()) return false
+
         return langCode.length in 2..3 &&
                langCode.all { it.isLowerCase() } &&
                countryCode.length == 2 &&

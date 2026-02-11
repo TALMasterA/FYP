@@ -1,16 +1,17 @@
 package com.example.fyp.domain.settings
 
-import com.example.fyp.data.learning.FirestoreQuizRepository
 import com.example.fyp.data.settings.UserSettingsRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.*
-import org.mockito.Mockito.*
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
+import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.verifyNoInteractions
 
 /**
  * Unit tests for UnlockColorPaletteWithCoinsUseCase.
@@ -57,7 +58,9 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
         val paletteId = "premium"
         val cost = 100
 
-        whenever(quizRepo.deductCoins(userId, cost)).thenReturn(50) // 150 - 100 = 50 remaining
+        quizRepo.stub {
+            onBlocking { deductCoins(userId, cost) } doReturn 50 // 150 - 100 = 50 remaining
+        }
 
         val result = useCase(userId, paletteId, cost)
 
@@ -72,7 +75,9 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
         val paletteId = "premium"
         val cost = 100
 
-        whenever(quizRepo.deductCoins(userId, cost)).thenReturn(0) // 100 - 100 = 0 remaining
+        quizRepo.stub {
+            onBlocking { deductCoins(userId, cost) } doReturn 0 // 100 - 100 = 0 remaining
+        }
 
         val result = useCase(userId, paletteId, cost)
 
@@ -89,7 +94,9 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
         val paletteId = "premium"
         val cost = 100
 
-        whenever(quizRepo.deductCoins(userId, cost)).thenReturn(-1) // Insufficient
+        quizRepo.stub {
+            onBlocking { deductCoins(userId, cost) } doReturn -1 // Insufficient
+        }
 
         val result = useCase(userId, paletteId, cost)
 
@@ -105,7 +112,9 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
         val paletteId = "premium"
         val cost = 50
 
-        whenever(quizRepo.deductCoins(userId, cost)).thenReturn(-1) // 0 - 50 = -50, insufficient
+        quizRepo.stub {
+            onBlocking { deductCoins(userId, cost) } doReturn -1 // 0 - 50 = -50, insufficient
+        }
 
         val result = useCase(userId, paletteId, cost)
 
@@ -121,7 +130,9 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
         val paletteId = "luxury"
         val cost = 1000
 
-        whenever(quizRepo.deductCoins(userId, cost)).thenReturn(500) // 1500 - 1000 = 500
+        quizRepo.stub {
+            onBlocking { deductCoins(userId, cost) } doReturn 500 // 1500 - 1000 = 500
+        }
 
         val result = useCase(userId, paletteId, cost)
 
@@ -136,7 +147,9 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
         val paletteId = "basic"
         val cost = 1
 
-        whenever(quizRepo.deductCoins(userId, cost)).thenReturn(99) // 100 - 1 = 99
+        quizRepo.stub {
+            onBlocking { deductCoins(userId, cost) } doReturn 99 // 100 - 1 = 99
+        }
 
         val result = useCase(userId, paletteId, cost)
 
@@ -152,17 +165,23 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
         val userId = "user123"
 
         // First unlock: 500 - 100 = 400 remaining
-        whenever(quizRepo.deductCoins(userId, 100)).thenReturn(400)
+        quizRepo.stub {
+            onBlocking { deductCoins(userId, 100) } doReturn 400
+        }
         val result1 = useCase(userId, "palette1", 100)
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result1)
 
         // Second unlock: 400 - 200 = 200 remaining
-        whenever(quizRepo.deductCoins(userId, 200)).thenReturn(200)
+        quizRepo.stub {
+            onBlocking { deductCoins(userId, 200) } doReturn 200
+        }
         val result2 = useCase(userId, "palette2", 200)
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result2)
 
         // Third unlock fails: 200 - 300 = -100 insufficient
-        whenever(quizRepo.deductCoins(userId, 300)).thenReturn(-1)
+        quizRepo.stub {
+            onBlocking { deductCoins(userId, 300) } doReturn -1
+        }
         val result3 = useCase(userId, "palette3", 300)
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins, result3)
 
