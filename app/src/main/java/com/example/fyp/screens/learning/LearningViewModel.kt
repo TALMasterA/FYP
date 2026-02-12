@@ -1,7 +1,9 @@
 package com.example.fyp.screens.learning
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.azure.AzureLanguageConfig
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.domain.learning.LearningSheetsRepository
@@ -15,6 +17,7 @@ import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.TranslationRecord
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,6 +56,7 @@ data class LearningUiState(
 
 @HiltViewModel
 class LearningViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val authRepo: FirebaseAuthRepository,
     private val sheetsRepo: LearningSheetsRepository,
     private val sharedHistoryDataSource: SharedHistoryDataSource,
@@ -63,15 +67,17 @@ class LearningViewModel @Inject constructor(
     private val quizRepo: QuizRepository,
 ) : ViewModel() {
 
+    // Cached supported languages - loaded once and reused
+    val supportedLanguages: List<String> by lazy {
+        AzureLanguageConfig.loadSupportedLanguages(context)
+    }
+
     private val _uiState = MutableStateFlow(LearningUiState())
     val uiState: StateFlow<LearningUiState> = _uiState.asStateFlow()
 
     private val json = Json { ignoreUnknownKeys = true }
     private var uid: String? = null
     private var historyJob: Job? = null
-
-    // Prefetch flag to avoid redundant prefetching (Priority 2 #14)
-    private var isPrefetched = false
     private var settingsJob: Job? = null
     private var generationJob: Job? = null
     private var quizGenerationJob: Job? = null
@@ -445,25 +451,6 @@ class LearningViewModel @Inject constructor(
         quizGenerationJob?.cancel()
         quizGenerationJob = null
         _uiState.value = uiState.value.copy(generatingQuizLanguageCode = null)
-    }
-
-    /**
-     * Pre-fetch learning sheet metadata in background (Priority 2 #14).
-     * Called from MainActivity or HomeScreen after user logs in.
-     * Ensures instant learning screen display when user navigates to it.
-     */
-    fun prefetchSheetMetadata() {
-        if (isPrefetched) return
-        isPrefetched = true
-        
-        viewModelScope.launch {
-            try {
-                refreshSheetMetaForClusters()
-            } catch (e: Exception) {
-                // Ignore errors on prefetch - silent background operation
-                android.util.Log.d("LearningVM", "Prefetch failed (non-critical): ${e.message}")
-            }
-        }
     }
 
     fun setPrimaryLanguage(languageCode: String) {

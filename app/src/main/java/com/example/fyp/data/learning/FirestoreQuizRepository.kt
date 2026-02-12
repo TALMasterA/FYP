@@ -161,37 +161,39 @@ class FirestoreQuizRepository @Inject constructor(
 
     private suspend fun updateStats(uid: String, attempt: QuizAttempt) {
         val statsRef = statsDocRef(uid, attempt.primaryLanguageCode, attempt.targetLanguageCode)
-        val currentStats = statsRef.get().await()
 
-        // For averageScore, highestScore, and lowestScore, we need current values (read-then-write)
-        // But attemptCount can use atomic increment (FieldValue.increment)
-        if (currentStats.exists()) {
-            val current = currentStats.toObject(QuizStats::class.java) ?: QuizStats()
-            val newCount = current.attemptCount + 1
-            val newAverage = (current.averageScore * current.attemptCount + attempt.percentage) / newCount
+        // Use Firestore transaction for atomic updates to prevent race conditions
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(statsRef)
 
-            val updates = mapOf(
-                "attemptCount" to com.google.firebase.firestore.FieldValue.increment(1),
-                "averageScore" to newAverage,
-                "highestScore" to maxOf(current.highestScore, attempt.totalScore),
-                "lowestScore" to if (current.lowestScore == 0) attempt.totalScore
-                    else minOf(current.lowestScore, attempt.totalScore),
-                "lastAttemptAt" to attempt.completedAt
-            )
-            statsRef.update(updates).await()
-        } else {
-            // First attempt - use set instead of update
-            val stats = QuizStats(
-                primaryLanguageCode = attempt.primaryLanguageCode,
-                targetLanguageCode = attempt.targetLanguageCode,
-                attemptCount = 1,
-                averageScore = attempt.percentage,
-                highestScore = attempt.totalScore,
-                lowestScore = attempt.totalScore,
-                lastAttemptAt = attempt.completedAt
-            )
-            statsRef.set(stats).await()
-        }
+            if (snapshot.exists()) {
+                val current = snapshot.toObject(QuizStats::class.java) ?: QuizStats()
+                val newCount = current.attemptCount + 1
+                val newAverage = (current.averageScore * current.attemptCount + attempt.percentage) / newCount
+
+                val updates = mapOf(
+                    "attemptCount" to newCount,
+                    "averageScore" to newAverage,
+                    "highestScore" to maxOf(current.highestScore, attempt.totalScore),
+                    "lowestScore" to if (current.lowestScore == 0) attempt.totalScore
+                        else minOf(current.lowestScore, attempt.totalScore),
+                    "lastAttemptAt" to attempt.completedAt
+                )
+                transaction.update(statsRef, updates)
+            } else {
+                // First attempt - use set
+                val stats = QuizStats(
+                    primaryLanguageCode = attempt.primaryLanguageCode,
+                    targetLanguageCode = attempt.targetLanguageCode,
+                    attemptCount = 1,
+                    averageScore = attempt.percentage,
+                    highestScore = attempt.totalScore,
+                    lowestScore = attempt.totalScore,
+                    lastAttemptAt = attempt.completedAt
+                )
+                transaction.set(statsRef, stats)
+            }
+        }.await()
     }
 
     // ---- Generated quiz (cached per sheet version) ----

@@ -407,6 +407,12 @@ enum class UiTextKey {
     LanguageDetectedTemplate,
     LanguageDetectFailed,
 
+    // --- Image Recognition (OCR) ---
+    ImageRecognitionButton,
+    ImageRecognitionAccuracyWarning,
+    ImageRecognitionScanning,
+    ImageRecognitionSuccess,
+
     // --- Cache ---
     CacheClearButton,
     CacheClearSuccess,
@@ -583,4 +589,3 @@ val CoreUiTexts: List<String> = listOf(
     // VoiceSettingsDesc
     "Choose a voice for text-to-speech output per language.",
 )
-

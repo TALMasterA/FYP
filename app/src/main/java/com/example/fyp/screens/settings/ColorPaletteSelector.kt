@@ -96,7 +96,7 @@ fun ColorPaletteSelector(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        items(ALL_PALETTES) { palette ->
+        items(ALL_PALETTES, key = { it.id }) { palette ->
             ColorPaletteCard(
                 palette = palette,
                 isSelected = currentPaletteId == palette.id,

@@ -36,7 +36,8 @@ import kotlin.coroutines.suspendCoroutine
 fun ImageSourceDialog(
     onCamera: () -> Unit,
     onGallery: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    accuracyWarning: String
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -77,6 +78,14 @@ fun ImageSourceDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Choose from Gallery")
                 }
+
+                // Accuracy warning
+                Text(
+                    text = accuracyWarning,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         },
         confirmButton = {},

@@ -9,6 +9,74 @@ class QuizGenerationRepositoryImpl @Inject constructor(
     private val genAi: CloudGenAiClient
 ) : QuizGenerationRepository {
 
+    /**
+     * Select optimal translation records for quiz generation context.
+     * Uses diverse sampling strategy to avoid duplicates and ensure variety.
+     *
+     * @param records All available translation records
+     * @param targetSize Target number of records to select (default 20)
+     * @return Optimally selected records
+     */
+    private fun selectOptimalContext(
+        records: List<TranslationRecord>,
+        targetSize: Int = 20
+    ): List<TranslationRecord> {
+        if (records.size <= targetSize) return records
+
+        // 1. Deduplicate by source text (case-insensitive)
+        val uniqueWords = records
+            .groupBy { it.sourceText.lowercase().trim() }
+            .mapValues { it.value.first() } // Keep first occurrence
+
+        // 2. Calculate frequency for each word
+        val wordFrequency = records
+            .groupingBy { it.sourceText.lowercase().trim() }
+            .eachCount()
+
+        // 3. Weighted selection strategy:
+        //    - 50% most frequent words (likely important/common errors)
+        //    - 30% recent words (fresh in memory)
+        //    - 20% random words (variety)
+
+        val frequentCount = targetSize / 2
+        val recentCount = (targetSize * 30) / 100
+        val randomCount = targetSize - frequentCount - recentCount
+
+        // Get most frequent words
+        val frequent = uniqueWords.values
+            .sortedByDescending { wordFrequency[it.sourceText.lowercase().trim()] ?: 0 }
+            .take(frequentCount)
+
+        // Get recent unique words (excluding already selected frequent ones)
+        val recent = records
+            .takeLast(targetSize * 2) // Look at more recent records
+            .distinctBy { it.sourceText.lowercase().trim() }
+            .filterNot { record ->
+                frequent.any { it.sourceText.lowercase().trim() == record.sourceText.lowercase().trim() }
+            }
+            .take(recentCount)
+
+        // Get random selection from remaining words
+        val remaining = uniqueWords.values
+            .filterNot { record ->
+                val key = record.sourceText.lowercase().trim()
+                frequent.any { it.sourceText.lowercase().trim() == key } ||
+                recent.any { it.sourceText.lowercase().trim() == key }
+            }
+
+        val random = if (remaining.isNotEmpty()) {
+            remaining.shuffled().take(randomCount)
+        } else {
+            emptyList()
+        }
+
+        // Combine all selections, sorted by timestamp (most recent first)
+        return (frequent + recent + random)
+            .distinctBy { it.sourceText.lowercase().trim() }
+            .sortedByDescending { it.timestamp }
+            .take(targetSize)
+    }
+
     override suspend fun generateQuiz(
         deployment: String,
         primaryLanguageCode: String,
@@ -16,7 +84,10 @@ class QuizGenerationRepositoryImpl @Inject constructor(
         records: List<TranslationRecord>,
         learningMaterial: String
     ): String {
-        val recent = records.takeLast(20).joinToString("\n") { r ->
+        // Use optimized context selection instead of just takeLast(20)
+        val selectedRecords = selectOptimalContext(records, targetSize = 20)
+
+        val recent = selectedRecords.joinToString("\n") { r ->
             "- [${r.sourceLang}→${r.targetLang}] ${r.sourceText} => ${r.targetText}"
         }
 

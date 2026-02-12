@@ -19,6 +19,15 @@ import com.example.fyp.core.PaginationRow
 import com.example.fyp.core.pageCount
 import com.example.fyp.model.ui.UiTextKey
 
+/**
+ * Dialog state for WordBankDetailView - consolidated for better recomposition efficiency
+ */
+private sealed class DialogState {
+    object None : DialogState()
+    object Filter : DialogState()
+    object RegenInfo : DialogState()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordBankDetailView(
@@ -49,11 +58,11 @@ fun WordBankDetailView(
     onPageChange: (Int) -> Unit,
     pageSize: Int
 ) {
-    var showFilterDialog by remember { mutableStateOf(false) }
-    var showRegenInfo by remember { mutableStateOf(false) }
+    // Consolidated dialog state for better recomposition efficiency
+    var dialogState by remember { mutableStateOf<DialogState>(DialogState.None) }
 
     // Filter dialog
-    if (showFilterDialog && wordBank != null) {
+    if (dialogState is DialogState.Filter && wordBank != null) {
         WordBankFilterDialog(
             wordBank = wordBank,
             filterKeyword = filterKeyword,
@@ -63,22 +72,22 @@ fun WordBankDetailView(
             onFilterCategoryChange = onFilterCategoryChange,
             onFilterDifficultyChange = onFilterDifficultyChange,
             onApply = {
-                showFilterDialog = false
+                dialogState = DialogState.None
                 onPageChange(0)
             },
-            onDismiss = { showFilterDialog = false },
+            onDismiss = { dialogState = DialogState.None },
             t = t
         )
     }
 
     // Regen info dialog
-    if (showRegenInfo) {
+    if (dialogState is DialogState.RegenInfo) {
         AlertDialog(
-            onDismissRequest = { showRegenInfo = false },
+            onDismissRequest = { dialogState = DialogState.None },
             title = { Text(t(UiTextKey.WordBankRegenInfoTitle)) },
             text = { Text(t(UiTextKey.WordBankRegenInfoMessage)) },
             confirmButton = {
-                Button(onClick = { showRegenInfo = false }) {
+                Button(onClick = { dialogState = DialogState.None }) {
                     Text(t(UiTextKey.ActionConfirm))
                 }
             }
@@ -101,8 +110,8 @@ fun WordBankDetailView(
             onGenerate = onGenerate,
             onCancel = onCancel,
             t = t,
-            onShowFilterDialog = { showFilterDialog = true },
-            onShowRegenInfo = { showRegenInfo = true },
+            onShowFilterDialog = { dialogState = DialogState.Filter },
+            onShowRegenInfo = { dialogState = DialogState.RegenInfo },
             hasActiveFilters = filterKeyword.isNotBlank() || filterCategory.isNotBlank() || filterDifficulty.isNotBlank()
         )
 

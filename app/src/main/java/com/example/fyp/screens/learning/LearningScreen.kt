@@ -33,7 +33,6 @@ import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.core.ConfirmationDialog
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
-import com.example.fyp.data.azure.AzureLanguageConfig
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
@@ -62,8 +61,7 @@ fun LearningScreen(
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
-    val context = LocalContext.current
-    val supported = remember { AzureLanguageConfig.loadSupportedLanguages(context).toSet() }
+    val supported = remember { viewModel.supportedLanguages.toSet() }
 
     var pendingGenerateLang by remember { mutableStateOf<String?>(null) }
     var showRegenInfo by remember { mutableStateOf(false) }
