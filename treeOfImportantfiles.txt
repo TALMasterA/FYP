@@ -24,6 +24,7 @@ FYP/
 │           ├── AppNavigation.kt
 │           │
 │           ├── core/
+│           │   ├── CameraPermissions.kt
 │           │   ├── Constants.kt
 │           │   ├── ConnectivityObserver.kt
 │           │   ├── Logger.kt
@@ -78,6 +79,7 @@ FYP/
 │           │   │   ├── QuizParser.kt
 │           │   │   ├── FirestoreLearningSheetsRepository.kt
 │           │   │   └── LearningContentRepositoryImpl.kt
+│           │   ├── ocr/ MLKitOcrRepository.kt
 │           │   ├── ui/
 │           │   │   ├── UiLanguageCacheStore.kt
 │           │   │   └── UiLanguageStateController.kt
@@ -86,8 +88,8 @@ FYP/
 │           │       └── SettingsModule.kt
 │           │
 │           ├── domain/
-│           │   ├── auth/
-│           │   │   └── LoginUseCase.kt
+│           │   ├── auth/ LoginUseCase.kt
+│           │   ├── ocr/ RecognizeTextFromImageUseCase.kt
 │           │   ├── history/
 │           │   │   ├── HistoryRepository.kt
 │           │   │   ├── DeleteHistoryRecordUseCase.kt
@@ -154,6 +156,7 @@ FYP/
 │           │   ├── speech/
 │           │   │   ├── ContinuousConversationController.kt
 │           │   │   ├── ContinuousConversationScreen.kt
+│           │   │   ├── ImageCaptureComponents.kt
 │           │   │   ├── SpeechModels.kt
 │           │   │   ├── SpeechRecognitionComponents.kt
 │           │   │   ├── SpeechRecognitionScreen.kt
@@ -198,6 +201,7 @@ FYP/
 │           │   ├── FavoriteRecord.kt
 │           │   ├── CustomWord.kt
 │           │   ├── SpeechResult.kt
+│           │   ├── OcrResult.kt
 │           │   ├── Quiz.kt
 │           │   ├── TranslationRecord.kt
 │           │   └── HistorySession.kt
@@ -213,7 +217,7 @@ FYP/
 │                   └── AnimatedComponents.kt
 │
 └── fyp-backend/
-    ├── firebase.json
+    ├── firebase.json / firestore.indexes.json
     ├── .firebaserc
     └── functions/
         ├── package.json / package-lock.json
