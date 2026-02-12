@@ -1,4 +1,3 @@
-@file:Suppress("AssignedValueIsNeverRead")
 
 package com.example.fyp.screens.home
 

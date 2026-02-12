@@ -47,7 +47,7 @@ class TranslationCache @Inject constructor(
         private val CACHE_KEY = stringPreferencesKey("translation_cache")
         private const val MAX_CACHE_SIZE = 1000 // Increased from 500 for better cache coverage
         private const val CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000L // 30 days (increased from 7)
-        private const val IN_MEMORY_CACHE_SIZE = 200 // Fast in-memory cache
+        private const val IN_MEMORY_CACHE_SIZE = 800
     }
 
     private val json = Json { ignoreUnknownKeys = true }

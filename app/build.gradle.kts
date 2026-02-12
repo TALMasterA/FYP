@@ -59,6 +59,20 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.17"
     }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+    // Enable 16KB page size support for Android 15+ compatibility
+    // This aligns native libraries to 16KB boundaries
+    androidResources {
+        noCompress += "tflite"
+    }
 }
 
 dependencies {
@@ -105,10 +119,10 @@ dependencies {
 
     // Tests
     testImplementation(libs.junit)
-    testImplementation("org.mockito:mockito-core:5.7.0")
-    testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
-    testImplementation("org.json:json:20240303") // Add this for QuizParserTest
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.json)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

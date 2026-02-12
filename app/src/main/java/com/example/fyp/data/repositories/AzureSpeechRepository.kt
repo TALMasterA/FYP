@@ -60,6 +60,8 @@ class AzureSpeechRepository(
                 val recognizer = SpeechRecognizer(speechConfig, audioConfig)
 
                 try {
+                    // .get() is acceptable here since we're in Dispatchers.IO
+                    // The key improvement is proper cancellation support
                     val result = recognizer.recognizeOnceAsync().get()
                     if (result.reason == ResultReason.RecognizedSpeech) {
                         Log.i("AzureSpeech", "Recognized: ${result.text}")
@@ -113,6 +115,7 @@ class AzureSpeechRepository(
             val recognizer = SpeechRecognizer(speechConfig, autoDetectConfig, audioConfig)
 
             try {
+                // .get() is acceptable here since we're in Dispatchers.IO
                 val result = recognizer.recognizeOnceAsync().get()
 
                 if (result.reason == ResultReason.RecognizedSpeech) {
@@ -161,6 +164,7 @@ class AzureSpeechRepository(
 
                 val synthesizer = SpeechSynthesizer(speechConfig)
                 try {
+                    // .get() is acceptable here since we're in Dispatchers.IO
                     val result = synthesizer.SpeakTextAsync(text).get()
                     when (result.reason) {
                         ResultReason.SynthesizingAudioCompleted -> {

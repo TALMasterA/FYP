@@ -152,7 +152,8 @@ fun SpeechRecognitionScreen(
             },
             onDismiss = {
                 showImageSourceDialog = false
-            }
+            },
+            accuracyWarning = t(UiTextKey.ImageRecognitionAccuracyWarning)
         )
     }
 
@@ -311,8 +312,6 @@ fun SpeechRecognitionScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
                     // Camera/Image button for OCR
                     OutlinedButton(
                         onClick = { showImageSourceDialog = true },
@@ -324,8 +323,9 @@ fun SpeechRecognitionScreen(
                             contentDescription = null
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Scan Text from Image")
+                        Text(t(UiTextKey.ImageRecognitionButton))
                     }
+
 
                     SourceTextEditor(
                         value = recognizedText,
