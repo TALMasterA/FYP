@@ -126,6 +126,9 @@ dependencies {
 
     // ML Kit Text Recognition
     implementation(libs.mlkit.text.recognition)
+    implementation(libs.mlkit.text.recognition.chinese)
+    implementation(libs.mlkit.text.recognition.japanese)
+    implementation(libs.mlkit.text.recognition.korean)
 
     // CameraX for image capture
     implementation(libs.androidx.camera.camera2)

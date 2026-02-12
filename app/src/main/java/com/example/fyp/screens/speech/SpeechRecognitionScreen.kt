@@ -1,7 +1,8 @@
 package com.example.fyp.screens.speech
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -125,7 +125,7 @@ fun SpeechRecognitionScreen(
     
     // Image picker launcher
     val launchImagePicker = rememberImagePickerLauncher { uri ->
-        uri?.let { viewModel.recognizeTextFromImage(it) }
+        uri?.let { viewModel.recognizeTextFromImage(it, selectedLanguage) }
     }
 
     // Handle camera permission
@@ -161,7 +161,7 @@ fun SpeechRecognitionScreen(
         CameraCaptureScreen(
             onImageCaptured = { uri ->
                 showCamera = false
-                viewModel.recognizeTextFromImage(uri)
+                viewModel.recognizeTextFromImage(uri, selectedLanguage)
             },
             onError = { error ->
                 showCamera = false
