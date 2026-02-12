@@ -272,15 +272,19 @@ class SpeechViewModel @Inject constructor(
     /**
      * Process an image and extract text using ML Kit OCR
      * @param imageUri URI of the image to process
+     * @param languageCode Optional language hint for script selection
      */
-    fun recognizeTextFromImage(imageUri: Uri) {
+    fun recognizeTextFromImage(imageUri: Uri, languageCode: String? = null) {
         viewModelScope.launch {
             speechState = speechState.copy(
                 statusMessage = "Scanning image for text...",
                 recognizePhase = RecognizePhase.Preparing
             )
 
-            when (val result = recognizeTextFromImageUseCase(imageUri)) {
+            // Map "auto" to null so repository uses default/latin or we could add auto-detection logic
+            val lang = if (languageCode == "auto") null else languageCode
+
+            when (val result = recognizeTextFromImageUseCase(imageUri, lang)) {
                 is OcrResult.Success -> {
                     speechState = speechState.copy(
                         recognizedText = result.text,
