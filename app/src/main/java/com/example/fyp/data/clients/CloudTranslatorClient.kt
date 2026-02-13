@@ -1,5 +1,6 @@
 package com.example.fyp.data.clients
 
+import com.example.fyp.core.NetworkRetry
 import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.tasks.await
 
@@ -47,25 +48,30 @@ class CloudTranslatorClient(
         from: String?,
         to: String
     ): List<String> {
-        val data = hashMapOf(
-            "texts" to texts,
-            "to" to to
-        )
-        if (!from.isNullOrBlank()) data["from"] = from
+        return NetworkRetry.withRetry(
+            maxAttempts = 3,
+            shouldRetry = NetworkRetry::isRetryableFirebaseException
+        ) {
+            val data = hashMapOf(
+                "texts" to texts,
+                "to" to to
+            )
+            if (!from.isNullOrBlank()) data["from"] = from
 
-        val result = functions
-            .getHttpsCallable("translateTexts")
-            .call(data)
-            .await()
+            val result = functions
+                .getHttpsCallable("translateTexts")
+                .call(data)
+                .await()
 
-        @Suppress("UNCHECKED_CAST")
-        val map = result.data as? Map<String, Any?>
-            ?: throw IllegalStateException("Unexpected result type: ${result.data}")
+            @Suppress("UNCHECKED_CAST")
+            val map = result.data as? Map<String, Any?>
+                ?: throw IllegalStateException("Unexpected result type: ${result.data}")
 
-        val list = map["translatedTexts"] as? List<*>
-            ?: throw IllegalStateException("Missing translatedTexts in result")
+            val list = map["translatedTexts"] as? List<*>
+                ?: throw IllegalStateException("Missing translatedTexts in result")
 
-        return list.map { it as? String ?: "" }
+            list.map { it as? String ?: "" }
+        }
     }
 
     /**

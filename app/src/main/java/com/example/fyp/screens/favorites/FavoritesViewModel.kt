@@ -20,6 +20,7 @@ import javax.inject.Inject
 
 data class FavoritesUiState(
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val favorites: List<FavoriteRecord> = emptyList(),
     val error: String? = null,
     val speakingId: String? = null,
@@ -126,10 +127,31 @@ class FavoritesViewModel @Inject constructor(
     }
 
     /**
-     * Refresh favorites - call when screen becomes visible.
+     * Refresh favorites - call when screen becomes visible or user pulls to refresh.
      */
     fun refresh() {
-        currentUserId?.let { loadFavorites(it) }
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isRefreshing = true)
+            try {
+                val allFavorites = favoritesRepo.getAllFavoritesOnce(userId)
+                val visibleCount = _uiState.value.visibleCount
+                val visibleFavorites = allFavorites.take(visibleCount)
+                val hasMore = allFavorites.size > visibleCount
+
+                _uiState.value = _uiState.value.copy(
+                    isRefreshing = false,
+                    favorites = visibleFavorites,
+                    hasMore = hasMore,
+                    error = null
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isRefreshing = false,
+                    error = e.message ?: "Failed to refresh favorites"
+                )
+            }
+        }
     }
 
     fun removeFavorite(favoriteId: String) {

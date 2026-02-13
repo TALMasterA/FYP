@@ -1,8 +1,10 @@
 package com.example.fyp.model.user
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 
 @Serializable
+@Immutable
 data class UserSettings(
     val primaryLanguageCode: String = "en-US",
     val fontSizeScale: Float = 1.0f,

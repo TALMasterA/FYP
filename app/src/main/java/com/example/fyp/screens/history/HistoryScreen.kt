@@ -30,6 +30,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.LaunchedEffect
 import com.example.fyp.core.LanguageDropdownField
+import com.example.fyp.core.rememberHapticFeedback
+import com.example.fyp.ui.components.TranslationCardSkeleton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +44,7 @@ fun HistoryScreen(
     val viewModel: HistoryViewModel = hiltViewModel()
     val speechVm: SpeechViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
+    val haptic = rememberHapticFeedback()
 
     // Refresh coin stats when screen becomes visible (on-demand instead of real-time listener)
     LaunchedEffect(Unit) {
@@ -162,6 +165,7 @@ fun HistoryScreen(
             confirmText = t(UiTextKey.HistoryDeleteSessionButton),
             cancelText = t(UiTextKey.ActionCancel),
             onConfirm = {
+                haptic.reject()
                 viewModel.deleteSession(sid)
                 if (selectedSessionId == sid) selectedSessionId = null
                 pendingDeleteSessionId = null
@@ -179,6 +183,7 @@ fun HistoryScreen(
             cancelText = t(UiTextKey.ActionCancel),
             onValueChange = { renameText = it },
             onConfirm = {
+                haptic.confirm()
                 viewModel.renameSession(sid, renameText.trim())
                 pendingRenameSessionId = null
             },
@@ -371,8 +376,19 @@ fun HistoryScreen(
                 when {
                     uiState.isLoading -> Box(
                         Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) { CircularProgressIndicator() }
+                        contentAlignment = Alignment.TopCenter,
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            repeat(5) {
+                                TranslationCardSkeleton()
+                            }
+                        }
+                    }
 
                     uiState.error != null -> Text(
                         text = uiState.error.orEmpty(),

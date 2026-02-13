@@ -27,6 +27,8 @@ FYP/
 │           │   ├── CameraPermissions.kt
 │           │   ├── Constants.kt
 │           │   ├── ConnectivityObserver.kt
+│           │   ├── HapticFeedback.kt
+│           │   ├── NetworkRetry.kt
 │           │   ├── Logger.kt
 │           │   ├── AudioRecorder.kt
 │           │   ├── PermissionUi.kt
@@ -214,6 +216,7 @@ FYP/
 │               │   ├── Color.kt
 │               │   └── Type.kt
 │               └── components/
+│                   ├── LoadingSkeletons.kt
 │                   └── AnimatedComponents.kt
 │
 └── fyp-backend/

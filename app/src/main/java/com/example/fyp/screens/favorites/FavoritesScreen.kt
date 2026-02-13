@@ -46,6 +46,7 @@ import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.pageCount
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.core.UiConstants
+import com.example.fyp.core.rememberHapticFeedback
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.FavoriteRecord
@@ -61,6 +62,7 @@ fun FavoritesScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+    val haptic = rememberHapticFeedback()
 
     // Pagination state
     var currentPage by remember { mutableIntStateOf(0) }
@@ -135,9 +137,18 @@ fun FavoritesScreen(
                         FavoriteCard(
                             favorite = favorite,
                             languageNameFor = uiLanguageNameFor,
-                            onSpeakSource = { viewModel.speak(favorite.sourceText, favorite.sourceLang, favorite.id + "_source") },
-                            onSpeakTarget = { viewModel.speak(favorite.targetText, favorite.targetLang, favorite.id + "_target") },
-                            onDelete = { viewModel.removeFavorite(favorite.id) },
+                            onSpeakSource = {
+                                haptic.click()
+                                viewModel.speak(favorite.sourceText, favorite.sourceLang, favorite.id + "_source")
+                            },
+                            onSpeakTarget = {
+                                haptic.click()
+                                viewModel.speak(favorite.targetText, favorite.targetLang, favorite.id + "_target")
+                            },
+                            onDelete = {
+                                haptic.reject()
+                                viewModel.removeFavorite(favorite.id)
+                            },
                             isSpeakingSource = uiState.speakingId == (favorite.id + "_source"),
                             isSpeakingTarget = uiState.speakingId == (favorite.id + "_target"),
                             t = t

@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import com.example.fyp.core.rememberHapticFeedback
 import com.example.fyp.core.rememberTranslator
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.UiTextKey
@@ -64,6 +65,7 @@ fun QuizTakingScreen(
     regenEnabled: Boolean = true,
 ) {
     val t = rememberTranslator(appLanguageState)
+    val haptic = rememberHapticFeedback()
 
     var currentQuestionIndex by remember { mutableStateOf(0) }
     val currentQuestion = attempt.questions.getOrNull(currentQuestionIndex)
@@ -215,7 +217,12 @@ fun QuizTakingScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
-                onClick = { if (currentQuestionIndex > 0) currentQuestionIndex-- },
+                onClick = {
+                    if (currentQuestionIndex > 0) {
+                        haptic.click()
+                        currentQuestionIndex--
+                    }
+                },
                 enabled = currentQuestionIndex > 0,
             ) {
                 Icon(
@@ -227,8 +234,10 @@ fun QuizTakingScreen(
             Button(
                 onClick = {
                     if (currentQuestionIndex < attempt.questions.size - 1) {
+                        haptic.click()
                         currentQuestionIndex++
                     } else {
+                        haptic.confirm()
                         onSubmit()
                     }
                 },
@@ -240,7 +249,12 @@ fun QuizTakingScreen(
             }
 
             IconButton(
-                onClick = { if (currentQuestionIndex < attempt.questions.size - 1) currentQuestionIndex++ },
+                onClick = {
+                    if (currentQuestionIndex < attempt.questions.size - 1) {
+                        haptic.click()
+                        currentQuestionIndex++
+                    }
+                },
                 enabled = currentQuestionIndex < attempt.questions.size - 1,
             ) {
                 Icon(

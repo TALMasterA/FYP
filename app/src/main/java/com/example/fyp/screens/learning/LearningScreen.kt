@@ -44,6 +44,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
+import com.example.fyp.ui.components.LearningSheetSkeleton
 
 @Suppress("UNUSED_PARAMETER", "SENSELESS_COMPARISON")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -143,6 +144,12 @@ fun LearningScreen(
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
+            }
+
+            if (uiState.isLoading) {
+                items(3) {
+                    LearningSheetSkeleton()
+                }
             }
 
             uiState.error?.let { errorMsg ->

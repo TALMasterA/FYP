@@ -1,10 +1,12 @@
 package com.example.fyp.model
 
+import androidx.compose.runtime.Immutable
 import com.google.firebase.Timestamp
 import kotlinx.serialization.Serializable
 
 // Quiz question model with multiple choice answers
 @Serializable
+@Immutable
 data class QuizQuestion(
     val id: String = "",
     val question: String = "",

@@ -51,6 +51,7 @@ import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
+import com.example.fyp.core.rememberHapticFeedback
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -64,6 +65,7 @@ fun SpeechRecognitionScreen(
 
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+    val haptic = rememberHapticFeedback()
 
     val recognizedText = viewModel.recognizedText
     val translatedText = viewModel.translatedText
@@ -295,6 +297,7 @@ fun SpeechRecognitionScreen(
                         preparingLabel = t(UiTextKey.StatusRecognizePreparing),
                         listeningLabel = t(UiTextKey.StatusRecognizeListening),
                         onClick = {
+                            haptic.click()
                             if (selectedLanguage == "auto") {
                                 // Use auto-detect recognition
                                 viewModel.recognizeWithAutoDetect(
@@ -320,7 +323,7 @@ fun SpeechRecognitionScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.CameraAlt,
-                            contentDescription = null
+                            contentDescription = t(UiTextKey.ImageRecognitionButton)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(t(UiTextKey.ImageRecognitionButton))
@@ -354,6 +357,7 @@ fun SpeechRecognitionScreen(
                         label = t(UiTextKey.TranslateButton),
                         enabled = isLoggedIn && recognizedText.isNotBlank(),
                         onClick = {
+                            haptic.click()
                             viewModel.translate(
                                 fromLanguage = selectedLanguage,
                                 toLanguage = selectedTargetLanguage,
