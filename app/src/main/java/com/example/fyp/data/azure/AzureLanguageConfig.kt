@@ -1,6 +1,8 @@
 package com.example.fyp.data.azure
 
 import android.content.Context
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 
 object AzureLanguageConfig {
@@ -12,6 +14,12 @@ object AzureLanguageConfig {
             List(arr.length()) { i -> arr.getString(i) }
         } catch (e: Exception) {
             listOf("en-US")
+        }
+    }
+
+    suspend fun loadSupportedLanguagesSuspend(context: Context): List<String> {
+        return withContext(Dispatchers.IO) {
+            loadSupportedLanguages(context)
         }
     }
 }

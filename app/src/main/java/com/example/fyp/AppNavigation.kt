@@ -8,6 +8,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -83,7 +84,10 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    val supported = remember { AzureLanguageConfig.loadSupportedLanguages(context) }
+    val supported by produceState(initialValue = listOf("en-US")) {
+        value = AzureLanguageConfig.loadSupportedLanguagesSuspend(context)
+    }
+    
     val uiLanguages = remember(supported) {
         supported.distinct().map { code ->
             code to LanguageDisplayNames.displayName(code)
