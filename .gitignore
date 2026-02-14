@@ -38,3 +38,6 @@ captures/
 fyp-backend/functions/node_modules/
 fyp-backend/functions/lib/
 fyp-backend/.firebase/
+
+# VS Code settings folder
+.vscode/
