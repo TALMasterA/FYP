@@ -119,6 +119,18 @@ enum class UiTextKey {
     HelpNotesTitle,
     HelpNotes,
 
+    // --- Feedback ---
+    FeedbackTitle,
+    FeedbackDesc,
+    FeedbackMessagePlaceholder,
+    FeedbackSubmitButton,
+    FeedbackSubmitting,
+    FeedbackSuccessTitle,
+    FeedbackSuccessMessage,
+    FeedbackErrorTitle,
+    FeedbackErrorMessage,
+    FeedbackMessageRequired,
+
     // --- Continuous Mode ---
     ContinuousTitle,
     ContinuousStartButton,

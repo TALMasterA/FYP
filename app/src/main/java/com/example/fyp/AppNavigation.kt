@@ -32,6 +32,7 @@ import com.example.fyp.data.azure.AzureLanguageConfig
 import com.example.fyp.data.azure.LanguageDisplayNames
 import com.example.fyp.data.ui.rememberUiLanguageState
 import com.example.fyp.screens.help.HelpScreen
+import com.example.fyp.screens.feedback.FeedbackScreen
 import com.example.fyp.screens.history.HistoryScreen
 import com.example.fyp.screens.home.HomeScreen
 import com.example.fyp.screens.favorites.FavoritesScreen
@@ -68,6 +69,7 @@ sealed class AppScreen(val route: String) {
     object Favorites : AppScreen("favorites")
     object Shop : AppScreen("shop")
     object VoiceSettings : AppScreen("voice_settings")
+    object Feedback : AppScreen("feedback")
 
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
         fun routeFor(primaryCode: String, targetCode: String) =
@@ -180,6 +182,13 @@ fun AppNavigation() {
                         )
                     }
 
+                    composable(AppScreen.Feedback.route) {
+                        FeedbackScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
                     composable(AppScreen.Continuous.route) {
                         ContinuousConversationScreen(
                             uiLanguages = uiLanguages,
@@ -248,6 +257,7 @@ fun AppNavigation() {
                             onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) },
                             onOpenShop = { navController.navigate(AppScreen.Shop.route) },
                             onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) },
+                            onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) },
                             viewModel = settingsViewModel
                         )
                     }

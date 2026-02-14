@@ -53,6 +53,7 @@ fun SettingsScreen(
     onOpenFavorites: () -> Unit = {},
     onOpenShop: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
+    onOpenFeedback: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -197,6 +198,18 @@ fun SettingsScreen(
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                             }
+                        }
+
+                        // Feedback button
+                        TextButton(
+                            onClick = onOpenFeedback,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = t(UiTextKey.FeedbackTitle),
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
                         }
                     }
                 }
