@@ -189,31 +189,31 @@ class UserSettingsTest {
     // --- History View Limit Tests ---
 
     @Test
-    fun `history view limit has default value of 100`() {
+    fun `history view limit has default value of 50`() {
         val settings = UserSettings()
 
-        assertEquals(100, settings.historyViewLimit)
+        assertEquals(50, settings.historyViewLimit)
     }
 
     @Test
     fun `history view limit can be expanded`() {
-        val settings = UserSettings(historyViewLimit = 150)
+        val settings = UserSettings(historyViewLimit = 100)
 
-        assertEquals(150, settings.historyViewLimit)
-        assertTrue(settings.historyViewLimit > 100)
+        assertEquals(100, settings.historyViewLimit)
+        assertTrue(settings.historyViewLimit > 50)
     }
 
     @Test
     fun `history limit constants are defined`() {
-        assertEquals(100, UserSettings.BASE_HISTORY_LIMIT)
-        assertEquals(150, UserSettings.MAX_HISTORY_LIMIT)
+        assertEquals(50, UserSettings.BASE_HISTORY_LIMIT)
+        assertEquals(100, UserSettings.MAX_HISTORY_LIMIT)
         assertEquals(1000, UserSettings.HISTORY_EXPANSION_COST)
         assertEquals(10, UserSettings.HISTORY_EXPANSION_INCREMENT)
     }
 
     @Test
     fun `history limit expansion follows increment pattern`() {
-        val limits = listOf(100, 110, 120, 130, 140, 150)
+        val limits = listOf(50, 60, 70, 80, 90, 100)
 
         limits.forEach { limit ->
             val settings = UserSettings(historyViewLimit = limit)
@@ -223,7 +223,7 @@ class UserSettingsTest {
 
     @Test
     fun `history limit should not exceed maximum`() {
-        val settings = UserSettings(historyViewLimit = 150)
+        val settings = UserSettings(historyViewLimit = 100)
 
         assertTrue(settings.historyViewLimit <= UserSettings.MAX_HISTORY_LIMIT)
     }
