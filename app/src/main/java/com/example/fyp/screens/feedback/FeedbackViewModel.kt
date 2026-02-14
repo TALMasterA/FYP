@@ -27,18 +27,24 @@ class FeedbackViewModel @Inject constructor(
 
     fun submitFeedback(message: String) {
         if (message.isBlank()) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Message cannot be empty")
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "Message cannot be empty",
+                showErrorDialog = true
+            )
             return
         }
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isSubmitting = true, errorMessage = null)
-            
+            _uiState.value = _uiState.value.copy(isSubmitting = true, errorMessage = null, showErrorDialog = false)
+
             try {
                 feedbackRepository.submitFeedback(message)
                 _uiState.value = FeedbackUiState(showSuccessDialog = true)
             } catch (e: Exception) {
-                _uiState.value = FeedbackUiState(showErrorDialog = true)
+                _uiState.value = FeedbackUiState(
+                    showErrorDialog = true,
+                    errorMessage = e.message ?: "Failed to submit feedback. Please check your internet connection."
+                )
             }
         }
     }

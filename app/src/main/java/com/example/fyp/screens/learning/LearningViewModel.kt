@@ -69,10 +69,13 @@ class LearningViewModel @Inject constructor(
 
     private companion object {
         /** Maximum number of entries in the sheet metadata cache */
-        const val MAX_SHEET_CACHE_SIZE = 50
+        const val MAX_SHEET_CACHE_SIZE = 100
 
         /** Number of quiz questions to generate and store */
         const val QUIZ_QUESTIONS_COUNT = 10
+
+        /** Maximum number of language pairs to fetch metadata for in parallel (prevents quota exhaustion) */
+        const val METADATA_BATCH_SIZE = 5
     }
 
     // Cached supported languages - loaded once and reused
@@ -242,35 +245,39 @@ class LearningViewModel @Inject constructor(
             // Only fetch metadata for languages not in cache
             val languagesToFetch = languages.filter { it !in sheetMetaCache }
 
-            // OPTIMIZATION: Batch all reads together instead of sequential queries
+            // OPTIMIZATION: Process in batches to prevent too many concurrent reads
             if (languagesToFetch.isNotEmpty()) {
                 try {
-                    // Fetch all sheets, quizzes, and awards concurrently using coroutineScope
-                    coroutineScope {
-                        val results = languagesToFetch.map { lang ->
-                            lang to async {
-                                try {
-                                    val doc = sheetsRepo.getSheet(uid, primary, lang)
-                                    val quizDoc = quizRepo.getGeneratedQuizDoc(uid, primary, lang)
-                                    val lastAwarded = quizRepo.getLastAwardedQuizCount(uid, primary, lang)
-                                    SheetMetaCache(
-                                        exists = doc != null,
-                                        sheetCount = doc?.historyCountAtGenerate,
-                                        quizCount = quizDoc?.historyCountAtGenerate,
-                                        lastAwardedCount = lastAwarded
-                                    )
-                                } catch (ce: CancellationException) {
-                                    throw ce
-                                } catch (e: Exception) {
-                                    if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
-                                    SheetMetaCache(false, null, null, null)
+                    // Process languages in batches to prevent Firebase quota exhaustion
+                    val batches = languagesToFetch.chunked(METADATA_BATCH_SIZE)
+
+                    for (batch in batches) {
+                        coroutineScope {
+                            val results = batch.map { lang ->
+                                lang to async {
+                                    try {
+                                        val doc = sheetsRepo.getSheet(uid, primary, lang)
+                                        val quizDoc = quizRepo.getGeneratedQuizDoc(uid, primary, lang)
+                                        val lastAwarded = quizRepo.getLastAwardedQuizCount(uid, primary, lang)
+                                        SheetMetaCache(
+                                            exists = doc != null,
+                                            sheetCount = doc?.historyCountAtGenerate,
+                                            quizCount = quizDoc?.historyCountAtGenerate,
+                                            lastAwardedCount = lastAwarded
+                                        )
+                                    } catch (ce: CancellationException) {
+                                        throw ce
+                                    } catch (e: Exception) {
+                                        if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
+                                        SheetMetaCache(false, null, null, null)
+                                    }
                                 }
                             }
-                        }
 
-                        // Await all results
-                        results.forEach { pair ->
-                            sheetMetaCache[pair.first] = pair.second.await()
+                            // Await all results in this batch
+                            results.forEach { pair ->
+                                sheetMetaCache[pair.first] = pair.second.await()
+                            }
                         }
                     }
                 } catch (ce: CancellationException) {
