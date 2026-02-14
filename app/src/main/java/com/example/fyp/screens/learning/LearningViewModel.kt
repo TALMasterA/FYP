@@ -474,6 +474,14 @@ class LearningViewModel @Inject constructor(
         _uiState.value = uiState.value.copy(generatingLanguageCode = null)
     }
 
+    fun refreshLanguageCounts() {
+        viewModelScope.launch {
+            sharedHistoryDataSource.forceRefreshLanguageCounts(_uiState.value.primaryLanguageCode)
+            refreshClusters()
+            refreshSheetMetaForClusters()
+        }
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
