@@ -9,7 +9,7 @@ plugins {
     id("com.google.firebase.crashlytics")
     id("com.google.firebase.firebase-perf")
 
-    kotlin("kapt")
+    alias(libs.plugins.ksp)
     kotlin("plugin.serialization")
 }
 
@@ -21,8 +21,8 @@ android {
         applicationId = "com.example.fyp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 29
-        versionName = "1.7.6"
+        versionCode = 30
+        versionName = "1.7.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -118,7 +118,7 @@ dependencies {
     // Hilt DI
     implementation(libs.hilt.android)
     implementation(libs.espresso.core)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
     // Tests

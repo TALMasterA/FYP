@@ -5,14 +5,36 @@ import com.example.fyp.data.cloud.TranslationCache
 import com.example.fyp.data.clients.CloudTranslatorClient
 import com.example.fyp.data.clients.DetectedLanguage
 import com.example.fyp.model.SpeechResult
+import com.example.fyp.utils.ErrorMessageMapper
 import javax.inject.Inject
 
+/**
+ * Repository for cloud-based translation services.
+ * Implements intelligent caching to reduce API calls and improve performance.
+ *
+ * Features:
+ * - Single and batch translation with automatic caching
+ * - Language detection with caching
+ * - Efficient cache management to minimize cloud API usage
+ *
+ * All translation results are cached locally for 30 days to improve
+ * responsiveness and reduce costs.
+ */
 class FirebaseTranslationRepository @Inject constructor(
     private val cloudTranslatorClient: CloudTranslatorClient,
     private val translationCache: TranslationCache,
     private val languageDetectionCache: LanguageDetectionCache
 ) : TranslationRepository {
 
+    /**
+     * Translates text from one language to another.
+     * Checks cache first to avoid unnecessary API calls.
+     *
+     * @param text The text to translate
+     * @param fromLanguage Source language code (e.g., "en-US")
+     * @param toLanguage Target language code (e.g., "zh-CN")
+     * @return SpeechResult.Success with translated text or SpeechResult.Error
+     */
     override suspend fun translate(
         text: String,
         fromLanguage: String,
@@ -37,7 +59,7 @@ class FirebaseTranslationRepository @Inject constructor(
 
             SpeechResult.Success(translated)
         } catch (e: Exception) {
-            SpeechResult.Error(e.message ?: "Translation failed")
+            SpeechResult.Error(ErrorMessageMapper.mapTranslationError(e.message ?: "Translation failed"))
         }
     }
 
@@ -97,6 +119,13 @@ class FirebaseTranslationRepository @Inject constructor(
         }
     }
 
+    /**
+     * Detects the language of the given text.
+     * Results are cached to avoid repeated API calls for the same text.
+     *
+     * @param text The text to analyze
+     * @return DetectedLanguage with language code and confidence score, or null on error
+     */
     override suspend fun detectLanguage(text: String): DetectedLanguage? {
         return try {
             // Check cache first

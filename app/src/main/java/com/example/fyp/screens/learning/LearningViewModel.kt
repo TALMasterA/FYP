@@ -67,6 +67,14 @@ class LearningViewModel @Inject constructor(
     private val quizRepo: QuizRepository,
 ) : ViewModel() {
 
+    private companion object {
+        /** Maximum number of entries in the sheet metadata cache */
+        const val MAX_SHEET_CACHE_SIZE = 50
+
+        /** Number of quiz questions to generate and store */
+        const val QUIZ_QUESTIONS_COUNT = 10
+    }
+
     // Cached supported languages - loaded once and reused
     val supportedLanguages: List<String> by lazy {
         AzureLanguageConfig.loadSupportedLanguages(context)
@@ -192,14 +200,14 @@ class LearningViewModel @Inject constructor(
     }
 
     // Cache for sheet metadata to avoid repeated Firestore reads
-    // Using LRU cache with max 50 entries to prevent memory leaks
+    // Using LRU cache with max entries to prevent memory leaks
     private val sheetMetaCache = object : LinkedHashMap<String, SheetMetaCache>(
         16,  // Initial capacity
         0.75f,  // Load factor
         true  // Access order (for LRU)
     ) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SheetMetaCache>): Boolean {
-            return size > 50  // Max 50 entries to prevent unbounded growth
+            return size > MAX_SHEET_CACHE_SIZE
         }
     }
     private var lastPrimaryForCache: String? = null
@@ -410,10 +418,10 @@ class LearningViewModel @Inject constructor(
                 ensureActive()
 
                 val questions = QuizParser.parseQuizFromContent(quizText)
-                if (questions.size < 10) {
+                if (questions.size < QUIZ_QUESTIONS_COUNT) {
                     _uiState.value = uiState.value.copy(
                         generatingQuizLanguageCode = null,
-                        error = "Quiz generated but only parsed ${questions.size}/10 questions. Try regenerate."
+                        error = "Quiz generated but only parsed ${questions.size}/$QUIZ_QUESTIONS_COUNT questions. Try regenerate."
                     )
                     return@launch
                 }
@@ -422,7 +430,7 @@ class LearningViewModel @Inject constructor(
                     uid = uid,
                     primaryCode = primary,
                     targetCode = languageCode,
-                    quizData = json.encodeToString(questions.take(10)),
+                    quizData = json.encodeToString(questions.take(QUIZ_QUESTIONS_COUNT)),
                     historyCountAtGenerate = sheetHistoryCount
                 )
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import com.example.fyp.model.OcrResult
 import com.example.fyp.model.TextBlock
+import com.example.fyp.utils.ErrorMessageMapper
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
@@ -19,13 +20,26 @@ import javax.inject.Singleton
 import kotlin.coroutines.resume
 
 /**
- * Repository for ML Kit text recognition (OCR)
- * Uses on-device processing for privacy and speed
+ * Repository for ML Kit text recognition (OCR).
+ * Uses on-device processing for privacy and speed.
+ *
+ * Supports multiple scripts:
+ * - Latin (English, European languages)
+ * - Chinese (Simplified and Traditional)
+ * - Japanese (Kanji, Hiragana, Katakana)
+ * - Korean (Hangul)
+ *
+ * The appropriate recognizer is automatically selected based on the language code.
  */
 @Singleton
 class MLKitOcrRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
+    private companion object {
+        /** Length of language code prefix used for script detection */
+        const val LANGUAGE_PREFIX_LENGTH = 2
+    }
+
     private val latinRecognizer by lazy {
         TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
     }
@@ -43,16 +57,18 @@ class MLKitOcrRepository @Inject constructor(
     }
 
     /**
-     * Recognize text from an image URI
+     * Recognize text from an image URI.
+     * Automatically selects the appropriate text recognizer based on language code.
+     *
      * @param uri The image URI (from camera or gallery)
      * @param languageCode The ISO language code (e.g. "zh-HK", "ja-JP") to select script
-     * @return OcrResult with recognized text or error
+     * @return OcrResult with recognized text blocks or error message
      */
     suspend fun recognizeText(uri: Uri, languageCode: String? = null): OcrResult = withContext(Dispatchers.Default) {
         try {
             val image = InputImage.fromFilePath(context, uri)
             
-            val recognizer = when (languageCode?.lowercase()?.take(2)) {
+            val recognizer = when (languageCode?.lowercase()?.take(LANGUAGE_PREFIX_LENGTH)) {
                 "zh" -> chineseRecognizer
                 "ja" -> japaneseRecognizer
                 "ko" -> koreanRecognizer
@@ -82,9 +98,8 @@ class MLKitOcrRepository @Inject constructor(
                         continuation.resume(result)
                     }
                     .addOnFailureListener { exception ->
-                        continuation.resume(
-                            OcrResult.Error(exception.message ?: "OCR processing failed")
-                        )
+                        val errorMessage = ErrorMessageMapper.mapOcrError(exception.message ?: "OCR processing failed")
+                        continuation.resume(OcrResult.Error(errorMessage))
                     }
                 
                 continuation.invokeOnCancellation {
@@ -92,12 +107,14 @@ class MLKitOcrRepository @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            OcrResult.Error(e.message ?: "Failed to load image")
+            val errorMessage = ErrorMessageMapper.mapOcrError(e.message ?: "Failed to load image")
+            OcrResult.Error(errorMessage)
         }
     }
 
     /**
-     * Clean up resources when repository is no longer needed
+     * Clean up resources when repository is no longer needed.
+     * Closes all text recognizer instances to free memory.
      */
     fun close() {
         if (latinRecognizer != null) latinRecognizer.close()

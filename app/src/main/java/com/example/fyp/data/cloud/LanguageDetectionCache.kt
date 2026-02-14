@@ -38,6 +38,11 @@ data class LanguageDetectionCacheData(
  * Local cache for language detection results.
  * Reduces API calls by caching detected languages for text that has been analyzed before.
  * Uses normalized text (trimmed, lowercase) as cache key.
+ *
+ * Cache characteristics:
+ * - Maximum 200 entries (LRU eviction)
+ * - 24-hour TTL for cached results
+ * - Persisted using DataStore for offline availability
  */
 @Singleton
 class LanguageDetectionCache @Inject constructor(
@@ -45,17 +50,28 @@ class LanguageDetectionCache @Inject constructor(
 ) {
     companion object {
         private val CACHE_KEY = stringPreferencesKey("detection_cache")
+
+        /** Maximum number of cached detection results */
         private const val MAX_CACHE_SIZE = 200
-        private const val CACHE_TTL_MS = 24 * 60 * 60 * 1000L // 24 hours
+
+        /** Cache time-to-live in milliseconds (24 hours) */
+        private const val CACHE_TTL_MS = 24 * 60 * 60 * 1000L
+
+        /** Maximum text length for cache key to prevent excessive memory usage */
+        private const val MAX_KEY_TEXT_LENGTH = 500
     }
 
     private val json = Json { ignoreUnknownKeys = true }
 
     /**
-     * Generate cache key from text (normalized)
+     * Generate normalized cache key from text.
+     * Limits key size to prevent memory issues.
+     *
+     * @param text The text to create a cache key for
+     * @return Normalized cache key (lowercase, trimmed, max 500 chars)
      */
     private fun cacheKey(text: String): String {
-        return text.trim().lowercase().take(500) // Limit key size
+        return text.trim().lowercase().take(MAX_KEY_TEXT_LENGTH)
     }
 
     /**
@@ -81,12 +97,15 @@ class LanguageDetectionCache @Inject constructor(
     }
 
     /**
-     * Cache a detection result
+     * Cache a detection result for future lookups.
+     *
+     * @param text The text that was analyzed
+     * @param result The detected language information
      */
     suspend fun cache(text: String, result: DetectedLanguage) {
         val key = cacheKey(text)
         val entry = CachedDetection(
-            text = text.trim().take(500),
+            text = text.trim().take(MAX_KEY_TEXT_LENGTH),
             language = result.language,
             score = result.score,
             isTranslationSupported = result.isTranslationSupported

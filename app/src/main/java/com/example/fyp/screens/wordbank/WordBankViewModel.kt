@@ -55,6 +55,14 @@ class WordBankViewModel @Inject constructor(
     private val wordBankCacheDataStore: WordBankCacheDataStore
 ) : ViewModel() {
 
+    private companion object {
+        /** Debounce time for word bank generation to prevent duplicate API calls */
+        const val GENERATION_DEBOUNCE_MS = 2000L
+
+        /** Maximum length of debug log output for generated content */
+        const val MAX_DEBUG_LOG_LENGTH = 500
+    }
+
     // Cached supported languages - loaded once and reused
     val supportedLanguages: List<String> by lazy {
         AzureLanguageConfig.loadSupportedLanguages(context)
@@ -70,7 +78,6 @@ class WordBankViewModel @Inject constructor(
 
     // Debounce for word bank generation to prevent duplicate API calls (Priority 2 #13)
     private var lastGenerationTime = 0L
-    private val GENERATION_DEBOUNCE_MS = 2000L  // 2 seconds
     private var generationJob: Job? = null
     private var records: List<TranslationRecord> = emptyList()
     private var primaryLanguageCode: String = "en-US"
@@ -561,7 +568,7 @@ class WordBankViewModel @Inject constructor(
                     targetLanguageCode = targetLanguageCode,
                     records = relevantRecords
                 )
-                android.util.Log.d("WordBankVM", "Raw content received: ${rawContent.take(500)}")
+                android.util.Log.d("WordBankVM", "Raw content received: ${rawContent.take(MAX_DEBUG_LOG_LENGTH)}")
 
                 // Check if cancelled
                 ensureActive()

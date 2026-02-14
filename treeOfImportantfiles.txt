@@ -23,6 +23,8 @@ FYP/
 │           ├── FYPApplication.kt
 │           ├── AppNavigation.kt
 │           │
+│           ├── utils/ ErrorMessageMapper.kt
+│           │
 │           ├── core/
 │           │   ├── CameraPermissions.kt
 │           │   ├── Constants.kt

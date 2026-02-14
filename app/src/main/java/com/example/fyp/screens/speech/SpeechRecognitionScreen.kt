@@ -53,6 +53,9 @@ import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
 import com.example.fyp.core.rememberHapticFeedback
 
+/** Maximum number of candidate languages for auto-detection (Azure SDK limit) */
+private const val MAX_AUTO_DETECT_LANGUAGES = 4
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SpeechRecognitionScreen(
@@ -283,12 +286,12 @@ fun SpeechRecognitionScreen(
 
                         // Add languages that differ from target (to detect what user is speaking)
                         commonLanguages.forEach { lang ->
-                            if (candidates.size < 4 && lang != selectedTargetLanguage) {
+                            if (candidates.size < MAX_AUTO_DETECT_LANGUAGES && lang != selectedTargetLanguage) {
                                 candidates.add(lang)
                             }
                         }
 
-                        candidates.take(4)
+                        candidates.take(MAX_AUTO_DETECT_LANGUAGES)
                     }
 
                     RecognizeButton(
