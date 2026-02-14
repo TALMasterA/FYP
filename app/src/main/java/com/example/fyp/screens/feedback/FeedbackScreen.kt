@@ -55,7 +55,9 @@ fun FeedbackScreen(
         AlertDialog(
             onDismissRequest = { viewModel.dismissErrorDialog() },
             title = { Text(t(UiTextKey.FeedbackErrorTitle)) },
-            text = { Text(t(UiTextKey.FeedbackErrorMessage)) },
+            text = {
+                Text(uiState.errorMessage ?: t(UiTextKey.FeedbackErrorMessage))
+            },
             confirmButton = {
                 TextButton(onClick = { viewModel.dismissErrorDialog() }) {
                     Text(t(UiTextKey.ActionConfirm))

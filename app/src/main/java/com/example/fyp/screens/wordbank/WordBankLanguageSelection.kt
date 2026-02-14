@@ -22,6 +22,7 @@ import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.model.ui.UiTextKey
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LanguageSelectionView(
     clusters: List<WordBankLanguageCluster>,
