@@ -11,7 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.model.ui.UiTextKey
+import kotlinx.coroutines.delay
 
 @Composable
 fun LanguageSelectionView(
@@ -30,11 +32,28 @@ fun LanguageSelectionView(
     onPrimaryLanguageChange: (String) -> Unit,
     customWordsCount: Int = 0,
     onSelectCustomWordBank: () -> Unit = {},
+    onRefresh: () -> Unit = {},
     t: (UiTextKey) -> String
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            delay(500)
+            isRefreshing = false
+        }
+    }
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            onRefresh()
+        }
     ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
         // Primary language dropdown
         Column(
             modifier = Modifier
@@ -115,6 +134,7 @@ fun LanguageSelectionView(
                     )
                 }
             }
+        }
         }
     }
 }
