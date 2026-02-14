@@ -23,6 +23,9 @@ import com.example.fyp.model.ui.LanguageNameTranslations
 import com.example.fyp.model.ui.LanguageNameKeys
 import kotlinx.coroutines.launch
 
+@Immutable
+data class UiLanguageList(val items: List<Pair<String, String>>)
+
 /**
  * Apply predefined language name corrections to a UI text map.
  * This fixes translation API errors where language names are incorrectly translated.
@@ -103,6 +106,25 @@ fun AppLanguageDropdown(
     enabled: Boolean = true,
     isLoggedIn: Boolean = false
 ) {
+    AppLanguageDropdown(
+        uiLanguages = UiLanguageList(uiLanguages),
+        appLanguageState = appLanguageState,
+        onUpdateAppLanguage = onUpdateAppLanguage,
+        uiText = uiText,
+        enabled = enabled,
+        isLoggedIn = isLoggedIn
+    )
+}
+
+@Composable
+fun AppLanguageDropdown(
+    uiLanguages: UiLanguageList,
+    appLanguageState: AppLanguageState,
+    onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
+    uiText: (UiTextKey, String) -> String,
+    enabled: Boolean = true,
+    isLoggedIn: Boolean = false
+) {
     val scope = rememberCoroutineScope()
     val (_, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val context = LocalContext.current
@@ -129,7 +151,7 @@ fun AppLanguageDropdown(
     LanguageDropdownField(
         label = uiText(UiTextKey.AppUiLanguageLabel, "App UI language"),
         selectedCode = appLanguageState.selectedUiLanguage,
-        options = uiLanguages.map { it.first },
+        options = uiLanguages.items.map { it.first },
         nameFor = uiLanguageNameFor,
         enabled = enabled,
         onSelected = { code ->

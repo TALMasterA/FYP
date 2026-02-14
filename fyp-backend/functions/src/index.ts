@@ -4,8 +4,18 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import fetch from "node-fetch";
 import * as admin from "firebase-admin";
 
-admin.initializeApp();
-const firestoreDb = admin.firestore();
+// Lazy initialization to reduce cold start time
+let _firestoreDb: admin.firestore.Firestore | undefined;
+
+function getFirestore(): admin.firestore.Firestore {
+  if (!admin.apps.length) {
+    admin.initializeApp();
+  }
+  if (!_firestoreDb) {
+    _firestoreDb = admin.firestore();
+  }
+  return _firestoreDb;
+}
 
 setGlobalOptions({maxInstances: 10});
 
@@ -52,23 +62,6 @@ function requireString(value: unknown, paramName: string): string {
  */
 function optionalString(value: unknown): string {
   return value ? String(value).trim() : "";
-}
-
-/**
- * Validates array parameter with optional max length check.
- * @param value The value to validate
- * @param paramName The parameter name for error messages
- * @param maxLength Optional maximum array length
- * @returns The validated array
- */
-function requireArray<T>(value: unknown, paramName: string, maxLength?: number): T[] {
-  if (!Array.isArray(value) || value.length === 0) {
-    throw new HttpsError("invalid-argument", `${paramName} is required`);
-  }
-  if (maxLength && value.length > maxLength) {
-    throw new HttpsError("resource-exhausted", `${paramName} exceeds maximum of ${maxLength} items`);
-  }
-  return value as T[];
 }
 
 export const getSpeechToken = onCall(
@@ -158,15 +151,15 @@ export const translateTexts = onCall(
   async (request) => {
     // No auth required - allows UI language translation for all users
     // Non-logged-in users can only call this once (enforced client-side)
-    const texts = requireArray<unknown>(request.data?.texts, "texts");
     const to = requireString(request.data?.to, "to");
     const from = optionalString(request.data?.from);
+    const texts = request.data?.texts ?? [];
 
     const key = AZURE_TRANSLATOR_KEY.value();
     const region = AZURE_TRANSLATOR_REGION.value();
 
     const url = buildTranslateUrl({to, from: from || undefined});
-    const reqBody = texts.map((t) => ({Text: String(t ?? "")}));
+    const reqBody = texts.map((t: any) => ({Text: String(t ?? "")}));
 
     const resp = await fetch(url, {
       method: "POST",
@@ -210,7 +203,7 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour window
  * @throws HttpsError if rate limit is exceeded
  */
 async function enforceRateLimit(uid: string): Promise<void> {
-  const rateLimitRef = firestoreDb
+  const rateLimitRef = getFirestore()
     .collection("rate_limits")
     .doc(uid);
 
@@ -403,21 +396,21 @@ export const awardQuizCoins = onCall(
     const versionKey = `${primaryCode}__${targetCode}__${generatedCount}`;
 
     // Document references
-    const coinAwardRef = firestoreDb
+    const coinAwardRef = getFirestore()
       .collection("users").doc(uid)
       .collection("coin_awards").doc(versionKey);
-    const lastAwardedRef = firestoreDb
+    const lastAwardedRef = getFirestore()
       .collection("users").doc(uid)
       .collection("last_awarded_quiz").doc(`${primaryCode}__${targetCode}`);
-    const coinStatsRef = firestoreDb
+    const coinStatsRef = getFirestore()
       .collection("users").doc(uid)
       .collection("user_stats").doc("coins");
-    const sheetRef = firestoreDb
+    const sheetRef = getFirestore()
       .collection("users").doc(uid)
       .collection("learning_sheets").doc(`${primaryCode}__${targetCode}`);
 
     // Run transaction for atomicity
-    const result = await firestoreDb.runTransaction(async (tx) => {
+    const result = await getFirestore().runTransaction(async (tx) => {
       // Check 1: Already awarded for this exact version?
       const awardDoc = await tx.get(coinAwardRef);
       if (awardDoc.exists) {

@@ -22,6 +22,7 @@ import com.example.fyp.core.LocalFontSizeScale
 import com.example.fyp.core.LocalUiLanguages
 import com.example.fyp.core.LocalUpdateAppLanguage
 import com.example.fyp.core.OfflineBanner
+import com.example.fyp.core.UiLanguageList
 import com.example.fyp.core.composableRequireLogin
 import com.example.fyp.core.composableRequireLoginWithArgs
 import com.example.fyp.core.createScaledTypography
@@ -147,7 +148,7 @@ fun AppNavigation() {
                     ) {
                     composable(AppScreen.Home.route) {
                         HomeScreen(
-                            uiLanguages = uiLanguages,
+                            uiLanguages = UiLanguageList(uiLanguages),
                             appLanguageState = appLanguageState,
                             onUpdateAppLanguage = updateAppLanguage,
                             onStartSpeech = { navController.navigate(AppScreen.Speech.route) },

@@ -1,4 +1,3 @@
-
 package com.example.fyp.screens.home
 
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.core.UiLanguageList
 import com.example.fyp.screens.login.AuthViewModel
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.user.AuthState
@@ -61,7 +61,7 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    uiLanguages: List<Pair<String, String>>,
+    uiLanguages: UiLanguageList,
     appLanguageState: AppLanguageState,
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     onStartSpeech: () -> Unit,
@@ -85,25 +85,6 @@ fun HomeScreen(
     // Alternating title logic
     val defaultTitle = t(UiTextKey.HomeTitle)
     val userName = (authState as? AuthState.LoggedIn)?.user?.displayName?.takeIf { it.isNotBlank() }
-    var showUserName by remember { mutableStateOf(false) }
-
-    // Toggle between title and username every 3 seconds if user has a display name
-    LaunchedEffect(userName) {
-        if (userName != null) {
-            while (true) {
-                delay(3000)
-                showUserName = !showUserName
-            }
-        } else {
-            showUserName = false
-        }
-    }
-
-    val displayTitle = if (userName != null && showUserName) {
-        "👋 $userName"
-    } else {
-        defaultTitle
-    }
 
     if (showLogoutDialog) {
         AlertDialog(
@@ -131,7 +112,7 @@ fun HomeScreen(
     }
 
     StandardScreenScaffold(
-        title = displayTitle,
+        title = defaultTitle,
         onBack = null,
         actions = {
             when (authState) {
@@ -344,4 +325,32 @@ private fun FeatureCard(
             }
         }
     }
+}
+
+@Composable
+private fun GreetingTitle(
+    defaultTitle: String,
+    userName: String?
+) {
+    var showUserName by remember { mutableStateOf(false) }
+
+    // Toggle between title and username every 3 seconds if user has a display name
+    LaunchedEffect(userName) {
+        if (!userName.isNullOrBlank()) {
+            while (true) {
+                delay(3000)
+                showUserName = !showUserName
+            }
+        } else {
+            showUserName = false
+        }
+    }
+
+    val displayTitle = if (!userName.isNullOrBlank() && showUserName) {
+        "👋 $userName"
+    } else {
+        defaultTitle
+    }
+
+    Text(displayTitle)
 }
