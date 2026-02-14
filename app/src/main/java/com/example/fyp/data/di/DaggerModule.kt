@@ -233,4 +233,12 @@ object AppModule {
     @Singleton
     fun provideHistoryRepository(db: FirebaseFirestore): HistoryRepository =
         FirestoreHistoryRepository(db)
+
+    @Provides
+    @Singleton
+    fun provideFeedbackRepository(
+        db: FirebaseFirestore,
+        auth: FirebaseAuth
+    ): com.example.fyp.domain.feedback.FeedbackRepository =
+        com.example.fyp.data.feedback.FirestoreFeedbackRepository(db, auth)
 }
