@@ -56,7 +56,7 @@ class OcrResultTest {
         val block = TextBlock("你好", rect, "zh")
         
         assertEquals("你好", block.text)
-        assertEquals(rect, block.boundingBox)
+        assertSame(rect, block.boundingBox)
         assertEquals("zh", block.language)
     }
 

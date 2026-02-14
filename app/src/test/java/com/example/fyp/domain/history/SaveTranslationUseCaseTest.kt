@@ -3,12 +3,14 @@ package com.example.fyp.domain.history
 import com.example.fyp.data.history.FirestoreHistoryRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.model.TranslationRecord
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoMoreInteractions
+import java.util.Date
 
 class SaveTranslationUseCaseTest {
 
@@ -33,7 +35,7 @@ class SaveTranslationUseCaseTest {
             targetText = "你好",
             sourceLang = "en-US",
             targetLang = "zh-CN",
-            timestamp = System.currentTimeMillis()
+            timestamp = Timestamp(Date())
         )
 
         // Act
@@ -56,7 +58,7 @@ class SaveTranslationUseCaseTest {
                 targetText = "Hola",
                 sourceLang = "en-US",
                 targetLang = "es-ES",
-                timestamp = System.currentTimeMillis()
+                timestamp = Timestamp(Date())
             ),
             TranslationRecord(
                 id = "2",
@@ -65,7 +67,7 @@ class SaveTranslationUseCaseTest {
                 targetText = "さようなら",
                 sourceLang = "en-US",
                 targetLang = "ja-JP",
-                timestamp = System.currentTimeMillis()
+                timestamp = Timestamp(Date())
             )
         )
 

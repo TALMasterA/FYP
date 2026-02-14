@@ -26,7 +26,7 @@ class DetectLanguageUseCaseTest {
     fun `invoke returns detected language when successful`() = runTest {
         // Arrange
         val text = "Hello world"
-        val expected = DetectedLanguage("en", 0.99)
+        val expected = DetectedLanguage("en", 0.99, true)
         whenever(translationRepository.detectLanguage(text))
             .thenReturn(expected)
 
@@ -56,10 +56,10 @@ class DetectLanguageUseCaseTest {
     fun `invoke handles different languages`() = runTest {
         // Arrange
         val testCases = listOf(
-            Pair("Hello", DetectedLanguage("en", 0.99)),
-            Pair("你好", DetectedLanguage("zh", 0.98)),
-            Pair("こんにちは", DetectedLanguage("ja", 0.97)),
-            Pair("안녕하세요", DetectedLanguage("ko", 0.96))
+            Pair("Hello", DetectedLanguage("en", 0.99, true)),
+            Pair("你好", DetectedLanguage("zh", 0.98, true)),
+            Pair("こんにちは", DetectedLanguage("ja", 0.97, true)),
+            Pair("안녕하세요", DetectedLanguage("ko", 0.96, true))
         )
 
         testCases.forEach { (text, expected) ->
