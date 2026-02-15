@@ -4,9 +4,9 @@ package com.example.fyp.model.ui
 val ScreenUiTexts: List<String> = listOf(
     // --- Speech/Home Instructions ---
     // SpeechInstructions
-    "Select the detect and translate languages below. Only suitable for short pharse. \n" +
+    "Select the detect and translate languages below. Only suitable for short phrases. \n" +
             "Support languages: English, Cantonese, Japanese, Mandarin... \n" +
-            "Switch button for swiping the languages selected",
+            "Switch button for switching between the languages selected",
 
     // HomeInstructions
     "You can change the app UI language by the dropdown on top. \n" +
@@ -270,7 +270,7 @@ val ScreenUiTexts: List<String> = listOf(
 
     // AuthRegisterRules
     "Register is disabled in development stage. \n" +
-            "Caution: You cannot reset password if you use email that not exist. \n" +
+            "Caution: You cannot reset password if you use an email that does not exist. \n" +
             "Register rules: \n" +
             "• Email must be a valid format (e.g., name@example.com) \n" +
             "• Password must be at least 6 characters \n" +
@@ -409,7 +409,7 @@ val ScreenUiTexts: List<String> = listOf(
     "Details Settings",
 
     // SettingsNotLoggedInWarning
-    "Not logged in, amendments below will not take effect/saved.",
+    "Not logged in. Changes below will not be saved.",
 
     // SettingsVoiceTitle
     "Voice Settings",
@@ -440,7 +440,7 @@ val ScreenUiTexts: List<String> = listOf(
     "Generate",
 
     // LearningRegenerate
-    "Re-generate",
+    "Regenerate",
 
     // LearningGenerating
     "Generating...",
@@ -461,7 +461,7 @@ val ScreenUiTexts: List<String> = listOf(
     "No sheet content yet.",
 
     // LearningSheetRegenerate
-    "Re-gen",
+    "Regenerate",
 
     // LearningSheetGenerating
     "Generating...",
@@ -482,7 +482,7 @@ val ScreenUiTexts: List<String> = listOf(
     "Regeneration Rules",
 
     // LearningRegenInfoMessage
-    "To regenerate learning materials:\n\n• First generation: Always allowed\n• Re-generation: Requires at least 5 MORE translation records than the previous generation\n\nThe button will be enabled (blue) when you have enough new records. If it's disabled (gray), keep translating to unlock regeneration!\n\n💡 Note: If the count doesn't update after translating, please restart the app to refresh.",
+    "To regenerate learning materials:\n\n• First generation: Always allowed\n• Regeneration: Requires at least 5 MORE translation records than the previous generation\n\nThe button will be enabled (blue) when you have enough new records. If it's disabled (gray), keep translating to unlock regeneration!\n\n💡 Note: If the count doesn't update after translating, please restart the app to refresh.",
 
     // QuizRegenBlockedSameMaterial
     "❌ Quiz already generated for this material version. Generate a new learning sheet to create a new quiz.",

@@ -567,7 +567,7 @@ val CoreUiTexts: List<String> = listOf(
     // SpeechInputPlaceholder
     "Type here or use microphone...",
     // SpeechTranslatedPlaceholder
-    "The translated result will be show here.",
+    "The translated result will be shown here.",
     // StatusAzureErrorTemplate
     "Azure error: %s",
     // StatusTranslationErrorTemplate
