@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.BuildConfig
+import com.example.fyp.R
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.StandardScreenScaffold
@@ -39,6 +40,7 @@ import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import androidx.compose.material3.TextButton
+import com.google.firebase.appdistribution.FirebaseAppDistribution
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -200,16 +202,36 @@ fun SettingsScreen(
                             }
                         }
 
-                        // Feedback button
-                        TextButton(
-                            onClick = onOpenFeedback,
-                            modifier = Modifier.fillMaxWidth()
+                        // Feedback buttons - Two separate options
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text(
-                                text = t(UiTextKey.FeedbackTitle),
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
+                            // Tester Feedback (Firebase App Distribution)
+                            TextButton(
+                                onClick = {
+                                    FirebaseAppDistribution.getInstance().startFeedback(R.string.feedback_additional_info)
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "Tester Feedback",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+
+                            // General Feedback (Custom Form)
+                            TextButton(
+                                onClick = onOpenFeedback,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = t(UiTextKey.FeedbackTitle),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }

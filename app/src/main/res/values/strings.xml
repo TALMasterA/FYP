@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FYP</string>
+    <string name="feedback_additional_info">Please describe any issues, suggestions, or feedback about the app.</string>
 </resources>

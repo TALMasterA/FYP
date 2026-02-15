@@ -46,6 +46,8 @@ import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.data.wordbank.FirestoreWordBankRepository
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.domain.settings.SetVoiceForLanguageUseCase
+import com.example.fyp.domain.feedback.FeedbackRepository
+import com.example.fyp.data.feedback.FirestoreFeedbackRepository
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import java.io.File
@@ -236,9 +238,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFeedbackRepository(
-        db: FirebaseFirestore,
-        auth: FirebaseAuth
-    ): com.example.fyp.domain.feedback.FeedbackRepository =
-        com.example.fyp.data.feedback.FirestoreFeedbackRepository(db, auth)
+    fun provideFeedbackRepository(db: FirebaseFirestore, auth: FirebaseAuth): FeedbackRepository =
+        FirestoreFeedbackRepository(db, auth)
 }
