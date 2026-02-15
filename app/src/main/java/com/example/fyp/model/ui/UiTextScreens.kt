@@ -122,6 +122,37 @@ val ScreenUiTexts: List<String> = listOf(
             "  • App version displayed in Settings → About\n" +
             "  • Report bugs or suggest features via GitHub repository\n",
 
+    // --- Feedback ---
+    // FeedbackTitle
+    "Feedback",
+
+    // FeedbackDesc
+    "We appreciate your feedback! Please share your suggestions, bug reports, or general comments about the app.",
+
+    // FeedbackMessagePlaceholder
+    "Enter your feedback here...",
+
+    // FeedbackSubmitButton
+    "Submit Feedback",
+
+    // FeedbackSubmitting
+    "Submitting...",
+
+    // FeedbackSuccessTitle
+    "Thank You!",
+
+    // FeedbackSuccessMessage
+    "Your feedback has been submitted successfully. We appreciate your input!",
+
+    // FeedbackErrorTitle
+    "Submission Failed",
+
+    // FeedbackErrorMessage
+    "Failed to submit feedback. Please check your internet connection and try again.",
+
+    // FeedbackMessageRequired
+    "Please enter your feedback message.",
+
     // --- Continuous Mode ---
     // ContinuousTitle
     "Continuous mode",

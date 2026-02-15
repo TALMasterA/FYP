@@ -21,8 +21,8 @@ android {
         applicationId = "com.example.fyp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 30
-        versionName = "1.7.7"
+        versionCode = 31
+        versionName = "1.8.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -114,6 +114,7 @@ dependencies {
     implementation(libs.firebase.functions)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.firebase.perf)
+    implementation(libs.firebase.appdistribution)
 
     // Hilt DI
     implementation(libs.hilt.android)

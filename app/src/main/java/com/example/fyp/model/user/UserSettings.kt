@@ -12,11 +12,11 @@ data class UserSettings(
     val colorPaletteId: String = "default", // Color palette selection
     val unlockedPalettes: List<String> = listOf("default"), // List of unlocked color palettes
     val voiceSettings: Map<String, String> = emptyMap(), // language code -> voice name
-    val historyViewLimit: Int = 100, // Default 100 records displayed, expandable to 150
+    val historyViewLimit: Int = 50, // Default 50 records displayed, expandable to 100
 ) {
     companion object {
-        const val BASE_HISTORY_LIMIT = 100
-        const val MAX_HISTORY_LIMIT = 150
+        const val BASE_HISTORY_LIMIT = 50
+        const val MAX_HISTORY_LIMIT = 100
         const val HISTORY_EXPANSION_COST = 1000
         const val HISTORY_EXPANSION_INCREMENT = 10
     }

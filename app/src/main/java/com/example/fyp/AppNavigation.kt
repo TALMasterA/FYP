@@ -35,6 +35,7 @@ import com.example.fyp.screens.help.HelpScreen
 import com.example.fyp.screens.history.HistoryScreen
 import com.example.fyp.screens.home.HomeScreen
 import com.example.fyp.screens.favorites.FavoritesScreen
+import com.example.fyp.screens.feedback.FeedbackScreen
 import com.example.fyp.screens.learning.LearningScreen
 import com.example.fyp.screens.learning.LearningSheetScreen
 import com.example.fyp.screens.learning.LearningViewModel
@@ -68,6 +69,7 @@ sealed class AppScreen(val route: String) {
     object Favorites : AppScreen("favorites")
     object Shop : AppScreen("shop")
     object VoiceSettings : AppScreen("voice_settings")
+    object Feedback : AppScreen("feedback")
 
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
         fun routeFor(primaryCode: String, targetCode: String) =
@@ -248,6 +250,7 @@ fun AppNavigation() {
                             onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) },
                             onOpenShop = { navController.navigate(AppScreen.Shop.route) },
                             onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) },
+                            onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) },
                             viewModel = settingsViewModel
                         )
                     }
@@ -344,6 +347,13 @@ fun AppNavigation() {
                         onNeedLogin = navigateToLogin
                     ) {
                         FavoritesScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(AppScreen.Feedback.route) {
+                        FeedbackScreen(
                             appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
                         )

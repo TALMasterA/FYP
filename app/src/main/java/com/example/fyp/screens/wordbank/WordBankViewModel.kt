@@ -518,6 +518,13 @@ class WordBankViewModel @Inject constructor(
         )
     }
 
+    fun refreshLanguageCounts() {
+        viewModelScope.launch {
+            sharedHistoryDataSource.forceRefreshLanguageCounts(primaryLanguageCode)
+            refreshClusters()
+        }
+    }
+
     fun generateWordBank(targetLanguageCode: String) {
         val uid = currentUserId ?: return
 

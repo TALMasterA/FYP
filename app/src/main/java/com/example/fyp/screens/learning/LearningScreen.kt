@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -120,13 +121,29 @@ fun LearningScreen(
             )
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+        var isRefreshing by remember { mutableStateOf(false) }
+
+        LaunchedEffect(isRefreshing) {
+            if (isRefreshing) {
+                kotlinx.coroutines.delay(500)
+                isRefreshing = false
+            }
+        }
+
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                viewModel.refreshLanguageCounts()
+            }
         ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
             item {
                 LanguageDropdownField(
                     label = t(UiTextKey.SettingsPrimaryLanguageLabel),
@@ -269,6 +286,7 @@ fun LearningScreen(
                         }
                     }
             }
+        }
         }
     }
 }
