@@ -52,6 +52,7 @@ import com.example.fyp.screens.speech.SpeechRecognitionScreen
 import com.example.fyp.screens.wordbank.WordBankScreen
 import com.example.fyp.screens.wordbank.WordBankViewModel
 import com.example.fyp.ui.theme.FYPTheme
+import com.example.fyp.ui.theme.ThemeHelper
 import com.example.fyp.ui.theme.Typography as AppTypography
 
 sealed class AppScreen(val route: String) {
@@ -112,12 +113,9 @@ fun AppNavigation() {
     val fontSizeScale = validateScale(settingsUiState.settings.fontSizeScale)
     val scaledTypography = createScaledTypography(AppTypography, fontSizeScale)
 
-    val themeMode = settingsUiState.settings.themeMode
-    val darkTheme = when (themeMode) {
-        "dark" -> true
-        "light" -> false
-        else -> isSystemInDarkTheme()
-    }
+    // Use ThemeHelper to determine dark theme based on settings and time
+    val systemDarkTheme = isSystemInDarkTheme()
+    val darkTheme = ThemeHelper.shouldUseDarkTheme(settingsUiState.settings, systemDarkTheme)
     val colorPaletteId = settingsUiState.settings.colorPaletteId
 
     // Observe network connectivity for offline indicator

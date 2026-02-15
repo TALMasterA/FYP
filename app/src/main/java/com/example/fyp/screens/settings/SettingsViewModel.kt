@@ -12,6 +12,7 @@ import com.example.fyp.domain.settings.SetColorPaletteUseCase
 import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase
 import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase.Result as UnlockResult
 import com.example.fyp.domain.settings.SetVoiceForLanguageUseCase
+import com.example.fyp.domain.settings.SetAutoThemeEnabledUseCase
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.user.UserSettings
@@ -45,6 +46,7 @@ class SettingsViewModel @Inject constructor(
     private val setColorPalette: SetColorPaletteUseCase,
     private val unlockColorPaletteWithCoins: UnlockColorPaletteWithCoinsUseCase,
     private val setVoiceForLanguage: SetVoiceForLanguageUseCase,
+    private val setAutoThemeEnabled: SetAutoThemeEnabledUseCase,
     private val quizRepo: com.example.fyp.data.learning.FirestoreQuizRepository
 ) : ViewModel() {
 
@@ -172,20 +174,50 @@ class SettingsViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            runCatching { setThemeMode(uid, newMode) }
-                .onSuccess {
-                    _uiState.value = _uiState.value.copy(
-                        settings = _uiState.value.settings.copy(themeMode = newMode),
-                        errorKey = null,
-                        errorRaw = null
+            // Handle "scheduled" separately
+            if (newMode == "scheduled") {
+                runCatching { setAutoThemeEnabled(uid, true) }
+                    .onSuccess {
+                        _uiState.value = _uiState.value.copy(
+                            settings = _uiState.value.settings.copy(autoThemeEnabled = true),
+                            errorKey = null,
+                            errorRaw = null
+                        )
+                    }
+                    .onFailure { e ->
+                        _uiState.value = _uiState.value.copy(
+                            errorRaw = e.message ?: "Theme save failed"
+                        )
+                    }
+            } else {
+                // For System/Light/Dark, we first disable auto theme, then set the mode
+                // We do this to ensure "scheduled" logic doesn't override the manual selection
+
+                // 1. Disable auto theme if it enabled
+                if (_uiState.value.settings.autoThemeEnabled) {
+                     runCatching { setAutoThemeEnabled(uid, false) }
+                     // Update local state temporarily
+                     _uiState.value = _uiState.value.copy(
+                        settings = _uiState.value.settings.copy(autoThemeEnabled = false)
                     )
                 }
-                .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(
-                        errorKey = null,
-                        errorRaw = e.message ?: "Theme save failed"
-                    )
-                }
+
+                // 2. Set the mode
+                runCatching { setThemeMode(uid, newMode) }
+                    .onSuccess {
+                        _uiState.value = _uiState.value.copy(
+                            settings = _uiState.value.settings.copy(themeMode = newMode),
+                            errorKey = null,
+                            errorRaw = null
+                        )
+                    }
+                    .onFailure { e ->
+                        _uiState.value = _uiState.value.copy(
+                            errorKey = null,
+                            errorRaw = e.message ?: "Theme save failed"
+                        )
+                    }
+            }
         }
     }
 
@@ -287,5 +319,29 @@ class SettingsViewModel @Inject constructor(
 
     fun clearUnlockError() {
         _uiState.value = _uiState.value.copy(unlockError = null)
+    }
+
+    fun updateAutoThemeEnabled(enabled: Boolean) {
+        val uid = _uiState.value.uid ?: run {
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            return
+        }
+
+        viewModelScope.launch {
+            runCatching { setAutoThemeEnabled(uid, enabled) }
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        settings = _uiState.value.settings.copy(autoThemeEnabled = enabled),
+                        errorKey = null,
+                        errorRaw = null
+                    )
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        errorKey = null,
+                        errorRaw = e.message ?: "Failed to update auto theme setting"
+                    )
+                }
+        }
     }
 }

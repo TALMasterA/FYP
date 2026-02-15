@@ -37,11 +37,15 @@ fun ImageSourceDialog(
     onCamera: () -> Unit,
     onGallery: () -> Unit,
     onDismiss: () -> Unit,
-    accuracyWarning: String
+    accuracyWarning: String,
+    title: String,
+    cameraLabel: String,
+    galleryLabel: String,
+    cancelLabel: String,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select Image Source") },
+        title = { Text(title) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -60,7 +64,7 @@ fun ImageSourceDialog(
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Take Photo")
+                    Text(cameraLabel)
                 }
                 
                 OutlinedButton(
@@ -76,7 +80,7 @@ fun ImageSourceDialog(
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Choose from Gallery")
+                    Text(galleryLabel)
                 }
 
                 // Accuracy warning
@@ -91,7 +95,7 @@ fun ImageSourceDialog(
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(cancelLabel)
             }
         }
     )
@@ -104,7 +108,9 @@ fun ImageSourceDialog(
 fun CameraCaptureScreen(
     onImageCaptured: (Uri) -> Unit,
     onError: (Exception) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    captureContentDesc: String,
+    cancelLabel: String
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -184,14 +190,14 @@ fun CameraCaptureScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.CameraAlt,
-                    contentDescription = "Capture",
+                    contentDescription = captureContentDesc,
                     modifier = Modifier.size(32.dp)
                 )
             }
             
             // Cancel button
             TextButton(onClick = onCancel) {
-                Text("Cancel", color = MaterialTheme.colorScheme.onSurface)
+                Text(cancelLabel, color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }

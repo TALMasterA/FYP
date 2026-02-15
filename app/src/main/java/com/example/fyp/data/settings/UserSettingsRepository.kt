@@ -20,6 +20,11 @@ interface UserSettingsRepository {
     suspend fun setVoiceForLanguage(userId: String, languageCode: String, voiceName: String)
 
     /**
+     * Enable or disable automatic theme switching based on time (6 AM - 6 PM light, 6 PM - 6 AM dark).
+     */
+    suspend fun setAutoThemeEnabled(userId: String, enabled: Boolean)
+
+    /**
      * Expand history view limit by increment (costs coins).
      */
     suspend fun expandHistoryViewLimit(userId: String, newLimit: Int)

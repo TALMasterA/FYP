@@ -158,7 +158,11 @@ fun SpeechRecognitionScreen(
             onDismiss = {
                 showImageSourceDialog = false
             },
-            accuracyWarning = t(UiTextKey.ImageRecognitionAccuracyWarning)
+            accuracyWarning = t(UiTextKey.ImageRecognitionAccuracyWarning),
+            title = t(UiTextKey.ImageSourceTitle),
+            cameraLabel = t(UiTextKey.ImageSourceCamera),
+            galleryLabel = t(UiTextKey.ImageSourceGallery),
+            cancelLabel = t(UiTextKey.ImageSourceCancel)
         )
     }
 
@@ -175,7 +179,9 @@ fun SpeechRecognitionScreen(
             },
             onCancel = {
                 showCamera = false
-            }
+            },
+            captureContentDesc = t(UiTextKey.CameraCaptureContentDesc),
+            cancelLabel = t(UiTextKey.ImageSourceCancel)
         )
         return // Don't show the regular UI when camera is active
     }
