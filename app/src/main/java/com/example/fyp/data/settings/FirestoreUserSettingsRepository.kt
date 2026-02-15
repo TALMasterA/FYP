@@ -31,6 +31,7 @@ class FirestoreUserSettingsRepository @Inject constructor(
         val unlockedPalettes = snap?.get("unlockedPalettes") as? List<String> ?: listOf("default")
         val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
         val historyViewLimit = snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT
+        val autoThemeEnabled = snap?.getBoolean("autoThemeEnabled") ?: false
 
         return UserSettings(
             primaryLanguageCode = code.ifBlank { "en-US" },
@@ -39,7 +40,8 @@ class FirestoreUserSettingsRepository @Inject constructor(
             colorPaletteId = colorPaletteId,
             unlockedPalettes = unlockedPalettes,
             voiceSettings = voiceSettings,
-            historyViewLimit = historyViewLimit
+            historyViewLimit = historyViewLimit,
+            autoThemeEnabled = autoThemeEnabled
         )
     }
 
@@ -100,6 +102,13 @@ class FirestoreUserSettingsRepository @Inject constructor(
             .update("voiceSettings.$languageCode", voiceName)
             .await()
     }
+
+    override suspend fun setAutoThemeEnabled(userId: String, enabled: Boolean) {
+        docRef(userId)
+            .set(mapOf("autoThemeEnabled" to enabled), SetOptions.merge())
+            .await()
+    }
+
 
     override suspend fun expandHistoryViewLimit(userId: String, newLimit: Int) {
         val clampedLimit = newLimit.coerceIn(UserSettings.BASE_HISTORY_LIMIT, UserSettings.MAX_HISTORY_LIMIT)

@@ -60,7 +60,7 @@ val ScreenUiTexts: List<String> = listOf(
             "  • Word Bank - Automatically generated vocabulary list from your translations\n" +
             "  • Favorites - Bookmark important translations for quick access\n\n" +
             
-            "⚙CUSTOMIZATION:\n" +
+            "CUSTOMIZATION:\n" +
             "  • UI Language - Change app interface language (English, Chinese, Japanese, etc.)\n" +
             "  • Theme Settings - Switch between light, dark, or system theme\n" +
             "  • Font Size - Adjust text size from 80% to 150%\n" +
@@ -68,7 +68,7 @@ val ScreenUiTexts: List<String> = listOf(
             "  • Voice Settings - Customize text-to-speech voices for different languages\n\n" +
             
             "HISTORY & ORGANIZATION:\n" +
-            "  • Translation History - Recent 100 records (expandable to 150 via Shop)\n" +
+            "  • Translation History - Recent records (expandable via Shop)\n" +
             "  • Filter & Search - Find translations by language or keyword\n" +
             "  • Session Management - Organize continuous conversations by session\n" +
             "  • Cloud Sync - All data synced to your Firebase account\n\n" +
@@ -94,7 +94,7 @@ val ScreenUiTexts: List<String> = listOf(
             "  • Use earphones during continuous mode to prevent audio feedback loops\n" +
             "  • The app may re-capture its own TTS output if using speakers\n\n" +
             
-            "⚕Accuracy & Limitations:\n" +
+            "Accuracy & Limitations:\n" +
             "  • Do NOT rely on translations for medical, legal, or safety-critical decisions\n" +
             "  • AI translations may contain errors or cultural misinterpretations\n" +
             "  • Always verify important translations with professional services\n\n" +
@@ -398,6 +398,9 @@ val ScreenUiTexts: List<String> = listOf(
 
     // SettingsThemeDark
     "Dark",
+
+    //SettingsThemeScheduled
+    "Scheduled",
 
     // SettingsResetPW
     "Reset password here",
@@ -962,4 +965,44 @@ val ScreenUiTexts: List<String> = listOf(
 
     // CacheStatsTemplate
     "Cache: {count} translations stored",
+
+    // --- Auto Theme ---
+    // SettingsAutoThemeTitle
+    "Auto Theme Switching",
+    // SettingsAutoThemeDesc
+    "Automatically switch between light and dark themes based on time of day",
+    // SettingsAutoThemeEnabled
+    "Enabled",
+    // SettingsAutoThemeDisabled
+    "Disabled",
+    // SettingsAutoThemeDarkStartLabel
+    "Dark mode starts at:",
+    // SettingsAutoThemeLightStartLabel
+    "Light mode starts at:",
+    // SettingsAutoThemePreview
+    "Theme will automatically switch at scheduled times",
+
+    // --- Offline Mode ---
+    // OfflineModeTitle
+    "Offline Mode",
+    // OfflineModeMessage
+    "You're offline. Browsing cached data.",
+    // OfflineModeRetry
+    "Retry Connection",
+    // OfflineDataCached
+    "Cached data available",
+    // OfflineSyncPending
+    "Changes will sync when online",
+
+    // --- Image Capture ---
+    // ImageSourceTitle
+    "Select Image Source",
+    // ImageSourceCamera
+    "Take Photo",
+    // ImageSourceGallery
+    "Choose from Gallery",
+    // ImageSourceCancel
+    "Cancel",
+    // CameraCaptureContentDesc
+    "Capture",
 )

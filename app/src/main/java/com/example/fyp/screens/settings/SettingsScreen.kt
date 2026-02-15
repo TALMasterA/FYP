@@ -4,8 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -413,71 +415,86 @@ fun SettingsScreen(
                 )
 
                 val currentMode = uiState.settings.themeMode
+                val isAuto = uiState.settings.autoThemeEnabled
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                // Helper for Theme Option
+                @Composable
+                fun ThemeOption(
+                    title: String,
+                    selected: Boolean,
+                    onClick: () -> Unit,
+                    modifier: Modifier = Modifier
                 ) {
                     Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { viewModel.updateThemeMode("system") },
+                        modifier = modifier
+                            .clickable(onClick = onClick),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (currentMode == "system")
+                            containerColor = if (selected)
                                 MaterialTheme.colorScheme.primaryContainer
                             else
                                 MaterialTheme.colorScheme.surfaceVariant
                         )
                     ) {
                         Text(
-                            text = t(UiTextKey.SettingsThemeSystem),
+                            text = title,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { viewModel.updateThemeMode("light") },
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (currentMode == "light")
-                                MaterialTheme.colorScheme.primaryContainer
-                            else
-                                MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Text(
-                            text = t(UiTextKey.SettingsThemeLight),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { viewModel.updateThemeMode("dark") },
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (currentMode == "dark")
-                                MaterialTheme.colorScheme.primaryContainer
-                            else
-                                MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    ) {
-                        Text(
-                            text = t(UiTextKey.SettingsThemeDark),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
                 }
+
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // Row 1: System & Scheduled
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        ThemeOption(
+                            title = t(UiTextKey.SettingsThemeSystem),
+                            selected = !isAuto && currentMode == "system",
+                            onClick = { viewModel.updateThemeMode("system") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        ThemeOption(
+                            title = t(UiTextKey.SettingsThemeScheduled),
+                            selected = isAuto,
+                            onClick = { viewModel.updateThemeMode("scheduled") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    // Row 2: Light & Dark
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        ThemeOption(
+                            title = t(UiTextKey.SettingsThemeLight),
+                            selected = !isAuto && currentMode == "light",
+                            onClick = { viewModel.updateThemeMode("light") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        ThemeOption(
+                            title = t(UiTextKey.SettingsThemeDark),
+                            selected = !isAuto && currentMode == "dark",
+                            onClick = { viewModel.updateThemeMode("dark") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
+            // Show schedule info when enabled
+            if (uiState.settings.autoThemeEnabled) {
+                Text(
+                    text = t(UiTextKey.SettingsAutoThemePreview),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
             }
 
             // About

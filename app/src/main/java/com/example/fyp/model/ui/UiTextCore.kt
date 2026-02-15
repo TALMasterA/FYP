@@ -220,6 +220,7 @@ enum class UiTextKey {
     SettingsThemeSystem,
     SettingsThemeLight,
     SettingsThemeDark,
+    SettingsThemeScheduled,
     SettingsResetPW,
     SettingsQuickLinks,
     SettingsNotLoggedInWarning,
@@ -429,9 +430,32 @@ enum class UiTextKey {
     CacheClearButton,
     CacheClearSuccess,
     CacheStatsTemplate,
+
+    // --- Auto Theme ---
+    SettingsAutoThemeTitle,
+    SettingsAutoThemeDesc,
+    SettingsAutoThemeEnabled,
+    SettingsAutoThemeDisabled,
+    SettingsAutoThemeDarkStartLabel,
+    SettingsAutoThemeLightStartLabel,
+    SettingsAutoThemePreview,
+
+    // --- Offline Mode ---
+    OfflineModeTitle,
+    OfflineModeMessage,
+    OfflineModeRetry,
+    OfflineDataCached,
+    OfflineSyncPending,
+
+    // --- Image Capture ---
+    ImageSourceTitle,
+    ImageSourceCamera,
+    ImageSourceGallery,
+    ImageSourceCancel,
+    CameraCaptureContentDesc,
 }
 
-// Core UI texts - used throughout the app (basic controls + common UI elements)
+// Core Ui Texts list
 val CoreUiTexts: List<String> = listOf(
     // --- Basic UI Controls ---
     // AzureRecognizeButton

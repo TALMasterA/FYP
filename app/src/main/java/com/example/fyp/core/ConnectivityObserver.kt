@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.fyp.model.ui.UiTextKey
 
 /**
  * Observe current network connectivity state.
@@ -87,6 +88,9 @@ fun rememberConnectivityState(): State<Boolean> {
  */
 @Composable
 fun OfflineBanner(isConnected: Boolean) {
+    val appLanguageState = LocalAppLanguageState.current
+    val t = rememberTranslator(appLanguageState)
+
     AnimatedVisibility(
         visible = !isConnected,
         enter = expandVertically(),
@@ -107,7 +111,7 @@ fun OfflineBanner(isConnected: Boolean) {
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "You are offline. Changes will sync when reconnected.",
+                text = t(UiTextKey.OfflineSyncPending),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
