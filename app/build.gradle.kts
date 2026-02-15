@@ -114,6 +114,7 @@ dependencies {
     implementation(libs.firebase.functions)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.firebase.perf)
+    implementation(libs.firebase.appdistribution)
 
     // Hilt DI
     implementation(libs.hilt.android)

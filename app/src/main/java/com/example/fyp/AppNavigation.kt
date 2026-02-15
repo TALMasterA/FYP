@@ -32,10 +32,10 @@ import com.example.fyp.data.azure.AzureLanguageConfig
 import com.example.fyp.data.azure.LanguageDisplayNames
 import com.example.fyp.data.ui.rememberUiLanguageState
 import com.example.fyp.screens.help.HelpScreen
-import com.example.fyp.screens.feedback.FeedbackScreen
 import com.example.fyp.screens.history.HistoryScreen
 import com.example.fyp.screens.home.HomeScreen
 import com.example.fyp.screens.favorites.FavoritesScreen
+import com.example.fyp.screens.feedback.FeedbackScreen
 import com.example.fyp.screens.learning.LearningScreen
 import com.example.fyp.screens.learning.LearningSheetScreen
 import com.example.fyp.screens.learning.LearningViewModel
@@ -178,13 +178,6 @@ fun AppNavigation() {
                             uiLanguages = uiLanguages,
                             appLanguageState = appLanguageState,
                             onUpdateAppLanguage = updateAppLanguage,
-                            onBack = { navController.popBackStack() }
-                        )
-                    }
-
-                    composable(AppScreen.Feedback.route) {
-                        FeedbackScreen(
-                            appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
                         )
                     }
@@ -354,6 +347,13 @@ fun AppNavigation() {
                         onNeedLogin = navigateToLogin
                     ) {
                         FavoritesScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(AppScreen.Feedback.route) {
+                        FeedbackScreen(
                             appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
                         )
