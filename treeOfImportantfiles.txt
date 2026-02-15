@@ -87,8 +87,6 @@ FYP/
 │           │   │   ├── FirestoreLearningSheetsRepository.kt
 │           │   │   └── LearningContentRepositoryImpl.kt
 │           │   ├── ocr/ MLKitOcrRepository.kt
-│           │   ├── monitoring/
-│           │   │   └── FirestoreReadCounter.kt
 │           │   ├── ui/
 │           │   │   ├── UiLanguageCacheStore.kt
 │           │   │   └── UiLanguageStateController.kt
