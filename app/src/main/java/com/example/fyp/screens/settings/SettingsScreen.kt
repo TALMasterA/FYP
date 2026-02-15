@@ -217,7 +217,7 @@ fun SettingsScreen(
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text(
-                                    text = "Tester Feedback",
+                                    text = "T.Feedback",
                                     style = MaterialTheme.typography.bodyLarge,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )

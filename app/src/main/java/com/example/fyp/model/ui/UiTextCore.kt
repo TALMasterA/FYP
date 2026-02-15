@@ -76,6 +76,10 @@ enum class UiTextKey {
     ToastCopied,
     DisableText,
 
+    // --- Standard UI Components ---
+    ErrorRetryButton,
+    ErrorGenericMessage,
+
     // --- Shop ---
     ShopTitle,
     ShopCoinBalance,
@@ -588,6 +592,12 @@ val CoreUiTexts: List<String> = listOf(
     "Copied to clipboard",
     // DisableText
     "Login is required to use translation features & storing translation history.",
+
+    // --- Standard UI Components ---
+    // ErrorRetryButton
+    "Retry",
+    // ErrorGenericMessage
+    "An error occurred. Please try again.",
 
     // --- Shop ---
     // ShopTitle
