@@ -212,18 +212,30 @@ All potential candidates were verified:
   - FirestoreProfileRepository.kt - Uses `awaitClose { reg.remove() }`
 - **Impact:** Memory leaks are already prevented through proper implementation
 
-**B. Batch Firestore Reads for Metadata** ⏭️ SKIPPED
+**B. Batch Firestore Reads for Metadata** ✅ IMPLEMENTED
 - **File:** `LearningViewModel.kt`, lines 254-280
-- **Issue:** N+1 query problem - each metadata item triggers 3 separate reads
-- **Status:** Not implemented - would require significant refactoring of the metadata caching system
-- **Recommendation:** Consider for future optimization if Firestore costs become an issue
+- **Problem Solved:** N+1 query problem - each metadata item triggered 3 separate reads (15 reads for 5 languages)
+- **Implementation:**
+  - Added `getBatchSheetMetadata()` to LearningSheetsRepository
+  - Added `getBatchQuizMetadata()` to QuizRepository
+  - Uses Firestore `whereIn` to fetch up to 10 documents per query
+  - Processes in chunks for larger batches
+  - Refactored `refreshSheetMetaForClusters()` to use batch methods
+- **Result:** Reduced from 3N reads to ~N/5 reads (~66% reduction)
+- **Impact:** ✅ Significantly reduced Firestore read operations and costs
 
-**C. Add Pagination for History** ⏭️ SKIPPED
+**C. Add Pagination for History** ✅ IMPLEMENTED
 - **File:** `FirestoreHistoryRepository.kt`
-- **Issue:** Loads all records at once (can be 1000+ items)
-- **Status:** Not implemented - would require UI changes and significant refactoring
-- **Note:** Current implementation uses DEFAULT_HISTORY_LIMIT = 200L which provides some protection
-- **Recommendation:** Consider implementing if users report performance issues with large histories
+- **Problem Solved:** Loading all records at once (200+ items) caused performance issues
+- **Implementation:**
+  - Added `loadMoreHistory()` method with cursor-based pagination
+  - Uses `startAfter(timestamp)` for efficient pagination
+  - Added UI state fields: `hasMoreRecords`, `isLoadingMore`, `totalRecordsCount`
+  - Added `loadMoreHistory()` method in HistoryViewModel
+  - Added "Load More" button in HistoryDiscreteTab UI
+  - Shows progress indicator and record count
+- **Result:** Loads 50 records per page instead of all at once
+- **Impact:** ✅ Faster initial load, reduced memory usage, better UX for large histories
 
 #### 5.1.3 User Experience Enhancements ✅ IMPLEMENTED
 
