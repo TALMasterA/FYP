@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.fyp.model.TranslationRecord
+import com.example.fyp.ui.components.EmptyStates
 
 @Composable
 fun HistoryDiscreteTab(
@@ -53,7 +54,10 @@ fun HistoryDiscreteTab(
     onLoadMore: () -> Unit = {},
 ) {
     if (records.isEmpty()) {
-        Text(noRecordsText, modifier = Modifier.padding(8.dp))
+        EmptyStates.NoHistory(
+            message = noRecordsText,
+            modifier = Modifier.fillMaxSize()
+        )
         return
     }
 

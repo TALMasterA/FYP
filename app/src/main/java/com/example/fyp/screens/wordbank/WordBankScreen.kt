@@ -16,6 +16,7 @@ import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.ui.components.WordBankItemSkeleton
 
 // Word Bank Screen - Main entry point for word bank feature
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,9 +65,17 @@ fun WordBankScreen(
         ) {
             when {
                 uiState.isLoading && !uiState.isGenerating -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    // Show loading skeletons
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        repeat(5) {
+                            WordBankItemSkeleton()
+                        }
+                    }
                 }
                 uiState.error != null && selectedLanguage == null && !uiState.isCustomWordBankSelected && !uiState.isGenerating -> {
                     Column(
