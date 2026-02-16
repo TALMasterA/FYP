@@ -26,36 +26,38 @@ class FirestoreSharingRepository @Inject constructor(
         fromUserId: UserId,
         toUserId: UserId,
         wordData: Map<String, Any>
-    ): Result<SharedItem> = try {
-        // Verify friendship
-        if (!friendsRepository.areFriends(fromUserId, toUserId)) {
-            return Result.failure(IllegalStateException("Users are not friends"))
+    ): Result<SharedItem> {
+        return try {
+            // Verify friendship
+            if (!friendsRepository.areFriends(fromUserId, toUserId)) {
+                return Result.failure(IllegalStateException("Users are not friends"))
+            }
+
+            // Get sender profile
+            val fromProfile = friendsRepository.getPublicProfile(fromUserId)
+                ?: return Result.failure(IllegalStateException("Sender profile not found"))
+
+            val itemRef = db.collection("users")
+                .document(toUserId.value)
+                .collection("shared_inbox")
+                .document()
+
+            val sharedItem = SharedItem(
+                itemId = itemRef.id,
+                fromUserId = fromUserId.value,
+                fromUsername = fromProfile.username,
+                toUserId = toUserId.value,
+                type = SharedItemType.WORD,
+                content = wordData,
+                status = SharedItemStatus.PENDING,
+                createdAt = Timestamp.now()
+            )
+
+            itemRef.set(sharedItem).await()
+            Result.success(sharedItem)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
-        // Get sender profile
-        val fromProfile = friendsRepository.getPublicProfile(fromUserId)
-            ?: return Result.failure(IllegalStateException("Sender profile not found"))
-
-        val itemRef = db.collection("users")
-            .document(toUserId.value)
-            .collection("shared_inbox")
-            .document()
-
-        val sharedItem = SharedItem(
-            itemId = itemRef.id,
-            fromUserId = fromUserId.value,
-            fromUsername = fromProfile.username,
-            toUserId = toUserId.value,
-            type = SharedItemType.WORD,
-            content = wordData,
-            status = SharedItemStatus.PENDING,
-            createdAt = Timestamp.now()
-        )
-
-        itemRef.set(sharedItem).await()
-        Result.success(sharedItem)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
     override suspend fun shareLearningMaterial(
@@ -63,77 +65,81 @@ class FirestoreSharingRepository @Inject constructor(
         toUserId: UserId,
         type: SharedItemType,
         materialData: Map<String, Any>
-    ): Result<SharedItem> = try {
-        // Verify friendship
-        if (!friendsRepository.areFriends(fromUserId, toUserId)) {
-            return Result.failure(IllegalStateException("Users are not friends"))
+    ): Result<SharedItem> {
+        return try {
+            // Verify friendship
+            if (!friendsRepository.areFriends(fromUserId, toUserId)) {
+                return Result.failure(IllegalStateException("Users are not friends"))
+            }
+
+            // Validate type
+            require(type == SharedItemType.LEARNING_SHEET || type == SharedItemType.QUIZ) {
+                "Invalid material type"
+            }
+
+            // Get sender profile
+            val fromProfile = friendsRepository.getPublicProfile(fromUserId)
+                ?: return Result.failure(IllegalStateException("Sender profile not found"))
+
+            val itemRef = db.collection("users")
+                .document(toUserId.value)
+                .collection("shared_inbox")
+                .document()
+
+            val sharedItem = SharedItem(
+                itemId = itemRef.id,
+                fromUserId = fromUserId.value,
+                fromUsername = fromProfile.username,
+                toUserId = toUserId.value,
+                type = type,
+                content = materialData,
+                status = SharedItemStatus.PENDING,
+                createdAt = Timestamp.now()
+            )
+
+            itemRef.set(sharedItem).await()
+            Result.success(sharedItem)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
-        // Validate type
-        require(type == SharedItemType.LEARNING_SHEET || type == SharedItemType.QUIZ) {
-            "Invalid material type"
-        }
-
-        // Get sender profile
-        val fromProfile = friendsRepository.getPublicProfile(fromUserId)
-            ?: return Result.failure(IllegalStateException("Sender profile not found"))
-
-        val itemRef = db.collection("users")
-            .document(toUserId.value)
-            .collection("shared_inbox")
-            .document()
-
-        val sharedItem = SharedItem(
-            itemId = itemRef.id,
-            fromUserId = fromUserId.value,
-            fromUsername = fromProfile.username,
-            toUserId = toUserId.value,
-            type = type,
-            content = materialData,
-            status = SharedItemStatus.PENDING,
-            createdAt = Timestamp.now()
-        )
-
-        itemRef.set(sharedItem).await()
-        Result.success(sharedItem)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
     override suspend fun acceptSharedItem(
         itemId: String,
         userId: UserId
-    ): Result<Unit> = try {
-        val itemRef = db.collection("users")
-            .document(userId.value)
-            .collection("shared_inbox")
-            .document(itemId)
+    ): Result<Unit> {
+        return try {
+            val itemRef = db.collection("users")
+                .document(userId.value)
+                .collection("shared_inbox")
+                .document(itemId)
 
-        val item = itemRef.get().await().toObject(SharedItem::class.java)
-            ?: return Result.failure(IllegalArgumentException("Item not found"))
+            val item = itemRef.get().await().toObject(SharedItem::class.java)
+                ?: return Result.failure(IllegalArgumentException("Item not found"))
 
-        // Verify ownership
-        if (item.toUserId != userId.value) {
-            return Result.failure(IllegalArgumentException("Not authorized"))
-        }
-
-        // Update status
-        itemRef.update("status", SharedItemStatus.ACCEPTED.name).await()
-
-        // Handle different item types
-        when (item.type) {
-            SharedItemType.WORD -> addWordToUserWordBank(userId, item.content)
-            SharedItemType.LEARNING_SHEET -> {
-                // In a real implementation, add to user's learning materials
+            // Verify ownership
+            if (item.toUserId != userId.value) {
+                return Result.failure(IllegalArgumentException("Not authorized"))
             }
-            SharedItemType.QUIZ -> {
-                // In a real implementation, add to user's quiz collection
-            }
-        }
 
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
+            // Update status
+            itemRef.update("status", SharedItemStatus.ACCEPTED.name).await()
+
+            // Handle different item types
+            when (item.type) {
+                SharedItemType.WORD -> addWordToUserWordBank(userId, item.content)
+                SharedItemType.LEARNING_SHEET -> {
+                    // In a real implementation, add to user's learning materials
+                }
+                SharedItemType.QUIZ -> {
+                    // In a real implementation, add to user's quiz collection
+                }
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun dismissSharedItem(

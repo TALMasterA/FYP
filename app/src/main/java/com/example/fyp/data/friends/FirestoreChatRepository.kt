@@ -32,42 +32,44 @@ class FirestoreChatRepository @Inject constructor(
         fromUserId: UserId,
         toUserId: UserId,
         content: String
-    ): Result<FriendMessage> = try {
-        // Validate content
-        require(content.isNotBlank()) { "Message content cannot be blank" }
-        require(content.length <= 2000) { "Message content too long" }
+    ): Result<FriendMessage> {
+        return try {
+            // Validate content
+            require(content.isNotBlank()) { "Message content cannot be blank" }
+            require(content.length <= 2000) { "Message content too long" }
 
-        // Verify friendship
-        if (!friendsRepository.areFriends(fromUserId, toUserId)) {
-            return Result.failure(IllegalStateException("Users are not friends"))
+            // Verify friendship
+            if (!friendsRepository.areFriends(fromUserId, toUserId)) {
+                return Result.failure(IllegalStateException("Users are not friends"))
+            }
+
+            val chatId = generateChatId(fromUserId, toUserId)
+            val messageRef = db.collection("chats")
+                .document(chatId)
+                .collection("messages")
+                .document()
+
+            val message = FriendMessage(
+                messageId = messageRef.id,
+                chatId = chatId,
+                senderId = fromUserId.value,
+                receiverId = toUserId.value,
+                content = content,
+                type = MessageType.TEXT,
+                isRead = false,
+                createdAt = Timestamp.now()
+            )
+
+            // Save message
+            messageRef.set(message).await()
+
+            // Update chat metadata
+            updateChatMetadata(chatId, fromUserId, toUserId, content)
+
+            Result.success(message)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
-        val chatId = generateChatId(fromUserId, toUserId)
-        val messageRef = db.collection("chats")
-            .document(chatId)
-            .collection("messages")
-            .document()
-
-        val message = FriendMessage(
-            messageId = messageRef.id,
-            chatId = chatId,
-            senderId = fromUserId.value,
-            receiverId = toUserId.value,
-            content = content,
-            type = MessageType.TEXT,
-            isRead = false,
-            createdAt = Timestamp.now()
-        )
-
-        // Save message
-        messageRef.set(message).await()
-
-        // Update chat metadata
-        updateChatMetadata(chatId, fromUserId, toUserId, content)
-
-        Result.success(message)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
     override suspend fun sendSharedItemMessage(
@@ -75,45 +77,47 @@ class FirestoreChatRepository @Inject constructor(
         toUserId: UserId,
         type: MessageType,
         metadata: Map<String, Any>
-    ): Result<FriendMessage> = try {
-        // Verify friendship
-        if (!friendsRepository.areFriends(fromUserId, toUserId)) {
-            return Result.failure(IllegalStateException("Users are not friends"))
+    ): Result<FriendMessage> {
+        return try {
+            // Verify friendship
+            if (!friendsRepository.areFriends(fromUserId, toUserId)) {
+                return Result.failure(IllegalStateException("Users are not friends"))
+            }
+
+            val chatId = generateChatId(fromUserId, toUserId)
+            val messageRef = db.collection("chats")
+                .document(chatId)
+                .collection("messages")
+                .document()
+
+            val content = when (type) {
+                MessageType.SHARED_WORD -> "Shared a word"
+                MessageType.SHARED_LEARNING_MATERIAL -> "Shared learning material"
+                else -> "Shared an item"
+            }
+
+            val message = FriendMessage(
+                messageId = messageRef.id,
+                chatId = chatId,
+                senderId = fromUserId.value,
+                receiverId = toUserId.value,
+                content = content,
+                type = type,
+                metadata = metadata,
+                isRead = false,
+                createdAt = Timestamp.now()
+            )
+
+            // Save message
+            messageRef.set(message).await()
+
+            // Update chat metadata
+            updateChatMetadata(chatId, fromUserId, toUserId, content)
+
+            Result.success(message)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
-        val chatId = generateChatId(fromUserId, toUserId)
-        val messageRef = db.collection("chats")
-            .document(chatId)
-            .collection("messages")
-            .document()
-
-        val content = when (type) {
-            MessageType.SHARED_WORD -> "Shared a word"
-            MessageType.SHARED_LEARNING_MATERIAL -> "Shared learning material"
-            else -> "Shared an item"
-        }
-
-        val message = FriendMessage(
-            messageId = messageRef.id,
-            chatId = chatId,
-            senderId = fromUserId.value,
-            receiverId = toUserId.value,
-            content = content,
-            type = type,
-            metadata = metadata,
-            isRead = false,
-            createdAt = Timestamp.now()
-        )
-
-        // Save message
-        messageRef.set(message).await()
-
-        // Update chat metadata
-        updateChatMetadata(chatId, fromUserId, toUserId, content)
-
-        Result.success(message)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
     private suspend fun updateChatMetadata(
