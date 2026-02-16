@@ -104,6 +104,24 @@ value class DeploymentName(val value: String) {
     }
 }
 
+/**
+ * Wraps username strings with validation.
+ * Username must be 3-20 characters and contain only letters, numbers, and underscores.
+ * @throws IllegalArgumentException if the value doesn't meet requirements
+ */
+@JvmInline
+@Serializable
+value class Username(val value: String) {
+    init {
+        require(value.length in 3..20) { 
+            "Username must be 3-20 characters, got: ${value.length}" 
+        }
+        require(value.matches(Regex("^[a-zA-Z0-9_]+$"))) {
+            "Username can only contain letters, numbers, and underscores, got: $value"
+        }
+    }
+}
+
 // Extension functions for common conversions
 fun String.toUserId() = UserId(this)
 fun String.toLanguageCode() = LanguageCode(this)
@@ -112,3 +130,4 @@ fun String.toSessionId() = SessionId(this)
 fun String.toPaletteId() = PaletteId(this)
 fun String.toVoiceName() = VoiceName(this)
 fun String.toDeploymentName() = DeploymentName(this)
+fun String.toUsername() = Username(this)
