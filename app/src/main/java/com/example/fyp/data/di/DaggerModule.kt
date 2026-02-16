@@ -240,4 +240,25 @@ object AppModule {
     @Singleton
     fun provideFeedbackRepository(db: FirebaseFirestore, auth: FirebaseAuth): FeedbackRepository =
         FirestoreFeedbackRepository(db, auth)
+
+    @Provides
+    @Singleton
+    fun provideFriendsRepository(db: FirebaseFirestore): com.example.fyp.data.friends.FriendsRepository =
+        com.example.fyp.data.friends.FirestoreFriendsRepository(db)
+
+    @Provides
+    @Singleton
+    fun provideChatRepository(
+        db: FirebaseFirestore,
+        friendsRepo: com.example.fyp.data.friends.FriendsRepository
+    ): com.example.fyp.data.friends.ChatRepository =
+        com.example.fyp.data.friends.FirestoreChatRepository(db, friendsRepo)
+
+    @Provides
+    @Singleton
+    fun provideSharingRepository(
+        db: FirebaseFirestore,
+        friendsRepo: com.example.fyp.data.friends.FriendsRepository
+    ): com.example.fyp.data.friends.SharingRepository =
+        com.example.fyp.data.friends.FirestoreSharingRepository(db, friendsRepo)
 }
