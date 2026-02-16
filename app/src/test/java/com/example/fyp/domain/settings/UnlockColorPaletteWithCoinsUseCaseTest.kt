@@ -189,6 +189,6 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
 
         verify(settingsRepo).unlockColorPalette(userId, PaletteId("palette1"))
         verify(settingsRepo).unlockColorPalette(userId, PaletteId("palette2"))
-        verify(settingsRepo, never()).unlockColorPalette(userId, PaletteId("palette3"))
+        verify(settingsRepo, never()).unlockColorPalette(any(), any())
     }
 }

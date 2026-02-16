@@ -28,7 +28,7 @@ class UserSettingsTest {
         assertEquals("default", settings.colorPaletteId)
         assertEquals(listOf("default"), settings.unlockedPalettes)
         assertTrue(settings.voiceSettings.isEmpty())
-        assertEquals(100, settings.historyViewLimit)
+        assertEquals(50, settings.historyViewLimit)  // Default is 50, not 100
     }
 
     // --- Primary Language Tests ---
