@@ -106,24 +106,26 @@ class FirestoreFriendsRepository @Inject constructor(
     // Username Management
     // ============================================
 
-    override suspend fun setUsername(userId: UserId, username: Username): Result<Unit> = try {
-        val usernameDoc = db.collection("usernames").document(username.value)
-        
-        // Check if username is taken by another user
-        val existing = usernameDoc.get().await()
-        if (existing.exists() && existing.getString("userId") != userId.value) {
-            return Result.failure(IllegalArgumentException("Username already taken"))
+    override suspend fun setUsername(userId: UserId, username: Username): Result<Unit> {
+        return try {
+            val usernameDoc = db.collection("usernames").document(username.value)
+            
+            // Check if username is taken by another user
+            val existing = usernameDoc.get().await()
+            if (existing.exists() && existing.getString("userId") != userId.value) {
+                return Result.failure(IllegalArgumentException("Username already taken"))
+            }
+
+            // Set username
+            usernameDoc.set(mapOf(
+                "userId" to userId.value,
+                "createdAt" to Timestamp.now()
+            )).await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
-        // Set username
-        usernameDoc.set(mapOf(
-            "userId" to userId.value,
-            "createdAt" to Timestamp.now()
-        )).await()
-
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
     override suspend fun isUsernameAvailable(username: Username): Boolean = try {
@@ -174,119 +176,123 @@ class FirestoreFriendsRepository @Inject constructor(
     override suspend fun sendFriendRequest(
         fromUserId: UserId,
         toUserId: UserId
-    ): Result<FriendRequest> = try {
-        // Check if already friends
-        if (areFriends(fromUserId, toUserId)) {
-            return Result.failure(IllegalStateException("Already friends"))
+    ): Result<FriendRequest> {
+        return try {
+            // Check if already friends
+            if (areFriends(fromUserId, toUserId)) {
+                return Result.failure(IllegalStateException("Already friends"))
+            }
+
+            // Check for existing pending request
+            val existingRequest = db.collection("friend_requests")
+                .whereEqualTo("fromUserId", fromUserId.value)
+                .whereEqualTo("toUserId", toUserId.value)
+                .whereEqualTo("status", RequestStatus.PENDING.name)
+                .limit(1)
+                .get()
+                .await()
+
+            if (!existingRequest.isEmpty) {
+                return Result.failure(IllegalStateException("Friend request already sent"))
+            }
+
+            // Get sender profile
+            val fromProfile = getPublicProfile(fromUserId)
+                ?: return Result.failure(IllegalStateException("Sender profile not found"))
+
+            // Create request
+            val requestRef = db.collection("friend_requests").document()
+            val request = FriendRequest(
+                requestId = requestRef.id,
+                fromUserId = fromUserId.value,
+                fromUsername = fromProfile.username,
+                fromDisplayName = fromProfile.displayName,
+                fromAvatarUrl = fromProfile.avatarUrl,
+                toUserId = toUserId.value,
+                status = RequestStatus.PENDING,
+                createdAt = Timestamp.now(),
+                updatedAt = Timestamp.now()
+            )
+
+            requestRef.set(request).await()
+            Result.success(request)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
-        // Check for existing pending request
-        val existingRequest = db.collection("friend_requests")
-            .whereEqualTo("fromUserId", fromUserId.value)
-            .whereEqualTo("toUserId", toUserId.value)
-            .whereEqualTo("status", RequestStatus.PENDING.name)
-            .limit(1)
-            .get()
-            .await()
-
-        if (!existingRequest.isEmpty) {
-            return Result.failure(IllegalStateException("Friend request already sent"))
-        }
-
-        // Get sender profile
-        val fromProfile = getPublicProfile(fromUserId)
-            ?: return Result.failure(IllegalStateException("Sender profile not found"))
-
-        // Create request
-        val requestRef = db.collection("friend_requests").document()
-        val request = FriendRequest(
-            requestId = requestRef.id,
-            fromUserId = fromUserId.value,
-            fromUsername = fromProfile.username,
-            fromDisplayName = fromProfile.displayName,
-            fromAvatarUrl = fromProfile.avatarUrl,
-            toUserId = toUserId.value,
-            status = RequestStatus.PENDING,
-            createdAt = Timestamp.now(),
-            updatedAt = Timestamp.now()
-        )
-
-        requestRef.set(request).await()
-        Result.success(request)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
     override suspend fun acceptFriendRequest(
         requestId: String,
         currentUserId: UserId
-    ): Result<Unit> = try {
-        val requestRef = db.collection("friend_requests").document(requestId)
-        val requestDoc = requestRef.get().await()
-        val request = requestDoc.toObject(FriendRequest::class.java)
-            ?: return Result.failure(IllegalArgumentException("Request not found"))
+    ): Result<Unit> {
+        return try {
+            val requestRef = db.collection("friend_requests").document(requestId)
+            val requestDoc = requestRef.get().await()
+            val request = requestDoc.toObject(FriendRequest::class.java)
+                ?: return Result.failure(IllegalArgumentException("Request not found"))
 
-        // Verify the current user is the recipient
-        if (request.toUserId != currentUserId.value) {
-            return Result.failure(IllegalArgumentException("Not authorized"))
+            // Verify the current user is the recipient
+            if (request.toUserId != currentUserId.value) {
+                return Result.failure(IllegalArgumentException("Not authorized"))
+            }
+
+            // Get both profiles
+            val fromProfile = getPublicProfile(UserId(request.fromUserId))
+                ?: return Result.failure(IllegalStateException("Sender profile not found"))
+            val toProfile = getPublicProfile(currentUserId)
+                ?: return Result.failure(IllegalStateException("Recipient profile not found"))
+
+            val now = Timestamp.now()
+
+            // Use batch write for atomicity
+            val batch = db.batch()
+
+            // Update request status
+            batch.update(
+                requestRef,
+                mapOf(
+                    "status" to RequestStatus.ACCEPTED.name,
+                    "updatedAt" to now
+                )
+            )
+
+            // Add to fromUser's friends list
+            val fromFriendRef = db.collection("users")
+                .document(request.fromUserId)
+                .collection("friends")
+                .document(currentUserId.value)
+            batch.set(
+                fromFriendRef,
+                FriendRelation(
+                    friendId = currentUserId.value,
+                    friendUsername = toProfile.username,
+                    friendDisplayName = toProfile.displayName,
+                    friendAvatarUrl = toProfile.avatarUrl,
+                    addedAt = now
+                )
+            )
+
+            // Add to toUser's friends list
+            val toFriendRef = db.collection("users")
+                .document(currentUserId.value)
+                .collection("friends")
+                .document(request.fromUserId)
+            batch.set(
+                toFriendRef,
+                FriendRelation(
+                    friendId = request.fromUserId,
+                    friendUsername = fromProfile.username,
+                    friendDisplayName = fromProfile.displayName,
+                    friendAvatarUrl = fromProfile.avatarUrl,
+                    addedAt = now
+                )
+            )
+
+            batch.commit().await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
-
-        // Get both profiles
-        val fromProfile = getPublicProfile(UserId(request.fromUserId))
-            ?: return Result.failure(IllegalStateException("Sender profile not found"))
-        val toProfile = getPublicProfile(currentUserId)
-            ?: return Result.failure(IllegalStateException("Recipient profile not found"))
-
-        val now = Timestamp.now()
-
-        // Use batch write for atomicity
-        val batch = db.batch()
-
-        // Update request status
-        batch.update(
-            requestRef,
-            mapOf(
-                "status" to RequestStatus.ACCEPTED.name,
-                "updatedAt" to now
-            )
-        )
-
-        // Add to fromUser's friends list
-        val fromFriendRef = db.collection("users")
-            .document(request.fromUserId)
-            .collection("friends")
-            .document(currentUserId.value)
-        batch.set(
-            fromFriendRef,
-            FriendRelation(
-                friendId = currentUserId.value,
-                friendUsername = toProfile.username,
-                friendDisplayName = toProfile.displayName,
-                friendAvatarUrl = toProfile.avatarUrl,
-                addedAt = now
-            )
-        )
-
-        // Add to toUser's friends list
-        val toFriendRef = db.collection("users")
-            .document(currentUserId.value)
-            .collection("friends")
-            .document(request.fromUserId)
-        batch.set(
-            toFriendRef,
-            FriendRelation(
-                friendId = request.fromUserId,
-                friendUsername = fromProfile.username,
-                friendDisplayName = fromProfile.displayName,
-                friendAvatarUrl = fromProfile.avatarUrl,
-                addedAt = now
-            )
-        )
-
-        batch.commit().await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
     override suspend fun rejectFriendRequest(requestId: String): Result<Unit> = try {
