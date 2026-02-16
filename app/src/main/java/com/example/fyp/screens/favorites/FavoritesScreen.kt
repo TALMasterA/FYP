@@ -21,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,6 +52,8 @@ import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.FavoriteRecord
 import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.ui.components.EmptyStates
+import com.example.fyp.ui.components.TranslationCardSkeleton
 import kotlinx.coroutines.delay
 
 @Composable
@@ -110,51 +113,61 @@ fun FavoritesScreen(
                 }
             }
 
-            if (uiState.favorites.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = t(UiTextKey.FavoritesEmpty),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                // Favorites list with pagination
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(pagedFavorites, key = { it.id }) { favorite ->
-                        FavoriteCard(
-                            favorite = favorite,
-                            languageNameFor = uiLanguageNameFor,
-                            onSpeakSource = {
-                                haptic.click()
-                                viewModel.speak(favorite.sourceText, favorite.sourceLang, favorite.id + "_source")
-                            },
-                            onSpeakTarget = {
-                                haptic.click()
-                                viewModel.speak(favorite.targetText, favorite.targetLang, favorite.id + "_target")
-                            },
-                            onDelete = {
-                                haptic.reject()
-                                viewModel.removeFavorite(favorite.id)
-                            },
-                            isSpeakingSource = uiState.speakingId == (favorite.id + "_source"),
-                            isSpeakingTarget = uiState.speakingId == (favorite.id + "_target"),
-                            t = t
-                        )
+            when {
+                uiState.isLoading -> {
+                    // Show loading skeletons
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        repeat(3) {
+                            TranslationCardSkeleton()
+                        }
                     }
                 }
+                uiState.favorites.isEmpty() -> {
+                    // Enhanced empty state
+                    EmptyStates.NoFavorites(
+                        message = t(UiTextKey.FavoritesEmpty),
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                else -> {
+                    // Favorites list with pagination
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                        contentPadding = PaddingValues(vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(pagedFavorites, key = { it.id }) { favorite ->
+                            FavoriteCard(
+                                favorite = favorite,
+                                languageNameFor = uiLanguageNameFor,
+                                onSpeakSource = {
+                                    haptic.click()
+                                    viewModel.speak(favorite.sourceText, favorite.sourceLang, favorite.id + "_source")
+                                },
+                                onSpeakTarget = {
+                                    haptic.click()
+                                    viewModel.speak(favorite.targetText, favorite.targetLang, favorite.id + "_target")
+                                },
+                                onDelete = {
+                                    haptic.reject()
+                                    viewModel.removeFavorite(favorite.id)
+                                },
+                                isSpeakingSource = uiState.speakingId == (favorite.id + "_source"),
+                                isSpeakingTarget = uiState.speakingId == (favorite.id + "_target"),
+                                t = t
+                            )
+                        }
+                    }
 
                 // Show "Load More" button if there are more favorites (Lazy Loading - Priority 2 #9)
                 if (uiState.hasMore && currentPage == totalPages - 1) {
