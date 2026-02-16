@@ -76,25 +76,26 @@ service cloud.firestore {
     // NEW: Friends Feature - Chat Messages
     // ============================================
     match /chats/{chatId}/messages/{messageId} {
-      // Helper function to check if user is participant
-      function isParticipant() {
-        let metadata = get(/databases/$(database)/documents/chats/$(chatId)/metadata/info).data;
-        return request.auth.uid in metadata.participants;
+      // Read if user is in the chatId (chatId format: "userId1_userId2")
+      // This avoids extra document reads by parsing the chatId
+      function isParticipantFromChatId() {
+        let userIds = chatId.split('_');
+        return request.auth.uid == userIds[0] || request.auth.uid == userIds[1];
       }
 
-      // Read if participant in chat
-      allow read: if request.auth != null && isParticipant();
+      // Read if participant in chat (determined from chatId)
+      allow read: if request.auth != null && isParticipantFromChatId();
 
       // Create if participant and sender matches auth.uid
       allow create: if request.auth != null 
-        && isParticipant()
+        && isParticipantFromChatId()
         && request.resource.data.senderId == request.auth.uid
         && request.resource.data.content.size() > 0
         && request.resource.data.content.size() <= 2000;
 
       // Update only allowed for marking as read
       allow update: if request.auth != null 
-        && isParticipant()
+        && isParticipantFromChatId()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
 
       allow delete: if false;
