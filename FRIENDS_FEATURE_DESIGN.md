@@ -471,6 +471,62 @@ service cloud.firestore {
       // Delete not allowed - use status updates
       allow delete: if false;
     }
+    
+    // Chat messages
+    match /chats/{chatId}/messages/{messageId} {
+      // Helper function to check if user is participant
+      function isParticipant() {
+        let participants = get(/databases/$(database)/documents/chats/$(chatId)/metadata/info).data.participants;
+        return request.auth.uid in participants;
+      }
+      
+      // Read if participant in chat
+      allow read: if request.auth != null && isParticipant();
+      
+      // Create if participant and sender matches auth.uid
+      allow create: if request.auth != null 
+        && isParticipant()
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.content.size() > 0
+        && request.resource.data.content.size() <= 2000;
+      
+      // Update only allowed for marking as read
+      allow update: if request.auth != null 
+        && isParticipant()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      
+      allow delete: if false;
+    }
+    
+    // Chat metadata
+    match /chats/{chatId}/metadata/info {
+      // Read if participant
+      function isParticipant() {
+        return request.auth.uid in resource.data.participants;
+      }
+      
+      allow read: if request.auth != null && isParticipant();
+      allow write: if request.auth != null && request.auth.uid in request.resource.data.participants;
+    }
+    
+    // Shared items inbox
+    match /users/{userId}/shared_inbox/{itemId} {
+      // Read own inbox
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Create if sending to another user
+      allow create: if request.auth != null 
+        && request.resource.data.fromUserId == request.auth.uid
+        && request.resource.data.toUserId == userId;
+      
+      // Update own inbox items (accept/dismiss)
+      allow update: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.data.status in ["ACCEPTED", "DISMISSED"];
+      
+      // Delete own inbox items
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }
 ```
@@ -509,42 +565,182 @@ export const onFriendRequestCreate = functions.firestore
 
 ### Phase 1: Foundation (Week 1)
 - [ ] Add `Username` value class to `ValueTypes.kt`
-- [ ] Create `UserProfile` and `FriendRelation` data models
+- [ ] Create `UserProfile` extension and `FriendRelation` data models
 - [ ] Create `FriendRequest` data model
+- [ ] Create `FriendMessage` and `SharedItem` data models
 - [ ] Implement username registry and validation
 - [ ] Update Firestore security rules
 
-### Phase 2: Repository & Use Cases (Week 2)
+### Phase 2: Repository & Use Cases - Friends (Week 2)
 - [ ] Create `FriendsRepository` interface
 - [ ] Implement `FirestoreFriendsRepository`
 - [ ] Create use cases for search, requests, and friend management
 - [ ] Add Cloud Functions for request handling (optional)
 
-### Phase 3: UI - Friends List (Week 3)
+### Phase 3: Repository & Use Cases - Chat (Week 3)
+- [ ] Create `ChatRepository` interface
+- [ ] Implement `FirestoreChatRepository`
+- [ ] Create use cases for messaging
+- [ ] Add real-time message listeners
+
+### Phase 4: Repository & Use Cases - Sharing (Week 3)
+- [ ] Create `SharingRepository` interface
+- [ ] Implement `FirestoreSharingRepository`
+- [ ] Create use cases for sharing and receiving items
+- [ ] Integrate with word bank for adding shared words
+
+### Phase 5: UI - Friends List & Management (Week 4)
 - [ ] Create `FriendsViewModel`
 - [ ] Create `FriendsScreen` composable
-- [ ] Implement friend list with remove functionality
-- [ ] Add navigation from Settings
-
-### Phase 4: UI - Search & Add (Week 4)
 - [ ] Create `AddFriendsScreen` composable
-- [ ] Implement search by username
-- [ ] Implement search by user ID
+- [ ] Create `FriendRequestsScreen` composable
+- [ ] Add navigation from Settings
 - [ ] Add "Share my ID" functionality
 
-### Phase 5: UI - Friend Requests (Week 5)
-- [ ] Create `FriendRequestsScreen` composable
-- [ ] Implement incoming requests list
-- [ ] Implement outgoing requests list
-- [ ] Add accept/reject/cancel actions
-- [ ] Add badge for pending requests
+### Phase 6: UI - Chat Feature (Week 5)
+- [ ] Create `ChatViewModel`
+- [ ] Create `ChatScreen` composable
+- [ ] Create message list UI
+- [ ] Create message input UI
+- [ ] Implement real-time message updates
+- [ ] Add unread message badge
 
-### Phase 6: Polish & Testing (Week 6)
-- [ ] Add loading and error states
+### Phase 7: UI - Sharing Feature (Week 6)
+- [ ] Add share buttons to word bank screen
+- [ ] Add share buttons to learning materials screen
+- [ ] Create `SharedInboxScreen` composable
+- [ ] Implement add-to-wordbank functionality
+- [ ] Add notification badge for shared items
+
+### Phase 8: UI Text & Polish (Week 7)
+- [ ] Add all UI text keys to `UiTextScreens.kt`
+- [ ] Add loading states and error handling
+- [ ] Add empty states for all lists
 - [ ] Implement offline support
-- [ ] Write unit tests for use cases
-- [ ] Write integration tests for repository
 - [ ] Performance optimization
+
+### Phase 9: Testing & Security (Week 8)
+- [ ] Write unit tests for repositories
+- [ ] Write unit tests for use cases
+- [ ] Write tests for ViewModels
+- [ ] Security review with codeql_checker
+- [ ] Integration testing
+
+---
+
+## Chat Feature (Phase 7)
+
+### Chat Data Model
+
+```kotlin
+/**
+ * Represents a chat message between two friends.
+ */
+data class FriendMessage(
+    val messageId: String = "",
+    val chatId: String = "",              // Composite ID: smaller_uid + "_" + larger_uid
+    val senderId: String = "",
+    val receiverId: String = "",
+    val content: String = "",
+    val type: MessageType = MessageType.TEXT,
+    val metadata: Map<String, Any> = emptyMap(),  // For shared items
+    val isRead: Boolean = false,
+    val createdAt: Timestamp = Timestamp.now()
+)
+
+enum class MessageType {
+    TEXT,                    // Regular text message
+    SHARED_WORD,             // Shared word bank word
+    SHARED_LEARNING_MATERIAL // Shared learning sheet/quiz
+}
+```
+
+### Chat Collection Structure
+
+```
+/chats/{chatId}/
+    metadata/info           # Chat metadata (participants, lastMessage, etc.)
+    messages/{messageId}    # Individual messages
+```
+
+### Chat Features
+
+1. **Real-time Messaging**
+   - Send and receive text messages
+   - Real-time updates using Firestore listeners
+   - Message read status
+
+2. **Unread Message Badge**
+   - Display unread message count on chat icon
+   - Clear badge when opening chat
+
+3. **Message History**
+   - Load last 50 messages initially
+   - Pagination for older messages
+   - Timestamps with date separators
+
+---
+
+## Sharing Feature (Phase 8)
+
+### Shared Item Data Model
+
+```kotlin
+/**
+ * Represents an item shared between friends.
+ */
+data class SharedItem(
+    val itemId: String = "",
+    val fromUserId: String = "",
+    val fromUsername: String = "",
+    val toUserId: String = "",
+    val type: SharedItemType = SharedItemType.WORD,
+    val content: Map<String, Any> = emptyMap(),
+    val status: SharedItemStatus = SharedItemStatus.PENDING,
+    val createdAt: Timestamp = Timestamp.now()
+)
+
+enum class SharedItemType {
+    WORD,                    // Word bank word
+    LEARNING_SHEET,          // Learning sheet
+    QUIZ                     // Quiz
+}
+
+enum class SharedItemStatus {
+    PENDING,                 // Not yet acted upon
+    ACCEPTED,                // Added to user's collection
+    DISMISSED                // Dismissed/ignored
+}
+```
+
+### Sharing Collection Structure
+
+```
+/users/{userId}/
+    shared_inbox/{itemId}   # Received shared items
+```
+
+### Sharing Features
+
+1. **Share Word Bank Words**
+   - Select words from word bank to share
+   - Send to specific friend via message
+   - Friend can add to their word bank with one click
+
+2. **Share Learning Materials**
+   - Share learning sheets with friends
+   - Share quiz references
+   - Friend can view and add to their learning collection
+
+3. **Received Items Inbox**
+   - View all shared items received
+   - Accept (add to own collection) or dismiss
+   - Notification badge for new shared items
+
+4. **Word Bank Integration**
+   - When accepting a shared word, add to user's word bank under same language
+   - Maintain original translation and context
+   - Mark as "received from friend" in metadata
 
 ---
 
@@ -573,10 +769,10 @@ export const onFriendRequestCreate = functions.firestore
    - Report inappropriate profiles
    - Granular visibility settings
 
-6. **Social Learning**
-   - Share translation records with friends
-   - Collaborative word banks
+6. **Group Features**
+   - Group chats (3+ friends)
    - Group study sessions
+   - Collaborative word banks
 
 ---
 
@@ -602,8 +798,9 @@ export const onFriendRequestCreate = functions.firestore
 
 ---
 
-**Document Version**: 1.0  
+**Document Version**: 2.0  
 **Created**: 2026-02-16  
-**Status**: Design Phase  
-**Estimated Total Effort**: 6 weeks
+**Updated**: 2026-02-16  
+**Status**: Design Phase - Enhanced with Chat & Sharing Features  
+**Estimated Total Effort**: 8 weeks
 
