@@ -33,7 +33,10 @@ data class HistoryUiState(
     val favoriteIds: Set<String> = emptySet(), // Track which record IDs are favorited (session-only)
     val favoritedTexts: Set<String> = emptySet(), // Track favorited content "sourceText|targetText" (persisted)
     val addingFavoriteId: String? = null, // Track which record is being added/removed
-    val historyViewLimit: Int = UserSettings.BASE_HISTORY_LIMIT // Current history view limit
+    val historyViewLimit: Int = UserSettings.BASE_HISTORY_LIMIT, // Current history view limit
+    val hasMoreRecords: Boolean = false, // Whether there are more records to load
+    val isLoadingMore: Boolean = false, // Whether we're currently loading more records
+    val totalRecordsCount: Int = 0 // Total count of all records
 )
 
 @HiltViewModel
@@ -46,7 +49,8 @@ class HistoryViewModel @Inject constructor(
     private val renameSession: RenameSessionUseCase,
     private val deleteSession: DeleteSessionUseCase,
     private val quizRepo: QuizRepository,
-    private val favoritesRepo: FirestoreFavoritesRepository
+    private val favoritesRepo: FirestoreFavoritesRepository,
+    private val historyRepo: com.example.fyp.domain.history.HistoryRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryUiState())
@@ -130,6 +134,46 @@ class HistoryViewModel @Inject constructor(
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(error = e.message ?: "Delete session failed")
                 }
+        }
+    }
+
+    /**
+     * Load more history records (pagination).
+     * Appends older records to the current list.
+     */
+    fun loadMoreHistory() {
+        val uid = currentUserId ?: return
+        val currentRecords = _uiState.value.records
+        if (currentRecords.isEmpty() || _uiState.value.isLoadingMore) return
+
+        val lastRecord = currentRecords.lastOrNull() ?: return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoadingMore = true)
+
+            try {
+                // Load next page (50 more records)
+                val moreRecords = historyRepo.loadMoreHistory(
+                    userId = uid,
+                    limit = 50,
+                    lastTimestamp = lastRecord.timestamp
+                )
+
+                // Append to existing records
+                val allRecords = currentRecords + moreRecords
+                val hasMore = moreRecords.size >= 50
+
+                _uiState.value = _uiState.value.copy(
+                    records = allRecords,
+                    hasMoreRecords = hasMore,
+                    isLoadingMore = false
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoadingMore = false,
+                    error = "Failed to load more records"
+                )
+            }
         }
     }
 
@@ -265,10 +309,14 @@ class HistoryViewModel @Inject constructor(
             // Observe from shared data source instead of creating new listener
             sharedHistoryDataSource.historyRecords
                 .collect { list ->
+                    // Check if there might be more records
+                    val hasMore = list.size >= initialLimit
+                    
                     _uiState.value = _uiState.value.copy(
                         isLoading = sharedHistoryDataSource.isLoading.value,
                         error = sharedHistoryDataSource.error.value,
-                        records = list
+                        records = list,
+                        hasMoreRecords = hasMore
                     )
                 }
         }
@@ -279,6 +327,16 @@ class HistoryViewModel @Inject constructor(
                 .collect { map ->
                     _uiState.value = _uiState.value.copy(sessionNames = map)
                 }
+        }
+
+        // Fetch total count for pagination info
+        viewModelScope.launch {
+            try {
+                val totalCount = historyRepo.getHistoryCount(userId)
+                _uiState.value = _uiState.value.copy(totalRecordsCount = totalCount)
+            } catch (_: Exception) {
+                // Ignore count fetch errors
+            }
         }
 
         // Fetch coin stats once instead of real-time listener

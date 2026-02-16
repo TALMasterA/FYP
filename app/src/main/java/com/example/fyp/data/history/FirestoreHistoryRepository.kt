@@ -109,6 +109,32 @@ class FirestoreHistoryRepository @Inject constructor(
     }
 
     /**
+     * Load more history records for pagination (cursor-based).
+     * This allows users to load older records beyond the initial limit.
+     */
+    override suspend fun loadMoreHistory(
+        userId: String,
+        limit: Long,
+        lastTimestamp: Timestamp
+    ): List<TranslationRecord> {
+        return try {
+            val snapshot = firestore.collection("users")
+                .document(userId)
+                .collection("history")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .startAfter(lastTimestamp)
+                .limit(limit)
+                .get()
+                .await()
+
+            snapshot.toObjects(TranslationRecord::class.java)
+        } catch (e: Exception) {
+            Log.w("FirestoreHistoryRepository", "Failed to load more history", e)
+            emptyList()
+        }
+    }
+
+    /**
      * Fetch only new records since last update (incremental loading).
      * This is called internally when we want to update history without re-fetching everything.
      */
