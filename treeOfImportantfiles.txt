@@ -185,6 +185,7 @@ FYP/
 │           │   │   ├── ProfileScreen.kt
 │           │   │   ├── ProfileViewModel.kt
 │           │   │   ├── SettingsScreen.kt
+│           │   │   ├── SettingsNotesScreen.kt
 │           │   │   └── SettingsViewModel.kt
 │           │   ├── favorites/
 │           │   │   ├── FavoritesScreen.kt
@@ -216,6 +217,7 @@ FYP/
 │           │   ├── OcrResult.kt
 │           │   ├── Quiz.kt
 │           │   ├── TranslationRecord.kt
+│           │   ├── ValueTypes.kt
 │           │   └── HistorySession.kt
 │           │
 │           └── ui/
@@ -227,6 +229,7 @@ FYP/
 │               │   ├── Color.kt
 │               │   └── Type.kt
 │               └── components/
+│                   ├── EmptyStateView.kt
 │                   ├── StandardComponents.kt
 │                   ├── LoadingSkeletons.kt
 │                   └── AnimatedComponents.kt

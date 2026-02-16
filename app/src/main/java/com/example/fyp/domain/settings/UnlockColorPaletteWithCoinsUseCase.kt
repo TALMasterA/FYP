@@ -2,6 +2,8 @@ package com.example.fyp.domain.settings
 
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.settings.UserSettingsRepository
+import com.example.fyp.model.PaletteId
+import com.example.fyp.model.UserId
 import javax.inject.Inject
 
 /**
@@ -29,7 +31,7 @@ class UnlockColorPaletteWithCoinsUseCase @Inject constructor(
      * @param cost The cost in coins (0 for free palettes)
      * @return Result indicating success or insufficient coins
      */
-    suspend operator fun invoke(userId: String, paletteId: String, cost: Int): Result {
+    suspend operator fun invoke(userId: UserId, paletteId: PaletteId, cost: Int): Result {
         // Free palette (default), just unlock it
         if (cost == 0) {
             settingsRepo.unlockColorPalette(userId, paletteId)

@@ -12,6 +12,8 @@ import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.QuizAttempt
 import com.example.fyp.model.QuizQuestion
 import com.example.fyp.model.TranslationRecord
+import com.example.fyp.model.UserId
+import com.example.fyp.model.LanguageCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -118,7 +120,7 @@ class LearningSheetViewModel @Inject constructor(
         }
 
         historyJob = viewModelScope.launch {
-            observeUserHistory(uid).collect { records ->
+            observeUserHistory(UserId(uid)).collect { records ->
                 val related = records.filter { it.sourceLang == targetCode || it.targetLang == targetCode }
                 latestRelatedRecords = related
                 _uiState.value = _uiState.value.copy(countNow = related.size)
@@ -133,7 +135,7 @@ class LearningSheetViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            runCatching { sheetsRepo.getSheet(uidNow, primaryCode, targetCode) }
+            runCatching { sheetsRepo.getSheet(UserId(uidNow), LanguageCode(primaryCode), LanguageCode(targetCode)) }
                 .onSuccess { doc ->
                     val newSheetVersion = doc?.historyCountAtGenerate
                     val generatedVersion = _uiState.value.generatedQuizHistoryCountAtGenerate
@@ -167,7 +169,7 @@ class LearningSheetViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(quizLoading = true, quizError = null)
 
             try {
-                val doc = quizRepo.getGeneratedQuizDoc(uidNow, primaryCode, targetCode)
+                val doc = quizRepo.getGeneratedQuizDoc(UserId(uidNow), LanguageCode(primaryCode), LanguageCode(targetCode))
                 if (doc == null) {
                     _uiState.value = _uiState.value.copy(
                         quizLoading = false,
@@ -180,7 +182,7 @@ class LearningSheetViewModel @Inject constructor(
                     return@launch
                 }
 
-                val questions = quizRepo.getGeneratedQuizQuestions(uidNow, primaryCode, targetCode)
+                val questions = quizRepo.getGeneratedQuizQuestions(UserId(uidNow), LanguageCode(primaryCode), LanguageCode(targetCode))
                 if (questions.isEmpty()) {
                     _uiState.value = _uiState.value.copy(
                         quizLoading = false,
@@ -236,13 +238,19 @@ class LearningSheetViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(quizLoading = true)
             try {
                 val completedAttempt = parseAndStoreQuiz.completeAttempt(attempt)
-                val attemptId = parseAndStoreQuiz.saveAttempt(uidNow, completedAttempt)
+                val attemptId = parseAndStoreQuiz.saveAttempt(uidNow, completedAttempt) // This calls ParseAndStoreQuizUseCase.saveAttempt which I fixed to take String wrapper inside. Wait, I updated ParseAndStoreQuizUseCase to take String and wrap it. So here passing String is correct!
+                // ERROR: "Argument type mismatch: actual type is 'kotlin.String', but 'com.example.fyp.model.UserId' was expected."
+                // Wait, did I fix ParseAndStoreQuizUseCase signature?
+                // Yes, I changed `saveAttempt(uid: String, ...)` -> returns `quizRepository.saveAttempt(UserId(uid), ...)`.
+                // So calling it with String is CORRECT.
+                // The error was from BEFORE my fix.
+
                 val finalAttempt = completedAttempt.copy(id = attemptId)
 
                 // Award coins (first-attempt only) if all conditions are met
                 // The latestSheetCount must match the quiz's generatedHistoryCountAtGenerate
                 val latestSheetCount = _uiState.value.historyCountAtGenerate
-                val coinsAwarded = quizRepo.awardCoinsIfEligible(uidNow, finalAttempt, latestSheetCount)
+                val coinsAwarded = quizRepo.awardCoinsIfEligible(UserId(uidNow), finalAttempt, latestSheetCount)
 
                 // Only show coins alert if coins were actually awarded
                 val coinMessage = if (coinsAwarded && finalAttempt.totalScore > 0) {

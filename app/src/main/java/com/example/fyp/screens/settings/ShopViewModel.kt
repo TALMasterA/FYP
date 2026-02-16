@@ -7,6 +7,8 @@ import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.UserSettings
+import com.example.fyp.model.UserId
+import com.example.fyp.model.PaletteId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,8 +63,8 @@ class ShopViewModel @Inject constructor(
     private fun loadData(userId: String) {
         viewModelScope.launch {
             try {
-                val settings = settingsRepo.fetchUserSettings(userId)
-                val coinStats = quizRepo.fetchUserCoinStats(userId)
+                val settings = settingsRepo.fetchUserSettings(UserId(userId))
+                val coinStats = quizRepo.fetchUserCoinStats(UserId(userId))
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -102,7 +104,7 @@ class ShopViewModel @Inject constructor(
                     .coerceAtMost(UserSettings.MAX_HISTORY_LIMIT)
 
                 // Deduct coins (returns new balance, avoiding a separate fetch)
-                val newBalance = quizRepo.deductCoins(uid, UserSettings.HISTORY_EXPANSION_COST)
+                val newBalance = quizRepo.deductCoins(UserId(uid), UserSettings.HISTORY_EXPANSION_COST)
                 if (newBalance < 0) {
                     _uiState.value = _uiState.value.copy(
                         isPurchasing = false,
@@ -112,7 +114,7 @@ class ShopViewModel @Inject constructor(
                 }
 
                 // Update history limit
-                settingsRepo.expandHistoryViewLimit(uid, newLimit)
+                settingsRepo.expandHistoryViewLimit(UserId(uid), newLimit)
 
                 _uiState.value = _uiState.value.copy(
                     isPurchasing = false,
@@ -135,7 +137,7 @@ class ShopViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                settingsRepo.setColorPalette(uid, paletteId)
+                settingsRepo.setColorPalette(UserId(uid), PaletteId(paletteId))
                 _uiState.value = _uiState.value.copy(currentPaletteId = paletteId)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(purchaseError = e.message)
@@ -157,7 +159,7 @@ class ShopViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // Deduct coins (returns new balance, avoiding a separate fetch)
-                val newBalance = quizRepo.deductCoins(uid, cost)
+                val newBalance = quizRepo.deductCoins(UserId(uid), cost)
                 if (newBalance < 0) {
                     _uiState.value = _uiState.value.copy(
                         isPurchasing = false,
@@ -167,7 +169,7 @@ class ShopViewModel @Inject constructor(
                 }
 
                 // Unlock palette
-                settingsRepo.unlockColorPalette(uid, paletteId)
+                settingsRepo.unlockColorPalette(UserId(uid), PaletteId(paletteId))
 
                 _uiState.value = _uiState.value.copy(
                     isPurchasing = false,
@@ -197,4 +199,3 @@ class ShopViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(purchaseSuccess = null)
     }
 }
-

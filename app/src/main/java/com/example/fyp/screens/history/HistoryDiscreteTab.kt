@@ -191,7 +191,6 @@ fun HistoryList(
                 }
             }
         }
-        }
 
         // Load More button for pagination
         if (hasMoreRecords) {
@@ -219,5 +218,6 @@ fun HistoryList(
                     }
                 }
             }
+        }
     }
 }

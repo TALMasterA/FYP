@@ -1,5 +1,7 @@
 package com.example.fyp.domain.learning
 
+import com.example.fyp.model.DeploymentName // Added
+import com.example.fyp.model.LanguageCode // Added
 import com.example.fyp.model.TranslationRecord
 import javax.inject.Inject
 
@@ -13,9 +15,9 @@ class GenerateLearningMaterialsUseCase @Inject constructor(
         records: List<TranslationRecord>
     ): String {
         return repo.generateForLanguage(
-            deployment = deployment,
-            primaryLanguageCode = primaryLanguageCode,
-            targetLanguageCode = targetLanguageCode,
+            deployment = DeploymentName(deployment),
+            primaryLanguageCode = LanguageCode(primaryLanguageCode),
+            targetLanguageCode = LanguageCode(targetLanguageCode),
             records = records
         )
     }

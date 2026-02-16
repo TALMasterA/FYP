@@ -13,6 +13,10 @@ import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase
 import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase.Result as UnlockResult
 import com.example.fyp.domain.settings.SetVoiceForLanguageUseCase
 import com.example.fyp.domain.settings.SetAutoThemeEnabledUseCase
+import com.example.fyp.model.LanguageCode
+import com.example.fyp.model.PaletteId
+import com.example.fyp.model.UserId
+import com.example.fyp.model.VoiceName
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.user.UserSettings
@@ -109,7 +113,7 @@ class SettingsViewModel @Inject constructor(
         val userId = uid ?: return
         viewModelScope.launch {
             try {
-                val stats = quizRepo.fetchUserCoinStats(userId) ?: UserCoinStats()
+                val stats = quizRepo.fetchUserCoinStats(UserId(userId)) ?: UserCoinStats()
                 _uiState.value = _uiState.value.copy(coinStats = stats)
             } catch (_: Exception) {
                 // Ignore coin fetch errors
@@ -124,7 +128,7 @@ class SettingsViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            runCatching { setPrimaryLanguage(uid, newCode) }
+            runCatching { setPrimaryLanguage(UserId(uid), LanguageCode(newCode)) }
                 .onSuccess {
                     _uiState.value = _uiState.value.copy(
                         settings = _uiState.value.settings.copy(primaryLanguageCode = newCode),
@@ -150,7 +154,7 @@ class SettingsViewModel @Inject constructor(
         val validated = validateScale(scale)
 
         viewModelScope.launch {
-            runCatching { setFontSizeScale(uid, validated) }
+            runCatching { setFontSizeScale(UserId(uid), validated) }
                 .onSuccess {
                     _uiState.value = _uiState.value.copy(
                         settings = _uiState.value.settings.copy(fontSizeScale = validated),
@@ -176,7 +180,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             // Handle "scheduled" separately
             if (newMode == "scheduled") {
-                runCatching { setAutoThemeEnabled(uid, true) }
+                runCatching { setAutoThemeEnabled(UserId(uid), true) }
                     .onSuccess {
                         _uiState.value = _uiState.value.copy(
                             settings = _uiState.value.settings.copy(autoThemeEnabled = true),
@@ -195,7 +199,7 @@ class SettingsViewModel @Inject constructor(
 
                 // 1. Disable auto theme if it enabled
                 if (_uiState.value.settings.autoThemeEnabled) {
-                     runCatching { setAutoThemeEnabled(uid, false) }
+                     runCatching { setAutoThemeEnabled(UserId(uid), false) }
                      // Update local state temporarily
                      _uiState.value = _uiState.value.copy(
                         settings = _uiState.value.settings.copy(autoThemeEnabled = false)
@@ -203,7 +207,7 @@ class SettingsViewModel @Inject constructor(
                 }
 
                 // 2. Set the mode
-                runCatching { setThemeMode(uid, newMode) }
+                runCatching { setThemeMode(UserId(uid), newMode) }
                     .onSuccess {
                         _uiState.value = _uiState.value.copy(
                             settings = _uiState.value.settings.copy(themeMode = newMode),
@@ -228,7 +232,7 @@ class SettingsViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            runCatching { setColorPalette(uid, paletteId) }
+            runCatching { setColorPalette(UserId(uid), PaletteId(paletteId)) }
                 .onSuccess {
                     _uiState.value = _uiState.value.copy(
                         settings = _uiState.value.settings.copy(colorPaletteId = paletteId),
@@ -254,7 +258,7 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(unlockingPaletteId = paletteId, unlockError = null)
 
         viewModelScope.launch {
-            runCatching { unlockColorPaletteWithCoins(uid, paletteId, cost) }
+            runCatching { unlockColorPaletteWithCoins(UserId(uid), PaletteId(paletteId), cost) }
                 .onSuccess { result ->
                     when (result) {
                         UnlockResult.Success -> {
@@ -292,7 +296,7 @@ class SettingsViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            runCatching { setVoiceForLanguage(uid, languageCode, voiceName) }
+            runCatching { setVoiceForLanguage(UserId(uid), LanguageCode(languageCode), VoiceName(voiceName)) }
                 .onSuccess {
                     // Update local state optimistically
                     val currentSettings = _uiState.value.settings
@@ -328,7 +332,7 @@ class SettingsViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            runCatching { setAutoThemeEnabled(uid, enabled) }
+            runCatching { setAutoThemeEnabled(UserId(uid), enabled) }
                 .onSuccess {
                     _uiState.value = _uiState.value.copy(
                         settings = _uiState.value.settings.copy(autoThemeEnabled = enabled),

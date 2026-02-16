@@ -1,7 +1,11 @@
 package com.example.fyp.data.history
 
 import com.example.fyp.domain.history.HistoryRepository
+import com.example.fyp.model.LanguageCode
+import com.example.fyp.model.RecordId
+import com.example.fyp.model.SessionId
 import com.example.fyp.model.TranslationRecord
+import com.example.fyp.model.UserId
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
@@ -38,16 +42,21 @@ class FirestoreHistoryRepository @Inject constructor(
             .await()
 
         // Update language counts cache to keep it in sync
-        updateLanguageCountsCache(record.userId, record.sourceLang, record.targetLang, increment = true)
+        updateLanguageCountsCache(
+            UserId(record.userId),
+            LanguageCode(record.sourceLang),
+            LanguageCode(record.targetLang),
+            increment = true
+        )
     }
 
-    override suspend fun delete(userId: String, recordId: String) {
+    override suspend fun delete(userId: UserId, recordId: RecordId) {
         // Fetch the record first to get language info for cache update
         val record = try {
             firestore.collection("users")
-                .document(userId)
+                .document(userId.value)
                 .collection("history")
-                .document(recordId)
+                .document(recordId.value)
                 .get()
                 .await()
                 .toObject(TranslationRecord::class.java)
@@ -56,15 +65,15 @@ class FirestoreHistoryRepository @Inject constructor(
         }
 
         firestore.collection("users")
-            .document(userId)
+            .document(userId.value)
             .collection("history")
-            .document(recordId)
+            .document(recordId.value)
             .delete()
             .await()
 
         // Update language counts cache if we got the record info
         record?.let {
-            updateLanguageCountsCache(userId, it.sourceLang, it.targetLang, increment = false)
+            updateLanguageCountsCache(userId, LanguageCode(it.sourceLang), LanguageCode(it.targetLang), increment = false)
         }
     }
 
@@ -76,9 +85,10 @@ class FirestoreHistoryRepository @Inject constructor(
      * After first load, only fetches records newer than last fetch timestamp,
      * reducing bandwidth and improving performance for large histories.
      */
-    override fun getHistory(userId: String, limit: Long): Flow<List<TranslationRecord>> = callbackFlow {
+    override fun getHistory(userId: UserId, limit: Long): Flow<List<TranslationRecord>> = callbackFlow {
+        val uid = userId.value
         val listener = firestore.collection("users")
-            .document(userId)
+            .document(uid)
             .collection("history")
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .limit(limit)
@@ -92,19 +102,19 @@ class FirestoreHistoryRepository @Inject constructor(
 
                 // Track the latest timestamp for incremental loading
                 if (newRecords.isNotEmpty()) {
-                    lastFetchTimestamp[userId] = newRecords.first().timestamp
+                    lastFetchTimestamp[uid] = newRecords.first().timestamp
                 }
 
                 // Cache records for merge with incremental updates
-                cachedRecords[userId] = newRecords
+                cachedRecords[uid] = newRecords
 
                 trySend(newRecords)
             }
         awaitClose {
             listener.remove()
             // Clean up cache when listener is removed
-            cachedRecords.remove(userId)
-            lastFetchTimestamp.remove(userId)
+            cachedRecords.remove(uid)
+            lastFetchTimestamp.remove(uid)
         }
     }
 
@@ -113,13 +123,13 @@ class FirestoreHistoryRepository @Inject constructor(
      * This allows users to load older records beyond the initial limit.
      */
     override suspend fun loadMoreHistory(
-        userId: String,
+        userId: UserId,
         limit: Long,
         lastTimestamp: Timestamp
     ): List<TranslationRecord> {
         return try {
             val snapshot = firestore.collection("users")
-                .document(userId)
+                .document(userId.value)
                 .collection("history")
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .startAfter(lastTimestamp)
@@ -174,10 +184,10 @@ class FirestoreHistoryRepository @Inject constructor(
      * Get history count without fetching all documents (uses aggregation).
      * This is much cheaper than fetching all documents just to count them.
      */
-    override suspend fun getHistoryCount(userId: String): Int {
+    override suspend fun getHistoryCount(userId: UserId): Int {
         return try {
             val snapshot = firestore.collection("users")
-                .document(userId)
+                .document(userId.value)
                 .collection("history")
                 .count()
                 .get(com.google.firebase.firestore.AggregateSource.SERVER)
@@ -185,7 +195,7 @@ class FirestoreHistoryRepository @Inject constructor(
             snapshot.count.toInt()
         } catch (e: Exception) {
             // Fallback: if count aggregation fails, return -1 to indicate unknown
-            Log.w("FirestoreHistoryRepository", "Failed to get history count for user $userId", e)
+            Log.w("FirestoreHistoryRepository", "Failed to get history count for user ${userId.value}", e)
             -1
         }
     }
@@ -200,11 +210,11 @@ class FirestoreHistoryRepository @Inject constructor(
      *
      * NOTE: Does NOT filter by primary language - caller should filter as needed.
      */
-    override suspend fun getLanguageCounts(userId: String, primaryLanguageCode: String): Map<String, Int> {
+    override suspend fun getLanguageCounts(userId: UserId, primaryLanguageCode: LanguageCode): Map<String, Int> {
         return try {
             // First try to read from the cached stats document (1 read instead of N reads)
             val statsDoc = firestore.collection("users")
-                .document(userId)
+                .document(userId.value)
                 .collection("user_stats")
                 .document("language_counts")
                 .get()
@@ -227,10 +237,10 @@ class FirestoreHistoryRepository @Inject constructor(
             }
 
             // Fallback: if cache doesn't exist, compute from history records and update cache
-            Log.w("FirestoreHistoryRepository", "Language counts cache missing for user $userId, rebuilding...")
-            rebuildLanguageCountsCache(userId)
+            Log.w("FirestoreHistoryRepository", "Language counts cache missing for user ${userId.value}, rebuilding...")
+            rebuildLanguageCountsCache(userId.value)
         } catch (e: Exception) {
-            Log.w("FirestoreHistoryRepository", "Failed to get language counts for user $userId", e)
+            Log.w("FirestoreHistoryRepository", "Failed to get language counts for user ${userId.value}", e)
             emptyMap()
         }
     }
@@ -240,28 +250,28 @@ class FirestoreHistoryRepository @Inject constructor(
      * This increments the counts for both source and target languages.
      * Call this after save() to keep the cache in sync.
      */
-    override suspend fun updateLanguageCountsCache(userId: String, sourceLang: String, targetLang: String, increment: Boolean) {
+    override suspend fun updateLanguageCountsCache(userId: UserId, sourceLang: LanguageCode, targetLang: LanguageCode, increment: Boolean) {
         try {
             val statsRef = firestore.collection("users")
-                .document(userId)
+                .document(userId.value)
                 .collection("user_stats")
                 .document("language_counts")
 
             val updates = mutableMapOf<String, Any>()
             val delta = if (increment) 1 else -1
 
-            if (sourceLang.isNotBlank()) {
-                updates[sourceLang] = com.google.firebase.firestore.FieldValue.increment(delta.toLong())
+            if (sourceLang.value.isNotBlank()) {
+                updates[sourceLang.value] = com.google.firebase.firestore.FieldValue.increment(delta.toLong())
             }
-            if (targetLang.isNotBlank() && targetLang != sourceLang) {
-                updates[targetLang] = com.google.firebase.firestore.FieldValue.increment(delta.toLong())
+            if (targetLang.value.isNotBlank() && targetLang.value != sourceLang.value) {
+                updates[targetLang.value] = com.google.firebase.firestore.FieldValue.increment(delta.toLong())
             }
 
             if (updates.isNotEmpty()) {
                 statsRef.set(updates, com.google.firebase.firestore.SetOptions.merge()).await()
             }
         } catch (e: Exception) {
-            Log.w("FirestoreHistoryRepository", "Failed to update language counts cache for user $userId", e)
+            Log.w("FirestoreHistoryRepository", "Failed to update language counts cache for user ${userId.value}", e)
         }
     }
 
@@ -308,9 +318,9 @@ class FirestoreHistoryRepository @Inject constructor(
         }
     }
 
-    override fun listenSessions(userId: String): Flow<List<HistorySession>> = callbackFlow {
+    override fun listenSessions(userId: UserId): Flow<List<HistorySession>> = callbackFlow {
         val listener = firestore.collection("users")
-            .document(userId)
+            .document(userId.value)
             .collection("sessions")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -323,14 +333,14 @@ class FirestoreHistoryRepository @Inject constructor(
         awaitClose { listener.remove() }
     }
 
-    override suspend fun setSessionName(userId: String, sessionId: String, name: String) {
+    override suspend fun setSessionName(userId: UserId, sessionId: SessionId, name: String) {
         firestore.collection("users")
-            .document(userId)
+            .document(userId.value)
             .collection("sessions")
-            .document(sessionId)
+            .document(sessionId.value)
             .set(
                 HistorySession(
-                    sessionId = sessionId,
+                    sessionId = sessionId.value,
                     name = name,
                     updatedAt = Timestamp.now()
                 )
@@ -338,11 +348,11 @@ class FirestoreHistoryRepository @Inject constructor(
             .await()
     }
 
-    override suspend fun deleteSession(userId: String, sessionId: String) {
-        val col = firestore.collection("users").document(userId).collection("history")
+    override suspend fun deleteSession(userId: UserId, sessionId: SessionId) {
+        val col = firestore.collection("users").document(userId.value).collection("history")
 
         while (true) {
-            val snapshot = col.whereEqualTo("sessionId", sessionId).limit(400).get().await()
+            val snapshot = col.whereEqualTo("sessionId", sessionId.value).limit(400).get().await()
             if (snapshot.isEmpty) break
 
             val batch = firestore.batch()
@@ -351,14 +361,14 @@ class FirestoreHistoryRepository @Inject constructor(
         }
 
         firestore.collection("users")
-            .document(userId)
+            .document(userId.value)
             .collection("sessions")
-            .document(sessionId)
+            .document(sessionId.value)
             .delete()
             .await()
 
         // Rebuild language counts cache after bulk deletion
         // This is more efficient than tracking each deletion individually
-        rebuildLanguageCountsCache(userId)
+        rebuildLanguageCountsCache(userId.value)
     }
 }
