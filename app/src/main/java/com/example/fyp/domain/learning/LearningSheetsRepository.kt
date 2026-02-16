@@ -1,6 +1,8 @@
 package com.example.fyp.domain.learning
 
 import com.example.fyp.data.learning.LearningSheetDoc
+import com.example.fyp.model.LanguageCode
+import com.example.fyp.model.UserId
 
 /**
  * Metadata for a learning sheet (without full content).
@@ -22,7 +24,7 @@ interface LearningSheetsRepository {
      * @param target Target language code
      * @return LearningSheetDoc if found, null otherwise
      */
-    suspend fun getSheet(uid: String, primary: String, target: String): LearningSheetDoc?
+    suspend fun getSheet(uid: UserId, primary: LanguageCode, target: LanguageCode): LearningSheetDoc?
 
     /**
      * Batch retrieves metadata for multiple language pairs.
@@ -33,8 +35,8 @@ interface LearningSheetsRepository {
      * @return Map of target language code to metadata
      */
     suspend fun getBatchSheetMetadata(
-        uid: String,
-        primary: String,
+        uid: UserId,
+        primary: LanguageCode,
         targets: List<String>
     ): Map<String, SheetMetadata>
 
@@ -47,9 +49,9 @@ interface LearningSheetsRepository {
      * @param historyCountAtGenerate Number of history records when generated
      */
     suspend fun upsertSheet(
-        uid: String,
-        primary: String,
-        target: String,
+        uid: UserId,
+        primary: LanguageCode,
+        target: LanguageCode,
         content: String,
         historyCountAtGenerate: Int
     )

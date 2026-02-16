@@ -2,10 +2,10 @@ package com.example.fyp.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.example.fyp.BuildConfig
 import com.example.fyp.core.StandardScreenBody
 import com.example.fyp.core.StandardScreenScaffold
@@ -13,6 +13,8 @@ import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +42,7 @@ fun SystemNotesScreen(
                 )
             ) {
                 Column(
-                    modifier = androidx.compose.ui.Modifier.padding(16.dp),
+                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
@@ -62,7 +64,7 @@ fun SystemNotesScreen(
                 )
             ) {
                 Column(
-                    modifier = androidx.compose.ui.Modifier.padding(16.dp),
+                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
@@ -87,7 +89,7 @@ fun SystemNotesScreen(
                 )
             ) {
                 Column(
-                    modifier = androidx.compose.ui.Modifier.padding(16.dp),
+                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
@@ -112,7 +114,7 @@ fun SystemNotesScreen(
                 )
             ) {
                 Column(
-                    modifier = androidx.compose.ui.Modifier.padding(16.dp),
+                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
@@ -138,7 +140,7 @@ fun SystemNotesScreen(
                 )
             ) {
                 Column(
-                    modifier = androidx.compose.ui.Modifier.padding(16.dp),
+                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(

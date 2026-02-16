@@ -21,6 +21,7 @@ import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.user.UserSettings
+import com.example.fyp.model.UserId
 import com.example.fyp.model.OcrResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -92,7 +93,7 @@ class SpeechViewModel @Inject constructor(
                 _authState.value = authState
                 // Observe settings when user is logged in
                 if (authState is AuthState.LoggedIn) {
-                    observeSettings(authState.user.uid).collect { settings ->
+                    observeSettings(UserId(authState.user.uid)).collect { settings ->
                         _userSettings.value = settings
                     }
                 } else {

@@ -49,11 +49,11 @@ class FirestoreQuizRepository @Inject constructor(
             .collection("coin_awards")
             .document(versionKey)
 
-    override suspend fun saveAttempt(uid: String, attempt: QuizAttempt): String {
+    override suspend fun saveAttempt(uid: UserId, attempt: QuizAttempt): String {
         val attemptId = attempt.id.ifEmpty { db.collection("dummy").document().id }
 
         val doc = QuizAttemptDoc(
-            userId = uid,
+            userId = uid.value,
             primaryLanguageCode = attempt.primaryLanguageCode,
             targetLanguageCode = attempt.targetLanguageCode,
             questionsJson = json.encodeToString<List<QuizQuestion>>(attempt.questions),
@@ -66,19 +66,19 @@ class FirestoreQuizRepository @Inject constructor(
             generatedHistoryCountAtGenerate = attempt.generatedHistoryCountAtGenerate
         )
 
-        docRef(uid, attemptId).set(doc).await()
-        updateStats(uid, attempt)
+        docRef(uid.value, attemptId).set(doc).await()
+        updateStats(uid.value, attempt)
         return attemptId
     }
 
-    override suspend fun getAttempt(uid: String, attemptId: String): QuizAttempt? {
-        val snap = docRef(uid, attemptId).get().await()
+    override suspend fun getAttempt(uid: UserId, attemptId: String): QuizAttempt? {
+        val snap = docRef(uid.value, attemptId).get().await()
         if (!snap.exists()) return null
 
         val doc = snap.toObject(QuizAttemptDoc::class.java) ?: return null
         return QuizAttempt(
             id = attemptId,
-            userId = uid,
+            userId = uid.value,
             primaryLanguageCode = doc.primaryLanguageCode,
             targetLanguageCode = doc.targetLanguageCode,
             questions = json.decodeOrDefault<List<QuizQuestion>>(doc.questionsJson, emptyList()),
@@ -93,14 +93,14 @@ class FirestoreQuizRepository @Inject constructor(
     }
 
     override suspend fun getAttemptsByLanguagePair(
-        uid: String,
-        primaryCode: String,
-        targetCode: String,
+        uid: UserId,
+        primaryCode: LanguageCode,
+        targetCode: LanguageCode,
         limit: Long
     ): List<QuizAttempt> {
-        val snap = collectionRef(uid)
-            .whereEqualTo("primaryLanguageCode", primaryCode)
-            .whereEqualTo("targetLanguageCode", targetCode)
+        val snap = collectionRef(uid.value)
+            .whereEqualTo("primaryLanguageCode", primaryCode.value)
+            .whereEqualTo("targetLanguageCode", targetCode.value)
             .orderBy("completedAt")
             .limit(limit)
             .get()
@@ -110,7 +110,7 @@ class FirestoreQuizRepository @Inject constructor(
             val data = docSnap.toObject(QuizAttemptDoc::class.java) ?: return@mapNotNull null
             QuizAttempt(
                 id = docSnap.id,
-                userId = uid,
+                userId = uid.value,
                 primaryLanguageCode = data.primaryLanguageCode,
                 targetLanguageCode = data.targetLanguageCode,
                 questions = json.decodeOrDefault<List<QuizQuestion>>(data.questionsJson, emptyList()),
@@ -126,16 +126,16 @@ class FirestoreQuizRepository @Inject constructor(
     }
 
     override suspend fun getQuizStats(
-        uid: String,
-        primaryLanguageCode: String,
-        targetLanguageCode: String
+        uid: UserId,
+        primaryLanguageCode: LanguageCode,
+        targetLanguageCode: LanguageCode
     ): QuizStats? {
-        val snap = statsDocRef(uid, primaryLanguageCode, targetLanguageCode).get().await()
+        val snap = statsDocRef(uid.value, primaryLanguageCode.value, targetLanguageCode.value).get().await()
         return if (snap.exists()) snap.toObject(QuizStats::class.java) else null
     }
 
-    override suspend fun getRecentAttempts(uid: String, limit: Long): List<QuizAttempt> {
-        val snap = collectionRef(uid)
+    override suspend fun getRecentAttempts(uid: UserId, limit: Long): List<QuizAttempt> {
+        val snap = collectionRef(uid.value)
             .orderBy("completedAt")
             .limit(limit)
             .get()
@@ -145,7 +145,7 @@ class FirestoreQuizRepository @Inject constructor(
             val data = docSnap.toObject(QuizAttemptDoc::class.java) ?: return@mapNotNull null
             QuizAttempt(
                 id = docSnap.id,
-                userId = uid,
+                userId = uid.value,
                 primaryLanguageCode = data.primaryLanguageCode,
                 targetLanguageCode = data.targetLanguageCode,
                 questions = emptyList(),
@@ -206,19 +206,19 @@ class FirestoreQuizRepository @Inject constructor(
             .document("${primaryCode}__${targetCode}")
 
     override suspend fun getGeneratedQuizDoc(
-        uid: String,
-        primaryLanguageCode: String,
-        targetLanguageCode: String
+        uid: UserId,
+        primaryLanguageCode: LanguageCode,
+        targetLanguageCode: LanguageCode
     ): GeneratedQuizDoc? {
-        val snap = generatedQuizDocRef(uid, primaryLanguageCode, targetLanguageCode).get().await()
+        val snap = generatedQuizDocRef(uid.value, primaryLanguageCode.value, targetLanguageCode.value).get().await()
         if (!snap.exists()) return null
         return snap.toObject(GeneratedQuizDoc::class.java)
     }
 
     override suspend fun upsertGeneratedQuiz(
-        uid: String,
-        primaryCode: String,
-        targetCode: String,
+        uid: UserId,
+        primaryCode: LanguageCode,
+        targetCode: LanguageCode,
         quizData: String,
         historyCountAtGenerate: Int
     ) {
@@ -229,19 +229,19 @@ class FirestoreQuizRepository @Inject constructor(
         }
         
         val doc = GeneratedQuizDoc(
-            primaryLanguageCode = primaryCode,
-            targetLanguageCode = targetCode,
+            primaryLanguageCode = primaryCode.value,
+            targetLanguageCode = targetCode.value,
             questionsJson = quizData,
             generatedAt = Timestamp.now(),
             historyCountAtGenerate = historyCountAtGenerate
         )
-        generatedQuizDocRef(uid, primaryCode, targetCode).set(doc).await()
+        generatedQuizDocRef(uid.value, primaryCode.value, targetCode.value).set(doc).await()
     }
 
     override suspend fun getGeneratedQuizQuestions(
-        uid: String,
-        primaryLanguageCode: String,
-        targetLanguageCode: String
+        uid: UserId,
+        primaryLanguageCode: LanguageCode,
+        targetLanguageCode: LanguageCode
     ): List<QuizQuestion> {
         val doc = getGeneratedQuizDoc(uid, primaryLanguageCode, targetLanguageCode) ?: return emptyList()
         return json.decodeOrDefault<List<QuizQuestion>>(doc.questionsJson, emptyList())
@@ -252,8 +252,8 @@ class FirestoreQuizRepository @Inject constructor(
      * This combines generated quiz docs and last awarded counts in optimized queries.
      */
     override suspend fun getBatchQuizMetadata(
-        uid: String,
-        primary: String,
+        uid: UserId,
+        primary: LanguageCode,
         targets: List<String>
     ): Map<String, QuizMetadata> {
         if (targets.isEmpty()) return emptyMap()
@@ -261,13 +261,13 @@ class FirestoreQuizRepository @Inject constructor(
         val result = mutableMapOf<String, QuizMetadata>()
         
         // Build document IDs
-        val quizDocIds = targets.map { "${primary}__${it}" }
-        
+        val quizDocIds = targets.map { "${primary.value}__${it}" }
+
         // Process in chunks of 10 (Firestore whereIn limit)
         targets.chunked(10).zip(quizDocIds.chunked(10)).forEach { (chunkTargets, chunkQuizIds) ->
             // Batch get generated quiz docs
             val quizSnapshot = db.collection("users")
-                .document(uid)
+                .document(uid.value)
                 .collection("generated_quizzes")
                 .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
                 .get()
@@ -277,7 +277,7 @@ class FirestoreQuizRepository @Inject constructor(
             
             // Batch get last awarded counts
             val awardedSnapshot = db.collection("users")
-                .document(uid)
+                .document(uid.value)
                 .collection("last_awarded_quiz")
                 .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
                 .get()
@@ -307,8 +307,8 @@ class FirestoreQuizRepository @Inject constructor(
 
     // ---- Coins (first-attempt rewards) ----
 
-    override fun observeUserCoinStats(uid: String): Flow<UserCoinStats> = callbackFlow {
-        val reg = coinStatsDoc(uid).addSnapshotListener { snap, _ ->
+    override fun observeUserCoinStats(uid: UserId): Flow<UserCoinStats> = callbackFlow {
+        val reg = coinStatsDoc(uid.value).addSnapshotListener { snap, _ ->
             if (snap != null && snap.exists()) {
                 val stats = snap.toObject(UserCoinStats::class.java) ?: UserCoinStats()
                 trySend(stats)
@@ -319,8 +319,8 @@ class FirestoreQuizRepository @Inject constructor(
         awaitClose { reg.remove() }
     }
 
-    override suspend fun fetchUserCoinStats(uid: String): UserCoinStats? {
-        val snap = coinStatsDoc(uid).get().await()
+    override suspend fun fetchUserCoinStats(uid: UserId): UserCoinStats? {
+        val snap = coinStatsDoc(uid.value).get().await()
         return if (snap.exists()) snap.toObject(UserCoinStats::class.java) else null
     }
 
@@ -334,8 +334,8 @@ class FirestoreQuizRepository @Inject constructor(
      * Get the last awarded quiz count for a language pair.
      * Returns null if no quiz has been awarded coins yet.
      */
-    override suspend fun getLastAwardedQuizCount(uid: String, primaryCode: String, targetCode: String): Int? {
-        val snap = lastAwardedCountDoc(uid, primaryCode, targetCode).get().await()
+    override suspend fun getLastAwardedQuizCount(uid: UserId, primaryCode: LanguageCode, targetCode: LanguageCode): Int? {
+        val snap = lastAwardedCountDoc(uid.value, primaryCode.value, targetCode.value).get().await()
         return if (snap.exists()) snap.getLong("count")?.toInt() else null
     }
 
@@ -354,7 +354,7 @@ class FirestoreQuizRepository @Inject constructor(
      * sheet version from Firestore to prevent client-side manipulation.
      */
     override suspend fun awardCoinsIfEligible(
-        uid: String,
+        uid: UserId,
         attempt: QuizAttempt,
         latestHistoryCount: Int?
     ): Boolean {
@@ -374,9 +374,9 @@ class FirestoreQuizRepository @Inject constructor(
      * Returns the new coin balance if successful, or -1 if insufficient coins.
      * This avoids a separate fetchUserCoinStats call after deduction.
      */
-    override suspend fun deductCoins(uid: String, amount: Int): Int {
+    override suspend fun deductCoins(uid: UserId, amount: Int): Int {
         return db.runTransaction { tx ->
-            val statsSnap = tx.get(coinStatsDoc(uid))
+            val statsSnap = tx.get(coinStatsDoc(uid.value))
             val current = if (statsSnap.exists()) statsSnap.toObject(UserCoinStats::class.java) ?: UserCoinStats() else UserCoinStats()
 
             // Check if user has enough coins
@@ -386,8 +386,7 @@ class FirestoreQuizRepository @Inject constructor(
 
             // Deduct coins
             val newTotal = current.coinTotal - amount
-            tx.set(coinStatsDoc(uid), current.copy(coinTotal = newTotal))
-
+            tx.set(coinStatsDoc(uid.value), current.copy(coinTotal = newTotal))
             newTotal
         }.await()
     }

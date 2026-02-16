@@ -3,6 +3,8 @@ package com.example.fyp.data.learning
 import com.example.fyp.data.cloud.CloudGenAiClient
 import com.example.fyp.domain.learning.LearningContentRepository
 import com.example.fyp.model.TranslationRecord
+import com.example.fyp.model.DeploymentName
+import com.example.fyp.model.LanguageCode
 import javax.inject.Inject
 
 class LearningContentRepositoryImpl @Inject constructor(
@@ -10,9 +12,9 @@ class LearningContentRepositoryImpl @Inject constructor(
 ) : LearningContentRepository {
 
     override suspend fun generateForLanguage(
-        deployment: String,
-        primaryLanguageCode: String,
-        targetLanguageCode: String,
+        deployment: DeploymentName,
+        primaryLanguageCode: LanguageCode,
+        targetLanguageCode: LanguageCode,
         records: List<TranslationRecord>
     ): String {
         val recent = records.takeLast(20).joinToString("\n") { r ->
@@ -38,7 +40,7 @@ Note: Quiz is generated separately (and this content will be referenced), so foc
 """.trimIndent()
 
         return genAi.generateLearningContent(
-            deployment = deployment,
+            deployment = deployment.value,
             prompt = prompt
         )
     }

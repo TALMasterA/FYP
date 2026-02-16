@@ -1,5 +1,9 @@
 package com.example.fyp.data.settings
 
+import com.example.fyp.model.LanguageCode
+import com.example.fyp.model.PaletteId
+import com.example.fyp.model.UserId
+import com.example.fyp.model.VoiceName
 import com.example.fyp.model.user.UserSettings
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -45,8 +49,8 @@ class FirestoreUserSettingsRepository @Inject constructor(
         )
     }
 
-    override fun observeUserSettings(userId: String): Flow<UserSettings> = callbackFlow {
-        val reg = docRef(userId).addSnapshotListener { snap, err ->
+    override fun observeUserSettings(userId: UserId): Flow<UserSettings> = callbackFlow {
+        val reg = docRef(userId.value).addSnapshotListener { snap, err ->
             if (err != null) {
                 close(err)
                 return@addSnapshotListener
@@ -57,62 +61,62 @@ class FirestoreUserSettingsRepository @Inject constructor(
         awaitClose { reg.remove() }
     }
 
-    override suspend fun fetchUserSettings(userId: String): UserSettings {
-        val snap = docRef(userId).get().await()
+    override suspend fun fetchUserSettings(userId: UserId): UserSettings {
+        val snap = docRef(userId.value).get().await()
         return parseSettings(snap)
     }
 
-    override suspend fun setPrimaryLanguage(userId: String, languageCode: String) {
-        docRef(userId)
-            .set(mapOf("primaryLanguageCode" to languageCode), SetOptions.merge())
+    override suspend fun setPrimaryLanguage(userId: UserId, languageCode: LanguageCode) {
+        docRef(userId.value)
+            .set(mapOf("primaryLanguageCode" to languageCode.value), SetOptions.merge())
             .await()
     }
 
-    override suspend fun setFontSizeScale(userId: String, scale: Float) {
-        docRef(userId)
+    override suspend fun setFontSizeScale(userId: UserId, scale: Float) {
+        docRef(userId.value)
             .set(mapOf("fontSizeScale" to scale), SetOptions.merge())
             .await()
     }
 
-    override suspend fun setThemeMode(userId: String, themeMode: String) {
-        docRef(userId)
+    override suspend fun setThemeMode(userId: UserId, themeMode: String) {
+        docRef(userId.value)
             .set(mapOf("themeMode" to themeMode), SetOptions.merge())
             .await()
     }
 
-    override suspend fun setColorPalette(userId: String, paletteId: String) {
-        docRef(userId)
-            .set(mapOf("colorPaletteId" to paletteId), SetOptions.merge())
+    override suspend fun setColorPalette(userId: UserId, paletteId: PaletteId) {
+        docRef(userId.value)
+            .set(mapOf("colorPaletteId" to paletteId.value), SetOptions.merge())
             .await()
     }
 
-    override suspend fun unlockColorPalette(userId: String, paletteId: String) {
+    override suspend fun unlockColorPalette(userId: UserId, paletteId: PaletteId) {
         // Use arrayUnion to atomically add palette without reading current list first.
         // This eliminates one Firestore read per palette unlock.
-        docRef(userId)
-            .set(mapOf("unlockedPalettes" to FieldValue.arrayUnion(paletteId)), SetOptions.merge())
+        docRef(userId.value)
+            .set(mapOf("unlockedPalettes" to FieldValue.arrayUnion(paletteId.value)), SetOptions.merge())
             .await()
     }
 
-    override suspend fun setVoiceForLanguage(userId: String, languageCode: String, voiceName: String) {
+    override suspend fun setVoiceForLanguage(userId: UserId, languageCode: LanguageCode, voiceName: VoiceName) {
         // Use dot-notation field path to update only the specific language key
         // within the voiceSettings map, without reading the entire document first.
         // This eliminates one Firestore read per voice change.
-        docRef(userId)
-            .update("voiceSettings.$languageCode", voiceName)
+        docRef(userId.value)
+            .update("voiceSettings.${languageCode.value}", voiceName.value)
             .await()
     }
 
-    override suspend fun setAutoThemeEnabled(userId: String, enabled: Boolean) {
-        docRef(userId)
+    override suspend fun setAutoThemeEnabled(userId: UserId, enabled: Boolean) {
+        docRef(userId.value)
             .set(mapOf("autoThemeEnabled" to enabled), SetOptions.merge())
             .await()
     }
 
 
-    override suspend fun expandHistoryViewLimit(userId: String, newLimit: Int) {
+    override suspend fun expandHistoryViewLimit(userId: UserId, newLimit: Int) {
         val clampedLimit = newLimit.coerceIn(UserSettings.BASE_HISTORY_LIMIT, UserSettings.MAX_HISTORY_LIMIT)
-        docRef(userId)
+        docRef(userId.value)
             .set(mapOf("historyViewLimit" to clampedLimit), SetOptions.merge())
             .await()
     }

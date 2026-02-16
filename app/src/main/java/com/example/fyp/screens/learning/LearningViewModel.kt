@@ -16,6 +16,8 @@ import com.example.fyp.core.AiConfig
 import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.TranslationRecord
+import com.example.fyp.model.UserId
+import com.example.fyp.model.LanguageCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
@@ -135,7 +137,7 @@ class LearningViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         settingsJob = viewModelScope.launch {
-            observeUserSettings(uid).collect { s ->
+            observeUserSettings(UserId(uid)).collect { s ->
                 val primary = s.primaryLanguageCode.ifBlank { "en-US" }
 
                 val prevPrimary = _uiState.value.primaryLanguageCode
@@ -260,8 +262,8 @@ class LearningViewModel @Inject constructor(
                     for (batch in batches) {
                         try {
                             // Batch fetch all metadata for this batch in 2 queries instead of 3N queries
-                            val sheetMeta = sheetsRepo.getBatchSheetMetadata(uid, primary, batch)
-                            val quizMeta = quizRepo.getBatchQuizMetadata(uid, primary, batch)
+                            val sheetMeta = sheetsRepo.getBatchSheetMetadata(UserId(uid), LanguageCode(primary), batch)
+                            val quizMeta = quizRepo.getBatchQuizMetadata(UserId(uid), LanguageCode(primary), batch)
 
                             // Build cache from batch results
                             for (lang in batch) {
@@ -357,9 +359,9 @@ class LearningViewModel @Inject constructor(
                 val materialOnly = com.example.fyp.data.learning.ContentCleaner.removeQuizFromContent(raw)
 
                 sheetsRepo.upsertSheet(
-                    uid = uid,
-                    primary = primary,
-                    target = languageCode,
+                    uid = UserId(uid),
+                    primary = LanguageCode(primary),
+                    target = LanguageCode(languageCode),
                     content = materialOnly,
                     historyCountAtGenerate = countNow
                 )
@@ -447,9 +449,9 @@ class LearningViewModel @Inject constructor(
                 }
 
                 quizRepo.upsertGeneratedQuiz(
-                    uid = uid,
-                    primaryCode = primary,
-                    targetCode = languageCode,
+                    uid = UserId(uid),
+                    primaryCode = LanguageCode(primary),
+                    targetCode = LanguageCode(languageCode),
                     quizData = json.encodeToString(questions.take(QUIZ_QUESTIONS_COUNT)),
                     historyCountAtGenerate = sheetHistoryCount
                 )
@@ -484,7 +486,7 @@ class LearningViewModel @Inject constructor(
     fun setPrimaryLanguage(languageCode: String) {
         val uid = this.uid ?: return
         viewModelScope.launch {
-            userSettingsRepo.setPrimaryLanguage(uid, languageCode)
+            userSettingsRepo.setPrimaryLanguage(UserId(uid), LanguageCode(languageCode))
         }
     }
 

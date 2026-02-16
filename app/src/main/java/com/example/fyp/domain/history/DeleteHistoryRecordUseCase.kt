@@ -1,6 +1,8 @@
 package com.example.fyp.domain.history
 
 import com.example.fyp.data.history.FirestoreHistoryRepository
+import com.example.fyp.model.RecordId
+import com.example.fyp.model.UserId
 import javax.inject.Inject
 
 /**
@@ -18,6 +20,6 @@ class DeleteHistoryRecordUseCase @Inject constructor(
      * @param recordId The ID of the record to delete
      */
     suspend operator fun invoke(userId: String, recordId: String) {
-        repo.delete(userId, recordId)
+        repo.delete(UserId(userId), RecordId(recordId))
     }
 }

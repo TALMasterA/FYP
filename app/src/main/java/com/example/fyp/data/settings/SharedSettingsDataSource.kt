@@ -1,5 +1,6 @@
 package com.example.fyp.data.settings
 
+import com.example.fyp.model.UserId // Added
 import com.example.fyp.model.user.UserSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,8 +45,8 @@ class SharedSettingsDataSource @Inject constructor(
      * If already observing the same user, does nothing (reuses existing listener).
      */
     fun startObserving(userId: String) {
-        if (userId == currentUserId && settingsJob?.isActive == true) {
-            // Already observing this user, no need to create new listener
+        if (currentUserId == userId) {
+            // Already observing this user
             return
         }
 
@@ -55,7 +56,7 @@ class SharedSettingsDataSource @Inject constructor(
         _isLoading.value = true
 
         settingsJob = scope.launch {
-            settingsRepo.observeUserSettings(userId)
+            settingsRepo.observeUserSettings(UserId(userId))
                 .catch { e ->
                     _isLoading.value = false
                     // Keep previous settings on error
@@ -72,7 +73,7 @@ class SharedSettingsDataSource @Inject constructor(
      * Useful for screens that don't need real-time updates.
      */
     suspend fun fetchOnce(userId: String): UserSettings {
-        return settingsRepo.fetchUserSettings(userId)
+        return settingsRepo.fetchUserSettings(UserId(userId))
     }
 
     /**
@@ -93,4 +94,3 @@ class SharedSettingsDataSource @Inject constructor(
         _settings.value = settings
     }
 }
-

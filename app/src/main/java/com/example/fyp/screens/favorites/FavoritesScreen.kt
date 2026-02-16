@@ -1,7 +1,6 @@
 package com.example.fyp.screens.favorites
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,7 +20,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -201,13 +199,14 @@ fun FavoritesScreen(
                         modifier = Modifier.padding(16.dp)
                     )
                 }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun FavoriteCard(
+fun FavoriteCard(
     favorite: FavoriteRecord,
     languageNameFor: (String) -> String,
     onSpeakSource: () -> Unit,

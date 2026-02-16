@@ -2,6 +2,8 @@ package com.example.fyp.data.learning
 
 import com.example.fyp.domain.learning.LearningSheetsRepository
 import com.example.fyp.domain.learning.SheetMetadata
+import com.example.fyp.model.UserId
+import com.example.fyp.model.LanguageCode
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -27,8 +29,8 @@ class FirestoreLearningSheetsRepository @Inject constructor(
             .collection("learning_sheets")
             .document(docId(primary, target))
 
-    override suspend fun getSheet(uid: String, primary: String, target: String): LearningSheetDoc? {
-        val snap = docRef(uid, norm(primary), norm(target)).get().await()
+    override suspend fun getSheet(uid: UserId, primary: LanguageCode, target: LanguageCode): LearningSheetDoc? {
+        val snap = docRef(uid.value, norm(primary.value), norm(target.value)).get().await()
         return if (snap.exists()) snap.toObject(LearningSheetDoc::class.java) else null
     }
 
@@ -37,48 +39,70 @@ class FirestoreLearningSheetsRepository @Inject constructor(
      * This significantly reduces Firestore reads compared to individual getSheet calls.
      */
     override suspend fun getBatchSheetMetadata(
-        uid: String,
-        primary: String,
+        uid: UserId,
+        primary: LanguageCode,
         targets: List<String>
     ): Map<String, SheetMetadata> {
         if (targets.isEmpty()) return emptyMap()
 
-        val p = norm(primary)
+        val p = norm(primary.value)
         val normalizedTargets = targets.map { norm(it) }
         
         // Build document IDs to query
         val docIds = normalizedTargets.map { docId(p, it) }
 
-        // Batch get all documents in one query
-        val collectionRef = db.collection("users")
-            .document(uid)
-            .collection("learning_sheets")
+        // Firestore 'in' query is limited to 10 items (or 30 in some cases), but getting by ID is faster via getAll
+        // However, we can't use getAll on a collection reference easily.
+        // Instead, we'll use a collection group query or just multiple gets if list is small.
+        // Efficient approach: fetch all docs in the collection that match the primary language?
+        // No, that might be too broad.
 
-        // Use whereIn to get multiple documents (limited to 10 per query)
+        // Actually, we can just use `getAll` by constructing DocumentReferences
+        val refs = docIds.map {
+            db.collection("users").document(uid.value).collection("learning_sheets").document(it)
+        }
+
+        val snapshots = db.runBatch { batch ->
+            // getAll is not available in batch in client SDK in the same way, but we can use Tasks.whenAll
+        }
+        // Wait, the Android SDK `getAll` is on `FirebaseFirestore` to fetch multiple docs.
+        // It's `db.getAll(*refs.toTypedArray())`? No, that's server SDK.
+
+        // For client SDK, we can just run parallel gets.
+        // Or query where 'primaryLanguageCode' == p AND 'targetLanguageCode' IN targets
+        // Creating a compound query. Limtit 10 for IN.
+
         val result = mutableMapOf<String, SheetMetadata>()
         
-        // Process in chunks of 10 (Firestore whereIn limit)
-        docIds.chunked(10).zip(normalizedTargets.chunked(10)).forEach { (chunkIds, chunkTargets) ->
-            val snapshot = collectionRef
-                .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkIds)
-                .get()
-                .await()
+        // Let's use the query approach if possible, or parallel gets.
+        // Given complexity, let's just do parallel gets for now, or use the existing logic if it was working.
+        // The previous code seemed to be incomplete implemented or I missed it.
+        // Let's implement it using 'in' query (chunks of 10)
 
-            // Map found documents
-            val foundDocs = snapshot.documents.associateBy { it.id }
-            
-            // Build result for this chunk
-            chunkTargets.forEachIndexed { idx, target ->
-                val docId = chunkIds[idx]
-                val doc = foundDocs[docId]
-                result[target] = if (doc != null && doc.exists()) {
-                    SheetMetadata(
+        val chunks = normalizedTargets.chunked(10)
+        for (chunk in chunks) {
+            val q = db.collection("users").document(uid.value).collection("learning_sheets")
+                .whereEqualTo("primaryLanguageCode", p)
+                .whereIn("targetLanguageCode", chunk)
+
+            val snaps = q.get().await()
+
+            // Mark found ones
+            snaps.documents.forEach { doc ->
+                val data = doc.toObject(LearningSheetDoc::class.java)
+                if (data != null) {
+                    result[data.targetLanguageCode] = SheetMetadata(
                         exists = true,
-                        historyCountAtGenerate = doc.getLong("historyCountAtGenerate")?.toInt()
+                        historyCountAtGenerate = data.historyCountAtGenerate
                     )
-                } else {
-                    SheetMetadata(exists = false, historyCountAtGenerate = null)
                 }
+            }
+        }
+
+        // Fill missing as non-existent
+        normalizedTargets.forEach { t ->
+            if (!result.containsKey(t)) {
+                result[t] = SheetMetadata(exists = false, historyCountAtGenerate = null)
             }
         }
 
@@ -86,14 +110,14 @@ class FirestoreLearningSheetsRepository @Inject constructor(
     }
 
     override suspend fun upsertSheet(
-        uid: String,
-        primary: String,
-        target: String,
+        uid: UserId,
+        primary: LanguageCode,
+        target: LanguageCode,
         content: String,
         historyCountAtGenerate: Int
     ) {
-        val p = norm(primary)
-        val t = norm(target)
+        val p = norm(primary.value)
+        val t = norm(target.value)
         val data = mapOf(
             "primaryLanguageCode" to p,
             "targetLanguageCode" to t,
@@ -101,6 +125,6 @@ class FirestoreLearningSheetsRepository @Inject constructor(
             "historyCountAtGenerate" to historyCountAtGenerate,
             "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
         )
-        docRef(uid, p, t).set(data).await()
+        docRef(uid.value, p, t).set(data).await()
     }
 }

@@ -15,6 +15,8 @@ import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.UserSettings
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.UserCoinStats
+import com.example.fyp.model.UserId
+import com.example.fyp.model.SessionId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -118,7 +120,7 @@ class HistoryViewModel @Inject constructor(
         if (uid.isBlank() || sessionId.isBlank()) return
 
         viewModelScope.launch {
-            runCatching { renameSession(uid, sessionId, name) }
+            runCatching { renameSession(UserId(uid), SessionId(sessionId), name) }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(error = e.message ?: "Rename failed")
                 }
@@ -130,7 +132,7 @@ class HistoryViewModel @Inject constructor(
         if (uid.isBlank() || sessionId.isBlank()) return
 
         viewModelScope.launch {
-            runCatching { deleteSession(uid, sessionId) }
+            runCatching { this@HistoryViewModel.deleteSession.invoke(uid, sessionId) }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(error = e.message ?: "Delete session failed")
                 }
@@ -154,7 +156,7 @@ class HistoryViewModel @Inject constructor(
             try {
                 // Load next page (50 more records)
                 val moreRecords = historyRepo.loadMoreHistory(
-                    userId = uid,
+                    userId = UserId(uid),
                     limit = 50,
                     lastTimestamp = lastRecord.timestamp
                 )
@@ -276,7 +278,7 @@ class HistoryViewModel @Inject constructor(
         val uid = currentUserId ?: return
         viewModelScope.launch {
             try {
-                val stats = quizRepo.fetchUserCoinStats(uid) ?: UserCoinStats()
+                val stats = quizRepo.fetchUserCoinStats(UserId(uid)) ?: UserCoinStats()
                 _uiState.value = _uiState.value.copy(coinStats = stats)
             } catch (_: Exception) {
                 // Ignore coin fetch errors
@@ -332,7 +334,7 @@ class HistoryViewModel @Inject constructor(
         // Fetch total count for pagination info
         viewModelScope.launch {
             try {
-                val totalCount = historyRepo.getHistoryCount(userId)
+                val totalCount = historyRepo.getHistoryCount(UserId(userId))
                 _uiState.value = _uiState.value.copy(totalRecordsCount = totalCount)
             } catch (_: Exception) {
                 // Ignore count fetch errors

@@ -5,6 +5,8 @@ import com.example.fyp.data.learning.QuizParser
 import com.example.fyp.model.QuizAnswer
 import com.example.fyp.model.QuizAttempt
 import com.example.fyp.model.QuizQuestion
+import com.example.fyp.model.UserId
+import com.example.fyp.model.LanguageCode
 import com.google.firebase.Timestamp
 import javax.inject.Inject
 
@@ -104,7 +106,7 @@ class ParseAndStoreQuizUseCase @Inject constructor(
      * Save completed quiz attempt to repository
      */
     suspend fun saveAttempt(uid: String, attempt: QuizAttempt): String {
-        return quizRepository.saveAttempt(uid, attempt)
+        return quizRepository.saveAttempt(UserId(uid), attempt)
     }
 
     /**
@@ -115,7 +117,11 @@ class ParseAndStoreQuizUseCase @Inject constructor(
         primaryLanguageCode: String,
         targetLanguageCode: String
     ): List<QuizAttempt> {
-        return quizRepository.getAttemptsByLanguagePair(uid, primaryLanguageCode, targetLanguageCode)
+        return quizRepository.getAttemptsByLanguagePair(
+            UserId(uid),
+            LanguageCode(primaryLanguageCode),
+            LanguageCode(targetLanguageCode)
+        )
     }
 
     /**
@@ -125,11 +131,15 @@ class ParseAndStoreQuizUseCase @Inject constructor(
         uid: String,
         primaryLanguageCode: String,
         targetLanguageCode: String
-    ) = quizRepository.getQuizStats(uid, primaryLanguageCode, targetLanguageCode)
+    ) = quizRepository.getQuizStats(
+        UserId(uid),
+        LanguageCode(primaryLanguageCode),
+        LanguageCode(targetLanguageCode)
+    )
 
     /**
      * Get recent quiz attempts across all language pairs
      */
     suspend fun getRecentAttempts(uid: String, limit: Long = 10) =
-        quizRepository.getRecentAttempts(uid, limit)
+        quizRepository.getRecentAttempts(UserId(uid), limit)
 }

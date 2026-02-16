@@ -1,7 +1,9 @@
 package com.example.fyp.data.history
 
 import android.util.Log
+import com.example.fyp.model.LanguageCode
 import com.example.fyp.model.TranslationRecord
+import com.example.fyp.model.UserId
 import com.example.fyp.model.user.UserSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -80,7 +82,7 @@ class SharedHistoryDataSource @Inject constructor(
         _error.value = null
 
         historyJob = scope.launch {
-            historyRepo.getHistory(userId, limit)
+            historyRepo.getHistory(UserId(userId), limit)
                 .catch { e ->
                     _isLoading.value = false
                     _error.value = e.message
@@ -119,7 +121,7 @@ class SharedHistoryDataSource @Inject constructor(
         // Update timestamp immediately to prevent retry storms on transient failures
         lastCountRefreshTime = now
         try {
-            val counts = historyRepo.getLanguageCounts(uid, primaryLanguageCode)
+            val counts = historyRepo.getLanguageCounts(UserId(uid), LanguageCode(primaryLanguageCode))
             _languageCounts.value = counts
         } catch (e: Exception) {
             // Keep existing counts on error, but log for debugging
