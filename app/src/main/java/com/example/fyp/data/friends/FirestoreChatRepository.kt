@@ -237,25 +237,23 @@ class FirestoreChatRepository @Inject constructor(
         0
     }
 
-    override suspend fun getTotalUnreadCount(userId: UserId): Int = try {
-        // Get all friends
-        val friends = friendsRepository.observeFriends(userId)
-        var totalUnread = 0
-
-        // This is a simplified implementation
-        // In production, you'd want to maintain a user-level unread count
-        // For now, return 0 and implement proper counting later
-        totalUnread
-    } catch (e: Exception) {
-        0
+    override suspend fun getTotalUnreadCount(userId: UserId): Int {
+        // TODO: Implement proper unread count tracking
+        // This requires maintaining a user-level aggregated unread count
+        // For now, return 0. Future implementation should:
+        // 1. Add a user-level document tracking total unread messages
+        // 2. Update this count when messages are sent/read
+        // 3. Use Cloud Functions to maintain consistency
+        return 0
     }
 
-    override suspend fun getUserChats(userId: UserId): List<ChatMetadata> = try {
-        // Get all friends to determine chat IDs
-        // This is a simplified implementation
-        // In production, maintain a user-level chats collection
-        emptyList()
-    } catch (e: Exception) {
-        emptyList()
+    override suspend fun getUserChats(userId: UserId): List<ChatMetadata> {
+        // TODO: Implement user chats list
+        // This requires maintaining a user-level chats collection
+        // For now, return empty list. Future implementation should:
+        // 1. Create /users/{userId}/chats collection
+        // 2. Add chat references when first message is sent
+        // 3. Sort by lastMessageAt
+        return emptyList()
     }
 }
