@@ -76,6 +76,9 @@ class LearningViewModel @Inject constructor(
 
         /** Maximum number of language pairs to fetch metadata for in parallel (prevents quota exhaustion) */
         const val METADATA_BATCH_SIZE = 5
+
+        /** Debounce duration for quiz generation to prevent accidental double-clicks (milliseconds) */
+        const val QUIZ_GENERATION_DEBOUNCE_MS = 2000L
     }
 
     // Cached supported languages - loaded once and reused
@@ -92,6 +95,9 @@ class LearningViewModel @Inject constructor(
     private var settingsJob: Job? = null
     private var generationJob: Job? = null
     private var quizGenerationJob: Job? = null
+
+    // Debounce tracking for quiz generation
+    private var lastQuizGenerationTime = 0L
 
     init {
         viewModelScope.launch {
@@ -385,6 +391,13 @@ class LearningViewModel @Inject constructor(
 
     /** Generate quiz in background (survives navigation like materials generation) */
     fun generateQuizFor(languageCode: String, sheetContent: String, sheetHistoryCount: Int) {
+        // Debounce: Prevent rapid clicks that could trigger multiple generations
+        val now = System.currentTimeMillis()
+        if (now - lastQuizGenerationTime < QUIZ_GENERATION_DEBOUNCE_MS) {
+            return // Ignore rapid clicks
+        }
+        lastQuizGenerationTime = now
+
         val uid = this.uid ?: run {
             _uiState.value = uiState.value.copy(error = "Not logged in")
             return
