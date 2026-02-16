@@ -251,38 +251,38 @@ class LearningViewModel @Inject constructor(
             // Only fetch metadata for languages not in cache
             val languagesToFetch = languages.filter { it !in sheetMetaCache }
 
-            // OPTIMIZATION: Process in batches to prevent too many concurrent reads
+            // OPTIMIZATION: Use batch reads to reduce Firestore operations from 3N to ~N/5
             if (languagesToFetch.isNotEmpty()) {
                 try {
                     // Process languages in batches to prevent Firebase quota exhaustion
                     val batches = languagesToFetch.chunked(METADATA_BATCH_SIZE)
 
                     for (batch in batches) {
-                        coroutineScope {
-                            val results = batch.map { lang ->
-                                lang to async {
-                                    try {
-                                        val doc = sheetsRepo.getSheet(uid, primary, lang)
-                                        val quizDoc = quizRepo.getGeneratedQuizDoc(uid, primary, lang)
-                                        val lastAwarded = quizRepo.getLastAwardedQuizCount(uid, primary, lang)
-                                        SheetMetaCache(
-                                            exists = doc != null,
-                                            sheetCount = doc?.historyCountAtGenerate,
-                                            quizCount = quizDoc?.historyCountAtGenerate,
-                                            lastAwardedCount = lastAwarded
-                                        )
-                                    } catch (ce: CancellationException) {
-                                        throw ce
-                                    } catch (e: Exception) {
-                                        if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
-                                        SheetMetaCache(false, null, null, null)
-                                    }
-                                }
-                            }
+                        try {
+                            // Batch fetch all metadata for this batch in 2 queries instead of 3N queries
+                            val sheetMeta = sheetsRepo.getBatchSheetMetadata(uid, primary, batch)
+                            val quizMeta = quizRepo.getBatchQuizMetadata(uid, primary, batch)
 
-                            // Await all results in this batch
-                            results.forEach { pair ->
-                                sheetMetaCache[pair.first] = pair.second.await()
+                            // Build cache from batch results
+                            for (lang in batch) {
+                                val sheet = sheetMeta[lang]
+                                val quiz = quizMeta[lang]
+                                
+                                sheetMetaCache[lang] = SheetMetaCache(
+                                    exists = sheet?.exists ?: false,
+                                    sheetCount = sheet?.historyCountAtGenerate,
+                                    quizCount = quiz?.quizHistoryCount,
+                                    lastAwardedCount = quiz?.lastAwardedCount
+                                )
+                            }
+                        } catch (e: Exception) {
+                            if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
+                            
+                            // Fill cache with error placeholders for this batch
+                            for (lang in batch) {
+                                if (lang !in sheetMetaCache) {
+                                    sheetMetaCache[lang] = SheetMetaCache(false, null, null, null)
+                                }
                             }
                         }
                     }

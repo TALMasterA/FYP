@@ -4,6 +4,7 @@ import com.example.fyp.core.decodeOrDefault
 import com.example.fyp.data.cloud.CloudQuizClient
 import com.example.fyp.domain.learning.GeneratedQuizDoc
 import com.example.fyp.domain.learning.QuizRepository
+import com.example.fyp.domain.learning.QuizMetadata
 import com.example.fyp.model.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -244,6 +245,64 @@ class FirestoreQuizRepository @Inject constructor(
     ): List<QuizQuestion> {
         val doc = getGeneratedQuizDoc(uid, primaryLanguageCode, targetLanguageCode) ?: return emptyList()
         return json.decodeOrDefault<List<QuizQuestion>>(doc.questionsJson, emptyList())
+    }
+
+    /**
+     * Batch retrieves quiz metadata for multiple language pairs.
+     * This combines generated quiz docs and last awarded counts in optimized queries.
+     */
+    override suspend fun getBatchQuizMetadata(
+        uid: String,
+        primary: String,
+        targets: List<String>
+    ): Map<String, QuizMetadata> {
+        if (targets.isEmpty()) return emptyMap()
+
+        val result = mutableMapOf<String, QuizMetadata>()
+        
+        // Build document IDs
+        val quizDocIds = targets.map { "${primary}__${it}" }
+        
+        // Process in chunks of 10 (Firestore whereIn limit)
+        targets.chunked(10).zip(quizDocIds.chunked(10)).forEach { (chunkTargets, chunkQuizIds) ->
+            // Batch get generated quiz docs
+            val quizSnapshot = db.collection("users")
+                .document(uid)
+                .collection("generated_quizzes")
+                .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
+                .get()
+                .await()
+            
+            val foundQuizDocs = quizSnapshot.documents.associateBy { it.id }
+            
+            // Batch get last awarded counts
+            val awardedSnapshot = db.collection("users")
+                .document(uid)
+                .collection("last_awarded_quiz")
+                .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
+                .get()
+                .await()
+            
+            val foundAwardedDocs = awardedSnapshot.documents.associateBy { it.id }
+            
+            // Build result for this chunk
+            chunkTargets.forEachIndexed { idx, target ->
+                val docId = chunkQuizIds[idx]
+                val quizDoc = foundQuizDocs[docId]
+                val awardedDoc = foundAwardedDocs[docId]
+                
+                result[target] = QuizMetadata(
+                    quizHistoryCount = if (quizDoc != null && quizDoc.exists()) {
+                        quizDoc.getLong("historyCountAtGenerate")?.toInt()
+                    } else null,
+                    lastAwardedCount = if (awardedDoc != null && awardedDoc.exists()) {
+                        awardedDoc.getLong("count")?.toInt()
+                    } else null
+                )
+            }
+        }
+
+        return result
     }
 
     // ---- Coins (first-attempt rewards) ----

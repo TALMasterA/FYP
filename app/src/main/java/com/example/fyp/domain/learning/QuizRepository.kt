@@ -16,6 +16,14 @@ data class GeneratedQuizDoc(
 )
 
 /**
+ * Metadata for quiz and last awarded count (without full quiz data).
+ */
+data class QuizMetadata(
+    val quizHistoryCount: Int?,
+    val lastAwardedCount: Int?
+)
+
+/**
  * Repository interface for managing quizzes and quiz-related data.
  * Abstracts the data source implementation (e.g., Firestore) from the domain layer.
  */
@@ -63,6 +71,20 @@ interface QuizRepository {
         primaryCode: String,
         targetCode: String
     ): GeneratedQuizDoc?
+
+    /**
+     * Batch retrieves quiz metadata for multiple language pairs.
+     * This is optimized to reduce the number of Firestore reads.
+     * @param uid User ID
+     * @param primary Primary language code
+     * @param targets List of target language codes
+     * @return Map of target language code to metadata
+     */
+    suspend fun getBatchQuizMetadata(
+        uid: String,
+        primary: String,
+        targets: List<String>
+    ): Map<String, QuizMetadata>
 
     /**
      * Creates or updates a generated quiz.
