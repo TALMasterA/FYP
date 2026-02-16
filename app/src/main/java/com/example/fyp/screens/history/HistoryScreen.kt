@@ -421,6 +421,10 @@ fun HistoryScreen(
                                 favoritedTexts = uiState.favoritedTexts,
                                 addingFavoriteId = uiState.addingFavoriteId,
                                 deleteLabel = t(UiTextKey.ActionDelete),
+                                hasMoreRecords = uiState.hasMoreRecords,
+                                isLoadingMore = uiState.isLoadingMore,
+                                totalRecordsCount = uiState.totalRecordsCount,
+                                onLoadMore = { viewModel.loadMoreHistory() },
                                 modifier = Modifier.weight(1f),
                             )
                         }
