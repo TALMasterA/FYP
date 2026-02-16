@@ -47,6 +47,7 @@ import com.example.fyp.screens.settings.SettingsScreen
 import com.example.fyp.screens.settings.SettingsViewModel
 import com.example.fyp.screens.settings.ShopScreen
 import com.example.fyp.screens.settings.VoiceSettingsScreen
+import com.example.fyp.screens.settings.SystemNotesScreen
 import com.example.fyp.screens.speech.ContinuousConversationScreen
 import com.example.fyp.screens.speech.SpeechRecognitionScreen
 import com.example.fyp.screens.wordbank.WordBankScreen
@@ -71,6 +72,7 @@ sealed class AppScreen(val route: String) {
     object Shop : AppScreen("shop")
     object VoiceSettings : AppScreen("voice_settings")
     object Feedback : AppScreen("feedback")
+    object SystemNotes : AppScreen("system_notes")
 
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
         fun routeFor(primaryCode: String, targetCode: String) =
@@ -249,6 +251,7 @@ fun AppNavigation() {
                             onOpenShop = { navController.navigate(AppScreen.Shop.route) },
                             onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) },
                             onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) },
+                            onOpenSystemNotes = { navController.navigate(AppScreen.SystemNotes.route) },
                             viewModel = settingsViewModel
                         )
                     }
@@ -352,6 +355,13 @@ fun AppNavigation() {
 
                     composable(AppScreen.Feedback.route) {
                         FeedbackScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composable(AppScreen.SystemNotes.route) {
+                        SystemNotesScreen(
                             appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
                         )

@@ -90,6 +90,66 @@ val MINT_PALETTE = ColorPalette(
     darkTertiary = "FF4DB6AC"
 )
 
+val CRIMSON_PALETTE = ColorPalette(
+    id = "crimson",
+    name = "Crimson Red",
+    cost = 10,
+    lightPrimary = "FFB71C1C",
+    lightSecondary = "FFD32F2F",
+    lightTertiary = "FFC62828",
+    darkPrimary = "FFEF5350",
+    darkSecondary = "FFE57373",
+    darkTertiary = "FFEF9A9A"
+)
+
+val AMBER_PALETTE = ColorPalette(
+    id = "amber",
+    name = "Amber Gold",
+    cost = 10,
+    lightPrimary = "FFFF6F00",
+    lightSecondary = "FFFFA000",
+    lightTertiary = "FFFF8F00",
+    darkPrimary = "FFFFCA28",
+    darkSecondary = "FFFFD54F",
+    darkTertiary = "FFFFE082"
+)
+
+val INDIGO_PALETTE = ColorPalette(
+    id = "indigo",
+    name = "Indigo Night",
+    cost = 10,
+    lightPrimary = "FF283593",
+    lightSecondary = "FF3F51B5",
+    lightTertiary = "FF303F9F",
+    darkPrimary = "FF7986CB",
+    darkSecondary = "FF9FA8DA",
+    darkTertiary = "FFC5CAE9"
+)
+
+val EMERALD_PALETTE = ColorPalette(
+    id = "emerald",
+    name = "Emerald Forest",
+    cost = 10,
+    lightPrimary = "FF1B5E20",
+    lightSecondary = "FF388E3C",
+    lightTertiary = "FF2E7D32",
+    darkPrimary = "FF66BB6A",
+    darkSecondary = "FF81C784",
+    darkTertiary = "FFA5D6A7"
+)
+
+val CORAL_PALETTE = ColorPalette(
+    id = "coral",
+    name = "Coral Reef",
+    cost = 10,
+    lightPrimary = "FFFF6E40",
+    lightSecondary = "FFFF7043",
+    lightTertiary = "FFFF5722",
+    darkPrimary = "FFFF8A65",
+    darkSecondary = "FFFFAB91",
+    darkTertiary = "FFFF9E80"
+)
+
 // List of all available palettes
 val ALL_PALETTES = listOf(
     DEFAULT_PALETTE,
@@ -97,7 +157,12 @@ val ALL_PALETTES = listOf(
     SUNSET_PALETTE,
     LAVENDER_PALETTE,
     ROSE_PALETTE,
-    MINT_PALETTE
+    MINT_PALETTE,
+    CRIMSON_PALETTE,
+    AMBER_PALETTE,
+    INDIGO_PALETTE,
+    EMERALD_PALETTE,
+    CORAL_PALETTE
 )
 
 // Convert hex string to Color
