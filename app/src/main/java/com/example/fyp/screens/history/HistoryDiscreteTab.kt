@@ -47,6 +47,10 @@ fun HistoryDiscreteTab(
     deleteLabel: String,
     noRecordsText: String,
     modifier: Modifier = Modifier,
+    hasMoreRecords: Boolean = false,
+    isLoadingMore: Boolean = false,
+    totalRecordsCount: Int = 0,
+    onLoadMore: () -> Unit = {},
 ) {
     if (records.isEmpty()) {
         Text(noRecordsText, modifier = Modifier.padding(8.dp))
@@ -67,6 +71,10 @@ fun HistoryDiscreteTab(
         favoritedTexts = favoritedTexts,
         addingFavoriteId = addingFavoriteId,
         deleteLabel = deleteLabel,
+        hasMoreRecords = hasMoreRecords,
+        isLoadingMore = isLoadingMore,
+        totalRecordsCount = totalRecordsCount,
+        onLoadMore = onLoadMore,
         modifier = modifier
     )
 }
@@ -86,7 +94,11 @@ fun HistoryList(
     favoritedTexts: Set<String>,
     addingFavoriteId: String?,
     deleteLabel: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hasMoreRecords: Boolean = false,
+    isLoadingMore: Boolean = false,
+    totalRecordsCount: Int = 0,
+    onLoadMore: () -> Unit = {},
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -175,5 +187,33 @@ fun HistoryList(
                 }
             }
         }
+        }
+
+        // Load More button for pagination
+        if (hasMoreRecords) {
+            item(key = "load_more_button") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    if (isLoadingMore) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(36.dp)
+                        )
+                    } else {
+                        Button(
+                            onClick = onLoadMore,
+                            modifier = Modifier.fillMaxWidth(0.6f)
+                        ) {
+                            Text("Load More")
+                            if (totalRecordsCount > 0) {
+                                Text(" (${records.size}/$totalRecordsCount)")
+                            }
+                        }
+                    }
+                }
+            }
     }
 }
