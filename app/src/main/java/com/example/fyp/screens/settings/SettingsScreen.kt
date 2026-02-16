@@ -58,6 +58,7 @@ fun SettingsScreen(
     onOpenShop: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
     onOpenFeedback: () -> Unit = {},
+    onOpenSystemNotes: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -234,6 +235,17 @@ fun SettingsScreen(
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                             }
+                        }
+
+                        // System Notes Button
+                        TextButton(
+                            onClick = onOpenSystemNotes,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "System Notes & Info",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
                     }
                 }
