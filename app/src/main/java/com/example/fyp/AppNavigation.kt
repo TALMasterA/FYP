@@ -36,6 +36,7 @@ import com.example.fyp.screens.history.HistoryScreen
 import com.example.fyp.screens.home.HomeScreen
 import com.example.fyp.screens.favorites.FavoritesScreen
 import com.example.fyp.screens.feedback.FeedbackScreen
+import com.example.fyp.screens.friends.ChatScreen
 import com.example.fyp.screens.friends.FriendsScreen
 import com.example.fyp.screens.learning.LearningScreen
 import com.example.fyp.screens.learning.LearningSheetScreen
@@ -75,6 +76,11 @@ sealed class AppScreen(val route: String) {
     object Feedback : AppScreen("feedback")
     object SystemNotes : AppScreen("system_notes")
     object Friends : AppScreen("friends")
+
+    object Chat : AppScreen("chat/{friendId}/{friendUsername}/{friendDisplayName}") {
+        fun routeFor(friendId: String, friendUsername: String, friendDisplayName: String = "") =
+            "chat/$friendId/$friendUsername/$friendDisplayName"
+    }
 
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
         fun routeFor(primaryCode: String, targetCode: String) =
@@ -368,6 +374,22 @@ fun AppNavigation() {
                         onNeedLogin = navigateToLogin
                     ) {
                         FriendsScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() },
+                            onOpenChat = { friendId, friendUsername, friendDisplayName ->
+                                navController.navigate(
+                                    AppScreen.Chat.routeFor(friendId, friendUsername, friendDisplayName)
+                                )
+                            }
+                        )
+                    }
+
+                    composableRequireLoginWithArgs(
+                        route = AppScreen.Chat.route,
+                        argNames = listOf("friendId", "friendUsername", "friendDisplayName"),
+                        onNeedLogin = navigateToLogin
+                    ) { backStackEntry ->
+                        ChatScreen(
                             appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
                         )
