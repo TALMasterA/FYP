@@ -507,6 +507,28 @@ enum class UiTextKey {
     ChatShowOriginal,
     ChatShowTranslation,
     ChatTranslateFailed,
+    
+    // --- Sharing Feature ---
+    ShareTitle,
+    ShareInboxTitle,
+    ShareInboxEmpty,
+    ShareWordButton,
+    ShareMaterialButton,
+    ShareSelectFriendTitle,
+    ShareSelectFriendMessage,
+    ShareSuccess,
+    ShareFailed,
+    ShareWordWith,
+    ShareMaterialWith,
+    ShareAcceptButton,
+    ShareDismissButton,
+    ShareAccepted,
+    ShareDismissed,
+    ShareActionFailed,
+    ShareTypeWord,
+    ShareTypeLearningSheet,
+    ShareTypeQuiz,
+    ShareReceivedFrom,
 }
 
 // Core Ui Texts list
@@ -778,4 +800,46 @@ val CoreUiTexts: List<String> = listOf(
     "Show Translation",
     // ChatTranslateFailed
     "Translation failed",
+    
+    // --- Sharing Feature ---
+    // ShareTitle
+    "Share",
+    // ShareInboxTitle
+    "Shared Inbox",
+    // ShareInboxEmpty
+    "No shared items yet. Friends can share words and learning materials with you!",
+    // ShareWordButton
+    "Share Word",
+    // ShareMaterialButton
+    "Share Material",
+    // ShareSelectFriendTitle
+    "Select Friend",
+    // ShareSelectFriendMessage
+    "Choose a friend to share with:",
+    // ShareSuccess
+    "Successfully shared!",
+    // ShareFailed
+    "Failed to share",
+    // ShareWordWith
+    "Share word with {username}",
+    // ShareMaterialWith
+    "Share material with {username}",
+    // ShareAcceptButton
+    "Accept",
+    // ShareDismissButton
+    "Dismiss",
+    // ShareAccepted
+    "Added to your collection",
+    // ShareDismissed
+    "Item dismissed",
+    // ShareActionFailed
+    "Action failed",
+    // ShareTypeWord
+    "Word",
+    // ShareTypeLearningSheet
+    "Learning Sheet",
+    // ShareTypeQuiz
+    "Quiz",
+    // ShareReceivedFrom
+    "From: {username}",
 )
