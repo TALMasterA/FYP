@@ -37,7 +37,7 @@ fun FriendsScreen(
     var showRemoveDialog by remember { mutableStateOf<FriendRelation?>(null) }
 
     StandardScreenScaffold(
-        title = "Friends", // TODO: Add to UI text keys
+        title = t(UiTextKey.FriendsTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack)
     ) { padding ->
@@ -92,9 +92,9 @@ fun FriendsScreen(
                 Button(
                     onClick = { showSearchDialog = true }
                 ) {
-                    Icon(Icons.Default.Search, contentDescription = "Search users")
+                    Icon(Icons.Default.Search, contentDescription = t(UiTextKey.FriendsSearchTitle))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Add Friends")
+                    Text(t(UiTextKey.FriendsAddButton))
                 }
 
                 if (uiState.incomingRequests.isNotEmpty()) {
@@ -105,7 +105,7 @@ fun FriendsScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Default.Notifications, contentDescription = "Friend requests")
+                        Icon(Icons.Default.Notifications, contentDescription = t(UiTextKey.FriendsRequestsSection).replace("{count}", "${uiState.incomingRequests.size}"))
                     }
                 }
             }
@@ -131,7 +131,7 @@ fun FriendsScreen(
                         if (uiState.incomingRequests.isNotEmpty()) {
                             item {
                                 Text(
-                                    text = "Friend Requests (${uiState.incomingRequests.size})",
+                                    text = t(UiTextKey.FriendsRequestsSection).replace("{count}", "${uiState.incomingRequests.size}"),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(vertical = 8.dp)
@@ -141,7 +141,9 @@ fun FriendsScreen(
                                 FriendRequestCard(
                                     request = request,
                                     onAccept = { viewModel.acceptFriendRequest(request.requestId) },
-                                    onReject = { viewModel.rejectFriendRequest(request.requestId) }
+                                    onReject = { viewModel.rejectFriendRequest(request.requestId) },
+                                    acceptText = t(UiTextKey.FriendsAcceptButton),
+                                    rejectText = t(UiTextKey.FriendsRejectButton)
                                 )
                             }
                             item {
@@ -153,7 +155,7 @@ fun FriendsScreen(
                         if (uiState.friends.isNotEmpty()) {
                             item {
                                 Text(
-                                    text = "Friends (${uiState.friends.size})",
+                                    text = t(UiTextKey.FriendsSectionTitle).replace("{count}", "${uiState.friends.size}"),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(vertical = 8.dp)
@@ -162,7 +164,8 @@ fun FriendsScreen(
                             items(uiState.friends) { friend ->
                                 FriendCard(
                                     friend = friend,
-                                    onRemove = { showRemoveDialog = friend }
+                                    onRemove = { showRemoveDialog = friend },
+                                    removeText = t(UiTextKey.FriendsRemoveButton)
                                 )
                             }
                         }
@@ -183,7 +186,8 @@ fun FriendsScreen(
             onDismiss = {
                 showSearchDialog = false
                 viewModel.onSearchQueryChange("")
-            }
+            },
+            t = t
         )
     }
 
@@ -191,8 +195,8 @@ fun FriendsScreen(
     showRemoveDialog?.let { friend ->
         AlertDialog(
             onDismissRequest = { showRemoveDialog = null },
-            title = { Text("Remove Friend") },
-            text = { Text("Are you sure you want to remove ${friend.friendUsername} from your friends list?") },
+            title = { Text(t(UiTextKey.FriendsRemoveDialogTitle)) },
+            text = { Text(t(UiTextKey.FriendsRemoveDialogMessage).replace("{username}", friend.friendUsername)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -200,12 +204,12 @@ fun FriendsScreen(
                         showRemoveDialog = null
                     }
                 ) {
-                    Text("Remove")
+                    Text(t(UiTextKey.FriendsRemoveConfirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRemoveDialog = null }) {
-                    Text("Cancel")
+                    Text(t(UiTextKey.FriendsCancelButton))
                 }
             }
         )
@@ -216,7 +220,9 @@ fun FriendsScreen(
 fun FriendRequestCard(
     request: FriendRequest,
     onAccept: () -> Unit,
-    onReject: () -> Unit
+    onReject: () -> Unit,
+    acceptText: String,
+    rejectText: String
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -248,14 +254,14 @@ fun FriendRequestCard(
                 IconButton(onClick = onAccept) {
                     Icon(
                         Icons.Default.Check,
-                        contentDescription = "Accept",
+                        contentDescription = acceptText,
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
                 IconButton(onClick = onReject) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Reject",
+                        contentDescription = rejectText,
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -267,7 +273,8 @@ fun FriendRequestCard(
 @Composable
 fun FriendCard(
     friend: FriendRelation,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    removeText: String
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -298,7 +305,7 @@ fun FriendCard(
             IconButton(onClick = onRemove) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "Remove friend",
+                    contentDescription = removeText,
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -313,17 +320,18 @@ fun SearchUsersDialog(
     isSearching: Boolean,
     onQueryChange: (String) -> Unit,
     onSendRequest: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    t: (UiTextKey) -> String
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Search Users") },
+        title = { Text(t(UiTextKey.FriendsSearchTitle)) },
         text = {
             Column {
                 TextField(
                     value = searchQuery,
                     onValueChange = onQueryChange,
-                    placeholder = { Text("Enter username...") },
+                    placeholder = { Text(t(UiTextKey.FriendsSearchPlaceholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -336,13 +344,13 @@ fun SearchUsersDialog(
                     }
                     searchQuery.length < 2 -> {
                         Text(
-                            "Enter at least 2 characters to search",
+                            t(UiTextKey.FriendsSearchMinChars),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     searchResults.isEmpty() -> {
-                        Text("No users found")
+                        Text(t(UiTextKey.FriendsSearchNoResults))
                     }
                     else -> {
                         LazyColumn(
@@ -351,7 +359,8 @@ fun SearchUsersDialog(
                             items(searchResults) { user ->
                                 SearchResultCard(
                                     user = user,
-                                    onSendRequest = { onSendRequest(user.uid) }
+                                    onSendRequest = { onSendRequest(user.uid) },
+                                    addButtonText = t(UiTextKey.FriendsSendRequestButton)
                                 )
                             }
                         }
@@ -361,7 +370,7 @@ fun SearchUsersDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text(t(UiTextKey.FriendsCloseButton))
             }
         }
     )
@@ -370,7 +379,8 @@ fun SearchUsersDialog(
 @Composable
 fun SearchResultCard(
     user: PublicUserProfile,
-    onSendRequest: () -> Unit
+    onSendRequest: () -> Unit,
+    addButtonText: String
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -403,7 +413,7 @@ fun SearchResultCard(
             ) {
                 Icon(
                     Icons.Default.PersonAdd,
-                    contentDescription = "Add friend",
+                    contentDescription = addButtonText,
                     modifier = Modifier.size(16.dp)
                 )
             }

@@ -189,7 +189,7 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "Friends", // TODO: Add to UI text keys
+                                    text = t(UiTextKey.FriendsMenuButton),
                                     style = MaterialTheme.typography.bodyLarge,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )

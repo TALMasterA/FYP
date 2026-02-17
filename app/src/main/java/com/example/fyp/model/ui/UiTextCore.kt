@@ -457,6 +457,32 @@ enum class UiTextKey {
     ImageSourceGallery,
     ImageSourceCancel,
     CameraCaptureContentDesc,
+
+    // --- Friends System ---
+    FriendsTitle,
+    FriendsMenuButton,
+    FriendsAddButton,
+    FriendsSearchTitle,
+    FriendsSearchPlaceholder,
+    FriendsSearchMinChars,
+    FriendsSearchNoResults,
+    FriendsListEmpty,
+    FriendsRequestsSection,
+    FriendsSectionTitle,
+    FriendsAcceptButton,
+    FriendsRejectButton,
+    FriendsRemoveButton,
+    FriendsRemoveDialogTitle,
+    FriendsRemoveDialogMessage,
+    FriendsSendRequestButton,
+    FriendsRequestSentSuccess,
+    FriendsRequestAcceptedSuccess,
+    FriendsRequestRejectedSuccess,
+    FriendsRemovedSuccess,
+    FriendsRequestFailed,
+    FriendsCloseBut,
+    FriendsCancelButton,
+    FriendsRemoveConfirm,
 }
 
 // Core Ui Texts list
@@ -634,4 +660,54 @@ val CoreUiTexts: List<String> = listOf(
     "Voice Settings",
     // VoiceSettingsDesc
     "Choose a voice for text-to-speech output per language.",
+
+    // --- Friends System ---
+    // FriendsTitle
+    "Friends",
+    // FriendsMenuButton
+    "Friends",
+    // FriendsAddButton
+    "Add Friends",
+    // FriendsSearchTitle
+    "Search Users",
+    // FriendsSearchPlaceholder
+    "Enter username...",
+    // FriendsSearchMinChars
+    "Enter at least 2 characters to search",
+    // FriendsSearchNoResults
+    "No users found",
+    // FriendsListEmpty
+    "Add friends to connect and share learning materials.",
+    // FriendsRequestsSection
+    "Friend Requests ({count})",
+    // FriendsSectionTitle
+    "Friends ({count})",
+    // FriendsAcceptButton
+    "Accept",
+    // FriendsRejectButton
+    "Reject",
+    // FriendsRemoveButton
+    "Remove",
+    // FriendsRemoveDialogTitle
+    "Remove Friend",
+    // FriendsRemoveDialogMessage
+    "Are you sure you want to remove {username} from your friends list?",
+    // FriendsSendRequestButton
+    "Add",
+    // FriendsRequestSentSuccess
+    "Friend request sent!",
+    // FriendsRequestAcceptedSuccess
+    "Friend request accepted!",
+    // FriendsRequestRejectedSuccess
+    "Request rejected",
+    // FriendsRemovedSuccess
+    "Friend removed",
+    // FriendsRequestFailed
+    "Failed to send request",
+    // FriendsCloseButton
+    "Close",
+    // FriendsCancelButton
+    "Cancel",
+    // FriendsRemoveConfirm
+    "Remove",
 )
