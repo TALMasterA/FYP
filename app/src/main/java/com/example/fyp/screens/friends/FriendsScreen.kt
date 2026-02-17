@@ -27,6 +27,7 @@ import com.example.fyp.ui.components.EmptyStates
 fun FriendsScreen(
     appLanguageState: AppLanguageState,
     onBack: () -> Unit,
+    onOpenChat: (friendId: String, friendUsername: String, friendDisplayName: String) -> Unit = { _, _, _ -> },
     viewModel: FriendsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -165,6 +166,7 @@ fun FriendsScreen(
                                 FriendCard(
                                     friend = friend,
                                     onRemove = { showRemoveDialog = friend },
+                                    onClick = { onOpenChat(friend.friendId, friend.friendUsername, friend.friendDisplayName) },
                                     removeText = t(UiTextKey.FriendsRemoveButton)
                                 )
                             }
@@ -274,12 +276,14 @@ fun FriendRequestCard(
 fun FriendCard(
     friend: FriendRelation,
     onRemove: () -> Unit,
+    onClick: () -> Unit,
     removeText: String
 ) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 4.dp),
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
