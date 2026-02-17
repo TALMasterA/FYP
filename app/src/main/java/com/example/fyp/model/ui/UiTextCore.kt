@@ -480,9 +480,22 @@ enum class UiTextKey {
     FriendsRequestRejectedSuccess,
     FriendsRemovedSuccess,
     FriendsRequestFailed,
-    FriendsCloseBut,
+    FriendsCloseButton,
     FriendsCancelButton,
     FriendsRemoveConfirm,
+
+    // --- Chat ---
+    ChatTitle,
+    ChatInputPlaceholder,
+    ChatSendButton,
+    ChatEmpty,
+    ChatMessageSent,
+    ChatMessageFailed,
+    ChatMarkingRead,
+    ChatLoadingMessages,
+    ChatToday,
+    ChatYesterday,
+    ChatUnreadBadge,
 }
 
 // Core Ui Texts list
@@ -710,4 +723,28 @@ val CoreUiTexts: List<String> = listOf(
     "Cancel",
     // FriendsRemoveConfirm
     "Remove",
+
+    // --- Chat ---
+    // ChatTitle
+    "Chat with {username}",
+    // ChatInputPlaceholder
+    "Type a message...",
+    // ChatSendButton
+    "Send",
+    // ChatEmpty
+    "No messages yet. Start the conversation!",
+    // ChatMessageSent
+    "Message sent",
+    // ChatMessageFailed
+    "Failed to send message",
+    // ChatMarkingRead
+    "Marking as read...",
+    // ChatLoadingMessages
+    "Loading messages...",
+    // ChatToday
+    "Today",
+    // ChatYesterday
+    "Yesterday",
+    // ChatUnreadBadge
+    "{count} unread",
 )
