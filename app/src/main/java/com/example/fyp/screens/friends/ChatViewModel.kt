@@ -3,10 +3,12 @@ package com.example.fyp.screens.friends
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.repositories.UserSettingsRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.MarkMessagesAsReadUseCase
 import com.example.fyp.domain.friends.ObserveMessagesUseCase
 import com.example.fyp.domain.friends.SendMessageUseCase
+import com.example.fyp.domain.friends.TranslateAllMessagesUseCase
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.FriendMessage
 import com.example.fyp.model.user.AuthState
@@ -29,7 +31,11 @@ data class ChatUiState(
     val error: String? = null,
     val friendUsername: String = "",
     val friendDisplayName: String = "",
-    val currentUserId: String = ""
+    val currentUserId: String = "",
+    val isTranslating: Boolean = false,
+    val translatedMessages: Map<String, String> = emptyMap(), // original -> translated
+    val showTranslation: Boolean = false,
+    val translationError: String? = null
 )
 
 @HiltViewModel
@@ -38,7 +44,9 @@ class ChatViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val observeMessagesUseCase: ObserveMessagesUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
-    private val markMessagesAsReadUseCase: MarkMessagesAsReadUseCase
+    private val markMessagesAsReadUseCase: MarkMessagesAsReadUseCase,
+    private val translateAllMessagesUseCase: TranslateAllMessagesUseCase,
+    private val userSettingsRepository: UserSettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -139,6 +147,61 @@ class ChatViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+    
+    fun translateAllMessages() {
+        val userId = currentUserId ?: return
+        val messages = _uiState.value.messages
+        
+        if (messages.isEmpty() || _uiState.value.isTranslating) return
+        
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isTranslating = true, translationError = null)
+            
+            try {
+                // Get user's preferred language from settings
+                val settings = userSettingsRepository.getUserSettings(userId)
+                val targetLanguage = settings?.appLanguage?.value ?: "en"
+                
+                // Translate all messages
+                val result = translateAllMessagesUseCase(messages, targetLanguage)
+                
+                result.fold(
+                    onSuccess = { translations ->
+                        _uiState.value = _uiState.value.copy(
+                            translatedMessages = translations,
+                            showTranslation = true,
+                            isTranslating = false
+                        )
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            translationError = error.message ?: "Translation failed",
+                            isTranslating = false
+                        )
+                    }
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    translationError = e.message ?: "Translation failed",
+                    isTranslating = false
+                )
+            }
+        }
+    }
+    
+    fun toggleTranslation() {
+        _uiState.value = _uiState.value.copy(
+            showTranslation = !_uiState.value.showTranslation
+        )
+    }
+    
+    fun clearTranslation() {
+        _uiState.value = _uiState.value.copy(
+            translatedMessages = emptyMap(),
+            showTranslation = false,
+            translationError = null
+        )
     }
 
     override fun onCleared() {

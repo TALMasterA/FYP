@@ -496,6 +496,17 @@ enum class UiTextKey {
     ChatToday,
     ChatYesterday,
     ChatUnreadBadge,
+    
+    // --- Chat Translation ---
+    ChatTranslateButton,
+    ChatTranslateDialogTitle,
+    ChatTranslateDialogMessage,
+    ChatTranslateConfirm,
+    ChatTranslating,
+    ChatTranslated,
+    ChatShowOriginal,
+    ChatShowTranslation,
+    ChatTranslateFailed,
 }
 
 // Core Ui Texts list
@@ -747,4 +758,24 @@ val CoreUiTexts: List<String> = listOf(
     "Yesterday",
     // ChatUnreadBadge
     "{count} unread",
+    
+    // --- Chat Translation ---
+    // ChatTranslateButton
+    "Translate",
+    // ChatTranslateDialogTitle
+    "Translate Conversation",
+    // ChatTranslateDialogMessage
+    "Translate all messages to your preferred language? This will detect the language of each message and translate them.",
+    // ChatTranslateConfirm
+    "Translate All",
+    // ChatTranslating
+    "Translating messages...",
+    // ChatTranslated
+    "Messages translated",
+    // ChatShowOriginal
+    "Show Original",
+    // ChatShowTranslation
+    "Show Translation",
+    // ChatTranslateFailed
+    "Translation failed",
 )
