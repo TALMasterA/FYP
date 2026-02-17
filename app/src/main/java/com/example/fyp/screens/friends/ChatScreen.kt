@@ -38,6 +38,7 @@ fun ChatScreen(
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
     
     val listState = rememberLazyListState()
+    var showTranslateDialog by remember { mutableStateOf(false) }
 
     // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(uiState.messages.size) {
@@ -45,11 +46,52 @@ fun ChatScreen(
             listState.animateScrollToItem(uiState.messages.size - 1)
         }
     }
+    
+    // Show translate confirmation dialog
+    if (showTranslateDialog) {
+        TranslateConfirmDialog(
+            title = t(UiTextKey.ChatTranslateDialogTitle),
+            message = t(UiTextKey.ChatTranslateDialogMessage),
+            confirmText = t(UiTextKey.ChatTranslateConfirm),
+            cancelText = t(UiTextKey.FriendsCancelButton),
+            onConfirm = {
+                viewModel.translateAllMessages()
+                showTranslateDialog = false
+            },
+            onDismiss = { showTranslateDialog = false }
+        )
+    }
 
     StandardScreenScaffold(
         title = t(UiTextKey.ChatTitle).replace("{username}", uiState.friendUsername),
         onBack = onBack,
-        backContentDescription = t(UiTextKey.NavBack)
+        backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            // Translate button
+            if (uiState.messages.isNotEmpty()) {
+                if (uiState.isTranslating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp).padding(end = 8.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else if (uiState.translatedMessages.isNotEmpty()) {
+                    // Toggle between original and translated
+                    TextButton(onClick = { viewModel.toggleTranslation() }) {
+                        Text(
+                            if (uiState.showTranslation) {
+                                t(UiTextKey.ChatShowOriginal)
+                            } else {
+                                t(UiTextKey.ChatShowTranslation)
+                            }
+                        )
+                    }
+                } else {
+                    TextButton(onClick = { showTranslateDialog = true }) {
+                        Text(t(UiTextKey.ChatTranslateButton))
+                    }
+                }
+            }
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -79,6 +121,35 @@ fun ChatScreen(
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
                         TextButton(onClick = { viewModel.clearError() }) {
+                            Text(t(UiTextKey.ActionCancel))
+                        }
+                    }
+                }
+            }
+            
+            // Translation error message
+            uiState.translationError?.let { error ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = error,
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        TextButton(onClick = { viewModel.clearTranslation() }) {
                             Text(t(UiTextKey.ActionCancel))
                         }
                     }
@@ -123,7 +194,10 @@ fun ChatScreen(
                         items(uiState.messages) { message ->
                             MessageBubble(
                                 message = message,
-                                currentUserId = uiState.currentUserId ?: ""
+                                currentUserId = uiState.currentUserId ?: "",
+                                translatedText = if (uiState.showTranslation) {
+                                    uiState.translatedMessages[message.content]
+                                } else null
                             )
                         }
                     }
@@ -146,7 +220,8 @@ fun ChatScreen(
 @Composable
 fun MessageBubble(
     message: FriendMessage,
-    currentUserId: String
+    currentUserId: String,
+    translatedText: String? = null
 ) {
     val isCurrentUser = message.senderId == currentUserId
     
@@ -175,7 +250,7 @@ fun MessageBubble(
                 modifier = Modifier.padding(12.dp)
             ) {
                 Text(
-                    text = message.content,
+                    text = translatedText ?: message.content,
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (isCurrentUser) {
                         MaterialTheme.colorScheme.onPrimaryContainer
@@ -183,6 +258,20 @@ fun MessageBubble(
                         MaterialTheme.colorScheme.onSecondaryContainer
                     }
                 )
+                // Show translation indicator if text is translated
+                if (translatedText != null && translatedText != message.content) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Translated",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isCurrentUser) {
+                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                        } else {
+                            MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f)
+                        }
+                    )
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = formatTimestamp(message.createdAt),
@@ -275,4 +364,30 @@ private fun formatTimestamp(timestamp: Timestamp): String {
             SimpleDateFormat("MMM d, yyyy HH:mm", Locale.getDefault()).format(date)
         }
     }
+}
+
+@Composable
+fun TranslateConfirmDialog(
+    title: String,
+    message: String,
+    confirmText: String,
+    cancelText: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(confirmText)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(cancelText)
+            }
+        }
+    )
 }
