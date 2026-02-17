@@ -55,6 +55,7 @@ fun SettingsScreen(
     onOpenResetPassword: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
     onOpenFavorites: () -> Unit = {},
+    onOpenFriends: () -> Unit = {},
     onOpenShop: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
     onOpenFeedback: () -> Unit = {},
@@ -172,6 +173,23 @@ fun SettingsScreen(
                             ) {
                                 Text(
                                     text = t(UiTextKey.FavoritesTitle),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+
+                        // Friends button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            TextButton(
+                                onClick = onOpenFriends,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Friends", // TODO: Add to UI text keys
                                     style = MaterialTheme.typography.bodyLarge,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )

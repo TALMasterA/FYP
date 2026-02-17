@@ -36,6 +36,7 @@ import com.example.fyp.screens.history.HistoryScreen
 import com.example.fyp.screens.home.HomeScreen
 import com.example.fyp.screens.favorites.FavoritesScreen
 import com.example.fyp.screens.feedback.FeedbackScreen
+import com.example.fyp.screens.friends.FriendsScreen
 import com.example.fyp.screens.learning.LearningScreen
 import com.example.fyp.screens.learning.LearningSheetScreen
 import com.example.fyp.screens.learning.LearningViewModel
@@ -73,6 +74,7 @@ sealed class AppScreen(val route: String) {
     object VoiceSettings : AppScreen("voice_settings")
     object Feedback : AppScreen("feedback")
     object SystemNotes : AppScreen("system_notes")
+    object Friends : AppScreen("friends")
 
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
         fun routeFor(primaryCode: String, targetCode: String) =
@@ -248,6 +250,7 @@ fun AppNavigation() {
                             onOpenResetPassword = { navController.navigate(AppScreen.ResetPassword.route) },
                             onOpenProfile = { navController.navigate(AppScreen.Profile.route) },
                             onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) },
+                            onOpenFriends = { navController.navigate(AppScreen.Friends.route) },
                             onOpenShop = { navController.navigate(AppScreen.Shop.route) },
                             onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) },
                             onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) },
@@ -355,6 +358,16 @@ fun AppNavigation() {
 
                     composable(AppScreen.Feedback.route) {
                         FeedbackScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composableRequireLogin(
+                        route = AppScreen.Friends.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        FriendsScreen(
                             appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
                         )
