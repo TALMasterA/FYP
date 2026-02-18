@@ -69,11 +69,20 @@ Firebase login is required.
 - Custom word bank for user-defined vocabulary entries
 - Favorites system for bookmarking important translations
 
+**Friend System:** (NEW!)
+- Search and add friends by username
+- Send/accept/reject friend requests
+- Real-time chat with friends
+- Translate entire conversations to your language
+- Share words and learning materials with friends
+- Accept or dismiss shared items
+- Shared inbox for received items
+
 **Customization:**
 - UI language translation (supports 16+ languages)
 - Theme settings (Light/Dark/System)
 - Font size adjustment (80%-150%)
-- 6 color palettes (1 free default + 5 unlockable at 10 coins each: Ocean, Sunset, Lavender, Rose, Mint)
+- 11 color palettes (1 free default + 10 unlockable at 10 coins each: Ocean, Sunset, Lavender, Rose, Mint, Crimson, Amber, Indigo, Emerald, Coral)
 - Voice settings per language
 
 **History & Organization:**
@@ -110,12 +119,14 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
         - `learning/` - Learning sheets, quiz taking & results
         - `wordbank/` - Generated & custom word banks
         - `favorites/` - Bookmarked translations
+        - `friends/` - Friend management, chat, and shared inbox (NEW!)
         - `settings/` - Settings, profile, shop, voice settings
         - `login/` - Login, registration, password reset
         - `help/` - Help & info screen
     - `model/` - Data models (`TranslationRecord`, `Quiz`, `UserSettings`, etc.)
         - `ui/` - UI text localization keys and translations
         - `user/` - User-related models (`AuthState`, `UserProfile`, `UserSettings`)
+        - `friends/` - Friend system models (`FriendRequest`, `FriendMessage`, `SharedItem`, etc.) (NEW!)
     - `data/` - Repository implementations and data sources
         - `azure/` - Azure Speech & language configuration
         - `cloud/` - Cloud function clients and caching (translation, language detection)
@@ -123,6 +134,7 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
         - `di/` - Hilt dependency injection modules
         - `history/` - History repository and shared data source
         - `learning/` - Quiz, learning sheet, and content repositories
+        - `friends/` - Friend, chat, and sharing repositories (NEW!)
         - `repositories/` - Speech and translation repositories
         - `settings/` - User settings repository and shared data source
         - `ui/` - UI language cache and state controller
@@ -132,6 +144,7 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
         - `auth/` - Login use case
         - `history/` - History CRUD operations and repository interface
         - `learning/` - Learning materials, quiz generation, eligibility checks, repository interfaces
+        - `friends/` - Friend management, chat, and sharing use cases (NEW!)
         - `settings/` - Settings modification use cases
         - `speech/` - Speech recognition, translation, TTS use cases
     - `core/` - Common composables and utilities (logging, audio, permissions, pagination, font scaling)
@@ -239,6 +252,11 @@ gh auth login
 - `CustomWord` - User-defined vocabulary entry with pronunciation and example
 - `HistorySession` - Continuous conversation session metadata
 - `SpeechResult` - Sealed class for speech recognition results (Success/Error)
+- `PublicUserProfile` - User profile with username for friend system (NEW!)
+- `FriendRequest` - Friend request with sender/receiver info and status (NEW!)
+- `FriendRelation` - Bidirectional friendship record (NEW!)
+- `FriendMessage` - Chat message with sender, text, timestamp, read status (NEW!)
+- `SharedItem` - Shared word/material with sender, type, content (NEW!)
 
 **Firestore Collections:**
 - `users/{uid}/history` - Translation records
@@ -256,6 +274,11 @@ gh auth login
 - `users/{uid}/favorites` - Bookmarked translations
 - `users/{uid}/word_banks/{primary}_{target}` - Generated vocabulary per language pair
 - `users/{uid}/custom_words` - User-defined vocabulary entries
+- `usernames` - Username registry for uniqueness enforcement (NEW!)
+- `user_search` - Searchable user index by username (NEW!)
+- `friend_requests` - Friend requests between users (NEW!)
+- `chats/{chatId}/messages` - Chat messages between friends (NEW!)
+- `users/{uid}/shared_inbox` - Items shared with user by friends (NEW!)
 
 --------------------------------------------------------------
 
@@ -281,5 +304,5 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** February 16, 2026 - Manual checked
+**Last Updated:** February 18, 2026 - Friend System Added
 (Some content is by github copilot agent and may contain error)
