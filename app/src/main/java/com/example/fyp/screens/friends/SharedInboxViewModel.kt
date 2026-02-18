@@ -53,6 +53,9 @@ class SharedInboxViewModel @Inject constructor(
                         observeJob?.cancel()
                         _uiState.update { SharedInboxUiState() }
                     }
+                    is AuthState.Loading -> {
+                        // Do nothing, wait for login/logout
+                    }
                 }
             }
         }

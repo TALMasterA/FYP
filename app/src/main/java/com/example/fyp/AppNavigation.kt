@@ -392,7 +392,7 @@ fun AppNavigation() {
                         onNeedLogin = navigateToLogin
                     ) {
                         SharedInboxScreen(
-                            t = appLanguageState.t,
+                            appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
                         )
                     }

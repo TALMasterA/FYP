@@ -11,10 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.fyp.core.StandardScreenScaffold
+import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.friends.SharedItem
 import com.example.fyp.model.friends.SharedItemType
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
-import com.example.fyp.screens.StandardScreenScaffold
 import com.example.fyp.ui.components.EmptyStates
 import java.text.SimpleDateFormat
 import java.util.*
@@ -22,10 +25,12 @@ import java.util.*
 @Composable
 fun SharedInboxScreen(
     viewModel: SharedInboxViewModel = hiltViewModel(),
-    t: (UiTextKey) -> String,
+    appLanguageState: AppLanguageState,
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     // Auto-dismiss messages after showing
     LaunchedEffect(uiState.successMessage, uiState.error) {
@@ -37,7 +42,7 @@ fun SharedInboxScreen(
 
     StandardScreenScaffold(
         title = t(UiTextKey.ShareInboxTitle),
-        onBackClick = onBack
+        onBack = onBack
     ) { padding ->
         Box(
             modifier = Modifier
