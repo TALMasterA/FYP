@@ -529,6 +529,19 @@ enum class UiTextKey {
     ShareTypeLearningSheet,
     ShareTypeQuiz,
     ShareReceivedFrom,
+
+    // --- My Profile ---
+    MyProfileTitle,
+    MyProfileUserId,
+    MyProfileUsername,
+    MyProfileDisplayName,
+    MyProfileCopyUserId,
+    MyProfileCopyUsername,
+    MyProfileShare,
+    MyProfileCopied,
+    MyProfileLanguages,
+    MyProfilePrimaryLanguage,
+    MyProfileLearningLanguages,
 }
 
 // Core Ui Texts list
@@ -842,4 +855,28 @@ val CoreUiTexts: List<String> = listOf(
     "Quiz",
     // ShareReceivedFrom
     "From: {username}",
+
+    // --- My Profile ---
+    // MyProfileTitle
+    "My Profile",
+    // MyProfileUserId
+    "User ID",
+    // MyProfileUsername
+    "Username",
+    // MyProfileDisplayName
+    "Display Name",
+    // MyProfileCopyUserId
+    "Copy User ID",
+    // MyProfileCopyUsername
+    "Copy Username",
+    // MyProfileShare
+    "Share Profile",
+    // MyProfileCopied
+    "Copied to clipboard!",
+    // MyProfileLanguages
+    "Languages",
+    // MyProfilePrimaryLanguage
+    "Primary Language",
+    // MyProfileLearningLanguages
+    "Learning Languages",
 )
