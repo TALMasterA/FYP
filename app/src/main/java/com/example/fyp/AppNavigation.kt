@@ -259,6 +259,7 @@ fun AppNavigation() {
                             onOpenProfile = { navController.navigate(AppScreen.Profile.route) },
                             onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) },
                             onOpenFriends = { navController.navigate(AppScreen.Friends.route) },
+                            onOpenSharedInbox = { navController.navigate(AppScreen.SharedInbox.route) },
                             onOpenShop = { navController.navigate(AppScreen.Shop.route) },
                             onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) },
                             onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) },

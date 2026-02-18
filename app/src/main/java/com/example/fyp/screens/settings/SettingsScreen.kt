@@ -56,6 +56,7 @@ fun SettingsScreen(
     onOpenProfile: () -> Unit = {},
     onOpenFavorites: () -> Unit = {},
     onOpenFriends: () -> Unit = {},
+    onOpenSharedInbox: () -> Unit = {},
     onOpenShop: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
     onOpenFeedback: () -> Unit = {},
@@ -186,10 +187,21 @@ fun SettingsScreen(
                         ) {
                             TextButton(
                                 onClick = onOpenFriends,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.weight(1f)
                             ) {
                                 Text(
                                     text = t(UiTextKey.FriendsMenuButton),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                            
+                            TextButton(
+                                onClick = onOpenSharedInbox,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = t(UiTextKey.ShareInboxTitle),
                                     style = MaterialTheme.typography.bodyLarge,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
