@@ -3,7 +3,7 @@ package com.example.fyp.screens.friends
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fyp.data.repositories.UserSettingsRepository
+import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.MarkMessagesAsReadUseCase
 import com.example.fyp.domain.friends.ObserveMessagesUseCase

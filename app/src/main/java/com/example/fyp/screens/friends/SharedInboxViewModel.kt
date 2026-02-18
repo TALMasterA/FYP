@@ -2,13 +2,15 @@ package com.example.fyp.screens.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.fyp.data.auth.FirebaseAuthRepository
+import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.AcceptSharedItemUseCase
 import com.example.fyp.domain.friends.DismissSharedItemUseCase
 import com.example.fyp.domain.friends.ObserveSharedInboxUseCase
-import com.example.fyp.model.ValueTypes.UserId
+import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.SharedItem
+import com.example.fyp.model.user.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,19 +37,32 @@ class SharedInboxViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SharedInboxUiState())
     val uiState: StateFlow<SharedInboxUiState> = _uiState.asStateFlow()
 
-    private var observeJob: kotlinx.coroutines.Job? = null
+    private var observeJob: Job? = null
+    private var currentUserId: UserId? = null
 
     init {
-        observeInbox()
+        viewModelScope.launch {
+            authRepository.currentUserState.collect { auth ->
+                when (auth) {
+                    is AuthState.LoggedIn -> {
+                        currentUserId = UserId(auth.user.uid)
+                        observeInbox(UserId(auth.user.uid))
+                    }
+                    is AuthState.LoggedOut -> {
+                        currentUserId = null
+                        observeJob?.cancel()
+                        _uiState.update { SharedInboxUiState() }
+                    }
+                }
+            }
+        }
     }
 
-    private fun observeInbox() {
-        val currentUserId = authRepository.getCurrentUserId() ?: return
-        
+    private fun observeInbox(userId: UserId) {
         observeJob?.cancel()
         observeJob = viewModelScope.launch {
             try {
-                observeSharedInboxUseCase(UserId(currentUserId)).collect { items ->
+                observeSharedInboxUseCase(userId).collect { items ->
                     _uiState.update { it.copy(
                         isLoading = false,
                         sharedItems = items,
@@ -64,17 +79,20 @@ class SharedInboxViewModel @Inject constructor(
     }
 
     fun acceptItem(itemId: String) {
-        val currentUserId = authRepository.getCurrentUserId() ?: return
+        val userId = currentUserId ?: return
         
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true, error = null) }
             
-            acceptSharedItemUseCase(itemId, UserId(currentUserId))
+            acceptSharedItemUseCase(itemId, userId)
                 .onSuccess {
                     _uiState.update { it.copy(
                         isProcessing = false,
                         successMessage = "Added to your collection"
                     )}
+                    // Clear success message after 3 seconds
+                    kotlinx.coroutines.delay(3000)
+                    _uiState.update { it.copy(successMessage = null) }
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(
@@ -86,17 +104,20 @@ class SharedInboxViewModel @Inject constructor(
     }
 
     fun dismissItem(itemId: String) {
-        val currentUserId = authRepository.getCurrentUserId() ?: return
+        val userId = currentUserId ?: return
         
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true, error = null) }
             
-            dismissSharedItemUseCase(itemId, UserId(currentUserId))
+            dismissSharedItemUseCase(itemId, userId)
                 .onSuccess {
                     _uiState.update { it.copy(
                         isProcessing = false,
                         successMessage = "Item dismissed"
                     )}
+                    // Clear success message after 3 seconds
+                    kotlinx.coroutines.delay(3000)
+                    _uiState.update { it.copy(successMessage = null) }
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(
