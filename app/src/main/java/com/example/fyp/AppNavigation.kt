@@ -38,6 +38,7 @@ import com.example.fyp.screens.favorites.FavoritesScreen
 import com.example.fyp.screens.feedback.FeedbackScreen
 import com.example.fyp.screens.friends.ChatScreen
 import com.example.fyp.screens.friends.FriendsScreen
+import com.example.fyp.screens.friends.SharedInboxScreen
 import com.example.fyp.screens.learning.LearningScreen
 import com.example.fyp.screens.learning.LearningSheetScreen
 import com.example.fyp.screens.learning.LearningViewModel
@@ -76,6 +77,7 @@ sealed class AppScreen(val route: String) {
     object Feedback : AppScreen("feedback")
     object SystemNotes : AppScreen("system_notes")
     object Friends : AppScreen("friends")
+    object SharedInbox : AppScreen("shared_inbox")
 
     object Chat : AppScreen("chat/{friendId}/{friendUsername}/{friendDisplayName}") {
         fun routeFor(friendId: String, friendUsername: String, friendDisplayName: String = "") =
@@ -381,6 +383,16 @@ fun AppNavigation() {
                                     AppScreen.Chat.routeFor(friendId, friendUsername, friendDisplayName)
                                 )
                             }
+                        )
+                    }
+
+                    composableRequireLogin(
+                        route = AppScreen.SharedInbox.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        SharedInboxScreen(
+                            t = appLanguageState.t,
+                            onBack = { navController.popBackStack() }
                         )
                     }
 
