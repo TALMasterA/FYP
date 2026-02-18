@@ -55,6 +55,7 @@ fun SettingsScreen(
     onOpenResetPassword: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
     onOpenFavorites: () -> Unit = {},
+    onOpenMyProfile: () -> Unit = {},
     onOpenFriends: () -> Unit = {},
     onOpenSharedInbox: () -> Unit = {},
     onOpenShop: () -> Unit = {},
@@ -178,6 +179,23 @@ fun SettingsScreen(
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                             }
+                        }
+
+                        // My Profile button (full width)
+                        TextButton(
+                            onClick = onOpenMyProfile,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = t(UiTextKey.MyProfileTitle),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
 
                         // Friends button

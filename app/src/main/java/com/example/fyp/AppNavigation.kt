@@ -38,6 +38,7 @@ import com.example.fyp.screens.favorites.FavoritesScreen
 import com.example.fyp.screens.feedback.FeedbackScreen
 import com.example.fyp.screens.friends.ChatScreen
 import com.example.fyp.screens.friends.FriendsScreen
+import com.example.fyp.screens.friends.MyProfileScreen
 import com.example.fyp.screens.friends.SharedInboxScreen
 import com.example.fyp.screens.learning.LearningScreen
 import com.example.fyp.screens.learning.LearningSheetScreen
@@ -77,6 +78,7 @@ sealed class AppScreen(val route: String) {
     object Feedback : AppScreen("feedback")
     object SystemNotes : AppScreen("system_notes")
     object Friends : AppScreen("friends")
+    object MyProfile : AppScreen("my_profile")
     object SharedInbox : AppScreen("shared_inbox")
 
     object Chat : AppScreen("chat/{friendId}/{friendUsername}/{friendDisplayName}") {
@@ -258,6 +260,7 @@ fun AppNavigation() {
                             onOpenResetPassword = { navController.navigate(AppScreen.ResetPassword.route) },
                             onOpenProfile = { navController.navigate(AppScreen.Profile.route) },
                             onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) },
+                            onOpenMyProfile = { navController.navigate(AppScreen.MyProfile.route) },
                             onOpenFriends = { navController.navigate(AppScreen.Friends.route) },
                             onOpenSharedInbox = { navController.navigate(AppScreen.SharedInbox.route) },
                             onOpenShop = { navController.navigate(AppScreen.Shop.route) },
@@ -392,6 +395,16 @@ fun AppNavigation() {
                         onNeedLogin = navigateToLogin
                     ) {
                         SharedInboxScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composableRequireLogin(
+                        route = AppScreen.MyProfile.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        MyProfileScreen(
                             appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
                         )
