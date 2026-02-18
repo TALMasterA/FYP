@@ -171,4 +171,10 @@ object EmptyStates {
             modifier = modifier
         )
     }
+
+    val NoSharedItems: EmptyState = EmptyState(
+        icon = Icons.Outlined.Inbox,
+        title = { t -> t(UiTextKey.ShareInboxEmpty) },
+        message = { t -> "No items shared with you yet" }
+    )
 }
