@@ -160,8 +160,8 @@ class ChatViewModel @Inject constructor(
             
             try {
                 // Get user's preferred language from settings
-                val settings = userSettingsRepository.getUserSettings(userId)
-                val targetLanguage = settings?.appLanguage?.value ?: "en"
+                val settings = userSettingsRepository.fetchUserSettings(userId)
+                val targetLanguage = settings.primaryLanguageCode.substringBefore("-") // Get language code (e.g., "en" from "en-US")
                 
                 // Translate all messages
                 val result = translateAllMessagesUseCase(messages, targetLanguage)

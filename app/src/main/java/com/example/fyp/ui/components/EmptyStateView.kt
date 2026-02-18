@@ -3,6 +3,7 @@ package com.example.fyp.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -10,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.fyp.model.ui.UiTextKey
 
 /**
  * Enhanced empty state component with icon, title, message, and optional action.
@@ -172,9 +174,17 @@ object EmptyStates {
         )
     }
 
-    val NoSharedItems: EmptyState = EmptyState(
-        icon = Icons.Outlined.Inbox,
-        title = { t -> t(UiTextKey.ShareInboxEmpty) },
-        message = { t -> "No items shared with you yet" }
-    )
+    @Composable
+    fun NoSharedItems(
+        t: (UiTextKey) -> String,
+        message: String = "No items shared with you yet",
+        modifier: Modifier = Modifier
+    ) {
+        EmptyStateView(
+            icon = Icons.Outlined.Inbox,
+            title = t(UiTextKey.ShareInboxEmpty),
+            message = message,
+            modifier = modifier
+        )
+    }
 }

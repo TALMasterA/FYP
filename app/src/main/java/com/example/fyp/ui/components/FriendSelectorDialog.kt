@@ -93,11 +93,11 @@ fun FriendSelectorDialog(
                             LazyColumn(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                items(friends, key = { it.friendUserId }) { friend ->
+                                items(friends, key = { it.friendId }) { friend ->
                                     FriendSelectorItem(
                                         friend = friend,
                                         onClick = {
-                                            onFriendSelected(UserId(friend.friendUserId))
+                                            onFriendSelected(UserId(friend.friendId))
                                             onDismiss()
                                         }
                                     )
