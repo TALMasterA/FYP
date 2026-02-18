@@ -95,11 +95,20 @@ class FriendsViewModel @Inject constructor(
         }
     }
 
+    private var searchJob: Job? = null
+
     fun onSearchQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
         
+        // Cancel previous search
+        searchJob?.cancel()
+        
         if (query.length >= 2) {
-            searchUsers(query)
+            // Debounce: wait 300ms before searching
+            searchJob = viewModelScope.launch {
+                kotlinx.coroutines.delay(300)
+                searchUsers(query)
+            }
         } else {
             _uiState.value = _uiState.value.copy(
                 searchResults = emptyList(),

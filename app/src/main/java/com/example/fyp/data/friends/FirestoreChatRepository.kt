@@ -206,6 +206,25 @@ class FirestoreChatRepository @Inject constructor(
         awaitClose { listener.remove() }
     }
 
+    override suspend fun loadOlderMessages(
+        chatId: String,
+        beforeTimestamp: Timestamp,
+        limit: Long
+    ): List<FriendMessage> = try {
+        db.collection("chats")
+            .document(chatId)
+            .collection("messages")
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .whereLessThan("createdAt", beforeTimestamp)
+            .limit(limit)
+            .get()
+            .await()
+            .toObjects(FriendMessage::class.java)
+            .reversed() // Reverse to get oldest first
+    } catch (e: Exception) {
+        emptyList()
+    }
+
     override suspend fun getChatMetadata(chatId: String): ChatMetadata? = try {
         db.collection("chats")
             .document(chatId)
