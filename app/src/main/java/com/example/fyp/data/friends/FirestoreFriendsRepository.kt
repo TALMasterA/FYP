@@ -330,6 +330,7 @@ class FirestoreFriendsRepository @Inject constructor(
             .whereEqualTo("toUserId", userId.value)
             .whereEqualTo("status", RequestStatus.PENDING.name)
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(100) // Limit to 100 incoming requests
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
@@ -346,6 +347,7 @@ class FirestoreFriendsRepository @Inject constructor(
             .whereEqualTo("fromUserId", userId.value)
             .whereEqualTo("status", RequestStatus.PENDING.name)
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(100) // Limit to 100 outgoing requests
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
@@ -366,6 +368,7 @@ class FirestoreFriendsRepository @Inject constructor(
             .document(userId.value)
             .collection("friends")
             .orderBy("addedAt", Query.Direction.DESCENDING)
+            .limit(100) // Limit to 100 friends (can be expanded with pagination)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)

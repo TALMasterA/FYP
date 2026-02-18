@@ -49,8 +49,22 @@ interface ChatRepository {
     /**
      * Observe messages in a chat in real-time.
      * Returns messages ordered by creation time (newest last).
+     * @param limit Maximum number of messages to load
      */
     fun observeMessages(chatId: String, limit: Long = 50): Flow<List<FriendMessage>>
+    
+    /**
+     * Load older messages for pagination.
+     * Returns messages older than the provided timestamp.
+     * @param chatId The chat ID
+     * @param beforeTimestamp Load messages created before this timestamp
+     * @param limit Maximum number of messages to load
+     */
+    suspend fun loadOlderMessages(
+        chatId: String,
+        beforeTimestamp: com.google.firebase.Timestamp,
+        limit: Long = 50
+    ): List<FriendMessage>
     
     /**
      * Get chat metadata.
