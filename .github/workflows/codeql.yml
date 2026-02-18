@@ -101,11 +101,17 @@ jobs:
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
     # Create google-services.json from GitHub Secret
+    # If secret is not available, the mock file in the repo will be used
     - name: Setup Firebase Config
       if: matrix.language == 'java-kotlin'
       shell: bash
       run: |
-        echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+        if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+          echo "Using Firebase config from secrets"
+          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+        else
+          echo "Using mock Firebase config (google-services.json already in repo)"
+        fi
 
     # Run manual build steps for Java/Kotlin (Android app)
     - name: Build Android App
