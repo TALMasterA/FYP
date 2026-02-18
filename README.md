@@ -70,6 +70,7 @@ Firebase login is required.
 - Favorites system for bookmarking important translations
 
 **Friend System:** (NEW!)
+- **My Profile:** Display and share your User ID and Username for easy friend discovery
 - Search and add friends by username
 - Send/accept/reject friend requests
 - Real-time chat with friends
