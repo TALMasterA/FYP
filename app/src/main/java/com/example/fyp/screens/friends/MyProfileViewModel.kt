@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.GetCurrentUserProfileUseCase
-import com.example.fyp.model.auth.AuthState
+import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.friends.PublicUserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,9 +42,9 @@ class MyProfileViewModel @Inject constructor(
             authRepository.currentUserState.collect { authState ->
                 when (authState) {
                     is AuthState.LoggedIn -> {
-                        currentUserId = authState.userId
-                        _uiState.update { it.copy(userId = authState.userId) }
-                        loadProfile(authState.userId)
+                        currentUserId = authState.user.uid
+                        _uiState.update { it.copy(userId = authState.user.uid) }
+                        loadProfile(authState.user.uid)
                     }
                     is AuthState.LoggedOut -> {
                         currentUserId = null
@@ -62,24 +62,23 @@ class MyProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             
-            getCurrentUserProfileUseCase(userId)
-                .onSuccess { profile ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            profile = profile,
-                            error = null
-                        )
-                    }
+            try {
+                val profile = getCurrentUserProfileUseCase(userId)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        profile = profile,
+                        error = if (profile == null) "Profile not found" else null
+                    )
                 }
-                .onFailure { exception ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = exception.message ?: "Failed to load profile"
-                        )
-                    }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "Failed to load profile"
+                    )
                 }
+            }
         }
     }
 
