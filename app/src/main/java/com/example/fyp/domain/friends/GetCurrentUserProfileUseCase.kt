@@ -1,6 +1,7 @@
 package com.example.fyp.domain.friends
 
 import com.example.fyp.data.friends.FriendsRepository
+import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.PublicUserProfile
 import javax.inject.Inject
 
@@ -11,7 +12,7 @@ import javax.inject.Inject
 class GetCurrentUserProfileUseCase @Inject constructor(
     private val friendsRepository: FriendsRepository
 ) {
-    suspend operator fun invoke(userId: String): Result<PublicUserProfile?> {
-        return friendsRepository.getPublicProfile(userId)
+    suspend operator fun invoke(userId: String): PublicUserProfile? {
+        return friendsRepository.getPublicProfile(UserId(userId))
     }
 }
