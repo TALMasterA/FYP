@@ -50,12 +50,12 @@ fun ProfileScreen(
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
-    var displayName by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var deletePassword by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.profile) {
-        displayName = uiState.profile.displayName
+        username = uiState.profile.username
     }
 
     // Handle account deletion success
@@ -108,17 +108,23 @@ fun ProfileScreen(
                     }
 
                     OutlinedTextField(
-                        value = displayName,
-                        onValueChange = { displayName = it },
-                        label = { Text(t(UiTextKey.ProfileDisplayNameLabel)) },
-                        placeholder = { Text(t(UiTextKey.ProfileDisplayNameHint)) },
+                        value = username,
+                        onValueChange = { username = it },
+                        label = { Text(t(UiTextKey.ProfileUsernameLabel)) },
+                        placeholder = { Text(t(UiTextKey.ProfileUsernameHint)) },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        supportingText = {
+                            Text(
+                                text = "Username for friends to find you (3-20 characters, letters/numbers/_)",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     )
 
                     Button(
-                        onClick = { viewModel.updateDisplayName(displayName) },
-                        enabled = !uiState.isLoading && displayName.isNotBlank(),
+                        onClick = { viewModel.updateUsername(username) },
+                        enabled = !uiState.isLoading && username.isNotBlank() && username.length in 3..20,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         if (uiState.isLoading) {

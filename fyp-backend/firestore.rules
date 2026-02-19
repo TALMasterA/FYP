@@ -12,6 +12,32 @@ service cloud.firestore {
     }
 
     // ============================================
+    // NEW: Friends Feature - Public Profiles
+    // Allow authenticated users to read public profiles of any user
+    // ============================================
+    match /users/{userId}/profile/public {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ============================================
+    // NEW: Friends Feature - Friends List
+    // Allow users to read their own friends list
+    // Also allow batch writes when accepting friend requests (both users get updated)
+    // ============================================
+    match /users/{userId}/friends/{friendId} {
+      // Users can read their own friends
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Users can write to their own friends list
+      allow write: if request.auth != null && request.auth.uid == userId;
+
+      // Special case: Allow writing to friend's list when accepting friend request
+      // This happens in a batch transaction where both users' friends lists are updated
+      allow write: if request.auth != null && request.auth.uid == friendId;
+    }
+
+    // ============================================
     // NEW: Feedback Collection (For feedback feature)
     // Authenticated users can submit feedback
     // ============================================

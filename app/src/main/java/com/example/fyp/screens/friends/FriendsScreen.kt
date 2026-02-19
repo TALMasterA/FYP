@@ -37,10 +37,24 @@ fun FriendsScreen(
     var showSearchDialog by remember { mutableStateOf(false) }
     var showRemoveDialog by remember { mutableStateOf<FriendRelation?>(null) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Show notification when new friend requests arrive
+    LaunchedEffect(uiState.newRequestCount) {
+        if (uiState.newRequestCount > 0) {
+            snackbarHostState.showSnackbar(
+                message = "You have ${uiState.newRequestCount} new friend request(s)!",
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearNewRequestCount()
+        }
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.FriendsTitle),
         onBack = onBack,
-        backContentDescription = t(UiTextKey.NavBack)
+        backContentDescription = t(UiTextKey.NavBack),
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -185,6 +199,7 @@ fun FriendsScreen(
             isSearching = uiState.isSearching,
             onQueryChange = { viewModel.onSearchQueryChange(it) },
             onSendRequest = { viewModel.sendFriendRequest(it) },
+            canSendRequestTo = { userId -> viewModel.canSendRequestTo(userId) },
             onDismiss = {
                 showSearchDialog = false
                 viewModel.onSearchQueryChange("")
@@ -244,13 +259,6 @@ fun FriendRequestCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                if (request.fromDisplayName.isNotEmpty()) {
-                    Text(
-                        text = request.fromDisplayName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
             Row {
                 IconButton(onClick = onAccept) {
@@ -298,13 +306,6 @@ fun FriendCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                if (friend.friendDisplayName.isNotEmpty()) {
-                    Text(
-                        text = friend.friendDisplayName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
             IconButton(onClick = onRemove) {
                 Icon(
@@ -324,6 +325,7 @@ fun SearchUsersDialog(
     isSearching: Boolean,
     onQueryChange: (String) -> Unit,
     onSendRequest: (String) -> Unit,
+    canSendRequestTo: (String) -> Boolean,
     onDismiss: () -> Unit,
     t: (UiTextKey) -> String
 ) {
@@ -364,6 +366,7 @@ fun SearchUsersDialog(
                                 SearchResultCard(
                                     user = user,
                                     onSendRequest = { onSendRequest(user.uid) },
+                                    canSendRequest = canSendRequestTo(user.uid),
                                     addButtonText = t(UiTextKey.FriendsSendRequestButton)
                                 )
                             }
@@ -384,6 +387,7 @@ fun SearchUsersDialog(
 fun SearchResultCard(
     user: PublicUserProfile,
     onSendRequest: () -> Unit,
+    canSendRequest: Boolean,
     addButtonText: String
 ) {
     ElevatedCard(
@@ -404,15 +408,17 @@ fun SearchResultCard(
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
-                if (user.displayName.isNotEmpty()) {
+                if (!canSendRequest) {
                     Text(
-                        text = user.displayName,
-                        style = MaterialTheme.typography.bodySmall
+                        text = "Already connected or pending",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
             Button(
                 onClick = onSendRequest,
+                enabled = canSendRequest,
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Icon(

@@ -372,12 +372,30 @@ class WordBankViewModel @Inject constructor(
                 // Ignore error, just keep previous count
             }
 
-            // Use TOTAL language counts from all records, not limited display records
-            val languageCounts = sharedHistoryDataSource.languageCounts.value
-                .filter { (lang, _) -> lang != primaryLanguageCode && lang.isNotBlank() }
+            // Calculate directional counts from actual history records
+            // Only count records where one side is the primary language
+            val directionalCounts = mutableMapOf<String, Int>()
+
+            records.forEach { record ->
+                val source = record.sourceLang
+                val target = record.targetLang
+
+                // Only count if one side is the primary language
+                when {
+                    source == primaryLanguageCode && target != primaryLanguageCode && target.isNotBlank() -> {
+                        // Primary → Target: learning target language
+                        directionalCounts[target] = (directionalCounts[target] ?: 0) + 1
+                    }
+                    target == primaryLanguageCode && source != primaryLanguageCode && source.isNotBlank() -> {
+                        // Source → Primary: also useful for learning source language
+                        directionalCounts[source] = (directionalCounts[source] ?: 0) + 1
+                    }
+                    // Skip records where neither or both sides are primary language
+                }
+            }
 
             // Check cache (in-memory first, then persisted DataStore, then Firestore)
-            val languagesToCheck = languageCounts.keys.filter { it !in wordBankExistsCache }
+            val languagesToCheck = directionalCounts.keys.filter { it !in wordBankExistsCache }
 
             // Parallelize existence checks for better performance
             if (languagesToCheck.isNotEmpty()) {
@@ -414,7 +432,7 @@ class WordBankViewModel @Inject constructor(
                 }
             }
 
-            val clusters = languageCounts
+            val clusters = directionalCounts
                 .map { (lang, count) ->
                     WordBankLanguageCluster(
                         languageCode = lang,

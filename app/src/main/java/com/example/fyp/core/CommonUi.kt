@@ -298,6 +298,7 @@ fun StandardScreenScaffold(
     onBack: (() -> Unit)? = null,
     backContentDescription: String = "Back",
     actions: @Composable RowScope.() -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -310,6 +311,7 @@ fun StandardScreenScaffold(
                 actions = actions
             )
         },
+        snackbarHost = snackbarHost,
         content = content
     )
 }

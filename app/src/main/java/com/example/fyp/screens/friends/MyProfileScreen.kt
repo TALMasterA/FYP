@@ -148,15 +148,6 @@ fun MyProfileScreen(
 
                         Divider(modifier = Modifier.padding(vertical = 16.dp))
 
-                        // Display Name Section
-                        ProfileInfoItem(
-                            label = t(UiTextKey.MyProfileDisplayName),
-                            value = profile.displayName.ifEmpty { "Not set" },
-                            icon = Icons.Default.Badge,
-                            onCopy = null
-                        )
-
-                        Divider(modifier = Modifier.padding(vertical = 16.dp))
 
                         // Primary Language
                         ProfileInfoItem(

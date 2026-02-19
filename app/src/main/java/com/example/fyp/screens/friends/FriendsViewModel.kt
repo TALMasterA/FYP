@@ -24,11 +24,13 @@ data class FriendsUiState(
     val isLoading: Boolean = true,
     val friends: List<FriendRelation> = emptyList(),
     val incomingRequests: List<FriendRequest> = emptyList(),
+    val outgoingRequests: List<FriendRequest> = emptyList(),
     val searchQuery: String = "",
     val searchResults: List<PublicUserProfile> = emptyList(),
     val isSearching: Boolean = false,
     val error: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val newRequestCount: Int = 0  // For notification badge
 )
 
 @HiltViewModel
@@ -36,6 +38,7 @@ class FriendsViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val observeFriendsUseCase: ObserveFriendsUseCase,
     private val observeIncomingRequestsUseCase: ObserveIncomingRequestsUseCase,
+    private val observeOutgoingRequestsUseCase: ObserveOutgoingRequestsUseCase,
     private val searchUsersUseCase: SearchUsersUseCase,
     private val sendFriendRequestUseCase: SendFriendRequestUseCase,
     private val acceptFriendRequestUseCase: AcceptFriendRequestUseCase,
@@ -47,8 +50,10 @@ class FriendsViewModel @Inject constructor(
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
 
     private var friendsJob: Job? = null
-    private var requestsJob: Job? = null
+    private var incomingRequestsJob: Job? = null
+    private var outgoingRequestsJob: Job? = null
     private var currentUserId: UserId? = null
+    private var previousIncomingCount = 0
 
     init {
         viewModelScope.launch {
@@ -60,8 +65,10 @@ class FriendsViewModel @Inject constructor(
                     }
                     AuthState.LoggedOut -> {
                         friendsJob?.cancel()
-                        requestsJob?.cancel()
+                        incomingRequestsJob?.cancel()
+                        outgoingRequestsJob?.cancel()
                         currentUserId = null
+                        previousIncomingCount = 0
                         _uiState.value = FriendsUiState(isLoading = false)
                     }
                     AuthState.Loading -> {
@@ -85,11 +92,29 @@ class FriendsViewModel @Inject constructor(
         }
 
         // Observe incoming requests
-        requestsJob?.cancel()
-        requestsJob = viewModelScope.launch {
+        incomingRequestsJob?.cancel()
+        incomingRequestsJob = viewModelScope.launch {
             observeIncomingRequestsUseCase(userId).collect { requests ->
+                val newCount = if (previousIncomingCount > 0 && requests.size > previousIncomingCount) {
+                    requests.size - previousIncomingCount
+                } else {
+                    0
+                }
+                previousIncomingCount = requests.size
+
                 _uiState.value = _uiState.value.copy(
-                    incomingRequests = requests
+                    incomingRequests = requests,
+                    newRequestCount = newCount
+                )
+            }
+        }
+
+        // Observe outgoing requests
+        outgoingRequestsJob?.cancel()
+        outgoingRequestsJob = viewModelScope.launch {
+            observeOutgoingRequestsUseCase(userId).collect { requests ->
+                _uiState.value = _uiState.value.copy(
+                    outgoingRequests = requests
                 )
             }
         }
@@ -223,5 +248,34 @@ class FriendsViewModel @Inject constructor(
             error = null,
             successMessage = null
         )
+    }
+
+    fun clearNewRequestCount() {
+        _uiState.value = _uiState.value.copy(newRequestCount = 0)
+    }
+
+    /**
+     * Check if a user can receive a friend request from current user.
+     * Returns true if they are NOT friends and NO pending request exists.
+     */
+    fun canSendRequestTo(userId: String): Boolean {
+        val state = _uiState.value
+
+        // Check if already friends
+        if (state.friends.any { it.friendId == userId }) {
+            return false
+        }
+
+        // Check if there's a pending outgoing request
+        if (state.outgoingRequests.any { it.toUserId == userId }) {
+            return false
+        }
+
+        // Check if there's a pending incoming request
+        if (state.incomingRequests.any { it.fromUserId == userId }) {
+            return false
+        }
+
+        return true
     }
 }

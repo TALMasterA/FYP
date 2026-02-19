@@ -21,8 +21,8 @@ android {
         applicationId = "com.example.fyp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 32
-        versionName = "1.8.2"
+        versionCode = 33
+        versionName = "1.9.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -136,7 +136,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     
     // Performance Monitoring & Debugging (Debug only)
-    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
+    debugImplementation(libs.leakcanary.android)
 
     implementation(libs.androidx.datastore.preferences)
 
