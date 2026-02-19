@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.GetCurrentUserProfileUseCase
+import com.example.fyp.model.UserId
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.friends.PublicUserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,7 +61,7 @@ class MyProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val profile = getCurrentUserProfileUseCase(userId)
+                val profile = getCurrentUserProfileUseCase(UserId(userId))
                 // Cache own username so share operations don't need a Firestore profile read
                 if (profile?.username?.isNotBlank() == true) {
                     sharedFriendsDataSource.cacheOwnUsername(userId, profile.username)

@@ -29,6 +29,13 @@ class FirestoreChatRepository @Inject constructor(
 
     // ── Send messages ────────────────────────────────────────────────────────
 
+    override suspend fun sendMessage(
+        chatId: String,
+        fromUserId: UserId,
+        toUserId: UserId,
+        content: String
+    ): Result<Unit> = sendTextMessage(fromUserId, toUserId, content).map { }
+
     /**
      * OPTIMIZED: Removed areFriends() Firestore read — the UI only presents
      * the send button for confirmed friends, so the check is redundant.

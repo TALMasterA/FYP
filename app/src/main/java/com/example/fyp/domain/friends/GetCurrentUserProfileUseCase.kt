@@ -12,7 +12,7 @@ import javax.inject.Inject
 class GetCurrentUserProfileUseCase @Inject constructor(
     private val friendsRepository: FriendsRepository
 ) {
-    suspend operator fun invoke(userId: String): PublicUserProfile? {
-        return friendsRepository.getPublicProfile(UserId(userId))
+    suspend operator fun invoke(userId: UserId): PublicUserProfile? {
+        return friendsRepository.getPublicProfile(userId)
     }
 }
