@@ -200,6 +200,7 @@ class LearningViewModel @Inject constructor(
      * IMPORTANT: For learning materials, we want to count records where:
      * - The language appears WITH the primary language in the same record
      * - This represents actual translatable content between primary ↔ target
+     * - Count BOTH source and target languages (consistent with backend cache logic)
      *
      * For example, if primary is Cantonese:
      * - Cantonese→English: counts for English (learning English from Cantonese)
@@ -210,26 +211,37 @@ class LearningViewModel @Inject constructor(
         languageCounts: Map<String, Int>,
         primaryLanguageCode: String
     ): List<LanguageClusterUi> {
-        // Calculate directional counts from actual history records
-        val directionalCounts = mutableMapOf<String, Int>()
+        // Calculate counts from actual history records
+        // Count BOTH source and target languages (matching backend cache logic)
+        val allLanguageCounts = mutableMapOf<String, Int>()
 
         _uiState.value.records.forEach { record ->
             val source = record.sourceLang
             val target = record.targetLang
 
-            // Only count if one side is the primary language
-            when {
-                source == primaryLanguageCode && target != primaryLanguageCode -> {
-                    // Primary → Target: learning target language
-                    directionalCounts[target] = (directionalCounts[target] ?: 0) + 1
-                }
-                target == primaryLanguageCode && source != primaryLanguageCode -> {
-                    // Source → Primary: also useful for learning source language
-                    directionalCounts[source] = (directionalCounts[source] ?: 0) + 1
-                }
-                // Skip records where neither or both sides are primary language
+            // Count both languages (consistent with backend cache)
+            if (source.isNotBlank()) {
+                allLanguageCounts[source] = (allLanguageCounts[source] ?: 0) + 1
+            }
+            if (target.isNotBlank() && target != source) {
+                allLanguageCounts[target] = (allLanguageCounts[target] ?: 0) + 1
             }
         }
+
+        // Filter to only show languages that appear WITH primary language
+        // (exclude records where neither side is primary)
+        val relevantLanguages = _uiState.value.records
+            .filter { record ->
+                record.sourceLang == primaryLanguageCode || record.targetLang == primaryLanguageCode
+            }
+            .flatMap { record ->
+                listOf(record.sourceLang, record.targetLang).filter { it != primaryLanguageCode && it.isNotBlank() }
+            }
+            .toSet()
+
+        // Build final counts: use actual counts but only for relevant languages
+        val directionalCounts = allLanguageCounts
+            .filterKeys { it in relevantLanguages }
 
         return directionalCounts
             .filter { (code, _) -> code.isNotBlank() }
