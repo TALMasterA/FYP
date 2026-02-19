@@ -92,6 +92,7 @@ object AppModule {
 
         return OkHttpClient.Builder()
             .cache(cache)
+            .addInterceptor(com.example.fyp.data.network.CacheInterceptor()) // Add cache interceptor
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
