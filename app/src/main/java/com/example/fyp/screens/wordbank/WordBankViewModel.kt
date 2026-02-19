@@ -372,27 +372,39 @@ class WordBankViewModel @Inject constructor(
                 // Ignore error, just keep previous count
             }
 
-            // Calculate directional counts from actual history records
-            // Only count records where one side is the primary language
-            val directionalCounts = mutableMapOf<String, Int>()
+            // Calculate counts from actual history records
+            // Count BOTH source and target languages for each record (matching backend cache logic)
+            // Then filter to show only languages that appear WITH primary language
+            val allLanguageCounts = mutableMapOf<String, Int>()
 
             records.forEach { record ->
                 val source = record.sourceLang
                 val target = record.targetLang
 
-                // Only count if one side is the primary language
-                when {
-                    source == primaryLanguageCode && target != primaryLanguageCode && target.isNotBlank() -> {
-                        // Primary → Target: learning target language
-                        directionalCounts[target] = (directionalCounts[target] ?: 0) + 1
-                    }
-                    target == primaryLanguageCode && source != primaryLanguageCode && source.isNotBlank() -> {
-                        // Source → Primary: also useful for learning source language
-                        directionalCounts[source] = (directionalCounts[source] ?: 0) + 1
-                    }
-                    // Skip records where neither or both sides are primary language
+                // Count both languages (consistent with backend cache)
+                if (source.isNotBlank()) {
+                    allLanguageCounts[source] = (allLanguageCounts[source] ?: 0) + 1
+                }
+                if (target.isNotBlank() && target != source) {
+                    allLanguageCounts[target] = (allLanguageCounts[target] ?: 0) + 1
                 }
             }
+
+            // Filter to only show languages that appear WITH primary language
+            // (exclude records where neither side is primary)
+            val relevantLanguages = records
+                .filter { record ->
+                    record.sourceLang == primaryLanguageCode || record.targetLang == primaryLanguageCode
+                }
+                .flatMap { record ->
+                    listOf(record.sourceLang, record.targetLang).filter { it != primaryLanguageCode && it.isNotBlank() }
+                }
+                .toSet()
+
+            // Build final counts: use actual counts but only for relevant languages
+            val directionalCounts = allLanguageCounts
+                .filterKeys { it in relevantLanguages }
+                .toMutableMap()
 
             // Check cache (in-memory first, then persisted DataStore, then Firestore)
             val languagesToCheck = directionalCounts.keys.filter { it !in wordBankExistsCache }
