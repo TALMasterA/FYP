@@ -3,6 +3,7 @@ package com.example.fyp.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.core.validateScale
+import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.domain.settings.SetFontSizeScaleUseCase
@@ -44,6 +45,7 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val sharedSettings: SharedSettingsDataSource,
+    private val friendsRepo: FriendsRepository,
     private val setPrimaryLanguage: SetPrimaryLanguageUseCase,
     private val setFontSizeScale: SetFontSizeScaleUseCase,
     private val setThemeMode: SetThemeModeUseCase,
@@ -128,7 +130,16 @@ class SettingsViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            runCatching { setPrimaryLanguage(UserId(uid), LanguageCode(newCode)) }
+            runCatching {
+                // Update settings
+                setPrimaryLanguage(UserId(uid), LanguageCode(newCode))
+
+                // Also update public profile for friends feature
+                friendsRepo.updatePublicProfile(
+                    UserId(uid),
+                    mapOf("primaryLanguage" to newCode)
+                )
+            }
                 .onSuccess {
                     _uiState.value = _uiState.value.copy(
                         settings = _uiState.value.settings.copy(primaryLanguageCode = newCode),

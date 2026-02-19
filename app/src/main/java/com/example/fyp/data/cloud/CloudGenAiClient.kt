@@ -44,13 +44,42 @@ class CloudGenAiClient @Inject constructor(
             "prompt" to prompt
         )
 
-        val result = functions
-            .getHttpsCallable("generateLearningContent")
-            .withTimeout(AI_GENERATION_TIMEOUT_MINUTES, TimeUnit.MINUTES)
-            .call(data)
-            .await()
+        try {
+            val result = functions
+                .getHttpsCallable("generateLearningContent")
+                .withTimeout(AI_GENERATION_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+                .call(data)
+                .await()
 
-        val map = result.data as? Map<*, *> ?: emptyMap<Any, Any>()
-        return map["content"] as? String ?: ""
+            val map = result.data as? Map<*, *> ?: throw Exception("Invalid response format from server")
+            val content = map["content"] as? String
+
+            if (content.isNullOrBlank()) {
+                throw Exception("No content generated. Please try again.")
+            }
+
+            return content
+        } catch (e: com.google.firebase.functions.FirebaseFunctionsException) {
+            // Handle specific Firebase Functions errors
+            val errorMessage = when (e.code) {
+                com.google.firebase.functions.FirebaseFunctionsException.Code.UNAUTHENTICATED ->
+                    "Authentication required. Please log in again."
+                com.google.firebase.functions.FirebaseFunctionsException.Code.PERMISSION_DENIED ->
+                    "Permission denied. Please check your account status."
+                com.google.firebase.functions.FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED ->
+                    "Rate limit exceeded. Please wait before trying again."
+                com.google.firebase.functions.FirebaseFunctionsException.Code.DEADLINE_EXCEEDED ->
+                    "Request timed out. The generation took too long. Please try again."
+                com.google.firebase.functions.FirebaseFunctionsException.Code.UNAVAILABLE ->
+                    "Service temporarily unavailable. Please try again later."
+                com.google.firebase.functions.FirebaseFunctionsException.Code.INTERNAL ->
+                    "Server error occurred. Please ensure you're using the latest app version and try again."
+                else -> "Generation failed: ${e.message ?: "Unknown error"}"
+            }
+            throw Exception(errorMessage, e)
+        } catch (e: Exception) {
+            // Handle other exceptions
+            throw Exception("Generation failed: ${e.message ?: "Unknown error"}", e)
+        }
     }
 }

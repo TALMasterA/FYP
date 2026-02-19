@@ -2,22 +2,24 @@ package com.example.fyp.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.user.FirestoreProfileRepository
+import com.example.fyp.model.UserId
+import com.example.fyp.model.Username
 import com.example.fyp.model.user.AuthState
-import com.example.fyp.model.user.UserProfile
+import com.example.fyp.model.friends.PublicUserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class ProfileUiState(
     val isLoading: Boolean = false,
-    val profile: UserProfile = UserProfile(),
+    val profile: PublicUserProfile = PublicUserProfile(),
     val email: String? = null,
     val error: String? = null,
     val successMessage: String? = null,
@@ -29,7 +31,8 @@ data class ProfileUiState(
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
-    private val profileRepo: FirestoreProfileRepository
+    private val profileRepo: FirestoreProfileRepository,
+    private val friendsRepo: FriendsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -65,16 +68,83 @@ class ProfileViewModel @Inject constructor(
     private fun observeProfile(userId: String) {
         profileJob?.cancel()
         profileJob = viewModelScope.launch {
-            profileRepo.observeProfile(userId)
-                .catch { e ->
-                    _uiState.value = _uiState.value.copy(
-                        error = e.message ?: "Failed to load profile"
-                    )
+            try {
+                // Load public profile for friends feature
+                val profile = friendsRepo.getPublicProfile(UserId(userId))
+                _uiState.value = _uiState.value.copy(
+                    profile = profile ?: PublicUserProfile(),
+                    isLoading = false,
+                    error = if (profile == null) "Profile not found" else null
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = e.message ?: "Failed to load profile",
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+    fun updateUsername(username: String) {
+        val userId = currentUserId ?: return
+
+        // Validate username format
+        if (!username.matches(Regex("^[a-zA-Z0-9_]+$"))) {
+            _uiState.value = _uiState.value.copy(
+                error = "Username can only contain letters, numbers, and underscores"
+            )
+            return
+        }
+
+        if (username.length !in 3..20) {
+            _uiState.value = _uiState.value.copy(
+                error = "Username must be 3-20 characters"
+            )
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                error = null,
+                successMessage = null
+            )
+
+            // First, check if username is available
+            val isAvailable = friendsRepo.isUsernameAvailable(Username(username))
+            if (!isAvailable && username != _uiState.value.profile.username) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Username already taken"
+                )
+                return@launch
+            }
+
+            // Update username in the registry
+            friendsRepo.setUsername(UserId(userId), Username(username))
+                .onSuccess {
+                    // Update public profile
+                    friendsRepo.updatePublicProfile(
+                        UserId(userId),
+                        mapOf("username" to username)
+                    ).onSuccess {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            successMessage = "Username updated successfully"
+                        )
+                        // Reload profile
+                        observeProfile(userId)
+                    }.onFailure { e ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            error = e.message ?: "Failed to update profile"
+                        )
+                    }
                 }
-                .collect { profile ->
+                .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
-                        profile = profile,
-                        isLoading = false
+                        isLoading = false,
+                        error = e.message ?: "Failed to set username"
                     )
                 }
         }

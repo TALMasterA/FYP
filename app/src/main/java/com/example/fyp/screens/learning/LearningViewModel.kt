@@ -195,17 +195,44 @@ class LearningViewModel @Inject constructor(
 
     /**
      * Build language clusters from total counts (not limited records).
-     * Excludes the primary language (like WordBank does).
+     * Excludes the primary language and calculates directional counts.
+     *
+     * IMPORTANT: For learning materials, we want to count records where:
+     * - The language appears WITH the primary language in the same record
+     * - This represents actual translatable content between primary ↔ target
+     *
+     * For example, if primary is Cantonese:
+     * - Cantonese→English: counts for English (learning English from Cantonese)
+     * - English→Cantonese: also counts for English (learning English to Cantonese)
+     * - Spanish→French: does NOT count (neither side is Cantonese)
      */
     private fun buildLanguageClustersFromCounts(
         languageCounts: Map<String, Int>,
         primaryLanguageCode: String
     ): List<LanguageClusterUi> {
-        return languageCounts
-            .filter { (code, _) ->
-                // Show all languages from history except the primary language
-                code != primaryLanguageCode && code.isNotBlank()
+        // Calculate directional counts from actual history records
+        val directionalCounts = mutableMapOf<String, Int>()
+
+        _uiState.value.records.forEach { record ->
+            val source = record.sourceLang
+            val target = record.targetLang
+
+            // Only count if one side is the primary language
+            when {
+                source == primaryLanguageCode && target != primaryLanguageCode -> {
+                    // Primary → Target: learning target language
+                    directionalCounts[target] = (directionalCounts[target] ?: 0) + 1
+                }
+                target == primaryLanguageCode && source != primaryLanguageCode -> {
+                    // Source → Primary: also useful for learning source language
+                    directionalCounts[source] = (directionalCounts[source] ?: 0) + 1
+                }
+                // Skip records where neither or both sides are primary language
             }
+        }
+
+        return directionalCounts
+            .filter { (code, _) -> code.isNotBlank() }
             .map { (code, count) -> LanguageClusterUi(code, count) }
             .sortedWith(compareByDescending<LanguageClusterUi> { it.count }.thenBy { it.languageCode })
     }

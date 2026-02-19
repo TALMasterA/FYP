@@ -250,9 +250,30 @@ export const generateLearningContent = onCall(
     const deployment = requireString(request.data?.deployment, "deployment");
     const prompt = requireString(request.data?.prompt, "prompt");
 
+    // Validate prompt length
+    if (prompt.length > 10000) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Prompt is too long. Maximum 10,000 characters."
+      );
+    }
+
     const baseUrl = GENAI_BASE_URL.value();
     const apiVersion = GENAI_API_VERSION.value();
     const apiKey = GENAI_API_KEY.value();
+
+    // Validate secrets are configured
+    if (!baseUrl || !apiVersion || !apiKey) {
+      console.error("GenAI secrets not configured", {
+        hasBaseUrl: !!baseUrl,
+        hasApiVersion: !!apiVersion,
+        hasApiKey: !!apiKey
+      });
+      throw new HttpsError(
+        "failed-precondition",
+        "AI service is not properly configured. Please contact support."
+      );
+    }
 
     const url = new URL(
       baseUrl.replace(/\/+$/, "") +
@@ -268,28 +289,93 @@ export const generateLearningContent = onCall(
       temperature: 1,
     };
 
-    const resp = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "api-key": apiKey,
-      },
-      body: JSON.stringify(body),
-    });
+    let resp;
+    try {
+      resp = await fetch(url.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": apiKey,
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (fetchError: any) {
+      console.error("Network error calling GenAI API", {
+        error: fetchError?.message,
+        deployment
+      });
+      throw new HttpsError(
+        "unavailable",
+        "Unable to reach AI service. Please check your internet connection and try again."
+      );
+    }
 
     const text = await resp.text();
     if (!resp.ok) {
       console.error("GenAI API error", {
         status: resp.status,
-        errorPreview: text.substring(0, 200)
+        statusText: resp.statusText,
+        errorPreview: text.substring(0, 500),
+        deployment
       });
+
+      // Provide more specific error messages based on status code
+      if (resp.status === 401 || resp.status === 403) {
+        throw new HttpsError(
+          "failed-precondition",
+          "AI service authentication failed. Please contact support."
+        );
+      } else if (resp.status === 429) {
+        throw new HttpsError(
+          "resource-exhausted",
+          "AI service rate limit exceeded. Please try again in a few minutes."
+        );
+      } else if (resp.status === 404) {
+        throw new HttpsError(
+          "not-found",
+          "AI model deployment not found. Please update your app to the latest version."
+        );
+      } else if (resp.status >= 500) {
+        throw new HttpsError(
+          "unavailable",
+          "AI service is temporarily unavailable. Please try again later."
+        );
+      }
+
       throw new HttpsError(
-        "internal", "AI content generation service unavailable. Please try again."
+        "internal",
+        "AI content generation failed. Please try again or update your app to the latest version."
       );
     }
 
-    const json = JSON.parse(text);
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (parseError: any) {
+      console.error("Failed to parse GenAI response", {
+        error: parseError?.message,
+        responsePreview: text.substring(0, 200)
+      });
+      throw new HttpsError(
+        "internal",
+        "Invalid response from AI service. Please try again."
+      );
+    }
+
     const content = json?.choices?.[0]?.message?.content ?? "";
+
+    if (!content) {
+      console.error("Empty content from GenAI", {
+        hasChoices: !!json?.choices,
+        choicesLength: json?.choices?.length,
+        firstChoice: json?.choices?.[0]
+      });
+      throw new HttpsError(
+        "internal",
+        "No content generated. Please try again."
+      );
+    }
+
     return { content };
   }
 );

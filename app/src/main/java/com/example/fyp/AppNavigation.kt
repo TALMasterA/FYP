@@ -114,6 +114,10 @@ fun AppNavigation() {
 
     val (appLanguageState, updateAppLanguage) = rememberUiLanguageState(uiLanguages)
 
+    // Application-level ViewModel for cross-cutting concerns (used for side effects)
+    @Suppress("UNUSED_VARIABLE")
+    val appViewModel: AppViewModel = hiltViewModel()
+
     // One SettingsViewModel shared across app
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val settingsUiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
