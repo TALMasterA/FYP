@@ -4,16 +4,11 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import fetch from "node-fetch";
 import * as admin from "firebase-admin";
 
-// Lazy initialization to reduce cold start time
-let _firestoreDb: admin.firestore.Firestore | undefined;
+// Initialize Firebase Admin at module load time (required for Cloud Functions v2)
+admin.initializeApp();
+const _firestoreDb: admin.firestore.Firestore = admin.firestore();
 
 function getFirestore(): admin.firestore.Firestore {
-  if (!admin.apps.length) {
-    admin.initializeApp();
-  }
-  if (!_firestoreDb) {
-    _firestoreDb = admin.firestore();
-  }
   return _firestoreDb;
 }
 
@@ -210,7 +205,14 @@ async function enforceRateLimit(uid: string): Promise<void> {
   const now = Date.now();
   const windowStart = now - RATE_LIMIT_WINDOW_MS;
 
-  const doc = await rateLimitRef.get();
+  let doc: admin.firestore.DocumentSnapshot;
+  try {
+    doc = await rateLimitRef.get();
+  } catch (fsError: any) {
+    console.error("enforceRateLimit: Firestore read failed", {uid, error: fsError?.message});
+    throw new HttpsError("internal", "Rate limit check failed (Firestore read error). Please try again.");
+  }
+
   let timestamps: number[] = [];
 
   if (doc.exists) {
@@ -223,7 +225,11 @@ async function enforceRateLimit(uid: string): Promise<void> {
 
   if (timestamps.length >= RATE_LIMIT_MAX_REQUESTS) {
     // Persist the filtered timestamps to prevent unbounded storage growth
-    await rateLimitRef.set({timestamps, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
+    try {
+      await rateLimitRef.set({timestamps, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
+    } catch (fsWriteError: any) {
+      console.warn("enforceRateLimit: Firestore write failed during rate limit enforcement", {uid, error: fsWriteError?.message});
+    }
     throw new HttpsError(
       "resource-exhausted",
       `Rate limit exceeded. Maximum ${RATE_LIMIT_MAX_REQUESTS} AI generation requests per hour.`
@@ -232,7 +238,12 @@ async function enforceRateLimit(uid: string): Promise<void> {
 
   // Add current timestamp and save
   timestamps.push(now);
-  await rateLimitRef.set({timestamps, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
+  try {
+    await rateLimitRef.set({timestamps, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
+  } catch (fsWriteError: any) {
+    console.error("enforceRateLimit: Firestore write failed", {uid, error: fsWriteError?.message});
+    throw new HttpsError("internal", "Rate limit update failed (Firestore write error). Please try again.");
+  }
 }
 
 export const generateLearningContent = onCall(
@@ -241,6 +252,7 @@ export const generateLearningContent = onCall(
     timeoutSeconds: 300, // 5 minutes timeout for AI generation
   },
   async (request) => {
+    try {
     requireAuth(request.auth);
 
     // Enforce per-user rate limiting for AI generation
@@ -250,36 +262,51 @@ export const generateLearningContent = onCall(
     const deployment = requireString(request.data?.deployment, "deployment");
     const prompt = requireString(request.data?.prompt, "prompt");
 
-    // Validate prompt length
-    if (prompt.length > 10000) {
-      throw new HttpsError(
-        "invalid-argument",
-        "Prompt is too long. Maximum 10,000 characters."
-      );
-    }
-
     const baseUrl = GENAI_BASE_URL.value();
     const apiVersion = GENAI_API_VERSION.value();
     const apiKey = GENAI_API_KEY.value();
 
-    // Validate secrets are configured
+    // IMPORTANT: Validate secrets are configured before using them.
+    // If any secret is missing, new URL() below would throw a TypeError
+    // which surfaces as an opaque INTERNAL error to the client.
     if (!baseUrl || !apiVersion || !apiKey) {
       console.error("GenAI secrets not configured", {
         hasBaseUrl: !!baseUrl,
         hasApiVersion: !!apiVersion,
-        hasApiKey: !!apiKey
+        hasApiKey: !!apiKey,
+        uid
       });
       throw new HttpsError(
         "failed-precondition",
-        "AI service is not properly configured. Please contact support."
+        "AI service is not configured. Please contact support."
       );
     }
 
-    const url = new URL(
-      baseUrl.replace(/\/+$/, "") +
-        `/deployments/${encodeURIComponent(deployment)}/chat/completions`
-    );
-    url.searchParams.set("api-version", apiVersion);
+    let url: URL;
+    try {
+      url = new URL(
+        baseUrl.replace(/\/+$/, "") +
+          `/openai/deployments/${encodeURIComponent(deployment)}/chat/completions`
+      );
+      url.searchParams.set("api-version", apiVersion);
+    } catch (urlError: any) {
+      console.error("Invalid GENAI_BASE_URL", {
+        baseUrl,
+        error: urlError?.message,
+        uid
+      });
+      throw new HttpsError(
+        "failed-precondition",
+        "AI service URL is misconfigured. Please contact support."
+      );
+    }
+
+    console.log("generateLearningContent: calling Azure OpenAI", {
+      uid,
+      deployment,
+      promptLength: prompt.length,
+      url: url.toString().replace(apiKey, "***")
+    });
 
     const body = {
       messages: [
@@ -331,9 +358,10 @@ export const generateLearningContent = onCall(
           "AI service rate limit exceeded. Please try again in a few minutes."
         );
       } else if (resp.status === 404) {
+        console.error("Azure OpenAI deployment not found", { deployment, baseUrl });
         throw new HttpsError(
           "not-found",
-          "AI model deployment not found. Please update your app to the latest version."
+          `AI deployment '${deployment}' not found in Azure. Check the deployment name in Azure Portal.`
         );
       } else if (resp.status >= 500) {
         throw new HttpsError(
@@ -344,7 +372,7 @@ export const generateLearningContent = onCall(
 
       throw new HttpsError(
         "internal",
-        "AI content generation failed. Please try again or update your app to the latest version."
+        "AI content generation failed. Please try again."
       );
     }
 
@@ -377,6 +405,20 @@ export const generateLearningContent = onCall(
     }
 
     return { content };
+    } catch (e: any) {
+      // Re-throw HttpsErrors as-is (they already have code + message)
+      if (e instanceof HttpsError) throw e;
+      // Wrap any unexpected error with its message so it appears in the client
+      // instead of an opaque INTERNAL error with no details.
+      console.error("generateLearningContent: unexpected error", {
+        message: e?.message,
+        stack: e?.stack?.substring(0, 500),
+      });
+      throw new HttpsError(
+        "internal",
+        `Generation failed: ${e?.message ?? "Unknown error"}. Please try again.`
+      );
+    }
   }
 );
 

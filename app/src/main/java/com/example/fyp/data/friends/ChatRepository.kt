@@ -85,7 +85,13 @@ interface ChatRepository {
      * Get total unread message count across all chats for a user.
      */
     suspend fun getTotalUnreadCount(userId: UserId): Int
-    
+
+    /**
+     * Observe total unread message count across all chats for a user in real-time.
+     * Emits a new value whenever messages are sent or read.
+     */
+    fun observeTotalUnreadCount(userId: UserId): Flow<Int>
+
     /**
      * Get list of chats for a user (sorted by last message time).
      */

@@ -23,6 +23,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,6 +70,9 @@ fun SettingsScreen(
     onOpenVoiceSettings: () -> Unit = {},
     onOpenFeedback: () -> Unit = {},
     onOpenSystemNotes: () -> Unit = {},
+    pendingFriendRequestCount: Int = 0,
+    unreadMessageCount: Int = 0,
+    pendingSharedItemCount: Int = 0,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -209,26 +214,57 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            TextButton(
-                                onClick = onOpenFriends,
+                            // Friends button with badge for pending requests + unread messages
+                            val friendsBadgeCount = pendingFriendRequestCount + unreadMessageCount
+                            BadgedBox(
+                                badge = {
+                                    if (friendsBadgeCount > 0) {
+                                        Badge(
+                                            containerColor = MaterialTheme.colorScheme.error,
+                                            contentColor = MaterialTheme.colorScheme.onError
+                                        ) {
+                                            Text(if (friendsBadgeCount > 99) "99+" else "$friendsBadgeCount")
+                                        }
+                                    }
+                                },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(
-                                    text = t(UiTextKey.FriendsMenuButton),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
+                                TextButton(
+                                    onClick = onOpenFriends,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = t(UiTextKey.FriendsMenuButton),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                }
                             }
                             
-                            TextButton(
-                                onClick = onOpenSharedInbox,
+                            // Shared Inbox button with badge for pending shared items
+                            BadgedBox(
+                                badge = {
+                                    if (pendingSharedItemCount > 0) {
+                                        Badge(
+                                            containerColor = MaterialTheme.colorScheme.error,
+                                            contentColor = MaterialTheme.colorScheme.onError
+                                        ) {
+                                            Text(if (pendingSharedItemCount > 99) "99+" else "$pendingSharedItemCount")
+                                        }
+                                    }
+                                },
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(
-                                    text = t(UiTextKey.ShareInboxTitle),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
+                                TextButton(
+                                    onClick = onOpenSharedInbox,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = t(UiTextKey.ShareInboxTitle),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                }
                             }
                         }
 

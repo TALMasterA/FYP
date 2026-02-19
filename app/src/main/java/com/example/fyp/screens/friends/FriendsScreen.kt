@@ -50,6 +50,14 @@ fun FriendsScreen(
         }
     }
 
+    // Auto-dismiss error/success messages after 3 seconds
+    LaunchedEffect(uiState.error, uiState.successMessage) {
+        if (uiState.error != null || uiState.successMessage != null) {
+            kotlinx.coroutines.delay(3000)
+            viewModel.clearMessages()
+        }
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.FriendsTitle),
         onBack = onBack,
@@ -134,7 +142,7 @@ fun FriendsScreen(
                             .align(Alignment.CenterHorizontally)
                     )
                 }
-                uiState.friends.isEmpty() && uiState.incomingRequests.isEmpty() -> {
+                uiState.friends.isEmpty() && uiState.incomingRequests.isEmpty() && uiState.outgoingRequests.isEmpty() -> {
                     EmptyStates.NoFriends()
                 }
                 else -> {
@@ -162,7 +170,28 @@ fun FriendsScreen(
                                 )
                             }
                             item {
-                                Divider(modifier = Modifier.padding(vertical = 16.dp))
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                            }
+                        }
+
+                        // Outgoing (Sent) requests section
+                        if (uiState.outgoingRequests.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Sent Requests (${uiState.outgoingRequests.size})",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                            items(uiState.outgoingRequests) { request ->
+                                OutgoingRequestCard(
+                                    request = request,
+                                    onCancel = { viewModel.cancelFriendRequest(request.requestId) }
+                                )
+                            }
+                            item {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
                             }
                         }
 
@@ -234,8 +263,48 @@ fun FriendsScreen(
 }
 
 @Composable
-fun FriendRequestCard(
+fun OutgoingRequestCard(
     request: FriendRequest,
+    onCancel: () -> Unit
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (request.toUsername.isNotEmpty()) request.toUsername
+                           else "To: ${request.toUserId.take(12)}…",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Pending",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(onClick = onCancel) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "Cancel request",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FriendRequestCard(    request: FriendRequest,
     onAccept: () -> Unit,
     onReject: () -> Unit,
     acceptText: String,

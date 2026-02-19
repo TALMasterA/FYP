@@ -47,6 +47,7 @@ fun WordBankDetailView(
     onSpeakWord: (WordBankItem, SpeakingType) -> Unit,
     onSpeakExample: (WordBankItem) -> Unit,
     onDeleteWord: (WordBankItem) -> Unit,
+    onShareWord: ((WordBankItem) -> Unit)? = null,
     t: (UiTextKey) -> String,
     filterKeyword: String,
     onFilterKeywordChange: (String) -> Unit,
@@ -133,6 +134,7 @@ fun WordBankDetailView(
                 onSpeakWord = onSpeakWord,
                 onSpeakExample = onSpeakExample,
                 onDeleteWord = onDeleteWord,
+                onShareWord = onShareWord,
                 t = t
             )
         }
@@ -385,6 +387,7 @@ private fun WordBankList(
     onSpeakWord: (WordBankItem, SpeakingType) -> Unit,
     onSpeakExample: (WordBankItem) -> Unit,
     onDeleteWord: (WordBankItem) -> Unit,
+    onShareWord: ((WordBankItem) -> Unit)? = null,
     t: (UiTextKey) -> String
 ) {
     // Apply filters
@@ -440,6 +443,7 @@ private fun WordBankList(
                         onSpeakTranslated = { onSpeakWord(word, SpeakingType.TRANSLATED) },
                         onSpeakExample = { onSpeakExample(word) },
                         onDelete = { onDeleteWord(word) },
+                        onShare = onShareWord?.let { callback -> { callback(word) } },
                         t = t
                     )
                 }

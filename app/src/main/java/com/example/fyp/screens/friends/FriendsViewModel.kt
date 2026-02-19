@@ -2,6 +2,7 @@ package com.example.fyp.screens.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.*
 import com.example.fyp.model.UserId
@@ -30,27 +31,30 @@ data class FriendsUiState(
     val isSearching: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
-    val newRequestCount: Int = 0  // For notification badge
+    val newRequestCount: Int = 0  // For snackbar notification badge
 )
 
+/**
+ * OPTIMIZED: Friends list and incoming requests are read from [SharedFriendsDataSource]
+ * (shared single-listener data source) instead of creating new Firestore listeners.
+ * Outgoing requests still have their own listener (only needed on this screen).
+ */
 @HiltViewModel
 class FriendsViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
-    private val observeFriendsUseCase: ObserveFriendsUseCase,
-    private val observeIncomingRequestsUseCase: ObserveIncomingRequestsUseCase,
+    private val sharedFriendsDataSource: SharedFriendsDataSource,
     private val observeOutgoingRequestsUseCase: ObserveOutgoingRequestsUseCase,
     private val searchUsersUseCase: SearchUsersUseCase,
     private val sendFriendRequestUseCase: SendFriendRequestUseCase,
     private val acceptFriendRequestUseCase: AcceptFriendRequestUseCase,
     private val rejectFriendRequestUseCase: RejectFriendRequestUseCase,
+    private val cancelFriendRequestUseCase: CancelFriendRequestUseCase,
     private val removeFriendUseCase: RemoveFriendUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FriendsUiState())
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
 
-    private var friendsJob: Job? = null
-    private var incomingRequestsJob: Job? = null
     private var outgoingRequestsJob: Job? = null
     private var currentUserId: UserId? = null
     private var previousIncomingCount = 0
@@ -61,11 +65,12 @@ class FriendsViewModel @Inject constructor(
                 when (auth) {
                     is AuthState.LoggedIn -> {
                         currentUserId = UserId(auth.user.uid)
-                        loadFriendsAndRequests(UserId(auth.user.uid))
+                        // Ensure shared data source is running (idempotent)
+                        sharedFriendsDataSource.startObserving(auth.user.uid)
+                        subscribeToSharedData()
+                        startOutgoingRequestsObserver(UserId(auth.user.uid))
                     }
                     AuthState.LoggedOut -> {
-                        friendsJob?.cancel()
-                        incomingRequestsJob?.cancel()
                         outgoingRequestsJob?.cancel()
                         currentUserId = null
                         previousIncomingCount = 0
@@ -79,66 +84,54 @@ class FriendsViewModel @Inject constructor(
         }
     }
 
-    private fun loadFriendsAndRequests(userId: UserId) {
-        // Observe friends list
-        friendsJob?.cancel()
-        friendsJob = viewModelScope.launch {
-            observeFriendsUseCase(userId).collect { friends ->
-                _uiState.value = _uiState.value.copy(
-                    friends = friends,
-                    isLoading = false
-                )
+    /** Mirror shared-data-source flows into UI state. */
+    private fun subscribeToSharedData() {
+        // Friends list
+        viewModelScope.launch {
+            sharedFriendsDataSource.friends.collect { friends ->
+                _uiState.value = _uiState.value.copy(friends = friends, isLoading = false)
             }
         }
-
-        // Observe incoming requests
-        incomingRequestsJob?.cancel()
-        incomingRequestsJob = viewModelScope.launch {
-            observeIncomingRequestsUseCase(userId).collect { requests ->
+        // Incoming requests — also tracks new-request notification
+        viewModelScope.launch {
+            sharedFriendsDataSource.incomingRequests.collect { requests ->
                 val newCount = if (previousIncomingCount > 0 && requests.size > previousIncomingCount) {
                     requests.size - previousIncomingCount
                 } else {
                     0
                 }
                 previousIncomingCount = requests.size
-
                 _uiState.value = _uiState.value.copy(
                     incomingRequests = requests,
                     newRequestCount = newCount
                 )
             }
         }
+    }
 
-        // Observe outgoing requests
+    private fun startOutgoingRequestsObserver(userId: UserId) {
         outgoingRequestsJob?.cancel()
         outgoingRequestsJob = viewModelScope.launch {
             observeOutgoingRequestsUseCase(userId).collect { requests ->
-                _uiState.value = _uiState.value.copy(
-                    outgoingRequests = requests
-                )
+                _uiState.value = _uiState.value.copy(outgoingRequests = requests)
             }
         }
     }
+
+    // ── Search ───────────────────────────────────────────────────────────────
 
     private var searchJob: Job? = null
 
     fun onSearchQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
-        
-        // Cancel previous search
         searchJob?.cancel()
-        
         if (query.length >= 2) {
-            // Debounce: wait 300ms before searching
             searchJob = viewModelScope.launch {
                 kotlinx.coroutines.delay(300)
                 searchUsers(query)
             }
         } else {
-            _uiState.value = _uiState.value.copy(
-                searchResults = emptyList(),
-                isSearching = false
-            )
+            _uiState.value = _uiState.value.copy(searchResults = emptyList(), isSearching = false)
         }
     }
 
@@ -147,107 +140,65 @@ class FriendsViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isSearching = true)
             try {
                 val results = searchUsersUseCase(query)
-                _uiState.value = _uiState.value.copy(
-                    searchResults = results,
-                    isSearching = false,
-                    error = null
-                )
+                _uiState.value = _uiState.value.copy(searchResults = results, isSearching = false, error = null)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isSearching = false,
-                    error = "Search failed: ${e.message}"
-                )
+                _uiState.value = _uiState.value.copy(isSearching = false, error = "Search failed: ${e.message}")
             }
         }
     }
 
+    // ── Friend request actions ────────────────────────────────────────────────
+
     fun sendFriendRequest(toUserId: String) {
         val fromUserId = currentUserId ?: return
-        
         viewModelScope.launch {
-            val result = sendFriendRequestUseCase(fromUserId, UserId(toUserId))
-            result.fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        successMessage = "Friend request sent!",
-                        error = null
-                    )
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        error = error.message ?: "Failed to send request"
-                    )
-                }
+            sendFriendRequestUseCase(fromUserId, UserId(toUserId)).fold(
+                onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Friend request sent!", error = null) },
+                onFailure = { _uiState.value = _uiState.value.copy(error = it.message ?: "Failed to send request") }
             )
         }
     }
 
     fun acceptFriendRequest(requestId: String) {
         val userId = currentUserId ?: return
-        
         viewModelScope.launch {
-            val result = acceptFriendRequestUseCase(requestId, userId)
-            result.fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        successMessage = "Friend request accepted!",
-                        error = null
-                    )
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        error = error.message ?: "Failed to accept request"
-                    )
-                }
+            acceptFriendRequestUseCase(requestId, userId).fold(
+                onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Friend request accepted!", error = null) },
+                onFailure = { _uiState.value = _uiState.value.copy(error = it.message ?: "Failed to accept request") }
             )
         }
     }
 
     fun rejectFriendRequest(requestId: String) {
         viewModelScope.launch {
-            val result = rejectFriendRequestUseCase(requestId)
-            result.fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        successMessage = "Request rejected",
-                        error = null
-                    )
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        error = error.message ?: "Failed to reject request"
-                    )
-                }
+            rejectFriendRequestUseCase(requestId).fold(
+                onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Request rejected", error = null) },
+                onFailure = { _uiState.value = _uiState.value.copy(error = it.message ?: "Failed to reject request") }
+            )
+        }
+    }
+
+    fun cancelFriendRequest(requestId: String) {
+        viewModelScope.launch {
+            cancelFriendRequestUseCase(requestId).fold(
+                onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Friend request cancelled", error = null) },
+                onFailure = { _uiState.value = _uiState.value.copy(error = it.message ?: "Failed to cancel request") }
             )
         }
     }
 
     fun removeFriend(friendId: String) {
         val userId = currentUserId ?: return
-        
         viewModelScope.launch {
-            val result = removeFriendUseCase(userId, UserId(friendId))
-            result.fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        successMessage = "Friend removed",
-                        error = null
-                    )
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        error = error.message ?: "Failed to remove friend"
-                    )
-                }
+            removeFriendUseCase(userId, UserId(friendId)).fold(
+                onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Friend removed", error = null) },
+                onFailure = { _uiState.value = _uiState.value.copy(error = it.message ?: "Failed to remove friend") }
             )
         }
     }
 
     fun clearMessages() {
-        _uiState.value = _uiState.value.copy(
-            error = null,
-            successMessage = null
-        )
+        _uiState.value = _uiState.value.copy(error = null, successMessage = null)
     }
 
     fun clearNewRequestCount() {
@@ -260,22 +211,9 @@ class FriendsViewModel @Inject constructor(
      */
     fun canSendRequestTo(userId: String): Boolean {
         val state = _uiState.value
-
-        // Check if already friends
-        if (state.friends.any { it.friendId == userId }) {
-            return false
-        }
-
-        // Check if there's a pending outgoing request
-        if (state.outgoingRequests.any { it.toUserId == userId }) {
-            return false
-        }
-
-        // Check if there's a pending incoming request
-        if (state.incomingRequests.any { it.fromUserId == userId }) {
-            return false
-        }
-
+        if (state.friends.any { it.friendId == userId }) return false
+        if (state.outgoingRequests.any { it.toUserId == userId }) return false
+        if (state.incomingRequests.any { it.fromUserId == userId }) return false
         return true
     }
 }

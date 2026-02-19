@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,6 +15,7 @@ import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.ui.components.FriendSelectorDialog
 import com.example.fyp.ui.components.WordBankItemSkeleton
 
 // Word Bank Screen - Main entry point for word bank feature
@@ -141,6 +141,45 @@ fun WordBankScreen(
                     var wordBankPage by remember { mutableIntStateOf(0) }
                     val pageSize = 10
 
+                    // Share: show friend selector when a word is pending share
+                    if (uiState.pendingShareWord != null) {
+                        FriendSelectorDialog(
+                            friends = uiState.friends,
+                            isLoading = uiState.isSharing,
+                            t = t,
+                            onFriendSelected = { friendId ->
+                                viewModel.shareWord(uiState.pendingShareWord!!, friendId)
+                            },
+                            onDismiss = { viewModel.setPendingShareWord(null) }
+                        )
+                    }
+
+                    // Share feedback
+                    uiState.shareSuccess?.let { msg ->
+                        LaunchedEffect(msg) {
+                            kotlinx.coroutines.delay(3000)
+                            viewModel.clearShareMessages()
+                        }
+                        Snackbar(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(16.dp)
+                        ) { Text(msg) }
+                    }
+                    uiState.shareError?.let { err ->
+                        LaunchedEffect(err) {
+                            kotlinx.coroutines.delay(3000)
+                            viewModel.clearShareMessages()
+                        }
+                        Snackbar(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(16.dp),
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        ) { Text(err) }
+                    }
+
                     WordBankDetailView(
                         languageName = uiLanguageNameFor(selectedLanguage),
                         wordBank = currentWordBank,
@@ -160,6 +199,7 @@ fun WordBankScreen(
                         onDeleteWord = { word ->
                             viewModel.deleteWordFromBank(word.id, selectedLanguage)
                         },
+                        onShareWord = { word -> viewModel.setPendingShareWord(word) },
                         t = t,
                         filterKeyword = filterKeyword,
                         onFilterKeywordChange = { filterKeyword = it },

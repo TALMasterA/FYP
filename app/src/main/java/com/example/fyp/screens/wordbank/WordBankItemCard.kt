@@ -27,6 +27,7 @@ fun WordBankItemCard(
     onSpeakTranslated: () -> Unit,
     onSpeakExample: () -> Unit,
     onDelete: () -> Unit,
+    onShare: (() -> Unit)? = null,
     t: (UiTextKey) -> String
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -164,7 +165,7 @@ fun WordBankItemCard(
                     }
                 }
 
-                // Right side: delete and expand buttons stacked vertically
+                // Right side: delete, share and expand buttons stacked vertically
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.Top
@@ -180,6 +181,21 @@ fun WordBankItemCard(
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(20.dp)
                         )
+                    }
+
+                    // Share icon button (only shown when onShare is provided)
+                    if (onShare != null) {
+                        IconButton(
+                            onClick = onShare,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = t(UiTextKey.ShareWordButton),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
 
                     // Expand/collapse icon below delete

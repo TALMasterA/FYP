@@ -2,6 +2,7 @@ package com.example.fyp.screens.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.GetCurrentUserProfileUseCase
 import com.example.fyp.model.user.AuthState
@@ -25,7 +26,8 @@ data class MyProfileUiState(
 @HiltViewModel
 class MyProfileViewModel @Inject constructor(
     private val authRepository: FirebaseAuthRepository,
-    private val getCurrentUserProfileUseCase: GetCurrentUserProfileUseCase
+    private val getCurrentUserProfileUseCase: GetCurrentUserProfileUseCase,
+    private val sharedFriendsDataSource: SharedFriendsDataSource
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MyProfileUiState())
@@ -34,10 +36,6 @@ class MyProfileViewModel @Inject constructor(
     private var currentUserId: String? = null
 
     init {
-        observeAuthState()
-    }
-
-    private fun observeAuthState() {
         viewModelScope.launch {
             authRepository.currentUserState.collect { authState ->
                 when (authState) {
@@ -61,9 +59,12 @@ class MyProfileViewModel @Inject constructor(
     private fun loadProfile(userId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            
             try {
                 val profile = getCurrentUserProfileUseCase(userId)
+                // Cache own username so share operations don't need a Firestore profile read
+                if (profile?.username?.isNotBlank() == true) {
+                    sharedFriendsDataSource.cacheOwnUsername(userId, profile.username)
+                }
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -73,10 +74,7 @@ class MyProfileViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        error = e.message ?: "Failed to load profile"
-                    )
+                    it.copy(isLoading = false, error = e.message ?: "Failed to load profile")
                 }
             }
         }
@@ -84,7 +82,6 @@ class MyProfileViewModel @Inject constructor(
 
     fun showSuccessMessage(message: String) {
         _uiState.update { it.copy(successMessage = message) }
-        // Auto-clear after 3 seconds
         viewModelScope.launch {
             kotlinx.coroutines.delay(3000)
             _uiState.update { it.copy(successMessage = null) }

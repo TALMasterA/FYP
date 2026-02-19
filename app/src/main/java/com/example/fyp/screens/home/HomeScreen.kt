@@ -52,6 +52,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
@@ -72,6 +74,7 @@ fun HomeScreen(
     onOpenLearning: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenWordBank: () -> Unit,
+    totalNotificationCount: Int = 0,
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
@@ -240,14 +243,27 @@ fun HomeScreen(
             }
 
             // FABs positioned to avoid overlap on all screen sizes
-            FloatingActionButton(
-                onClick = onOpenSettings,
+            BadgedBox(
+                badge = {
+                    if (totalNotificationCount > 0) {
+                        Badge(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        ) {
+                            Text(if (totalNotificationCount > 99) "99+" else "$totalNotificationCount")
+                        }
+                    }
+                },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(16.dp)
                     .navigationBarsPadding()
             ) {
-                Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                FloatingActionButton(
+                    onClick = onOpenSettings
+                ) {
+                    Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                }
             }
 
             // Word Bank FAB on the left side (only show when logged in)

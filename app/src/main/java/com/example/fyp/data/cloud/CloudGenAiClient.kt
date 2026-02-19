@@ -60,26 +60,38 @@ class CloudGenAiClient @Inject constructor(
 
             return content
         } catch (e: com.google.firebase.functions.FirebaseFunctionsException) {
-            // Handle specific Firebase Functions errors
+            // Prefer e.message (the server-supplied human-readable text) over hardcoded fallbacks
+            // so the user always sees a specific reason (e.g. "No content generated",
+            // "AI deployment not found", "Rate limit exceeded. Maximum 10 requests per hour.").
+            val serverMsg = e.message?.takeIf { it.isNotBlank() }
             val errorMessage = when (e.code) {
                 com.google.firebase.functions.FirebaseFunctionsException.Code.UNAUTHENTICATED ->
-                    "Authentication required. Please log in again."
+                    serverMsg ?: "Authentication required. Please log in again."
                 com.google.firebase.functions.FirebaseFunctionsException.Code.PERMISSION_DENIED ->
-                    "Permission denied. Please check your account status."
+                    serverMsg ?: "Permission denied. Please check your account status."
                 com.google.firebase.functions.FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED ->
-                    "Rate limit exceeded. Please wait before trying again."
+                    serverMsg ?: "Rate limit exceeded. Please wait before trying again."
                 com.google.firebase.functions.FirebaseFunctionsException.Code.DEADLINE_EXCEEDED ->
-                    "Request timed out. The generation took too long. Please try again."
+                    serverMsg ?: "Request timed out. The generation took too long. Please try again."
                 com.google.firebase.functions.FirebaseFunctionsException.Code.UNAVAILABLE ->
-                    "Service temporarily unavailable. Please try again later."
+                    serverMsg ?: "Service temporarily unavailable. Please try again later."
                 com.google.firebase.functions.FirebaseFunctionsException.Code.INTERNAL ->
-                    "Server error occurred. Please ensure you're using the latest app version and try again."
-                else -> "Generation failed: ${e.message ?: "Unknown error"}"
+                    // Server throws INTERNAL for: parse failure, empty content, etc.
+                    // e.message contains the exact reason – show it instead of a blank "server error".
+                    serverMsg ?: "An internal server error occurred. Please try again later."
+                com.google.firebase.functions.FirebaseFunctionsException.Code.NOT_FOUND ->
+                    serverMsg ?: "AI model deployment not found. Please contact support."
+                com.google.firebase.functions.FirebaseFunctionsException.Code.FAILED_PRECONDITION ->
+                    serverMsg ?: "AI service is not configured. Please contact support."
+                com.google.firebase.functions.FirebaseFunctionsException.Code.INVALID_ARGUMENT ->
+                    serverMsg ?: "Invalid request parameters. Please try again."
+                else ->
+                    serverMsg ?: "Generation failed. Please try again."
             }
             throw Exception(errorMessage, e)
         } catch (e: Exception) {
-            // Handle other exceptions
-            throw Exception("Generation failed: ${e.message ?: "Unknown error"}", e)
+            // Pass the original message through so it is visible in the UI
+            throw Exception(e.message?.takeIf { it.isNotBlank() } ?: "Generation failed. Please try again.", e)
         }
     }
 }

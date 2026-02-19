@@ -12,6 +12,8 @@ data class FriendRequest(
     val fromDisplayName: String = "",
     val fromAvatarUrl: String = "",
     val toUserId: String = "",
+    val toUsername: String = "",         // Recipient's username (cached at send time)
+    val toDisplayName: String = "",      // Recipient's display name (cached at send time)
     val status: RequestStatus = RequestStatus.PENDING,
     val createdAt: Timestamp = Timestamp.now(),
     val updatedAt: Timestamp = Timestamp.now()
