@@ -1,6 +1,8 @@
 package com.example.fyp.domain.history
 
 import com.example.fyp.data.history.FirestoreHistoryRepository
+import com.example.fyp.model.RecordId
+import com.example.fyp.model.UserId
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -28,22 +30,22 @@ class DeleteHistoryRecordUseCaseTest {
         useCase(userId, recordId)
 
         // Assert
-        verify(repo).delete(userId, recordId)
+        verify(repo).delete(UserId(userId), RecordId(recordId))
     }
 
     @Test
     fun `invoke handles different user and record ids`() = runTest {
         // Arrange
         val testCases = listOf(
-            Pair("user1", "record1"),
-            Pair("user2", "record2"),
-            Pair("user3", "record3")
+            "user1" to "record1",
+            "user2" to "record2",
+            "user3" to "record3"
         )
 
         // Act & Assert
         testCases.forEach { (userId, recordId) ->
             useCase(userId, recordId)
-            verify(repo).delete(userId, recordId)
+            verify(repo).delete(UserId(userId), RecordId(recordId))
         }
     }
 }

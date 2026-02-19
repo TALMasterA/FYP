@@ -1,6 +1,8 @@
 package com.example.fyp.domain.settings
 
 import com.example.fyp.data.settings.UserSettingsRepository
+import com.example.fyp.model.PaletteId
+import com.example.fyp.model.UserId
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
@@ -39,8 +41,8 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
 
     @Test
     fun `free palette unlocks without coin deduction`() = runBlocking {
-        val userId = "user123"
-        val paletteId = "default"
+        val userId = UserId("user123")
+        val paletteId = PaletteId("default")
         val cost = 0
 
         val result = useCase(userId, paletteId, cost)
@@ -54,8 +56,8 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
 
     @Test
     fun `paid palette unlocks when user has sufficient coins`() = runBlocking {
-        val userId = "user123"
-        val paletteId = "premium"
+        val userId = UserId("user123")
+        val paletteId = PaletteId("premium")
         val cost = 100
 
         quizRepo.stub {
@@ -71,8 +73,8 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
 
     @Test
     fun `paid palette unlocks when user has exact coins needed`() = runBlocking {
-        val userId = "user123"
-        val paletteId = "premium"
+        val userId = UserId("user123")
+        val paletteId = PaletteId("premium")
         val cost = 100
 
         quizRepo.stub {
@@ -90,8 +92,8 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
 
     @Test
     fun `paid palette fails when user has insufficient coins`() = runBlocking {
-        val userId = "user123"
-        val paletteId = "premium"
+        val userId = UserId("user123")
+        val paletteId = PaletteId("premium")
         val cost = 100
 
         quizRepo.stub {
@@ -108,8 +110,8 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
 
     @Test
     fun `paid palette fails when user has zero coins`() = runBlocking {
-        val userId = "user123"
-        val paletteId = "premium"
+        val userId = UserId("user123")
+        val paletteId = PaletteId("premium")
         val cost = 50
 
         quizRepo.stub {
@@ -126,8 +128,8 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
 
     @Test
     fun `expensive palette unlocks with sufficient high balance`() = runBlocking {
-        val userId = "user123"
-        val paletteId = "luxury"
+        val userId = UserId("user123")
+        val paletteId = PaletteId("luxury")
         val cost = 1000
 
         quizRepo.stub {
@@ -143,8 +145,8 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
 
     @Test
     fun `cheap palette unlocks with minimal cost`() = runBlocking {
-        val userId = "user123"
-        val paletteId = "basic"
+        val userId = UserId("user123")
+        val paletteId = PaletteId("basic")
         val cost = 1
 
         quizRepo.stub {
@@ -162,31 +164,31 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
 
     @Test
     fun `multiple unlocks deplete coin balance correctly`() = runBlocking {
-        val userId = "user123"
+        val userId = UserId("user123")
 
         // First unlock: 500 - 100 = 400 remaining
         quizRepo.stub {
             onBlocking { deductCoins(userId, 100) } doReturn 400
         }
-        val result1 = useCase(userId, "palette1", 100)
+        val result1 = useCase(userId, PaletteId("palette1"), 100)
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result1)
 
         // Second unlock: 400 - 200 = 200 remaining
         quizRepo.stub {
             onBlocking { deductCoins(userId, 200) } doReturn 200
         }
-        val result2 = useCase(userId, "palette2", 200)
+        val result2 = useCase(userId, PaletteId("palette2"), 200)
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result2)
 
         // Third unlock fails: 200 - 300 = -100 insufficient
         quizRepo.stub {
             onBlocking { deductCoins(userId, 300) } doReturn -1
         }
-        val result3 = useCase(userId, "palette3", 300)
+        val result3 = useCase(userId, PaletteId("palette3"), 300)
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins, result3)
 
-        verify(settingsRepo).unlockColorPalette(userId, "palette1")
-        verify(settingsRepo).unlockColorPalette(userId, "palette2")
-        verify(settingsRepo, never()).unlockColorPalette(userId, "palette3")
+        verify(settingsRepo).unlockColorPalette(userId, PaletteId("palette1"))
+        verify(settingsRepo).unlockColorPalette(userId, PaletteId("palette2"))
+        verify(settingsRepo, never()).unlockColorPalette(userId, PaletteId("palette3"))
     }
 }
