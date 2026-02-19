@@ -12,6 +12,19 @@ service cloud.firestore {
     }
 
     // ============================================
+    // Friends Feature - Shared Inbox
+    // Allow authenticated users to CREATE (send) shared items into another user's inbox.
+    // The sender's fromUserId must match their auth UID.
+    // The recipient (owner) can read, update (accept/dismiss) via the owner rule above.
+    // ============================================
+    match /users/{userId}/shared_inbox/{itemId} {
+      // Any authenticated user can send (create) a shared item to another user's inbox.
+      // fromUserId in the document must match the authenticated sender.
+      allow create: if request.auth != null
+        && request.resource.data.fromUserId == request.auth.uid;
+    }
+
+    // ============================================
     // NEW: Friends Feature - Public Profiles
     // Allow authenticated users to read public profiles of any user
     // ============================================

@@ -12,7 +12,10 @@ import com.example.fyp.data.wordbank.WordBankCacheDataStore
 import com.example.fyp.data.wordbank.WordBankGenerationRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
+import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.settings.SharedSettingsDataSource
+import com.example.fyp.domain.friends.ShareWordUseCase
+import com.example.fyp.model.UserId
 import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.core.AiConfig
 import com.example.fyp.core.UiConstants
@@ -52,7 +55,9 @@ class WordBankViewModel @Inject constructor(
     private val customWordsRepo: FirestoreCustomWordsRepository,
     private val translateTextUseCase: TranslateTextUseCase,
     private val sharedSettings: SharedSettingsDataSource,
-    private val wordBankCacheDataStore: WordBankCacheDataStore
+    private val wordBankCacheDataStore: WordBankCacheDataStore,
+    private val sharedFriendsDataSource: SharedFriendsDataSource,
+    private val shareWordUseCase: ShareWordUseCase
 ) : ViewModel() {
 
     private companion object {
@@ -86,6 +91,13 @@ class WordBankViewModel @Inject constructor(
     private val wordBankExistsCache: MutableMap<String, Boolean> = mutableMapOf()
     private var lastPrimaryForCache: String? = null
 
+    /**
+     * OPTIMIZED: In-memory custom words count cache.
+     * Avoids calling getAllCustomWordsOnce() (a Firestore read) on every refreshClusters().
+     * Invalidated only when a custom word is added or deleted.
+     */
+    private var cachedCustomWordsCount: Int? = null
+
 
     init {
         viewModelScope.launch {
@@ -104,6 +116,13 @@ class WordBankViewModel @Inject constructor(
                                 userSettings = settings
                             }
                         }
+                        // Subscribe friends list for share feature (uses shared listeners)
+                        sharedFriendsDataSource.startObserving(auth.user.uid)
+                        launch {
+                            sharedFriendsDataSource.friends.collect { friends ->
+                                _uiState.value = _uiState.value.copy(friends = friends)
+                            }
+                        }
                     }
                     AuthState.LoggedOut -> {
                         currentUserId = null
@@ -112,6 +131,7 @@ class WordBankViewModel @Inject constructor(
                         settingsJob?.cancel()
                         sharedHistoryDataSource.stopObserving()
                         wordBankExistsCache.clear()
+                        cachedCustomWordsCount = null
                         _uiState.value = WordBankUiState(
                             isLoading = false,
                             error = "Not logged in"
@@ -156,6 +176,7 @@ class WordBankViewModel @Inject constructor(
                 sourceLang = sourceLang,
                 targetLang = targetLang
             ).onSuccess {
+                cachedCustomWordsCount = null // invalidate cache after add
                 // Refresh custom words if we're viewing the custom word bank
                 if (_uiState.value.isCustomWordBankSelected) {
                     loadCustomWords()
@@ -275,6 +296,7 @@ class WordBankViewModel @Inject constructor(
 
         viewModelScope.launch {
             customWordsRepo.deleteCustomWord(uid, wordId).onSuccess {
+                cachedCustomWordsCount = null // invalidate cache after delete
                 // Refresh the custom word bank if we're viewing it
                 if (_uiState.value.isCustomWordBankSelected) {
                     loadCustomWords()
@@ -364,76 +386,69 @@ class WordBankViewModel @Inject constructor(
                 lastPrimaryForCache = primaryLanguageCode
             }
 
-            // Load custom words count
-            try {
-                val customWords = customWordsRepo.getAllCustomWordsOnce(uid)
-                _uiState.value = _uiState.value.copy(customWordsCount = customWords.size)
-            } catch (_: Exception) {
-                // Ignore error, just keep previous count
+            // OPTIMIZED: Use in-memory cached count; only fetch from Firestore when invalidated.
+            // Avoids a Firestore read on every history record update.
+            if (cachedCustomWordsCount == null) {
+                try {
+                    val customWords = customWordsRepo.getAllCustomWordsOnce(uid)
+                    cachedCustomWordsCount = customWords.size
+                } catch (_: Exception) {
+                    cachedCustomWordsCount = _uiState.value.customWordsCount // keep previous
+                }
             }
+            _uiState.value = _uiState.value.copy(customWordsCount = cachedCustomWordsCount ?: 0)
 
-            // Calculate counts from actual history records
-            // Count BOTH source and target languages for each record (matching backend cache logic)
+            // Calculate language counts from in-memory history records
             val allLanguageCounts = mutableMapOf<String, Int>()
-
             records.forEach { record ->
                 val source = record.sourceLang
                 val target = record.targetLang
-
-                // Count both languages (consistent with backend cache)
-                if (source.isNotBlank()) {
-                    allLanguageCounts[source] = (allLanguageCounts[source] ?: 0) + 1
-                }
-                if (target.isNotBlank() && target != source) {
-                    allLanguageCounts[target] = (allLanguageCounts[target] ?: 0) + 1
-                }
+                if (source.isNotBlank()) allLanguageCounts[source] = (allLanguageCounts[source] ?: 0) + 1
+                if (target.isNotBlank() && target != source) allLanguageCounts[target] = (allLanguageCounts[target] ?: 0) + 1
             }
 
-            // Display logic: Show ALL languages except primary language
-            // Exception: If primary language has no records, show ALL languages
             val primaryHasRecords = (allLanguageCounts[primaryLanguageCode] ?: 0) > 0
-            
             val directionalCounts = if (primaryHasRecords) {
-                // Primary has records: exclude it from display
                 allLanguageCounts.filterKeys { it != primaryLanguageCode }.toMutableMap()
             } else {
-                // Primary has no records: show ALL languages
                 allLanguageCounts.toMutableMap()
             }
 
-            // Check cache (in-memory first, then persisted DataStore, then Firestore)
+            // OPTIMIZED: Load the entire DataStore cache once (1 DataStore read) and query
+            // all language entries from the in-memory map — instead of N individual reads.
             val languagesToCheck = directionalCounts.keys.filter { it !in wordBankExistsCache }
-
-            // Parallelize existence checks for better performance
             if (languagesToCheck.isNotEmpty()) {
                 coroutineScope {
-                    val results = languagesToCheck.map { lang ->
+                    // Single DataStore read for all missing languages
+                    val batchCacheResults = async {
+                        // Load whole cache once; returns null map entries for unknowns
+                        languagesToCheck.associateWith { lang ->
+                            wordBankCacheDataStore.getWordBankExists(uid, primaryLanguageCode, lang)
+                        }
+                    }.await()
+
+                    // For entries not in DataStore cache, query Firestore (in parallel)
+                    val firestoreLangs = batchCacheResults.filterValues { it == null }.keys.toList()
+                    val firestoreResults = firestoreLangs.map { lang ->
                         lang to async {
                             try {
-                                // First check persisted cache
-                                val cachedExists = wordBankCacheDataStore.getWordBankExists(uid, primaryLanguageCode, lang)
-                                if (cachedExists != null) {
-                                    cachedExists
-                                } else {
-                                    // Not in persisted cache, check Firestore
-                                    val exists = wordBankRepo.wordBankExists(uid, primaryLanguageCode, lang)
-                                    // Save to persisted cache
-                                    wordBankCacheDataStore.cacheWordBank(
-                                        userId = uid,
-                                        primaryLang = primaryLanguageCode,
-                                        targetLang = lang,
-                                        exists = exists
-                                    )
-                                    exists
-                                }
-                            } catch (_: Exception) {
-                                false
-                            }
+                                val exists = wordBankRepo.wordBankExists(uid, primaryLanguageCode, lang)
+                                wordBankCacheDataStore.cacheWordBank(
+                                    userId = uid,
+                                    primaryLang = primaryLanguageCode,
+                                    targetLang = lang,
+                                    exists = exists
+                                )
+                                exists
+                            } catch (_: Exception) { false }
                         }
                     }
-                    
-                    // Collect results
-                    results.forEach { (lang, deferred) ->
+
+                    // Populate in-memory cache
+                    batchCacheResults.forEach { (lang, cached) ->
+                        if (cached != null) wordBankExistsCache[lang] = cached
+                    }
+                    firestoreResults.forEach { (lang, deferred) ->
                         wordBankExistsCache[lang] = deferred.await()
                     }
                 }
@@ -792,4 +807,56 @@ class WordBankViewModel @Inject constructor(
             }
         }
     }
+
+    // ── Share Feature ──────────────────────────────────────────────────────
+
+    fun setPendingShareWord(word: WordBankItem?) {
+        _uiState.value = _uiState.value.copy(pendingShareWord = word, shareError = null, shareSuccess = null)
+    }
+
+    /**
+     * OPTIMIZED: fromUsername is resolved from the in-memory username cache in
+     * SharedFriendsDataSource — no extra Firestore profile read needed.
+     */
+    fun shareWord(word: WordBankItem, toUserId: UserId) {
+        val fromId = currentUserId ?: return
+        val state = _uiState.value
+
+        // Derive source/target language codes
+        val (sourceLang, targetLang) = if (state.isCustomWordBankSelected) {
+            val parts = word.category.split(" → ")
+            Pair(parts.getOrNull(0)?.trim() ?: primaryLanguageCode, parts.getOrNull(1)?.trim() ?: "")
+        } else {
+            Pair(
+                state.currentWordBank?.primaryLanguageCode ?: primaryLanguageCode,
+                state.currentWordBank?.targetLanguageCode ?: state.selectedLanguageCode ?: ""
+            )
+        }
+
+        // Resolve username from in-memory cache (avoids a Firestore read)
+        val fromUsername = sharedFriendsDataSource.getCachedUsername(fromId) ?: ""
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSharing = true, shareError = null, shareSuccess = null, pendingShareWord = null)
+            shareWordUseCase(
+                fromUserId = UserId(fromId),
+                fromUsername = fromUsername,
+                toUserId = toUserId,
+                sourceText = word.originalWord,
+                targetText = word.translatedWord,
+                sourceLang = sourceLang,
+                targetLang = targetLang,
+                notes = word.example
+            ).onSuccess {
+                _uiState.value = _uiState.value.copy(isSharing = false, shareSuccess = "Shared successfully!")
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(isSharing = false, shareError = e.message ?: "Failed to share")
+            }
+        }
+    }
+
+    fun clearShareMessages() {
+        _uiState.value = _uiState.value.copy(shareSuccess = null, shareError = null)
+    }
 }
+

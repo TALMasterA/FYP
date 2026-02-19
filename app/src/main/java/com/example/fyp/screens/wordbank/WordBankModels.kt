@@ -1,5 +1,6 @@
 package com.example.fyp.screens.wordbank
 
+import com.example.fyp.model.friends.FriendRelation
 import com.google.firebase.Timestamp
 
 /**
@@ -43,7 +44,13 @@ data class WordBankUiState(
     // Custom word bank specific state
     val isCustomWordBankSelected: Boolean = false,
     val customWords: List<WordBankItem> = emptyList(),
-    val customWordsCount: Int = 0
+    val customWordsCount: Int = 0,
+    // Share feature state
+    val friends: List<FriendRelation> = emptyList(),
+    val isSharing: Boolean = false,
+    val shareSuccess: String? = null,
+    val shareError: String? = null,
+    val pendingShareWord: WordBankItem? = null
 )
 
 /**

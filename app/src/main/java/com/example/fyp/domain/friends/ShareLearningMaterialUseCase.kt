@@ -14,8 +14,9 @@ class ShareLearningMaterialUseCase @Inject constructor(
 ) {
     /**
      * Share a learning sheet or quiz with a friend.
-     * 
+     *
      * @param fromUserId Current user sharing the material
+     * @param fromUsername Caller's own username (in-memory — avoids a Firestore profile read)
      * @param toUserId Friend receiving the material
      * @param type Type of material (LEARNING_SHEET or QUIZ)
      * @param materialId ID of the material
@@ -24,6 +25,7 @@ class ShareLearningMaterialUseCase @Inject constructor(
      */
     suspend operator fun invoke(
         fromUserId: UserId,
+        fromUsername: String,
         toUserId: UserId,
         type: SharedItemType,
         materialId: String,
@@ -35,11 +37,12 @@ class ShareLearningMaterialUseCase @Inject constructor(
             "title" to title,
             "description" to description
         )
-        
+
         return sharingRepository.shareLearningMaterial(
-            fromUserId, 
-            toUserId, 
-            type, 
+            fromUserId,
+            fromUsername,
+            toUserId,
+            type,
             materialData
         )
     }

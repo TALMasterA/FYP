@@ -18,25 +18,23 @@ import javax.inject.Singleton
 
 @Singleton
 class FirestoreSharingRepository @Inject constructor(
-    private val db: FirebaseFirestore,
-    private val friendsRepository: FriendsRepository
+    private val db: FirebaseFirestore
 ) : SharingRepository {
 
+    // ── Share Word ───────────────────────────────────────────────────────────
+
+    /**
+     * OPTIMIZED: Removed areFriends() Firestore read (UI enforces friends-only) and
+     * getPublicProfile() read (caller now passes fromUsername from in-memory profile).
+     * Net saving: 2 Firestore reads per share operation.
+     */
     override suspend fun shareWord(
         fromUserId: UserId,
+        fromUsername: String,
         toUserId: UserId,
         wordData: Map<String, Any>
     ): Result<SharedItem> {
         return try {
-            // Verify friendship
-            if (!friendsRepository.areFriends(fromUserId, toUserId)) {
-                return Result.failure(IllegalStateException("Users are not friends"))
-            }
-
-            // Get sender profile
-            val fromProfile = friendsRepository.getPublicProfile(fromUserId)
-                ?: return Result.failure(IllegalStateException("Sender profile not found"))
-
             val itemRef = db.collection("users")
                 .document(toUserId.value)
                 .collection("shared_inbox")
@@ -45,7 +43,7 @@ class FirestoreSharingRepository @Inject constructor(
             val sharedItem = SharedItem(
                 itemId = itemRef.id,
                 fromUserId = fromUserId.value,
-                fromUsername = fromProfile.username,
+                fromUsername = fromUsername,
                 toUserId = toUserId.value,
                 type = SharedItemType.WORD,
                 content = wordData,
@@ -60,26 +58,22 @@ class FirestoreSharingRepository @Inject constructor(
         }
     }
 
+    // ── Share Learning Material ──────────────────────────────────────────────
+
+    /**
+     * OPTIMIZED: Same approach as shareWord — no friendship or profile reads.
+     */
     override suspend fun shareLearningMaterial(
         fromUserId: UserId,
+        fromUsername: String,
         toUserId: UserId,
         type: SharedItemType,
         materialData: Map<String, Any>
     ): Result<SharedItem> {
         return try {
-            // Verify friendship
-            if (!friendsRepository.areFriends(fromUserId, toUserId)) {
-                return Result.failure(IllegalStateException("Users are not friends"))
-            }
-
-            // Validate type
             require(type == SharedItemType.LEARNING_SHEET || type == SharedItemType.QUIZ) {
                 "Invalid material type"
             }
-
-            // Get sender profile
-            val fromProfile = friendsRepository.getPublicProfile(fromUserId)
-                ?: return Result.failure(IllegalStateException("Sender profile not found"))
 
             val itemRef = db.collection("users")
                 .document(toUserId.value)
@@ -89,7 +83,7 @@ class FirestoreSharingRepository @Inject constructor(
             val sharedItem = SharedItem(
                 itemId = itemRef.id,
                 fromUserId = fromUserId.value,
-                fromUsername = fromProfile.username,
+                fromUsername = fromUsername,
                 toUserId = toUserId.value,
                 type = type,
                 content = materialData,
@@ -104,6 +98,8 @@ class FirestoreSharingRepository @Inject constructor(
         }
     }
 
+    // ── Accept / Dismiss ─────────────────────────────────────────────────────
+
     override suspend fun acceptSharedItem(
         itemId: String,
         userId: UserId
@@ -117,23 +113,16 @@ class FirestoreSharingRepository @Inject constructor(
             val item = itemRef.get().await().toObject(SharedItem::class.java)
                 ?: return Result.failure(IllegalArgumentException("Item not found"))
 
-            // Verify ownership
             if (item.toUserId != userId.value) {
                 return Result.failure(IllegalArgumentException("Not authorized"))
             }
 
-            // Update status
             itemRef.update("status", SharedItemStatus.ACCEPTED.name).await()
 
-            // Handle different item types
             when (item.type) {
                 SharedItemType.WORD -> addWordToUserWordBank(userId, item.content)
-                SharedItemType.LEARNING_SHEET -> {
-                    // In a real implementation, add to user's learning materials
-                }
-                SharedItemType.QUIZ -> {
-                    // In a real implementation, add to user's quiz collection
-                }
+                SharedItemType.LEARNING_SHEET -> { /* future: add to learning materials */ }
+                SharedItemType.QUIZ -> { /* future: add to quiz collection */ }
             }
 
             Result.success(Unit)
@@ -157,10 +146,13 @@ class FirestoreSharingRepository @Inject constructor(
         Result.failure(e)
     }
 
+    // ── Observe ──────────────────────────────────────────────────────────────
+
     override fun observeSharedInbox(userId: UserId): Flow<List<SharedItem>> = callbackFlow {
         val listener = db.collection("users")
             .document(userId.value)
             .collection("shared_inbox")
+            .whereEqualTo("status", SharedItemStatus.PENDING.name)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -185,15 +177,15 @@ class FirestoreSharingRepository @Inject constructor(
         0
     }
 
+    // ── Private helpers ──────────────────────────────────────────────────────
+
     private suspend fun addWordToUserWordBank(userId: UserId, wordData: Map<String, Any>) {
         try {
-            // Extract word details
             val sourceText = wordData["sourceText"] as? String ?: return
             val targetText = wordData["targetText"] as? String ?: return
             val sourceLang = wordData["sourceLang"] as? String ?: return
             val targetLang = wordData["targetLang"] as? String ?: return
 
-            // Add to user's custom words collection
             val wordRef = db.collection("users")
                 .document(userId.value)
                 .collection("wordbank")

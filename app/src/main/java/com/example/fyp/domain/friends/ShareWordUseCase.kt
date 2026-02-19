@@ -15,6 +15,7 @@ class ShareWordUseCase @Inject constructor(
      * Share a word with a friend.
      * 
      * @param fromUserId Current user sharing the word
+     * @param fromUsername Caller's own username (in-memory — avoids a Firestore profile read)
      * @param toUserId Friend receiving the word
      * @param sourceText The word in source language
      * @param targetText The word in target language
@@ -24,6 +25,7 @@ class ShareWordUseCase @Inject constructor(
      */
     suspend operator fun invoke(
         fromUserId: UserId,
+        fromUsername: String,
         toUserId: UserId,
         sourceText: String,
         targetText: String,
@@ -39,6 +41,6 @@ class ShareWordUseCase @Inject constructor(
             "notes" to notes
         )
         
-        return sharingRepository.shareWord(fromUserId, toUserId, wordData)
+        return sharingRepository.shareWord(fromUserId, fromUsername, toUserId, wordData)
     }
 }

@@ -9,7 +9,6 @@ import com.example.fyp.model.friends.FriendRequest
 import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.friends.RequestStatus
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.channels.awaitClose
@@ -40,10 +39,12 @@ class FirestoreFriendsRepository @Inject constructor(
             .set(profile)
             .await()
 
-        // Update search index
+        // Update search index — store full profile fields to avoid N reads in searchByUsername
         val searchData = mapOf(
             "username_lowercase" to profile.username.lowercase(),
+            "username" to profile.username,
             "displayName" to profile.displayName,
+            "avatarUrl" to profile.avatarUrl,
             "isDiscoverable" to profile.isDiscoverable,
             "primaryLanguage" to profile.primaryLanguage,
             "learningLanguages" to profile.learningLanguages,
@@ -85,15 +86,19 @@ class FirestoreFriendsRepository @Inject constructor(
 
         // Update search index if username or discoverability changed
         val searchUpdates = mutableMapOf<String, Any>()
-        updates["username"]?.let { searchUpdates["username_lowercase"] = (it as String).lowercase() }
+        updates["username"]?.let {
+            searchUpdates["username_lowercase"] = (it as String).lowercase()
+            searchUpdates["username"] = it
+        }
         updates["displayName"]?.let { searchUpdates["displayName"] = it }
+        updates["avatarUrl"]?.let { searchUpdates["avatarUrl"] = it }
         updates["isDiscoverable"]?.let { searchUpdates["isDiscoverable"] = it }
         updates["lastActiveAt"]?.let { searchUpdates["lastActiveAt"] = it }
 
         if (searchUpdates.isNotEmpty()) {
             db.collection("user_search")
                 .document(userId.value)
-                .update(searchUpdates)
+                .set(searchUpdates, com.google.firebase.firestore.SetOptions.merge())
                 .await()
         }
 
@@ -142,11 +147,17 @@ class FirestoreFriendsRepository @Inject constructor(
     // Search
     // ============================================
 
+    /**
+     * OPTIMIZED: Profile fields are now stored in user_search documents (see
+     * createOrUpdatePublicProfile), so we build PublicUserProfile directly from
+     * the search query results — no additional per-user reads needed.
+     * Previous cost: 1 query + N reads. New cost: 1 query.
+     */
     override suspend fun searchByUsername(query: String, limit: Long): List<PublicUserProfile> = try {
         val lowerQuery = query.lowercase()
         val endQuery = lowerQuery + '\uf8ff'
 
-        val userIds = db.collection("user_search")
+        db.collection("user_search")
             .whereEqualTo("isDiscoverable", true)
             .whereGreaterThanOrEqualTo("username_lowercase", lowerQuery)
             .whereLessThanOrEqualTo("username_lowercase", endQuery)
@@ -154,12 +165,21 @@ class FirestoreFriendsRepository @Inject constructor(
             .get()
             .await()
             .documents
-            .map { it.id }
-
-        // Fetch full profiles
-        userIds.mapNotNull { userId ->
-            getPublicProfile(UserId(userId))
-        }
+            .mapNotNull { doc ->
+                val username = doc.getString("username") ?: return@mapNotNull null
+                @Suppress("UNCHECKED_CAST")
+                val learningLangs = (doc.get("learningLanguages") as? List<String>) ?: emptyList()
+                PublicUserProfile(
+                    uid = doc.id,
+                    username = username,
+                    displayName = doc.getString("displayName") ?: "",
+                    avatarUrl = doc.getString("avatarUrl") ?: "",
+                    isDiscoverable = doc.getBoolean("isDiscoverable") ?: true,
+                    primaryLanguage = doc.getString("primaryLanguage") ?: "",
+                    learningLanguages = learningLangs,
+                    lastActiveAt = doc.getTimestamp("lastActiveAt") ?: Timestamp.now()
+                )
+            }
     } catch (e: Exception) {
         emptyList()
     }
@@ -200,6 +220,9 @@ class FirestoreFriendsRepository @Inject constructor(
             val fromProfile = getPublicProfile(fromUserId)
                 ?: return Result.failure(IllegalStateException("Sender profile not found"))
 
+            // Get recipient profile for caching username (best-effort)
+            val toProfile = getPublicProfile(toUserId)
+
             // Create request
             val requestRef = db.collection("friend_requests").document()
             val request = FriendRequest(
@@ -209,6 +232,8 @@ class FirestoreFriendsRepository @Inject constructor(
                 fromDisplayName = fromProfile.displayName,
                 fromAvatarUrl = fromProfile.avatarUrl,
                 toUserId = toUserId.value,
+                toUsername = toProfile?.username ?: "",
+                toDisplayName = toProfile?.displayName ?: "",
                 status = RequestStatus.PENDING,
                 createdAt = Timestamp.now(),
                 updatedAt = Timestamp.now()
@@ -263,12 +288,12 @@ class FirestoreFriendsRepository @Inject constructor(
                 .document(currentUserId.value)
             batch.set(
                 fromFriendRef,
-                FriendRelation(
-                    friendId = currentUserId.value,
-                    friendUsername = toProfile.username,
-                    friendDisplayName = toProfile.displayName,
-                    friendAvatarUrl = toProfile.avatarUrl,
-                    addedAt = now
+                mapOf(
+                    "friendId" to currentUserId.value,
+                    "friendUsername" to toProfile.username,
+                    "friendDisplayName" to toProfile.displayName,
+                    "friendAvatarUrl" to toProfile.avatarUrl,
+                    "addedAt" to now
                 )
             )
 
@@ -279,12 +304,12 @@ class FirestoreFriendsRepository @Inject constructor(
                 .document(request.fromUserId)
             batch.set(
                 toFriendRef,
-                FriendRelation(
-                    friendId = request.fromUserId,
-                    friendUsername = fromProfile.username,
-                    friendDisplayName = fromProfile.displayName,
-                    friendAvatarUrl = fromProfile.avatarUrl,
-                    addedAt = now
+                mapOf(
+                    "friendId" to request.fromUserId,
+                    "friendUsername" to fromProfile.username,
+                    "friendDisplayName" to fromProfile.displayName,
+                    "friendAvatarUrl" to fromProfile.avatarUrl,
+                    "addedAt" to now
                 )
             )
 

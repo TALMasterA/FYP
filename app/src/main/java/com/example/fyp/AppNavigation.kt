@@ -83,7 +83,7 @@ sealed class AppScreen(val route: String) {
 
     object Chat : AppScreen("chat/{friendId}/{friendUsername}/{friendDisplayName}") {
         fun routeFor(friendId: String, friendUsername: String, friendDisplayName: String = "") =
-            "chat/$friendId/$friendUsername/$friendDisplayName"
+            "chat/${java.net.URLEncoder.encode(friendId, "UTF-8")}/${java.net.URLEncoder.encode(friendUsername, "UTF-8")}/${java.net.URLEncoder.encode(friendDisplayName, "UTF-8")}"
     }
 
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
@@ -115,8 +115,10 @@ fun AppNavigation() {
     val (appLanguageState, updateAppLanguage) = rememberUiLanguageState(uiLanguages)
 
     // Application-level ViewModel for cross-cutting concerns (used for side effects)
-    @Suppress("UNUSED_VARIABLE")
     val appViewModel: AppViewModel = hiltViewModel()
+    val pendingFriendRequestCount by appViewModel.pendingFriendRequestCount.collectAsStateWithLifecycle()
+    val unreadMessageCount by appViewModel.unreadMessageCount.collectAsStateWithLifecycle()
+    val pendingSharedItemCount by appViewModel.pendingSharedItemCount.collectAsStateWithLifecycle()
 
     // One SettingsViewModel shared across app
     val settingsViewModel: SettingsViewModel = hiltViewModel()
@@ -177,6 +179,7 @@ fun AppNavigation() {
                             onOpenLearning = { navController.navigate(AppScreen.Learning.route) { launchSingleTop = true } },
                             onOpenSettings = { navController.navigate(AppScreen.Settings.route) { launchSingleTop = true } },
                             onOpenWordBank = { navController.navigate(AppScreen.WordBank.route) { launchSingleTop = true } },
+                            totalNotificationCount = pendingFriendRequestCount + unreadMessageCount + pendingSharedItemCount,
                         )
                     }
 
@@ -271,6 +274,9 @@ fun AppNavigation() {
                             onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) },
                             onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) },
                             onOpenSystemNotes = { navController.navigate(AppScreen.SystemNotes.route) },
+                            pendingFriendRequestCount = pendingFriendRequestCount,
+                            unreadMessageCount = unreadMessageCount,
+                            pendingSharedItemCount = pendingSharedItemCount,
                             viewModel = settingsViewModel
                         )
                     }

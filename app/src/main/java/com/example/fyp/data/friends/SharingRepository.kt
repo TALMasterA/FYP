@@ -13,11 +13,13 @@ interface SharingRepository {
     /**
      * Share a word bank word with a friend.
      * @param fromUserId The user sharing the word
+     * @param fromUsername The username of the sharing user (passed in-memory to avoid a profile read)
      * @param toUserId The friend receiving the word
      * @param wordData Map containing word information (sourceText, targetText, sourceLang, targetLang, etc.)
      */
     suspend fun shareWord(
         fromUserId: UserId,
+        fromUsername: String,
         toUserId: UserId,
         wordData: Map<String, Any>
     ): Result<SharedItem>
@@ -25,12 +27,14 @@ interface SharingRepository {
     /**
      * Share a learning material (sheet or quiz) with a friend.
      * @param fromUserId The user sharing the material
+     * @param fromUsername The username of the sharing user (passed in-memory to avoid a profile read)
      * @param toUserId The friend receiving the material
      * @param type Type of material (LEARNING_SHEET or QUIZ)
      * @param materialData Map containing material information
      */
     suspend fun shareLearningMaterial(
         fromUserId: UserId,
+        fromUsername: String,
         toUserId: UserId,
         type: SharedItemType,
         materialData: Map<String, Any>

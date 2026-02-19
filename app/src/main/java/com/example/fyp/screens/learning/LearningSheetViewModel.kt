@@ -4,10 +4,15 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.data.friends.SharedFriendsDataSource
+import com.example.fyp.domain.friends.ObserveFriendsUseCase
+import com.example.fyp.domain.friends.ShareLearningMaterialUseCase
 import com.example.fyp.domain.learning.LearningSheetsRepository
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.domain.history.ObserveUserHistoryUseCase
 import com.example.fyp.domain.learning.ParseAndStoreQuizUseCase
+import com.example.fyp.model.friends.FriendRelation
+import com.example.fyp.model.friends.SharedItemType
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.QuizAttempt
 import com.example.fyp.model.QuizQuestion
@@ -43,6 +48,13 @@ data class LearningSheetUiState(
     // Generated quiz metadata
     val generatedQuizHistoryCountAtGenerate: Int? = null,
     val isQuizOutdated: Boolean = false,
+
+    // Share feature
+    val friends: List<FriendRelation> = emptyList(),
+    val isSharing: Boolean = false,
+    val shareSuccess: String? = null,
+    val shareError: String? = null,
+    val showShareDialog: Boolean = false,
 )
 
 @HiltViewModel
@@ -53,6 +65,9 @@ class LearningSheetViewModel @Inject constructor(
     private val observeUserHistory: ObserveUserHistoryUseCase,
     private val parseAndStoreQuiz: ParseAndStoreQuizUseCase,
     private val quizRepo: QuizRepository,
+    private val shareLearningMaterialUseCase: ShareLearningMaterialUseCase,
+    private val observeFriendsUseCase: ObserveFriendsUseCase,
+    private val sharedFriendsDataSource: SharedFriendsDataSource,
 ) : ViewModel() {
 
     private val primaryCode: String = savedStateHandle.get<String>("primaryCode").orEmpty()
@@ -113,6 +128,13 @@ class LearningSheetViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         loadSheet()
+
+        // Observe friends for share feature
+        viewModelScope.launch {
+            observeFriendsUseCase(UserId(uid)).collect { friends ->
+                _uiState.value = _uiState.value.copy(friends = friends)
+            }
+        }
 
         if (pendingInitQuiz) {
             pendingInitQuiz = false
@@ -281,5 +303,49 @@ class LearningSheetViewModel @Inject constructor(
             isQuizTaken = false,
             quizError = null
         )
+    }
+
+    // ============================================
+    // Share Feature
+    // ============================================
+
+    fun showShareDialog() {
+        _uiState.value = _uiState.value.copy(showShareDialog = true, shareError = null, shareSuccess = null)
+    }
+
+    fun dismissShareDialog() {
+        _uiState.value = _uiState.value.copy(showShareDialog = false)
+    }
+
+    fun shareSheet(toUserId: UserId) {
+        val fromId = uid ?: return
+        val state = _uiState.value
+
+        val title = "Learning Sheet: ${state.primaryLanguageCode} → ${state.targetLanguageCode}"
+        val materialId = "${state.primaryLanguageCode}_${state.targetLanguageCode}"
+
+        // Resolve username from in-memory cache — avoids a Firestore profile read
+        val fromUsername = sharedFriendsDataSource.getCachedUsername(fromId) ?: ""
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSharing = true, shareError = null, shareSuccess = null, showShareDialog = false)
+            shareLearningMaterialUseCase(
+                fromUserId = UserId(fromId),
+                fromUsername = fromUsername,
+                toUserId = toUserId,
+                type = SharedItemType.LEARNING_SHEET,
+                materialId = materialId,
+                title = title,
+                description = state.content?.take(200) ?: ""
+            ).onSuccess {
+                _uiState.value = _uiState.value.copy(isSharing = false, shareSuccess = "Shared successfully!")
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(isSharing = false, shareError = e.message ?: "Failed to share")
+            }
+        }
+    }
+
+    fun clearShareMessages() {
+        _uiState.value = _uiState.value.copy(shareSuccess = null, shareError = null)
     }
 }

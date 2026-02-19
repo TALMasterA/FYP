@@ -26,6 +26,10 @@ object UiConstants {
  * AI and generation related constants
  */
 object AiConfig {
+    /**
+     * Azure OpenAI deployment name - must match the deployment name in Azure Portal.
+     * Go to: Azure Portal → Azure OpenAI → Deployments → copy the exact name.
+     */
     const val DEFAULT_DEPLOYMENT = "gpt-5-mini"
     const val AI_GENERATION_TIMEOUT_MINUTES = 5L
 }

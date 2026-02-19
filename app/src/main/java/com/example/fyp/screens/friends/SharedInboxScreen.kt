@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -11,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.friends.SharedItem
@@ -28,7 +30,7 @@ fun SharedInboxScreen(
     appLanguageState: AppLanguageState,
     onBack: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
@@ -182,7 +184,7 @@ fun SharedItemCard(
                     Icon(
                         when (item.type) {
                             SharedItemType.WORD -> Icons.Default.Book
-                            SharedItemType.LEARNING_SHEET -> Icons.Default.Article
+                            SharedItemType.LEARNING_SHEET -> Icons.AutoMirrored.Filled.Article
                             SharedItemType.QUIZ -> Icons.Default.Quiz
                         },
                         contentDescription = null,
@@ -213,7 +215,7 @@ fun SharedItemCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Divider()
+            HorizontalDivider()
 
             // Content display
             when (item.type) {
