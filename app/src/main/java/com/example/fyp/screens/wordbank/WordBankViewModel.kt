@@ -374,7 +374,6 @@ class WordBankViewModel @Inject constructor(
 
             // Calculate counts from actual history records
             // Count BOTH source and target languages for each record (matching backend cache logic)
-            // Then filter to show only languages that appear WITH primary language
             val allLanguageCounts = mutableMapOf<String, Int>()
 
             records.forEach { record ->
@@ -390,21 +389,17 @@ class WordBankViewModel @Inject constructor(
                 }
             }
 
-            // Filter to only show languages that appear WITH primary language
-            // (exclude records where neither side is primary)
-            val relevantLanguages = records
-                .filter { record ->
-                    record.sourceLang == primaryLanguageCode || record.targetLang == primaryLanguageCode
-                }
-                .flatMap { record ->
-                    listOf(record.sourceLang, record.targetLang).filter { it != primaryLanguageCode && it.isNotBlank() }
-                }
-                .toSet()
-
-            // Build final counts: use actual counts but only for relevant languages
-            val directionalCounts = allLanguageCounts
-                .filterKeys { it in relevantLanguages }
-                .toMutableMap()
+            // Display logic: Show ALL languages except primary language
+            // Exception: If primary language has no records, show ALL languages
+            val primaryHasRecords = (allLanguageCounts[primaryLanguageCode] ?: 0) > 0
+            
+            val directionalCounts = if (primaryHasRecords) {
+                // Primary has records: exclude it from display
+                allLanguageCounts.filterKeys { it != primaryLanguageCode }.toMutableMap()
+            } else {
+                // Primary has no records: show ALL languages
+                allLanguageCounts.toMutableMap()
+            }
 
             // Check cache (in-memory first, then persisted DataStore, then Firestore)
             val languagesToCheck = directionalCounts.keys.filter { it !in wordBankExistsCache }
