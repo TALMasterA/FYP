@@ -228,20 +228,17 @@ class LearningViewModel @Inject constructor(
             }
         }
 
-        // Filter to only show languages that appear WITH primary language
-        // (exclude records where neither side is primary)
-        val relevantLanguages = _uiState.value.records
-            .filter { record ->
-                record.sourceLang == primaryLanguageCode || record.targetLang == primaryLanguageCode
-            }
-            .flatMap { record ->
-                listOf(record.sourceLang, record.targetLang).filter { it != primaryLanguageCode && it.isNotBlank() }
-            }
-            .toSet()
-
-        // Build final counts: use actual counts but only for relevant languages
-        val directionalCounts = allLanguageCounts
-            .filterKeys { it in relevantLanguages }
+        // Display logic: Show ALL languages except primary language
+        // Exception: If primary language has no records, show ALL languages
+        val primaryHasRecords = (allLanguageCounts[primaryLanguageCode] ?: 0) > 0
+        
+        val directionalCounts = if (primaryHasRecords) {
+            // Primary has records: exclude it from display
+            allLanguageCounts.filterKeys { it != primaryLanguageCode }
+        } else {
+            // Primary has no records: show ALL languages
+            allLanguageCounts
+        }
 
         return directionalCounts
             .filter { (code, _) -> code.isNotBlank() }
