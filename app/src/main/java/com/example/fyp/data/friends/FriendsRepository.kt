@@ -56,7 +56,12 @@ interface FriendsRepository {
      * Returns up to [limit] matching users who are discoverable.
      */
     suspend fun searchByUsername(query: String, limit: Long = 20): List<PublicUserProfile>
-    
+
+    /**
+     * Search users by username, returning a Result wrapper.
+     */
+    suspend fun searchUsersByUsername(query: String, limit: Long = 20): Result<List<PublicUserProfile>>
+
     /**
      * Find user by exact user ID.
      * Returns null if user not found or not discoverable.
@@ -76,8 +81,8 @@ interface FriendsRepository {
      * Accept a friend request.
      * Creates friendship for both users.
      */
-    suspend fun acceptFriendRequest(requestId: String, currentUserId: UserId): Result<Unit>
-    
+    suspend fun acceptFriendRequest(requestId: String, currentUserId: UserId, friendUserId: UserId): Result<Unit>
+
     /**
      * Reject a friend request.
      */

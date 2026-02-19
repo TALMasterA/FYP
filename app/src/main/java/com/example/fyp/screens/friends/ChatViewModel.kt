@@ -9,6 +9,7 @@ import com.example.fyp.domain.friends.MarkMessagesAsReadUseCase
 import com.example.fyp.domain.friends.ObserveMessagesUseCase
 import com.example.fyp.domain.friends.SendMessageUseCase
 import com.example.fyp.domain.friends.TranslateAllMessagesUseCase
+import com.example.fyp.data.friends.ChatRepository
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.FriendMessage
 import com.example.fyp.model.user.AuthState
@@ -46,7 +47,8 @@ class ChatViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
     private val markMessagesAsReadUseCase: MarkMessagesAsReadUseCase,
     private val translateAllMessagesUseCase: TranslateAllMessagesUseCase,
-    private val userSettingsRepository: UserSettingsRepository
+    private val userSettingsRepository: UserSettingsRepository,
+    private val chatRepository: ChatRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -126,8 +128,9 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSending = true, error = null)
             
-            val result = sendMessageUseCase(userId, friendId, messageText)
-            
+            val chatId = chatRepository.generateChatId(userId, friendId)
+            val result = sendMessageUseCase(chatId, userId, friendId, messageText)
+
             result.fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(

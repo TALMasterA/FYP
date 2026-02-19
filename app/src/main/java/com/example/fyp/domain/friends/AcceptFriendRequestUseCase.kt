@@ -10,7 +10,7 @@ import javax.inject.Inject
 class AcceptFriendRequestUseCase @Inject constructor(
     private val friendsRepository: FriendsRepository
 ) {
-    suspend operator fun invoke(requestId: String, currentUserId: UserId): Result<Unit> {
-        return friendsRepository.acceptFriendRequest(requestId, currentUserId)
+    suspend operator fun invoke(requestId: String, currentUserId: UserId, friendUserId: UserId): Result<Unit> {
+        return friendsRepository.acceptFriendRequest(requestId, currentUserId, friendUserId)
     }
 }

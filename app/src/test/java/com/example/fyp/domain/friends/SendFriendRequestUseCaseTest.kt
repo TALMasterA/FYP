@@ -2,6 +2,7 @@ package com.example.fyp.domain.friends
 
 import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.model.UserId
+import com.example.fyp.model.friends.FriendRequest
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -33,7 +34,7 @@ class SendFriendRequestUseCaseTest {
         val toUserId = UserId("user2")
 
         friendsRepository.stub {
-            onBlocking { sendFriendRequest(fromUserId, toUserId) } doReturn Result.success(Unit)
+            onBlocking { sendFriendRequest(fromUserId, toUserId) } doReturn Result.success(FriendRequest())
         }
 
         // Act
@@ -84,7 +85,7 @@ class SendFriendRequestUseCaseTest {
 
         toUserIds.forEach { toUserId ->
             friendsRepository.stub {
-                onBlocking { sendFriendRequest(fromUserId, toUserId) } doReturn Result.success(Unit)
+                onBlocking { sendFriendRequest(fromUserId, toUserId) } doReturn Result.success(FriendRequest())
             }
         }
 

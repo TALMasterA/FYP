@@ -25,7 +25,17 @@ interface ChatRepository {
         toUserId: UserId,
         content: String
     ): Result<FriendMessage>
-    
+
+    /**
+     * Send a text message using an explicit chatId.
+     */
+    suspend fun sendMessage(
+        chatId: String,
+        fromUserId: UserId,
+        toUserId: UserId,
+        content: String
+    ): Result<Unit>
+
     /**
      * Send a shared item message (word or learning material).
      */

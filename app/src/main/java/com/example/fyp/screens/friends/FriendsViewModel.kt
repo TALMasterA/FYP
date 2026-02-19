@@ -138,12 +138,14 @@ class FriendsViewModel @Inject constructor(
     private fun searchUsers(query: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSearching = true)
-            try {
-                val results = searchUsersUseCase(query)
-                _uiState.value = _uiState.value.copy(searchResults = results, isSearching = false, error = null)
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isSearching = false, error = "Search failed: ${e.message}")
-            }
+            searchUsersUseCase(query).fold(
+                onSuccess = { results ->
+                    _uiState.value = _uiState.value.copy(searchResults = results, isSearching = false, error = null)
+                },
+                onFailure = { e ->
+                    _uiState.value = _uiState.value.copy(isSearching = false, error = "Search failed: ${e.message}")
+                }
+            )
         }
     }
 
@@ -161,8 +163,12 @@ class FriendsViewModel @Inject constructor(
 
     fun acceptFriendRequest(requestId: String) {
         val userId = currentUserId ?: return
+        val friendUserId = _uiState.value.incomingRequests
+            .firstOrNull { it.requestId == requestId }
+            ?.fromUserId
+            ?.let { UserId(it) } ?: return
         viewModelScope.launch {
-            acceptFriendRequestUseCase(requestId, userId).fold(
+            acceptFriendRequestUseCase(requestId, userId, friendUserId).fold(
                 onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Friend request accepted!", error = null) },
                 onFailure = { _uiState.value = _uiState.value.copy(error = it.message ?: "Failed to accept request") }
             )

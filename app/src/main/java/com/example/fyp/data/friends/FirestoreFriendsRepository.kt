@@ -184,6 +184,12 @@ class FirestoreFriendsRepository @Inject constructor(
         emptyList()
     }
 
+    override suspend fun searchUsersByUsername(query: String, limit: Long): Result<List<PublicUserProfile>> = try {
+        Result.success(searchByUsername(query, limit))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
     override suspend fun findByUserId(userId: UserId): PublicUserProfile? {
         val profile = getPublicProfile(userId)
         return if (profile?.isDiscoverable == true) profile else null
@@ -248,7 +254,8 @@ class FirestoreFriendsRepository @Inject constructor(
 
     override suspend fun acceptFriendRequest(
         requestId: String,
-        currentUserId: UserId
+        currentUserId: UserId,
+        friendUserId: UserId
     ): Result<Unit> {
         return try {
             val requestRef = db.collection("friend_requests").document(requestId)

@@ -1,40 +1,20 @@
 package com.example.fyp.domain.friends
 
 import com.example.fyp.data.friends.FriendsRepository
-import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.PublicUserProfile
 import javax.inject.Inject
 
 /**
- * Use case for searching users by username or userId.
- * - If query looks like a userId (long string), search by userId
- * - Otherwise, search by username prefix
+ * Use case for searching users by username.
+ * Returns Result.failure if query is too short (< 2 chars).
  */
 class SearchUsersUseCase @Inject constructor(
     private val friendsRepository: FriendsRepository
 ) {
-    suspend operator fun invoke(query: String, limit: Long = 20): List<PublicUserProfile> {
+    suspend operator fun invoke(query: String, limit: Long = 20): Result<List<PublicUserProfile>> {
         if (query.length < 2) {
-            return emptyList()
+            return Result.failure(IllegalArgumentException("Search query must be at least 2 characters"))
         }
-
-        // Check if query looks like a userId (28+ characters, alphanumeric)
-        // Firebase UIDs are 28 characters long
-        val results = mutableListOf<PublicUserProfile>()
-
-        if (query.length >= 10 && query.all { it.isLetterOrDigit() }) {
-            // Try to find by exact userId
-            val userById = friendsRepository.findByUserId(UserId(query))
-            if (userById != null) {
-                results.add(userById)
-            }
-        }
-
-        // Also search by username (unless we found exact userId match)
-        if (results.isEmpty()) {
-            results.addAll(friendsRepository.searchByUsername(query, limit))
-        }
-
-        return results
+        return friendsRepository.searchUsersByUsername(query)
     }
 }

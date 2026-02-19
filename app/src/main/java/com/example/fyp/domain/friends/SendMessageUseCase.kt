@@ -2,7 +2,6 @@ package com.example.fyp.domain.friends
 
 import com.example.fyp.data.friends.ChatRepository
 import com.example.fyp.model.UserId
-import com.example.fyp.model.friends.FriendMessage
 import javax.inject.Inject
 
 /**
@@ -12,10 +11,14 @@ class SendMessageUseCase @Inject constructor(
     private val chatRepository: ChatRepository
 ) {
     suspend operator fun invoke(
+        chatId: String,
         fromUserId: UserId,
         toUserId: UserId,
         content: String
-    ): Result<FriendMessage> {
-        return chatRepository.sendTextMessage(fromUserId, toUserId, content)
+    ): Result<Unit> {
+        if (content.isBlank()) {
+            return Result.failure(IllegalArgumentException("Message text cannot be empty"))
+        }
+        return chatRepository.sendMessage(chatId, fromUserId, toUserId, content)
     }
 }
