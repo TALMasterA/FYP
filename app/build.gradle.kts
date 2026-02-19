@@ -134,6 +134,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    
+    // Performance Monitoring & Debugging (Debug only)
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.12")
 
     implementation(libs.androidx.datastore.preferences)
 
