@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.friends.ChatRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
+import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.EnsurePublicProfileExistsUseCase
@@ -37,6 +38,7 @@ class AppViewModel @Inject constructor(
     private val ensurePublicProfileExistsUseCase: EnsurePublicProfileExistsUseCase,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
     private val sharedSettingsDataSource: SharedSettingsDataSource,
+    private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
@@ -73,6 +75,8 @@ class AppViewModel @Inject constructor(
                         sharedFriendsDataSource.startObserving(userId)
                         // Start settings listener early so subsequent ViewModels find it warm
                         sharedSettingsDataSource.startObserving(userId)
+                        // Start history listener early so Learning and WordBank screens load immediately
+                        sharedHistoryDataSource.startObserving(userId)
                         if (lastInitializedUserId != userId) {
                             lastInitializedUserId = userId
                             initializeUserProfile(userId)
@@ -83,6 +87,7 @@ class AppViewModel @Inject constructor(
                         lastInitializedUserId = null
                         sharedFriendsDataSource.stopObserving()
                         sharedSettingsDataSource.stopObserving()
+                        sharedHistoryDataSource.stopObserving()
                         unreadJob?.cancel()
                         _unreadMessageCount.value = 0
                     }

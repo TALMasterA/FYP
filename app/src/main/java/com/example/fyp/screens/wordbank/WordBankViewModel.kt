@@ -488,11 +488,37 @@ class WordBankViewModel @Inject constructor(
             )
 
             try {
-                // Fetch generated word bank only (no more custom word merging)
+                // Fetch generated word bank
                 val wordBank = wordBankRepo.getWordBank(uid, primaryLanguageCode, languageCode)
 
+                // Also fetch custom words for this language pair and merge them in
+                val customWords = customWordsRepo.getCustomWordsOnce(uid, primaryLanguageCode, languageCode)
+                val customWordItems = customWords.map { cw ->
+                    WordBankItem(
+                        id = "custom_${cw.id}",
+                        originalWord = cw.originalWord,
+                        translatedWord = cw.translatedWord,
+                        pronunciation = cw.pronunciation,
+                        example = cw.example,
+                        category = cw.sourceLang + " → " + cw.targetLang,
+                        difficulty = ""
+                    )
+                }
+
+                val mergedWordBank = if (wordBank != null) {
+                    wordBank.copy(words = wordBank.words + customWordItems)
+                } else if (customWordItems.isNotEmpty()) {
+                    WordBank(
+                        primaryLanguageCode = primaryLanguageCode,
+                        targetLanguageCode = languageCode,
+                        words = customWordItems
+                    )
+                } else {
+                    null
+                }
+
                 _uiState.value = _uiState.value.copy(
-                    currentWordBank = wordBank,
+                    currentWordBank = mergedWordBank,
                     isLoading = false
                 )
             } catch (e: Exception) {

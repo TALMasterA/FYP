@@ -29,6 +29,8 @@ fun FriendsScreen(
     appLanguageState: AppLanguageState,
     onBack: () -> Unit,
     onOpenChat: (friendId: String, friendUsername: String, friendDisplayName: String) -> Unit = { _, _, _ -> },
+    onOpenSharedInbox: () -> Unit = {},
+    pendingSharedItemCount: Int = 0,
     viewModel: FriendsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -121,15 +123,41 @@ fun FriendsScreen(
                     Text(t(UiTextKey.FriendsAddButton))
                 }
 
-                if (uiState.incomingRequests.isNotEmpty()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Shared Inbox button with red-dot badge
                     BadgedBox(
                         badge = {
-                            Badge {
-                                Text("${uiState.incomingRequests.size}")
+                            if (pendingSharedItemCount > 0) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                ) {
+                                    Text(if (pendingSharedItemCount > 99) "99+" else "$pendingSharedItemCount")
+                                }
                             }
                         }
                     ) {
-                        Icon(Icons.Default.Notifications, contentDescription = t(UiTextKey.FriendsRequestsSection).replace("{count}", "${uiState.incomingRequests.size}"))
+                        IconButton(onClick = onOpenSharedInbox) {
+                            Icon(
+                                Icons.Default.Inbox,
+                                contentDescription = t(UiTextKey.ShareInboxTitle)
+                            )
+                        }
+                    }
+
+                    if (uiState.incomingRequests.isNotEmpty()) {
+                        BadgedBox(
+                            badge = {
+                                Badge {
+                                    Text("${uiState.incomingRequests.size}")
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.Notifications, contentDescription = t(UiTextKey.FriendsRequestsSection).replace("{count}", "${uiState.incomingRequests.size}"))
+                        }
                     }
                 }
             }

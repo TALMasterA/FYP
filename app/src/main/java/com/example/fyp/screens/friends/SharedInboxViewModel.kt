@@ -23,7 +23,8 @@ data class SharedInboxUiState(
     val error: String? = null,
     val successMessage: String? = null,
     val isProcessing: Boolean = false,
-    val newItemCount: Int = 0       // items that arrived since screen was last opened
+    val newItemCount: Int = 0,          // items that arrived since screen was last opened
+    val newItemIds: Set<String> = emptySet() // IDs of items that are new/unread (red dot)
 )
 
 /**
@@ -44,6 +45,8 @@ class SharedInboxViewModel @Inject constructor(
     private var currentUserId: UserId? = null
     // Track item count when screen was last "seen" to compute new arrivals
     private var seenCount: Int = -1
+    // Track IDs seen at last markItemsAsSeen() call
+    private var seenItemIds: Set<String> = emptySet()
 
     init {
         viewModelScope.launch {
@@ -56,14 +59,30 @@ class SharedInboxViewModel @Inject constructor(
                         // Mirror shared state into local UI state
                         launch {
                             sharedFriendsDataSource.pendingSharedItems.collect { items ->
+                                val currentIds = items.map { it.itemId }.toSet()
                                 val newCount = when {
                                     seenCount < 0 -> 0          // first load — nothing "new" yet
                                     items.size > seenCount -> items.size - seenCount
                                     else -> _uiState.value.newItemCount
                                 }
-                                if (seenCount < 0) seenCount = items.size
+                                // Compute new item IDs: items not in the last seen set
+                                val newIds = if (seenCount < 0) {
+                                    emptySet() // first load — nothing "new" yet
+                                } else {
+                                    currentIds - seenItemIds
+                                }
+                                if (seenCount < 0) {
+                                    seenCount = items.size
+                                    seenItemIds = currentIds
+                                }
                                 _uiState.update {
-                                    it.copy(isLoading = false, sharedItems = items, error = null, newItemCount = newCount)
+                                    it.copy(
+                                        isLoading = false,
+                                        sharedItems = items,
+                                        error = null,
+                                        newItemCount = newCount,
+                                        newItemIds = it.newItemIds + newIds
+                                    )
                                 }
                             }
                         }
@@ -71,6 +90,7 @@ class SharedInboxViewModel @Inject constructor(
                     is AuthState.LoggedOut -> {
                         currentUserId = null
                         seenCount = -1
+                        seenItemIds = emptySet()
                         _uiState.update { SharedInboxUiState() }
                     }
                     is AuthState.Loading -> Unit
@@ -81,8 +101,10 @@ class SharedInboxViewModel @Inject constructor(
 
     /** Call when the user opens / views the inbox to reset the "new" badge. */
     fun markItemsAsSeen() {
-        seenCount = _uiState.value.sharedItems.size
-        _uiState.update { it.copy(newItemCount = 0) }
+        val current = _uiState.value.sharedItems
+        seenCount = current.size
+        seenItemIds = current.map { it.itemId }.toSet()
+        _uiState.update { it.copy(newItemCount = 0, newItemIds = emptySet()) }
     }
 
     fun acceptItem(itemId: String) {
@@ -97,6 +119,22 @@ class SharedInboxViewModel @Inject constructor(
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(isProcessing = false, error = error.message ?: "Failed to accept item") }
+                }
+        }
+    }
+
+    fun deleteItem(itemId: String) {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isProcessing = true, error = null) }
+            dismissSharedItemUseCase(itemId, userId)
+                .onSuccess {
+                    _uiState.update { it.copy(isProcessing = false, successMessage = "Item deleted") }
+                    kotlinx.coroutines.delay(3000)
+                    _uiState.update { it.copy(successMessage = null) }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isProcessing = false, error = error.message ?: "Failed to delete item") }
                 }
         }
     }

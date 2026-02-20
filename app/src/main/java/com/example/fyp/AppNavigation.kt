@@ -408,7 +408,9 @@ fun AppNavigation() {
                                 navController.navigate(
                                     AppScreen.Chat.routeFor(friendId, friendUsername, friendDisplayName)
                                 )
-                            }
+                            },
+                            onOpenSharedInbox = { navController.navigate(AppScreen.SharedInbox.route) },
+                            pendingSharedItemCount = pendingSharedItemCount
                         )
                     }
 

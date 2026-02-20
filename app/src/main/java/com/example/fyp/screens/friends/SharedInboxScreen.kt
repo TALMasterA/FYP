@@ -3,6 +3,8 @@ package com.example.fyp.screens.friends
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.*
@@ -10,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,15 +31,18 @@ import java.util.*
 fun SharedInboxScreen(
     viewModel: SharedInboxViewModel = hiltViewModel(),
     appLanguageState: AppLanguageState,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onViewMaterial: (itemId: String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
-    // Mark items as seen when the screen opens so the badge resets
-    LaunchedEffect(Unit) {
-        viewModel.markItemsAsSeen()
+    // Mark items as seen once loading is complete, so the badge accurately resets
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading) {
+            viewModel.markItemsAsSeen()
+        }
     }
 
     // Auto-dismiss messages after showing
@@ -110,8 +116,11 @@ fun SharedInboxScreen(
                             SharedItemCard(
                                 item = item,
                                 t = t,
+                                isNew = item.itemId in uiState.newItemIds,
                                 onAccept = { viewModel.acceptItem(item.itemId) },
                                 onDismiss = { viewModel.dismissItem(item.itemId) },
+                                onDelete = { viewModel.deleteItem(item.itemId) },
+                                onViewMaterial = { onViewMaterial(item.itemId) },
                                 isProcessing = uiState.isProcessing
                             )
                         }
@@ -194,10 +203,51 @@ fun SharedInboxScreen(
 fun SharedItemCard(
     item: SharedItem,
     t: (UiTextKey) -> String,
+    isNew: Boolean = false,
     onAccept: () -> Unit,
     onDismiss: () -> Unit,
+    onDelete: () -> Unit = {},
     isProcessing: Boolean
 ) {
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showMaterialDetailDialog by remember { mutableStateOf(false) }
+
+    // Delete confirmation dialog for learning materials
+    if (showDeleteConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            title = { Text("Delete Item") },
+            text = { Text("Are you sure you want to delete this shared item? This action cannot be undone.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirmDialog = false
+                        onDelete()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Material detail dialog for LEARNING_SHEET / QUIZ
+    if (showMaterialDetailDialog && (item.type == SharedItemType.LEARNING_SHEET || item.type == SharedItemType.QUIZ)) {
+        SharedMaterialDetailDialog(
+            item = item,
+            t = t,
+            onDismiss = { showMaterialDetailDialog = false }
+        )
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -216,15 +266,27 @@ fun SharedItemCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        when (item.type) {
-                            SharedItemType.WORD -> Icons.Default.Book
-                            SharedItemType.LEARNING_SHEET -> Icons.AutoMirrored.Filled.Article
-                            SharedItemType.QUIZ -> Icons.Default.Quiz
-                        },
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    // Red dot badge for new/unread items
+                    BadgedBox(
+                        badge = {
+                            if (isNew) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                )
+                            }
+                        }
+                    ) {
+                        Icon(
+                            when (item.type) {
+                                SharedItemType.WORD -> Icons.Default.Book
+                                SharedItemType.LEARNING_SHEET -> Icons.AutoMirrored.Filled.Article
+                                SharedItemType.QUIZ -> Icons.Default.Quiz
+                            },
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     Text(
                         when (item.type) {
                             SharedItemType.WORD -> t(UiTextKey.ShareTypeWord)
@@ -235,7 +297,7 @@ fun SharedItemCard(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-                
+
                 Text(
                     formatTimestamp(item.createdAt.toDate()),
                     style = MaterialTheme.typography.bodySmall,
@@ -278,50 +340,161 @@ fun SharedItemCard(
                 }
                 SharedItemType.LEARNING_SHEET, SharedItemType.QUIZ -> {
                     val content = item.content
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         Text(
                             content["title"] as? String ?: "",
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold
                         )
                         val description = content["description"] as? String
                         if (!description.isNullOrBlank()) {
                             Text(
                                 description,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 3
                             )
                         }
+                        Text(
+                            "Tap \"View\" to read the full material",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
 
-            // Action buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onDismiss,
-                    enabled = !isProcessing,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(t(UiTextKey.ShareDismissButton))
+            // Action buttons — differ by item type
+            when (item.type) {
+                SharedItemType.WORD -> {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            enabled = !isProcessing,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(t(UiTextKey.ShareDismissButton))
+                        }
+                        Button(
+                            onClick = onAccept,
+                            enabled = !isProcessing,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(t(UiTextKey.ShareAcceptButton))
+                        }
+                    }
                 }
-                
-                Button(
-                    onClick = onAccept,
-                    enabled = !isProcessing,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(t(UiTextKey.ShareAcceptButton))
+                SharedItemType.LEARNING_SHEET, SharedItemType.QUIZ -> {
+                    // Learning materials: View full content or Delete
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showMaterialDetailDialog = true },
+                            enabled = !isProcessing,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("View")
+                        }
+                        Button(
+                            onClick = { showDeleteConfirmDialog = true },
+                            enabled = !isProcessing,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error,
+                                contentColor = MaterialTheme.colorScheme.onError
+                            )
+                        ) {
+                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Delete")
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+fun SharedMaterialDetailDialog(
+    item: SharedItem,
+    t: (UiTextKey) -> String,
+    onDismiss: () -> Unit
+) {
+    val content = item.content
+    val title = content["title"] as? String ?: ""
+    val description = content["description"] as? String ?: ""
+    val typeLabel = when (item.type) {
+        SharedItemType.LEARNING_SHEET -> t(UiTextKey.ShareTypeLearningSheet)
+        SharedItemType.QUIZ -> t(UiTextKey.ShareTypeQuiz)
+        else -> ""
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = typeLabel,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = t(UiTextKey.ShareReceivedFrom).replace("{username}", item.fromUsername),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (description.isNotBlank()) {
+                    HorizontalDivider()
+                    Text(
+                        text = description,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                } else {
+                    Text(
+                        text = "No preview available for this material.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
 }
 
 private fun formatTimestamp(date: Date): String {
