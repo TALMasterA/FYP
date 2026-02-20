@@ -179,34 +179,51 @@ class FirestoreSharingRepository @Inject constructor(
 
     // ── Private helpers ──────────────────────────────────────────────────────
 
+    /**
+     * Add a shared word to the recipient's custom_words collection.
+     * Uses the same path/schema as FirestoreCustomWordsRepository so the word
+     * appears immediately in the Word Bank screen without any migration.
+     *
+     * Shared word data keys (from ShareWordUseCase):
+     *   "sourceText"  → CustomWord.originalWord
+     *   "targetText"  → CustomWord.translatedWord
+     *   "sourceLang"  → CustomWord.sourceLang
+     *   "targetLang"  → CustomWord.targetLang
+     *   "notes"       → CustomWord.example
+     */
     private suspend fun addWordToUserWordBank(userId: UserId, wordData: Map<String, Any>) {
         try {
-            val sourceText = wordData["sourceText"] as? String ?: return
-            val targetText = wordData["targetText"] as? String ?: return
+            val originalWord = wordData["sourceText"] as? String ?: return
+            val translatedWord = wordData["targetText"] as? String ?: return
             val sourceLang = wordData["sourceLang"] as? String ?: return
             val targetLang = wordData["targetLang"] as? String ?: return
+            val notes = wordData["notes"] as? String ?: ""
 
+            if (originalWord.isBlank() || translatedWord.isBlank()) return
+
+            // Write to users/{userId}/custom_words/{docId} — same collection that
+            // FirestoreCustomWordsRepository reads, so the word shows in Word Bank instantly.
             val wordRef = db.collection("users")
                 .document(userId.value)
-                .collection("wordbank")
-                .document(sourceLang)
-                .collection("words")
+                .collection("custom_words")
                 .document()
 
             val word = mapOf(
-                "id" to wordRef.id,
-                "sourceText" to sourceText,
-                "targetText" to targetText,
-                "sourceLang" to sourceLang,
-                "targetLang" to targetLang,
-                "isCustom" to true,
-                "sharedByFriend" to true,
-                "addedAt" to Timestamp.now()
+                "id"             to wordRef.id,
+                "userId"         to userId.value,
+                "originalWord"   to originalWord.trim().take(200),
+                "translatedWord" to translatedWord.trim().take(200),
+                "pronunciation"  to "",
+                "example"        to notes.trim().take(500),
+                "sourceLang"     to sourceLang,
+                "targetLang"     to targetLang,
+                "createdAt"      to Timestamp.now()
             )
 
             wordRef.set(word).await()
         } catch (e: Exception) {
-            // Log but don't fail the accept operation
+            android.util.Log.w("SharingRepo", "addWordToUserWordBank failed", e)
+            // Non-fatal: item is still marked ACCEPTED in the inbox
         }
     }
 }

@@ -250,7 +250,16 @@ fun AppNavigation() {
                             uiLanguages = uiLanguages,
                             appLanguageState = appLanguageState,
                             onUpdateAppLanguage = updateAppLanguage,
-                            onBack = { navController.popBackStack() },
+                            onBack = {
+                                // Use navigateUp() which is safer than popBackStack():
+                                // navigateUp() falls back to popBackStack() and handles edge cases
+                                if (!navController.navigateUp()) {
+                                    navController.navigate(AppScreen.Home.route) {
+                                        popUpTo(AppScreen.Home.route) { inclusive = false }
+                                        launchSingleTop = true
+                                    }
+                                }
+                            },
                             viewModel = learningViewModel,
                             onOpenSheet = { primary, target ->
                                 navController.navigate(AppScreen.LearningSheet.routeFor(primary, target))
@@ -361,8 +370,11 @@ fun AppNavigation() {
                             appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() },
                             onAccountDeleted = {
+                                // Navigate to Home, clearing the entire back stack
+                                // Use inclusive=false so Home itself remains
                                 navController.navigate(AppScreen.Home.route) {
-                                    popUpTo(AppScreen.Home.route) { inclusive = true }
+                                    popUpTo(0) { inclusive = true }
+                                    launchSingleTop = true
                                 }
                             }
                         )

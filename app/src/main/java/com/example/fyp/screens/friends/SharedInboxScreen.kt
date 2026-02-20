@@ -34,6 +34,11 @@ fun SharedInboxScreen(
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
+    // Mark items as seen when the screen opens so the badge resets
+    LaunchedEffect(Unit) {
+        viewModel.markItemsAsSeen()
+    }
+
     // Auto-dismiss messages after showing
     LaunchedEffect(uiState.successMessage, uiState.error) {
         if (uiState.successMessage != null || uiState.error != null) {
@@ -60,17 +65,47 @@ fun SharedInboxScreen(
                         CircularProgressIndicator()
                     }
                 }
-                
+
                 uiState.sharedItems.isEmpty() -> {
                     EmptyStates.NoSharedItems(t)
                 }
-                
+
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        // New-items banner
+                        if (uiState.newItemCount > 0) {
+                            item {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.NewReleases,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                        Text(
+                                            text = "${uiState.newItemCount} new item${if (uiState.newItemCount > 1) "s" else ""} received!",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
+                                }
+                            }
+                        }
                         items(uiState.sharedItems, key = { it.itemId }) { item ->
                             SharedItemCard(
                                 item = item,

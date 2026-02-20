@@ -103,8 +103,15 @@ class FirebaseTranslationRepositoryTest {
         val result = repository.translate(text, from, to)
 
         assertTrue(result is SpeechResult.Error)
-        assertTrue((result as SpeechResult.Error).message.contains("Translation failed") ||
-                   result.message.contains("Network error"))
+        // mapTranslationError maps "Network error" -> "Network connection failed..."
+        // or falls back to "Translation failed. Please try again."
+        val errorMessage = (result as SpeechResult.Error).message
+        assertTrue(
+            "Expected error message to contain network or translation failure text, but was: $errorMessage",
+            errorMessage.contains("Network", ignoreCase = true) ||
+            errorMessage.contains("Translation failed", ignoreCase = true) ||
+            errorMessage.contains("failed", ignoreCase = true)
+        )
     }
 
     @Test

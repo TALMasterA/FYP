@@ -22,7 +22,8 @@ data class SharedInboxUiState(
     val sharedItems: List<SharedItem> = emptyList(),
     val error: String? = null,
     val successMessage: String? = null,
-    val isProcessing: Boolean = false
+    val isProcessing: Boolean = false,
+    val newItemCount: Int = 0       // items that arrived since screen was last opened
 )
 
 /**
@@ -41,6 +42,8 @@ class SharedInboxViewModel @Inject constructor(
     val uiState: StateFlow<SharedInboxUiState> = _uiState.asStateFlow()
 
     private var currentUserId: UserId? = null
+    // Track item count when screen was last "seen" to compute new arrivals
+    private var seenCount: Int = -1
 
     init {
         viewModelScope.launch {
@@ -53,18 +56,33 @@ class SharedInboxViewModel @Inject constructor(
                         // Mirror shared state into local UI state
                         launch {
                             sharedFriendsDataSource.pendingSharedItems.collect { items ->
-                                _uiState.update { it.copy(isLoading = false, sharedItems = items, error = null) }
+                                val newCount = when {
+                                    seenCount < 0 -> 0          // first load — nothing "new" yet
+                                    items.size > seenCount -> items.size - seenCount
+                                    else -> _uiState.value.newItemCount
+                                }
+                                if (seenCount < 0) seenCount = items.size
+                                _uiState.update {
+                                    it.copy(isLoading = false, sharedItems = items, error = null, newItemCount = newCount)
+                                }
                             }
                         }
                     }
                     is AuthState.LoggedOut -> {
                         currentUserId = null
+                        seenCount = -1
                         _uiState.update { SharedInboxUiState() }
                     }
                     is AuthState.Loading -> Unit
                 }
             }
         }
+    }
+
+    /** Call when the user opens / views the inbox to reset the "new" badge. */
+    fun markItemsAsSeen() {
+        seenCount = _uiState.value.sharedItems.size
+        _uiState.update { it.copy(newItemCount = 0) }
     }
 
     fun acceptItem(itemId: String) {

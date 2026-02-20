@@ -6,6 +6,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -27,8 +28,7 @@ class LoginUseCaseTest {
         val email = "test@example.com"
         val password = "password123"
         val expected = Result.success(User(uid = "user-id-123"))
-        whenever(authRepo.login(email, password))
-            .thenReturn(expected)
+        doReturn(expected).whenever(authRepo).login(email, password)
 
         // Act
         val result = useCase(email, password)
@@ -44,8 +44,7 @@ class LoginUseCaseTest {
         val email = "test@example.com"
         val password = "wrong-password"
         val expected = Result.failure<User>(Exception("Invalid credentials"))
-        whenever(authRepo.login(email, password))
-            .thenReturn(expected)
+        doReturn(expected).whenever(authRepo).login(email, password)
 
         // Act
         val result = useCase(email, password)
@@ -60,8 +59,7 @@ class LoginUseCaseTest {
         val email = ""
         val password = ""
         val expected = Result.failure<User>(Exception("Email and password required"))
-        whenever(authRepo.login(email, password))
-            .thenReturn(expected)
+        doReturn(expected).whenever(authRepo).login(email, password)
 
         // Act
         val result = useCase(email, password)

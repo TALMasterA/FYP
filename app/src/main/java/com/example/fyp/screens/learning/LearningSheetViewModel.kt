@@ -5,11 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
-import com.example.fyp.domain.friends.ObserveFriendsUseCase
+import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.domain.friends.ShareLearningMaterialUseCase
 import com.example.fyp.domain.learning.LearningSheetsRepository
 import com.example.fyp.domain.learning.QuizRepository
-import com.example.fyp.domain.history.ObserveUserHistoryUseCase
 import com.example.fyp.domain.learning.ParseAndStoreQuizUseCase
 import com.example.fyp.model.friends.FriendRelation
 import com.example.fyp.model.friends.SharedItemType
@@ -19,12 +18,14 @@ import com.example.fyp.model.QuizQuestion
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.UserId
 import com.example.fyp.model.LanguageCode
+import com.example.fyp.core.decodeOrDefault
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 data class LearningSheetUiState(
@@ -62,17 +63,17 @@ class LearningSheetViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val authRepo: FirebaseAuthRepository,
     private val sheetsRepo: LearningSheetsRepository,
-    private val observeUserHistory: ObserveUserHistoryUseCase,
+    private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val parseAndStoreQuiz: ParseAndStoreQuizUseCase,
     private val quizRepo: QuizRepository,
     private val shareLearningMaterialUseCase: ShareLearningMaterialUseCase,
-    private val observeFriendsUseCase: ObserveFriendsUseCase,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
 ) : ViewModel() {
 
     private val primaryCode: String = savedStateHandle.get<String>("primaryCode").orEmpty()
     private val targetCode: String = savedStateHandle.get<String>("targetCode").orEmpty()
 
+    private val json = Json { ignoreUnknownKeys = true }
     private var latestRelatedRecords: List<TranslationRecord> = emptyList()
 
     private val _uiState = MutableStateFlow(
@@ -129,9 +130,9 @@ class LearningSheetViewModel @Inject constructor(
 
         loadSheet()
 
-        // Observe friends for share feature
+        // Mirror friends from the shared in-memory source (no new Firestore listener).
         viewModelScope.launch {
-            observeFriendsUseCase(UserId(uid)).collect { friends ->
+            sharedFriendsDataSource.friends.collect { friends ->
                 _uiState.value = _uiState.value.copy(friends = friends)
             }
         }
@@ -141,11 +142,19 @@ class LearningSheetViewModel @Inject constructor(
             initializeQuiz()
         }
 
+        // Mirror history from the shared data source (no new Firestore listener).
+        // countNow is exposed in uiState for use by QuizScreen / quiz logic;
+        // LearningSheetScreen reads countNow from learningViewModel.clusters instead.
         historyJob = viewModelScope.launch {
-            observeUserHistory(UserId(uid)).collect { records ->
-                val related = records.filter { it.sourceLang == targetCode || it.targetLang == targetCode }
+            sharedHistoryDataSource.historyRecords.collect { records ->
+                val related = records.filter {
+                    it.sourceLang == targetCode || it.targetLang == targetCode
+                }
                 latestRelatedRecords = related
-                _uiState.value = _uiState.value.copy(countNow = related.size)
+                // Use the authoritative total count (all records, not just the display limit)
+                val count = sharedHistoryDataSource.getCountForLanguage(targetCode)
+                    .takeIf { it > 0 } ?: related.size
+                _uiState.value = _uiState.value.copy(countNow = count)
             }
         }
     }
@@ -191,7 +200,10 @@ class LearningSheetViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(quizLoading = true, quizError = null)
 
             try {
-                val doc = quizRepo.getGeneratedQuizDoc(UserId(uidNow), LanguageCode(primaryCode), LanguageCode(targetCode))
+                // Single Firestore read — parse questions from the same doc object.
+                val doc = quizRepo.getGeneratedQuizDoc(
+                    UserId(uidNow), LanguageCode(primaryCode), LanguageCode(targetCode)
+                )
                 if (doc == null) {
                     _uiState.value = _uiState.value.copy(
                         quizLoading = false,
@@ -204,7 +216,9 @@ class LearningSheetViewModel @Inject constructor(
                     return@launch
                 }
 
-                val questions = quizRepo.getGeneratedQuizQuestions(UserId(uidNow), LanguageCode(primaryCode), LanguageCode(targetCode))
+                // Parse questions from the already-fetched doc (no second Firestore read).
+                val questions = json.decodeOrDefault<List<QuizQuestion>>(doc.questionsJson, emptyList())
+
                 if (questions.isEmpty()) {
                     _uiState.value = _uiState.value.copy(
                         quizLoading = false,

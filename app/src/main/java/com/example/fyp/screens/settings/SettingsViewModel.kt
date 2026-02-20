@@ -104,23 +104,23 @@ class SettingsViewModel @Inject constructor(
             }
         }
 
-        // Fetch coin stats once instead of real-time listener
-        refreshCoinStats(uid)
+        // Subscribe to real-time coin stats once per login (avoids re-fetching on every navigation)
+        viewModelScope.launch {
+            try {
+                quizRepo.observeUserCoinStats(UserId(uid)).collect { stats ->
+                    _uiState.value = _uiState.value.copy(coinStats = stats)
+                }
+            } catch (_: Exception) { /* non-fatal */ }
+        }
     }
 
     /**
-     * Refresh coin stats on demand (e.g., when screen becomes visible).
+     * Refresh coin stats on demand (kept for backward-compat; the real-time observer
+     * already keeps the value current, so this is mostly a no-op).
      */
     fun refreshCoinStats(uid: String? = _uiState.value.uid) {
-        val userId = uid ?: return
-        viewModelScope.launch {
-            try {
-                val stats = quizRepo.fetchUserCoinStats(UserId(userId)) ?: UserCoinStats()
-                _uiState.value = _uiState.value.copy(coinStats = stats)
-            } catch (_: Exception) {
-                // Ignore coin fetch errors
-            }
-        }
+        // Real-time observer in start() keeps coinStats up-to-date.
+        // This method is retained so existing call-sites compile without changes.
     }
 
     fun updatePrimaryLanguage(newCode: String) {

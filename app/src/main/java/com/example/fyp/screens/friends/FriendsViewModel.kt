@@ -2,6 +2,7 @@ package com.example.fyp.screens.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.friends.ChatRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.*
@@ -31,18 +32,21 @@ data class FriendsUiState(
     val isSearching: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
-    val newRequestCount: Int = 0  // For snackbar notification badge
+    val newRequestCount: Int = 0,                          // For snackbar notification badge
+    val unreadCountPerFriend: Map<String, Int> = emptyMap() // friendId -> unread message count
 )
 
 /**
  * OPTIMIZED: Friends list and incoming requests are read from [SharedFriendsDataSource]
  * (shared single-listener data source) instead of creating new Firestore listeners.
  * Outgoing requests still have their own listener (only needed on this screen).
+ * Per-friend unread counts are observed via ChatRepository.observeChatMetadata().
  */
 @HiltViewModel
 class FriendsViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
+    private val chatRepository: ChatRepository,
     private val observeOutgoingRequestsUseCase: ObserveOutgoingRequestsUseCase,
     private val searchUsersUseCase: SearchUsersUseCase,
     private val sendFriendRequestUseCase: SendFriendRequestUseCase,
@@ -59,6 +63,9 @@ class FriendsViewModel @Inject constructor(
     private var currentUserId: UserId? = null
     private var previousIncomingCount = 0
 
+    // Per-friend chat unread observers: friendId -> Job
+    private val unreadJobs = mutableMapOf<String, Job>()
+
     init {
         viewModelScope.launch {
             authRepo.currentUserState.collect { auth ->
@@ -72,6 +79,8 @@ class FriendsViewModel @Inject constructor(
                     }
                     AuthState.LoggedOut -> {
                         outgoingRequestsJob?.cancel()
+                        unreadJobs.values.forEach { it.cancel() }
+                        unreadJobs.clear()
                         currentUserId = null
                         previousIncomingCount = 0
                         _uiState.value = FriendsUiState(isLoading = false)
@@ -86,10 +95,11 @@ class FriendsViewModel @Inject constructor(
 
     /** Mirror shared-data-source flows into UI state. */
     private fun subscribeToSharedData() {
-        // Friends list
+        // Friends list — also starts per-friend unread count observers
         viewModelScope.launch {
             sharedFriendsDataSource.friends.collect { friends ->
                 _uiState.value = _uiState.value.copy(friends = friends, isLoading = false)
+                updateUnreadObservers(friends)
             }
         }
         // Incoming requests — also tracks new-request notification
@@ -105,6 +115,36 @@ class FriendsViewModel @Inject constructor(
                     incomingRequests = requests,
                     newRequestCount = newCount
                 )
+            }
+        }
+    }
+
+    /**
+     * Start/stop per-friend chat metadata observers to track unread message counts.
+     * Called whenever the friends list changes.
+     */
+    private fun updateUnreadObservers(friends: List<FriendRelation>) {
+        val uid = currentUserId ?: return
+        val currentFriendIds = friends.map { it.friendId }.toSet()
+
+        // Cancel observers for removed friends
+        val removed = unreadJobs.keys - currentFriendIds
+        removed.forEach { friendId ->
+            unreadJobs.remove(friendId)?.cancel()
+        }
+
+        // Start observers for new friends
+        val added = currentFriendIds - unreadJobs.keys
+        added.forEach { friendId ->
+            if (friendId.isBlank()) return@forEach
+            val chatId = chatRepository.generateChatId(uid, UserId(friendId))
+            unreadJobs[friendId] = viewModelScope.launch {
+                chatRepository.observeChatMetadata(chatId).collect { meta ->
+                    val unread = meta?.unreadCount?.get(uid.value)?.coerceAtLeast(0) ?: 0
+                    val current = _uiState.value.unreadCountPerFriend.toMutableMap()
+                    current[friendId] = unread
+                    _uiState.value = _uiState.value.copy(unreadCountPerFriend = current)
+                }
             }
         }
     }

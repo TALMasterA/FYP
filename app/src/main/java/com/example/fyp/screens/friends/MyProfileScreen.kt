@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.data.azure.LanguageDisplayNames
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
@@ -148,17 +149,23 @@ fun MyProfileScreen(
 
                         Divider(modifier = Modifier.padding(vertical = 16.dp))
 
+                        // Primary Language - display human-readable name, not code
+                        val primaryLangCode = profile.primaryLanguage
+                        val primaryLangDisplay = if (primaryLangCode.isNotEmpty())
+                            LanguageDisplayNames.displayName(primaryLangCode)
+                        else
+                            "Not set"
 
-                        // Primary Language
                         ProfileInfoItem(
                             label = t(UiTextKey.MyProfilePrimaryLanguage),
-                            value = profile.primaryLanguage.ifEmpty { "Not set" },
+                            value = primaryLangDisplay,
                             icon = Icons.Default.Language,
                             onCopy = null
                         )
 
-                        // Learning Languages
-                        if (profile.learningLanguages.isNotEmpty()) {
+                        // Learning Languages - display human-readable names, not codes
+                        val learningLangs = profile.learningLanguages.orEmpty()
+                        if (learningLangs.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = t(UiTextKey.MyProfileLearningLanguages),
@@ -167,7 +174,7 @@ fun MyProfileScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            profile.learningLanguages.forEach { language ->
+                            learningLangs.forEach { languageCode ->
                                 Row(
                                     modifier = Modifier.padding(vertical = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -180,7 +187,7 @@ fun MyProfileScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = language,
+                                        text = LanguageDisplayNames.displayName(languageCode),
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                 }

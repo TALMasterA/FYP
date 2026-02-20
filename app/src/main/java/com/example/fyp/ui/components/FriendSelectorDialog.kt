@@ -97,7 +97,9 @@ fun FriendSelectorDialog(
                                     FriendSelectorItem(
                                         friend = friend,
                                         onClick = {
-                                            onFriendSelected(UserId(friend.friendId))
+                                            if (friend.friendId.isNotBlank()) {
+                                                onFriendSelected(UserId(friend.friendId))
+                                            }
                                             onDismiss()
                                         }
                                     )

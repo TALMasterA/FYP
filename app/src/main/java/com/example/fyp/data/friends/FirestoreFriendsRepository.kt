@@ -76,12 +76,12 @@ class FirestoreFriendsRepository @Inject constructor(
         userId: UserId,
         updates: Map<String, Any>
     ): Result<Unit> = try {
-        // Update public profile
+        // Use set with merge so it works even if the document doesn't exist yet
         db.collection("users")
             .document(userId.value)
             .collection("profile")
             .document("public")
-            .update(updates)
+            .set(updates, com.google.firebase.firestore.SetOptions.merge())
             .await()
 
         // Update search index if username or discoverability changed

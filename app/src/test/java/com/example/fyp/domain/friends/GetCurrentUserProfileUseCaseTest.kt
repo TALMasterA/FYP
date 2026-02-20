@@ -31,7 +31,7 @@ class GetCurrentUserProfileUseCaseTest {
         // Arrange
         val userId = UserId("user1")
         val expectedProfile = PublicUserProfile(
-            userId = userId,
+            uid = "user1",
             username = "john_doe",
             displayName = "John Doe",
             primaryLanguage = "en-US",
@@ -58,7 +58,8 @@ class GetCurrentUserProfileUseCaseTest {
         // Act
         val result = useCase(userId)
 
-        // Assert
+        // Assert: use case returns null — callers (e.g. MyProfileViewModel) handle null gracefully
+        // by showing a helpful message rather than crashing.
         assertNull(result)
         verify(friendsRepository).getPublicProfile(userId)
     }
@@ -68,17 +69,17 @@ class GetCurrentUserProfileUseCaseTest {
         // Arrange
         val user1 = UserId("user1")
         val user2 = UserId("user2")
-        
+
         val profile1 = PublicUserProfile(
-            userId = user1,
+            uid = "user1",
             username = "user1",
             displayName = "User One",
             primaryLanguage = "en-US",
             learningLanguages = listOf()
         )
-        
+
         val profile2 = PublicUserProfile(
-            userId = user2,
+            uid = "user2",
             username = "user2",
             displayName = "User Two",
             primaryLanguage = "es-ES",

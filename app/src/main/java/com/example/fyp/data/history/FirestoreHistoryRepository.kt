@@ -50,18 +50,40 @@ class FirestoreHistoryRepository @Inject constructor(
         )
     }
 
-    override suspend fun delete(userId: UserId, recordId: RecordId) {
-        // Fetch the record first to get language info for cache update
-        val record = try {
-            firestore.collection("users")
-                .document(userId.value)
-                .collection("history")
-                .document(recordId.value)
-                .get()
-                .await()
-                .toObject(TranslationRecord::class.java)
-        } catch (e: Exception) {
-            null
+    /**
+     * Deletes a translation record.
+     *
+     * When [knownSourceLang] and [knownTargetLang] are supplied (e.g. from an
+     * already-loaded [TranslationRecord]) the pre-delete document read is skipped,
+     * saving 1 Firestore read per deletion.
+     */
+    override suspend fun delete(userId: UserId, recordId: RecordId) =
+        delete(userId, recordId, null, null)
+
+    suspend fun delete(
+        userId: UserId,
+        recordId: RecordId,
+        knownSourceLang: LanguageCode?,
+        knownTargetLang: LanguageCode?
+    ) {
+        // Only fetch the record if the caller didn't supply language codes.
+        val (sourceLang, targetLang) = if (knownSourceLang != null && knownTargetLang != null) {
+            knownSourceLang to knownTargetLang
+        } else {
+            try {
+                val rec = firestore.collection("users")
+                    .document(userId.value)
+                    .collection("history")
+                    .document(recordId.value)
+                    .get()
+                    .await()
+                    .toObject(TranslationRecord::class.java)
+                val s = rec?.sourceLang?.let { LanguageCode(it) }
+                val t = rec?.targetLang?.let { LanguageCode(it) }
+                s to t
+            } catch (e: Exception) {
+                null to null
+            }
         }
 
         firestore.collection("users")
@@ -71,9 +93,8 @@ class FirestoreHistoryRepository @Inject constructor(
             .delete()
             .await()
 
-        // Update language counts cache if we got the record info
-        record?.let {
-            updateLanguageCountsCache(userId, LanguageCode(it.sourceLang), LanguageCode(it.targetLang), increment = false)
+        if (sourceLang != null && targetLang != null) {
+            updateLanguageCountsCache(userId, sourceLang, targetLang, increment = false)
         }
     }
 

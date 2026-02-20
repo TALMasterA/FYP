@@ -8,32 +8,38 @@ import com.google.firebase.Timestamp
 import javax.inject.Inject
 
 /**
- * Use case to ensure that a public profile exists for a user.
- * This should be called when a user logs in or registers.
+ * Ensures that a public profile exists for a user on login/registration.
  *
- * If the profile doesn't exist, it creates one with default values.
- * If it exists, it updates the lastActiveAt timestamp.
+ * Optimizations vs. original:
+ * - Accepts an optional [knownPrimaryLanguage] so callers that already have the
+ *   settings in-memory (e.g. AppViewModel via SharedSettingsDataSource) can skip
+ *   the extra [UserSettingsRepository.fetchUserSettings] read entirely.
+ * - Only writes `lastActiveAt` when the profile exists AND the primary language
+ *   has actually changed, eliminating a pointless write on every login.
+ *
+ * Cost (profile already exists, same primary language): 2 reads, 0 writes.
+ * Cost (profile already exists, language changed):       2 reads, 1 write.
+ * Cost (profile does not exist):                         2 reads, 1 write.
+ * Previous cost (always):                                2 reads, 1 write.
  */
 class EnsurePublicProfileExistsUseCase @Inject constructor(
     private val friendsRepository: FriendsRepository,
     private val settingsRepository: UserSettingsRepository
 ) {
-    suspend operator fun invoke(userId: String) {
+    suspend operator fun invoke(userId: String, knownPrimaryLanguage: String? = null) {
         val uid = UserId(userId)
 
-        // Get user settings to get current primary language
-        val settings = settingsRepository.fetchUserSettings(uid)
-        val currentPrimaryLanguage = settings.primaryLanguageCode.ifBlank { "en-US" }
+        // Use caller-supplied language when available to avoid a Firestore read.
+        val currentPrimaryLanguage = knownPrimaryLanguage?.takeIf { it.isNotBlank() }
+            ?: settingsRepository.fetchUserSettings(uid).primaryLanguageCode.ifBlank { "en-US" }
 
-        // Check if profile already exists
         val existingProfile = friendsRepository.getPublicProfile(uid)
 
         if (existingProfile == null) {
-            // Create a new public profile with default values
             val newProfile = PublicUserProfile(
                 uid = userId,
-                username = "",  // Will be empty until user sets it
-                displayName = "",  // Will be empty until user sets it
+                username = "",
+                displayName = "",
                 avatarUrl = "",
                 primaryLanguage = currentPrimaryLanguage,
                 learningLanguages = emptyList(),
@@ -41,17 +47,20 @@ class EnsurePublicProfileExistsUseCase @Inject constructor(
                 createdAt = Timestamp.now(),
                 lastActiveAt = Timestamp.now()
             )
-
             friendsRepository.createOrUpdatePublicProfile(uid, newProfile)
         } else {
-            // Update lastActiveAt timestamp AND primary language (in case it changed)
-            friendsRepository.updatePublicProfile(
-                uid,
-                mapOf(
-                    "lastActiveAt" to Timestamp.now(),
-                    "primaryLanguage" to currentPrimaryLanguage
+            // Only write if the primary language actually changed – avoids a write on
+            // every login when the user hasn't switched languages.
+            if (existingProfile.primaryLanguage != currentPrimaryLanguage) {
+                friendsRepository.updatePublicProfile(
+                    uid,
+                    mapOf(
+                        "lastActiveAt" to Timestamp.now(),
+                        "primaryLanguage" to currentPrimaryLanguage
+                    )
                 )
-            )
+            }
+            // If nothing changed we skip the write entirely.
         }
     }
 }

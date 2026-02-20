@@ -70,7 +70,8 @@ class MyProfileViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         profile = profile,
-                        error = if (profile == null) "Profile not found" else null
+                        // Show profile not found gracefully (not a crash - just informational)
+                        error = if (profile == null) "Profile not found. Please set a username in Settings > Profile." else null
                     )
                 }
             } catch (e: Exception) {

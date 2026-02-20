@@ -42,11 +42,12 @@ class SharedSettingsDataSource @Inject constructor(
 
     /**
      * Start observing settings for a user.
-     * If already observing the same user, does nothing (reuses existing listener).
+     * If already observing the same user with an active job, does nothing (reuses existing listener).
+     * Re-starts if the previous job was cancelled (e.g. after an error).
      */
     fun startObserving(userId: String) {
-        if (currentUserId == userId) {
-            // Already observing this user
+        if (currentUserId == userId && settingsJob?.isActive == true) {
+            // Already observing this user with a live listener
             return
         }
 

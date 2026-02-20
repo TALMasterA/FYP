@@ -1,7 +1,6 @@
 package com.example.fyp.domain.friends
 
 import com.example.fyp.data.friends.FriendsRepository
-import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.PublicUserProfile
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -33,14 +32,14 @@ class SearchUsersUseCaseTest {
         val query = "john"
         val expectedProfiles = listOf(
             PublicUserProfile(
-                userId = UserId("user1"),
+                uid = "user1",
                 username = "john_doe",
                 displayName = "John Doe",
                 primaryLanguage = "en-US",
                 learningLanguages = listOf("es-ES")
             ),
             PublicUserProfile(
-                userId = UserId("user2"),
+                uid = "user2",
                 username = "johnny",
                 displayName = "Johnny Smith",
                 primaryLanguage = "en-US",

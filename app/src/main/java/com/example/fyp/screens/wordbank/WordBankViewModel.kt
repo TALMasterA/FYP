@@ -362,14 +362,11 @@ class WordBankViewModel @Inject constructor(
         sharedHistoryDataSource.startObserving(userId)
 
         historyJob = viewModelScope.launch {
-            // Force refresh on initial load to ensure data is fresh when user enters screen
-            sharedHistoryDataSource.forceRefreshLanguageCounts(primaryLanguageCode)
-            refreshClusters()
-
             sharedHistoryDataSource.historyRecords
                 .collect { list ->
                     records = list
-                    // Refresh total language counts for word bank generation
+                    // Use debounced refresh — SharedHistoryDataSource guards against back-to-back
+                    // reads when LearningViewModel and WordBankViewModel both subscribe.
                     sharedHistoryDataSource.refreshLanguageCounts(primaryLanguageCode)
                     refreshClusters()
                 }
@@ -398,14 +395,10 @@ class WordBankViewModel @Inject constructor(
             }
             _uiState.value = _uiState.value.copy(customWordsCount = cachedCustomWordsCount ?: 0)
 
-            // Calculate language counts from in-memory history records
-            val allLanguageCounts = mutableMapOf<String, Int>()
-            records.forEach { record ->
-                val source = record.sourceLang
-                val target = record.targetLang
-                if (source.isNotBlank()) allLanguageCounts[source] = (allLanguageCounts[source] ?: 0) + 1
-                if (target.isNotBlank() && target != source) allLanguageCounts[target] = (allLanguageCounts[target] ?: 0) + 1
-            }
+            // Use total language counts from ALL history records (not just the limited display set).
+            // This reads from the Firestore language-counts cache via SharedHistoryDataSource,
+            // ensuring the word bank counts match the actual number of records the user has.
+            val allLanguageCounts = sharedHistoryDataSource.languageCounts.value.toMutableMap()
 
             val primaryHasRecords = (allLanguageCounts[primaryLanguageCode] ?: 0) > 0
             val directionalCounts = if (primaryHasRecords) {
@@ -647,8 +640,19 @@ class WordBankViewModel @Inject constructor(
                     historyCount = unifiedCount
                 )
 
-                // Refresh the word bank
-                val wordBank = wordBankRepo.getWordBank(uid, primaryLanguageCode, targetLanguageCode)
+                // Build updated WordBank in-memory instead of re-reading from Firestore.
+                // appendWords() deduplicates by originalWord, so replicate that here.
+                val existingWords = _uiState.value.currentWordBank?.words ?: emptyList()
+                val existingOriginals = existingWords.map { it.originalWord.lowercase().trim() }.toSet()
+                val uniqueNew = words.filter { it.originalWord.lowercase().trim() !in existingOriginals }
+                val mergedWords = existingWords + uniqueNew
+
+                val updatedWordBank = WordBank(
+                    primaryLanguageCode = primaryLanguageCode,
+                    targetLanguageCode = targetLanguageCode,
+                    words = mergedWords,
+                    historyCountAtGenerate = unifiedCount
+                )
 
                 // Invalidate cache and refresh clusters to update hasWordBank status
                 invalidateWordBankCache(targetLanguageCode)
@@ -656,7 +660,7 @@ class WordBankViewModel @Inject constructor(
 
                 _uiState.value = _uiState.value.copy(
                     isGenerating = false,
-                    currentWordBank = wordBank
+                    currentWordBank = updatedWordBank
                 )
             } catch (ce: CancellationException) {
                 // Don't update state on cancellation - cancelGeneration() handles it

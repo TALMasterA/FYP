@@ -87,12 +87,9 @@ fun LearningSheetScreen(
     val regenEnabled = !uiState.isLoading && !isAnyGenerationOngoing && countNowFromCluster > 0 && !unchanged && countHigherThanPrevious && hasEnoughNewRecords
 
 
-    // Load when entering
-    LaunchedEffect(primaryCode, targetCode) {
-        viewModel.loadSheet()
-    }
-
-    // Reload after generation finishes for this target (so content updates immediately)
+    // Reload the sheet whenever: the language pair changes, OR generation just completed
+    // (lastSavedCount advances). A single LaunchedEffect is enough — no need for two separate
+    // effects that would both fire on initial composition and cause a double read.
     val lastSavedCount = learningUiState.sheetCountByLanguage[targetCode]
     LaunchedEffect(primaryCode, targetCode, lastSavedCount) {
         viewModel.loadSheet()

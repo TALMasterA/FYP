@@ -165,17 +165,12 @@ class LearningViewModel @Inject constructor(
         // Use shared history data source (single listener shared across ViewModels)
         sharedHistoryDataSource.startObserving(uid)
 
-        // Same pattern as WordBank: refresh counts then clusters in same collect block
+        // Mirror history into UI and refresh generation metadata on every change.
         historyJob = viewModelScope.launch {
-            // Force refresh on initial load to ensure data is fresh when user enters screen
-            sharedHistoryDataSource.forceRefreshLanguageCounts(_uiState.value.primaryLanguageCode)
-            refreshClusters()
-
             sharedHistoryDataSource.historyRecords.collect { records ->
                 _uiState.value = _uiState.value.copy(records = records, isLoading = false)
-                // Refresh total language counts for generation eligibility
+                // Debounced (5 s) — guards against back-to-back reads from co-running WordBankViewModel
                 sharedHistoryDataSource.refreshLanguageCounts(_uiState.value.primaryLanguageCode)
-                // Then refresh clusters (same as WordBank pattern)
                 refreshClusters()
             }
         }
@@ -211,27 +206,15 @@ class LearningViewModel @Inject constructor(
         languageCounts: Map<String, Int>,
         primaryLanguageCode: String
     ): List<LanguageClusterUi> {
-        // Calculate counts from actual history records
-        // Count BOTH source and target languages (matching backend cache logic)
-        val allLanguageCounts = mutableMapOf<String, Int>()
-
-        _uiState.value.records.forEach { record ->
-            val source = record.sourceLang
-            val target = record.targetLang
-
-            // Count both languages (consistent with backend cache)
-            if (source.isNotBlank()) {
-                allLanguageCounts[source] = (allLanguageCounts[source] ?: 0) + 1
-            }
-            if (target.isNotBlank() && target != source) {
-                allLanguageCounts[target] = (allLanguageCounts[target] ?: 0) + 1
-            }
-        }
+        // Use the total language counts from ALL history records (not just the limited display set).
+        // `languageCounts` is fetched from the Firestore language-counts cache via
+        // SharedHistoryDataSource.refreshLanguageCounts(), so it always reflects the true total.
+        val allLanguageCounts = languageCounts.toMutableMap()
 
         // Display logic: Show ALL languages except primary language
         // Exception: If primary language has no records, show ALL languages
         val primaryHasRecords = (allLanguageCounts[primaryLanguageCode] ?: 0) > 0
-        
+
         val directionalCounts = if (primaryHasRecords) {
             // Primary has records: exclude it from display
             allLanguageCounts.filterKeys { it != primaryLanguageCode }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -208,6 +209,7 @@ fun FriendsScreen(
                             items(uiState.friends) { friend ->
                                 FriendCard(
                                     friend = friend,
+                                    unreadCount = uiState.unreadCountPerFriend[friend.friendId] ?: 0,
                                     onRemove = { showRemoveDialog = friend },
                                     onClick = { onOpenChat(friend.friendId, friend.friendUsername, friend.friendDisplayName) },
                                     removeText = t(UiTextKey.FriendsRemoveButton)
@@ -352,6 +354,7 @@ fun FriendRequestCard(    request: FriendRequest,
 @Composable
 fun FriendCard(
     friend: FriendRelation,
+    unreadCount: Int = 0,
     onRemove: () -> Unit,
     onClick: () -> Unit,
     removeText: String
@@ -375,6 +378,26 @@ fun FriendCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
+            }
+            // Unread message badge
+            if (unreadCount > 0) {
+                BadgedBox(
+                    badge = {
+                        Badge(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        ) {
+                            Text(if (unreadCount > 99) "99+" else "$unreadCount")
+                        }
+                    },
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Message,
+                        contentDescription = "$unreadCount unread messages",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
             IconButton(onClick = onRemove) {
                 Icon(

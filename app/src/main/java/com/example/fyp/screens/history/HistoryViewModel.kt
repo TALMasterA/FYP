@@ -108,7 +108,8 @@ class HistoryViewModel @Inject constructor(
         if (uid.isBlank() || record.id.isBlank()) return
 
         viewModelScope.launch {
-            runCatching { deleteHistoryRecord(uid, record.id) }
+            // Pass language codes so the repository can skip the pre-read (saves 1 read per delete)
+            runCatching { deleteHistoryRecord(uid, record.id, record.sourceLang, record.targetLang) }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(error = e.message ?: "Delete failed")
                 }

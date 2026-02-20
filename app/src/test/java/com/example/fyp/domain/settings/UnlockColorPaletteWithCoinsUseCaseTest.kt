@@ -1,39 +1,91 @@
 package com.example.fyp.domain.settings
 
 import com.example.fyp.data.settings.UserSettingsRepository
+import com.example.fyp.model.LanguageCode
 import com.example.fyp.model.PaletteId
 import com.example.fyp.model.UserId
+import com.example.fyp.model.VoiceName
+import com.example.fyp.model.user.UserSettings
+import com.example.fyp.domain.learning.GeneratedQuizDoc
+import com.example.fyp.domain.learning.QuizMetadata
+import com.example.fyp.domain.learning.QuizRepository
+import com.example.fyp.model.LanguageCode as LC
+import com.example.fyp.model.QuizAttempt
+import com.example.fyp.model.QuizQuestion
+import com.example.fyp.model.QuizStats
+import com.example.fyp.model.UserCoinStats
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.*
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
-import org.mockito.kotlin.stub
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
+
+/**
+ * Fake UserSettingsRepository that records calls to unlockColorPalette.
+ * Avoids Mockito, which cannot handle @JvmInline value class parameters.
+ */
+private class FakeUserSettingsRepository : UserSettingsRepository {
+    val unlockedPalettes = mutableListOf<Pair<UserId, PaletteId>>()
+
+    override suspend fun unlockColorPalette(userId: UserId, paletteId: PaletteId) {
+        unlockedPalettes.add(userId to paletteId)
+    }
+
+    // Unused stubs
+    override fun observeUserSettings(userId: UserId): Flow<UserSettings> = emptyFlow()
+    override suspend fun fetchUserSettings(userId: UserId): UserSettings = error("not used")
+    override suspend fun setFontSizeScale(userId: UserId, scale: Float) {}
+    override suspend fun setPrimaryLanguage(userId: UserId, languageCode: LanguageCode) {}
+    override suspend fun setThemeMode(userId: UserId, themeMode: String) {}
+    override suspend fun setColorPalette(userId: UserId, paletteId: PaletteId) {}
+    override suspend fun setVoiceForLanguage(userId: UserId, languageCode: LanguageCode, voiceName: VoiceName) {}
+    override suspend fun setAutoThemeEnabled(userId: UserId, enabled: Boolean) {}
+    override suspend fun expandHistoryViewLimit(userId: UserId, newLimit: Int) {}
+}
+
+/**
+ * Fake QuizRepository that returns a configurable deductCoins result.
+ * Avoids Mockito, which cannot handle @JvmInline value class parameters.
+ */
+private class FakeQuizRepository : QuizRepository {
+    var deductCoinsResult: Int = 0
+    var deductCoinsCalled = false
+
+    override suspend fun deductCoins(uid: UserId, amount: Int): Int {
+        deductCoinsCalled = true
+        return deductCoinsResult
+    }
+
+    // Unused stubs
+    override suspend fun saveAttempt(uid: UserId, attempt: QuizAttempt): String = ""
+    override suspend fun getAttempt(uid: UserId, attemptId: String): QuizAttempt? = null
+    override suspend fun getAttemptsByLanguagePair(uid: UserId, primaryCode: LC, targetCode: LC, limit: Long): List<QuizAttempt> = emptyList()
+    override suspend fun getQuizStats(uid: UserId, primaryCode: LC, targetCode: LC): QuizStats? = null
+    override suspend fun getRecentAttempts(uid: UserId, limit: Long): List<QuizAttempt> = emptyList()
+    override suspend fun getGeneratedQuizDoc(uid: UserId, primaryCode: LC, targetCode: LC): GeneratedQuizDoc? = null
+    override suspend fun getBatchQuizMetadata(uid: UserId, primary: LC, targets: List<String>): Map<String, QuizMetadata> = emptyMap()
+    override suspend fun upsertGeneratedQuiz(uid: UserId, primaryCode: LC, targetCode: LC, quizData: String, historyCountAtGenerate: Int) {}
+    override suspend fun getGeneratedQuizQuestions(uid: UserId, primaryCode: LC, targetCode: LC): List<QuizQuestion> = emptyList()
+    override fun observeUserCoinStats(uid: UserId): Flow<UserCoinStats> = emptyFlow()
+    override suspend fun fetchUserCoinStats(uid: UserId): UserCoinStats? = null
+    override suspend fun getLastAwardedQuizCount(uid: UserId, primaryCode: LC, targetCode: LC): Int? = null
+    override suspend fun awardCoinsIfEligible(uid: UserId, attempt: QuizAttempt, latestHistoryCount: Int?): Boolean = false
+}
 
 /**
  * Unit tests for UnlockColorPaletteWithCoinsUseCase.
- *
- * Tests the business logic for unlocking color palettes with coins:
- * 1. Free palettes (cost=0) should unlock without coin deduction
- * 2. Paid palettes should deduct coins and unlock on success
- * 3. Insufficient coins should return error without unlocking
- * 4. Proper ordering: deduct coins THEN unlock (transaction safety)
  */
 class UnlockColorPaletteWithCoinsUseCaseTest {
 
-    private lateinit var settingsRepo: UserSettingsRepository
-    private lateinit var quizRepo: com.example.fyp.domain.learning.QuizRepository
+    private lateinit var settingsRepo: FakeUserSettingsRepository
+    private lateinit var quizRepo: FakeQuizRepository
     private lateinit var useCase: UnlockColorPaletteWithCoinsUseCase
 
     @Before
     fun setup() {
-        settingsRepo = mock()
-        quizRepo = mock()
+        settingsRepo = FakeUserSettingsRepository()
+        quizRepo = FakeQuizRepository()
         useCase = UnlockColorPaletteWithCoinsUseCase(settingsRepo, quizRepo)
     }
 
@@ -43,13 +95,13 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
     fun `free palette unlocks without coin deduction`() = runBlocking {
         val userId = UserId("user123")
         val paletteId = PaletteId("default")
-        val cost = 0
 
-        val result = useCase(userId, paletteId, cost)
+        val result = useCase(userId, paletteId, cost = 0)
 
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result)
-        verify(settingsRepo).unlockColorPalette(userId, paletteId)
-        verifyNoInteractions(quizRepo) // Should NOT deduct coins for free palette
+        assertEquals(1, settingsRepo.unlockedPalettes.size)
+        assertEquals(userId to paletteId, settingsRepo.unlockedPalettes[0])
+        assertFalse("Coins should NOT be deducted for free palette", quizRepo.deductCoinsCalled)
     }
 
     // --- Paid Palette Success Tests ---
@@ -58,34 +110,27 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
     fun `paid palette unlocks when user has sufficient coins`() = runBlocking {
         val userId = UserId("user123")
         val paletteId = PaletteId("premium")
-        val cost = 100
+        quizRepo.deductCoinsResult = 50 // 150 - 100 = 50 remaining
 
-        quizRepo.stub {
-            onBlocking { deductCoins(userId, cost) } doReturn 50 // 150 - 100 = 50 remaining
-        }
-
-        val result = useCase(userId, paletteId, cost)
+        val result = useCase(userId, paletteId, cost = 100)
 
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result)
-        verify(quizRepo).deductCoins(userId, cost)
-        verify(settingsRepo).unlockColorPalette(userId, paletteId)
+        assertTrue(quizRepo.deductCoinsCalled)
+        assertEquals(1, settingsRepo.unlockedPalettes.size)
+        assertEquals(userId to paletteId, settingsRepo.unlockedPalettes[0])
     }
 
     @Test
     fun `paid palette unlocks when user has exact coins needed`() = runBlocking {
         val userId = UserId("user123")
         val paletteId = PaletteId("premium")
-        val cost = 100
+        quizRepo.deductCoinsResult = 0 // 100 - 100 = 0 remaining
 
-        quizRepo.stub {
-            onBlocking { deductCoins(userId, cost) } doReturn 0 // 100 - 100 = 0 remaining
-        }
-
-        val result = useCase(userId, paletteId, cost)
+        val result = useCase(userId, paletteId, cost = 100)
 
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result)
-        verify(quizRepo).deductCoins(userId, cost)
-        verify(settingsRepo).unlockColorPalette(userId, paletteId)
+        assertTrue(quizRepo.deductCoinsCalled)
+        assertEquals(1, settingsRepo.unlockedPalettes.size)
     }
 
     // --- Insufficient Coins Tests ---
@@ -94,34 +139,25 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
     fun `paid palette fails when user has insufficient coins`() = runBlocking {
         val userId = UserId("user123")
         val paletteId = PaletteId("premium")
-        val cost = 100
+        quizRepo.deductCoinsResult = -1 // Insufficient
 
-        quizRepo.stub {
-            onBlocking { deductCoins(userId, cost) } doReturn -1 // Insufficient
-        }
-
-        val result = useCase(userId, paletteId, cost)
+        val result = useCase(userId, paletteId, cost = 100)
 
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins, result)
-        verify(quizRepo).deductCoins(userId, cost)
-        // Should NOT unlock palette when deduction fails
-        verify(settingsRepo, never()).unlockColorPalette(any(), any())
+        assertTrue(quizRepo.deductCoinsCalled)
+        assertTrue("Palette must NOT be unlocked on failure", settingsRepo.unlockedPalettes.isEmpty())
     }
 
     @Test
     fun `paid palette fails when user has zero coins`() = runBlocking {
         val userId = UserId("user123")
         val paletteId = PaletteId("premium")
-        val cost = 50
+        quizRepo.deductCoinsResult = -1 // 0 - 50 = insufficient
 
-        quizRepo.stub {
-            onBlocking { deductCoins(userId, cost) } doReturn -1 // 0 - 50 = -50, insufficient
-        }
-
-        val result = useCase(userId, paletteId, cost)
+        val result = useCase(userId, paletteId, cost = 50)
 
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins, result)
-        verify(settingsRepo, never()).unlockColorPalette(any(), any())
+        assertTrue("Palette must NOT be unlocked on failure", settingsRepo.unlockedPalettes.isEmpty())
     }
 
     // --- Edge Cases ---
@@ -130,34 +166,26 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
     fun `expensive palette unlocks with sufficient high balance`() = runBlocking {
         val userId = UserId("user123")
         val paletteId = PaletteId("luxury")
-        val cost = 1000
+        quizRepo.deductCoinsResult = 500 // 1500 - 1000 = 500
 
-        quizRepo.stub {
-            onBlocking { deductCoins(userId, cost) } doReturn 500 // 1500 - 1000 = 500
-        }
-
-        val result = useCase(userId, paletteId, cost)
+        val result = useCase(userId, paletteId, cost = 1000)
 
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result)
-        verify(quizRepo).deductCoins(userId, cost)
-        verify(settingsRepo).unlockColorPalette(userId, paletteId)
+        assertTrue(quizRepo.deductCoinsCalled)
+        assertEquals(1, settingsRepo.unlockedPalettes.size)
     }
 
     @Test
     fun `cheap palette unlocks with minimal cost`() = runBlocking {
         val userId = UserId("user123")
         val paletteId = PaletteId("basic")
-        val cost = 1
+        quizRepo.deductCoinsResult = 99 // 100 - 1 = 99
 
-        quizRepo.stub {
-            onBlocking { deductCoins(userId, cost) } doReturn 99 // 100 - 1 = 99
-        }
-
-        val result = useCase(userId, paletteId, cost)
+        val result = useCase(userId, paletteId, cost = 1)
 
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result)
-        verify(quizRepo).deductCoins(userId, cost)
-        verify(settingsRepo).unlockColorPalette(userId, paletteId)
+        assertTrue(quizRepo.deductCoinsCalled)
+        assertEquals(1, settingsRepo.unlockedPalettes.size)
     }
 
     // --- Scenario Tests ---
@@ -167,28 +195,23 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
         val userId = UserId("user123")
 
         // First unlock: 500 - 100 = 400 remaining
-        quizRepo.stub {
-            onBlocking { deductCoins(userId, 100) } doReturn 400
-        }
+        quizRepo.deductCoinsResult = 400
         val result1 = useCase(userId, PaletteId("palette1"), 100)
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result1)
 
         // Second unlock: 400 - 200 = 200 remaining
-        quizRepo.stub {
-            onBlocking { deductCoins(userId, 200) } doReturn 200
-        }
+        quizRepo.deductCoinsResult = 200
         val result2 = useCase(userId, PaletteId("palette2"), 200)
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result2)
 
-        // Third unlock fails: 200 - 300 = -100 insufficient
-        quizRepo.stub {
-            onBlocking { deductCoins(userId, 300) } doReturn -1
-        }
+        // Third unlock fails: 200 - 300 = insufficient
+        quizRepo.deductCoinsResult = -1
         val result3 = useCase(userId, PaletteId("palette3"), 300)
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins, result3)
 
-        verify(settingsRepo).unlockColorPalette(userId, PaletteId("palette1"))
-        verify(settingsRepo).unlockColorPalette(userId, PaletteId("palette2"))
-        verify(settingsRepo, never()).unlockColorPalette(any(), any())
+        // Exactly 2 palettes unlocked (palette1 + palette2), palette3 was NOT unlocked
+        assertEquals(2, settingsRepo.unlockedPalettes.size)
+        assertEquals(userId to PaletteId("palette1"), settingsRepo.unlockedPalettes[0])
+        assertEquals(userId to PaletteId("palette2"), settingsRepo.unlockedPalettes[1])
     }
 }

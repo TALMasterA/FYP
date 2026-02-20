@@ -48,6 +48,10 @@ class WordBankCacheDataStore @Inject constructor(
 
     private val json = Json { ignoreUnknownKeys = true }
 
+    // In-memory mirror of the DataStore contents — avoids re-parsing JSON on every read.
+    // Null means "not yet loaded"; invalidated on every write.
+    @Volatile private var memCache: WordBankCacheData? = null
+
     /**
      * Generate cache key for a language pair
      */
@@ -145,29 +149,31 @@ class WordBankCacheDataStore @Inject constructor(
      * Clear all cached data
      */
     suspend fun clearAll() {
+        memCache = null
         context.wordBankCacheDataStore.edit { prefs ->
             prefs.remove(CACHE_KEY)
         }
     }
 
     private suspend fun loadCache(): WordBankCacheData {
+        // Serve from the in-memory mirror when available — avoids DataStore + JSON overhead.
+        memCache?.let { return it }
         return try {
             context.wordBankCacheDataStore.data
                 .map { prefs ->
                     val jsonString = prefs[CACHE_KEY]
-                    if (jsonString != null) {
-                        json.decodeFromString<WordBankCacheData>(jsonString)
-                    } else {
-                        WordBankCacheData()
-                    }
+                    if (jsonString != null) json.decodeFromString<WordBankCacheData>(jsonString)
+                    else WordBankCacheData()
                 }
                 .first()
+                .also { memCache = it }
         } catch (e: Exception) {
             WordBankCacheData()
         }
     }
 
     private suspend fun saveCache(data: WordBankCacheData) {
+        memCache = data          // update mirror immediately
         try {
             context.wordBankCacheDataStore.edit { prefs ->
                 prefs[CACHE_KEY] = json.encodeToString(data)

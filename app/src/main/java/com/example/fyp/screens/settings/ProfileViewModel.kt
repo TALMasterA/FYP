@@ -69,12 +69,14 @@ class ProfileViewModel @Inject constructor(
         profileJob?.cancel()
         profileJob = viewModelScope.launch {
             try {
-                // Load public profile for friends feature
+                // Load public profile for friends feature.
+                // If the profile document doesn't exist yet (new user), use an empty default —
+                // no error is shown so the screen renders normally and the user can set a username.
                 val profile = friendsRepo.getPublicProfile(UserId(userId))
                 _uiState.value = _uiState.value.copy(
                     profile = profile ?: PublicUserProfile(),
                     isLoading = false,
-                    error = if (profile == null) "Profile not found" else null
+                    error = null
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(

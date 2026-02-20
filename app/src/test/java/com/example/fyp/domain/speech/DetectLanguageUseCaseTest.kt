@@ -7,9 +7,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 
 class DetectLanguageUseCaseTest {
 
@@ -27,8 +28,9 @@ class DetectLanguageUseCaseTest {
         // Arrange
         val text = "Hello world"
         val expected = DetectedLanguage("en", 0.99, true)
-        whenever(translationRepository.detectLanguage(text))
-            .thenReturn(expected)
+        translationRepository.stub {
+            onBlocking { detectLanguage(text) } doReturn expected
+        }
 
         // Act
         val result = useCase(text)
@@ -42,8 +44,9 @@ class DetectLanguageUseCaseTest {
     fun `invoke returns null when detection fails`() = runTest {
         // Arrange
         val text = "Unknown text"
-        whenever(translationRepository.detectLanguage(text))
-            .thenReturn(null)
+        translationRepository.stub {
+            onBlocking { detectLanguage(text) } doReturn null
+        }
 
         // Act
         val result = useCase(text)
@@ -62,14 +65,16 @@ class DetectLanguageUseCaseTest {
             Pair("안녕하세요", DetectedLanguage("ko", 0.96, true))
         )
 
+        // Set up all stubs before executing
         testCases.forEach { (text, expected) ->
-            whenever(translationRepository.detectLanguage(text))
-                .thenReturn(expected)
+            translationRepository.stub {
+                onBlocking { detectLanguage(text) } doReturn expected
+            }
+        }
 
-            // Act
+        // Act & Assert
+        testCases.forEach { (text, expected) ->
             val result = useCase(text)
-
-            // Assert
             assertEquals(expected, result)
         }
     }
@@ -78,8 +83,9 @@ class DetectLanguageUseCaseTest {
     fun `invoke handles empty text`() = runTest {
         // Arrange
         val text = ""
-        whenever(translationRepository.detectLanguage(text))
-            .thenReturn(null)
+        translationRepository.stub {
+            onBlocking { detectLanguage(text) } doReturn null
+        }
 
         // Act
         val result = useCase(text)
