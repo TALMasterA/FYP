@@ -350,7 +350,8 @@ class LearningSheetViewModel @Inject constructor(
                 type = SharedItemType.LEARNING_SHEET,
                 materialId = materialId,
                 title = title,
-                description = state.content?.take(200) ?: ""
+                description = state.content?.take(200) ?: "",
+                fullContent = state.content ?: ""
             ).onSuccess {
                 _uiState.value = _uiState.value.copy(isSharing = false, shareSuccess = "Shared successfully!")
             }.onFailure { e ->

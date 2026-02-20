@@ -1,6 +1,7 @@
 package com.example.fyp.screens.friends
 
 import com.example.fyp.data.friends.SharedFriendsDataSource
+import com.example.fyp.data.friends.SharingRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.AcceptSharedItemUseCase
 import com.example.fyp.domain.friends.DismissSharedItemUseCase
@@ -34,6 +35,7 @@ class SharedInboxViewModelTest {
     private lateinit var sharedFriendsDataSource: SharedFriendsDataSource
     private lateinit var acceptSharedItemUseCase: AcceptSharedItemUseCase
     private lateinit var dismissSharedItemUseCase: DismissSharedItemUseCase
+    private lateinit var sharingRepository: SharingRepository
 
     private val authStateFlow = MutableStateFlow<AuthState>(AuthState.Loading)
     private val pendingItemsFlow = MutableStateFlow<List<SharedItem>>(emptyList())
@@ -52,6 +54,7 @@ class SharedInboxViewModelTest {
         }
         acceptSharedItemUseCase = mock()
         dismissSharedItemUseCase = mock()
+        sharingRepository = mock()
     }
 
     @After
@@ -62,6 +65,7 @@ class SharedInboxViewModelTest {
     private fun createViewModel() = SharedInboxViewModel(
         authRepository = authRepository,
         sharedFriendsDataSource = sharedFriendsDataSource,
+        sharingRepository = sharingRepository,
         acceptSharedItemUseCase = acceptSharedItemUseCase,
         dismissSharedItemUseCase = dismissSharedItemUseCase
     )
@@ -82,17 +86,30 @@ class SharedInboxViewModelTest {
         createdAt = Timestamp.now()
     )
 
-    // ── Initial load: no new item IDs ─────────────────────────────────────────
+    // ── Initial load: all pending items are marked as new ────────────────────
 
     @Test
-    fun `initial load does not mark items as new`() = runTest {
+    fun `initial load marks all pending items as new`() = runTest {
         val viewModel = createViewModel()
 
         authStateFlow.value = loggedInState
         pendingItemsFlow.value = listOf(makeItem("item1"), makeItem("item2"))
 
         val state = viewModel.uiState.value
-        assertTrue("No items should be marked new on initial load", state.newItemIds.isEmpty())
+        assertTrue("item1 should be marked new on initial load", "item1" in state.newItemIds)
+        assertTrue("item2 should be marked new on initial load", "item2" in state.newItemIds)
+        assertEquals(2, state.newItemCount)
+    }
+
+    @Test
+    fun `initial load with no items has empty newItemIds`() = runTest {
+        val viewModel = createViewModel()
+
+        authStateFlow.value = loggedInState
+        pendingItemsFlow.value = emptyList()
+
+        val state = viewModel.uiState.value
+        assertTrue("No items should be marked new when inbox is empty", state.newItemIds.isEmpty())
         assertEquals(0, state.newItemCount)
     }
 

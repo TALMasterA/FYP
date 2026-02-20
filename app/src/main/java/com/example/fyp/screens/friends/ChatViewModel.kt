@@ -105,6 +105,9 @@ class ChatViewModel @Inject constructor(
                     messages = messages,
                     isLoading = false
                 )
+                // Re-mark as read whenever new messages arrive while the chat is open
+                // This ensures the unread badge clears immediately when messages are received
+                markMessagesAsRead(userId)
             }
         }
     }

@@ -40,6 +40,7 @@ import com.example.fyp.screens.friends.ChatScreen
 import com.example.fyp.screens.friends.FriendsScreen
 import com.example.fyp.screens.friends.MyProfileScreen
 import com.example.fyp.screens.friends.SharedInboxScreen
+import com.example.fyp.screens.friends.SharedMaterialDetailScreen
 import com.example.fyp.screens.learning.LearningScreen
 import com.example.fyp.screens.learning.LearningSheetScreen
 import com.example.fyp.screens.learning.LearningViewModel
@@ -80,6 +81,11 @@ sealed class AppScreen(val route: String) {
     object Friends : AppScreen("friends")
     object MyProfile : AppScreen("my_profile")
     object SharedInbox : AppScreen("shared_inbox")
+
+    object SharedMaterialDetail : AppScreen("shared_material_detail/{itemId}") {
+        fun routeFor(itemId: String) =
+            "shared_material_detail/${java.net.URLEncoder.encode(itemId, "UTF-8")}"
+    }
 
     object Chat : AppScreen("chat/{friendId}/{friendUsername}/{friendDisplayName}") {
         fun routeFor(friendId: String, friendUsername: String, friendDisplayName: String = "") =
@@ -419,6 +425,24 @@ fun AppNavigation() {
                         onNeedLogin = navigateToLogin
                     ) {
                         SharedInboxScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() },
+                            onViewMaterial = { itemId ->
+                                navController.navigate(AppScreen.SharedMaterialDetail.routeFor(itemId))
+                            }
+                        )
+                    }
+
+                    composableRequireLoginWithArgs(
+                        route = AppScreen.SharedMaterialDetail.route,
+                        argNames = listOf("itemId"),
+                        onNeedLogin = navigateToLogin
+                    ) { backStackEntry ->
+                        val itemId = java.net.URLDecoder.decode(
+                            backStackEntry.arguments?.getString("itemId").orEmpty(), "UTF-8"
+                        )
+                        SharedMaterialDetailScreen(
+                            itemId = itemId,
                             appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
                         )

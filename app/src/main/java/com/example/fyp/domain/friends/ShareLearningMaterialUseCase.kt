@@ -21,7 +21,8 @@ class ShareLearningMaterialUseCase @Inject constructor(
      * @param type Type of material (LEARNING_SHEET or QUIZ)
      * @param materialId ID of the material
      * @param title Title of the material
-     * @param description Optional description
+     * @param description Short preview/description (first ~200 chars)
+     * @param fullContent The complete content text for the recipient to read
      */
     suspend operator fun invoke(
         fromUserId: UserId,
@@ -30,12 +31,14 @@ class ShareLearningMaterialUseCase @Inject constructor(
         type: SharedItemType,
         materialId: String,
         title: String,
-        description: String = ""
+        description: String = "",
+        fullContent: String = ""
     ): Result<SharedItem> {
         val materialData = mapOf(
             "materialId" to materialId,
             "title" to title,
-            "description" to description
+            "description" to description,
+            "fullContent" to fullContent
         )
 
         return sharingRepository.shareLearningMaterial(

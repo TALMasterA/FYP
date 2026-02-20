@@ -61,7 +61,11 @@ class FirestoreSharingRepository @Inject constructor(
     // ── Share Learning Material ──────────────────────────────────────────────
 
     /**
-     * OPTIMIZED: Same approach as shareWord — no friendship or profile reads.
+     * Stores the shared item in the inbox AND writes the full content to a
+     * separate sub-document (shared_inbox/{itemId}/content/body) so that
+     * the main SharedItem document stays small (well within Firestore 1 MB),
+     * while the full learning-sheet text is fetched on demand by the
+     * SharedMaterialDetailScreen.
      */
     override suspend fun shareLearningMaterial(
         fromUserId: UserId,
@@ -80,18 +84,31 @@ class FirestoreSharingRepository @Inject constructor(
                 .collection("shared_inbox")
                 .document()
 
+            // Strip fullContent out of the main doc to keep it small
+            val fullContent = materialData["fullContent"] as? String ?: ""
+            val contentForMainDoc = materialData.toMutableMap().apply { remove("fullContent") }
+
             val sharedItem = SharedItem(
                 itemId = itemRef.id,
                 fromUserId = fromUserId.value,
                 fromUsername = fromUsername,
                 toUserId = toUserId.value,
                 type = type,
-                content = materialData,
+                content = contentForMainDoc,
                 status = SharedItemStatus.PENDING,
                 createdAt = Timestamp.now()
             )
 
-            itemRef.set(sharedItem).await()
+            // Use a batch: write main item + full-content sub-doc atomically
+            val batch = db.batch()
+            batch.set(itemRef, sharedItem)
+
+            if (fullContent.isNotBlank()) {
+                val contentRef = itemRef.collection("content").document("body")
+                batch.set(contentRef, mapOf("fullContent" to fullContent))
+            }
+
+            batch.commit().await()
             Result.success(sharedItem)
         } catch (e: Exception) {
             Result.failure(e)
@@ -175,6 +192,21 @@ class FirestoreSharingRepository @Inject constructor(
             .size()
     } catch (e: Exception) {
         0
+    }
+
+    override suspend fun fetchSharedItemFullContent(userId: UserId, itemId: String): String? = try {
+        val doc = db.collection("users")
+            .document(userId.value)
+            .collection("shared_inbox")
+            .document(itemId)
+            .collection("content")
+            .document("body")
+            .get()
+            .await()
+        doc.getString("fullContent")
+    } catch (e: Exception) {
+        android.util.Log.w("SharingRepo", "fetchSharedItemFullContent failed for $itemId", e)
+        null
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────

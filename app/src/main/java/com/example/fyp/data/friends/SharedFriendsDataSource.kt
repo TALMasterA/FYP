@@ -58,6 +58,29 @@ class SharedFriendsDataSource @Inject constructor(
     private val _pendingSharedItems = MutableStateFlow<List<SharedItem>>(emptyList())
     val pendingSharedItems: StateFlow<List<SharedItem>> = _pendingSharedItems.asStateFlow()
 
+    // ── Seen/unread tracking for notification badge ───────────────────────────
+
+    /** IDs of shared inbox items the user has already seen (opened the inbox). */
+    private val _seenSharedItemIds = MutableStateFlow<Set<String>>(emptySet())
+
+    /**
+     * Count of PENDING items that the user has NOT yet seen.
+     * This drives the notification badge so it clears once the inbox is opened.
+     */
+    val unseenSharedItemCount: kotlinx.coroutines.flow.Flow<Int> =
+        kotlinx.coroutines.flow.combine(_pendingSharedItems, _seenSharedItemIds) { items, seen ->
+            items.count { it.itemId !in seen }
+        }
+
+    /**
+     * Call this when the user opens the Shared Inbox screen so all currently
+     * pending items are considered "seen" and the notification badge clears.
+     */
+    fun markSharedItemsSeen() {
+        val currentIds = _pendingSharedItems.value.map { it.itemId }.toSet()
+        _seenSharedItemIds.value = _seenSharedItemIds.value + currentIds
+    }
+
     // ── In-memory username cache (avoid re-fetching sender profile on share) ──
 
     /** Cache: userId → username. Populated when friends list loads. */
@@ -123,6 +146,9 @@ class SharedFriendsDataSource @Inject constructor(
             try {
                 sharingRepository.observeSharedInbox(uid).collect { list ->
                     _pendingSharedItems.value = list
+                    // Remove IDs from seenSet that are no longer pending (accepted/dismissed)
+                    val currentIds = list.map { it.itemId }.toSet()
+                    _seenSharedItemIds.value = _seenSharedItemIds.value.intersect(currentIds)
                 }
             } catch (e: Exception) {
                 Log.w("SharedFriendsDS", "Shared inbox listener error", e)
@@ -144,6 +170,7 @@ class SharedFriendsDataSource @Inject constructor(
         _friends.value = emptyList()
         _incomingRequests.value = emptyList()
         _pendingSharedItems.value = emptyList()
+        _seenSharedItemIds.value = emptySet()
         usernameCache.clear()
     }
 

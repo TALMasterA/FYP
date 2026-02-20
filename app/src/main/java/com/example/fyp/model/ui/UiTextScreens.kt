@@ -1062,6 +1062,17 @@ val ScreenUiTexts: List<String> = listOf(
     // FriendsRemoveConfirm
     "Remove",
 
+    // FriendsNewRequestsTemplate
+    "You have {count} new friend request(s)!",
+    // FriendsSentRequestsSection
+    "Sent Requests ({count})",
+    // FriendsPendingStatus
+    "Pending",
+    // FriendsCancelRequestButton
+    "Cancel request",
+    // FriendsUnreadMessageDesc
+    "Send message",
+
     // --- Chat ---
     // ChatTitle
     "Chat with {username}",
@@ -1106,6 +1117,9 @@ val ScreenUiTexts: List<String> = listOf(
     // ChatTranslateFailed
     "Translation failed",
 
+    // ChatTranslatedLabel
+    "Translated",
+
     // --- Sharing Feature ---
     // ShareTitle
     "Share",
@@ -1147,6 +1161,23 @@ val ScreenUiTexts: List<String> = listOf(
     "Quiz",
     // ShareReceivedFrom
     "From: {username}",
+
+    // ShareNewItemsTemplate
+    "{count} new item(s) received!",
+    // ShareViewFullMaterial
+    "Tap \"View\" to read the full material",
+    // ShareDeleteItemTitle
+    "Delete Item",
+    // ShareDeleteItemMessage
+    "Are you sure you want to delete this shared item? This action cannot be undone.",
+    // ShareDeleteButton
+    "Delete",
+    // ShareViewButton
+    "View",
+    // ShareItemNotFound
+    "Item not found.",
+    // ShareNoContent
+    "No content available for this material.",
 
     // --- My Profile ---
     // MyProfileTitle

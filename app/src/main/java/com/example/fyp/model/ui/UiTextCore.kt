@@ -485,6 +485,11 @@ enum class UiTextKey {
     FriendsCloseButton,
     FriendsCancelButton,
     FriendsRemoveConfirm,
+    FriendsNewRequestsTemplate,
+    FriendsSentRequestsSection,
+    FriendsPendingStatus,
+    FriendsCancelRequestButton,
+    FriendsUnreadMessageDesc,
 
     // --- Chat ---
     ChatTitle,
@@ -509,7 +514,8 @@ enum class UiTextKey {
     ChatShowOriginal,
     ChatShowTranslation,
     ChatTranslateFailed,
-    
+    ChatTranslatedLabel,
+
     // --- Sharing Feature ---
     ShareTitle,
     ShareInboxTitle,
@@ -531,6 +537,14 @@ enum class UiTextKey {
     ShareTypeLearningSheet,
     ShareTypeQuiz,
     ShareReceivedFrom,
+    ShareNewItemsTemplate,
+    ShareViewFullMaterial,
+    ShareDeleteItemTitle,
+    ShareDeleteItemMessage,
+    ShareDeleteButton,
+    ShareViewButton,
+    ShareItemNotFound,
+    ShareNoContent,
 
     // --- My Profile ---
     MyProfileTitle,

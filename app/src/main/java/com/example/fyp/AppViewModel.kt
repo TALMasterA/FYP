@@ -54,8 +54,7 @@ class AppViewModel @Inject constructor(
 
     /** Pending shared inbox items — derived from shared in-memory state. */
     val pendingSharedItemCount: StateFlow<Int> =
-        sharedFriendsDataSource.pendingSharedItems
-            .map { it.size }
+        sharedFriendsDataSource.unseenSharedItemCount
             .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     private val _unreadMessageCount = MutableStateFlow(0)

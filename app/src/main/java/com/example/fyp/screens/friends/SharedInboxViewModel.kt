@@ -3,6 +3,7 @@ package com.example.fyp.screens.friends
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.friends.SharedFriendsDataSource
+import com.example.fyp.data.friends.SharingRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.AcceptSharedItemUseCase
 import com.example.fyp.domain.friends.DismissSharedItemUseCase
@@ -24,7 +25,8 @@ data class SharedInboxUiState(
     val successMessage: String? = null,
     val isProcessing: Boolean = false,
     val newItemCount: Int = 0,          // items that arrived since screen was last opened
-    val newItemIds: Set<String> = emptySet() // IDs of items that are new/unread (red dot)
+    val newItemIds: Set<String> = emptySet(), // IDs of items that are new/unread (red dot)
+    val fullContentMap: Map<String, String> = emptyMap() // itemId -> full content text
 )
 
 /**
@@ -35,6 +37,7 @@ data class SharedInboxUiState(
 class SharedInboxViewModel @Inject constructor(
     private val authRepository: FirebaseAuthRepository,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
+    private val sharingRepository: SharingRepository,
     private val acceptSharedItemUseCase: AcceptSharedItemUseCase,
     private val dismissSharedItemUseCase: DismissSharedItemUseCase
 ) : ViewModel() {
@@ -60,20 +63,18 @@ class SharedInboxViewModel @Inject constructor(
                         launch {
                             sharedFriendsDataSource.pendingSharedItems.collect { items ->
                                 val currentIds = items.map { it.itemId }.toSet()
-                                val newCount = when {
-                                    seenCount < 0 -> 0          // first load — nothing "new" yet
-                                    items.size > seenCount -> items.size - seenCount
-                                    else -> _uiState.value.newItemCount
-                                }
-                                // Compute new item IDs: items not in the last seen set
-                                val newIds = if (seenCount < 0) {
-                                    emptySet() // first load — nothing "new" yet
+                                val isFirstLoad = seenCount < 0
+                                // On first load, ALL pending items are "new/unread" since the
+                                // user hasn't opened the inbox yet in this session.
+                                val newIds = if (isFirstLoad) {
+                                    currentIds // all items unseen on first load
                                 } else {
-                                    currentIds - seenItemIds
+                                    currentIds - seenItemIds // only items not seen before
                                 }
-                                if (seenCount < 0) {
-                                    seenCount = items.size
-                                    seenItemIds = currentIds
+                                val newCount = newIds.size
+                                if (isFirstLoad) {
+                                    // Don't set seenItemIds here — wait for markItemsAsSeen()
+                                    seenCount = 0 // mark as "past first load" but nothing seen yet
                                 }
                                 _uiState.update {
                                     it.copy(
@@ -102,9 +103,17 @@ class SharedInboxViewModel @Inject constructor(
     /** Call when the user opens / views the inbox to reset the "new" badge. */
     fun markItemsAsSeen() {
         val current = _uiState.value.sharedItems
+        val currentIds = current.map { it.itemId }.toSet()
         seenCount = current.size
-        seenItemIds = current.map { it.itemId }.toSet()
+        seenItemIds = currentIds
         _uiState.update { it.copy(newItemCount = 0, newItemIds = emptySet()) }
+        // Also clear the notification badge that lives in SharedFriendsDataSource
+        sharedFriendsDataSource.markSharedItemsSeen()
+    }
+
+    /** Call when the user opens a specific shared item detail to clear its red dot. */
+    fun markItemSeen(itemId: String) {
+        _uiState.update { it.copy(newItemIds = it.newItemIds - itemId) }
     }
 
     fun acceptItem(itemId: String) {
@@ -157,6 +166,27 @@ class SharedInboxViewModel @Inject constructor(
 
     fun clearMessages() {
         _uiState.update { it.copy(error = null, successMessage = null) }
+    }
+
+    /**
+     * Fetch the full text content of a shared learning material from the
+     * sub-document (stored separately to keep the main doc small).
+     * Results are cached in uiState.fullContentMap so subsequent navigations are instant.
+     * Stores an empty string if the sub-document doesn't exist so the loading
+     * spinner stops and the UI falls back to the description preview.
+     */
+    fun loadFullContent(itemId: String) {
+        val userId = currentUserId ?: return
+        // Already cached — no need to re-fetch
+        if (_uiState.value.fullContentMap.containsKey(itemId)) return
+        viewModelScope.launch {
+            val content = sharingRepository.fetchSharedItemFullContent(userId, itemId)
+            // Store result (even if null/empty) so we don't show infinite spinner.
+            // Falls back to description preview in SharedMaterialDetailScreen.
+            _uiState.update {
+                it.copy(fullContentMap = it.fullContentMap + (itemId to (content ?: "")))
+            }
+        }
     }
 }
 

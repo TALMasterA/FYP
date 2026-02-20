@@ -46,7 +46,7 @@ fun FriendsScreen(
     LaunchedEffect(uiState.newRequestCount) {
         if (uiState.newRequestCount > 0) {
             snackbarHostState.showSnackbar(
-                message = "You have ${uiState.newRequestCount} new friend request(s)!",
+                message = t(UiTextKey.FriendsNewRequestsTemplate).replace("{count}", "${uiState.newRequestCount}"),
                 duration = SnackbarDuration.Short
             )
             viewModel.clearNewRequestCount()
@@ -163,12 +163,13 @@ fun FriendsScreen(
             }
 
             // Friends list
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             when {
                 uiState.isLoading -> {
                     CircularProgressIndicator(
                         modifier = Modifier
                             .padding(32.dp)
-                            .align(Alignment.CenterHorizontally)
+                            .align(Alignment.TopCenter)
                     )
                 }
                 uiState.friends.isEmpty() && uiState.incomingRequests.isEmpty() && uiState.outgoingRequests.isEmpty() -> {
@@ -207,7 +208,7 @@ fun FriendsScreen(
                         if (uiState.outgoingRequests.isNotEmpty()) {
                             item {
                                 Text(
-                                    text = "Sent Requests (${uiState.outgoingRequests.size})",
+                                    text = t(UiTextKey.FriendsSentRequestsSection).replace("{count}", "${uiState.outgoingRequests.size}"),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(vertical = 8.dp)
@@ -216,7 +217,9 @@ fun FriendsScreen(
                             items(uiState.outgoingRequests) { request ->
                                 OutgoingRequestCard(
                                     request = request,
-                                    onCancel = { viewModel.cancelFriendRequest(request.requestId) }
+                                    onCancel = { viewModel.cancelFriendRequest(request.requestId) },
+                                    pendingText = t(UiTextKey.FriendsPendingStatus),
+                                    cancelText = t(UiTextKey.FriendsCancelRequestButton)
                                 )
                             }
                             item {
@@ -240,13 +243,15 @@ fun FriendsScreen(
                                     unreadCount = uiState.unreadCountPerFriend[friend.friendId] ?: 0,
                                     onRemove = { showRemoveDialog = friend },
                                     onClick = { onOpenChat(friend.friendId, friend.friendUsername, friend.friendDisplayName) },
-                                    removeText = t(UiTextKey.FriendsRemoveButton)
+                                    removeText = t(UiTextKey.FriendsRemoveButton),
+                                    sendMessageText = t(UiTextKey.FriendsUnreadMessageDesc)
                                 )
                             }
                         }
                     }
                 }
             }
+            } // end Box
         }
     }
 
@@ -295,7 +300,9 @@ fun FriendsScreen(
 @Composable
 fun OutgoingRequestCard(
     request: FriendRequest,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    pendingText: String,
+    cancelText: String
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -317,7 +324,7 @@ fun OutgoingRequestCard(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Pending",
+                    text = pendingText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -325,7 +332,7 @@ fun OutgoingRequestCard(
             IconButton(onClick = onCancel) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = "Cancel request",
+                    contentDescription = cancelText,
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -385,7 +392,8 @@ fun FriendCard(
     unreadCount: Int = 0,
     onRemove: () -> Unit,
     onClick: () -> Unit,
-    removeText: String
+    removeText: String,
+    sendMessageText: String = "Send message"
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -407,25 +415,28 @@ fun FriendCard(
                     fontWeight = FontWeight.Bold
                 )
             }
-            // Unread message badge
-            if (unreadCount > 0) {
-                BadgedBox(
-                    badge = {
+            // Unread message badge — always show message icon, red dot only when unread > 0
+            BadgedBox(
+                badge = {
+                    if (unreadCount > 0) {
                         Badge(
                             containerColor = MaterialTheme.colorScheme.error,
                             contentColor = MaterialTheme.colorScheme.onError
                         ) {
                             Text(if (unreadCount > 99) "99+" else "$unreadCount")
                         }
-                    },
-                    modifier = Modifier.padding(end = 8.dp)
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.Message,
-                        contentDescription = "$unreadCount unread messages",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
+                    }
+                },
+                modifier = Modifier
+                    .padding(end = 12.dp)
+                    .wrapContentSize()
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.Message,
+                    contentDescription = if (unreadCount > 0) "$unreadCount unread messages" else sendMessageText,
+                    tint = if (unreadCount > 0) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             IconButton(onClick = onRemove) {
                 Icon(

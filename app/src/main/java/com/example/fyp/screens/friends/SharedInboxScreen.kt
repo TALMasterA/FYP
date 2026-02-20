@@ -3,8 +3,6 @@ package com.example.fyp.screens.friends
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.*
@@ -14,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.first
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.StandardScreenScaffold
@@ -38,11 +37,13 @@ fun SharedInboxScreen(
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
-    // Mark items as seen once loading is complete, so the badge accurately resets
-    LaunchedEffect(uiState.isLoading) {
-        if (!uiState.isLoading) {
-            viewModel.markItemsAsSeen()
-        }
+    // Mark all items as seen when the inbox finishes loading.
+    // Collects the ViewModel's StateFlow directly (not snapshotFlow) to reliably
+    // catch the transition from isLoading=true → false on every visit.
+    LaunchedEffect(Unit) {
+        viewModel.uiState
+            .first { !it.isLoading }
+        viewModel.markItemsAsSeen()
     }
 
     // Auto-dismiss messages after showing
@@ -104,7 +105,7 @@ fun SharedInboxScreen(
                                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                         Text(
-                                            text = "${uiState.newItemCount} new item${if (uiState.newItemCount > 1) "s" else ""} received!",
+                                            text = t(UiTextKey.ShareNewItemsTemplate).replace("{count}", "${uiState.newItemCount}"),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
@@ -207,17 +208,17 @@ fun SharedItemCard(
     onAccept: () -> Unit,
     onDismiss: () -> Unit,
     onDelete: () -> Unit = {},
+    onViewMaterial: () -> Unit = {},
     isProcessing: Boolean
 ) {
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
-    var showMaterialDetailDialog by remember { mutableStateOf(false) }
 
     // Delete confirmation dialog for learning materials
     if (showDeleteConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = false },
-            title = { Text("Delete Item") },
-            text = { Text("Are you sure you want to delete this shared item? This action cannot be undone.") },
+            title = { Text(t(UiTextKey.ShareDeleteItemTitle)) },
+            text = { Text(t(UiTextKey.ShareDeleteItemMessage)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -228,25 +229,17 @@ fun SharedItemCard(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Delete")
+                    Text(t(UiTextKey.ShareDeleteButton))
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showDeleteConfirmDialog = false }) {
-                    Text("Cancel")
+                    Text(t(UiTextKey.FriendsCancelButton))
                 }
             }
         )
     }
 
-    // Material detail dialog for LEARNING_SHEET / QUIZ
-    if (showMaterialDetailDialog && (item.type == SharedItemType.LEARNING_SHEET || item.type == SharedItemType.QUIZ)) {
-        SharedMaterialDetailDialog(
-            item = item,
-            t = t,
-            onDismiss = { showMaterialDetailDialog = false }
-        )
-    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -361,7 +354,7 @@ fun SharedItemCard(
                             )
                         }
                         Text(
-                            "Tap \"View\" to read the full material",
+                            t(UiTextKey.ShareViewFullMaterial),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -403,13 +396,13 @@ fun SharedItemCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(
-                            onClick = { showMaterialDetailDialog = true },
+                            onClick = onViewMaterial,
                             enabled = !isProcessing,
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("View")
+                            Text(t(UiTextKey.ShareViewButton))
                         }
                         Button(
                             onClick = { showDeleteConfirmDialog = true },
@@ -422,7 +415,7 @@ fun SharedItemCard(
                         ) {
                             Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Delete")
+                            Text(t(UiTextKey.ShareDeleteButton))
                         }
                     }
                 }
@@ -431,71 +424,6 @@ fun SharedItemCard(
     }
 }
 
-@Composable
-fun SharedMaterialDetailDialog(
-    item: SharedItem,
-    t: (UiTextKey) -> String,
-    onDismiss: () -> Unit
-) {
-    val content = item.content
-    val title = content["title"] as? String ?: ""
-    val description = content["description"] as? String ?: ""
-    val typeLabel = when (item.type) {
-        SharedItemType.LEARNING_SHEET -> t(UiTextKey.ShareTypeLearningSheet)
-        SharedItemType.QUIZ -> t(UiTextKey.ShareTypeQuiz)
-        else -> ""
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = typeLabel,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = t(UiTextKey.ShareReceivedFrom).replace("{username}", item.fromUsername),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                if (description.isNotBlank()) {
-                    HorizontalDivider()
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                } else {
-                    Text(
-                        text = "No preview available for this material.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
-            }
-        }
-    )
-}
 
 private fun formatTimestamp(date: Date): String {
     val now = Calendar.getInstance()

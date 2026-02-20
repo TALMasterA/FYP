@@ -65,4 +65,11 @@ interface SharingRepository {
      * Get pending (unacted upon) shared items count.
      */
     suspend fun getPendingItemsCount(userId: UserId): Int
+
+    /**
+     * Fetch the full content text for a shared learning material.
+     * Stored in a sub-document to avoid Firestore 1 MB document limit.
+     * Returns null if not found (older items that didn't store full content).
+     */
+    suspend fun fetchSharedItemFullContent(userId: UserId, itemId: String): String?
 }

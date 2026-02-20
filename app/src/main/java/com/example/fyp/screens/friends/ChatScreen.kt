@@ -197,7 +197,8 @@ fun ChatScreen(
                                 currentUserId = uiState.currentUserId ?: "",
                                 translatedText = if (uiState.showTranslation) {
                                     uiState.translatedMessages[message.content]
-                                } else null
+                                } else null,
+                                translatedLabel = t(UiTextKey.ChatTranslatedLabel)
                             )
                         }
                     }
@@ -221,7 +222,8 @@ fun ChatScreen(
 fun MessageBubble(
     message: FriendMessage,
     currentUserId: String,
-    translatedText: String? = null
+    translatedText: String? = null,
+    translatedLabel: String = "Translated"
 ) {
     val isCurrentUser = message.senderId == currentUserId
     
@@ -262,7 +264,7 @@ fun MessageBubble(
                 if (translatedText != null && translatedText != message.content) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Translated",
+                        text = translatedLabel,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = if (isCurrentUser) {
