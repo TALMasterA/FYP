@@ -12,8 +12,8 @@ class SearchUsersUseCase @Inject constructor(
     private val friendsRepository: FriendsRepository
 ) {
     suspend operator fun invoke(query: String, limit: Long = 20): Result<List<PublicUserProfile>> {
-        if (query.length < 2) {
-            return Result.failure(IllegalArgumentException("Search query must be at least 2 characters"))
+        if (query.length < 3) {
+            return Result.failure(IllegalArgumentException("Search query must be at least 3 characters"))
         }
         return friendsRepository.searchUsersByUsername(query)
     }

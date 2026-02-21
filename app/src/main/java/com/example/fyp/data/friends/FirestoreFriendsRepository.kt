@@ -436,6 +436,28 @@ class FirestoreFriendsRepository @Inject constructor(
         batch.delete(friendUserRef)
 
         batch.commit().await()
+
+        // Clean up old accepted/rejected friend_request documents in both directions
+        // so the two users can re-send friend requests to each other later.
+        try {
+            val oldRequests1 = db.collection("friend_requests")
+                .whereEqualTo("fromUserId", userId.value)
+                .whereEqualTo("toUserId", friendId.value)
+                .get().await()
+            val oldRequests2 = db.collection("friend_requests")
+                .whereEqualTo("fromUserId", friendId.value)
+                .whereEqualTo("toUserId", userId.value)
+                .get().await()
+            val cleanupBatch = db.batch()
+            (oldRequests1.documents + oldRequests2.documents).forEach { doc ->
+                cleanupBatch.delete(doc.reference)
+            }
+            cleanupBatch.commit().await()
+        } catch (_: Exception) {
+            // Non-fatal: cleanup is best-effort; the PENDING check in sendFriendRequest
+            // still filters correctly since old docs won't be PENDING.
+        }
+
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)

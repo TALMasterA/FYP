@@ -12,14 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,24 +24,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.friends.SharedItemType
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 /**
  * Full-screen view of a shared learning material or quiz.
  *
+ * Uses [StandardScreenScaffold] for a consistent top app bar with back arrow,
+ * matching all other screens. The title shows who shared the item.
+ *
  * Uses a dedicated [SharedMaterialDetailViewModel] that independently fetches
  * the item and its full content from Firestore, so it works regardless of
  * whether SharedInboxViewModel has the item in memory.
- *
- * No top app bar header — just a back arrow inline with the content.
  */
 @Composable
 fun SharedMaterialDetailScreen(
@@ -57,13 +49,24 @@ fun SharedMaterialDetailScreen(
     viewModel: SharedMaterialDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val (uiText, _) = rememberUiTextFunctions(appLanguageState)
+    val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     // ── Loading ──────────────────────────────────────────────────────────────
     if (uiState.isLoading) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        StandardScreenScaffold(
+            title = t(UiTextKey.ShareInboxTitle),
+            onBack = onBack,
+            backContentDescription = t(UiTextKey.NavBack)
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
         return
     }
@@ -71,28 +74,62 @@ fun SharedMaterialDetailScreen(
     // ── Error / not found ────────────────────────────────────────────────────
     val item = uiState.item
     if (item == null) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = uiState.error ?: t(UiTextKey.ShareItemNotFound),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        StandardScreenScaffold(
+            title = t(UiTextKey.ShareInboxTitle),
+            onBack = onBack,
+            backContentDescription = t(UiTextKey.NavBack)
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = uiState.error ?: t(UiTextKey.ShareItemNotFound),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
         return
     }
 
     // ── Content ──────────────────────────────────────────────────────────────
     val content = item.content
-    val title = content["title"] as? String ?: content["sourceText"] as? String ?: ""
-    val description = content["description"] as? String ?: ""
+    val rawTitle = content["title"] as? String ?: content["sourceText"] as? String ?: ""
+
+    // Derive language codes for the header
+    val sourceLangCode: String
+    val targetLangCode: String
+    when (item.type) {
+        SharedItemType.WORD -> {
+            sourceLangCode = content["sourceLang"] as? String ?: ""
+            targetLangCode = content["targetLang"] as? String ?: ""
+        }
+        SharedItemType.LEARNING_SHEET, SharedItemType.QUIZ -> {
+            // Title format: "Learning Sheet: en-US → zh-CN"
+            val arrow = rawTitle.indexOf(" → ")
+            if (arrow != -1) {
+                val colonIdx = rawTitle.indexOf(": ")
+                sourceLangCode = if (colonIdx != -1) rawTitle.substring(colonIdx + 2, arrow).trim() else ""
+                targetLangCode = rawTitle.substring(arrow + 3).trim()
+            } else {
+                sourceLangCode = ""
+                targetLangCode = ""
+            }
+        }
+    }
+    val sourceLangName = if (sourceLangCode.isNotBlank()) uiLanguageNameFor(sourceLangCode) else ""
+    val targetLangName = if (targetLangCode.isNotBlank()) uiLanguageNameFor(targetLangCode) else ""
+    val langHeader = when {
+        sourceLangName.isNotBlank() && targetLangName.isNotBlank() -> "$sourceLangName → $targetLangName"
+        else -> rawTitle
+    }
 
     // Full content: prefer fetched sub-doc, fall back to description preview
+    val description = content["description"] as? String ?: ""
     val fetchedFullContent = uiState.fullContent
     val isContentLoading = fetchedFullContent == null
         && (item.type == SharedItemType.LEARNING_SHEET || item.type == SharedItemType.QUIZ)
@@ -105,131 +142,102 @@ fun SharedMaterialDetailScreen(
     val targetText = content["targetText"] as? String ?: ""
     val notes = content["notes"] as? String ?: ""
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Back button (no header/app bar)
-        IconButton(onClick = onBack) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back"
-            )
-        }
+    // Screen title: "Shared by <sender>" using i18n key; fallback to item type title if no sender
+    val senderName = item.fromUsername.takeIf { it.isNotBlank() }
+        ?: (item.content["fromUsername"] as? String)?.takeIf { it.isNotBlank() }
+    val screenTitle = if (senderName != null) {
+        t(UiTextKey.ShareReceivedFrom).replace("{username}", senderName)
+    } else {
+        t(UiTextKey.ShareInboxTitle)
+    }
 
-        // Title
-        if (title.isNotBlank()) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        // Sender + timestamp
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+    StandardScreenScaffold(
+        title = screenTitle,
+        onBack = onBack,
+        backContentDescription = t(UiTextKey.NavBack)
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(padding)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            // Language header: sourceLang → targetLang
+            if (langHeader.isNotBlank()) {
                 Text(
-                    text = t(UiTextKey.ShareReceivedFrom).replace("{username}", item.fromUsername),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = formatDetailTimestamp(item.createdAt.toDate()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = langHeader,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
-        }
 
-        HorizontalDivider()
+            HorizontalDivider()
 
-        // ── Body ─────────────────────────────────────────────────────────────
-        when (item.type) {
-            SharedItemType.WORD -> {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (targetText.isNotBlank()) {
+            // ── Body ─────────────────────────────────────────────────────────
+            when (item.type) {
+                SharedItemType.WORD -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = targetText,
+                            text = rawTitle,
                             style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
-                    }
-                    if (notes.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = notes,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-            SharedItemType.LEARNING_SHEET, SharedItemType.QUIZ -> {
-                when {
-                    isContentLoading -> {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        if (targetText.isNotBlank()) {
                             Text(
-                                text = "Loading content...",
+                                text = targetText,
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        if (notes.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = notes,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-                    bodyText.isNotBlank() -> {
-                        Text(
-                            text = bodyText,
-                            style = MaterialTheme.typography.bodyLarge,
-                            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
-                        )
-                    }
-                    else -> {
-                        Text(
-                            text = t(UiTextKey.ShareNoContent),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                }
+                SharedItemType.LEARNING_SHEET, SharedItemType.QUIZ -> {
+                    when {
+                        isContentLoading -> {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                Text(
+                                    text = "Loading content...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        bodyText.isNotBlank() -> {
+                            Text(
+                                text = bodyText,
+                                style = MaterialTheme.typography.bodyLarge,
+                                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
+                            )
+                        }
+                        else -> {
+                            Text(
+                                text = t(UiTextKey.ShareNoContent),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
-    }
-}
-
-private fun formatDetailTimestamp(date: Date): String {
-    val now = Calendar.getInstance()
-    val target = Calendar.getInstance().apply { time = date }
-    return when {
-        now.get(Calendar.YEAR) == target.get(Calendar.YEAR) &&
-        now.get(Calendar.DAY_OF_YEAR) == target.get(Calendar.DAY_OF_YEAR) ->
-            "Today, " + SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
-        now.get(Calendar.YEAR) == target.get(Calendar.YEAR) ->
-            SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(date)
-        else ->
-            SimpleDateFormat("MMM d, yyyy HH:mm", Locale.getDefault()).format(date)
     }
 }

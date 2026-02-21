@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,8 +25,9 @@ import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
-import com.example.fyp.ui.components.EmptyStates
+import com.example.fyp.ui.components.EmptyStateView
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsScreen(
     appLanguageState: AppLanguageState,
@@ -41,7 +43,17 @@ fun FriendsScreen(
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     var showSearchDialog by remember { mutableStateOf(false) }
-    var showRemoveDialog by remember { mutableStateOf<FriendRelation?>(null) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showInfoDialog by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            viewModel.refreshFriendsList()
+            kotlinx.coroutines.delay(600)
+            isRefreshing = false
+        }
+    }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -64,196 +76,22 @@ fun FriendsScreen(
         }
     }
 
-    StandardScreenScaffold(
-        title = t(UiTextKey.FriendsTitle),
-        onBack = onBack,
-        backContentDescription = t(UiTextKey.NavBack),
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            // Error/Success messages
-            uiState.error?.let { error ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ) {
-                    Text(
-                        text = error,
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
+    // Info dialog
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text(t(UiTextKey.FriendsInfoTitle)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(t(UiTextKey.FriendsInfoMessage))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text(t(UiTextKey.FriendsInfoGotItButton))
                 }
             }
-
-            uiState.successMessage?.let { message ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Text(
-                        text = message,
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-
-            // Search button and friend requests badge
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(
-                    onClick = { showSearchDialog = true }
-                ) {
-                    Icon(Icons.Default.Search, contentDescription = t(UiTextKey.FriendsSearchTitle))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(t(UiTextKey.FriendsAddButton))
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Shared Inbox button with red-dot badge (no count)
-                    Box {
-                        IconButton(onClick = onOpenSharedInbox) {
-                            Icon(
-                                Icons.Default.Inbox,
-                                contentDescription = t(UiTextKey.ShareInboxTitle)
-                            )
-                        }
-                        // Badge positioned at top-end of the icon button
-                        if (hasUnseenSharedItems) {
-                            Badge(
-                                containerColor = MaterialTheme.colorScheme.error,
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(top = 8.dp, end = 8.dp)
-                            )
-                        }
-                    }
-
-                    if (uiState.incomingRequests.isNotEmpty()) {
-                        BadgedBox(
-                            badge = {
-                                Badge {
-                                    Text("${uiState.incomingRequests.size}")
-                                }
-                            }
-                        ) {
-                            Icon(Icons.Default.Notifications, contentDescription = t(UiTextKey.FriendsRequestsSection).replace("{count}", "${uiState.incomingRequests.size}"))
-                        }
-                    }
-                }
-            }
-
-            // Friends list
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .padding(32.dp)
-                            .align(Alignment.TopCenter)
-                    )
-                }
-                uiState.friends.isEmpty() && uiState.incomingRequests.isEmpty() && uiState.outgoingRequests.isEmpty() -> {
-                    EmptyStates.NoFriends()
-                }
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        // Friend requests section
-                        if (uiState.incomingRequests.isNotEmpty()) {
-                            item {
-                                Text(
-                                    text = t(UiTextKey.FriendsRequestsSection).replace("{count}", "${uiState.incomingRequests.size}"),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(vertical = 8.dp)
-                                )
-                            }
-                            items(uiState.incomingRequests, key = { it.requestId }) { request ->
-                                FriendRequestCard(
-                                    request = request,
-                                    onAccept = { viewModel.acceptFriendRequest(request.requestId) },
-                                    onReject = { viewModel.rejectFriendRequest(request.requestId) },
-                                    acceptText = t(UiTextKey.FriendsAcceptButton),
-                                    rejectText = t(UiTextKey.FriendsRejectButton)
-                                )
-                            }
-                            item {
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                            }
-                        }
-
-                        // Outgoing (Sent) requests section
-                        if (uiState.outgoingRequests.isNotEmpty()) {
-                            item {
-                                Text(
-                                    text = t(UiTextKey.FriendsSentRequestsSection).replace("{count}", "${uiState.outgoingRequests.size}"),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(vertical = 8.dp)
-                                )
-                            }
-                            items(uiState.outgoingRequests, key = { it.requestId }) { request ->
-                                OutgoingRequestCard(
-                                    request = request,
-                                    onCancel = { viewModel.cancelFriendRequest(request.requestId) },
-                                    pendingText = t(UiTextKey.FriendsPendingStatus),
-                                    cancelText = t(UiTextKey.FriendsCancelRequestButton)
-                                )
-                            }
-                            item {
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                            }
-                        }
-
-                        // Friends section
-                        if (uiState.friends.isNotEmpty()) {
-                            item {
-                                Text(
-                                    text = t(UiTextKey.FriendsSectionTitle).replace("{count}", "${uiState.friends.size}"),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(vertical = 8.dp)
-                                )
-                            }
-                            items(uiState.friends, key = { it.friendId }) { friend ->
-                                FriendCard(
-                                    friend = friend,
-                                    unreadCount = uiState.unreadCountPerFriend[friend.friendId] ?: 0,
-                                    onRemove = { showRemoveDialog = friend },
-                                    onClick = { onOpenChat(friend.friendId, friend.friendUsername, friend.friendDisplayName) },
-                                    removeText = t(UiTextKey.FriendsRemoveButton),
-                                    sendMessageText = t(UiTextKey.FriendsUnreadMessageDesc)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            } // end Box
-        }
+        )
     }
 
     // Search dialog
@@ -273,33 +111,247 @@ fun FriendsScreen(
         )
     }
 
-    // Remove friend confirmation dialog
-    showRemoveDialog?.let { friend ->
+    // Multi-delete confirmation dialog
+    if (showDeleteConfirmDialog) {
+        val count = uiState.selectedFriendIds.size
         AlertDialog(
-            onDismissRequest = { showRemoveDialog = null },
-            title = { Text(t(UiTextKey.FriendsRemoveDialogTitle)) },
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            title = { Text(t(UiTextKey.FriendsDeleteMultipleTitle)) },
             text = {
-                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Text(t(UiTextKey.FriendsRemoveDialogMessage).replace("{username}", friend.friendUsername))
-                }
+                Text(t(UiTextKey.FriendsDeleteMultipleMessage).replace("{count}", "$count"))
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.removeFriend(friend.friendId)
-                        showRemoveDialog = null
+                        viewModel.removeSelectedFriends()
+                        showDeleteConfirmDialog = false
                     }
                 ) {
-                    Text(t(UiTextKey.FriendsRemoveConfirm))
+                    Text(t(UiTextKey.FriendsRemoveConfirm), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showRemoveDialog = null }) {
+                TextButton(onClick = {
+                    showDeleteConfirmDialog = false
+                    viewModel.exitDeleteMode()
+                }) {
                     Text(t(UiTextKey.FriendsCancelButton))
                 }
             }
         )
     }
+
+    StandardScreenScaffold(
+        title = t(UiTextKey.FriendsTitle),
+        onBack = onBack,
+        backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            IconButton(onClick = { showInfoDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = t(UiTextKey.FriendsInfoTitle),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { isRefreshing = true },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+
+                // Error/Success messages
+                uiState.error?.let { error ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                    ) {
+                        Text(
+                            text = error,
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+
+                uiState.successMessage?.let { message ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Text(
+                            text = message,
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+
+                // Action row: Add Friends + icon buttons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(onClick = { showSearchDialog = true }) {
+                        Icon(Icons.Default.Search, contentDescription = t(UiTextKey.FriendsSearchTitle))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(t(UiTextKey.FriendsAddButton))
+                    }
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Delete friends icon button
+                        IconButton(onClick = {
+                            when {
+                                !uiState.isDeleteMode -> viewModel.toggleDeleteMode()
+                                uiState.selectedFriendIds.isNotEmpty() -> showDeleteConfirmDialog = true
+                                else -> viewModel.exitDeleteMode()
+                            }
+                        }) {
+                            Icon(
+                                if (uiState.isDeleteMode) Icons.Default.DeleteForever else Icons.Default.PersonRemove,
+                                contentDescription = t(UiTextKey.FriendsDeleteModeButton),
+                                tint = if (uiState.isDeleteMode) MaterialTheme.colorScheme.error
+                                       else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        // Shared Inbox button with red-dot badge
+                        IconButton(onClick = onOpenSharedInbox) {
+                            BadgedBox(
+                                badge = {
+                                    if (hasUnseenSharedItems) {
+                                        Badge(containerColor = MaterialTheme.colorScheme.error)
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.Inbox,
+                                    contentDescription = t(UiTextKey.ShareInboxTitle)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Content area
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    when {
+                        uiState.isLoading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .padding(32.dp)
+                                    .align(Alignment.TopCenter)
+                            )
+                        }
+                        uiState.friends.isEmpty() && uiState.incomingRequests.isEmpty() && uiState.outgoingRequests.isEmpty() -> {
+                            // Informative empty state
+                            EmptyStateView(
+                                icon = Icons.Default.People,
+                                title = t(UiTextKey.FriendsEmptyTitle),
+                                message = t(UiTextKey.FriendsEmptyMessage),
+                                modifier = Modifier.align(Alignment.Center),
+                                actionLabel = t(UiTextKey.FriendsAddButton),
+                                onActionClick = { showSearchDialog = true }
+                            )
+                        }
+                        else -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                // Friend requests section
+                                if (uiState.incomingRequests.isNotEmpty()) {
+                                    item {
+                                        Text(
+                                            text = t(UiTextKey.FriendsRequestsSection).replace("{count}", "${uiState.incomingRequests.size}"),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(vertical = 8.dp)
+                                        )
+                                    }
+                                    items(uiState.incomingRequests, key = { it.requestId }) { request ->
+                                        FriendRequestCard(
+                                            request = request,
+                                            onAccept = { viewModel.acceptFriendRequest(request.requestId) },
+                                            onReject = { viewModel.rejectFriendRequest(request.requestId) },
+                                            acceptText = t(UiTextKey.FriendsAcceptButton),
+                                            rejectText = t(UiTextKey.FriendsRejectButton)
+                                        )
+                                    }
+                                    item { HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp)) }
+                                }
+
+                                // Outgoing (Sent) requests section
+                                if (uiState.outgoingRequests.isNotEmpty()) {
+                                    item {
+                                        Text(
+                                            text = t(UiTextKey.FriendsSentRequestsSection).replace("{count}", "${uiState.outgoingRequests.size}"),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(vertical = 8.dp)
+                                        )
+                                    }
+                                    items(uiState.outgoingRequests, key = { it.requestId }) { request ->
+                                        OutgoingRequestCard(
+                                            request = request,
+                                            onCancel = { viewModel.cancelFriendRequest(request.requestId) },
+                                            pendingText = t(UiTextKey.FriendsPendingStatus),
+                                            cancelText = t(UiTextKey.FriendsCancelRequestButton)
+                                        )
+                                    }
+                                    item { HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp)) }
+                                }
+
+                                // Friends section
+                                if (uiState.friends.isNotEmpty()) {
+                                    item {
+                                        Text(
+                                            text = t(UiTextKey.FriendsSectionTitle).replace("{count}", "${uiState.friends.size}"),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(vertical = 8.dp)
+                                        )
+                                    }
+                                    items(uiState.friends, key = { it.friendId }) { friend ->
+                                        FriendCard(
+                                            friend = friend,
+                                            unreadCount = uiState.unreadCountPerFriend[friend.friendId] ?: 0,
+                                            onClick = {
+                                                if (uiState.isDeleteMode) {
+                                                    viewModel.toggleFriendSelection(friend.friendId)
+                                                } else {
+                                                    onOpenChat(friend.friendId, friend.friendUsername, friend.friendDisplayName)
+                                                }
+                                            },
+                                            sendMessageText = t(UiTextKey.FriendsUnreadMessageDesc),
+                                            isDeleteMode = uiState.isDeleteMode,
+                                            isSelected = uiState.selectedFriendIds.contains(friend.friendId),
+                                            onToggleSelect = { viewModel.toggleFriendSelection(friend.friendId) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } // end Box
+            } // end Column
+        } // end PullToRefreshBox
+    } // end StandardScreenScaffold
 }
 
 @Composable
@@ -346,7 +398,8 @@ fun OutgoingRequestCard(
 }
 
 @Composable
-fun FriendRequestCard(    request: FriendRequest,
+fun FriendRequestCard(
+    request: FriendRequest,
     onAccept: () -> Unit,
     onReject: () -> Unit,
     acceptText: String,
@@ -395,57 +448,92 @@ fun FriendRequestCard(    request: FriendRequest,
 fun FriendCard(
     friend: FriendRelation,
     unreadCount: Int = 0,
-    onRemove: () -> Unit,
     onClick: () -> Unit,
-    removeText: String,
-    sendMessageText: String = "Send message"
+    sendMessageText: String = "Send message",
+    isDeleteMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelect: () -> Unit = {}
 ) {
-    ElevatedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        onClick = onClick
+    Box(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        ElevatedCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(vertical = 4.dp),
+            onClick = onClick
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = friend.friendUsername,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            // Unread message red dot — only show when unread > 0
-            BadgedBox(
-                badge = {
-                    if (unreadCount > 0) {
-                        Badge(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isDeleteMode) {
+                    Checkbox(
+                        checked = isSelected,
+                        onCheckedChange = { onToggleSelect() },
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = friend.friendUsername,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (friend.friendDisplayName.isNotEmpty() && friend.friendDisplayName != friend.friendUsername) {
+                        Text(
+                            text = friend.friendDisplayName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                },
-                modifier = Modifier.padding(end = 12.dp)
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.Message,
-                    contentDescription = if (unreadCount > 0) "Unread messages" else sendMessageText,
-                    tint = if (unreadCount > 0) MaterialTheme.colorScheme.primary
-                           else MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                    // Show "unread messages" hint text below name when there are unread messages
+                    if (unreadCount > 0 && !isDeleteMode) {
+                        Text(
+                            text = "● New messages",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+                if (!isDeleteMode) {
+                    // Unread message badge — red dot + count when unread > 0
+                    BadgedBox(
+                        badge = {
+                            if (unreadCount > 0) {
+                                Badge(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                ) {
+                                    Text(if (unreadCount > 99) "99+" else "$unreadCount")
+                                }
+                            }
+                        },
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Message,
+                            contentDescription = if (unreadCount > 0) "$unreadCount unread messages" else sendMessageText,
+                            tint = if (unreadCount > 0) MaterialTheme.colorScheme.primary
+                                   else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
-            IconButton(onClick = onRemove) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = removeText,
-                    tint = MaterialTheme.colorScheme.error
-                )
-            }
+        }
+
+        // Red dot badge in top-left corner when there are unread messages
+        if (unreadCount > 0 && !isDeleteMode) {
+            Badge(
+                containerColor = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 4.dp, top = 4.dp)
+                    .size(12.dp)
+            )
         }
     }
 }
@@ -473,16 +561,25 @@ fun SearchUsersDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Hint: enter full user ID for exact lookup
+                Text(
+                    t(UiTextKey.FriendsSearchByUserIdHint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 when {
                     isSearching -> {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                     }
-                    searchQuery.length < 2 -> {
+                    searchQuery.trim().length < 3 -> {
                         Text(
-                            t(UiTextKey.FriendsSearchMinChars),
+                            t(UiTextKey.FriendsSearchMinChars3),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -491,9 +588,7 @@ fun SearchUsersDialog(
                         Text(t(UiTextKey.FriendsSearchNoResults))
                     }
                     else -> {
-                        LazyColumn(
-                            modifier = Modifier.heightIn(min = 100.dp, max = 300.dp)
-                        ) {
+                        LazyColumn(modifier = Modifier.heightIn(min = 100.dp, max = 300.dp)) {
                             items(searchResults, key = { it.uid }) { user ->
                                 SearchResultCard(
                                     user = user,

@@ -490,6 +490,12 @@ enum class UiTextKey {
     FriendsPendingStatus,
     FriendsCancelRequestButton,
     FriendsUnreadMessageDesc,
+    FriendsDeleteModeButton,
+    FriendsDeleteSelectedButton,
+    FriendsDeleteMultipleTitle,
+    FriendsDeleteMultipleMessage,
+    FriendsSearchMinChars3,
+    FriendsSearchByUserIdHint,
 
     // --- Chat ---
     ChatTitle,
@@ -558,6 +564,41 @@ enum class UiTextKey {
     MyProfileLanguages,
     MyProfilePrimaryLanguage,
     MyProfileLearningLanguages,
+
+    // --- Friends Info Dialog & Empty States ---
+    FriendsInfoTitle,
+    FriendsInfoMessage,
+    FriendsEmptyTitle,
+    FriendsEmptyMessage,
+    FriendsInfoGotItButton,
+
+    // --- Learning Info Dialog & Empty States ---
+    LearningInfoTitle,
+    LearningInfoMessage,
+    LearningEmptyTitle,
+    LearningEmptyMessage,
+    LearningInfoGotItButton,
+
+    // --- Word Bank Info Dialog & Empty States ---
+    WordBankInfoTitle,
+    WordBankInfoMessage,
+    WordBankInfoGotItButton,
+
+    // --- SharedInbox Info Dialog ---
+    ShareInboxInfoTitle,
+    ShareInboxInfoMessage,
+    ShareInboxInfoGotItButton,
+
+    // --- Accessibility Strings ---
+    AccessibilityDismiss,
+    AccessibilityAlreadyConnectedOrPending,
+    AccessibilityNewMessages,
+    AccessibilityNewReleasesIcon,
+    AccessibilitySuccessIcon,
+    AccessibilityErrorIcon,
+    AccessibilitySharedItemTypeIcon,
+    AccessibilityAddCustomWords,
+    AccessibilityWordBankExists,
 }
 
 // Core Ui Texts list

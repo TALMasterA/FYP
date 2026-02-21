@@ -69,6 +69,7 @@ fun LearningScreen(
 
     var pendingGenerateLang by remember { mutableStateOf<String?>(null) }
     var showRegenInfo by remember { mutableStateOf(false) }
+    var showScreenInfo by remember { mutableStateOf(false) }
 
     // Auto-dismiss error after delay
     LaunchedEffect(uiState.error) {
@@ -83,10 +84,10 @@ fun LearningScreen(
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
-            IconButton(onClick = { showRegenInfo = true }) {
+            IconButton(onClick = { showScreenInfo = true }) {
                 Icon(
                     imageVector = Icons.Default.Info,
-                    contentDescription = "Regeneration Rules",
+                    contentDescription = t(UiTextKey.LearningInfoTitle),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -122,6 +123,24 @@ fun LearningScreen(
                 confirmButton = {
                     Button(onClick = { showRegenInfo = false }) {
                         Text(t(UiTextKey.ActionConfirm))
+                    }
+                }
+            )
+        }
+
+        // Screen info dialog
+        if (showScreenInfo) {
+            AlertDialog(
+                onDismissRequest = { showScreenInfo = false },
+                title = { Text(t(UiTextKey.LearningInfoTitle)) },
+                text = {
+                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                        Text(t(UiTextKey.LearningInfoMessage))
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = { showScreenInfo = false }) {
+                        Text(t(UiTextKey.LearningInfoGotItButton))
                     }
                 }
             )

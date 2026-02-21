@@ -1,8 +1,11 @@
 package com.example.fyp.screens.wordbank
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,6 +41,9 @@ fun WordBankScreen(
     // Track current primary language in viewModel
     var currentPrimaryCode by remember { mutableStateOf(primaryLanguageCode) }
 
+    // Info dialog state
+    var showInfoDialog by remember { mutableStateOf(false) }
+
     // Set primary language code on first load
     LaunchedEffect(primaryLanguageCode) {
         viewModel.setPrimaryLanguageCode(primaryLanguageCode)
@@ -46,6 +52,24 @@ fun WordBankScreen(
 
     val selectedLanguage = uiState.selectedLanguageCode
     val currentWordBank = uiState.currentWordBank
+
+    // Info dialog
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text(t(UiTextKey.WordBankInfoTitle)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(t(UiTextKey.WordBankInfoMessage))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text(t(UiTextKey.WordBankInfoGotItButton))
+                }
+            }
+        )
+    }
 
     StandardScreenScaffold(
         title = t(UiTextKey.WordBankTitle),
@@ -56,7 +80,16 @@ fun WordBankScreen(
                 onBack()
             }
         },
-        backContentDescription = t(UiTextKey.NavBack)
+        backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            IconButton(onClick = { showInfoDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = t(UiTextKey.WordBankInfoTitle),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     ) { innerPadding ->
         Box(
             modifier = Modifier

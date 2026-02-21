@@ -165,6 +165,13 @@ class LearningViewModel @Inject constructor(
         // Use shared history data source (single listener shared across ViewModels)
         sharedHistoryDataSource.startObserving(uid)
 
+        // OPTIMIZATION: Force initial load of language counts to show data immediately
+        // This ensures the screen isn't empty on first launch
+        viewModelScope.launch {
+            sharedHistoryDataSource.forceRefreshLanguageCounts(_uiState.value.primaryLanguageCode)
+            refreshClusters()
+        }
+
         // Mirror history into UI and refresh generation metadata on every change.
         historyJob = viewModelScope.launch {
             sharedHistoryDataSource.historyRecords.collect { records ->

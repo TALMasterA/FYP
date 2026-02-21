@@ -103,7 +103,20 @@ interface ChatRepository {
     fun observeTotalUnreadCount(userId: UserId): Flow<Int>
 
     /**
+     * Observe per-friend unread counts as a single-document listener.
+     * Returns a map of friendId -> unread count, updated in real-time.
+     * This is more efficient than observing N per-chat metadata documents.
+     */
+    fun observeUnreadPerFriend(userId: UserId): Flow<Map<String, Int>>
+
+    /**
      * Get list of chats for a user (sorted by last message time).
      */
     suspend fun getUserChats(userId: UserId): List<ChatMetadata>
+
+    /**
+     * Delete an entire chat conversation including all messages and metadata.
+     * Used when removing a friend.
+     */
+    suspend fun deleteChatConversation(chatId: String): Result<Unit>
 }
