@@ -421,10 +421,16 @@ fun FriendCard(
                 )
             }
             // Unread message red dot — only show when unread > 0
-            Box(
-                modifier = Modifier
-                    .padding(end = 12.dp)
-                    .wrapContentSize()
+            BadgedBox(
+                badge = {
+                    if (unreadCount > 0) {
+                        Badge(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    }
+                },
+                modifier = Modifier.padding(end = 12.dp)
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.Message,
@@ -432,15 +438,6 @@ fun FriendCard(
                     tint = if (unreadCount > 0) MaterialTheme.colorScheme.primary
                            else MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                // Badge positioned at top-end of the message icon
-                if (unreadCount > 0) {
-                    Badge(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 2.dp, end = 2.dp)
-                    )
-                }
             }
             IconButton(onClick = onRemove) {
                 Icon(

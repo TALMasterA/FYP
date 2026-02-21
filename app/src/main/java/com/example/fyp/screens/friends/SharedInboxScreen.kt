@@ -56,10 +56,7 @@ fun SharedInboxScreen(
         }
     }
 
-    StandardScreenScaffold(
-        title = t(UiTextKey.ShareInboxTitle),
-        onBack = onBack
-    ) { padding ->
+    Scaffold { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -355,8 +352,7 @@ fun SharedItemCard(
                             Text(
                                 description,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 3
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         Text(
