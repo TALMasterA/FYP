@@ -49,6 +49,7 @@ class SharedInboxViewModelTest {
 
         authRepository = mock {
             on { currentUserState } doReturn authStateFlow
+            on { currentUser } doReturn null
         }
         sharedFriendsDataSource = mock {
             on { pendingSharedItems } doReturn pendingItemsFlow
@@ -161,11 +162,16 @@ class SharedInboxViewModelTest {
 
     @Test
     fun `acceptItem calls acceptSharedItemUseCase`() = runTest {
-        doAnswer { Result.success(Unit) }.whenever(acceptSharedItemUseCase).invoke(any(), any())
         val viewModel = createViewModel()
 
+        whenever(acceptSharedItemUseCase.invoke(any(), any()))
+            .thenReturn(Result.success(Unit))
+
         authStateFlow.value = loggedInState
+        testScheduler.advanceUntilIdle()
+
         viewModel.acceptItem("item1")
+        testScheduler.advanceUntilIdle()
 
         verify(acceptSharedItemUseCase).invoke("item1", UserId("user1"))
     }
@@ -174,22 +180,32 @@ class SharedInboxViewModelTest {
 
     @Test
     fun `deleteItem calls dismissSharedItemUseCase`() = runTest {
-        doAnswer { Result.success(Unit) }.whenever(dismissSharedItemUseCase).invoke(any(), any())
         val viewModel = createViewModel()
 
+        whenever(dismissSharedItemUseCase.invoke(any(), any()))
+            .thenReturn(Result.success(Unit))
+
         authStateFlow.value = loggedInState
+        testScheduler.advanceUntilIdle()
+
         viewModel.deleteItem("item2")
+        testScheduler.advanceUntilIdle()
 
         verify(dismissSharedItemUseCase).invoke("item2", UserId("user1"))
     }
 
     @Test
     fun `deleteItem sets successMessage to Item deleted`() = runTest {
-        doAnswer { Result.success(Unit) }.whenever(dismissSharedItemUseCase).invoke(any(), any())
         val viewModel = createViewModel()
 
+        whenever(dismissSharedItemUseCase.invoke(any(), any()))
+            .thenReturn(Result.success(Unit))
+
         authStateFlow.value = loggedInState
+        testScheduler.advanceUntilIdle()
+
         viewModel.deleteItem("item2")
+        testScheduler.advanceUntilIdle()
 
         assertEquals("Item deleted", viewModel.uiState.value.successMessage)
     }
