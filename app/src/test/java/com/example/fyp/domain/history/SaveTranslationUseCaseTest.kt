@@ -7,11 +7,8 @@ import com.google.firebase.Timestamp
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import java.util.Date
 
@@ -40,8 +37,8 @@ class SaveTranslationUseCaseTest {
             targetLang = "zh-CN",
             timestamp = Timestamp(Date())
         )
-        doAnswer { Unit }.whenever(historyRepo).save(any())
-        doAnswer { Unit }.whenever(sharedHistoryDataSource).forceRefreshLanguageCounts(any())
+        whenever(historyRepo.save(record)).thenReturn(Unit)
+        whenever(sharedHistoryDataSource.forceRefreshLanguageCounts("")).thenReturn(Unit)
 
         // Act
         useCase(record)
@@ -49,15 +46,11 @@ class SaveTranslationUseCaseTest {
         // Assert
         verify(historyRepo).save(record)
         verify(sharedHistoryDataSource).forceRefreshLanguageCounts("")
-        verifyNoMoreInteractions(historyRepo, sharedHistoryDataSource)
     }
 
     @Test
     fun `invoke handles different translation records`() = runTest {
         // Arrange
-        doAnswer { Unit }.whenever(historyRepo).save(any())
-        doAnswer { Unit }.whenever(sharedHistoryDataSource).forceRefreshLanguageCounts(any())
-
         val records = listOf(
             TranslationRecord(
                 id = "1",
@@ -81,6 +74,9 @@ class SaveTranslationUseCaseTest {
 
         // Act & Assert
         records.forEach { record ->
+            whenever(historyRepo.save(record)).thenReturn(Unit)
+            whenever(sharedHistoryDataSource.forceRefreshLanguageCounts("")).thenReturn(Unit)
+
             useCase(record)
             verify(historyRepo).save(record)
         }

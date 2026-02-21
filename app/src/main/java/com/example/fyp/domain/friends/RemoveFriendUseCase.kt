@@ -20,10 +20,19 @@ class RemoveFriendUseCase @Inject constructor(
         }
 
         // Then delete the chat conversation (messages + metadata)
-        val chatId = chatRepository.generateChatId(userId, friendId)
-        chatRepository.deleteChatConversation(chatId)
-        // Note: We don't fail the whole operation if chat deletion fails,
+        // Best-effort: We don't fail the whole operation if chat deletion fails,
         // since the friend relationship is already removed
+        try {
+            val chatId = chatRepository.generateChatId(userId, friendId)
+            val deleteResult = chatRepository.deleteChatConversation(chatId)
+            if (deleteResult.isFailure) {
+                // Log but don't fail - friend removal succeeded
+                android.util.Log.w("RemoveFriendUseCase", "Chat deletion failed but friend was removed", deleteResult.exceptionOrNull())
+            }
+        } catch (e: Exception) {
+            // Catch any exception from chat deletion - don't let it fail friend removal
+            android.util.Log.w("RemoveFriendUseCase", "Exception during chat deletion", e)
+        }
 
         return Result.success(Unit)
     }

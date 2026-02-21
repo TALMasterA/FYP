@@ -248,7 +248,7 @@ class FriendsViewModel @Inject constructor(
                 removeFriendUseCase(userId, UserId(friendId))
             }
             _uiState.value = _uiState.value.copy(
-                successMessage = "Friend(s) removed. Pull down to refresh before adding them again.",
+                successMessage = "Friend(s) removed.",
                 error = null
             )
         }

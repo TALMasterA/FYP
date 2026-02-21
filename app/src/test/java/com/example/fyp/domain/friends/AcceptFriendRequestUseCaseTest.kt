@@ -7,15 +7,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.*
 import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
-/**
- * Unit tests for AcceptFriendRequestUseCase.
- * Tests accepting friend requests with validation.
- */
 class AcceptFriendRequestUseCaseTest {
 
     private lateinit var friendsRepository: FriendsRepository
@@ -33,8 +28,8 @@ class AcceptFriendRequestUseCaseTest {
         val requestId = "request123"
         val currentUserId = UserId("user1")
         val friendUserId = UserId("user2")
-        doAnswer { Result.success(Unit) }.whenever(friendsRepository)
-            .acceptFriendRequest(any(), any(), any())
+        whenever(friendsRepository.acceptFriendRequest(requestId, currentUserId, friendUserId))
+            .thenReturn(Result.success(Unit))
 
         // Act
         val result = useCase(requestId, currentUserId, friendUserId)
@@ -51,8 +46,8 @@ class AcceptFriendRequestUseCaseTest {
         val currentUserId = UserId("user1")
         val friendUserId = UserId("user2")
         val exception = Exception("Request not found")
-        doAnswer { Result.failure<Unit>(exception) }.whenever(friendsRepository)
-            .acceptFriendRequest(any(), any(), any())
+        whenever(friendsRepository.acceptFriendRequest(requestId, currentUserId, friendUserId))
+            .thenReturn(Result.failure(exception))
 
         // Act
         val result = useCase(requestId, currentUserId, friendUserId)
@@ -71,12 +66,14 @@ class AcceptFriendRequestUseCaseTest {
             Triple("req2", currentUserId, UserId("user3")),
             Triple("req3", currentUserId, UserId("user4"))
         )
-        doAnswer { Result.success(Unit) }.whenever(friendsRepository)
-            .acceptFriendRequest(any(), any(), any())
+        requests.forEach { (reqId, uid, fid) ->
+            whenever(friendsRepository.acceptFriendRequest(reqId, uid, fid))
+                .thenReturn(Result.success(Unit))
+        }
 
         // Act & Assert
-        requests.forEach { (requestId, userId, friendId) ->
-            val result = useCase(requestId, userId, friendId)
+        requests.forEach { (requestId, uid, friendId) ->
+            val result = useCase(requestId, uid, friendId)
             assertTrue(result.isSuccess)
         }
     }

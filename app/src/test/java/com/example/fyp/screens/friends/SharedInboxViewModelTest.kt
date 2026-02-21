@@ -22,10 +22,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.*
 
-/**
- * Unit tests for SharedInboxViewModel.
- * Tests unread badge logic, item acceptance, dismissal, and delete behavior.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SharedInboxViewModelTest {
 
@@ -42,18 +38,19 @@ class SharedInboxViewModelTest {
     private val pendingItemsFlow = MutableStateFlow<List<SharedItem>>(emptyList())
 
     private val loggedInState = AuthState.LoggedIn(User(uid = "user1"))
+    private val testUserId = UserId("user1")
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        authRepository = mock {
-            on { currentUserState } doReturn authStateFlow
-            on { currentUser } doReturn null
-        }
-        sharedFriendsDataSource = mock {
-            on { pendingSharedItems } doReturn pendingItemsFlow
-        }
+        authRepository = mock()
+        whenever(authRepository.currentUserState).thenReturn(authStateFlow)
+        whenever(authRepository.currentUser).thenReturn(null)
+
+        sharedFriendsDataSource = mock()
+        whenever(sharedFriendsDataSource.pendingSharedItems).thenReturn(pendingItemsFlow)
+
         acceptSharedItemUseCase = mock()
         dismissSharedItemUseCase = mock()
         sharingRepository = mock()
@@ -98,8 +95,8 @@ class SharedInboxViewModelTest {
         pendingItemsFlow.value = listOf(makeItem("item1"), makeItem("item2"))
 
         val state = viewModel.uiState.value
-        assertTrue("item1 should be marked new on initial load", "item1" in state.newItemIds)
-        assertTrue("item2 should be marked new on initial load", "item2" in state.newItemIds)
+        assertTrue("item1 should be marked new", "item1" in state.newItemIds)
+        assertTrue("item2 should be marked new", "item2" in state.newItemIds)
         assertEquals(2, state.newItemCount)
     }
 
@@ -162,10 +159,10 @@ class SharedInboxViewModelTest {
 
     @Test
     fun `acceptItem calls acceptSharedItemUseCase`() = runTest {
-        val viewModel = createViewModel()
-
-        whenever(acceptSharedItemUseCase.invoke(any(), any()))
+        whenever(acceptSharedItemUseCase.invoke("item1", testUserId))
             .thenReturn(Result.success(Unit))
+
+        val viewModel = createViewModel()
 
         authStateFlow.value = loggedInState
         testScheduler.advanceUntilIdle()
@@ -173,17 +170,17 @@ class SharedInboxViewModelTest {
         viewModel.acceptItem("item1")
         testScheduler.advanceUntilIdle()
 
-        verify(acceptSharedItemUseCase).invoke("item1", UserId("user1"))
+        verify(acceptSharedItemUseCase).invoke("item1", testUserId)
     }
 
     // ── Delete (learning materials) uses dismiss ──────────────────────────────
 
     @Test
     fun `deleteItem calls dismissSharedItemUseCase`() = runTest {
-        val viewModel = createViewModel()
-
-        whenever(dismissSharedItemUseCase.invoke(any(), any()))
+        whenever(dismissSharedItemUseCase.invoke("item2", testUserId))
             .thenReturn(Result.success(Unit))
+
+        val viewModel = createViewModel()
 
         authStateFlow.value = loggedInState
         testScheduler.advanceUntilIdle()
@@ -191,21 +188,22 @@ class SharedInboxViewModelTest {
         viewModel.deleteItem("item2")
         testScheduler.advanceUntilIdle()
 
-        verify(dismissSharedItemUseCase).invoke("item2", UserId("user1"))
+        verify(dismissSharedItemUseCase).invoke("item2", testUserId)
     }
 
     @Test
     fun `deleteItem sets successMessage to Item deleted`() = runTest {
-        val viewModel = createViewModel()
-
-        whenever(dismissSharedItemUseCase.invoke(any(), any()))
+        whenever(dismissSharedItemUseCase.invoke("item2", testUserId))
             .thenReturn(Result.success(Unit))
+
+        val viewModel = createViewModel()
 
         authStateFlow.value = loggedInState
         testScheduler.advanceUntilIdle()
 
         viewModel.deleteItem("item2")
-        testScheduler.advanceUntilIdle()
+        // Advance only enough to complete the deleteItem coroutine but not the 3-second delay
+        testScheduler.runCurrent()
 
         assertEquals("Item deleted", viewModel.uiState.value.successMessage)
     }
