@@ -1224,13 +1224,11 @@ val ScreenUiTexts: List<String> = listOf(
     "• A red dot (●) in the top-left corner of a friend card means unread messages.\n" +
     "• Use the 📥 inbox icon to view shared materials.\n" +
     "• Use the trash icon to enter delete mode and remove friends.\n" +
-    "• Use the search button to find and add new friends by username or User ID.\n" +
-    "• After removing a friend, pull down to refresh before adding them again.",
+    "• Use the search button to find and add new friends by username or User ID.\n",
     // FriendsEmptyTitle
     "No Friends Yet",
     // FriendsEmptyMessage
-    "Search for friends by username or User ID using the 'Add Friends' button.\n" +
-    "Pull down to refresh after adding friends.",
+    "Search for friends by username or User ID using the 'Add Friends' button.\n",
     // FriendsInfoGotItButton
     "Got it",
 

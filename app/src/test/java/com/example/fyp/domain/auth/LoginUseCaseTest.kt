@@ -4,10 +4,10 @@ import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.model.user.User
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -29,13 +29,14 @@ class LoginUseCaseTest {
         val email = "test@example.com"
         val password = "password123"
         val expected = Result.success(User(uid = "user-id-123"))
-        doAnswer { expected }.whenever(authRepo).login(any(), any())
+        whenever(authRepo.login(email, password)).thenReturn(expected)
 
         // Act
         val result = useCase(email, password)
 
         // Assert
-        assertEquals(expected, result)
+        assertTrue(result.isSuccess)
+        assertEquals("user-id-123", result.getOrNull()?.uid)
         verify(authRepo).login(email, password)
     }
 
@@ -45,13 +46,14 @@ class LoginUseCaseTest {
         val email = "test@example.com"
         val password = "wrong-password"
         val expected = Result.failure<User>(Exception("Invalid credentials"))
-        doAnswer { expected }.whenever(authRepo).login(any(), any())
+        whenever(authRepo.login(email, password)).thenReturn(expected)
 
         // Act
         val result = useCase(email, password)
 
         // Assert
-        assertEquals(expected, result)
+        assertTrue(result.isFailure)
+        assertEquals("Invalid credentials", result.exceptionOrNull()?.message)
     }
 
     @Test
@@ -60,12 +62,13 @@ class LoginUseCaseTest {
         val email = ""
         val password = ""
         val expected = Result.failure<User>(Exception("Email and password required"))
-        doAnswer { expected }.whenever(authRepo).login(any(), any())
+        whenever(authRepo.login(email, password)).thenReturn(expected)
 
         // Act
         val result = useCase(email, password)
 
         // Assert
-        assertEquals(expected, result)
+        assertTrue(result.isFailure)
+        assertEquals("Email and password required", result.exceptionOrNull()?.message)
     }
 }

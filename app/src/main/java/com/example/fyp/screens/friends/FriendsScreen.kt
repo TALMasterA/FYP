@@ -1,9 +1,11 @@
 package com.example.fyp.screens.friends
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
@@ -525,14 +527,17 @@ fun FriendCard(
             }
         }
 
-        // Red dot badge in top-left corner when there are unread messages
+        // Red dot in top-left corner when there are unread messages
         if (unreadCount > 0 && !isDeleteMode) {
-            Badge(
-                containerColor = MaterialTheme.colorScheme.error,
+            Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(start = 4.dp, top = 4.dp)
-                    .size(12.dp)
+                    .padding(start = 4.dp, top = 2.dp)
+                    .size(14.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.error,
+                        shape = CircleShape
+                    )
             )
         }
     }

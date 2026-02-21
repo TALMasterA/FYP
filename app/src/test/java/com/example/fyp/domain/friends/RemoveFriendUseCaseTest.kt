@@ -1,80 +1,90 @@
 package com.example.fyp.domain.friends
 
+import com.example.fyp.data.friends.ChatRepository
 import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.model.UserId
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.*
-import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.stub
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
-/**
- * Unit tests for RemoveFriendUseCase.
- * Tests removing friends from friends list.
- */
 class RemoveFriendUseCaseTest {
 
     private lateinit var friendsRepository: FriendsRepository
+    private lateinit var chatRepository: ChatRepository
     private lateinit var useCase: RemoveFriendUseCase
+
+    private val currentUserId = UserId("user1")
+    private val friendUserId = UserId("user2")
+    private val chatId = "user1_user2"
 
     @Before
     fun setup() {
         friendsRepository = mock()
-        useCase = RemoveFriendUseCase(friendsRepository)
+        chatRepository = mock()
+        useCase = RemoveFriendUseCase(friendsRepository, chatRepository)
     }
 
     @Test
-    fun `remove friend succeeds`() = runTest {
-        // Arrange
-        val currentUserId = UserId("user1")
-        val friendUserId = UserId("user2")
+    fun `remove friend succeeds and deletes chat`() = runTest {
+        whenever(friendsRepository.removeFriend(currentUserId, friendUserId))
+            .thenReturn(Result.success(Unit))
+        whenever(chatRepository.generateChatId(currentUserId, friendUserId))
+            .thenReturn(chatId)
+        whenever(chatRepository.deleteChatConversation(chatId))
+            .thenReturn(Result.success(Unit))
 
-        friendsRepository.stub {
-            onBlocking { removeFriend(currentUserId, friendUserId) } doReturn Result.success(Unit)
-        }
-
-        // Act
         val result = useCase(currentUserId, friendUserId)
 
-        // Assert
         assertTrue(result.isSuccess)
         verify(friendsRepository).removeFriend(currentUserId, friendUserId)
+        verify(chatRepository).generateChatId(currentUserId, friendUserId)
+        verify(chatRepository).deleteChatConversation(chatId)
     }
 
     @Test
-    fun `remove friend handles repository failure`() = runTest {
-        // Arrange
-        val currentUserId = UserId("user1")
-        val friendUserId = UserId("user2")
+    fun `remove friend handles repository failure and skips chat deletion`() = runTest {
         val exception = Exception("Friendship not found")
+        whenever(friendsRepository.removeFriend(currentUserId, friendUserId))
+            .thenReturn(Result.failure(exception))
 
-        friendsRepository.stub {
-            onBlocking { removeFriend(currentUserId, friendUserId) } doReturn Result.failure(exception)
-        }
-
-        // Act
         val result = useCase(currentUserId, friendUserId)
 
-        // Assert
         assertTrue(result.isFailure)
         assertEquals("Friendship not found", result.exceptionOrNull()?.message)
+        verify(chatRepository, never()).deleteChatConversation(any())
     }
 
     @Test
-    fun `remove self as friend returns error`() = runTest {
-        // Arrange
+    fun `remove self as friend returns error and skips chat deletion`() = runTest {
         val userId = UserId("user1")
+        whenever(friendsRepository.removeFriend(userId, userId))
+            .thenReturn(Result.failure(Exception("Cannot remove yourself")))
 
-        // Act - trying to remove self
-        friendsRepository.stub {
-            onBlocking { removeFriend(userId, userId) } doReturn Result.failure(Exception("Cannot remove yourself"))
-        }
         val result = useCase(userId, userId)
 
-        // Assert
         assertTrue(result.isFailure)
+        verify(chatRepository, never()).deleteChatConversation(any())
+    }
+
+    @Test
+    fun `remove friend succeeds even if chat deletion fails`() = runTest {
+        whenever(friendsRepository.removeFriend(currentUserId, friendUserId))
+            .thenReturn(Result.success(Unit))
+        whenever(chatRepository.generateChatId(currentUserId, friendUserId))
+            .thenReturn(chatId)
+        whenever(chatRepository.deleteChatConversation(chatId))
+            .thenReturn(Result.failure(Exception("Chat deletion failed")))
+
+        val result = useCase(currentUserId, friendUserId)
+
+        assertTrue(result.isSuccess)
+        verify(friendsRepository).removeFriend(currentUserId, friendUserId)
+        verify(chatRepository).deleteChatConversation(chatId)
     }
 }

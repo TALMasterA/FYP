@@ -364,7 +364,6 @@ class FirestoreChatRepository @Inject constructor(
             deletedCount = 0
             val batch = db.batch()
 
-            // Get up to 500 messages
             val messagesSnapshot = db.collection("chats")
                 .document(chatId)
                 .collection("messages")
@@ -380,13 +379,33 @@ class FirestoreChatRepository @Inject constructor(
             if (deletedCount > 0) {
                 batch.commit().await()
             }
-        } while (deletedCount >= 500) // Continue if we hit the batch limit
+        } while (deletedCount >= 500)
 
-        // Delete chat metadata document
-        db.collection("chat_metadata")
-            .document(chatId)
-            .delete()
-            .await()
+        // Delete chat metadata (stored at chats/{chatId}/metadata/info)
+        try {
+            db.collection("chats")
+                .document(chatId)
+                .collection("metadata")
+                .document("info")
+                .delete()
+                .await()
+        } catch (_: Exception) { /* best-effort */ }
+
+        // Clean up per-friend unread counters on both user documents
+        try {
+            // chatId is "smallerUid_largerUid"
+            val parts = chatId.split("_", limit = 2)
+            if (parts.size == 2) {
+                val uid1 = parts[0]
+                val uid2 = parts[1]
+                val batch = db.batch()
+                val doc1 = db.collection("users").document(uid1)
+                val doc2 = db.collection("users").document(uid2)
+                batch.update(doc1, "unreadPerFriend.$uid2", FieldValue.delete())
+                batch.update(doc2, "unreadPerFriend.$uid1", FieldValue.delete())
+                batch.commit().await()
+            }
+        } catch (_: Exception) { /* best-effort */ }
 
         Result.success(Unit)
     } catch (e: Exception) {
