@@ -5,7 +5,9 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.*
@@ -38,7 +40,11 @@ fun WordBankItemCard(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             title = { Text(t(UiTextKey.ActionDelete)) },
-            text = { Text("Are you sure you want to delete \"${word.originalWord}\"?") },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text("Are you sure you want to delete \"${word.originalWord}\"?")
+                }
+            },
             confirmButton = {
                 TextButton(
                     onClick = {

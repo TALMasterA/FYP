@@ -44,7 +44,7 @@ class AppViewModel @Inject constructor(
 
     private var lastInitializedUserId: String? = null
 
-    // ── Notification counts (read-only for UI) ───────────────────────────────
+    // ── Notification state (read-only for UI) ──────────────────────────────
 
     /** Pending incoming friend requests — derived from shared in-memory state. */
     val pendingFriendRequestCount: StateFlow<Int> =
@@ -52,13 +52,14 @@ class AppViewModel @Inject constructor(
             .map { it.size }
             .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
-    /** Pending shared inbox items — derived from shared in-memory state. */
-    val pendingSharedItemCount: StateFlow<Int> =
-        sharedFriendsDataSource.unseenSharedItemCount
-            .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+    /** Whether there are unseen shared inbox items (red dot, no count). */
+    val hasUnseenSharedItems: StateFlow<Boolean> =
+        sharedFriendsDataSource.hasUnseenSharedItems
+            .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    private val _unreadMessageCount = MutableStateFlow(0)
-    val unreadMessageCount: StateFlow<Int> = _unreadMessageCount.asStateFlow()
+    /** Whether there are any unread chat messages (red dot, no count). */
+    private val _hasUnreadMessages = MutableStateFlow(false)
+    val hasUnreadMessages: StateFlow<Boolean> = _hasUnreadMessages.asStateFlow()
 
     private var unreadJob: Job? = null
 
@@ -88,7 +89,7 @@ class AppViewModel @Inject constructor(
                         sharedSettingsDataSource.stopObserving()
                         sharedHistoryDataSource.stopObserving()
                         unreadJob?.cancel()
-                        _unreadMessageCount.value = 0
+                        _hasUnreadMessages.value = false
                     }
                     is AuthState.Loading -> Unit
                 }
@@ -101,7 +102,7 @@ class AppViewModel @Inject constructor(
         unreadJob = viewModelScope.launch {
             try {
                 chatRepository.observeTotalUnreadCount(UserId(userId)).collect { count ->
-                    _unreadMessageCount.value = count
+                    _hasUnreadMessages.value = count > 0
                 }
             } catch (e: Exception) {
                 android.util.Log.e("AppViewModel", "Error observing unread messages", e)

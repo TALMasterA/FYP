@@ -191,10 +191,12 @@ fun LearningSheetScreen(
                     onDismissRequest = { showRegenBlockedAlert = false },
                     title = { Text(t(UiTextKey.LearningRegenBlockedTitle)) },
                     text = {
-                        Text(
-                            t(UiTextKey.LearningRegenBlockedMessage)
-                                .replace("{needed}", recordsNeeded.toString())
-                        )
+                        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                            Text(
+                                t(UiTextKey.LearningRegenBlockedMessage)
+                                    .replace("{needed}", recordsNeeded.toString())
+                            )
+                        }
                     },
                     confirmButton = {
                         Button(onClick = { showRegenBlockedAlert = false }) {
@@ -214,7 +216,11 @@ fun LearningSheetScreen(
                     AlertDialog(
                         onDismissRequest = { showRegenInfo = false },
                         title = { Text(t(UiTextKey.LearningRegenInfoTitle)) },
-                        text = { Text(t(UiTextKey.LearningRegenInfoMessage)) },
+                        text = {
+                            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                                Text(t(UiTextKey.LearningRegenInfoMessage))
+                            }
+                        },
                         confirmButton = {
                             Button(onClick = { showRegenInfo = false }) {
                                 Text(t(UiTextKey.ActionConfirm))

@@ -105,7 +105,10 @@ class FirestoreSharingRepository @Inject constructor(
 
             if (fullContent.isNotBlank()) {
                 val contentRef = itemRef.collection("content").document("body")
-                batch.set(contentRef, mapOf("fullContent" to fullContent))
+                batch.set(contentRef, mapOf(
+                    "fullContent" to fullContent,
+                    "fromUserId" to fromUserId.value
+                ))
             }
 
             batch.commit().await()
@@ -206,6 +209,19 @@ class FirestoreSharingRepository @Inject constructor(
         doc.getString("fullContent")
     } catch (e: Exception) {
         android.util.Log.w("SharingRepo", "fetchSharedItemFullContent failed for $itemId", e)
+        null
+    }
+
+    override suspend fun fetchSharedItemById(userId: UserId, itemId: String): SharedItem? = try {
+        db.collection("users")
+            .document(userId.value)
+            .collection("shared_inbox")
+            .document(itemId)
+            .get()
+            .await()
+            .toObject(SharedItem::class.java)
+    } catch (e: Exception) {
+        android.util.Log.w("SharingRepo", "fetchSharedItemById failed for $itemId", e)
         null
     }
 

@@ -72,4 +72,11 @@ interface SharingRepository {
      * Returns null if not found (older items that didn't store full content).
      */
     suspend fun fetchSharedItemFullContent(userId: UserId, itemId: String): String?
+
+    /**
+     * Fetch a single shared item by its ID.
+     * Used when navigating directly to a shared material detail screen
+     * and the in-memory list hasn't loaded yet.
+     */
+    suspend fun fetchSharedItemById(userId: UserId, itemId: String): SharedItem?
 }

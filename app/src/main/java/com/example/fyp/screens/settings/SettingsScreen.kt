@@ -37,7 +37,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.fyp.BuildConfig
 import com.example.fyp.R
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.LanguageDropdownField
@@ -49,7 +48,6 @@ import com.example.fyp.data.azure.AzureLanguageConfig
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
-import androidx.compose.material3.TextButton
 import com.google.firebase.appdistribution.FirebaseAppDistribution
 import kotlinx.coroutines.delay
 
@@ -71,8 +69,8 @@ fun SettingsScreen(
     onOpenFeedback: () -> Unit = {},
     onOpenSystemNotes: () -> Unit = {},
     pendingFriendRequestCount: Int = 0,
-    unreadMessageCount: Int = 0,
-    pendingSharedItemCount: Int = 0,
+    hasUnreadMessages: Boolean = false,
+    hasUnseenSharedItems: Boolean = false,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -214,17 +212,14 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // Friends button with badge for pending requests + unread messages
-                            val friendsBadgeCount = pendingFriendRequestCount + unreadMessageCount
+                            // Friends button with red dot for pending requests or unread messages
+                            val showFriendsBadge = pendingFriendRequestCount > 0 || hasUnreadMessages
                             BadgedBox(
                                 badge = {
-                                    if (friendsBadgeCount > 0) {
+                                    if (showFriendsBadge) {
                                         Badge(
-                                            containerColor = MaterialTheme.colorScheme.error,
-                                            contentColor = MaterialTheme.colorScheme.onError
-                                        ) {
-                                            Text(if (friendsBadgeCount > 99) "99+" else "$friendsBadgeCount")
-                                        }
+                                            containerColor = MaterialTheme.colorScheme.error
+                                        )
                                     }
                                 },
                                 modifier = Modifier.weight(1f)
@@ -241,16 +236,13 @@ fun SettingsScreen(
                                 }
                             }
                             
-                            // Shared Inbox button with badge for pending shared items
+                            // Shared Inbox button with red dot for unseen shared items
                             BadgedBox(
                                 badge = {
-                                    if (pendingSharedItemCount > 0) {
+                                    if (hasUnseenSharedItems) {
                                         Badge(
-                                            containerColor = MaterialTheme.colorScheme.error,
-                                            contentColor = MaterialTheme.colorScheme.onError
-                                        ) {
-                                            Text(if (pendingSharedItemCount > 99) "99+" else "$pendingSharedItemCount")
-                                        }
+                                            containerColor = MaterialTheme.colorScheme.error
+                                        )
                                     }
                                 },
                                 modifier = Modifier.weight(1f)
@@ -608,8 +600,13 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
 
+                val versionName = remember {
+                    try {
+                        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "?"
+                    } catch (_: Exception) { "?" }
+                }
                 Text(
-                    text = "${t(UiTextKey.SettingsAppVersion)}${BuildConfig.VERSION_NAME}",
+                    text = "${t(UiTextKey.SettingsAppVersion)}$versionName",
                     style = MaterialTheme.typography.bodyMedium
                 )
 

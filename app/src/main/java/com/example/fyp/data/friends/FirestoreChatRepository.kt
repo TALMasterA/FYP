@@ -2,6 +2,7 @@
 
 package com.example.fyp.data.friends
 
+import com.example.fyp.core.NetworkRetry
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.ChatMetadata
 import com.example.fyp.model.friends.FriendMessage
@@ -67,8 +68,13 @@ class FirestoreChatRepository @Inject constructor(
                 createdAt = Timestamp.now()
             )
 
-            // Save message
-            messageRef.set(message).await()
+            // Save message with retry for transient network failures
+            NetworkRetry.withRetry(
+                maxAttempts = 3,
+                shouldRetry = NetworkRetry::isRetryableFirebaseException
+            ) {
+                messageRef.set(message).await()
+            }
 
             // Update chat metadata
             updateChatMetadata(chatId, fromUserId, toUserId, content)
@@ -199,7 +205,7 @@ class FirestoreChatRepository @Inject constructor(
         val metaDoc = metaRef.get().await()
         @Suppress("UNCHECKED_CAST")
         val unreadMap = metaDoc.get("unreadCount") as? Map<String, Any>
-        val chatUnread = (unreadMap?.get(userId.value) as? Long)?.toInt() ?: 0
+        val chatUnread = (unreadMap?.get(userId.value) as? Number)?.toInt() ?: 0
 
         if (chatUnread > 0) {
             val batch = db.batch()
@@ -279,7 +285,7 @@ class FirestoreChatRepository @Inject constructor(
     }
 
     override suspend fun getUnreadCount(chatId: String, userId: UserId): Int = try {
-        getChatMetadata(chatId)?.unreadCount?.get(userId.value) ?: 0
+        getChatMetadata(chatId)?.getUnreadFor(userId.value) ?: 0
     } catch (e: Exception) {
         0
     }

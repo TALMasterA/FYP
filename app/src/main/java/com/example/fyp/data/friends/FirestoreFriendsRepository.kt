@@ -2,6 +2,7 @@
 
 package com.example.fyp.data.friends
 
+import com.example.fyp.core.NetworkRetry
 import com.example.fyp.model.Username
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.FriendRelation
@@ -328,15 +329,20 @@ class FirestoreFriendsRepository @Inject constructor(
     }
 
     override suspend fun rejectFriendRequest(requestId: String): Result<Unit> = try {
-        db.collection("friend_requests")
-            .document(requestId)
-            .update(
-                mapOf(
-                    "status" to RequestStatus.REJECTED.name,
-                    "updatedAt" to Timestamp.now()
+        NetworkRetry.withRetry(
+            maxAttempts = 3,
+            shouldRetry = NetworkRetry::isRetryableFirebaseException
+        ) {
+            db.collection("friend_requests")
+                .document(requestId)
+                .update(
+                    mapOf(
+                        "status" to RequestStatus.REJECTED.name,
+                        "updatedAt" to Timestamp.now()
+                    )
                 )
-            )
-            .await()
+                .await()
+        }
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)

@@ -8,6 +8,7 @@ import com.example.fyp.model.user.UserSettings
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -62,7 +63,14 @@ class FirestoreUserSettingsRepository @Inject constructor(
     }
 
     override suspend fun fetchUserSettings(userId: UserId): UserSettings {
-        val snap = docRef(userId.value).get().await()
+        val ref = docRef(userId.value)
+        // Cache-first: show saved settings instantly, server sync via real-time listener
+        val snap = try {
+            val cached = ref.get(Source.CACHE).await()
+            if (cached.exists()) cached else ref.get(Source.SERVER).await()
+        } catch (_: Exception) {
+            ref.get().await()
+        }
         return parseSettings(snap)
     }
 

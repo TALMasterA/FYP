@@ -93,7 +93,11 @@ fun HomeScreen(
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
             title = { Text(t(UiTextKey.DialogLogoutTitle)) },
-            text = { Text(t(UiTextKey.DialogLogoutMessage)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(t(UiTextKey.DialogLogoutMessage))
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {

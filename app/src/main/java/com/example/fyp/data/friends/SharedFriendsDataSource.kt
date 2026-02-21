@@ -63,13 +63,18 @@ class SharedFriendsDataSource @Inject constructor(
     /** IDs of shared inbox items the user has already seen (opened the inbox). */
     private val _seenSharedItemIds = MutableStateFlow<Set<String>>(emptySet())
 
+    /** Whether the initial inbox load has finished — used to suppress badge on app start. */
+    private var initialLoadComplete = false
+
     /**
-     * Count of PENDING items that the user has NOT yet seen.
-     * This drives the notification badge so it clears once the inbox is opened.
+     * Whether there are NEW shared inbox items the user hasn't seen yet.
+     * On app start, all existing items are auto-marked as seen so the badge
+     * does NOT reappear after restart. Only items arriving AFTER the initial
+     * load trigger the red dot.
      */
-    val unseenSharedItemCount: kotlinx.coroutines.flow.Flow<Int> =
+    val hasUnseenSharedItems: kotlinx.coroutines.flow.Flow<Boolean> =
         kotlinx.coroutines.flow.combine(_pendingSharedItems, _seenSharedItemIds) { items, seen ->
-            items.count { it.itemId !in seen }
+            items.any { it.itemId !in seen }
         }
 
     /**
@@ -120,7 +125,6 @@ class SharedFriendsDataSource @Inject constructor(
             try {
                 friendsRepository.observeFriends(uid).collect { list ->
                     _friends.value = list
-                    // Populate username cache so shares can skip getPublicProfile reads
                     list.forEach { rel ->
                         if (rel.friendUsername.isNotBlank()) {
                             usernameCache[rel.friendId] = rel.friendUsername
@@ -128,7 +132,9 @@ class SharedFriendsDataSource @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.w("SharedFriendsDS", "Friends listener error", e)
+                Log.w("SharedFriendsDS", "Friends listener error, restarting in 5s", e)
+                kotlinx.coroutines.delay(5000)
+                if (currentUserId == userId) startObserving(userId)
             }
         }
 
@@ -138,7 +144,9 @@ class SharedFriendsDataSource @Inject constructor(
                     _incomingRequests.value = list
                 }
             } catch (e: Exception) {
-                Log.w("SharedFriendsDS", "Requests listener error", e)
+                Log.w("SharedFriendsDS", "Requests listener error, restarting in 5s", e)
+                kotlinx.coroutines.delay(5000)
+                if (currentUserId == userId) startObserving(userId)
             }
         }
 
@@ -146,12 +154,20 @@ class SharedFriendsDataSource @Inject constructor(
             try {
                 sharingRepository.observeSharedInbox(uid).collect { list ->
                     _pendingSharedItems.value = list
-                    // Remove IDs from seenSet that are no longer pending (accepted/dismissed)
                     val currentIds = list.map { it.itemId }.toSet()
+                    if (!initialLoadComplete) {
+                        // First load after app start: mark ALL existing items as seen
+                        // so the badge does NOT reappear on restart.
+                        _seenSharedItemIds.value = currentIds
+                        initialLoadComplete = true
+                    }
+                    // Remove IDs from seenSet that are no longer pending (accepted/dismissed)
                     _seenSharedItemIds.value = _seenSharedItemIds.value.intersect(currentIds)
                 }
             } catch (e: Exception) {
-                Log.w("SharedFriendsDS", "Shared inbox listener error", e)
+                Log.w("SharedFriendsDS", "Shared inbox listener error, restarting in 5s", e)
+                kotlinx.coroutines.delay(5000)
+                if (currentUserId == userId) startObserving(userId)
             }
         }
     }
@@ -167,6 +183,7 @@ class SharedFriendsDataSource @Inject constructor(
         requestsJob = null
         inboxJob = null
         currentUserId = null
+        initialLoadComplete = false
         _friends.value = emptyList()
         _incomingRequests.value = emptyList()
         _pendingSharedItems.value = emptyList()

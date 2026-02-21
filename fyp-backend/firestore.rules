@@ -22,6 +22,12 @@ service cloud.firestore {
       // fromUserId in the document must match the authenticated sender.
       allow create: if request.auth != null
         && request.resource.data.fromUserId == request.auth.uid;
+
+      // Allow creating the content subcollection (e.g. for learning sheets)
+      match /content/{docId} {
+        allow create: if request.auth != null
+          && request.resource.data.fromUserId == request.auth.uid;
+      }
     }
 
     // ============================================

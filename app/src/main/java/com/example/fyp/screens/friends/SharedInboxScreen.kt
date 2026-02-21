@@ -3,6 +3,8 @@ package com.example.fyp.screens.friends
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.*
@@ -218,7 +220,11 @@ fun SharedItemCard(
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = false },
             title = { Text(t(UiTextKey.ShareDeleteItemTitle)) },
-            text = { Text(t(UiTextKey.ShareDeleteItemMessage)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(t(UiTextKey.ShareDeleteItemMessage))
+                }
+            },
             confirmButton = {
                 Button(
                     onClick = {

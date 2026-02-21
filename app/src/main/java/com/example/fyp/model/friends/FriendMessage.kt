@@ -35,5 +35,9 @@ data class ChatMetadata(
     val participantNames: Map<String, String> = emptyMap(), // userId -> username
     val lastMessageContent: String = "",
     val lastMessageAt: Timestamp = Timestamp.now(),
-    val unreadCount: Map<String, Int> = emptyMap()  // userId -> unread count
-)
+    val unreadCount: Map<String, Any> = emptyMap()  // userId -> unread count (any Number)
+) {
+    fun getUnreadFor(userId: String): Int {
+        return (unreadCount[userId] as? Number)?.toInt() ?: 0
+    }
+}

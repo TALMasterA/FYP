@@ -16,6 +16,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -139,12 +141,16 @@ class FriendsViewModel @Inject constructor(
             if (friendId.isBlank()) return@forEach
             val chatId = chatRepository.generateChatId(uid, UserId(friendId))
             unreadJobs[friendId] = viewModelScope.launch {
-                chatRepository.observeChatMetadata(chatId).collect { meta ->
-                    val unread = meta?.unreadCount?.get(uid.value)?.coerceAtLeast(0) ?: 0
-                    val current = _uiState.value.unreadCountPerFriend.toMutableMap()
-                    current[friendId] = unread
-                    _uiState.value = _uiState.value.copy(unreadCountPerFriend = current)
-                }
+                chatRepository.observeChatMetadata(chatId)
+                    .map { meta -> meta?.getUnreadFor(uid.value)?.coerceAtLeast(0) ?: 0 }
+                    .distinctUntilChanged()
+                    .collect { unread ->
+                        val current = _uiState.value.unreadCountPerFriend.toMutableMap()
+                        if (current[friendId] != unread) {
+                            current[friendId] = unread
+                            _uiState.value = _uiState.value.copy(unreadCountPerFriend = current)
+                        }
+                    }
             }
         }
     }

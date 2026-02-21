@@ -176,7 +176,10 @@ class SharedInboxViewModel @Inject constructor(
      * spinner stops and the UI falls back to the description preview.
      */
     fun loadFullContent(itemId: String) {
-        val userId = currentUserId ?: return
+        // Ensure we have a userId even if the init block hasn't processed the auth state flow yet
+        val currentUser = authRepository.currentUser
+        val userId = currentUserId ?: currentUser?.uid?.let { UserId(it) } ?: return
+
         // Already cached — no need to re-fetch
         if (_uiState.value.fullContentMap.containsKey(itemId)) return
         viewModelScope.launch {
@@ -185,6 +188,40 @@ class SharedInboxViewModel @Inject constructor(
             // Falls back to description preview in SharedMaterialDetailScreen.
             _uiState.update {
                 it.copy(fullContentMap = it.fullContentMap + (itemId to (content ?: "")))
+            }
+        }
+    }
+
+    /**
+     * Load a single shared item by ID directly from Firestore.
+     * Used when the detail screen is opened on a fresh ViewModel instance
+     * and the shared data source list hasn't populated yet.
+     * The item is inserted into the local sharedItems list so the UI can render it.
+     */
+    fun loadItemById(itemId: String) {
+        // Skip if item is already in state
+        if (_uiState.value.sharedItems.any { it.itemId == itemId }) return
+
+        val currentUser = authRepository.currentUser
+        val userId = currentUserId ?: currentUser?.uid?.let { UserId(it) } ?: return
+
+        viewModelScope.launch {
+            val item = sharingRepository.fetchSharedItemById(userId, itemId)
+            if (item != null) {
+                _uiState.update { state ->
+                    // Only add if not already present (race with shared data source)
+                    if (state.sharedItems.none { it.itemId == itemId }) {
+                        state.copy(
+                            sharedItems = state.sharedItems + item,
+                            isLoading = false
+                        )
+                    } else {
+                        state
+                    }
+                }
+            } else {
+                // Item not found — stop loading spinner
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }

@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
@@ -183,6 +185,19 @@ fun ChatScreen(
                     }
                 }
                 else -> {
+                    // Trigger load older messages when scrolled near the top
+                    val shouldLoadOlder = remember {
+                        derivedStateOf {
+                            val firstVisible = listState.firstVisibleItemIndex
+                            firstVisible <= 2 && !uiState.isLoadingOlder && uiState.hasMoreMessages && uiState.messages.size >= 25
+                        }
+                    }
+                    LaunchedEffect(shouldLoadOlder.value) {
+                        if (shouldLoadOlder.value) {
+                            viewModel.loadOlderMessages()
+                        }
+                    }
+
                     LazyColumn(
                         state = listState,
                         modifier = Modifier
@@ -191,7 +206,18 @@ fun ChatScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(uiState.messages) { message ->
+                        // Loading older messages indicator
+                        if (uiState.isLoadingOlder) {
+                            item(key = "__loading_older__") {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                }
+                            }
+                        }
+                        items(uiState.messages, key = { it.messageId }) { message ->
                             MessageBubble(
                                 message = message,
                                 currentUserId = uiState.currentUserId ?: "",
@@ -380,7 +406,11 @@ fun TranslateConfirmDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
-        text = { Text(message) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(message)
+            }
+        },
         confirmButton = {
             TextButton(onClick = onConfirm) {
                 Text(confirmText)

@@ -36,7 +36,11 @@ fun FeedbackScreen(
                 onBack()
             },
             title = { Text(t(UiTextKey.FeedbackSuccessTitle)) },
-            text = { Text(t(UiTextKey.FeedbackSuccessMessage)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(t(UiTextKey.FeedbackSuccessMessage))
+                }
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -56,7 +60,9 @@ fun FeedbackScreen(
             onDismissRequest = { viewModel.dismissErrorDialog() },
             title = { Text(t(UiTextKey.FeedbackErrorTitle)) },
             text = {
-                Text(uiState.errorMessage ?: t(UiTextKey.FeedbackErrorMessage))
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(uiState.errorMessage ?: t(UiTextKey.FeedbackErrorMessage))
+                }
             },
             confirmButton = {
                 TextButton(onClick = { viewModel.dismissErrorDialog() }) {

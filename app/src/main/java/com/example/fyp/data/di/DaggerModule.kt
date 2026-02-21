@@ -66,7 +66,7 @@ object AppModule {
 
         try {
             val persistentCacheSettings = com.google.firebase.firestore.PersistentCacheSettings.newBuilder()
-                .setSizeBytes(com.google.firebase.firestore.FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
+                .setSizeBytes(50L * 1024L * 1024L) // 50 MB — prevents unbounded disk growth
                 .build()
 
             firestore.firestoreSettings = com.google.firebase.firestore.FirebaseFirestoreSettings.Builder()

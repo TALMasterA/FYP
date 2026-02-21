@@ -3,6 +3,8 @@ package com.example.fyp.screens.friends
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.*
@@ -30,7 +32,8 @@ fun FriendsScreen(
     onBack: () -> Unit,
     onOpenChat: (friendId: String, friendUsername: String, friendDisplayName: String) -> Unit = { _, _, _ -> },
     onOpenSharedInbox: () -> Unit = {},
-    pendingSharedItemCount: Int = 0,
+    hasUnseenSharedItems: Boolean = false,
+    hasUnreadMessages: Boolean = false,
     viewModel: FriendsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -127,16 +130,13 @@ fun FriendsScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Shared Inbox button with red-dot badge
+                    // Shared Inbox button with red-dot badge (no count)
                     BadgedBox(
                         badge = {
-                            if (pendingSharedItemCount > 0) {
+                            if (hasUnseenSharedItems) {
                                 Badge(
-                                    containerColor = MaterialTheme.colorScheme.error,
-                                    contentColor = MaterialTheme.colorScheme.onError
-                                ) {
-                                    Text(if (pendingSharedItemCount > 99) "99+" else "$pendingSharedItemCount")
-                                }
+                                    containerColor = MaterialTheme.colorScheme.error
+                                )
                             }
                         }
                     ) {
@@ -190,7 +190,7 @@ fun FriendsScreen(
                                     modifier = Modifier.padding(vertical = 8.dp)
                                 )
                             }
-                            items(uiState.incomingRequests) { request ->
+                            items(uiState.incomingRequests, key = { it.requestId }) { request ->
                                 FriendRequestCard(
                                     request = request,
                                     onAccept = { viewModel.acceptFriendRequest(request.requestId) },
@@ -214,7 +214,7 @@ fun FriendsScreen(
                                     modifier = Modifier.padding(vertical = 8.dp)
                                 )
                             }
-                            items(uiState.outgoingRequests) { request ->
+                            items(uiState.outgoingRequests, key = { it.requestId }) { request ->
                                 OutgoingRequestCard(
                                     request = request,
                                     onCancel = { viewModel.cancelFriendRequest(request.requestId) },
@@ -237,7 +237,7 @@ fun FriendsScreen(
                                     modifier = Modifier.padding(vertical = 8.dp)
                                 )
                             }
-                            items(uiState.friends) { friend ->
+                            items(uiState.friends, key = { it.friendId }) { friend ->
                                 FriendCard(
                                     friend = friend,
                                     unreadCount = uiState.unreadCountPerFriend[friend.friendId] ?: 0,
@@ -277,7 +277,11 @@ fun FriendsScreen(
         AlertDialog(
             onDismissRequest = { showRemoveDialog = null },
             title = { Text(t(UiTextKey.FriendsRemoveDialogTitle)) },
-            text = { Text(t(UiTextKey.FriendsRemoveDialogMessage).replace("{username}", friend.friendUsername)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(t(UiTextKey.FriendsRemoveDialogMessage).replace("{username}", friend.friendUsername))
+                }
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -415,16 +419,13 @@ fun FriendCard(
                     fontWeight = FontWeight.Bold
                 )
             }
-            // Unread message badge — always show message icon, red dot only when unread > 0
+            // Unread message red dot — only show when unread > 0
             BadgedBox(
                 badge = {
                     if (unreadCount > 0) {
                         Badge(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError
-                        ) {
-                            Text(if (unreadCount > 99) "99+" else "$unreadCount")
-                        }
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
                     }
                 },
                 modifier = Modifier
@@ -433,7 +434,7 @@ fun FriendCard(
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.Message,
-                    contentDescription = if (unreadCount > 0) "$unreadCount unread messages" else sendMessageText,
+                    contentDescription = if (unreadCount > 0) "Unread messages" else sendMessageText,
                     tint = if (unreadCount > 0) MaterialTheme.colorScheme.primary
                            else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -491,9 +492,9 @@ fun SearchUsersDialog(
                     }
                     else -> {
                         LazyColumn(
-                            modifier = Modifier.height(300.dp)
+                            modifier = Modifier.heightIn(min = 100.dp, max = 300.dp)
                         ) {
-                            items(searchResults) { user ->
+                            items(searchResults, key = { it.uid }) { user ->
                                 SearchResultCard(
                                     user = user,
                                     onSendRequest = { onSendRequest(user.uid) },

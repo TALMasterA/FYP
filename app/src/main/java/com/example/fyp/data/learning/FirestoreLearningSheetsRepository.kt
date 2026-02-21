@@ -6,6 +6,7 @@ import com.example.fyp.model.UserId
 import com.example.fyp.model.LanguageCode
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -30,7 +31,14 @@ class FirestoreLearningSheetsRepository @Inject constructor(
             .document(docId(primary, target))
 
     override suspend fun getSheet(uid: UserId, primary: LanguageCode, target: LanguageCode): LearningSheetDoc? {
-        val snap = docRef(uid.value, norm(primary.value), norm(target.value)).get().await()
+        val ref = docRef(uid.value, norm(primary.value), norm(target.value))
+        // Try cache first for instant display, fall back to server
+        val snap = try {
+            val cached = ref.get(Source.CACHE).await()
+            if (cached.exists()) cached else ref.get(Source.SERVER).await()
+        } catch (_: Exception) {
+            ref.get().await()
+        }
         return if (snap.exists()) snap.toObject(LearningSheetDoc::class.java) else null
     }
 

@@ -17,6 +17,9 @@ import javax.inject.Singleton
 class FirebaseAuthRepository @Inject constructor(
     private val firebaseAuth: FirebaseAuth
 ) {
+    val currentUser: User?
+        get() = firebaseAuth.currentUser?.toUser()
+
     val currentUserState: Flow<AuthState> = callbackFlow {
         val initial = firebaseAuth.currentUser
         trySend(if (initial != null) AuthState.LoggedIn(initial.toUser()) else AuthState.LoggedOut)

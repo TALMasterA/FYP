@@ -36,7 +36,9 @@ data class ChatUiState(
     val isTranslating: Boolean = false,
     val translatedMessages: Map<String, String> = emptyMap(), // original -> translated
     val showTranslation: Boolean = false,
-    val translationError: String? = null
+    val translationError: String? = null,
+    val isLoadingOlder: Boolean = false,
+    val hasMoreMessages: Boolean = true  // Assume more until proven otherwise
 )
 
 @HiltViewModel
@@ -97,6 +99,8 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    private var markReadJob: Job? = null
+
     private fun loadMessages(userId: UserId) {
         messagesJob?.cancel()
         messagesJob = viewModelScope.launch {
@@ -105,9 +109,13 @@ class ChatViewModel @Inject constructor(
                     messages = messages,
                     isLoading = false
                 )
-                // Re-mark as read whenever new messages arrive while the chat is open
-                // This ensures the unread badge clears immediately when messages are received
-                markMessagesAsRead(userId)
+                // Debounce mark-as-read so rapid message updates don't trigger
+                // redundant Firestore writes
+                markReadJob?.cancel()
+                markReadJob = launch {
+                    kotlinx.coroutines.delay(300)
+                    markMessagesAsRead(userId)
+                }
             }
         }
     }
@@ -154,7 +162,40 @@ class ChatViewModel @Inject constructor(
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
-    
+
+    /**
+     * Load older messages when user scrolls to the top of the chat.
+     * Fetches 25 messages before the oldest currently loaded message.
+     */
+    fun loadOlderMessages() {
+        val state = _uiState.value
+        if (state.isLoadingOlder || !state.hasMoreMessages) return
+        val oldest = state.messages.firstOrNull() ?: return
+
+        val chatId = chatRepository.generateChatId(
+            currentUserId ?: return,
+            friendId
+        )
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoadingOlder = true)
+            try {
+                val olderMessages = chatRepository.loadOlderMessages(
+                    chatId = chatId,
+                    beforeTimestamp = oldest.createdAt,
+                    limit = 25
+                )
+                _uiState.value = _uiState.value.copy(
+                    messages = olderMessages + _uiState.value.messages,
+                    isLoadingOlder = false,
+                    hasMoreMessages = olderMessages.size >= 25
+                )
+            } catch (_: Exception) {
+                _uiState.value = _uiState.value.copy(isLoadingOlder = false)
+            }
+        }
+    }
+
     fun translateAllMessages() {
         val userId = currentUserId ?: return
         val messages = _uiState.value.messages

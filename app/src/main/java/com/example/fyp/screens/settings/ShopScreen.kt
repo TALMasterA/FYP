@@ -41,12 +41,14 @@ fun ShopScreen(
             onDismissRequest = { showPurchaseConfirmDialog = false },
             title = { Text(t(UiTextKey.ShopHistoryExpandedTitle)) },
             text = {
-                Text(
-                    t(UiTextKey.ShopHistoryExpandedMessage).replace(
-                        "{limit}",
-                        (uiState.currentHistoryLimit + UserSettings.HISTORY_EXPANSION_INCREMENT).coerceAtMost(UserSettings.MAX_HISTORY_LIMIT).toString()
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(
+                        t(UiTextKey.ShopHistoryExpandedMessage).replace(
+                            "{limit}",
+                            (uiState.currentHistoryLimit + UserSettings.HISTORY_EXPANSION_INCREMENT).coerceAtMost(UserSettings.MAX_HISTORY_LIMIT).toString()
+                        )
                     )
-                )
+                }
             },
             confirmButton = {
                 Button(onClick = {

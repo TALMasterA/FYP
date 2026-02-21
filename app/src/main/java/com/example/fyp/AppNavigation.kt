@@ -123,8 +123,8 @@ fun AppNavigation() {
     // Application-level ViewModel for cross-cutting concerns (used for side effects)
     val appViewModel: AppViewModel = hiltViewModel()
     val pendingFriendRequestCount by appViewModel.pendingFriendRequestCount.collectAsStateWithLifecycle()
-    val unreadMessageCount by appViewModel.unreadMessageCount.collectAsStateWithLifecycle()
-    val pendingSharedItemCount by appViewModel.pendingSharedItemCount.collectAsStateWithLifecycle()
+    val hasUnreadMessages by appViewModel.hasUnreadMessages.collectAsStateWithLifecycle()
+    val hasUnseenSharedItems by appViewModel.hasUnseenSharedItems.collectAsStateWithLifecycle()
 
     // One SettingsViewModel shared across app
     val settingsViewModel: SettingsViewModel = hiltViewModel()
@@ -177,15 +177,15 @@ fun AppNavigation() {
                             uiLanguages = UiLanguageList(uiLanguages),
                             appLanguageState = appLanguageState,
                             onUpdateAppLanguage = updateAppLanguage,
-                            onStartSpeech = { navController.navigate(AppScreen.Speech.route) },
-                            onOpenHelp = { navController.navigate(AppScreen.Help.route) },
-                            onStartContinuous = { navController.navigate(AppScreen.Continuous.route) },
+                            onStartSpeech = { navController.navigate(AppScreen.Speech.route) { launchSingleTop = true } },
+                            onOpenHelp = { navController.navigate(AppScreen.Help.route) { launchSingleTop = true } },
+                            onStartContinuous = { navController.navigate(AppScreen.Continuous.route) { launchSingleTop = true } },
                             onOpenHistory = { navController.navigate(AppScreen.History.route) { launchSingleTop = true } },
                             onOpenLogin = { navController.navigate(AppScreen.Login.route) { launchSingleTop = true } },
                             onOpenLearning = { navController.navigate(AppScreen.Learning.route) { launchSingleTop = true } },
                             onOpenSettings = { navController.navigate(AppScreen.Settings.route) { launchSingleTop = true } },
                             onOpenWordBank = { navController.navigate(AppScreen.WordBank.route) { launchSingleTop = true } },
-                            totalNotificationCount = pendingFriendRequestCount + unreadMessageCount + pendingSharedItemCount,
+                            totalNotificationCount = pendingFriendRequestCount + (if (hasUnreadMessages) 1 else 0) + (if (hasUnseenSharedItems) 1 else 0),
                         )
                     }
 
@@ -268,7 +268,7 @@ fun AppNavigation() {
                             },
                             viewModel = learningViewModel,
                             onOpenSheet = { primary, target ->
-                                navController.navigate(AppScreen.LearningSheet.routeFor(primary, target))
+                                navController.navigate(AppScreen.LearningSheet.routeFor(primary, target)) { launchSingleTop = true }
                             }
                         )
                     }
@@ -279,19 +279,19 @@ fun AppNavigation() {
                             appLanguageState = appLanguageState,
                             onUpdateAppLanguage = updateAppLanguage,
                             onBack = { navController.popBackStack() },
-                            onOpenResetPassword = { navController.navigate(AppScreen.ResetPassword.route) },
-                            onOpenProfile = { navController.navigate(AppScreen.Profile.route) },
-                            onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) },
-                            onOpenMyProfile = { navController.navigate(AppScreen.MyProfile.route) },
-                            onOpenFriends = { navController.navigate(AppScreen.Friends.route) },
-                            onOpenSharedInbox = { navController.navigate(AppScreen.SharedInbox.route) },
-                            onOpenShop = { navController.navigate(AppScreen.Shop.route) },
-                            onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) },
-                            onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) },
-                            onOpenSystemNotes = { navController.navigate(AppScreen.SystemNotes.route) },
+                            onOpenResetPassword = { navController.navigate(AppScreen.ResetPassword.route) { launchSingleTop = true } },
+                            onOpenProfile = { navController.navigate(AppScreen.Profile.route) { launchSingleTop = true } },
+                            onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) { launchSingleTop = true } },
+                            onOpenMyProfile = { navController.navigate(AppScreen.MyProfile.route) { launchSingleTop = true } },
+                            onOpenFriends = { navController.navigate(AppScreen.Friends.route) { launchSingleTop = true } },
+                            onOpenSharedInbox = { navController.navigate(AppScreen.SharedInbox.route) { launchSingleTop = true } },
+                            onOpenShop = { navController.navigate(AppScreen.Shop.route) { launchSingleTop = true } },
+                            onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) { launchSingleTop = true } },
+                            onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) { launchSingleTop = true } },
+                            onOpenSystemNotes = { navController.navigate(AppScreen.SystemNotes.route) { launchSingleTop = true } },
                             pendingFriendRequestCount = pendingFriendRequestCount,
-                            unreadMessageCount = unreadMessageCount,
-                            pendingSharedItemCount = pendingSharedItemCount,
+                            hasUnreadMessages = hasUnreadMessages,
+                            hasUnseenSharedItems = hasUnseenSharedItems,
                             viewModel = settingsViewModel
                         )
                     }
@@ -334,7 +334,7 @@ fun AppNavigation() {
                             onBack = { navController.popBackStack() },
                             learningViewModel = learningViewModel,
                             onOpenQuiz = {
-                                navController.navigate(AppScreen.Quiz.routeFor(primaryCode, targetCode))
+                                navController.navigate(AppScreen.Quiz.routeFor(primaryCode, targetCode)) { launchSingleTop = true }
                             }
                         )
                     }
@@ -413,10 +413,13 @@ fun AppNavigation() {
                             onOpenChat = { friendId, friendUsername, friendDisplayName ->
                                 navController.navigate(
                                     AppScreen.Chat.routeFor(friendId, friendUsername, friendDisplayName)
-                                )
+                                ) { launchSingleTop = true }
                             },
-                            onOpenSharedInbox = { navController.navigate(AppScreen.SharedInbox.route) },
-                            pendingSharedItemCount = pendingSharedItemCount
+                            onOpenSharedInbox = {
+                                navController.navigate(AppScreen.SharedInbox.route) { launchSingleTop = true }
+                            },
+                            hasUnseenSharedItems = hasUnseenSharedItems,
+                            hasUnreadMessages = hasUnreadMessages
                         )
                     }
 
@@ -428,7 +431,9 @@ fun AppNavigation() {
                             appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() },
                             onViewMaterial = { itemId ->
-                                navController.navigate(AppScreen.SharedMaterialDetail.routeFor(itemId))
+                                navController.navigate(
+                                    AppScreen.SharedMaterialDetail.routeFor(itemId)
+                                ) { launchSingleTop = true }
                             }
                         )
                     }
