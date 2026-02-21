@@ -2,6 +2,7 @@ package com.example.fyp.screens.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -214,15 +215,9 @@ fun SettingsScreen(
                         ) {
                             // Friends button with red dot for pending requests or unread messages
                             val showFriendsBadge = pendingFriendRequestCount > 0 || hasUnreadMessages
-                            BadgedBox(
-                                badge = {
-                                    if (showFriendsBadge) {
-                                        Badge(
-                                            containerColor = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                },
-                                modifier = Modifier.weight(1f)
+                            Box(
+                                modifier = Modifier.weight(1f),
+                                contentAlignment = androidx.compose.ui.Alignment.Center
                             ) {
                                 TextButton(
                                     onClick = onOpenFriends,
@@ -234,18 +229,21 @@ fun SettingsScreen(
                                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                     )
                                 }
+                                // Badge positioned at top-end of the button
+                                if (showFriendsBadge) {
+                                    Badge(
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier
+                                            .align(androidx.compose.ui.Alignment.TopEnd)
+                                            .padding(top = 4.dp, end = 4.dp)
+                                    )
+                                }
                             }
                             
                             // Shared Inbox button with red dot for unseen shared items
-                            BadgedBox(
-                                badge = {
-                                    if (hasUnseenSharedItems) {
-                                        Badge(
-                                            containerColor = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                },
-                                modifier = Modifier.weight(1f)
+                            Box(
+                                modifier = Modifier.weight(1f),
+                                contentAlignment = androidx.compose.ui.Alignment.Center
                             ) {
                                 TextButton(
                                     onClick = onOpenSharedInbox,
@@ -255,6 +253,15 @@ fun SettingsScreen(
                                         text = t(UiTextKey.ShareInboxTitle),
                                         style = MaterialTheme.typography.bodyLarge,
                                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                }
+                                // Badge positioned at top-end of the button
+                                if (hasUnseenSharedItems) {
+                                    Badge(
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier
+                                            .align(androidx.compose.ui.Alignment.TopEnd)
+                                            .padding(top = 4.dp, end = 4.dp)
                                     )
                                 }
                             }

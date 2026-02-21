@@ -6,10 +6,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.*
-import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.stub
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 /**
  * Unit tests for AcceptFriendRequestUseCase.
@@ -32,10 +33,8 @@ class AcceptFriendRequestUseCaseTest {
         val requestId = "request123"
         val currentUserId = UserId("user1")
         val friendUserId = UserId("user2")
-
-        friendsRepository.stub {
-            onBlocking { acceptFriendRequest(requestId, currentUserId, friendUserId) } doReturn Result.success(Unit)
-        }
+        doAnswer { Result.success(Unit) }.whenever(friendsRepository)
+            .acceptFriendRequest(any(), any(), any())
 
         // Act
         val result = useCase(requestId, currentUserId, friendUserId)
@@ -52,10 +51,8 @@ class AcceptFriendRequestUseCaseTest {
         val currentUserId = UserId("user1")
         val friendUserId = UserId("user2")
         val exception = Exception("Request not found")
-
-        friendsRepository.stub {
-            onBlocking { acceptFriendRequest(requestId, currentUserId, friendUserId) } doReturn Result.failure(exception)
-        }
+        doAnswer { Result.failure<Unit>(exception) }.whenever(friendsRepository)
+            .acceptFriendRequest(any(), any(), any())
 
         // Act
         val result = useCase(requestId, currentUserId, friendUserId)
@@ -74,12 +71,8 @@ class AcceptFriendRequestUseCaseTest {
             Triple("req2", currentUserId, UserId("user3")),
             Triple("req3", currentUserId, UserId("user4"))
         )
-
-        requests.forEach { (requestId, userId, friendId) ->
-            friendsRepository.stub {
-                onBlocking { acceptFriendRequest(requestId, userId, friendId) } doReturn Result.success(Unit)
-            }
-        }
+        doAnswer { Result.success(Unit) }.whenever(friendsRepository)
+            .acceptFriendRequest(any(), any(), any())
 
         // Act & Assert
         requests.forEach { (requestId, userId, friendId) ->

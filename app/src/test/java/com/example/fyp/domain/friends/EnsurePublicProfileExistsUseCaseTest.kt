@@ -39,10 +39,9 @@ class EnsurePublicProfileExistsUseCaseTest {
     @Test
     fun `creates new profile when none exists`() = runTest {
         // Arrange - no existing profile
-        whenever(settingsRepository.fetchUserSettings(uid)).thenReturn(defaultSettings)
-        whenever(friendsRepository.getPublicProfile(uid)).thenReturn(null)
-        whenever(friendsRepository.createOrUpdatePublicProfile(any(), any()))
-            .thenReturn(Result.success(Unit))
+        doAnswer { defaultSettings }.whenever(settingsRepository).fetchUserSettings(any())
+        doAnswer { null }.whenever(friendsRepository).getPublicProfile(any())
+        doAnswer { Result.success(Unit) }.whenever(friendsRepository).createOrUpdatePublicProfile(any(), any())
 
         // Act
         useCase(userId)
@@ -65,10 +64,9 @@ class EnsurePublicProfileExistsUseCaseTest {
             username = "existing_user",
             primaryLanguage = "en-US"
         )
-        whenever(settingsRepository.fetchUserSettings(uid)).thenReturn(defaultSettings)
-        whenever(friendsRepository.getPublicProfile(uid)).thenReturn(existingProfile)
-        whenever(friendsRepository.updatePublicProfile(any(), any()))
-            .thenReturn(Result.success(Unit))
+        doAnswer { defaultSettings }.whenever(settingsRepository).fetchUserSettings(any())
+        doAnswer { existingProfile }.whenever(friendsRepository).getPublicProfile(any())
+        doAnswer { Result.success(Unit) }.whenever(friendsRepository).updatePublicProfile(any(), any())
 
         // Act
         useCase(userId)
@@ -83,10 +81,9 @@ class EnsurePublicProfileExistsUseCaseTest {
         // Arrange
         val existingProfile = PublicUserProfile(uid = userId, primaryLanguage = "zh-HK")
         val settings = UserSettings(primaryLanguageCode = "en-US")
-        whenever(settingsRepository.fetchUserSettings(uid)).thenReturn(settings)
-        whenever(friendsRepository.getPublicProfile(uid)).thenReturn(existingProfile)
-        whenever(friendsRepository.updatePublicProfile(any(), any()))
-            .thenReturn(Result.success(Unit))
+        doAnswer { settings }.whenever(settingsRepository).fetchUserSettings(any())
+        doAnswer { existingProfile }.whenever(friendsRepository).getPublicProfile(any())
+        doAnswer { Result.success(Unit) }.whenever(friendsRepository).updatePublicProfile(any(), any())
 
         // Act
         useCase(userId)
@@ -103,10 +100,9 @@ class EnsurePublicProfileExistsUseCaseTest {
     fun `uses default language when settings have blank primary language`() = runTest {
         // Arrange
         val settingsWithBlankLang = UserSettings(primaryLanguageCode = "")
-        whenever(settingsRepository.fetchUserSettings(uid)).thenReturn(settingsWithBlankLang)
-        whenever(friendsRepository.getPublicProfile(uid)).thenReturn(null)
-        whenever(friendsRepository.createOrUpdatePublicProfile(any(), any()))
-            .thenReturn(Result.success(Unit))
+        doAnswer { settingsWithBlankLang }.whenever(settingsRepository).fetchUserSettings(any())
+        doAnswer { null }.whenever(friendsRepository).getPublicProfile(any())
+        doAnswer { Result.success(Unit) }.whenever(friendsRepository).createOrUpdatePublicProfile(any(), any())
 
         // Act
         useCase(userId)
@@ -120,10 +116,9 @@ class EnsurePublicProfileExistsUseCaseTest {
     @Test
     fun `new profile is discoverable by default`() = runTest {
         // Arrange
-        whenever(settingsRepository.fetchUserSettings(uid)).thenReturn(defaultSettings)
-        whenever(friendsRepository.getPublicProfile(uid)).thenReturn(null)
-        whenever(friendsRepository.createOrUpdatePublicProfile(any(), any()))
-            .thenReturn(Result.success(Unit))
+        doAnswer { defaultSettings }.whenever(settingsRepository).fetchUserSettings(any())
+        doAnswer { null }.whenever(friendsRepository).getPublicProfile(any())
+        doAnswer { Result.success(Unit) }.whenever(friendsRepository).createOrUpdatePublicProfile(any(), any())
 
         // Act
         useCase(userId)
@@ -137,10 +132,9 @@ class EnsurePublicProfileExistsUseCaseTest {
     @Test
     fun `new profile has empty username and displayName`() = runTest {
         // Arrange
-        whenever(settingsRepository.fetchUserSettings(uid)).thenReturn(defaultSettings)
-        whenever(friendsRepository.getPublicProfile(uid)).thenReturn(null)
-        whenever(friendsRepository.createOrUpdatePublicProfile(any(), any()))
-            .thenReturn(Result.success(Unit))
+        doAnswer { defaultSettings }.whenever(settingsRepository).fetchUserSettings(any())
+        doAnswer { null }.whenever(friendsRepository).getPublicProfile(any())
+        doAnswer { Result.success(Unit) }.whenever(friendsRepository).createOrUpdatePublicProfile(any(), any())
 
         // Act
         useCase(userId)
@@ -152,4 +146,3 @@ class EnsurePublicProfileExistsUseCaseTest {
         assertEquals("", profileCaptor.firstValue.displayName)
     }
 }
-

@@ -19,14 +19,6 @@ import org.junit.Test
 import org.junit.Assert.*
 import org.mockito.kotlin.*
 
-/**
- * Tests that language counts in Learning/WordBank screens reflect ALL records,
- * not just the limited display set (50-100 records shown in History screen).
- *
- * The fix: LearningViewModel and WordBankViewModel now use
- * SharedHistoryDataSource.languageCounts (populated from Firestore cache covering
- * all records) instead of iterating the limited historyRecords list.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SharedHistoryDataSourceLanguageCountsTest {
 
@@ -67,7 +59,7 @@ class SharedHistoryDataSourceLanguageCountsTest {
 
     @Test
     fun `languageCounts reflects all records not just limited display set`() = runTest {
-        doReturn(allRecordsCounts).whenever(historyRepo).getLanguageCounts(userId, primaryLang)
+        doAnswer { allRecordsCounts }.whenever(historyRepo).getLanguageCounts(any(), any())
         dataSource.startObserving(userId.value)
         dataSource.forceRefreshLanguageCounts(primaryLang.value)
 
@@ -79,7 +71,7 @@ class SharedHistoryDataSourceLanguageCountsTest {
 
     @Test
     fun `historyRecords limited while languageCounts covers all records`() = runTest {
-        doReturn(allRecordsCounts).whenever(historyRepo).getLanguageCounts(userId, primaryLang)
+        doAnswer { allRecordsCounts }.whenever(historyRepo).getLanguageCounts(any(), any())
         dataSource.startObserving(userId.value)
         dataSource.forceRefreshLanguageCounts(primaryLang.value)
 
@@ -89,7 +81,7 @@ class SharedHistoryDataSourceLanguageCountsTest {
 
     @Test
     fun `getCountForLanguage uses languageCounts from Firestore cache`() = runTest {
-        doReturn(allRecordsCounts).whenever(historyRepo).getLanguageCounts(userId, primaryLang)
+        doAnswer { allRecordsCounts }.whenever(historyRepo).getLanguageCounts(any(), any())
         dataSource.startObserving(userId.value)
         dataSource.forceRefreshLanguageCounts(primaryLang.value)
 
@@ -104,12 +96,12 @@ class SharedHistoryDataSourceLanguageCountsTest {
 
     @Test
     fun `forceRefreshLanguageCounts bypasses debounce`() = runTest {
-        doReturn(mapOf("en-US" to 100)).whenever(historyRepo).getLanguageCounts(userId, primaryLang)
+        doAnswer { mapOf("en-US" to 100) }.whenever(historyRepo).getLanguageCounts(any(), any())
         dataSource.startObserving(userId.value)
         dataSource.forceRefreshLanguageCounts(primaryLang.value)
         assertEquals(100, dataSource.languageCounts.value["en-US"])
 
-        doReturn(mapOf("en-US" to 150)).whenever(historyRepo).getLanguageCounts(userId, primaryLang)
+        doAnswer { mapOf("en-US" to 150) }.whenever(historyRepo).getLanguageCounts(any(), any())
         dataSource.forceRefreshLanguageCounts(primaryLang.value)
         assertEquals(150, dataSource.languageCounts.value["en-US"])
     }
@@ -121,10 +113,9 @@ class SharedHistoryDataSourceLanguageCountsTest {
 
     @Test
     fun `historyRecords cleared on stopObserving`() = runTest {
-        doReturn(allRecordsCounts).whenever(historyRepo).getLanguageCounts(userId, primaryLang)
+        doAnswer { allRecordsCounts }.whenever(historyRepo).getLanguageCounts(any(), any())
         dataSource.startObserving(userId.value)
         dataSource.stopObserving()
         assertTrue(dataSource.historyRecords.value.isEmpty())
     }
 }
-

@@ -30,6 +30,7 @@ import org.mockito.kotlin.*
 class SharedInboxViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
+    private val testScheduler = testDispatcher.scheduler
 
     private lateinit var authRepository: FirebaseAuthRepository
     private lateinit var sharedFriendsDataSource: SharedFriendsDataSource
@@ -128,6 +129,9 @@ class SharedInboxViewModelTest {
         // New item arrives
         pendingItemsFlow.value = listOf(makeItem("item1"), makeItem("item2"))
 
+        // Give time for flow to update
+        testScheduler.advanceUntilIdle()
+
         val state = viewModel.uiState.value
         assertTrue("item2 should be in newItemIds", "item2" in state.newItemIds)
         assertFalse("item1 should not be in newItemIds", "item1" in state.newItemIds)
@@ -157,9 +161,7 @@ class SharedInboxViewModelTest {
 
     @Test
     fun `acceptItem calls acceptSharedItemUseCase`() = runTest {
-        acceptSharedItemUseCase.stub {
-            onBlocking { invoke("item1", UserId("user1")) } doReturn Result.success(Unit)
-        }
+        doAnswer { Result.success(Unit) }.whenever(acceptSharedItemUseCase).invoke(any(), any())
         val viewModel = createViewModel()
 
         authStateFlow.value = loggedInState
@@ -172,9 +174,7 @@ class SharedInboxViewModelTest {
 
     @Test
     fun `deleteItem calls dismissSharedItemUseCase`() = runTest {
-        dismissSharedItemUseCase.stub {
-            onBlocking { invoke("item2", UserId("user1")) } doReturn Result.success(Unit)
-        }
+        doAnswer { Result.success(Unit) }.whenever(dismissSharedItemUseCase).invoke(any(), any())
         val viewModel = createViewModel()
 
         authStateFlow.value = loggedInState
@@ -185,9 +185,7 @@ class SharedInboxViewModelTest {
 
     @Test
     fun `deleteItem sets successMessage to Item deleted`() = runTest {
-        dismissSharedItemUseCase.stub {
-            onBlocking { invoke(any(), any()) } doReturn Result.success(Unit)
-        }
+        doAnswer { Result.success(Unit) }.whenever(dismissSharedItemUseCase).invoke(any(), any())
         val viewModel = createViewModel()
 
         authStateFlow.value = loggedInState

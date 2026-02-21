@@ -69,6 +69,8 @@ class SharedMaterialDetailViewModel @Inject constructor(
 
                 // Fetch full content from sub-document
                 val fullContent = sharingRepository.fetchSharedItemFullContent(userId, itemId)
+                // Use empty string if not found (will fallback to description in UI)
+                // vs null which means "still loading"
                 _uiState.value = _uiState.value.copy(fullContent = fullContent ?: "")
             } catch (e: Exception) {
                 _uiState.value = SharedMaterialDetailUiState(

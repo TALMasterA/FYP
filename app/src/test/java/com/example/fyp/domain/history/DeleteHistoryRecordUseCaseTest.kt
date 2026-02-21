@@ -6,8 +6,11 @@ import com.example.fyp.model.UserId
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 class DeleteHistoryRecordUseCaseTest {
 
@@ -25,17 +28,29 @@ class DeleteHistoryRecordUseCaseTest {
         // Arrange
         val userId = "user123"
         val recordId = "record456"
+        doAnswer { Unit }.whenever(repo).delete(
+            any<UserId>(), any<RecordId>(), any(), any()
+        )
 
         // Act
         useCase(userId, recordId)
 
         // Assert
-        verify(repo).delete(UserId(userId), RecordId(recordId))
+        verify(repo).delete(
+            UserId(userId),
+            RecordId(recordId),
+            null,
+            null
+        )
     }
 
     @Test
     fun `invoke handles different user and record ids`() = runTest {
         // Arrange
+        doAnswer { Unit }.whenever(repo).delete(
+            any<UserId>(), any<RecordId>(), any(), any()
+        )
+
         val testCases = listOf(
             "user1" to "record1",
             "user2" to "record2",
@@ -45,7 +60,12 @@ class DeleteHistoryRecordUseCaseTest {
         // Act & Assert
         testCases.forEach { (userId, recordId) ->
             useCase(userId, recordId)
-            verify(repo).delete(UserId(userId), RecordId(recordId))
+            verify(repo).delete(
+                UserId(userId),
+                RecordId(recordId),
+                null,
+                null
+            )
         }
     }
 }
