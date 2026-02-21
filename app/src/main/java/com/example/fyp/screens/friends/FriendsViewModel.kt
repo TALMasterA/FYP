@@ -13,11 +13,12 @@ import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.user.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -34,8 +35,11 @@ data class FriendsUiState(
     val isSearching: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
-    val newRequestCount: Int = 0,                          // For snackbar notification badge
-    val unreadCountPerFriend: Map<String, Int> = emptyMap() // friendId -> unread message count
+    val newRequestCount: Int = 0,   // For snackbar notification badge
+    val unreadCountPerFriend: Map<String, Int> = emptyMap(), // friendId -> unread message count
+    // Multi-select delete mode
+    val isDeleteMode: Boolean = false,
+    val selectedFriendIds: Set<String> = emptySet()
 )
 
 /**
@@ -49,6 +53,7 @@ class FriendsViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
     private val chatRepository: ChatRepository,
+    private val friendsRepository: com.example.fyp.data.friends.FriendsRepository,
     private val observeOutgoingRequestsUseCase: ObserveOutgoingRequestsUseCase,
     private val searchUsersUseCase: SearchUsersUseCase,
     private val sendFriendRequestUseCase: SendFriendRequestUseCase,
@@ -67,6 +72,8 @@ class FriendsViewModel @Inject constructor(
 
     // Per-friend chat unread observers: friendId -> Job
     private val unreadJobs = mutableMapOf<String, Job>()
+    // Single document unread observer (replaces N per-chat observers)
+    private var unreadPerFriendJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -78,11 +85,13 @@ class FriendsViewModel @Inject constructor(
                         sharedFriendsDataSource.startObserving(auth.user.uid)
                         subscribeToSharedData()
                         startOutgoingRequestsObserver(UserId(auth.user.uid))
+                        startUnreadPerFriendObserver(UserId(auth.user.uid))
                     }
                     AuthState.LoggedOut -> {
                         outgoingRequestsJob?.cancel()
                         unreadJobs.values.forEach { it.cancel() }
                         unreadJobs.clear()
+                        unreadPerFriendJob?.cancel()
                         currentUserId = null
                         previousIncomingCount = 0
                         _uiState.value = FriendsUiState(isLoading = false)
@@ -97,11 +106,10 @@ class FriendsViewModel @Inject constructor(
 
     /** Mirror shared-data-source flows into UI state. */
     private fun subscribeToSharedData() {
-        // Friends list — also starts per-friend unread count observers
+        // Friends list
         viewModelScope.launch {
             sharedFriendsDataSource.friends.collect { friends ->
                 _uiState.value = _uiState.value.copy(friends = friends, isLoading = false)
-                updateUnreadObservers(friends)
             }
         }
         // Incoming requests — also tracks new-request notification
@@ -122,35 +130,15 @@ class FriendsViewModel @Inject constructor(
     }
 
     /**
-     * Start/stop per-friend chat metadata observers to track unread message counts.
-     * Called whenever the friends list changes.
+     * OPTIMIZED (Medium #5): Single real-time listener on user document
+     * instead of one listener per friend chat metadata document.
+     * Observes users/{userId}.unreadPerFriend map for O(1) connections.
      */
-    private fun updateUnreadObservers(friends: List<FriendRelation>) {
-        val uid = currentUserId ?: return
-        val currentFriendIds = friends.map { it.friendId }.toSet()
-
-        // Cancel observers for removed friends
-        val removed = unreadJobs.keys - currentFriendIds
-        removed.forEach { friendId ->
-            unreadJobs.remove(friendId)?.cancel()
-        }
-
-        // Start observers for new friends
-        val added = currentFriendIds - unreadJobs.keys
-        added.forEach { friendId ->
-            if (friendId.isBlank()) return@forEach
-            val chatId = chatRepository.generateChatId(uid, UserId(friendId))
-            unreadJobs[friendId] = viewModelScope.launch {
-                chatRepository.observeChatMetadata(chatId)
-                    .map { meta -> meta?.getUnreadFor(uid.value)?.coerceAtLeast(0) ?: 0 }
-                    .distinctUntilChanged()
-                    .collect { unread ->
-                        val current = _uiState.value.unreadCountPerFriend.toMutableMap()
-                        if (current[friendId] != unread) {
-                            current[friendId] = unread
-                            _uiState.value = _uiState.value.copy(unreadCountPerFriend = current)
-                        }
-                    }
+    private fun startUnreadPerFriendObserver(userId: UserId) {
+        unreadPerFriendJob?.cancel()
+        unreadPerFriendJob = viewModelScope.launch {
+            chatRepository.observeUnreadPerFriend(userId).collect { unreadMap ->
+                _uiState.value = _uiState.value.copy(unreadCountPerFriend = unreadMap)
             }
         }
     }
@@ -171,26 +159,97 @@ class FriendsViewModel @Inject constructor(
     fun onSearchQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
         searchJob?.cancel()
-        if (query.length >= 2) {
+        val trimmed = query.trim()
+
+        if (trimmed.length >= 3) {
             searchJob = viewModelScope.launch {
-                kotlinx.coroutines.delay(300)
-                searchUsers(query)
+                delay(500) // OPTIMIZATION: Increased from 300ms to reduce Firestore queries
+                performCombinedSearch(trimmed)
             }
         } else {
             _uiState.value = _uiState.value.copy(searchResults = emptyList(), isSearching = false)
         }
     }
 
-    private fun searchUsers(query: String) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isSearching = true)
-            searchUsersUseCase(query).fold(
-                onSuccess = { results ->
-                    _uiState.value = _uiState.value.copy(searchResults = results, isSearching = false, error = null)
-                },
-                onFailure = { e ->
-                    _uiState.value = _uiState.value.copy(isSearching = false, error = "Search failed: ${e.message}")
+    private suspend fun performCombinedSearch(query: String) {
+        _uiState.value = _uiState.value.copy(isSearching = true)
+
+        // Parallel execution: Search by Username AND by UserID (if applicable)
+        val (usernameResults, idResult) = coroutineScope {
+            val usernameSearchDeferred = async {
+                searchUsersUseCase(query).getOrElse { emptyList() }
+            }
+
+            val idSearchDeferred = if (!query.contains(' ')) {
+                async {
+                    try {
+                        friendsRepository.findByUserId(UserId(query))
+                    } catch (_: Exception) {
+                        null
+                    }
                 }
+            } else null
+
+            Pair(usernameSearchDeferred.await(), idSearchDeferred?.await())
+        }
+
+        // Combine results, prioritizing ID match at the top if found
+        val distinctResults = (listOfNotNull(idResult) + usernameResults)
+            .distinctBy { it.uid }
+
+        _uiState.value = _uiState.value.copy(
+            searchResults = distinctResults,
+            isSearching = false,
+            error = null
+        )
+    }
+
+    // ── Delete mode ──────────────────────────────────────────────────────────
+
+    fun toggleDeleteMode() {
+        val state = _uiState.value
+        if (state.isDeleteMode) {
+            if (state.selectedFriendIds.isEmpty()) {
+                // Exit delete mode without doing anything
+                _uiState.value = state.copy(isDeleteMode = false)
+            }
+            // If there are selections, the UI shows the confirm dialog — don't exit here
+        } else {
+            _uiState.value = state.copy(isDeleteMode = true, selectedFriendIds = emptySet())
+        }
+    }
+
+    fun toggleFriendSelection(friendId: String) {
+        val selected = _uiState.value.selectedFriendIds.toMutableSet()
+        if (selected.contains(friendId)) selected.remove(friendId) else selected.add(friendId)
+        _uiState.value = _uiState.value.copy(selectedFriendIds = selected)
+    }
+
+    fun exitDeleteMode() {
+        _uiState.value = _uiState.value.copy(isDeleteMode = false, selectedFriendIds = emptySet())
+    }
+
+    fun removeSelectedFriends() {
+        val userId = currentUserId ?: return
+        val toDelete = _uiState.value.selectedFriendIds.toList()
+        if (toDelete.isEmpty()) return
+        viewModelScope.launch {
+            // Optimistically update the in-memory friends list immediately so
+            // canSendRequestTo() reflects the removal before the Firestore listener fires.
+            val updatedFriends = _uiState.value.friends.filter { it.friendId !in toDelete }
+            _uiState.value = _uiState.value.copy(
+                isDeleteMode = false,
+                selectedFriendIds = emptySet(),
+                friends = updatedFriends,
+                searchQuery = "",
+                searchResults = emptyList()
+            )
+            toDelete.forEach { friendId ->
+                removeFriendUseCase(userId, UserId(friendId))
+            }
+            _uiState.value = _uiState.value.copy(
+                successMessage = "Friend(s) removed. Pull down to refresh before adding them again.",
+                error = null
             )
         }
     }
@@ -242,9 +301,26 @@ class FriendsViewModel @Inject constructor(
     fun removeFriend(friendId: String) {
         val userId = currentUserId ?: return
         viewModelScope.launch {
+            // Optimistically remove from in-memory list immediately
+            val updatedFriends = _uiState.value.friends.filter { it.friendId != friendId }
+            _uiState.value = _uiState.value.copy(
+                friends = updatedFriends,
+                searchQuery = "",
+                searchResults = emptyList()
+            )
             removeFriendUseCase(userId, UserId(friendId)).fold(
-                onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Friend removed", error = null) },
-                onFailure = { _uiState.value = _uiState.value.copy(error = it.message ?: "Failed to remove friend") }
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        successMessage = "Friend removed. Pull down to refresh before adding them again.",
+                        error = null
+                    )
+                },
+                onFailure = {
+                    // On failure, we should reload from the data source to restore correct state
+                    _uiState.value = _uiState.value.copy(
+                        error = it.message ?: "Failed to remove friend"
+                    )
+                }
             )
         }
     }
@@ -255,6 +331,18 @@ class FriendsViewModel @Inject constructor(
 
     fun clearNewRequestCount() {
         _uiState.value = _uiState.value.copy(newRequestCount = 0)
+    }
+
+    /**
+     * Manually refresh friends list by restarting the shared data source.
+     * This helps ensure the latest state after operations like removing friends.
+     */
+    fun refreshFriendsList() {
+        val userId = currentUserId?.value ?: return
+        viewModelScope.launch {
+            sharedFriendsDataSource.stopObserving()
+            sharedFriendsDataSource.startObserving(userId)
+        }
     }
 
     /**

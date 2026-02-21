@@ -1072,6 +1072,18 @@ val ScreenUiTexts: List<String> = listOf(
     "Cancel request",
     // FriendsUnreadMessageDesc
     "Send message",
+    // FriendsDeleteModeButton
+    "Delete friends",
+    // FriendsDeleteSelectedButton
+    "Delete selected",
+    // FriendsDeleteMultipleTitle
+    "Remove Friends",
+    // FriendsDeleteMultipleMessage
+    "Remove {count} selected friend(s)?",
+    // FriendsSearchMinChars3
+    "Enter at least 3 characters to search by username",
+    // FriendsSearchByUserIdHint
+    "Or enter full User ID for exact lookup",
 
     // --- Chat ---
     // ChatTitle
@@ -1202,4 +1214,88 @@ val ScreenUiTexts: List<String> = listOf(
     "Primary Language",
     // MyProfileLearningLanguages
     "Learning Languages",
+
+    // --- Friends Info Dialog & Empty States ---
+    // FriendsInfoTitle
+    "Friends Screen Info",
+    // FriendsInfoMessage
+    "• Pull down to manually refresh your friends list, requests, and friend status.\n" +
+    "• Tap a friend card to open chat.\n" +
+    "• A red dot (●) in the top-left corner of a friend card means unread messages.\n" +
+    "• Use the 📥 inbox icon to view shared materials.\n" +
+    "• Use the trash icon to enter delete mode and remove friends.\n" +
+    "• Use the search button to find and add new friends by username or User ID.\n" +
+    "• After removing a friend, pull down to refresh before adding them again.",
+    // FriendsEmptyTitle
+    "No Friends Yet",
+    // FriendsEmptyMessage
+    "Search for friends by username or User ID using the 'Add Friends' button.\n" +
+    "Pull down to refresh after adding friends.",
+    // FriendsInfoGotItButton
+    "Got it",
+
+    // --- Learning Info Dialog & Empty States ---
+    // LearningInfoTitle
+    "Learning Screen Info",
+    // LearningInfoMessage
+    "• Pull down to manually refresh your language record counts.\n" +
+    "• Each card shows a language and how many translation records you have.\n" +
+    "• Press 'Generate' to create a learning sheet (first time is always free).\n" +
+    "• Regeneration requires at least 5 more records than the last generation.\n" +
+    "• Press the sheet button to open and study your generated materials.\n" +
+    "• Quiz is available after generating a learning sheet.",
+    // LearningEmptyTitle
+    "No Translation Records",
+    // LearningEmptyMessage
+    "Start translating to build up history records.\n" +
+    "Learning sheets are generated from your translation history.\n" +
+    "Pull down to refresh after translating.",
+    // LearningInfoGotItButton
+    "Got it",
+
+    // --- Word Bank Info Dialog & Empty States ---
+    // WordBankInfoTitle
+    "Word Bank Screen Info",
+    // WordBankInfoMessage
+    "• Pull down to manually refresh your word bank language list.\n" +
+    "• Select a language to view or generate its word bank.\n" +
+    "• Word banks are generated from your translation history.\n" +
+    "• Refreshing a word bank requires at least 20 more records than the last generation.\n" +
+    "• Use the Custom Words section to manually add your own vocabulary.\n" +
+    "• You can share words from your word bank with friends.",
+    // WordBankInfoGotItButton
+    "Got it",
+
+    // --- SharedInbox Info Dialog ---
+    // ShareInboxInfoTitle
+    "Shared Inbox Info",
+    // ShareInboxInfoMessage
+    "• Pull down to manually refresh your shared inbox.\n" +
+    "• Shared items from friends appear here.\n" +
+    "• Words can be accepted into your word bank.\n" +
+    "• Learning sheets and quizzes can be viewed in detail.\n" +
+    "• A red dot (●) indicates new/unread items.\n" +
+    "• Swipe or use buttons to accept, dismiss, or delete items.",
+    // ShareInboxInfoGotItButton
+    "Got it",
+
+    // --- Accessibility Strings ---
+    // AccessibilityDismiss
+    "Dismiss",
+    // AccessibilityAlreadyConnectedOrPending
+    "Already connected or pending",
+    // AccessibilityNewMessages
+    "New messages",
+    // AccessibilityNewReleasesIcon
+    "New items indicator",
+    // AccessibilitySuccessIcon
+    "Success",
+    // AccessibilityErrorIcon
+    "Error",
+    // AccessibilitySharedItemTypeIcon
+    "Shared item type",
+    // AccessibilityAddCustomWords
+    "Add custom words",
+    // AccessibilityWordBankExists
+    "Word bank exists",
 )

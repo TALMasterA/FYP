@@ -361,6 +361,13 @@ class WordBankViewModel @Inject constructor(
         // Use shared history data source (single listener shared across ViewModels)
         sharedHistoryDataSource.startObserving(userId)
 
+        // OPTIMIZATION: Force initial load of language counts to show data immediately
+        // This ensures the screen isn't empty on first launch
+        viewModelScope.launch {
+            sharedHistoryDataSource.forceRefreshLanguageCounts(primaryLanguageCode)
+            refreshClusters()
+        }
+
         historyJob = viewModelScope.launch {
             sharedHistoryDataSource.historyRecords
                 .collect { list ->

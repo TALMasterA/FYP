@@ -3,6 +3,7 @@ package com.example.fyp.screens.friends
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.friends.SharingRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.model.UserId
@@ -32,7 +33,8 @@ data class SharedMaterialDetailUiState(
 class SharedMaterialDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val authRepository: FirebaseAuthRepository,
-    private val sharingRepository: SharingRepository
+    private val sharingRepository: SharingRepository,
+    private val sharedFriendsDataSource: SharedFriendsDataSource
 ) : ViewModel() {
 
     private val itemId: String = savedStateHandle.get<String>("itemId") ?: ""
@@ -64,8 +66,16 @@ class SharedMaterialDetailViewModel @Inject constructor(
                     return@launch
                 }
 
+                // If fromUsername is missing (older shared items), try resolving from cache
+                val resolvedItem = if (item.fromUsername.isBlank() && item.fromUserId.isNotBlank()) {
+                    val cachedName = sharedFriendsDataSource.getCachedUsername(item.fromUserId)
+                    if (cachedName != null) item.copy(fromUsername = cachedName) else item
+                } else {
+                    item
+                }
+
                 // Show item immediately with loading indicator for full content
-                _uiState.value = SharedMaterialDetailUiState(isLoading = false, item = item)
+                _uiState.value = SharedMaterialDetailUiState(isLoading = false, item = resolvedItem)
 
                 // Fetch full content from sub-document
                 val fullContent = sharingRepository.fetchSharedItemFullContent(userId, itemId)

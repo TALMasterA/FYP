@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +29,7 @@ import com.example.fyp.ui.components.EmptyStates
 import java.text.SimpleDateFormat
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SharedInboxScreen(
     viewModel: SharedInboxViewModel = hiltViewModel(),
@@ -56,11 +58,61 @@ fun SharedInboxScreen(
         }
     }
 
-    Scaffold { padding ->
-        Box(
+    var showInfoDialog by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            kotlinx.coroutines.delay(600)
+            isRefreshing = false
+        }
+    }
+
+    // Info dialog
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text(t(UiTextKey.ShareInboxInfoTitle)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(t(UiTextKey.ShareInboxInfoMessage))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text(t(UiTextKey.ShareInboxInfoGotItButton))
+                }
+            }
+        )
+    }
+
+    StandardScreenScaffold(
+        title = t(UiTextKey.ShareInboxTitle),
+        onBack = onBack,
+        backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            IconButton(onClick = { showInfoDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = t(UiTextKey.ShareInboxInfoTitle),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    ) { padding ->
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                viewModel.markItemsAsSeen()
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+        ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
         ) {
             when {
                 uiState.isLoading -> {
@@ -100,7 +152,7 @@ fun SharedInboxScreen(
                                     ) {
                                         Icon(
                                             Icons.Default.NewReleases,
-                                            contentDescription = null,
+                                            contentDescription = t(UiTextKey.AccessibilityNewReleasesIcon),
                                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                         Text(
@@ -146,7 +198,7 @@ fun SharedInboxScreen(
                     ) {
                         Icon(
                             Icons.Default.CheckCircle,
-                            contentDescription = null,
+                            contentDescription = t(UiTextKey.AccessibilitySuccessIcon),
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
@@ -176,7 +228,7 @@ fun SharedInboxScreen(
                     ) {
                         Icon(
                             Icons.Default.Error,
-                            contentDescription = null,
+                            contentDescription = t(UiTextKey.AccessibilityErrorIcon),
                             tint = MaterialTheme.colorScheme.onErrorContainer
                         )
                         Text(
@@ -188,7 +240,7 @@ fun SharedInboxScreen(
                         IconButton(onClick = { viewModel.clearMessages() }) {
                             Icon(
                                 Icons.Default.Close,
-                                contentDescription = "Dismiss",
+                                contentDescription = t(UiTextKey.AccessibilityDismiss),
                                 tint = MaterialTheme.colorScheme.onErrorContainer
                             )
                         }
@@ -196,11 +248,37 @@ fun SharedInboxScreen(
                 }
             }
         }
+        }
+    }
+}
+
+/**
+ * Formats a Firebase Timestamp into a readable relative date string.
+ */
+private fun formatTimestamp(timestamp: com.google.firebase.Timestamp): String {
+    val date = timestamp.toDate()
+    val now = Calendar.getInstance()
+    val target = Calendar.getInstance().apply { time = date }
+
+    return when {
+        // Today
+        now.get(Calendar.YEAR) == target.get(Calendar.YEAR) &&
+        now.get(Calendar.DAY_OF_YEAR) == target.get(Calendar.DAY_OF_YEAR) -> {
+            SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
+        }
+        // This year
+        now.get(Calendar.YEAR) == target.get(Calendar.YEAR) -> {
+            SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(date)
+        }
+        // Older
+        else -> {
+            SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(date)
+        }
     }
 }
 
 @Composable
-fun SharedItemCard(
+private fun SharedItemCard(
     item: SharedItem,
     t: (UiTextKey) -> String,
     isNew: Boolean = false,
@@ -279,7 +357,7 @@ fun SharedItemCard(
                                 SharedItemType.LEARNING_SHEET -> Icons.AutoMirrored.Filled.Article
                                 SharedItemType.QUIZ -> Icons.Default.Quiz
                             },
-                            contentDescription = null,
+                            contentDescription = t(UiTextKey.AccessibilitySharedItemTypeIcon),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -295,7 +373,7 @@ fun SharedItemCard(
                 }
 
                 Text(
-                    formatTimestamp(item.createdAt.toDate()),
+                    formatTimestamp(item.createdAt),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -376,7 +454,7 @@ fun SharedItemCard(
                             enabled = !isProcessing,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Close, contentDescription = t(UiTextKey.ShareDismissButton), modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
                             Text(t(UiTextKey.ShareDismissButton))
                         }
@@ -385,7 +463,7 @@ fun SharedItemCard(
                             enabled = !isProcessing,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Check, contentDescription = t(UiTextKey.ShareAcceptButton), modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
                             Text(t(UiTextKey.ShareAcceptButton))
                         }
@@ -402,7 +480,7 @@ fun SharedItemCard(
                             enabled = !isProcessing,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Visibility, contentDescription = t(UiTextKey.ShareViewButton), modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
                             Text(t(UiTextKey.ShareViewButton))
                         }
@@ -415,7 +493,7 @@ fun SharedItemCard(
                                 contentColor = MaterialTheme.colorScheme.onError
                             )
                         ) {
-                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Delete, contentDescription = t(UiTextKey.ShareDeleteButton), modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
                             Text(t(UiTextKey.ShareDeleteButton))
                         }
@@ -426,24 +504,3 @@ fun SharedItemCard(
     }
 }
 
-
-private fun formatTimestamp(date: Date): String {
-    val now = Calendar.getInstance()
-    val target = Calendar.getInstance().apply { time = date }
-    
-    return when {
-        // Today
-        now.get(Calendar.YEAR) == target.get(Calendar.YEAR) &&
-        now.get(Calendar.DAY_OF_YEAR) == target.get(Calendar.DAY_OF_YEAR) -> {
-            SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
-        }
-        // This year
-        now.get(Calendar.YEAR) == target.get(Calendar.YEAR) -> {
-            SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(date)
-        }
-        // Older
-        else -> {
-            SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(date)
-        }
-    }
-}

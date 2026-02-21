@@ -168,6 +168,8 @@ class FirestoreChatRepository @Inject constructor(
             // User-level aggregated counter for notification badge (avoids scanning all chats)
             val receiverDocRef = db.collection("users").document(toUserId.value)
             batch.update(receiverDocRef, "totalUnreadMessages", FieldValue.increment(1))
+            // Per-friend unread map: enables single-document listener instead of N chat listeners
+            batch.update(receiverDocRef, "unreadPerFriend.${fromUserId.value}", FieldValue.increment(1))
 
             batch.commit().await()
         } catch (e: Exception) {
@@ -212,10 +214,15 @@ class FirestoreChatRepository @Inject constructor(
             // Reset per-chat counter
             batch.update(metaRef, "unreadCount.${userId.value}", 0)
             // Decrement user-level counter (floor at 0)
-            batch.update(
-                db.collection("users").document(userId.value),
-                "totalUnreadMessages", FieldValue.increment(-chatUnread.toLong())
-            )
+            val userDocRef = db.collection("users").document(userId.value)
+            batch.update(userDocRef, "totalUnreadMessages", FieldValue.increment(-chatUnread.toLong()))
+            // Determine the friend's ID from participants
+            val participants = metaDoc.get("participants") as? List<*>
+            val friendId = participants?.firstOrNull { it != userId.value }?.toString()
+            if (friendId != null) {
+                // Clear per-friend unread entry so the red dot disappears
+                batch.update(userDocRef, "unreadPerFriend.$friendId", 0)
+            }
             batch.commit().await()
         }
 
@@ -318,7 +325,71 @@ class FirestoreChatRepository @Inject constructor(
         awaitClose { listener.remove() }
     }
 
+    /**
+     * Observe per-friend unread counts from the single user document.
+     * Returns map of friendId -> unread count. Much more efficient than
+     * one listener per chat (medium priority #5).
+     */
+    @Suppress("UNCHECKED_CAST")
+    override fun observeUnreadPerFriend(userId: UserId): Flow<Map<String, Int>> = callbackFlow {
+        val listener = db.collection("users")
+            .document(userId.value)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) { trySend(emptyMap()); return@addSnapshotListener }
+                val raw = snapshot?.get("unreadPerFriend") as? Map<String, Any> ?: emptyMap()
+                val mapped = raw.mapValues { (_, v) -> (v as? Number)?.toInt()?.coerceAtLeast(0) ?: 0 }
+                    .filter { it.value > 0 }
+                trySend(mapped)
+            }
+        awaitClose { listener.remove() }
+    }
+
     // ── User chat list ───────────────────────────────────────────────────────
 
     override suspend fun getUserChats(userId: UserId): List<ChatMetadata> = emptyList()
+
+    // ── Delete chat conversation ─────────────────────────────────────────────
+
+    /**
+     * Delete entire chat conversation including all messages and metadata.
+     * Used when unfriending. Uses batched deletes for efficiency.
+     *
+     * NOTE: Firestore batch writes have a limit of 500 operations per batch.
+     * For large conversations, this may need to be called multiple times.
+     */
+    override suspend fun deleteChatConversation(chatId: String): Result<Unit> = try {
+        // Delete all messages in batches (max 500 per batch)
+        var deletedCount: Int
+        do {
+            deletedCount = 0
+            val batch = db.batch()
+
+            // Get up to 500 messages
+            val messagesSnapshot = db.collection("chats")
+                .document(chatId)
+                .collection("messages")
+                .limit(500)
+                .get()
+                .await()
+
+            messagesSnapshot.documents.forEach { doc ->
+                batch.delete(doc.reference)
+                deletedCount++
+            }
+
+            if (deletedCount > 0) {
+                batch.commit().await()
+            }
+        } while (deletedCount >= 500) // Continue if we hit the batch limit
+
+        // Delete chat metadata document
+        db.collection("chat_metadata")
+            .document(chatId)
+            .delete()
+            .await()
+
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }
