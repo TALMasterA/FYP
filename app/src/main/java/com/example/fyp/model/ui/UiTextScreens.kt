@@ -1270,12 +1270,32 @@ val ScreenUiTexts: List<String> = listOf(
     // ShareInboxInfoMessage
     "• Pull down to manually refresh your shared inbox.\n" +
     "• Shared items from friends appear here.\n" +
-    "• Words can be accepted into your word bank.\n" +
-    "• Learning sheets and quizzes can be viewed in detail.\n" +
+    "• Words can be accepted into your word bank or dismissed.\n" +
+    "• Learning sheets and quizzes can be viewed in detail by tapping View.\n" +
     "• A red dot (●) indicates new/unread items.\n" +
-    "• Swipe or use buttons to accept, dismiss, or delete items.",
+    "• Dismissing a shared word will ask for confirmation before removing it.",
     // ShareInboxInfoGotItButton
     "Got it",
+
+    // --- Profile Visibility ---
+    // MyProfileVisibilityLabel
+    "Profile Visibility",
+    // MyProfileVisibilityPublic
+    "Public",
+    // MyProfileVisibilityPrivate
+    "Private",
+    // MyProfileVisibilityDescription
+    "Public: anyone can search and add you as a friend.\nPrivate: you cannot be found via search.",
+
+    // --- Shared Word Dismiss Confirm ---
+    // ShareDismissWordTitle
+    "Dismiss Word",
+    // ShareDismissWordMessage
+    "Are you sure you want to dismiss this shared word? This action cannot be undone.",
+
+    // --- Shared Inbox Learning Sheet Language Label ---
+    // ShareLearningSheetLanguageLabel
+    "Language: {language}",
 
     // --- Accessibility Strings ---
     // AccessibilityDismiss

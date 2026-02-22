@@ -2,6 +2,7 @@ package com.example.fyp.screens.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.GetCurrentUserProfileUseCase
@@ -21,14 +22,16 @@ data class MyProfileUiState(
     val profile: PublicUserProfile? = null,
     val userId: String = "",
     val error: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val isUpdatingVisibility: Boolean = false
 )
 
 @HiltViewModel
 class MyProfileViewModel @Inject constructor(
     private val authRepository: FirebaseAuthRepository,
     private val getCurrentUserProfileUseCase: GetCurrentUserProfileUseCase,
-    private val sharedFriendsDataSource: SharedFriendsDataSource
+    private val sharedFriendsDataSource: SharedFriendsDataSource,
+    private val friendsRepository: FriendsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MyProfileUiState())
@@ -61,17 +64,32 @@ class MyProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val profile = getCurrentUserProfileUseCase(UserId(userId))
+                var profile = getCurrentUserProfileUseCase(UserId(userId))
+                // Auto-create profile if it doesn't exist
+                if (profile == null) {
+                    val newProfile = PublicUserProfile(
+                        uid = userId,
+                        username = "",
+                        displayName = "",
+                        avatarUrl = "",
+                        primaryLanguage = "",
+                        learningLanguages = emptyList(),
+                        isDiscoverable = true,
+                        createdAt = com.google.firebase.Timestamp.now(),
+                        lastActiveAt = com.google.firebase.Timestamp.now()
+                    )
+                    friendsRepository.createOrUpdatePublicProfile(UserId(userId), newProfile)
+                    profile = newProfile
+                }
                 // Cache own username so share operations don't need a Firestore profile read
-                if (profile?.username?.isNotBlank() == true) {
+                if (profile.username.isNotBlank()) {
                     sharedFriendsDataSource.cacheOwnUsername(userId, profile.username)
                 }
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         profile = profile,
-                        // Show profile not found gracefully (not a crash - just informational)
-                        error = if (profile == null) "Profile not found. Please set a username in Settings > Profile." else null
+                        error = null
                     )
                 }
             } catch (e: Exception) {
@@ -87,6 +105,29 @@ class MyProfileViewModel @Inject constructor(
         viewModelScope.launch {
             kotlinx.coroutines.delay(3000)
             _uiState.update { it.copy(successMessage = null) }
+        }
+    }
+
+    fun updateVisibility(isPublic: Boolean) {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUpdatingVisibility = true) }
+            friendsRepository.updatePublicProfile(
+                UserId(userId),
+                mapOf("isDiscoverable" to isPublic)
+            ).onSuccess {
+                _uiState.update {
+                    it.copy(
+                        isUpdatingVisibility = false,
+                        profile = it.profile?.copy(isDiscoverable = isPublic)
+                    )
+                }
+                showSuccessMessage(if (isPublic) "Profile set to Public" else "Profile set to Private")
+            }.onFailure { e ->
+                _uiState.update {
+                    it.copy(isUpdatingVisibility = false, error = e.message ?: "Failed to update visibility")
+                }
+            }
         }
     }
 

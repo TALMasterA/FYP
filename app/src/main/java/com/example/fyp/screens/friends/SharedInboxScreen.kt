@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.data.azure.LanguageDisplayNames
 import com.example.fyp.model.friends.SharedItem
 import com.example.fyp.model.friends.SharedItemType
 import com.example.fyp.model.ui.AppLanguageState
@@ -289,6 +290,7 @@ private fun SharedItemCard(
     isProcessing: Boolean
 ) {
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showDismissConfirmDialog by remember { mutableStateOf(false) }
 
     // Delete confirmation dialog for learning materials
     if (showDeleteConfirmDialog) {
@@ -315,6 +317,37 @@ private fun SharedItemCard(
             },
             dismissButton = {
                 OutlinedButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text(t(UiTextKey.FriendsCancelButton))
+                }
+            }
+        )
+    }
+
+    // Dismiss confirmation dialog for shared words
+    if (showDismissConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showDismissConfirmDialog = false },
+            title = { Text(t(UiTextKey.ShareDismissWordTitle)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(t(UiTextKey.ShareDismissWordMessage))
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDismissConfirmDialog = false
+                        onDismiss()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(t(UiTextKey.ShareDismissButton))
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showDismissConfirmDialog = false }) {
                     Text(t(UiTextKey.FriendsCancelButton))
                 }
             }
@@ -414,6 +447,17 @@ private fun SharedItemCard(
                 }
                 SharedItemType.LEARNING_SHEET, SharedItemType.QUIZ -> {
                     val content = item.content
+                    // Parse language codes from title (format: "Learning Sheet: en-US → zh-CN")
+                    val rawTitle = content["title"] as? String ?: ""
+                    val arrow = rawTitle.indexOf(" → ")
+                    val langDisplay = if (arrow != -1) {
+                        val colonIdx = rawTitle.indexOf(": ")
+                        val srcCode = if (colonIdx != -1) rawTitle.substring(colonIdx + 2, arrow).trim() else ""
+                        val tgtCode = rawTitle.substring(arrow + 3).trim()
+                        val srcName = if (srcCode.isNotBlank()) LanguageDisplayNames.displayName(srcCode) else srcCode
+                        val tgtName = if (tgtCode.isNotBlank()) LanguageDisplayNames.displayName(tgtCode) else tgtCode
+                        if (srcName.isNotBlank() && tgtName.isNotBlank()) "$srcName → $tgtName" else rawTitle
+                    } else rawTitle
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -421,18 +465,10 @@ private fun SharedItemCard(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            content["title"] as? String ?: "",
+                            langDisplay,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold
                         )
-                        val description = content["description"] as? String
-                        if (!description.isNullOrBlank()) {
-                            Text(
-                                description,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
                         Text(
                             t(UiTextKey.ShareViewFullMaterial),
                             style = MaterialTheme.typography.labelSmall,
@@ -450,7 +486,7 @@ private fun SharedItemCard(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(
-                            onClick = onDismiss,
+                            onClick = { showDismissConfirmDialog = true },
                             enabled = !isProcessing,
                             modifier = Modifier.weight(1f)
                         ) {

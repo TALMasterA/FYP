@@ -107,6 +107,85 @@ fun SystemNotesScreen(
                 }
             }
 
+            // Friend System Info
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Friend System",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "• Search and add friends by username or User ID\n" +
+                                "• Send, accept, or reject friend requests\n" +
+                                "• Real-time chat with friends and translate conversations\n" +
+                                "• Share words and learning materials with friends\n" +
+                                "• Shared Inbox to receive and manage items from friends\n" +
+                                "• A red dot (●) on friend cards or inbox indicates unread messages or new items\n" +
+                                "• Pull down to refresh friend list and requests",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            // Profile Visibility Info
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Profile Visibility",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "• You can set your profile to Public or Private in My Profile settings\n" +
+                                "• Public: any user can search for you and send a friend request\n" +
+                                "• Private: your profile will not appear in search results\n" +
+                                "• You can still add friends by sharing your User ID even when set to Private",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            // Shared Inbox Info
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Shared Inbox",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "• Shared words can be accepted into your word bank or dismissed\n" +
+                                "• Dismissing a shared word requires confirmation\n" +
+                                "• Shared learning sheets show the language name (not the code)\n" +
+                                "• Tap View to see the full content of shared learning materials\n" +
+                                "• A red dot (●) on the inbox icon indicates new items",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
             // Feature Notes
             Card(
                 colors = CardDefaults.cardColors(
@@ -127,7 +206,9 @@ fun SystemNotesScreen(
                                 "• History is limited to 50-100 records (expandable with coins)\n" +
                                 "• Auto sign-out occurs on app version updates for security\n" +
                                 "• Offline mode available for cached data\n" +
-                                "• All translations are powered by Azure AI services",
+                                "• All translations are powered by Azure AI services\n" +
+                                "• Usernames must be unique across all users\n" +
+                                "• Changing your username releases the old name for others to use",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -153,7 +234,8 @@ fun SystemNotesScreen(
                         text = "• Audio is only captured for recognition, never stored\n" +
                                 "• All data synced securely via Firebase\n" +
                                 "• OCR processing happens on-device (privacy-first)\n" +
-                                "• You can delete your account and all data anytime",
+                                "• You can delete your account and all data anytime\n" +
+                                "• Set your profile to Private to prevent others from finding you via search",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

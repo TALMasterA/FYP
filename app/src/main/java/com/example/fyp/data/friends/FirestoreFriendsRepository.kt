@@ -122,11 +122,24 @@ class FirestoreFriendsRepository @Inject constructor(
                 return Result.failure(IllegalArgumentException("Username already taken"))
             }
 
-            // Set username
+            // Look up the user's current username from their profile to release it
+            val currentProfile = getPublicProfile(userId)
+            val oldUsername = currentProfile?.username?.takeIf { it.isNotBlank() && it != username.value }
+
+            // Set new username
             usernameDoc.set(mapOf(
                 "userId" to userId.value,
                 "createdAt" to Timestamp.now()
             )).await()
+
+            // Release old username so others can use it
+            if (oldUsername != null) {
+                try {
+                    db.collection("usernames").document(oldUsername).delete().await()
+                } catch (_: Exception) {
+                    // Non-critical: old name cleanup failed, but new name is set
+                }
+            }
 
             Result.success(Unit)
         } catch (e: Exception) {
