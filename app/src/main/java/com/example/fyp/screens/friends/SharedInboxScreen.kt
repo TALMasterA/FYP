@@ -452,8 +452,8 @@ private fun SharedItemCard(
                     val arrow = rawTitle.indexOf(" → ")
                     val langDisplay = if (arrow != -1) {
                         val colonIdx = rawTitle.indexOf(": ")
-                        val srcCode = if (colonIdx != -1) rawTitle.substring(colonIdx + 2, arrow).trim() else ""
-                        val tgtCode = rawTitle.substring(arrow + 3).trim()
+                        val srcCode = if (colonIdx != -1 && colonIdx + 2 < arrow) rawTitle.substring(colonIdx + 2, arrow).trim() else ""
+                        val tgtCode = if (arrow + 3 <= rawTitle.length) rawTitle.substring(arrow + 3).trim() else ""
                         val srcName = if (srcCode.isNotBlank()) LanguageDisplayNames.displayName(srcCode) else srcCode
                         val tgtName = if (tgtCode.isNotBlank()) LanguageDisplayNames.displayName(tgtCode) else tgtCode
                         if (srcName.isNotBlank() && tgtName.isNotBlank()) "$srcName → $tgtName" else rawTitle

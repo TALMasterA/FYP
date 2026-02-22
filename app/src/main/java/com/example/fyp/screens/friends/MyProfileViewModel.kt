@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.domain.friends.EnsurePublicProfileExistsUseCase
 import com.example.fyp.domain.friends.GetCurrentUserProfileUseCase
 import com.example.fyp.model.UserId
 import com.example.fyp.model.user.AuthState
@@ -31,7 +32,8 @@ class MyProfileViewModel @Inject constructor(
     private val authRepository: FirebaseAuthRepository,
     private val getCurrentUserProfileUseCase: GetCurrentUserProfileUseCase,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
-    private val friendsRepository: FriendsRepository
+    private val friendsRepository: FriendsRepository,
+    private val ensurePublicProfileExistsUseCase: EnsurePublicProfileExistsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MyProfileUiState())
@@ -67,22 +69,11 @@ class MyProfileViewModel @Inject constructor(
                 var profile = getCurrentUserProfileUseCase(UserId(userId))
                 // Auto-create profile if it doesn't exist
                 if (profile == null) {
-                    val newProfile = PublicUserProfile(
-                        uid = userId,
-                        username = "",
-                        displayName = "",
-                        avatarUrl = "",
-                        primaryLanguage = "",
-                        learningLanguages = emptyList(),
-                        isDiscoverable = true,
-                        createdAt = com.google.firebase.Timestamp.now(),
-                        lastActiveAt = com.google.firebase.Timestamp.now()
-                    )
-                    friendsRepository.createOrUpdatePublicProfile(UserId(userId), newProfile)
-                    profile = newProfile
+                    ensurePublicProfileExistsUseCase(userId)
+                    profile = getCurrentUserProfileUseCase(UserId(userId))
                 }
                 // Cache own username so share operations don't need a Firestore profile read
-                if (profile.username.isNotBlank()) {
+                if (profile?.username?.isNotBlank() == true) {
                     sharedFriendsDataSource.cacheOwnUsername(userId, profile.username)
                 }
                 _uiState.update {
