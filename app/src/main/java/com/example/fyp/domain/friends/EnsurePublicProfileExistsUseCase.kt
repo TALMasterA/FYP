@@ -48,6 +48,9 @@ class EnsurePublicProfileExistsUseCase @Inject constructor(
                 lastActiveAt = Timestamp.now()
             )
             friendsRepository.createOrUpdatePublicProfile(uid, newProfile)
+            // Ensure the main user document exists with default unread fields
+            // so chat update() calls don't fail with NOT_FOUND for new users.
+            friendsRepository.ensureUserDocumentExists(uid)
         } else {
             // Only write if the primary language actually changed – avoids a write on
             // every login when the user hasn't switched languages.

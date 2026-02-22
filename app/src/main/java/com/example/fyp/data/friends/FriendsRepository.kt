@@ -127,4 +127,11 @@ interface FriendsRepository {
      * Check if two users are friends.
      */
     suspend fun areFriends(userId: UserId, otherUserId: UserId): Boolean
+
+    /**
+     * Ensure the main user document (/users/{userId}) exists with default
+     * unread counter fields so that update() calls from chat operations
+     * don't fail with NOT_FOUND errors.
+     */
+    suspend fun ensureUserDocumentExists(userId: UserId)
 }

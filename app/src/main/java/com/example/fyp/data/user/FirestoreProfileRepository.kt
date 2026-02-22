@@ -87,12 +87,31 @@ class FirestoreProfileRepository @Inject constructor(
         deleteCollection(userId, "coin_awards")
         deleteCollection(userId, "last_awarded_quiz")
         deleteCollection(userId, "user_stats")
+        // Friends-related subcollections
+        deleteCollection(userId, "friends")
+        deleteCollection(userId, "shared_inbox")
 
-        // Delete profile subcollection
+        // Delete profile subcollection (includes public profile)
         db.collection("users").document(userId)
             .collection("profile").document("settings").delete().await()
         db.collection("users").document(userId)
             .collection("profile").document("info").delete().await()
+        db.collection("users").document(userId)
+            .collection("profile").document("public").delete().await()
+
+        // Delete username registry entry (best-effort)
+        try {
+            val usernameQuery = db.collection("usernames")
+                .whereEqualTo("userId", userId)
+                .limit(1)
+                .get().await()
+            usernameQuery.documents.forEach { it.reference.delete().await() }
+        } catch (_: Exception) { /* best-effort */ }
+
+        // Delete user_search index entry (best-effort)
+        try {
+            db.collection("user_search").document(userId).delete().await()
+        } catch (_: Exception) { /* best-effort */ }
 
         // Delete user document
         db.collection("users").document(userId).delete().await()
