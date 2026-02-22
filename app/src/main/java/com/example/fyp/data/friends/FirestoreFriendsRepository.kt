@@ -498,4 +498,26 @@ class FirestoreFriendsRepository @Inject constructor(
     } catch (e: Exception) {
         false
     }
+
+    /**
+     * Ensure the main user document exists with default unread counter fields.
+     * Uses set-merge so existing fields are never overwritten.
+     * Called during profile initialization so subsequent update() calls
+     * (from chat operations) don't fail with NOT_FOUND.
+     */
+    override suspend fun ensureUserDocumentExists(userId: UserId) {
+        try {
+            db.collection("users").document(userId.value)
+                .set(
+                    mapOf(
+                        "totalUnreadMessages" to 0,
+                        "unreadPerFriend" to emptyMap<String, Any>()
+                    ),
+                    com.google.firebase.firestore.SetOptions.merge()
+                )
+                .await()
+        } catch (e: Exception) {
+            android.util.Log.e("FriendsRepository", "Failed to ensure user doc exists", e)
+        }
+    }
 }

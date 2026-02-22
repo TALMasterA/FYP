@@ -138,6 +138,14 @@ class FirestoreChatRepository @Inject constructor(
      * the user-level totalUnreadMessages counter atomically, replacing two
      * separate writes from the previous implementation.
      */
+    /**
+     * Update chat metadata and user-level unread counters after a message is sent.
+     *
+     * Uses update() with DOT-NOTATION field paths for nested map fields to avoid
+     * overwriting sibling entries in `unreadCount` and `unreadPerFriend`.
+     * Falls back to set-merge for document creation (first message in a chat,
+     * or user document not yet initialized).
+     */
     private suspend fun updateChatMetadata(
         chatId: String,
         fromUserId: UserId,
@@ -146,43 +154,57 @@ class FirestoreChatRepository @Inject constructor(
     ) {
         try {
             val now = Timestamp.now()
-            val batch = db.batch()
 
-            // Per-chat metadata (used by ChatScreen)
-            // Use proper nested structure instead of dot notation for better security rules compatibility
+            // ── 1. Per-chat metadata ──
             val metaRef = db.collection("chats")
                 .document(chatId)
                 .collection("metadata")
                 .document("info")
-            batch.set(
-                metaRef,
-                mapOf(
-                    "chatId" to chatId,
-                    "participants" to listOf(fromUserId.value, toUserId.value),
-                    "lastMessageContent" to lastMessageContent,
-                    "lastMessageAt" to now,
-                    "unreadCount" to mapOf(
-                        toUserId.value to FieldValue.increment(1)
+            try {
+                // update() uses dot-notation: only touches the specific nested key
+                metaRef.update(
+                    mapOf(
+                        "chatId" to chatId,
+                        "participants" to listOf(fromUserId.value, toUserId.value),
+                        "lastMessageContent" to lastMessageContent,
+                        "lastMessageAt" to now,
+                        "unreadCount.${toUserId.value}" to FieldValue.increment(1)
                     )
-                ),
-                com.google.firebase.firestore.SetOptions.merge()
-            )
+                ).await()
+            } catch (_: Exception) {
+                // Document doesn't exist yet (first message) — create it
+                metaRef.set(
+                    mapOf(
+                        "chatId" to chatId,
+                        "participants" to listOf(fromUserId.value, toUserId.value),
+                        "lastMessageContent" to lastMessageContent,
+                        "lastMessageAt" to now,
+                        "unreadCount" to mapOf(toUserId.value to 1)
+                    )
+                ).await()
+            }
 
-            // User-level aggregated counter for notification badge (avoids scanning all chats)
-            // Use proper nested structure instead of dot notation
+            // ── 2. User-level unread counters (notification badge) ──
             val receiverDocRef = db.collection("users").document(toUserId.value)
-            batch.set(
-                receiverDocRef,
-                mapOf(
-                    "totalUnreadMessages" to FieldValue.increment(1),
-                    "unreadPerFriend" to mapOf(
-                        fromUserId.value to FieldValue.increment(1)
+            try {
+                // update() with dot-notation preserves other friends' counts
+                receiverDocRef.update(
+                    mapOf(
+                        "totalUnreadMessages" to FieldValue.increment(1),
+                        "unreadPerFriend.${fromUserId.value}" to FieldValue.increment(1)
                     )
-                ),
-                com.google.firebase.firestore.SetOptions.merge()
-            )
+                ).await()
+            } catch (_: Exception) {
+                // User document doesn't exist — create with initial counters
+                receiverDocRef.set(
+                    mapOf(
+                        "totalUnreadMessages" to 1,
+                        "unreadPerFriend" to mapOf(fromUserId.value to 1)
+                    ),
+                    com.google.firebase.firestore.SetOptions.merge()
+                ).await()
+            }
 
-            batch.commit().await()
             android.util.Log.d("ChatRepository", "Updated chat metadata: chatId=$chatId, receiver=${toUserId.value}, sender=${fromUserId.value}")
         } catch (e: Exception) {
             android.util.Log.e("ChatRepository", "Failed to update chat metadata", e)
@@ -209,6 +231,9 @@ class FirestoreChatRepository @Inject constructor(
      * Instead, reads the per-chat unread counter (1 read), resets it to 0 (1 write),
      * and decrements the user-level total counter by the same amount (1 write).
      * Previous cost: N+2 operations. New cost: 3 operations.
+     *
+     * Uses update() with DOT-NOTATION field paths for nested maps to avoid
+     * overwriting sibling entries (e.g., other friends' unread counts).
      */
     override suspend fun markAllMessagesAsRead(chatId: String, userId: UserId): Result<Unit> = try {
         val metaRef = db.collection("chats")
@@ -226,31 +251,24 @@ class FirestoreChatRepository @Inject constructor(
 
         if (chatUnread > 0) {
             val batch = db.batch()
-            // Reset per-chat counter using nested structure instead of dot notation
-            batch.set(
-                metaRef,
-                mapOf("unreadCount" to mapOf(userId.value to 0)),
-                com.google.firebase.firestore.SetOptions.merge()
-            )
-            // Decrement user-level counter (floor at 0) using set-merge for safety
+            // Reset per-chat counter using DOT-NOTATION to preserve other user's count
+            batch.update(metaRef, "unreadCount.${userId.value}", 0)
+
+            // Decrement user-level counter and clear per-friend unread entry
             val userDocRef = db.collection("users").document(userId.value)
-            batch.set(
-                userDocRef,
-                mapOf("totalUnreadMessages" to FieldValue.increment(-chatUnread.toLong())),
-                com.google.firebase.firestore.SetOptions.merge()
-            )
-            // Determine the friend's ID from participants
             val participants = metaDoc.get("participants") as? List<*>
             val friendId = participants?.firstOrNull { it != userId.value }?.toString()
+
+            val userUpdates = mutableMapOf<String, Any>(
+                "totalUnreadMessages" to FieldValue.increment(-chatUnread.toLong())
+            )
             if (friendId != null) {
-                // Clear per-friend unread entry using nested structure instead of dot notation
-                batch.set(
-                    userDocRef,
-                    mapOf("unreadPerFriend" to mapOf(friendId to 0)),
-                    com.google.firebase.firestore.SetOptions.merge()
-                )
+                // DOT-NOTATION: only clears this friend's entry, preserves others
+                userUpdates["unreadPerFriend.$friendId"] = 0
                 android.util.Log.d("ChatRepository", "Clearing unread for friend: $friendId")
             }
+            batch.update(userDocRef, userUpdates)
+
             batch.commit().await()
             android.util.Log.d("ChatRepository", "Messages marked as read successfully")
         }
