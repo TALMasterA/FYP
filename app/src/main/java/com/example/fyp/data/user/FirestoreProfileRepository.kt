@@ -106,12 +106,16 @@ class FirestoreProfileRepository @Inject constructor(
                 .limit(1)
                 .get().await()
             usernameQuery.documents.forEach { it.reference.delete().await() }
-        } catch (_: Exception) { /* best-effort */ }
+        } catch (e: Exception) {
+            android.util.Log.d("ProfileRepo", "Username cleanup failed (best-effort)", e)
+        }
 
         // Delete user_search index entry (best-effort)
         try {
             db.collection("user_search").document(userId).delete().await()
-        } catch (_: Exception) { /* best-effort */ }
+        } catch (e: Exception) {
+            android.util.Log.d("ProfileRepo", "User search cleanup failed (best-effort)", e)
+        }
 
         // Delete user document
         db.collection("users").document(userId).delete().await()

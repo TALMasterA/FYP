@@ -171,8 +171,9 @@ class FirestoreChatRepository @Inject constructor(
                         "unreadCount.${toUserId.value}" to FieldValue.increment(1)
                     )
                 ).await()
-            } catch (_: Exception) {
-                // Document doesn't exist yet (first message) — create it
+            } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                // NOT_FOUND: Document doesn't exist yet (first message) — create it
+                android.util.Log.d("ChatRepository", "Chat metadata not found, creating: chatId=$chatId (${e.code})")
                 metaRef.set(
                     mapOf(
                         "chatId" to chatId,
@@ -194,8 +195,9 @@ class FirestoreChatRepository @Inject constructor(
                         "unreadPerFriend.${fromUserId.value}" to FieldValue.increment(1)
                     )
                 ).await()
-            } catch (_: Exception) {
-                // User document doesn't exist — create with initial counters
+            } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
+                // NOT_FOUND: User document doesn't exist — create with initial counters
+                android.util.Log.d("ChatRepository", "User doc not found, creating for receiver=${toUserId.value} (${e.code})")
                 receiverDocRef.set(
                     mapOf(
                         "totalUnreadMessages" to 1,
