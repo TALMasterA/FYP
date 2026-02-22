@@ -166,13 +166,14 @@ class FirestoreChatRepository @Inject constructor(
             )
 
             // User-level aggregated counter for notification badge (avoids scanning all chats)
-            // Use set-merge instead of update so fields are created if they don't exist yet
+            // Use set-merge with dot-notation paths so fields are created if they don't exist yet,
+            // while only updating the specific friend's counter (not overwriting the whole map).
             val receiverDocRef = db.collection("users").document(toUserId.value)
             batch.set(
                 receiverDocRef,
                 mapOf(
                     "totalUnreadMessages" to FieldValue.increment(1),
-                    "unreadPerFriend" to mapOf(fromUserId.value to FieldValue.increment(1))
+                    "unreadPerFriend.${fromUserId.value}" to FieldValue.increment(1)
                 ),
                 com.google.firebase.firestore.SetOptions.merge()
             )
@@ -217,8 +218,8 @@ class FirestoreChatRepository @Inject constructor(
 
         if (chatUnread > 0) {
             val batch = db.batch()
-            // Reset per-chat counter
-            batch.set(metaRef, mapOf("unreadCount" to mapOf(userId.value to 0)), com.google.firebase.firestore.SetOptions.merge())
+            // Reset per-chat counter using dot notation to only clear this user's count
+            batch.set(metaRef, mapOf("unreadCount.${userId.value}" to 0), com.google.firebase.firestore.SetOptions.merge())
             // Decrement user-level counter (floor at 0) using set-merge for safety
             val userDocRef = db.collection("users").document(userId.value)
             batch.set(
@@ -230,10 +231,10 @@ class FirestoreChatRepository @Inject constructor(
             val participants = metaDoc.get("participants") as? List<*>
             val friendId = participants?.firstOrNull { it != userId.value }?.toString()
             if (friendId != null) {
-                // Clear per-friend unread entry so the red dot disappears
+                // Clear per-friend unread entry using dot notation to only clear this friend
                 batch.set(
                     userDocRef,
-                    mapOf("unreadPerFriend" to mapOf(friendId to 0)),
+                    mapOf("unreadPerFriend.$friendId" to 0),
                     com.google.firebase.firestore.SetOptions.merge()
                 )
             }
