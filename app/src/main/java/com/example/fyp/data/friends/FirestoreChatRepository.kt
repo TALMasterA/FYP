@@ -252,24 +252,40 @@ class FirestoreChatRepository @Inject constructor(
         android.util.Log.d("ChatRepository", "Marking messages as read: chatId=$chatId, userId=${userId.value}, unreadCount=$chatUnread")
 
         if (chatUnread > 0) {
+            // Read user document to get current totalUnreadMessages
+            val userDocRef = db.collection("users").document(userId.value)
+            val userDoc = userDocRef.get().await()
+            val currentTotal = (userDoc.getLong("totalUnreadMessages") ?: 0L).toInt()
+
+            // Calculate new total, ensuring it never goes negative
+            val newTotal = (currentTotal - chatUnread).coerceAtLeast(0)
+
+            val participants = metaDoc.get("participants") as? List<*>
+            val friendId = participants?.firstOrNull { it != userId.value }?.toString()
+
+            android.util.Log.d("ChatRepository", "Marking read: chatUnread=$chatUnread, currentTotal=$currentTotal, newTotal=$newTotal, friendId=$friendId, docExists=${userDoc.exists()}")
+
             val batch = db.batch()
             // Reset per-chat counter using DOT-NOTATION to preserve other user's count
             batch.update(metaRef, "unreadCount.${userId.value}", 0)
 
-            // Decrement user-level counter and clear per-friend unread entry
-            val userDocRef = db.collection("users").document(userId.value)
-            val participants = metaDoc.get("participants") as? List<*>
-            val friendId = participants?.firstOrNull { it != userId.value }?.toString()
-
+            // Update user-level counter and clear per-friend unread entry
             val userUpdates = mutableMapOf<String, Any>(
-                "totalUnreadMessages" to FieldValue.increment(-chatUnread.toLong())
+                "totalUnreadMessages" to newTotal
             )
             if (friendId != null) {
-                // DOT-NOTATION: only clears this friend's entry, preserves others
-                userUpdates["unreadPerFriend.$friendId"] = 0
+                // DOT-NOTATION: delete this friend's entry to trigger listener update, preserves others
+                userUpdates["unreadPerFriend.$friendId"] = FieldValue.delete()
                 android.util.Log.d("ChatRepository", "Clearing unread for friend: $friendId")
             }
-            batch.update(userDocRef, userUpdates)
+
+            // Use set with merge if document doesn't exist, otherwise update
+            if (userDoc.exists()) {
+                batch.update(userDocRef, userUpdates)
+            } else {
+                // Document doesn't exist yet - create it with set/merge
+                batch.set(userDocRef, userUpdates, com.google.firebase.firestore.SetOptions.merge())
+            }
 
             batch.commit().await()
             android.util.Log.d("ChatRepository", "Messages marked as read successfully")
