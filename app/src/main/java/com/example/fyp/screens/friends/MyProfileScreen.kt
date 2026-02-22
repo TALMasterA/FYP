@@ -216,6 +216,59 @@ fun MyProfileScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(t(UiTextKey.MyProfileShare))
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Profile Visibility Setting
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = t(UiTextKey.MyProfileVisibilityLabel),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = t(UiTextKey.MyProfileVisibilityDescription),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FilterChip(
+                                selected = profile.isDiscoverable,
+                                onClick = { if (!profile.isDiscoverable) viewModel.updateVisibility(true) },
+                                label = { Text(t(UiTextKey.MyProfileVisibilityPublic)) },
+                                enabled = !uiState.isUpdatingVisibility,
+                                leadingIcon = if (profile.isDiscoverable) {
+                                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                } else null,
+                                modifier = Modifier.weight(1f)
+                            )
+                            FilterChip(
+                                selected = !profile.isDiscoverable,
+                                onClick = { if (profile.isDiscoverable) viewModel.updateVisibility(false) },
+                                label = { Text(t(UiTextKey.MyProfileVisibilityPrivate)) },
+                                enabled = !uiState.isUpdatingVisibility,
+                                leadingIcon = if (!profile.isDiscoverable) {
+                                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                } else null,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
             }
         }
     }

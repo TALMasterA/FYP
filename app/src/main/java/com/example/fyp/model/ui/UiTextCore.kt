@@ -589,6 +589,19 @@ enum class UiTextKey {
     ShareInboxInfoMessage,
     ShareInboxInfoGotItButton,
 
+    // --- Profile Visibility ---
+    MyProfileVisibilityLabel,
+    MyProfileVisibilityPublic,
+    MyProfileVisibilityPrivate,
+    MyProfileVisibilityDescription,
+
+    // --- Shared Word Dismiss Confirm ---
+    ShareDismissWordTitle,
+    ShareDismissWordMessage,
+
+    // --- Shared Inbox Learning Sheet Language Label ---
+    ShareLearningSheetLanguageLabel,
+
     // --- Accessibility Strings ---
     AccessibilityDismiss,
     AccessibilityAlreadyConnectedOrPending,
