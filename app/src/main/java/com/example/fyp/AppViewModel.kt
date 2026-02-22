@@ -102,6 +102,7 @@ class AppViewModel @Inject constructor(
         unreadJob = viewModelScope.launch {
             try {
                 chatRepository.observeTotalUnreadCount(UserId(userId)).collect { count ->
+                    android.util.Log.d("AppViewModel", "Unread count updated: $count")
                     _hasUnreadMessages.value = count > 0
                 }
             } catch (e: Exception) {

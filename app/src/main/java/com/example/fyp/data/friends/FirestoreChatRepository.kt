@@ -149,6 +149,7 @@ class FirestoreChatRepository @Inject constructor(
             val batch = db.batch()
 
             // Per-chat metadata (used by ChatScreen)
+            // Use proper nested structure instead of dot notation for better security rules compatibility
             val metaRef = db.collection("chats")
                 .document(chatId)
                 .collection("metadata")
@@ -160,26 +161,31 @@ class FirestoreChatRepository @Inject constructor(
                     "participants" to listOf(fromUserId.value, toUserId.value),
                     "lastMessageContent" to lastMessageContent,
                     "lastMessageAt" to now,
-                    "unreadCount.${toUserId.value}" to FieldValue.increment(1)
+                    "unreadCount" to mapOf(
+                        toUserId.value to FieldValue.increment(1)
+                    )
                 ),
                 com.google.firebase.firestore.SetOptions.merge()
             )
 
             // User-level aggregated counter for notification badge (avoids scanning all chats)
-            // Use set-merge with dot-notation paths so fields are created if they don't exist yet,
-            // while only updating the specific friend's counter (not overwriting the whole map).
+            // Use proper nested structure instead of dot notation
             val receiverDocRef = db.collection("users").document(toUserId.value)
             batch.set(
                 receiverDocRef,
                 mapOf(
                     "totalUnreadMessages" to FieldValue.increment(1),
-                    "unreadPerFriend.${fromUserId.value}" to FieldValue.increment(1)
+                    "unreadPerFriend" to mapOf(
+                        fromUserId.value to FieldValue.increment(1)
+                    )
                 ),
                 com.google.firebase.firestore.SetOptions.merge()
             )
 
             batch.commit().await()
+            android.util.Log.d("ChatRepository", "Updated chat metadata: chatId=$chatId, receiver=${toUserId.value}, sender=${fromUserId.value}")
         } catch (e: Exception) {
+            android.util.Log.e("ChatRepository", "Failed to update chat metadata", e)
             // Non-fatal: message is still saved; counter will re-sync on next markRead
         }
     }
@@ -216,10 +222,16 @@ class FirestoreChatRepository @Inject constructor(
         val unreadMap = metaDoc.get("unreadCount") as? Map<String, Any>
         val chatUnread = (unreadMap?.get(userId.value) as? Number)?.toInt() ?: 0
 
+        android.util.Log.d("ChatRepository", "Marking messages as read: chatId=$chatId, userId=${userId.value}, unreadCount=$chatUnread")
+
         if (chatUnread > 0) {
             val batch = db.batch()
-            // Reset per-chat counter using dot notation to only clear this user's count
-            batch.set(metaRef, mapOf("unreadCount.${userId.value}" to 0), com.google.firebase.firestore.SetOptions.merge())
+            // Reset per-chat counter using nested structure instead of dot notation
+            batch.set(
+                metaRef,
+                mapOf("unreadCount" to mapOf(userId.value to 0)),
+                com.google.firebase.firestore.SetOptions.merge()
+            )
             // Decrement user-level counter (floor at 0) using set-merge for safety
             val userDocRef = db.collection("users").document(userId.value)
             batch.set(
@@ -231,18 +243,21 @@ class FirestoreChatRepository @Inject constructor(
             val participants = metaDoc.get("participants") as? List<*>
             val friendId = participants?.firstOrNull { it != userId.value }?.toString()
             if (friendId != null) {
-                // Clear per-friend unread entry using dot notation to only clear this friend
+                // Clear per-friend unread entry using nested structure instead of dot notation
                 batch.set(
                     userDocRef,
-                    mapOf("unreadPerFriend.$friendId" to 0),
+                    mapOf("unreadPerFriend" to mapOf(friendId to 0)),
                     com.google.firebase.firestore.SetOptions.merge()
                 )
+                android.util.Log.d("ChatRepository", "Clearing unread for friend: $friendId")
             }
             batch.commit().await()
+            android.util.Log.d("ChatRepository", "Messages marked as read successfully")
         }
 
         Result.success(Unit)
     } catch (e: Exception) {
+        android.util.Log.e("ChatRepository", "Failed to mark messages as read", e)
         Result.failure(e)
     }
 
@@ -330,14 +345,24 @@ class FirestoreChatRepository @Inject constructor(
      * Fires only when totalUnreadMessages changes — minimal bandwidth.
      */
     override fun observeTotalUnreadCount(userId: UserId): Flow<Int> = callbackFlow {
+        android.util.Log.d("ChatRepository", "Setting up totalUnreadCount listener for user: ${userId.value}")
         val listener = db.collection("users")
             .document(userId.value)
             .addSnapshotListener { snapshot, error ->
-                if (error != null) { trySend(0); return@addSnapshotListener }
+                if (error != null) {
+                    android.util.Log.e("ChatRepository", "Error in totalUnreadCount listener", error)
+                    trySend(0)
+                    return@addSnapshotListener
+                }
+                val exists = snapshot?.exists() ?: false
                 val count = (snapshot?.getLong("totalUnreadMessages") ?: 0L).toInt().coerceAtLeast(0)
+                android.util.Log.d("ChatRepository", "totalUnreadCount listener fired: exists=$exists, count=$count, userId=${userId.value}")
                 trySend(count)
             }
-        awaitClose { listener.remove() }
+        awaitClose {
+            android.util.Log.d("ChatRepository", "Closing totalUnreadCount listener for user: ${userId.value}")
+            listener.remove()
+        }
     }
 
     /**
@@ -347,16 +372,26 @@ class FirestoreChatRepository @Inject constructor(
      */
     @Suppress("UNCHECKED_CAST")
     override fun observeUnreadPerFriend(userId: UserId): Flow<Map<String, Int>> = callbackFlow {
+        android.util.Log.d("ChatRepository", "Setting up unreadPerFriend listener for user: ${userId.value}")
         val listener = db.collection("users")
             .document(userId.value)
             .addSnapshotListener { snapshot, error ->
-                if (error != null) { trySend(emptyMap()); return@addSnapshotListener }
+                if (error != null) {
+                    android.util.Log.e("ChatRepository", "Error in unreadPerFriend listener", error)
+                    trySend(emptyMap())
+                    return@addSnapshotListener
+                }
+                val exists = snapshot?.exists() ?: false
                 val raw = snapshot?.get("unreadPerFriend") as? Map<String, Any> ?: emptyMap()
                 val mapped = raw.mapValues { (_, v) -> (v as? Number)?.toInt()?.coerceAtLeast(0) ?: 0 }
                     .filter { it.value > 0 }
+                android.util.Log.d("ChatRepository", "unreadPerFriend listener fired: exists=$exists, mapped=$mapped, userId=${userId.value}")
                 trySend(mapped)
             }
-        awaitClose { listener.remove() }
+        awaitClose {
+            android.util.Log.d("ChatRepository", "Closing unreadPerFriend listener for user: ${userId.value}")
+            listener.remove()
+        }
     }
 
     // ── User chat list ───────────────────────────────────────────────────────
