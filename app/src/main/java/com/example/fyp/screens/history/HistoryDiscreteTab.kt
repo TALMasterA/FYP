@@ -192,32 +192,6 @@ fun HistoryList(
             }
         }
 
-        // Load More button for pagination
-        if (hasMoreRecords) {
-            item(key = "load_more_button") {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    if (isLoadingMore) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(36.dp)
-                        )
-                    } else {
-                        Button(
-                            onClick = onLoadMore,
-                            modifier = Modifier.fillMaxWidth(0.6f)
-                        ) {
-                            Text("Load More")
-                            if (totalRecordsCount > 0) {
-                                Text(" (${records.size}/$totalRecordsCount)")
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // No "Load More" button — history shows only recent records (50-100 limit)
     }
 }

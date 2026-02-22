@@ -26,7 +26,7 @@ fun SystemNotesScreen(
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     StandardScreenScaffold(
-        title = "System Notes", // TODO: Add to UiTextKey
+        title = t(UiTextKey.SystemNotesTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack)
     ) { innerPadding ->

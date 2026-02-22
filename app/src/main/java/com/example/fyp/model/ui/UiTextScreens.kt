@@ -1316,4 +1316,12 @@ val ScreenUiTexts: List<String> = listOf(
     "Add custom words",
     // AccessibilityWordBankExists
     "Word bank exists",
+
+    // --- Settings Hard-coded Strings ---
+    // SettingsTesterFeedback
+    "T.Feedback",
+    // SettingsSystemNotesButton
+    "System Notes & Info",
+    // SystemNotesTitle
+    "System Notes",
 )

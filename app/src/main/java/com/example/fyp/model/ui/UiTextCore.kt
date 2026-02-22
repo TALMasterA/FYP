@@ -612,6 +612,11 @@ enum class UiTextKey {
     AccessibilitySharedItemTypeIcon,
     AccessibilityAddCustomWords,
     AccessibilityWordBankExists,
+
+    // --- Settings Hard-coded Strings ---
+    SettingsTesterFeedback,
+    SettingsSystemNotesButton,
+    SystemNotesTitle,
 }
 
 // Core Ui Texts list
