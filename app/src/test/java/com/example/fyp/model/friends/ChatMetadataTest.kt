@@ -103,10 +103,15 @@ class ChatMetadataTest {
     }
 
     @Test
-    fun `FriendMessage content is limited to 2000 chars by convention`() {
+    fun `FriendMessage content can store up to 2000 chars`() {
         val longContent = "a".repeat(2000)
         val msg = FriendMessage(content = longContent)
         assertEquals(2000, msg.content.length)
+
+        // Content over 2000 chars should be rejected by sendTextMessage (repository-level check)
+        val overContent = "a".repeat(2001)
+        val overMsg = FriendMessage(content = overContent)
+        assertTrue(overMsg.content.length > 2000) // Model doesn't enforce; repo does
     }
 
     @Test
