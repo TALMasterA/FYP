@@ -138,6 +138,7 @@ class FriendsViewModel @Inject constructor(
         unreadPerFriendJob?.cancel()
         unreadPerFriendJob = viewModelScope.launch {
             chatRepository.observeUnreadPerFriend(userId).collect { unreadMap ->
+                android.util.Log.d("FriendsViewModel", "Unread per friend updated: $unreadMap")
                 _uiState.value = _uiState.value.copy(unreadCountPerFriend = unreadMap)
             }
         }
