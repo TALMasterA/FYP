@@ -189,7 +189,10 @@ fun AppNavigation() {
                         )
                     }
 
-                    composable(AppScreen.Speech.route) {
+                    composableRequireLogin(
+                        route = AppScreen.Speech.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
                         SpeechRecognitionScreen(
                             uiLanguages = uiLanguages,
                             appLanguageState = appLanguageState,
@@ -207,7 +210,10 @@ fun AppNavigation() {
                         )
                     }
 
-                    composable(AppScreen.Continuous.route) {
+                    composableRequireLogin(
+                        route = AppScreen.Continuous.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
                         ContinuousConversationScreen(
                             uiLanguages = uiLanguages,
                             appLanguageState = appLanguageState,
