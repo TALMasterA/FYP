@@ -69,15 +69,17 @@ Firebase login is required.
 - Custom word bank for user-defined vocabulary entries
 - Favorites system for bookmarking important translations
 
-**Friend System:** (NEW!)
+**Friend System:**
 - **My Profile:** Display and share your User ID and Username for easy friend discovery
-- Search and add friends by username
+- **Profile Visibility:** Set profile to Public (searchable) or Private (hidden from search)
+- Search and add friends by username or User ID
 - Send/accept/reject friend requests
 - Real-time chat with friends
 - Translate entire conversations to your language
 - Share words and learning materials with friends
-- Accept or dismiss shared items
-- Shared inbox for received items
+- Shared inbox for received items with accept/dismiss confirmation
+- Red dot notifications for unread messages and new shared items
+- Usernames are unique; changing your username releases the old one for others
 
 **Customization:**
 - UI language translation (supports 16+ languages)
@@ -291,6 +293,7 @@ gh auth login
 - Audio captured only for recognition, not stored
 - Firebase Authentication handles secure login
 - Auto sign-out on app version update for security
+- Profile visibility setting: users can set their profile to Private to prevent discovery via search
 
 **API Security:**
 Using Firebase Cloud Functions to protect API keys (backend).
@@ -305,5 +308,5 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** February 18, 2026 - Friend System Added
+**Last Updated:** February 22, 2026 - Profile Visibility, Shared Inbox Updates, Username Release
 (Some content is by github copilot agent and may contain error)

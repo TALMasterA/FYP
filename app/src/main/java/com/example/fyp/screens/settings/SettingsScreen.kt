@@ -307,7 +307,7 @@ fun SettingsScreen(
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text(
-                                    text = "T.Feedback",
+                                    text = t(UiTextKey.SettingsTesterFeedback),
                                     style = MaterialTheme.typography.bodyLarge,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
@@ -332,7 +332,7 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "System Notes & Info",
+                                text = t(UiTextKey.SettingsSystemNotesButton),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }

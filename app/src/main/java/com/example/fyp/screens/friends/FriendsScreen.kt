@@ -333,6 +333,7 @@ fun FriendsScreen(
                                         FriendCard(
                                             friend = friend,
                                             unreadCount = uiState.unreadCountPerFriend[friend.friendId] ?: 0,
+                                            unreadMessagesText = t(UiTextKey.AccessibilityNewMessages),
                                             onClick = {
                                                 if (uiState.isDeleteMode) {
                                                     viewModel.toggleFriendSelection(friend.friendId)
@@ -450,6 +451,7 @@ fun FriendRequestCard(
 fun FriendCard(
     friend: FriendRelation,
     unreadCount: Int = 0,
+    unreadMessagesText: String = "New messages",
     onClick: () -> Unit,
     sendMessageText: String = "Send message",
     isDeleteMode: Boolean = false,
@@ -495,7 +497,7 @@ fun FriendCard(
                     // Show "unread messages" hint text below name when there are unread messages
                     if (unreadCount > 0 && !isDeleteMode) {
                         Text(
-                            text = "● New messages",
+                            text = "● $unreadMessagesText",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )

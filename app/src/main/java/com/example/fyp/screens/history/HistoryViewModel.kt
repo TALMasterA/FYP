@@ -332,15 +332,7 @@ class HistoryViewModel @Inject constructor(
                 }
         }
 
-        // Fetch total count for pagination info
-        viewModelScope.launch {
-            try {
-                val totalCount = historyRepo.getHistoryCount(UserId(userId))
-                _uiState.value = _uiState.value.copy(totalRecordsCount = totalCount)
-            } catch (_: Exception) {
-                // Ignore count fetch errors
-            }
-        }
+        // No longer fetching total count since we only show recent records (no Load More)
 
         // Fetch coin stats once instead of real-time listener
         refreshCoinStats()

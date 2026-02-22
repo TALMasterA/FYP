@@ -194,8 +194,11 @@ class FriendsViewModel @Inject constructor(
         }
 
         // Combine results, prioritizing ID match at the top if found
+        // Also filter out the current user from search results
+        val currentUid = currentUserId?.value
         val distinctResults = (listOfNotNull(idResult) + usernameResults)
             .distinctBy { it.uid }
+            .filter { it.uid != currentUid }
 
         _uiState.value = _uiState.value.copy(
             searchResults = distinctResults,

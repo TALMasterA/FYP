@@ -2,8 +2,10 @@ package com.example.fyp.screens.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.domain.friends.EnsurePublicProfileExistsUseCase
 import com.example.fyp.domain.friends.GetCurrentUserProfileUseCase
 import com.example.fyp.model.UserId
 import com.example.fyp.model.user.AuthState
@@ -21,14 +23,17 @@ data class MyProfileUiState(
     val profile: PublicUserProfile? = null,
     val userId: String = "",
     val error: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    val isUpdatingVisibility: Boolean = false
 )
 
 @HiltViewModel
 class MyProfileViewModel @Inject constructor(
     private val authRepository: FirebaseAuthRepository,
     private val getCurrentUserProfileUseCase: GetCurrentUserProfileUseCase,
-    private val sharedFriendsDataSource: SharedFriendsDataSource
+    private val sharedFriendsDataSource: SharedFriendsDataSource,
+    private val friendsRepository: FriendsRepository,
+    private val ensurePublicProfileExistsUseCase: EnsurePublicProfileExistsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MyProfileUiState())
@@ -61,7 +66,12 @@ class MyProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val profile = getCurrentUserProfileUseCase(UserId(userId))
+                var profile = getCurrentUserProfileUseCase(UserId(userId))
+                // Auto-create profile if it doesn't exist
+                if (profile == null) {
+                    ensurePublicProfileExistsUseCase(userId)
+                    profile = getCurrentUserProfileUseCase(UserId(userId))
+                }
                 // Cache own username so share operations don't need a Firestore profile read
                 if (profile?.username?.isNotBlank() == true) {
                     sharedFriendsDataSource.cacheOwnUsername(userId, profile.username)
@@ -70,8 +80,7 @@ class MyProfileViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         profile = profile,
-                        // Show profile not found gracefully (not a crash - just informational)
-                        error = if (profile == null) "Profile not found. Please set a username in Settings > Profile." else null
+                        error = null
                     )
                 }
             } catch (e: Exception) {
@@ -87,6 +96,29 @@ class MyProfileViewModel @Inject constructor(
         viewModelScope.launch {
             kotlinx.coroutines.delay(3000)
             _uiState.update { it.copy(successMessage = null) }
+        }
+    }
+
+    fun updateVisibility(isPublic: Boolean) {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUpdatingVisibility = true) }
+            friendsRepository.updatePublicProfile(
+                UserId(userId),
+                mapOf("isDiscoverable" to isPublic)
+            ).onSuccess {
+                _uiState.update {
+                    it.copy(
+                        isUpdatingVisibility = false,
+                        profile = it.profile?.copy(isDiscoverable = isPublic)
+                    )
+                }
+                showSuccessMessage(if (isPublic) "Profile set to Public" else "Profile set to Private")
+            }.onFailure { e ->
+                _uiState.update {
+                    it.copy(isUpdatingVisibility = false, error = e.message ?: "Failed to update visibility")
+                }
+            }
         }
     }
 
