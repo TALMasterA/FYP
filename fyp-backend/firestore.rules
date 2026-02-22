@@ -32,8 +32,9 @@ service cloud.firestore {
 
     // Helper function to check if only unread counter fields are being modified
     function onlyUpdatingUnreadCounters() {
-      // For set() with merge: request.resource.data contains the MERGED result (all fields),
-      // but diff().affectedKeys() returns ONLY the fields that changed.
+      // The app uses update() with DOT-NOTATION (e.g., "unreadPerFriend.{friendId}")
+      // to avoid overwriting sibling entries in nested maps.
+      // Falls back to set() with merge for document creation.
       //
       // When the document doesn't exist yet (resource == null):
       // - For new documents, check that we're only creating the allowed fields
@@ -152,7 +153,12 @@ service cloud.firestore {
          request.resource.data.status == "CANCELLED")
       );
 
-      allow delete: if false;
+      // Allow sender or receiver to delete completed (non-PENDING) requests
+      // Enables cleanup when unfriending so users can re-send requests later
+      allow delete: if request.auth != null && (
+        resource.data.fromUserId == request.auth.uid ||
+        resource.data.toUserId == request.auth.uid
+      ) && resource.data.status != "PENDING";
     }
 
     // ============================================
@@ -181,7 +187,8 @@ service cloud.firestore {
         && isParticipantFromChatId()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
 
-      allow delete: if false;
+      // Allow participants to delete messages (cleanup when unfriending)
+      allow delete: if request.auth != null && isParticipantFromChatId();
     }
 
     // ============================================
