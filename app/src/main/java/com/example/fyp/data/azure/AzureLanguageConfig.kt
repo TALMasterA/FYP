@@ -6,7 +6,11 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 
 object AzureLanguageConfig {
+    // Cache the result so the JSON asset is only read once across all call sites.
+    @Volatile private var cachedLanguages: List<String>? = null
+
     fun loadSupportedLanguages(context: Context): List<String> {
+        cachedLanguages?.let { return it }
         return try {
             val input = context.assets.open("azure_languages.json")
             val text = input.bufferedReader().use { it.readText() }
@@ -14,7 +18,7 @@ object AzureLanguageConfig {
             List(arr.length()) { i -> arr.getString(i) }
         } catch (e: Exception) {
             listOf("en-US")
-        }
+        }.also { cachedLanguages = it }
     }
 
     suspend fun loadSupportedLanguagesSuspend(context: Context): List<String> {

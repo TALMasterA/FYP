@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.azure.LanguageDisplayNames
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.history.FirestoreHistoryRepository
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import android.net.Uri
 import com.example.fyp.domain.speech.DetectLanguageUseCase
 import com.example.fyp.domain.speech.RecognizeFromMicUseCase
@@ -15,15 +16,13 @@ import com.example.fyp.domain.speech.RecognizeWithAutoDetectUseCase
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.domain.speech.StartContinuousConversationUseCase
 import com.example.fyp.domain.speech.TranslateTextUseCase
-import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
 import com.example.fyp.domain.ocr.RecognizeTextFromImageUseCase
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
-import com.example.fyp.model.user.UserSettings
-import com.example.fyp.model.UserId
 import com.example.fyp.model.OcrResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,14 +43,11 @@ class SpeechViewModel @Inject constructor(
     continuousUseCase: StartContinuousConversationUseCase,
     private val authRepo: FirebaseAuthRepository,
     private val historyRepo: FirestoreHistoryRepository,
-    private val observeSettings: ObserveUserSettingsUseCase,
+    private val sharedSettings: SharedSettingsDataSource,
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.LoggedOut)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
-
-    private val _userSettings = MutableStateFlow(UserSettings())
-    private val userSettings: StateFlow<UserSettings> = _userSettings.asStateFlow()
 
     private var speechState by mutableStateOf(SpeechScreenState())
 
@@ -87,18 +83,16 @@ class SpeechViewModel @Inject constructor(
     val isContinuousProcessing: Boolean get() = continuousController.isContinuousProcessing
     val continuousMessages: List<ChatMessage> get() = continuousController.continuousMessages
 
+    // Debounce queue for continuous-mode history saves.
+    // Segments are accumulated and flushed to Firestore 800 ms after the last segment arrives,
+    // reducing the number of individual Firestore round-trips during rapid speech.
+    private val pendingContinuousSaves = mutableListOf<TranslationRecord>()
+    private var continuousFlushJob: Job? = null
+
     init {
         viewModelScope.launch {
             authRepo.currentUserState.collect { authState ->
                 _authState.value = authState
-                // Observe settings when user is logged in
-                if (authState is AuthState.LoggedIn) {
-                    observeSettings(UserId(authState.user.uid)).collect { settings ->
-                        _userSettings.value = settings
-                    }
-                } else {
-                    _userSettings.value = UserSettings()
-                }
             }
         }
     }
@@ -117,22 +111,43 @@ class SpeechViewModel @Inject constructor(
         sequence: Long? = null,
     ) {
         val state = _authState.value
-        if (state is AuthState.LoggedIn) {
-            historyRepo.save(
-                TranslationRecord(
-                    id = UUID.randomUUID().toString(),
-                    userId = state.user.uid,
-                    sourceText = sourceText,
-                    targetText = targetText,
-                    sourceLang = sourceLang,
-                    targetLang = targetLang,
-                    mode = mode,
-                    sessionId = sessionId,
-                    speaker = speaker,
-                    direction = direction,
-                    sequence = sequence,
-                ),
-            )
+        if (state !is AuthState.LoggedIn) return
+
+        val record = TranslationRecord(
+            id = UUID.randomUUID().toString(),
+            userId = state.user.uid,
+            sourceText = sourceText,
+            targetText = targetText,
+            sourceLang = sourceLang,
+            targetLang = targetLang,
+            mode = mode,
+            sessionId = sessionId,
+            speaker = speaker,
+            direction = direction,
+            sequence = sequence,
+        )
+
+        if (mode == "continuous") {
+            // Queue continuous records and flush 800 ms after the last segment arrives.
+            // This batches multiple rapid segments into fewer Firestore round-trips.
+            pendingContinuousSaves.add(record)
+            continuousFlushJob?.cancel()
+            continuousFlushJob = viewModelScope.launch {
+                delay(CONTINUOUS_SAVE_DEBOUNCE_MS)
+                flushPendingSaves()
+            }
+        } else {
+            historyRepo.save(record)
+        }
+    }
+
+    /** Flush all queued continuous records to Firestore as a single batch write. */
+    private fun flushPendingSaves() {
+        if (pendingContinuousSaves.isEmpty()) return
+        val toSave = pendingContinuousSaves.toList()
+        pendingContinuousSaves.clear()
+        viewModelScope.launch {
+            historyRepo.saveBatch(toSave)
         }
     }
 
@@ -311,22 +326,22 @@ class SpeechViewModel @Inject constructor(
     // ---- TTS ----
 
     fun speakOriginal(languageCode: String) {
-        val voiceName = userSettings.value.voiceSettings[languageCode]
+        val voiceName = sharedSettings.settings.value.voiceSettings[languageCode]
         ttsController.speak(text = recognizedText, languageCode = languageCode, isTranslation = false, voiceName = voiceName)
     }
 
     fun speakTranslation(languageCode: String) {
-        val voiceName = userSettings.value.voiceSettings[languageCode]
+        val voiceName = sharedSettings.settings.value.voiceSettings[languageCode]
         ttsController.speak(text = translatedText, languageCode = languageCode, isTranslation = true, voiceName = voiceName)
     }
 
     fun speakText(languageCode: String, text: String) {
-        val voiceName = userSettings.value.voiceSettings[languageCode]
+        val voiceName = sharedSettings.settings.value.voiceSettings[languageCode]
         ttsController.speak(text = text, languageCode = languageCode, isTranslation = true, voiceName = voiceName)
     }
 
     fun speakTextOriginal(languageCode: String, text: String) {
-        val voiceName = userSettings.value.voiceSettings[languageCode]
+        val voiceName = sharedSettings.settings.value.voiceSettings[languageCode]
         ttsController.speak(text = text, languageCode = languageCode, isTranslation = false, voiceName = voiceName)
     }
 
@@ -351,6 +366,7 @@ class SpeechViewModel @Inject constructor(
     }
 
     fun endContinuousSession() {
+        flushPendingSaves()
         continuousController.endSession()
     }
 
@@ -361,5 +377,14 @@ class SpeechViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         stopContinuous()
+        // Flush pending records before cancelling the debounce job so no segments are lost.
+        // viewModelScope is still active at this point (it's cancelled after onCleared returns).
+        flushPendingSaves()
+        continuousFlushJob?.cancel()
+    }
+
+    companion object {
+        /** Milliseconds to wait after the last continuous segment before flushing saves to Firestore. */
+        private const val CONTINUOUS_SAVE_DEBOUNCE_MS = 800L
     }
 }

@@ -390,20 +390,23 @@ private fun WordBankList(
     onShareWord: ((WordBankItem) -> Unit)? = null,
     t: (UiTextKey) -> String
 ) {
-    // Apply filters
-    val filteredWords = wordBank.words.filter { word ->
-        val keywordMatch = filterKeyword.isBlank() ||
-                word.originalWord.contains(filterKeyword, ignoreCase = true) ||
-                word.translatedWord.contains(filterKeyword, ignoreCase = true) ||
-                word.example.contains(filterKeyword, ignoreCase = true)
+    // Apply filters — memoised so the O(n) scan only re-runs when filter inputs
+    // or the word list itself change, not on every unrelated recomposition.
+    val filteredWords = remember(wordBank.words, filterKeyword, filterCategory, filterDifficulty) {
+        wordBank.words.filter { word ->
+            val keywordMatch = filterKeyword.isBlank() ||
+                    word.originalWord.contains(filterKeyword, ignoreCase = true) ||
+                    word.translatedWord.contains(filterKeyword, ignoreCase = true) ||
+                    word.example.contains(filterKeyword, ignoreCase = true)
 
-        val categoryMatch = filterCategory.isBlank() ||
-                word.category.equals(filterCategory, ignoreCase = true)
+            val categoryMatch = filterCategory.isBlank() ||
+                    word.category.equals(filterCategory, ignoreCase = true)
 
-        val difficultyMatch = filterDifficulty.isBlank() ||
-                word.difficulty.equals(filterDifficulty, ignoreCase = true)
+            val difficultyMatch = filterDifficulty.isBlank() ||
+                    word.difficulty.equals(filterDifficulty, ignoreCase = true)
 
-        keywordMatch && categoryMatch && difficultyMatch
+            keywordMatch && categoryMatch && difficultyMatch
+        }
     }
 
     val totalPages = pageCount(filteredWords.size, pageSize)

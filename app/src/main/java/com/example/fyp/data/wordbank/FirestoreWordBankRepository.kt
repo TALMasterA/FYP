@@ -1,5 +1,6 @@
 package com.example.fyp.data.wordbank
 
+import com.example.fyp.core.NetworkRetry
 import com.example.fyp.screens.wordbank.WordBank
 import com.example.fyp.screens.wordbank.WordBankItem
 import com.google.firebase.Timestamp
@@ -84,7 +85,9 @@ class FirestoreWordBankRepository @Inject constructor(
             "historyCountAtGenerate" to historyCount
         )
 
-        docRef(uid, primary, target).set(data).await()
+        NetworkRetry.withRetry(shouldRetry = NetworkRetry::isRetryableFirebaseException) {
+            docRef(uid, primary, target).set(data).await()
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.example.fyp.data.learning
 
+import com.example.fyp.core.NetworkRetry
 import com.example.fyp.domain.learning.LearningSheetsRepository
 import com.example.fyp.domain.learning.SheetMetadata
 import com.example.fyp.model.UserId
@@ -142,6 +143,8 @@ class FirestoreLearningSheetsRepository @Inject constructor(
             "historyCountAtGenerate" to historyCountAtGenerate,
             "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
         )
-        docRef(uid.value, p, t).set(data).await()
+        NetworkRetry.withRetry(shouldRetry = NetworkRetry::isRetryableFirebaseException) {
+            docRef(uid.value, p, t).set(data).await()
+        }
     }
 }
