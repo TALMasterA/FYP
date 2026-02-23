@@ -501,55 +501,66 @@ class FirestoreFriendsRepository @Inject constructor(
     }
 
     /**
-     * Propagate a username change to all friends' cached FriendRelation documents.
+     * Propagate a username change to:
+     * 1. All friends' cached FriendRelation documents (friendUsername field).
+     * 2. Any pending outgoing friend_requests (fromUsername field), so the
+     *    recipient always sees the current name on the request card.
      *
-     * When user A renames to "newName", each friend B has a document at
-     * users/{B}/friends/{A} that stores the old username.  This method reads
-     * the current user's friends list to discover all friend IDs, then
-     * batch-updates users/{friendId}/friends/{userId}.friendUsername.
-     *
-     * The Firestore rule `allow write: if request.auth.uid == friendId`
-     * on users/{userId}/friends/{friendId} permits user A to write to
-     * users/{B}/friends/{A} because A's uid equals the document key (friendId).
+     * Firestore rules updated to allow the sender to update `fromUsername`
+     * on their own PENDING requests.
      */
     override suspend fun propagateUsernameChange(
         userId: UserId,
         newUsername: String
     ): Result<Unit> {
         return try {
-            // Fetch the user's own friends list to get all friend IDs
+            // ── 1. Update friendUsername in every friend's friend-list doc ──
             val friendDocs = db.collection("users")
                 .document(userId.value)
                 .collection("friends")
-                .limit(500) // consistent with rest of codebase
+                .limit(500)
                 .get()
                 .await()
                 .documents
 
-            if (friendDocs.isEmpty()) return Result.success(Unit)
-
-            // Batch-update each friend's copy of the user's friendUsername.
-            // Firestore limits 500 writes per batch — split if needed.
-            friendDocs.chunked(500).forEach { chunk ->
-                val batch = db.batch()
-                chunk.forEach { friendDoc ->
-                    val friendId = friendDoc.getString("friendId") ?: friendDoc.id
-                    val ref = db.collection("users")
-                        .document(friendId)
-                        .collection("friends")
-                        .document(userId.value)
-                    // Use set-merge instead of update: safe even if the doc was deleted
-                    // (e.g., the friend removed the user while propagation was running).
-                    batch.set(ref, mapOf("friendUsername" to newUsername),
-                        com.google.firebase.firestore.SetOptions.merge())
+            if (friendDocs.isNotEmpty()) {
+                friendDocs.chunked(500).forEach { chunk ->
+                    val batch = db.batch()
+                    chunk.forEach { friendDoc ->
+                        val friendId = friendDoc.getString("friendId") ?: friendDoc.id
+                        val ref = db.collection("users")
+                            .document(friendId)
+                            .collection("friends")
+                            .document(userId.value)
+                        // set-merge: safe even if the friend removed the user concurrently
+                        batch.set(ref, mapOf("friendUsername" to newUsername),
+                            com.google.firebase.firestore.SetOptions.merge())
+                    }
+                    batch.commit().await()
                 }
-                batch.commit().await()
+            }
+
+            // ── 2. Update fromUsername in pending outgoing friend requests ──
+            val pendingOutgoing = db.collection("friend_requests")
+                .whereEqualTo("fromUserId", userId.value)
+                .whereEqualTo("status", "PENDING")
+                .limit(100)
+                .get()
+                .await()
+                .documents
+
+            if (pendingOutgoing.isNotEmpty()) {
+                pendingOutgoing.chunked(500).forEach { chunk ->
+                    val batch = db.batch()
+                    chunk.forEach { doc ->
+                        batch.update(doc.reference, "fromUsername", newUsername)
+                    }
+                    batch.commit().await()
+                }
             }
 
             Result.success(Unit)
         } catch (e: Exception) {
-            // Non-fatal: friends will see the old username until they refresh.
-            // The public profile is already updated, so searches will show the new name.
             AppLogger.e("FriendsRepository", "propagateUsernameChange failed", e)
             Result.failure(e)
         }

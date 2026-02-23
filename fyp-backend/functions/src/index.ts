@@ -1,6 +1,7 @@
 import {setGlobalOptions} from "firebase-functions";
 import {defineSecret} from "firebase-functions/params";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {onDocumentCreated, onDocumentUpdated} from "firebase-functions/v2/firestore";
 import fetch from "node-fetch";
 import * as admin from "firebase-admin";
 
@@ -613,5 +614,233 @@ export const awardQuizCoins = onCall(
     });
 
     return result;
+  }
+);
+
+// ============ Push Notification Triggers ============
+
+const MAX_MESSAGE_PREVIEW_LENGTH = 100;
+
+/**
+ * Sends an FCM push notification to the recipient when a new chat message is created.
+ *
+ * Trigger: Firestore document create at chats/{chatId}/messages/{messageId}
+ *
+ * Flow:
+ *  1. Extract senderId and receiverId from the new message document.
+ *  2. Fetch the sender's public profile to get their username.
+ *  3. Fetch all FCM tokens registered for the receiver
+ *     (stored at users/{receiverId}/fcm_tokens/{token}).
+ *  4. Send a data-only FCM multicast message to all of the receiver's tokens.
+ *  5. Remove any tokens that have become invalid (registration_id_not_found).
+ *
+ * Security: Runs with admin privileges — bypasses Firestore security rules.
+ */
+export const sendChatNotification = onDocumentCreated(
+  "chats/{chatId}/messages/{messageId}",
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    const senderId: string = data.senderId ?? "";
+    const receiverId: string = data.receiverId ?? "";
+    const content: string = data.content ?? "";
+    const type: string = data.type ?? "TEXT";
+
+    if (!senderId || !receiverId) return;
+
+    // Don't notify for shared-item messages (they have their own inbox flow)
+    if (type !== "TEXT") return;
+
+    try {
+      // 1. Fetch sender's username from their public profile
+      const senderProfileSnap = await getFirestore()
+        .collection("users").doc(senderId)
+        .collection("profile").doc("public")
+        .get();
+      const senderUsername: string = senderProfileSnap.data()?.username ?? "Friend";
+
+      // 2. Fetch all FCM tokens for the receiver
+      const tokensSnap = await getFirestore()
+        .collection("users").doc(receiverId)
+        .collection("fcm_tokens")
+        .get();
+
+      if (tokensSnap.empty) {
+        console.log(`sendChatNotification: no FCM tokens for receiver=${receiverId}`);
+        return;
+      }
+
+      const tokens: string[] = tokensSnap.docs
+        .map((doc) => doc.data().token as string)
+        .filter((t) => !!t);
+
+      if (tokens.length === 0) return;
+
+      // 3. Build data-only FCM message (handled by FcmNotificationService on Android)
+      const messagePreview = content.length > MAX_MESSAGE_PREVIEW_LENGTH
+        ? content.substring(0, MAX_MESSAGE_PREVIEW_LENGTH) + "…"
+        : content;
+      const fcmMessage: admin.messaging.MulticastMessage = {
+        tokens,
+        data: {
+          type: "new_message",
+          senderId,
+          senderUsername,
+          messagePreview,
+        },
+        android: {
+          priority: "high",
+        },
+      };
+
+      // 4. Send the multicast message
+      const response = await admin.messaging().sendEachForMulticast(fcmMessage);
+      console.log(
+        `sendChatNotification: sent to ${tokens.length} tokens, ` +
+        `success=${response.successCount}, failure=${response.failureCount}`
+      );
+
+      // 5. Clean up invalid/expired tokens
+      const invalidTokens: string[] = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          const errCode = resp.error?.code ?? "";
+          if (
+            errCode === "messaging/registration-token-not-registered" ||
+            errCode === "messaging/invalid-registration-token"
+          ) {
+            invalidTokens.push(tokens[idx]);
+          } else {
+            console.warn(`sendChatNotification: token[${idx}] error: ${resp.error?.message}`);
+          }
+        }
+      });
+
+      if (invalidTokens.length > 0) {
+        const batch = getFirestore().batch();
+        for (const token of invalidTokens) {
+          const ref = getFirestore()
+            .collection("users").doc(receiverId)
+            .collection("fcm_tokens").doc(token);
+          batch.delete(ref);
+        }
+        await batch.commit();
+        console.log(`sendChatNotification: removed ${invalidTokens.length} invalid tokens`);
+      }
+    } catch (err: any) {
+      console.error("sendChatNotification: unexpected error", {
+        message: err?.message,
+        chatId: event.params.chatId,
+      });
+    }
+  }
+);
+
+/**
+ * Sends an FCM push notification to the sender when their friend request is accepted.
+ *
+ * Trigger: Firestore document update at friend_requests/{requestId}
+ * Only fires when status changes to "ACCEPTED".
+ */
+export const sendRequestAcceptedNotification = onDocumentUpdated(
+  "friend_requests/{requestId}",
+  async (event) => {
+    const before = event.data?.before?.data();
+    const after = event.data?.after?.data();
+    if (!before || !after) return;
+
+    // Only notify when status transitions to ACCEPTED
+    if (before.status === after.status || after.status !== "ACCEPTED") return;
+
+    const senderId: string = after.fromUserId ?? "";
+    const accepterUsername: string = after.toUsername ?? "your friend";
+
+    if (!senderId) return;
+
+    try {
+      const tokensSnap = await getFirestore()
+        .collection("users").doc(senderId)
+        .collection("fcm_tokens")
+        .get();
+
+      if (tokensSnap.empty) return;
+
+      const tokens: string[] = tokensSnap.docs
+        .map((doc) => doc.data().token as string)
+        .filter((t) => !!t);
+
+      if (tokens.length === 0) return;
+
+      const fcmMessage: admin.messaging.MulticastMessage = {
+        tokens,
+        data: {
+          type: "request_accepted",
+          friendUsername: accepterUsername,
+        },
+        android: { priority: "normal" },
+      };
+
+      const response = await admin.messaging().sendEachForMulticast(fcmMessage);
+      console.log(
+        `sendRequestAcceptedNotification: sent to ${tokens.length} tokens, ` +
+        `success=${response.successCount}, failure=${response.failureCount}`
+      );
+    } catch (err: any) {
+      console.error("sendRequestAcceptedNotification: error", { message: err?.message });
+    }
+  }
+);
+
+/**
+ * Sends an FCM push notification to the recipient when a new friend request is created.
+ *
+ * Trigger: Firestore document create at friend_requests/{requestId}
+ */
+export const sendFriendRequestNotification = onDocumentCreated(
+  "friend_requests/{requestId}",
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    // Only notify for new PENDING requests
+    if (data.status !== "PENDING") return;
+
+    const receiverId: string = data.toUserId ?? "";
+    const senderUsername: string = data.fromUsername ?? "Someone";
+
+    if (!receiverId) return;
+
+    try {
+      const tokensSnap = await getFirestore()
+        .collection("users").doc(receiverId)
+        .collection("fcm_tokens")
+        .get();
+
+      if (tokensSnap.empty) return;
+
+      const tokens: string[] = tokensSnap.docs
+        .map((doc) => doc.data().token as string)
+        .filter((t) => !!t);
+
+      if (tokens.length === 0) return;
+
+      const fcmMessage: admin.messaging.MulticastMessage = {
+        tokens,
+        data: {
+          type: "friend_request",
+          senderUsername,
+        },
+        android: { priority: "normal" },
+      };
+
+      const response = await admin.messaging().sendEachForMulticast(fcmMessage);
+      console.log(
+        `sendFriendRequestNotification: sent to ${tokens.length} tokens, ` +
+        `success=${response.successCount}, failure=${response.failureCount}`
+      );
+    } catch (err: any) {
+      console.error("sendFriendRequestNotification: error", { message: err?.message });
+    }
   }
 );

@@ -52,6 +52,9 @@ enum class RequestStatus {
     REQUEST_RECEIVED  // The other user already sent a request to current user
 }
 
+/** Maximum pending outgoing friend requests a user can have at any one time. */
+private const val MAX_PENDING_REQUESTS = 20
+
 /**
  * OPTIMIZED: Friends list and incoming requests are read from [SharedFriendsDataSource]
  * (shared single-listener data source) instead of creating new Firestore listeners.
@@ -319,6 +322,14 @@ class FriendsViewModel @Inject constructor(
         if (!_uiState.value.currentUserHasUsername) {
             _uiState.value = _uiState.value.copy(
                 error = "Please set a username in your profile before sending friend requests."
+            )
+            return
+        }
+        // Client-side rate limit: max MAX_PENDING_REQUESTS pending outgoing requests
+        if (_uiState.value.outgoingRequests.size >= MAX_PENDING_REQUESTS) {
+            _uiState.value = _uiState.value.copy(
+                error = "You have reached the maximum of 20 pending friend requests. " +
+                        "Please wait for some to be accepted or cancel them before sending more."
             )
             return
         }
