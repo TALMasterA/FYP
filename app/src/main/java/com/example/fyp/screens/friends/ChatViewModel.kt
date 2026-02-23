@@ -63,6 +63,7 @@ class ChatViewModel @Inject constructor(
 
     private var messagesJob: Job? = null
     private var profileLoadJob: Job? = null
+    private var markReadJob: Job? = null
     private var currentUserId: UserId? = null
     private val friendId: UserId
     private val friendUsername: String
@@ -83,20 +84,21 @@ class ChatViewModel @Inject constructor(
             authRepo.currentUserState.collect { auth ->
                 when (auth) {
                     is AuthState.LoggedIn -> {
-                        val wasLoggedOut = currentUserId == null
+                        val isFirstLogin = currentUserId == null
                         currentUserId = UserId(auth.user.uid)
                         _uiState.value = _uiState.value.copy(currentUserId = auth.user.uid)
                         loadMessages(UserId(auth.user.uid))
                         markMessagesAsRead(UserId(auth.user.uid))
 
-                        // Only load profile once when first logging in or if profile is not yet loaded
-                        if (wasLoggedOut || _uiState.value.friendProfile == null) {
+                        // Only load profile once on first login, or if not yet loaded
+                        if (isFirstLogin || _uiState.value.friendProfile == null) {
                             loadFriendProfile()
                         }
                     }
                     AuthState.LoggedOut -> {
                         messagesJob?.cancel()
                         profileLoadJob?.cancel()
+                        markReadJob?.cancel()
                         currentUserId = null
                         _uiState.value = ChatUiState(
                             isLoading = false,
@@ -111,8 +113,6 @@ class ChatViewModel @Inject constructor(
             }
         }
     }
-
-    private var markReadJob: Job? = null
 
     private fun loadMessages(userId: UserId) {
         messagesJob?.cancel()
@@ -131,6 +131,8 @@ class ChatViewModel @Inject constructor(
                         markMessagesAsRead(userId)
                     }
                 }
+            } catch (_: kotlinx.coroutines.CancellationException) {
+                // Normal cancellation — e.g. user navigated away or loadMessages called again
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -145,33 +147,24 @@ class ChatViewModel @Inject constructor(
             try {
                 markMessagesAsReadUseCase(userId, friendId)
             } catch (_: Exception) {
-                // Non-critical: ignore errors marking messages as read
+                // Non-critical
             }
         }
     }
 
-    /** Loads the friend's public profile so the chat header can show profile details. */
+    /** Loads the friend's public profile for the profile dialog. */
     private fun loadFriendProfile() {
-        viewModelScope.launch {
-            // Use supervisorScope to prevent cancellation from affecting parent scope
-            kotlinx.coroutines.supervisorScope {
-                try {
-                    android.util.Log.d("ChatViewModel", "Loading friend profile for: ${friendId.value}")
-                    val profile = friendsRepository.getPublicProfile(friendId)
-                    if (profile != null) {
-                        android.util.Log.d("ChatViewModel", "Friend profile loaded successfully: username=${profile.username}, uid=${profile.uid}")
-                        _uiState.value = _uiState.value.copy(friendProfile = profile)
-                    } else {
-                        android.util.Log.w("ChatViewModel", "Friend profile is null for: ${friendId.value}")
-                    }
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    // Silently handle cancellation - user navigated away, which is fine
-                    android.util.Log.d("ChatViewModel", "Profile loading cancelled (user navigated away)")
-                    // Don't re-throw - this prevents "StandaloneCoroutine was cancelled" error
-                } catch (e: Exception) {
-                    // Non-critical — profile dialog will just show minimal info from nav args
-                    android.util.Log.e("ChatViewModel", "Failed to load friend profile: ${e.message}", e)
-                }
+        // Cancel any in-flight load before starting a new one
+        profileLoadJob?.cancel()
+        profileLoadJob = viewModelScope.launch {
+            try {
+                val profile = friendsRepository.getPublicProfile(friendId)
+                _uiState.value = _uiState.value.copy(friendProfile = profile)
+            } catch (_: kotlinx.coroutines.CancellationException) {
+                // Normal cancellation — do NOT log or re-throw
+            } catch (e: Exception) {
+                // Non-critical: profile dialog will fall back to nav-arg data
+                android.util.Log.e("ChatViewModel", "Failed to load friend profile: ${e.message}")
             }
         }
     }
@@ -183,21 +176,15 @@ class ChatViewModel @Inject constructor(
     fun sendMessage() {
         val userId = currentUserId ?: return
         val messageText = _uiState.value.messageText.trim()
-        
         if (messageText.isBlank() || _uiState.value.isSending) return
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSending = true, error = null)
-            
             val chatId = chatRepository.generateChatId(userId, friendId)
             val result = sendMessageUseCase(chatId, userId, friendId, messageText)
-
             result.fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        messageText = "",
-                        isSending = false
-                    )
+                    _uiState.value = _uiState.value.copy(messageText = "", isSending = false)
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
@@ -221,11 +208,7 @@ class ChatViewModel @Inject constructor(
         val state = _uiState.value
         if (state.isLoadingOlder || !state.hasMoreMessages) return
         val oldest = state.messages.firstOrNull() ?: return
-
-        val chatId = chatRepository.generateChatId(
-            currentUserId ?: return,
-            friendId
-        )
+        val chatId = chatRepository.generateChatId(currentUserId ?: return, friendId)
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoadingOlder = true)
@@ -249,20 +232,14 @@ class ChatViewModel @Inject constructor(
     fun translateAllMessages() {
         val userId = currentUserId ?: return
         val messages = _uiState.value.messages
-        
         if (messages.isEmpty() || _uiState.value.isTranslating) return
-        
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isTranslating = true, translationError = null)
-            
             try {
-                // Get user's preferred language from settings
                 val settings = userSettingsRepository.fetchUserSettings(userId)
-                val targetLanguage = settings.primaryLanguageCode.substringBefore("-") // Get language code (e.g., "en" from "en-US")
-                
-                // Translate only friend's messages (not user's own messages)
+                val targetLanguage = settings.primaryLanguageCode.substringBefore("-")
                 val result = translateAllMessagesUseCase(messages, targetLanguage, userId.value)
-
                 result.fold(
                     onSuccess = { translations ->
                         _uiState.value = _uiState.value.copy(
@@ -286,13 +263,11 @@ class ChatViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun toggleTranslation() {
-        _uiState.value = _uiState.value.copy(
-            showTranslation = !_uiState.value.showTranslation
-        )
+        _uiState.value = _uiState.value.copy(showTranslation = !_uiState.value.showTranslation)
     }
-    
+
     fun clearTranslation() {
         _uiState.value = _uiState.value.copy(
             translatedMessages = emptyMap(),
@@ -304,5 +279,7 @@ class ChatViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         messagesJob?.cancel()
+        profileLoadJob?.cancel()
+        markReadJob?.cancel()
     }
 }
