@@ -9,8 +9,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -71,28 +71,84 @@ fun ChatScreen(
         val profile = uiState.friendProfile
         AlertDialog(
             onDismissRequest = { showProfileDialog = false },
-            title = { Text("@${uiState.friendUsername}") },
+            title = {
+                Text(
+                    text = if (uiState.friendUsername.isNotEmpty()) {
+                        "@${uiState.friendUsername}"
+                    } else {
+                        "Friend Profile"
+                    }
+                )
+            },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (profile != null) {
-                        if (profile.primaryLanguage.isNotBlank()) {
+                        // Username
+                        if (profile.username.isNotEmpty()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Username: ",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = profile.username,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+
+                        // User ID
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Text(
-                                text = "Primary language: ${profile.primaryLanguage}",
-                                style = MaterialTheme.typography.bodyMedium
+                                text = "User ID: ",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = profile.uid,
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
+
+                        // Learning languages
                         val learning = profile.learningLanguages.orEmpty()
                         if (learning.isNotEmpty()) {
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Learning: ",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = learning.joinToString(", "),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    } else {
+                        // Fallback when profile couldn't load
+                        Text(
+                            text = "Username: ${uiState.friendUsername}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        if (uiState.friendDisplayName.isNotEmpty() &&
+                            uiState.friendDisplayName != uiState.friendUsername) {
                             Text(
-                                text = "Learning: ${learning.joinToString(", ")}",
+                                text = "Display name: ${uiState.friendDisplayName}",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
-                    } else {
-                        Text(
-                            text = "Loading profile…",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
                     }
                 }
             },
@@ -401,7 +457,7 @@ fun MessageInput(
                     )
                 } else {
                     Icon(
-                        Icons.Default.Send,
+                        Icons.AutoMirrored.Filled.Send,
                         contentDescription = sendButtonText,
                         tint = if (messageText.isNotBlank()) {
                             MaterialTheme.colorScheme.primary

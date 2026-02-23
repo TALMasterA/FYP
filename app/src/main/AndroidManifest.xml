@@ -10,6 +10,7 @@
 
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
 
+
     <application
         android:name=".FYPApplication"
         android:allowBackup="true"
@@ -41,5 +42,11 @@
             </intent-filter>
         </service>
     </application>
+
+    <!-- Declare queries for Google Play Services to fix SecurityException -->
+    <queries>
+        <package android:name="com.google.android.gms" />
+        <package android:name="com.android.vending" />
+    </queries>
 
 </manifest>

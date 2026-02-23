@@ -62,6 +62,7 @@ class ChatViewModel @Inject constructor(
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
 
     private var messagesJob: Job? = null
+    private var profileLoadJob: Job? = null
     private var currentUserId: UserId? = null
     private val friendId: UserId
     private val friendUsername: String
@@ -82,14 +83,20 @@ class ChatViewModel @Inject constructor(
             authRepo.currentUserState.collect { auth ->
                 when (auth) {
                     is AuthState.LoggedIn -> {
+                        val wasLoggedOut = currentUserId == null
                         currentUserId = UserId(auth.user.uid)
                         _uiState.value = _uiState.value.copy(currentUserId = auth.user.uid)
                         loadMessages(UserId(auth.user.uid))
                         markMessagesAsRead(UserId(auth.user.uid))
-                        loadFriendProfile()
+
+                        // Only load profile once when first logging in or if profile is not yet loaded
+                        if (wasLoggedOut || _uiState.value.friendProfile == null) {
+                            loadFriendProfile()
+                        }
                     }
                     AuthState.LoggedOut -> {
                         messagesJob?.cancel()
+                        profileLoadJob?.cancel()
                         currentUserId = null
                         _uiState.value = ChatUiState(
                             isLoading = false,
@@ -146,11 +153,25 @@ class ChatViewModel @Inject constructor(
     /** Loads the friend's public profile so the chat header can show profile details. */
     private fun loadFriendProfile() {
         viewModelScope.launch {
-            try {
-                val profile = friendsRepository.getPublicProfile(friendId)
-                _uiState.value = _uiState.value.copy(friendProfile = profile)
-            } catch (_: Exception) {
-                // Non-critical — profile dialog will just show minimal info from nav args
+            // Use supervisorScope to prevent cancellation from affecting parent scope
+            kotlinx.coroutines.supervisorScope {
+                try {
+                    android.util.Log.d("ChatViewModel", "Loading friend profile for: ${friendId.value}")
+                    val profile = friendsRepository.getPublicProfile(friendId)
+                    if (profile != null) {
+                        android.util.Log.d("ChatViewModel", "Friend profile loaded successfully: username=${profile.username}, uid=${profile.uid}")
+                        _uiState.value = _uiState.value.copy(friendProfile = profile)
+                    } else {
+                        android.util.Log.w("ChatViewModel", "Friend profile is null for: ${friendId.value}")
+                    }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    // Silently handle cancellation - user navigated away, which is fine
+                    android.util.Log.d("ChatViewModel", "Profile loading cancelled (user navigated away)")
+                    // Don't re-throw - this prevents "StandaloneCoroutine was cancelled" error
+                } catch (e: Exception) {
+                    // Non-critical — profile dialog will just show minimal info from nav args
+                    android.util.Log.e("ChatViewModel", "Failed to load friend profile: ${e.message}", e)
+                }
             }
         }
     }
@@ -239,9 +260,9 @@ class ChatViewModel @Inject constructor(
                 val settings = userSettingsRepository.fetchUserSettings(userId)
                 val targetLanguage = settings.primaryLanguageCode.substringBefore("-") // Get language code (e.g., "en" from "en-US")
                 
-                // Translate all messages
-                val result = translateAllMessagesUseCase(messages, targetLanguage)
-                
+                // Translate only friend's messages (not user's own messages)
+                val result = translateAllMessagesUseCase(messages, targetLanguage, userId.value)
+
                 result.fold(
                     onSuccess = { translations ->
                         _uiState.value = _uiState.value.copy(

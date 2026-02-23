@@ -1115,7 +1115,7 @@ val ScreenUiTexts: List<String> = listOf(
     // ChatTranslateDialogTitle
     "Translate Conversation",
     // ChatTranslateDialogMessage
-    "Translate all messages to your preferred language? This will detect the language of each message and translate them.",
+    "Translate your friend's messages to your preferred language? This will detect the language of each message and translate them.",
     // ChatTranslateConfirm
     "Translate All",
     // ChatTranslating

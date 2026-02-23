@@ -302,7 +302,12 @@ fun SettingsScreen(
                             // Tester Feedback (Firebase App Distribution)
                             TextButton(
                                 onClick = {
-                                    FirebaseAppDistribution.getInstance().startFeedback(R.string.feedback_additional_info)
+                                    try {
+                                        FirebaseAppDistribution.getInstance().startFeedback(R.string.feedback_additional_info)
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("SettingsScreen", "Firebase App Distribution not available: ${e.message}")
+                                        // Silently fail - this feature may not be available in all builds
+                                    }
                                 },
                                 modifier = Modifier.weight(1f)
                             ) {
