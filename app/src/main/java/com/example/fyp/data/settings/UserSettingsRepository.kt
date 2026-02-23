@@ -28,6 +28,15 @@ interface UserSettingsRepository {
     suspend fun setAutoThemeEnabled(userId: UserId, enabled: Boolean)
 
     /**
+     * Update a single push-notification toggle for the user.
+     *
+     * @param field  One of "notifyNewMessages", "notifyFriendRequests",
+     *               "notifyRequestAccepted", "notifySharedInbox"
+     * @param enabled  Whether the notification type should be delivered.
+     */
+    suspend fun setNotificationPref(userId: UserId, field: String, enabled: Boolean)
+
+    /**
      * Expand history view limit by increment (costs coins).
      */
     suspend fun expandHistoryViewLimit(userId: UserId, newLimit: Int)

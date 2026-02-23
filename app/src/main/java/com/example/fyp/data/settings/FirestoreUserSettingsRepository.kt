@@ -37,6 +37,10 @@ class FirestoreUserSettingsRepository @Inject constructor(
         val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
         val historyViewLimit = snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT
         val autoThemeEnabled = snap?.getBoolean("autoThemeEnabled") ?: false
+        val notifyNewMessages = snap?.getBoolean("notifyNewMessages") ?: true
+        val notifyFriendRequests = snap?.getBoolean("notifyFriendRequests") ?: true
+        val notifyRequestAccepted = snap?.getBoolean("notifyRequestAccepted") ?: true
+        val notifySharedInbox = snap?.getBoolean("notifySharedInbox") ?: true
 
         return UserSettings(
             primaryLanguageCode = code.ifBlank { "en-US" },
@@ -46,7 +50,11 @@ class FirestoreUserSettingsRepository @Inject constructor(
             unlockedPalettes = unlockedPalettes,
             voiceSettings = voiceSettings,
             historyViewLimit = historyViewLimit,
-            autoThemeEnabled = autoThemeEnabled
+            autoThemeEnabled = autoThemeEnabled,
+            notifyNewMessages = notifyNewMessages,
+            notifyFriendRequests = notifyFriendRequests,
+            notifyRequestAccepted = notifyRequestAccepted,
+            notifySharedInbox = notifySharedInbox,
         )
     }
 
@@ -118,6 +126,20 @@ class FirestoreUserSettingsRepository @Inject constructor(
     override suspend fun setAutoThemeEnabled(userId: UserId, enabled: Boolean) {
         docRef(userId.value)
             .set(mapOf("autoThemeEnabled" to enabled), SetOptions.merge())
+            .await()
+    }
+
+    /** Allowed field names for notification preferences. */
+    private val notificationFields = setOf(
+        "notifyNewMessages", "notifyFriendRequests", "notifyRequestAccepted", "notifySharedInbox"
+    )
+
+    override suspend fun setNotificationPref(userId: UserId, field: String, enabled: Boolean) {
+        require(field in notificationFields) {
+            "Unknown notification preference field: $field"
+        }
+        docRef(userId.value)
+            .set(mapOf(field to enabled), SetOptions.merge())
             .await()
     }
 
