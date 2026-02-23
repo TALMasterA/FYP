@@ -23,6 +23,18 @@
 # Keep Firebase classes
 -keep class com.google.firebase.** { *; }
 -keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.appdistribution.**
+-keep class com.google.firebase.appdistribution.** { *; }
+
+# Keep Azure Speech SDK native methods and classes
+-keep class com.microsoft.cognitiveservices.speech.** { *; }
+-keepclassmembers class com.microsoft.cognitiveservices.speech.** { *; }
+-dontwarn com.microsoft.cognitiveservices.speech.**
+
+# Keep native method declarations
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
 
 # Keep Hilt classes
 -keep class dagger.hilt.** { *; }

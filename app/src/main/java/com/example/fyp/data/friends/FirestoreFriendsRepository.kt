@@ -70,7 +70,12 @@ class FirestoreFriendsRepository @Inject constructor(
             .get()
             .await()
             .toObject(PublicUserProfile::class.java)
+    } catch (e: kotlinx.coroutines.CancellationException) {
+        // Re-throw cancellation to properly propagate coroutine cancellation
+        throw e
     } catch (e: Exception) {
+        // Catch other exceptions (network, Firestore errors, etc.) and return null
+        android.util.Log.e("FirestoreFriendsRepository", "Failed to get public profile for ${userId.value}: ${e.message}")
         null
     }
 

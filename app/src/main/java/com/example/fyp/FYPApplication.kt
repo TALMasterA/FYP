@@ -17,9 +17,20 @@ class FYPApplication : Application() {
             enableStrictMode()
         }
         
-        FirebaseApp.initializeApp(this)
+        // Initialize Firebase with error handling
+        try {
+            FirebaseApp.initializeApp(this)
+            android.util.Log.d("FYPApplication", "Firebase initialized successfully")
+        } catch (e: Exception) {
+            android.util.Log.e("FYPApplication", "Firebase initialization failed", e)
+        }
+
         // Create notification channels for push notifications (required on Android 8+)
-        FcmNotificationService.createNotificationChannels(this)
+        try {
+            FcmNotificationService.createNotificationChannels(this)
+        } catch (e: Exception) {
+            android.util.Log.e("FYPApplication", "Failed to create notification channels", e)
+        }
     }
     
     /**

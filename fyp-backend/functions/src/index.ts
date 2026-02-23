@@ -637,7 +637,10 @@ const MAX_MESSAGE_PREVIEW_LENGTH = 100;
  * Security: Runs with admin privileges — bypasses Firestore security rules.
  */
 export const sendChatNotification = onDocumentCreated(
-  "chats/{chatId}/messages/{messageId}",
+  {
+    document: "chats/{chatId}/messages/{messageId}",
+    region: "us-central1",
+  },
   async (event) => {
     const data = event.data?.data();
     if (!data) return;
@@ -744,7 +747,10 @@ export const sendChatNotification = onDocumentCreated(
  * Only fires when status changes to "ACCEPTED".
  */
 export const sendRequestAcceptedNotification = onDocumentUpdated(
-  "friend_requests/{requestId}",
+  {
+    document: "friend_requests/{requestId}",
+    region: "us-central1",
+  },
   async (event) => {
     const before = event.data?.before?.data();
     const after = event.data?.after?.data();
@@ -798,7 +804,10 @@ export const sendRequestAcceptedNotification = onDocumentUpdated(
  * Trigger: Firestore document create at friend_requests/{requestId}
  */
 export const sendFriendRequestNotification = onDocumentCreated(
-  "friend_requests/{requestId}",
+  {
+    document: "friend_requests/{requestId}",
+    region: "us-central1",
+  },
   async (event) => {
     const data = event.data?.data();
     if (!data) return;
