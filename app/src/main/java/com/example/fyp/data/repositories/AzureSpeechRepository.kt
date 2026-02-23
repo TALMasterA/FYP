@@ -42,9 +42,6 @@ class AzureSpeechRepository(
 
         /** Maximum number of candidate languages for auto-detection */
         const val MAX_AUTO_DETECT_LANGUAGES = 4
-
-        /** Language code prefix length for script selection */
-        const val LANGUAGE_PREFIX_LENGTH = 2
     }
 
     private var cachedToken: String? = null
@@ -80,44 +77,41 @@ class AzureSpeechRepository(
 
     override suspend fun recognizeOnce(languageCode: String): SpeechResult =
         withContext(Dispatchers.IO) {
+            var speechConfig: SpeechConfig? = null
+            var audioConfig: AudioConfig? = null
+            var recognizer: SpeechRecognizer? = null
             try {
-                val speechConfig = getSpeechConfig()
+                speechConfig = getSpeechConfig()
                 speechConfig.speechRecognitionLanguage = languageCode
+                audioConfig = AudioConfig.fromDefaultMicrophoneInput()
+                recognizer = SpeechRecognizer(speechConfig, audioConfig)
 
-                val audioConfig = AudioConfig.fromDefaultMicrophoneInput()
-                val recognizer = SpeechRecognizer(speechConfig, audioConfig)
-
-                try {
-                    // .get() is acceptable here since we're in Dispatchers.IO
-                    // The key improvement is proper cancellation support
-                    val result = recognizer.recognizeOnceAsync().get()
-                    if (result.reason == ResultReason.RecognizedSpeech) {
-                        Log.i("AzureSpeech", "Recognized: ${result.text}")
-                        SpeechResult.Success(result.text)
-                    } else {
-                        val errorDetails =
-                            if (result.reason == ResultReason.Canceled) {
-                                val cancellation = CancellationDetails.fromResult(result)
-                                "Canceled: ${cancellation.reason}. Error details: ${cancellation.errorDetails}"
-                            } else {
-                                result.reason.toString()
-                            }
-
-                        logAndError(
-                            tag = "AzureSpeech",
-                            userMessage = ErrorMessageMapper.mapSpeechRecognitionError(errorDetails),
-                            logMessage = "Speech not recognized, reason: $errorDetails"
-                        )
-                    }
-                } finally {
-                    recognizer.close()
+                val result = recognizer.recognizeOnceAsync().get()
+                if (result.reason == ResultReason.RecognizedSpeech) {
+                    Log.i("AzureSpeech", "Recognized: ${result.text}")
+                    SpeechResult.Success(result.text)
+                } else {
+                    val errorDetails =
+                        if (result.reason == ResultReason.Canceled) {
+                            val cancellation = CancellationDetails.fromResult(result)
+                            "Canceled: ${cancellation.reason}. Error details: ${cancellation.errorDetails}"
+                        } else {
+                            result.reason.toString()
+                        }
+                    logAndError(
+                        tag = "AzureSpeech",
+                        userMessage = ErrorMessageMapper.mapSpeechRecognitionError(errorDetails),
+                        logMessage = "Speech not recognized, reason: $errorDetails"
+                    )
                 }
             } catch (ex: Exception) {
-                logAndError(
-                    tag = "AzureSpeech",
-                    userMessage = ErrorMessageMapper.map(ex),
-                    ex = ex
-                )
+                logAndError(tag = "AzureSpeech", userMessage = ErrorMessageMapper.map(ex), ex = ex)
+            } finally {
+                // Close in reverse-creation order; small delay lets native threads settle
+                runCatching { recognizer?.close() }
+                runCatching { audioConfig?.close() }
+                kotlinx.coroutines.delay(50)
+                runCatching { speechConfig?.close() }
             }
         }
 
@@ -131,53 +125,43 @@ class AzureSpeechRepository(
     override suspend fun recognizeOnceWithAutoDetect(
         candidateLanguages: List<String>
     ): Result<AutoDetectRecognitionResult> = withContext(Dispatchers.IO) {
+        var speechConfig: SpeechConfig? = null
+        var audioConfig: AudioConfig? = null
+        var recognizer: SpeechRecognizer? = null
         try {
-            val speechConfig = getSpeechConfig()
-
-            // Azure supports up to 4 languages for auto-detect
+            speechConfig = getSpeechConfig()
             val languages = candidateLanguages.take(MAX_AUTO_DETECT_LANGUAGES)
             if (languages.isEmpty()) {
                 return@withContext Result.failure(IllegalArgumentException("At least one candidate language is required"))
             }
-
             val autoDetectConfig = AutoDetectSourceLanguageConfig.fromLanguages(languages)
-            val audioConfig = AudioConfig.fromDefaultMicrophoneInput()
+            audioConfig = AudioConfig.fromDefaultMicrophoneInput()
+            recognizer = SpeechRecognizer(speechConfig, autoDetectConfig, audioConfig)
 
-            val recognizer = SpeechRecognizer(speechConfig, autoDetectConfig, audioConfig)
-
-            try {
-                // .get() is acceptable here since we're in Dispatchers.IO
-                val result = recognizer.recognizeOnceAsync().get()
-
-                if (result.reason == ResultReason.RecognizedSpeech) {
-                    // Get the detected language from the result
-                    val autoDetectResult = com.microsoft.cognitiveservices.speech.AutoDetectSourceLanguageResult.fromResult(result)
-                    val detectedLanguage = autoDetectResult.language ?: languages.first()
-
-                    Log.i("AzureSpeech", "Auto-detect recognized: ${result.text}, language: $detectedLanguage")
-
-                    Result.success(AutoDetectRecognitionResult(
-                        text = result.text,
-                        detectedLanguage = detectedLanguage
-                    ))
+            val result = recognizer.recognizeOnceAsync().get()
+            if (result.reason == ResultReason.RecognizedSpeech) {
+                val autoDetectResult = com.microsoft.cognitiveservices.speech.AutoDetectSourceLanguageResult.fromResult(result)
+                val detectedLanguage = autoDetectResult.language ?: languages.first()
+                Log.i("AzureSpeech", "Auto-detect recognized: ${result.text}, language: $detectedLanguage")
+                Result.success(AutoDetectRecognitionResult(text = result.text, detectedLanguage = detectedLanguage))
+            } else {
+                val errorDetails = if (result.reason == ResultReason.Canceled) {
+                    val cancellation = CancellationDetails.fromResult(result)
+                    "Canceled: ${cancellation.reason}. Error details: ${cancellation.errorDetails}"
                 } else {
-                    val errorDetails = if (result.reason == ResultReason.Canceled) {
-                        val cancellation = CancellationDetails.fromResult(result)
-                        "Canceled: ${cancellation.reason}. Error details: ${cancellation.errorDetails}"
-                    } else {
-                        result.reason.toString()
-                    }
-
-                    Log.e("AzureSpeech", "Auto-detect recognition failed: $errorDetails")
-                    val userMessage = ErrorMessageMapper.mapSpeechRecognitionError(errorDetails)
-                    Result.failure(Exception(userMessage))
+                    result.reason.toString()
                 }
-            } finally {
-                recognizer.close()
+                Log.e("AzureSpeech", "Auto-detect recognition failed: $errorDetails")
+                Result.failure(Exception(ErrorMessageMapper.mapSpeechRecognitionError(errorDetails)))
             }
         } catch (ex: Exception) {
             Log.e("AzureSpeech", "Error in auto-detect recognition", ex)
             Result.failure(Exception(ErrorMessageMapper.map(ex)))
+        } finally {
+            runCatching { recognizer?.close() }
+            runCatching { audioConfig?.close() }
+            kotlinx.coroutines.delay(50)
+            runCatching { speechConfig?.close() }
         }
     }
 
@@ -193,51 +177,40 @@ class AzureSpeechRepository(
         withContext(Dispatchers.IO) {
             if (text.isBlank()) return@withContext SpeechResult.Error("No text to speak")
 
+            var speechConfig: SpeechConfig? = null
+            var synthesizer: SpeechSynthesizer? = null
             try {
-                val speechConfig = getSpeechConfig()
+                speechConfig = getSpeechConfig()
                 speechConfig.speechSynthesisLanguage = languageCode
-
-                // Set voice name if provided, otherwise Azure will use default for the language
                 if (!voiceName.isNullOrBlank()) {
                     speechConfig.speechSynthesisVoiceName = voiceName
                 }
+                synthesizer = SpeechSynthesizer(speechConfig)
 
-                val synthesizer = SpeechSynthesizer(speechConfig)
-                try {
-                    // .get() is acceptable here since we're in Dispatchers.IO
-                    val result = synthesizer.SpeakTextAsync(text).get()
-                    when (result.reason) {
-                        ResultReason.SynthesizingAudioCompleted -> {
-                            Log.i("AzureTTS", "Speech synthesized for text: $text")
-                            SpeechResult.Success("Spoken successfully")
-                        }
-
-                        ResultReason.Canceled -> {
-                            val cancellation = SpeechSynthesisCancellationDetails.fromResult(result)
-                            val errorDetails = "TTS canceled: ${cancellation.reason}. ${cancellation.errorDetails}"
-                            logAndError(
-                                tag = "AzureTTS",
-                                userMessage = ErrorMessageMapper.mapSpeechRecognitionError(errorDetails),
-                                logMessage = errorDetails
-                            )
-                        }
-
-                        else -> {
-                            logAndError(
-                                tag = "AzureTTS",
-                                userMessage = "Speech synthesis failed. Please try again."
-                            )
-                        }
+                val result = synthesizer.SpeakTextAsync(text).get()
+                when (result.reason) {
+                    ResultReason.SynthesizingAudioCompleted -> {
+                        Log.i("AzureTTS", "Speech synthesized for text: $text")
+                        SpeechResult.Success("Spoken successfully")
                     }
-                } finally {
-                    synthesizer.close()
+                    ResultReason.Canceled -> {
+                        val cancellation = SpeechSynthesisCancellationDetails.fromResult(result)
+                        val errorDetails = "TTS canceled: ${cancellation.reason}. ${cancellation.errorDetails}"
+                        logAndError(
+                            tag = "AzureTTS",
+                            userMessage = ErrorMessageMapper.mapSpeechRecognitionError(errorDetails),
+                            logMessage = errorDetails
+                        )
+                    }
+                    else -> logAndError(tag = "AzureTTS", userMessage = "Speech synthesis failed. Please try again.")
                 }
             } catch (ex: Exception) {
-                logAndError(
-                    tag = "AzureTTS",
-                    userMessage = ErrorMessageMapper.map(ex),
-                    ex = ex
-                )
+                logAndError(tag = "AzureTTS", userMessage = ErrorMessageMapper.map(ex), ex = ex)
+            } finally {
+                // Synthesizer must be closed before speechConfig to avoid native mutex crash
+                runCatching { synthesizer?.close() }
+                kotlinx.coroutines.delay(50)
+                runCatching { speechConfig?.close() }
             }
         }
 
