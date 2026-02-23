@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.StandardScreenBody
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
@@ -265,8 +264,6 @@ fun HistoryScreen(
         )
     }
 
-    val showUiDropdown = (selectedTab == 0) || (selectedTab == 1 && selectedSessionId == null)
-
     StandardScreenScaffold(
         title = t(UiTextKey.HistoryTitle),
         onBack = {
@@ -343,16 +340,6 @@ fun HistoryScreen(
             scrollable = false,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (showUiDropdown) {
-                AppLanguageDropdown(
-                    uiLanguages = uiLanguages,
-                    appLanguageState = appLanguageState,
-                    onUpdateAppLanguage = onUpdateAppLanguage,
-                    uiText = uiText,
-                    isLoggedIn = true
-                )
-            }
-
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = MaterialTheme.colorScheme.background,

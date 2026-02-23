@@ -4,9 +4,9 @@ package com.example.fyp.model.ui
 val ScreenUiTexts: List<String> = listOf(
     // --- Speech/Home Instructions ---
     // SpeechInstructions
-    "Select the detect and translate languages below. Only suitable for short phrases. \n" +
-            "Support languages: English, Cantonese, Japanese, Mandarin... \n" +
-            "Switch button for switching between the languages selected",
+    "Select From and To languages below. Only suitable for short phrases.\n" +
+            "Supported languages: English, Cantonese, Japanese, Mandarin and more.\n" +
+            "Use the ⇄ button to swap the selected languages.",
 
     // HomeInstructions
     "You can change the app UI language by the dropdown on top. \n" +

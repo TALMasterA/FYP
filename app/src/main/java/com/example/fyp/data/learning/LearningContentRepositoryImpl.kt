@@ -7,6 +7,8 @@ import com.example.fyp.model.DeploymentName
 import com.example.fyp.model.LanguageCode
 import javax.inject.Inject
 
+private const val MAX_VOCABULARY_ITEMS = 8
+
 class LearningContentRepositoryImpl @Inject constructor(
     private val genAi: CloudGenAiClient
 ) : LearningContentRepository {
@@ -22,21 +24,19 @@ class LearningContentRepositoryImpl @Inject constructor(
         }
 
         val prompt = """
-Create learning material for target language: $targetLanguageCode.
-Explain in: $primaryLanguageCode.
+Create a concise study sheet for target language: $targetLanguageCode.
+Explanation language: $primaryLanguageCode.
 
-Show language name instead of language code.
-
-User translation history (related):
+User's recent translation history:
 $recent
 
-Create STUDY MATERIAL about vocabulary and grammar from the history above, using the $primaryLanguageCode language.
-Please use a beautiful format to present the study material. Change line if needed.
-Include examples, explanations, and practical usage.
-
-Please do not include question asking like "If you want...", generate a learning material instead of response-like tone.
-
-Note: Quiz is generated separately (and this content will be referenced), so focus only on high-quality educational content.
+Instructions:
+- Select only the 5–$MAX_VOCABULARY_ITEMS most useful and representative vocabulary items or short phrases from the history above.
+- For each item provide: the word/phrase in $targetLanguageCode, its $primaryLanguageCode meaning, a short pronunciation guide, and one brief example sentence.
+- Add a short grammar note (2–3 sentences max) only if a clear grammar pattern appears across the items.
+- Use clear headings and bullet points.
+- Do NOT include more than $MAX_VOCABULARY_ITEMS vocabulary items.
+- Do NOT use a question or response tone — write as a concise study sheet only.
 """.trimIndent()
 
         return genAi.generateLearningContent(
