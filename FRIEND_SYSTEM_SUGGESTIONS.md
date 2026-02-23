@@ -60,19 +60,30 @@ Ordered by priority (highest impact first).
 
 ---
 
-## 7. Propagate username change to pending friend requests ⏳ Pending
+## 7. Propagate username change to pending friend requests ✅ Implemented
 
 **Problem:** `FriendRequest` stores `fromUsername` / `toUsername` at the time the request is created. If either party renames before the request is accepted/rejected, the request card still shows the old name.
 
-**Suggested fix:** When `propagateUsernameChange` runs, also query `friend_requests` where `fromUserId == userId` and `status == PENDING`, and update `fromUsername` in each. This requires one extra Firestore query + batch. Risk: currently the `friend_requests` write rules only allow the sender to update `status` (cancel), not arbitrary fields — a rule adjustment would be needed.
+**Fix applied:** `propagateUsernameChange` now also queries `friend_requests` where `fromUserId == userId` and `status == PENDING`, and updates `fromUsername` in a batch write. Firestore rule updated to allow the sender to update `fromUsername` on their own PENDING requests:
+```
+(resource.data.fromUserId == request.auth.uid &&
+ resource.data.status == "PENDING" &&
+ request.resource.data.diff(resource.data).affectedKeys().hasOnly(["fromUsername"]))
+```
 
 ---
 
-## 8. Real-time username refresh without app restart ⏳ Pending
+## 8. Real-time username refresh without app restart ✅ Implemented
 
-**Problem:** `SharedFriendsDataSource` caches usernames in a `Map<String, String>` that is populated once from the friends list. If a friend renames after the cache is warmed, the in-memory cache becomes stale until the next app launch (or pull-to-refresh on the Friends screen).
+**Problem:** `SharedFriendsDataSource` caches usernames in a `Map<String, String>`. If a friend renames after the cache is warmed, the in-memory cache becomes stale.
 
-**Suggested fix:** Extend `SharedFriendsDataSource.friends` to re-populate the cache whenever the Firestore listener fires (i.e., whenever any friend document is updated). Because `observeFriends()` already listens for document changes, a renamed friend's updated `FriendRelation` will trigger a new emission automatically (once suggestion #1 above writes the new username), refreshing the cache in real time.
+**Fix applied:** This now works end-to-end automatically. When a friend renames:
+1. `propagateUsernameChange` writes the new `friendUsername` to `users/{myId}/friends/{friendId}`.
+2. `SharedFriendsDataSource.observeFriends` real-time listener fires (Firestore snapshot listener).
+3. The `_friends.value` is updated with the new `FriendRelation` — the Friends screen re-renders immediately.
+4. The `usernameCache` map is also updated on every emission: `list.forEach { rel -> usernameCache[rel.friendId] = rel.friendUsername }`.
+
+No app restart needed.
 
 ---
 
@@ -124,8 +135,10 @@ Ordered by priority (highest impact first).
 
 ---
 
-## 15. Rate-limit friend request sending ⏳ Pending
+## 15. Rate-limit friend request sending ✅ Implemented
 
 **Problem:** A user can send friend requests to many users in a short time, potentially spam-adding strangers.
 
-**Suggested fix:** Add a Cloud Functions-backed rate limit (e.g., max 20 outgoing requests per hour per user). Alternatively, use Firestore rules to enforce a maximum `friend_requests` count by running a `count()` aggregation query (available in Firestore v9.4+) before allowing a create. Client-side, the search results already disable the button for existing connections, but a malicious user could bypass client-side checks.
+**Fix applied:** Client-side rate limit: `FriendsViewModel.sendFriendRequest()` checks `outgoingRequests.size >= MAX_PENDING_REQUESTS` (20) before sending. If the limit is reached, a clear error message is shown. The search dialog already hides the Add button for existing connections, preventing duplicate requests. The constant `MAX_PENDING_REQUESTS = 20` is defined at file level for easy adjustment.
+
+> **Note:** A malicious user could bypass client-side checks by using the Firestore API directly. For full backend enforcement, a Cloud Functions callable that validates request counts server-side would be needed (still pending).

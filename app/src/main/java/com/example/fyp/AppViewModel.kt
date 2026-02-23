@@ -1,12 +1,14 @@
 package com.example.fyp
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.friends.ChatRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.core.FcmNotificationService
 import com.example.fyp.domain.friends.EnsurePublicProfileExistsUseCase
 import com.example.fyp.model.UserId
 import com.example.fyp.model.user.AuthState
@@ -34,13 +36,14 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class AppViewModel @Inject constructor(
+    application: Application,
     private val authRepository: FirebaseAuthRepository,
     private val ensurePublicProfileExistsUseCase: EnsurePublicProfileExistsUseCase,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
     private val sharedSettingsDataSource: SharedSettingsDataSource,
     private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val chatRepository: ChatRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private var lastInitializedUserId: String? = null
 
@@ -81,6 +84,8 @@ class AppViewModel @Inject constructor(
                             lastInitializedUserId = userId
                             initializeUserProfile(userId)
                             startObservingUnread(userId)
+                            // Upload FCM token so backend can send push notifications
+                            FcmNotificationService.uploadTokenIfLoggedIn(getApplication())
                         }
                     }
                     is AuthState.LoggedOut -> {

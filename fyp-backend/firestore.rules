@@ -145,12 +145,16 @@ service cloud.firestore {
         && request.resource.data.fromUserId == request.auth.uid
         && request.resource.data.status == "PENDING";
 
-      // Update if receiver (accept/reject) or sender (cancel)
+      // Update if receiver (accept/reject) or sender (cancel OR update own fromUsername)
       allow update: if request.auth != null && (
-        (resource.data.toUserId == request.auth.uid && 
+        (resource.data.toUserId == request.auth.uid &&
          request.resource.data.status in ["ACCEPTED", "REJECTED"]) ||
-        (resource.data.fromUserId == request.auth.uid && 
-         request.resource.data.status == "CANCELLED")
+        (resource.data.fromUserId == request.auth.uid &&
+         request.resource.data.status == "CANCELLED") ||
+        // Allow sender to update fromUsername when they rename themselves
+        (resource.data.fromUserId == request.auth.uid &&
+         resource.data.status == "PENDING" &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(["fromUsername"]))
       );
 
       // Allow sender or receiver to delete completed (non-PENDING) requests

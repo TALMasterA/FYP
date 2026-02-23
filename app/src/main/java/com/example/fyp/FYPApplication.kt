@@ -3,6 +3,7 @@ package com.example.fyp
 import android.app.Application
 import android.os.StrictMode
 import com.google.firebase.FirebaseApp
+import com.example.fyp.core.FcmNotificationService
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
@@ -17,6 +18,8 @@ class FYPApplication : Application() {
         }
         
         FirebaseApp.initializeApp(this)
+        // Create notification channels for push notifications (required on Android 8+)
+        FcmNotificationService.createNotificationChannels(this)
     }
     
     /**
