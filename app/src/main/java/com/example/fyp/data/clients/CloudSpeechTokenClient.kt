@@ -5,6 +5,7 @@ import com.example.fyp.core.NetworkRetry
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.FirebaseFunctionsException
 import kotlinx.coroutines.tasks.await
+import java.util.concurrent.TimeUnit
 
 data class SpeechTokenResponse(
     val token: String,
@@ -14,6 +15,10 @@ data class SpeechTokenResponse(
 class CloudSpeechTokenClient(
     private val functions: FirebaseFunctions = FirebaseFunctions.getInstance()
 ) {
+    private companion object {
+        const val TIMEOUT_SECONDS = 30L
+    }
+
     suspend fun getSpeechToken(): SpeechTokenResponse {
         Log.i("CloudSpeechToken", "getSpeechToken() called")
 
@@ -24,6 +29,7 @@ class CloudSpeechTokenClient(
             ) {
                 val result = functions
                     .getHttpsCallable("getSpeechToken")
+                    .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                     .call()
                     .await()
 

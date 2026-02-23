@@ -3,6 +3,7 @@ package com.example.fyp.data.clients
 import com.example.fyp.core.NetworkRetry
 import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.tasks.await
+import java.util.concurrent.TimeUnit
 
 data class DetectedLanguage(
     val language: String,
@@ -19,6 +20,10 @@ data class LanguageAlternative(
 class CloudTranslatorClient(
     private val functions: FirebaseFunctions = FirebaseFunctions.getInstance()
 ) {
+    private companion object {
+        const val TIMEOUT_SECONDS = 30L
+    }
+
     suspend fun translateText(
         text: String,
         from: String?,
@@ -32,6 +37,7 @@ class CloudTranslatorClient(
 
         val result = functions
             .getHttpsCallable("translateText")
+            .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .call(data)
             .await()
 
@@ -60,6 +66,7 @@ class CloudTranslatorClient(
 
             val result = functions
                 .getHttpsCallable("translateTexts")
+                .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .call(data)
                 .await()
 
@@ -83,6 +90,7 @@ class CloudTranslatorClient(
 
         val result = functions
             .getHttpsCallable("detectLanguage")
+            .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .call(data)
             .await()
 

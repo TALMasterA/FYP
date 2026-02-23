@@ -157,11 +157,17 @@ class FavoritesViewModel @Inject constructor(
     fun removeFavorite(favoriteId: String) {
         val userId = currentUserId ?: return
         viewModelScope.launch {
-            favoritesRepo.removeFavorite(userId, favoriteId)
-            // Update local state immediately instead of waiting for listener
-            _uiState.value = _uiState.value.copy(
-                favorites = _uiState.value.favorites.filter { it.id != favoriteId }
-            )
+            try {
+                favoritesRepo.removeFavorite(userId, favoriteId)
+                // Update local state immediately instead of waiting for listener
+                _uiState.value = _uiState.value.copy(
+                    favorites = _uiState.value.favorites.filter { it.id != favoriteId }
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = e.message ?: "Failed to remove favorite"
+                )
+            }
         }
     }
 

@@ -104,25 +104,36 @@ class ChatViewModel @Inject constructor(
     private fun loadMessages(userId: UserId) {
         messagesJob?.cancel()
         messagesJob = viewModelScope.launch {
-            observeMessagesUseCase(userId, friendId).collect { messages ->
-                _uiState.value = _uiState.value.copy(
-                    messages = messages,
-                    isLoading = false
-                )
-                // Debounce mark-as-read so rapid message updates don't trigger
-                // redundant Firestore writes
-                markReadJob?.cancel()
-                markReadJob = launch {
-                    kotlinx.coroutines.delay(300)
-                    markMessagesAsRead(userId)
+            try {
+                observeMessagesUseCase(userId, friendId).collect { messages ->
+                    _uiState.value = _uiState.value.copy(
+                        messages = messages,
+                        isLoading = false
+                    )
+                    // Debounce mark-as-read so rapid message updates don't trigger
+                    // redundant Firestore writes
+                    markReadJob?.cancel()
+                    markReadJob = launch {
+                        kotlinx.coroutines.delay(300)
+                        markMessagesAsRead(userId)
+                    }
                 }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Failed to load messages"
+                )
             }
         }
     }
 
     private fun markMessagesAsRead(userId: UserId) {
         viewModelScope.launch {
-            markMessagesAsReadUseCase(userId, friendId)
+            try {
+                markMessagesAsReadUseCase(userId, friendId)
+            } catch (_: Exception) {
+                // Non-critical: ignore errors marking messages as read
+            }
         }
     }
 

@@ -7,6 +7,9 @@ import com.example.fyp.model.LanguageCode
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -88,13 +91,19 @@ class FirestoreLearningSheetsRepository @Inject constructor(
         // Let's implement it using 'in' query (chunks of 10)
 
         val chunks = normalizedTargets.chunked(10)
-        for (chunk in chunks) {
-            val q = db.collection("users").document(uid.value).collection("learning_sheets")
-                .whereEqualTo("primaryLanguageCode", p)
-                .whereIn("targetLanguageCode", chunk)
+        // Fetch all chunks in parallel to reduce latency
+        val chunkResults = coroutineScope {
+            chunks.map { chunk ->
+                async {
+                    val q = db.collection("users").document(uid.value).collection("learning_sheets")
+                        .whereEqualTo("primaryLanguageCode", p)
+                        .whereIn("targetLanguageCode", chunk)
+                    q.get().await()
+                }
+            }.awaitAll()
+        }
 
-            val snaps = q.get().await()
-
+        for (snaps in chunkResults) {
             // Mark found ones
             snaps.documents.forEach { doc ->
                 val data = doc.toObject(LearningSheetDoc::class.java)
