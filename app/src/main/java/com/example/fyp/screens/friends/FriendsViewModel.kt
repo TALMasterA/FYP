@@ -324,8 +324,24 @@ class FriendsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             sendFriendRequestUseCase(fromUserId, UserId(toUserId)).fold(
-                onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Friend request sent!", error = null) },
-                onFailure = { _uiState.value = _uiState.value.copy(error = it.message ?: "Failed to send request") }
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        successMessage = "Friend request sent! They will be notified.",
+                        error = null
+                    )
+                },
+                onFailure = { e ->
+                    val message = when {
+                        e.message?.contains("Already friends", ignoreCase = true) == true ->
+                            "You are already friends with this user."
+                        e.message?.contains("already sent", ignoreCase = true) == true ->
+                            "You already have a pending request to this user. Please wait for their reply."
+                        e.message?.contains("profile not found", ignoreCase = true) == true ->
+                            "Could not find the user's profile. They may have deleted their account."
+                        else -> "Failed to send friend request. Please try again."
+                    }
+                    _uiState.value = _uiState.value.copy(error = message)
+                }
             )
         }
     }
@@ -338,8 +354,22 @@ class FriendsViewModel @Inject constructor(
             ?.let { UserId(it) } ?: return
         viewModelScope.launch {
             acceptFriendRequestUseCase(requestId, userId, friendUserId).fold(
-                onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Friend request accepted!", error = null) },
-                onFailure = { _uiState.value = _uiState.value.copy(error = it.message ?: "Failed to accept request") }
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        successMessage = "Friend request accepted! You are now friends.",
+                        error = null
+                    )
+                },
+                onFailure = { e ->
+                    val message = when {
+                        e.message?.contains("not found", ignoreCase = true) == true ->
+                            "This request no longer exists — it may have been cancelled."
+                        e.message?.contains("not authorized", ignoreCase = true) == true ->
+                            "You are not authorized to accept this request."
+                        else -> "Failed to accept request. Please try again."
+                    }
+                    _uiState.value = _uiState.value.copy(error = message)
+                }
             )
         }
     }
@@ -347,8 +377,20 @@ class FriendsViewModel @Inject constructor(
     fun rejectFriendRequest(requestId: String) {
         viewModelScope.launch {
             rejectFriendRequestUseCase(requestId).fold(
-                onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Request rejected", error = null) },
-                onFailure = { _uiState.value = _uiState.value.copy(error = it.message ?: "Failed to reject request") }
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        successMessage = "Request declined.",
+                        error = null
+                    )
+                },
+                onFailure = { e ->
+                    val message = when {
+                        e.message?.contains("not found", ignoreCase = true) == true ->
+                            "This request no longer exists."
+                        else -> "Failed to decline request. Please try again."
+                    }
+                    _uiState.value = _uiState.value.copy(error = message)
+                }
             )
         }
     }
@@ -356,8 +398,20 @@ class FriendsViewModel @Inject constructor(
     fun cancelFriendRequest(requestId: String) {
         viewModelScope.launch {
             cancelFriendRequestUseCase(requestId).fold(
-                onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Friend request cancelled", error = null) },
-                onFailure = { _uiState.value = _uiState.value.copy(error = it.message ?: "Failed to cancel request") }
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(
+                        successMessage = "Friend request cancelled.",
+                        error = null
+                    )
+                },
+                onFailure = { e ->
+                    val message = when {
+                        e.message?.contains("not found", ignoreCase = true) == true ->
+                            "This request no longer exists — it may have already been accepted or declined."
+                        else -> "Failed to cancel request. Please try again."
+                    }
+                    _uiState.value = _uiState.value.copy(error = message)
+                }
             )
         }
     }
@@ -375,14 +429,13 @@ class FriendsViewModel @Inject constructor(
             removeFriendUseCase(userId, UserId(friendId)).fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
-                        successMessage = "Friend removed. Pull down to refresh before adding them again.",
+                        successMessage = "Friend removed.",
                         error = null
                     )
                 },
-                onFailure = {
-                    // On failure, we should reload from the data source to restore correct state
+                onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
-                        error = it.message ?: "Failed to remove friend"
+                        error = "Failed to remove friend: ${e.message ?: "please try again."}"
                     )
                 }
             )

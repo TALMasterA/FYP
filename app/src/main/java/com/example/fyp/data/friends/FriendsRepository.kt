@@ -134,4 +134,15 @@ interface FriendsRepository {
      * don't fail with NOT_FOUND errors.
      */
     suspend fun ensureUserDocumentExists(userId: UserId)
+
+    /**
+     * Propagate a username change to all friends' friend-list entries.
+     *
+     * Each FriendRelation document caches the friend's username at the time the
+     * friendship was created. When a user renames themselves, every friend's copy
+     * of that cached username must be updated so the Friends screen shows the new name.
+     *
+     * Path updated: users/{friendId}/friends/{userId}.friendUsername
+     */
+    suspend fun propagateUsernameChange(userId: UserId, newUsername: String): Result<Unit>
 }

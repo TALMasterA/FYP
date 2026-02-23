@@ -130,9 +130,17 @@ class ProfileViewModel @Inject constructor(
                         UserId(userId),
                         mapOf("username" to username)
                     ).onSuccess {
+                        // Propagate the new username to all friends' cached FriendRelation docs
+                        // so they see the updated name immediately in their Friends list.
+                        val propagateResult = friendsRepo.propagateUsernameChange(UserId(userId), username)
+                        val successMsg = if (propagateResult.isFailure) {
+                            "Username updated. Your friends list may take a moment to refresh."
+                        } else {
+                            "Username updated successfully"
+                        }
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            successMessage = "Username updated successfully"
+                            successMessage = successMsg
                         )
                         // Reload profile
                         observeProfile(userId)
