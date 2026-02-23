@@ -52,6 +52,10 @@ class TranslationCache @Inject constructor(
 
     private val json = Json { ignoreUnknownKeys = true }
 
+    // Full in-memory mirror of the DataStore blob — avoids re-reading/deserialising on every write.
+    // Null means "not yet loaded"; cleared on invalidation (clearAll).
+    @Volatile private var memCache: TranslationCacheData? = null
+
     // In-memory cache for frequently accessed translations (LRU-style)
     private val inMemoryCache = object : LinkedHashMap<String, CachedTranslation>(
         IN_MEMORY_CACHE_SIZE, 0.75f, true
@@ -153,6 +157,7 @@ class TranslationCache @Inject constructor(
         synchronized(inMemoryCache) {
             inMemoryCache.clear()
         }
+        memCache = null
         context.translationCacheDataStore.edit { prefs ->
             prefs.remove(CACHE_KEY)
         }
@@ -239,6 +244,8 @@ class TranslationCache @Inject constructor(
     }
 
     private suspend fun loadCache(): TranslationCacheData {
+        // Serve from the in-memory mirror when available — avoids DataStore + JSON overhead.
+        memCache?.let { return it }
         return try {
             context.translationCacheDataStore.data
                 .map { prefs ->
@@ -250,6 +257,7 @@ class TranslationCache @Inject constructor(
                     }
                 }
                 .first()
+                .also { memCache = it }
         } catch (e: Exception) {
             TranslationCacheData()
         }
@@ -260,6 +268,7 @@ class TranslationCache @Inject constructor(
             context.translationCacheDataStore.edit { prefs ->
                 prefs[CACHE_KEY] = json.encodeToString(data)
             }
+            memCache = data          // update mirror only after successful disk write
         } catch (e: Exception) {
             // Ignore cache save errors
         }

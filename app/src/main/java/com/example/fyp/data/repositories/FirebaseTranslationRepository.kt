@@ -1,5 +1,6 @@
 package com.example.fyp.data.repositories
 
+import com.example.fyp.core.AppLogger
 import com.example.fyp.data.cloud.LanguageDetectionCache
 import com.example.fyp.data.cloud.TranslationCache
 import com.example.fyp.data.clients.CloudTranslatorClient
@@ -88,11 +89,11 @@ class FirebaseTranslationRepository @Inject constructor(
 
             // If all texts are cached, return immediately
             if (cacheResult.notFound.isEmpty()) {
-                android.util.Log.d("BatchTranslate", "All ${texts.size} texts found in cache")
+                AppLogger.d("BatchTranslate", "All ${texts.size} texts found in cache")
                 return Result.success(result)
             }
 
-            android.util.Log.d("BatchTranslate", "Cache: ${cacheResult.found.size} hits, ${cacheResult.notFound.size} misses")
+            AppLogger.d("BatchTranslate", "Cache: ${cacheResult.found.size} hits, ${cacheResult.notFound.size} misses")
 
             // Call API for texts not in cache
             val apiTranslations = cloudTranslatorClient.translateTexts(
@@ -114,7 +115,7 @@ class FirebaseTranslationRepository @Inject constructor(
 
             Result.success(result)
         } catch (e: Exception) {
-            android.util.Log.e("BatchTranslate", "Batch translation failed", e)
+            AppLogger.e("BatchTranslate", "Batch translation failed", e)
             Result.failure(e)
         }
     }
@@ -131,20 +132,20 @@ class FirebaseTranslationRepository @Inject constructor(
             // Check cache first
             val cached = languageDetectionCache.getCached(text)
             if (cached != null) {
-                android.util.Log.d("DetectLanguage", "Cache hit: ${cached.language}, score: ${cached.score}")
+                AppLogger.d("DetectLanguage", "Cache hit: ${cached.language}, score: ${cached.score}")
                 return cached
             }
 
             // Call API if not cached
             val result = cloudTranslatorClient.detectLanguage(text)
-            android.util.Log.d("DetectLanguage", "API call - Detected: ${result.language}, score: ${result.score}")
+            AppLogger.d("DetectLanguage", "API call - Detected: ${result.language}, score: ${result.score}")
 
             // Cache the result
             languageDetectionCache.cache(text, result)
 
             result
         } catch (e: Exception) {
-            android.util.Log.e("DetectLanguage", "Detection failed", e)
+            AppLogger.e("DetectLanguage", "Detection failed", e)
             null
         }
     }

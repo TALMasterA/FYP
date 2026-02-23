@@ -1,5 +1,8 @@
 package com.example.fyp
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -170,6 +173,10 @@ fun AppNavigation() {
                     NavHost(
                         navController = navController,
                         startDestination = AppScreen.Home.route,
+                        enterTransition = { fadeIn(animationSpec = tween(300)) },
+                        exitTransition = { fadeOut(animationSpec = tween(300)) },
+                        popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+                        popExitTransition = { fadeOut(animationSpec = tween(300)) },
                         modifier = Modifier.weight(1f)
                     ) {
                     composable(AppScreen.Home.route) {

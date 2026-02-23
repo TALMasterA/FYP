@@ -63,6 +63,10 @@ class LanguageDetectionCache @Inject constructor(
 
     private val json = Json { ignoreUnknownKeys = true }
 
+    // Full in-memory mirror of the DataStore blob — avoids re-reading/deserialising on every lookup.
+    // Null means "not yet loaded"; cleared on clearAll().
+    @Volatile private var memCache: LanguageDetectionCacheData? = null
+
     /**
      * Generate normalized cache key from text.
      * Limits key size to prevent memory issues.
@@ -129,12 +133,15 @@ class LanguageDetectionCache @Inject constructor(
      * Clear all cached detections
      */
     suspend fun clearAll() {
+        memCache = null
         context.languageDetectionCacheDataStore.edit { prefs ->
             prefs.remove(CACHE_KEY)
         }
     }
 
     private suspend fun loadCache(): LanguageDetectionCacheData {
+        // Serve from the in-memory mirror when available — avoids DataStore + JSON overhead.
+        memCache?.let { return it }
         return try {
             context.languageDetectionCacheDataStore.data
                 .map { prefs ->
@@ -146,6 +153,7 @@ class LanguageDetectionCache @Inject constructor(
                     }
                 }
                 .first()
+                .also { memCache = it }
         } catch (e: Exception) {
             LanguageDetectionCacheData()
         }
@@ -156,6 +164,7 @@ class LanguageDetectionCache @Inject constructor(
             context.languageDetectionCacheDataStore.edit { prefs ->
                 prefs[CACHE_KEY] = json.encodeToString(data)
             }
+            memCache = data          // update mirror only after successful disk write
         } catch (e: Exception) {
             // Ignore cache save errors
         }
