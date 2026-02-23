@@ -2,6 +2,7 @@
 
 package com.example.fyp.data.friends
 
+import com.example.fyp.core.AppLogger
 import com.example.fyp.core.NetworkRetry
 import com.example.fyp.model.Username
 import com.example.fyp.model.UserId
@@ -497,6 +498,61 @@ class FirestoreFriendsRepository @Inject constructor(
         doc.exists()
     } catch (e: Exception) {
         false
+    }
+
+    /**
+     * Propagate a username change to all friends' cached FriendRelation documents.
+     *
+     * When user A renames to "newName", each friend B has a document at
+     * users/{B}/friends/{A} that stores the old username.  This method reads
+     * the current user's friends list to discover all friend IDs, then
+     * batch-updates users/{friendId}/friends/{userId}.friendUsername.
+     *
+     * The Firestore rule `allow write: if request.auth.uid == friendId`
+     * on users/{userId}/friends/{friendId} permits user A to write to
+     * users/{B}/friends/{A} because A's uid equals the document key (friendId).
+     */
+    override suspend fun propagateUsernameChange(
+        userId: UserId,
+        newUsername: String
+    ): Result<Unit> {
+        return try {
+            // Fetch the user's own friends list to get all friend IDs
+            val friendDocs = db.collection("users")
+                .document(userId.value)
+                .collection("friends")
+                .limit(500) // consistent with rest of codebase
+                .get()
+                .await()
+                .documents
+
+            if (friendDocs.isEmpty()) return Result.success(Unit)
+
+            // Batch-update each friend's copy of the user's friendUsername.
+            // Firestore limits 500 writes per batch — split if needed.
+            friendDocs.chunked(500).forEach { chunk ->
+                val batch = db.batch()
+                chunk.forEach { friendDoc ->
+                    val friendId = friendDoc.getString("friendId") ?: friendDoc.id
+                    val ref = db.collection("users")
+                        .document(friendId)
+                        .collection("friends")
+                        .document(userId.value)
+                    // Use set-merge instead of update: safe even if the doc was deleted
+                    // (e.g., the friend removed the user while propagation was running).
+                    batch.set(ref, mapOf("friendUsername" to newUsername),
+                        com.google.firebase.firestore.SetOptions.merge())
+                }
+                batch.commit().await()
+            }
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            // Non-fatal: friends will see the old username until they refresh.
+            // The public profile is already updated, so searches will show the new name.
+            AppLogger.e("FriendsRepository", "propagateUsernameChange failed", e)
+            Result.failure(e)
+        }
     }
 
     /**
