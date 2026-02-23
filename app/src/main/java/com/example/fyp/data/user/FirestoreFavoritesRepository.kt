@@ -17,6 +17,10 @@ import javax.inject.Singleton
 class FirestoreFavoritesRepository @Inject constructor(
     private val db: FirebaseFirestore
 ) {
+    private companion object {
+        const val QUERY_LIMIT = 500L
+    }
+
     private fun colRef(uid: String) =
         db.collection("users").document(uid).collection("favorites")
 
@@ -26,6 +30,7 @@ class FirestoreFavoritesRepository @Inject constructor(
     fun observeFavorites(userId: String): Flow<List<FavoriteRecord>> = callbackFlow {
         val reg = colRef(userId)
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(QUERY_LIMIT)
             .addSnapshotListener { snap, err ->
                 if (err != null) {
                     close(err)
@@ -147,6 +152,7 @@ class FirestoreFavoritesRepository @Inject constructor(
     suspend fun getAllFavoritesOnce(userId: String): List<FavoriteRecord> = try {
         val snapshot = colRef(userId)
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(QUERY_LIMIT)
             .get()
             .await()
         snapshot.toObjects(FavoriteRecord::class.java)

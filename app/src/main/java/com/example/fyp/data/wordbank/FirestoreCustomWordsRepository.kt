@@ -19,6 +19,7 @@ class FirestoreCustomWordsRepository @Inject constructor(
     companion object {
         const val MAX_WORD_LENGTH = 200
         const val MAX_EXAMPLE_LENGTH = 500
+        private const val QUERY_LIMIT = 500L
     }
 
     private fun colRef(uid: String) =
@@ -36,6 +37,7 @@ class FirestoreCustomWordsRepository @Inject constructor(
             .whereEqualTo("sourceLang", sourceLang)
             .whereEqualTo("targetLang", targetLang)
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(QUERY_LIMIT)
             .addSnapshotListener { snap, err ->
                 if (err != null) {
                     close(err)
@@ -53,6 +55,7 @@ class FirestoreCustomWordsRepository @Inject constructor(
     fun observeAllCustomWords(userId: String): Flow<List<CustomWord>> = callbackFlow {
         val reg = colRef(userId)
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(QUERY_LIMIT)
             .addSnapshotListener { snap, err ->
                 if (err != null) {
                     close(err)
@@ -152,6 +155,7 @@ class FirestoreCustomWordsRepository @Inject constructor(
             .whereEqualTo("sourceLang", sourceLang)
             .whereEqualTo("targetLang", targetLang)
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(QUERY_LIMIT)
             .get()
             .await()
         snapshot.toObjects(CustomWord::class.java)
@@ -166,6 +170,7 @@ class FirestoreCustomWordsRepository @Inject constructor(
     suspend fun getAllCustomWordsOnce(userId: String): List<CustomWord> = try {
         val snapshot = colRef(userId)
             .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(QUERY_LIMIT)
             .get()
             .await()
         snapshot.toObjects(CustomWord::class.java)

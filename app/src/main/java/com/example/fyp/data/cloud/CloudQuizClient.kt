@@ -2,6 +2,7 @@ package com.example.fyp.data.cloud
 
 import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.tasks.await
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,6 +24,10 @@ data class CoinAwardResult(
 class CloudQuizClient @Inject constructor(
     private val functions: FirebaseFunctions
 ) {
+    private companion object {
+        const val TIMEOUT_SECONDS = 30L
+    }
+
     /**
      * Award coins for a quiz attempt with server-side verification.
      *
@@ -54,6 +59,7 @@ class CloudQuizClient @Inject constructor(
         return try {
             val result = functions
                 .getHttpsCallable("awardQuizCoins")
+                .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .call(data)
                 .await()
 

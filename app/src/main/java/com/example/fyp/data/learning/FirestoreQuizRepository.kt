@@ -8,6 +8,9 @@ import com.example.fyp.domain.learning.QuizMetadata
 import com.example.fyp.model.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -265,24 +268,30 @@ class FirestoreQuizRepository @Inject constructor(
 
         // Process in chunks of 10 (Firestore whereIn limit)
         targets.chunked(10).zip(quizDocIds.chunked(10)).forEach { (chunkTargets, chunkQuizIds) ->
-            // Batch get generated quiz docs
-            val quizSnapshot = db.collection("users")
-                .document(uid.value)
-                .collection("generated_quizzes")
-                .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
-                .get()
-                .await()
+            // Fetch quiz docs and awarded counts in parallel
+            val chunkResults = coroutineScope {
+                val quizDeferred = async {
+                    db.collection("users")
+                        .document(uid.value)
+                        .collection("generated_quizzes")
+                        .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
+                        .get()
+                        .await()
+                }
+                val awardedDeferred = async {
+                    db.collection("users")
+                        .document(uid.value)
+                        .collection("last_awarded_quiz")
+                        .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
+                        .get()
+                        .await()
+                }
+                listOf(quizDeferred, awardedDeferred).awaitAll()
+            }
+            val quizSnapshot = chunkResults[0]
+            val awardedSnapshot = chunkResults[1]
             
             val foundQuizDocs = quizSnapshot.documents.associateBy { it.id }
-            
-            // Batch get last awarded counts
-            val awardedSnapshot = db.collection("users")
-                .document(uid.value)
-                .collection("last_awarded_quiz")
-                .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
-                .get()
-                .await()
-            
             val foundAwardedDocs = awardedSnapshot.documents.associateBy { it.id }
             
             // Build result for this chunk
