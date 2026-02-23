@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,6 +42,7 @@ fun ChatScreen(
     
     val listState = rememberLazyListState()
     var showTranslateDialog by remember { mutableStateOf(false) }
+    var showProfileDialog by remember { mutableStateOf(false) }
 
     // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(uiState.messages.size) {
@@ -64,11 +66,57 @@ fun ChatScreen(
         )
     }
 
+    // Friend profile dialog
+    if (showProfileDialog) {
+        val profile = uiState.friendProfile
+        AlertDialog(
+            onDismissRequest = { showProfileDialog = false },
+            title = { Text("@${uiState.friendUsername}") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (profile != null) {
+                        if (profile.primaryLanguage.isNotBlank()) {
+                            Text(
+                                text = "Primary language: ${profile.primaryLanguage}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        val learning = profile.learningLanguages.orEmpty()
+                        if (learning.isNotEmpty()) {
+                            Text(
+                                text = "Learning: ${learning.joinToString(", ")}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Loading profile…",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showProfileDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.ChatTitle).replace("{username}", uiState.friendUsername),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
+            // Profile info icon — tapping opens the friend's profile dialog
+            IconButton(onClick = { showProfileDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "View friend profile",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
             // Translate button
             if (uiState.messages.isNotEmpty()) {
                 if (uiState.isTranslating) {

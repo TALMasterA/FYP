@@ -39,8 +39,18 @@ data class FriendsUiState(
     val unreadCountPerFriend: Map<String, Int> = emptyMap(), // friendId -> unread message count
     // Multi-select delete mode
     val isDeleteMode: Boolean = false,
-    val selectedFriendIds: Set<String> = emptySet()
+    val selectedFriendIds: Set<String> = emptySet(),
+    /** Whether the current user has set a username (required to send requests). */
+    val currentUserHasUsername: Boolean = false
 )
+
+/** Status of the local user's relationship with a search result. */
+enum class RequestStatus {
+    NONE,             // No connection — can send request
+    ALREADY_FRIENDS,  // Already friends
+    REQUEST_SENT,     // Current user sent a pending request
+    REQUEST_RECEIVED  // The other user already sent a request to current user
+}
 
 /**
  * OPTIMIZED: Friends list and incoming requests are read from [SharedFriendsDataSource]
@@ -86,6 +96,8 @@ class FriendsViewModel @Inject constructor(
                         subscribeToSharedData()
                         startOutgoingRequestsObserver(UserId(auth.user.uid))
                         startUnreadPerFriendObserver(UserId(auth.user.uid))
+                        // Load own profile to determine if username is set
+                        loadOwnUsername(auth.user.uid)
                     }
                     AuthState.LoggedOut -> {
                         outgoingRequestsJob?.cancel()
@@ -100,6 +112,32 @@ class FriendsViewModel @Inject constructor(
                         _uiState.value = _uiState.value.copy(isLoading = true)
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Check if the current user has a username set.
+     * First checks the in-memory cache; falls back to a Firestore read if not cached.
+     */
+    private fun loadOwnUsername(userId: String) {
+        // Check in-memory cache first (populated when MyProfileScreen was opened)
+        val cached = sharedFriendsDataSource.getCachedUsername(userId)
+        if (!cached.isNullOrBlank()) {
+            _uiState.value = _uiState.value.copy(currentUserHasUsername = true)
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val profile = friendsRepository.getPublicProfile(UserId(userId))
+                val username = profile?.username.orEmpty()
+                val hasUsername = username.isNotBlank()
+                if (hasUsername) {
+                    sharedFriendsDataSource.cacheOwnUsername(userId, username)
+                }
+                _uiState.value = _uiState.value.copy(currentUserHasUsername = hasUsername)
+            } catch (_: Exception) {
+                // Non-fatal; user will see an error when they try to send a request
             }
         }
     }
@@ -260,8 +298,30 @@ class FriendsViewModel @Inject constructor(
 
     // ── Friend request actions ────────────────────────────────────────────────
 
+    /**
+     * Surfaces a clear error when the user tries to open the Add Friends dialog
+     * without having set a username yet.
+     */
+    fun requireUsernameForAddFriends(): Boolean {
+        return if (!_uiState.value.currentUserHasUsername) {
+            _uiState.value = _uiState.value.copy(
+                error = "Please set a username in your profile before sending friend requests."
+            )
+            false
+        } else {
+            true
+        }
+    }
+
     fun sendFriendRequest(toUserId: String) {
         val fromUserId = currentUserId ?: return
+        // Require a username before sending any request so the recipient sees a real name
+        if (!_uiState.value.currentUserHasUsername) {
+            _uiState.value = _uiState.value.copy(
+                error = "Please set a username in your profile before sending friend requests."
+            )
+            return
+        }
         viewModelScope.launch {
             sendFriendRequestUseCase(fromUserId, UserId(toUserId)).fold(
                 onSuccess = { _uiState.value = _uiState.value.copy(successMessage = "Friend request sent!", error = null) },
@@ -350,14 +410,20 @@ class FriendsViewModel @Inject constructor(
     }
 
     /**
+     * Returns the current user's relationship status with [userId] for display in search results.
+     */
+    fun getRequestStatusFor(userId: String): RequestStatus {
+        val state = _uiState.value
+        if (state.friends.any { it.friendId == userId }) return RequestStatus.ALREADY_FRIENDS
+        if (state.outgoingRequests.any { it.toUserId == userId }) return RequestStatus.REQUEST_SENT
+        if (state.incomingRequests.any { it.fromUserId == userId }) return RequestStatus.REQUEST_RECEIVED
+        return RequestStatus.NONE
+    }
+
+    /**
      * Check if a user can receive a friend request from current user.
      * Returns true if they are NOT friends and NO pending request exists.
      */
-    fun canSendRequestTo(userId: String): Boolean {
-        val state = _uiState.value
-        if (state.friends.any { it.friendId == userId }) return false
-        if (state.outgoingRequests.any { it.toUserId == userId }) return false
-        if (state.incomingRequests.any { it.fromUserId == userId }) return false
-        return true
-    }
+    fun canSendRequestTo(userId: String): Boolean =
+        getRequestStatusFor(userId) == RequestStatus.NONE
 }
