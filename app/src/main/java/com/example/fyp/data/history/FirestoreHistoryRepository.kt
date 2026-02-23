@@ -1,5 +1,6 @@
 package com.example.fyp.data.history
 
+import com.example.fyp.core.NetworkRetry
 import com.example.fyp.domain.history.HistoryRepository
 import com.example.fyp.model.LanguageCode
 import com.example.fyp.model.RecordId
@@ -8,9 +9,13 @@ import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.UserId
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,13 +38,18 @@ class FirestoreHistoryRepository @Inject constructor(
     private val lastFetchTimestamp = mutableMapOf<String, Timestamp>()
     private val cachedRecords = mutableMapOf<String, List<TranslationRecord>>()
 
+    // Background scope for non-blocking cache maintenance tasks
+    private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     override suspend fun save(record: TranslationRecord) {
-        firestore.collection("users")
-            .document(record.userId)
-            .collection("history")
-            .document(record.id)
-            .set(record)
-            .await()
+        NetworkRetry.withRetry(shouldRetry = NetworkRetry::isRetryableFirebaseException) {
+            firestore.collection("users")
+                .document(record.userId)
+                .collection("history")
+                .document(record.id)
+                .set(record)
+                .await()
+        }
 
         // Update language counts cache to keep it in sync
         updateLanguageCountsCache(
@@ -48,6 +58,42 @@ class FirestoreHistoryRepository @Inject constructor(
             LanguageCode(record.targetLang),
             increment = true
         )
+    }
+
+    /**
+     * Batch-saves multiple [TranslationRecord]s using a single Firestore [WriteBatch].
+     * One network round-trip instead of one per record — used by the continuous-mode
+     * debounce flush to efficiently save a burst of segments together.
+     *
+     * After the batch write succeeds the per-language counts are updated incrementally.
+     * Firestore WriteBatch supports up to 500 operations; records are split into chunks.
+     */
+    suspend fun saveBatch(records: List<TranslationRecord>) {
+        if (records.isEmpty()) return
+
+        // Firestore batch limit is 500 ops; split in chunks of 490 to leave headroom.
+        records.chunked(490).forEach { chunk ->
+            NetworkRetry.withRetry(shouldRetry = NetworkRetry::isRetryableFirebaseException) {
+                val batch = firestore.batch()
+                chunk.forEach { record ->
+                    val ref = firestore.collection("users")
+                        .document(record.userId)
+                        .collection("history")
+                        .document(record.id)
+                    batch.set(ref, record)
+                }
+                batch.commit().await()
+            }
+            // Update per-language counts cache for each saved record
+            chunk.forEach { record ->
+                updateLanguageCountsCache(
+                    UserId(record.userId),
+                    LanguageCode(record.sourceLang),
+                    LanguageCode(record.targetLang),
+                    increment = true
+                )
+            }
+        }
     }
 
     /**
@@ -390,8 +436,15 @@ class FirestoreHistoryRepository @Inject constructor(
             .delete()
             .await()
 
-        // Rebuild language counts cache after bulk deletion
-        // This is more efficient than tracking each deletion individually
-        rebuildLanguageCountsCache(userId.value)
+        // Rebuild language counts cache after bulk deletion.
+        // Launched on background scope so the delete operation returns immediately —
+        // the UI is not blocked while the full history is re-read.
+        backgroundScope.launch {
+            try {
+                rebuildLanguageCountsCache(userId.value)
+            } catch (e: Exception) {
+                Log.w("FirestoreHistoryRepository", "Background cache rebuild failed after deleteSession", e)
+            }
+        }
     }
 }

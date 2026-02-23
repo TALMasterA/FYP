@@ -1,7 +1,7 @@
 # App Enhancement Suggestions
 
 Suggestions ordered by expected user-visible or cost impact.
-**✅ Implemented** = done in this session. **⏳ Pending** = involves logic changes, deferred.
+**✅ Implemented** = done. **⏳ Pending** = involves breaking logic changes or major architecture.
 
 ---
 
@@ -10,9 +10,7 @@ Suggestions ordered by expected user-visible or cost impact.
 **Area:** Navigation smoothness  
 **File:** `AppNavigation.kt`
 
-The `NavHost` had no `enterTransition`/`exitTransition` parameters, so every screen change was
-an abrupt cut with no animation. Added a 300 ms `fadeIn`/`fadeOut` as the default for all routes,
-giving the app a polished feel without changing any navigation logic.
+Added 300 ms `fadeIn`/`fadeOut` as the default for all routes.
 
 ---
 
@@ -21,12 +19,7 @@ giving the app a polished feel without changing any navigation logic.
 **Area:** Performance – DataStore I/O reduction  
 **File:** `data/cloud/TranslationCache.kt`
 
-Every call to `cache()` or `cacheBatch()` previously called `loadCache()` which deserialises the
-entire translation cache JSON blob from DataStore before appending the new entry. Added a
-`memCache: TranslationCacheData?` mirror (the same pattern already used by `WordBankCacheDataStore`
-and `LanguageDetectionCache`). `loadCache()` now serves from memory after the first read, and
-`saveCache()` keeps the mirror in sync. This eliminates a redundant DataStore read on every
-translation result that is newly cached — high-frequency during normal usage.
+Added `memCache` mirror — `loadCache()` serves from memory after the first read.
 
 ---
 
@@ -35,9 +28,7 @@ translation result that is newly cached — high-frequency during normal usage.
 **Area:** Performance – DataStore I/O reduction  
 **File:** `data/cloud/LanguageDetectionCache.kt`
 
-`LanguageDetectionCache.getCached()` always read the full DataStore blob. Added a `memCache`
-mirror and an `inMemoryLookup` map (key → entry), so repeat lookups for the same text are served
-from memory with zero I/O. The pattern is consistent with `WordBankCacheDataStore`.
+Added `memCache` mirror consistent with `WordBankCacheDataStore`.
 
 ---
 
@@ -46,13 +37,8 @@ from memory with zero I/O. The pattern is consistent with `WordBankCacheDataStor
 **Area:** Database read safety  
 **File:** `data/history/FirestoreHistoryRepository.kt`
 
-Two queries had no `.limit()`:
-
-- `rebuildLanguageCountsCache()` — fetches **all** history documents when the language-counts
-  stats document is missing. Could read tens of thousands of records on first install. Capped at
-  **10 000** (far beyond any realistic user history).
-- `listenSessions()` — real-time listener on the sessions collection with no bound. Capped at
-  **1 000** for consistency with the rest of the codebase.
+- `rebuildLanguageCountsCache()` capped at 10 000 docs.
+- `listenSessions()` listener capped at 1 000 docs.
 
 ---
 
@@ -61,112 +47,93 @@ Two queries had no `.limit()`:
 **Area:** Logging consistency / Crashlytics coverage  
 **File:** `data/repositories/FirebaseTranslationRepository.kt`
 
-`FirebaseTranslationRepository` contained several `android.util.Log.d/e` calls that bypass the
-centralised `AppLogger`. `AppLogger.d` is debug-gated (no-op in release) and `AppLogger.e`
-reports to Crashlytics, so using the abstraction improves crash visibility in production and
-avoids cluttering release logs.
-
 ---
 
-## 6. Migrate `SpeechViewModel` settings to `SharedSettingsDataSource` ⏳ Pending
+## 6. Migrate `SpeechViewModel` and `LearningViewModel` to `SharedSettingsDataSource` ✅ Implemented
 
 **Area:** Firestore listener count reduction  
-**File:** `screens/speech/SpeechViewModel.kt`
+**Files:** `screens/speech/SpeechViewModel.kt`, `screens/learning/LearningViewModel.kt`
 
-`SpeechViewModel` calls `observeSettings(UserId(...))` in its `init` block, which creates its own
-dedicated Firestore snapshot listener for the user-settings document. `SharedSettingsDataSource`
-(a `@Singleton`) is already started by `AppViewModel` before any screen ViewModel is created, and
-is shared by `SettingsViewModel`, `WordBankViewModel`, and `FavoritesViewModel`. Migrating
-`SpeechViewModel` to consume `sharedSettings.settings` instead would eliminate one redundant
-listener while the Speech screen is active.
+Both ViewModels previously called `ObserveUserSettingsUseCase(UserId(uid)).collect { ... }` which
+created a separate Firestore snapshot listener for the user-settings document while each screen
+was open.  Both now consume the shared `SharedSettingsDataSource.settings` `StateFlow`
+(already warmed by `AppViewModel` before any screen is created), eliminating two redundant
+listeners.
 
-**Logic impact:** Requires injecting `SharedSettingsDataSource` into `SpeechViewModel`, removing
-the `ObserveUserSettingsUseCase` dependency from this ViewModel, and adjusting how the settings
-`StateFlow` is consumed. The SpeechViewModel is complex (OCR, continuous mode, TTS), so the
-change should be done carefully with full re-test of all speech paths.
+`SpeechViewModel` no longer needs `ObserveUserSettingsUseCase` in its constructor at all.
+Voice settings are read on-demand from `sharedSettings.settings.value.voiceSettings`.
+The previous `init` block contained a nested `collect` that blocked the outer auth-state
+collector from emitting `LoggedOut` — this is also fixed by the migration.
 
 ---
 
 ## 7. Fix `getCountForLanguagePair` to use all-time counts ⏳ Pending
 
 **Area:** Data accuracy  
-**File:** `data/history/SharedHistoryDataSource.kt` (line 198)
+**File:** `data/history/SharedHistoryDataSource.kt`
 
-`getCountForLanguagePair()` counts matching records from `_historyRecords` (limited to the
-display limit, e.g. 100–200). The comment in the code already flags this: *"this may be inaccurate
-with history limits"*. For users with more records than the display limit, the pair count will be
-understated, which could affect generation eligibility decisions.
-
-**Fix approach:** Either (a) add a dedicated Firestore aggregation query for the pair count, or (b)
-store pair counts alongside per-language counts in the `user_stats/language_counts` document.
-Option (b) is cheaper to read but requires a more complex write path in `updateLanguageCountsCache`.
+> **Verification (2026-02-23):** The counts shown on the Learning and Word Bank screens are
+> already correct.  They come from `SharedHistoryDataSource.languageCounts`, which is populated
+> by `refreshLanguageCounts()` → `FirestoreHistoryRepository.getLanguageCounts()` → reads from
+> the `users/{uid}/user_stats/language_counts` stats document.  This document is atomically
+> updated on every `save()` and `delete()` call and represents **all** translation records, not
+> just the 50–100 shown in the History screen.  No change is required for the per-language counts.
+>
+> `getCountForLanguagePair()` (which counts only in-memory limited records) is used internally
+> but not surfaced to the UI.  Fix is deferred to a dedicated task.
 
 ---
 
-## 8. Apply `NetworkRetry` to critical Firestore writes ⏳ Pending
+## 8. Apply `NetworkRetry` to critical Firestore writes ✅ Implemented
 
 **Area:** Reliability  
 **Files:** `data/history/FirestoreHistoryRepository.kt`, `data/learning/FirestoreLearningSheetsRepository.kt`,
 `data/wordbank/FirestoreWordBankRepository.kt`
 
-`NetworkRetry.withRetry` is currently used on outgoing chat messages
-(`FirestoreChatRepository.sendTextMessage`) and batch translation (`CloudTranslatorClient.translateTexts`
-/ `CloudSpeechTokenClient.getSpeechToken`). However, the history `save()`, sheet `upsertSheet()`,
-and word-bank `saveWordBank()` writes have no retry logic. Transient network errors will silently
-lose data for these operations.
-
-**Logic impact:** Wrapping with `NetworkRetry.withRetry(shouldRetry = NetworkRetry::isRetryableFirebaseException)`
-is low risk, but history save is called from within a coroutine in `SpeechViewModel` and the
-retry duration adds latency that should be tested on slow connections.
+Wrapped `save()`, `upsertSheet()`, and `saveWordBank()` in
+`NetworkRetry.withRetry(shouldRetry = NetworkRetry::isRetryableFirebaseException)`.
+Transient network failures retry up to 3 times with exponential back-off.
 
 ---
 
-## 9. Use `derivedStateOf` for expensive Compose derivations ⏳ Pending
+## 9. Memoize expensive Compose filter derivations ✅ Implemented
 
 **Area:** Compose recomposition performance  
-**Files:** `screens/wordbank/WordBankScreen.kt`, `screens/learning/LearningScreen.kt`
+**File:** `screens/wordbank/WordBankDetailView.kt`
 
-Expressions like `uiState.clusters.filter { ... }` or `uiState.favorites.filter { ... }` inside
-composable lambdas re-execute on every recomposition even when the underlying list has not
-changed. Wrapping these in `remember { derivedStateOf { ... } }` makes Compose skip downstream
-recompositions when the derived value is stable, reducing unnecessary UI work for lists that
-update infrequently compared to overall recomposition rate.
-
-**Logic impact:** None — purely a Compose optimisation. However, each `derivedStateOf` usage must
-be verified to have the correct structural equality (data classes with `equals` already work
-correctly).
+Wrapped `filteredWords` O(n) list filter in
+`remember(wordBank.words, filterKeyword, filterCategory, filterDifficulty) { ... }` so the
+scan only re-runs when one of those values actually changes.
 
 ---
 
-## 10. Introduce `WorkManager` for cache maintenance ⏳ Pending
+## 10. Background cache rebuild after session delete ✅ Implemented
 
-**Area:** Background maintenance / Firestore cost  
-**Files:** `data/history/FirestoreHistoryRepository.kt`, `data/cloud/TranslationCache.kt`
+**Area:** UI responsiveness / Firestore cost  
+**File:** `data/history/FirestoreHistoryRepository.kt`
 
-Currently the `language_counts` stats document is rebuilt synchronously inside `deleteSession()`
-by calling `rebuildLanguageCountsCache()`. For a session with thousands of records this blocks
-the UI coroutine until the full history is fetched. Moving periodic cache maintenance (rebuilds,
-expired-entry eviction, translation cache compaction) into a `CoroutineWorker` scheduled with
-`WorkManager` would keep the UI responsive and avoid redundant work on every session deletion.
-
-**Logic impact:** Requires adding `WorkManager` as a dependency, defining a maintenance worker,
-and decoupling `rebuildLanguageCountsCache` from the synchronous delete path.
+`deleteSession()` previously called `rebuildLanguageCountsCache()` synchronously — a full
+history read that could scan thousands of documents and block the UI coroutine.  Added a
+`backgroundScope` (`SupervisorJob + Dispatchers.IO`) on the repository and launched the
+rebuild there, so `deleteSession()` returns immediately.
 
 ---
 
-## 11. Add input debouncing to the continuous-translation word auto-save ⏳ Pending
+## 11. Debounce continuous-mode history saves ✅ Implemented
 
-**Area:** API call reduction  
-**File:** `screens/speech/SpeechViewModel.kt` + `data/history/FirestoreHistoryRepository.kt`
+**Area:** Firestore write reduction  
+**File:** `screens/speech/SpeechViewModel.kt`
 
-In continuous conversation mode, a `save()` Firestore write is triggered for every recognised
-utterance segment. High-speed speakers or sessions with many short segments can generate dozens
-of writes per minute. Debouncing consecutive saves (e.g., coalescing segments within a 1-second
-window) and batching them into a single Firestore write would reduce document-write billing and
-improve throughput.
+Each recognised utterance segment previously triggered an immediate `historyRepo.save()` call.
+During rapid speech this produced many sequential Firestore writes per minute.
 
-**Logic impact:** Changes the granularity of history records. The existing session/segment model
-must be preserved, so coalescing must only combine records within the same speaker turn.
+Added a pending-record queue (`pendingContinuousSaves`) and a debounce job:
+- `mode = "continuous"` → record is enqueued; flush job is cancelled and restarted with an
+  800 ms delay.
+- After 800 ms of silence, all queued records are saved individually (each retains its own
+  `id`, `sessionId`, `speaker`, `direction`, `sequence`).
+- `endContinuousSession()` and `onCleared()` flush / discard the queue immediately.
+- `mode = "discrete"` → unchanged: saved immediately.
 
 ---
 
@@ -175,27 +142,15 @@ must be preserved, so coalescing must only combine records within the same speak
 **Area:** Offline resilience  
 **File:** `domain/history/SaveTranslationUseCase.kt`
 
-The app shows an offline banner when connectivity is lost but still attempts Firestore writes for
-each translation. Firestore's offline persistence will queue these automatically, but there is no
-user-visible acknowledgement or retry status. Adding a local `Room`-backed write queue with
-`WorkManager` delivery would give stronger guarantees and allow showing "syncing N records"
-progress when connectivity is restored.
-
-**Logic impact:** Major architectural addition — requires Room, a sync worker, conflict resolution
-strategy, and an update to the SaveTranslation flow.
+Major architectural addition — requires Room, a sync worker, conflict resolution strategy, and
+an update to the SaveTranslation flow.  Deferred to a dedicated task.
 
 ---
 
-## 13. Shared language-display name lookup ⏳ Pending
+## 13. Cache `AzureLanguageConfig.loadSupportedLanguages()` result ✅ Implemented
 
-**Area:** Minor performance / memory  
-**File:** `AppNavigation.kt`, all screens that call `LanguageDisplayNames.displayName(code)`
+**Area:** Performance / memory  
+**File:** `data/azure/AzureLanguageConfig.kt`
 
-`AzureLanguageConfig.loadSupportedLanguagesSuspend(context)` is called inside `produceState` on
-every `AppNavigation` recomposition. The result is `remember`d, which is correct, but multiple
-screens independently call `LanguageDisplayNames.displayName()` which re-parses the same JSON
-asset. Extracting a singleton `LanguageDisplayNameCache` pre-populated on app start would remove
-repeated asset parsing across screens.
-
-**Logic impact:** Low — requires moving the display-name map out of a static method into a
-`@Singleton` injectable, and updating call sites.
+Added a `@Volatile cachedLanguages` field on the `AzureLanguageConfig` object.  The first
+caller parses the JSON asset; every subsequent caller receives the cached list with zero I/O.

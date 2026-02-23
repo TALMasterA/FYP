@@ -13,7 +13,7 @@ import com.example.fyp.domain.learning.GenerateLearningMaterialsUseCase
 import com.example.fyp.domain.learning.GenerateQuizUseCase
 import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.core.AiConfig
-import com.example.fyp.domain.settings.ObserveUserSettingsUseCase
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.UserId
@@ -62,7 +62,7 @@ class LearningViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val sheetsRepo: LearningSheetsRepository,
     private val sharedHistoryDataSource: SharedHistoryDataSource,
-    private val observeUserSettings: ObserveUserSettingsUseCase,
+    private val sharedSettings: SharedSettingsDataSource,
     private val generateLearningMaterials: GenerateLearningMaterialsUseCase,
     private val userSettingsRepo: UserSettingsRepository,
     private val generateQuizUseCase: GenerateQuizUseCase,
@@ -150,7 +150,7 @@ class LearningViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         settingsJob = viewModelScope.launch {
-            observeUserSettings(UserId(uid)).collect { s ->
+            sharedSettings.settings.collect { s ->
                 val primary = s.primaryLanguageCode.ifBlank { "en-US" }
 
                 val prevPrimary = _uiState.value.primaryLanguageCode
