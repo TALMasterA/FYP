@@ -104,7 +104,7 @@ fun FriendsScreen(
             isSearching = uiState.isSearching,
             onQueryChange = { viewModel.onSearchQueryChange(it) },
             onSendRequest = { viewModel.sendFriendRequest(it) },
-            canSendRequestTo = { userId -> viewModel.canSendRequestTo(userId) },
+            requestStatusFor = { userId -> viewModel.getRequestStatusFor(userId) },
             onDismiss = {
                 showSearchDialog = false
                 viewModel.onSearchQueryChange("")
@@ -206,7 +206,11 @@ fun FriendsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(onClick = { showSearchDialog = true }) {
+                    Button(onClick = {
+                        if (viewModel.requireUsernameForAddFriends()) {
+                            showSearchDialog = true
+                        }
+                    }) {
                         Icon(Icons.Default.Search, contentDescription = t(UiTextKey.FriendsSearchTitle))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(t(UiTextKey.FriendsAddButton))
@@ -338,7 +342,7 @@ fun FriendsScreen(
                                                 if (uiState.isDeleteMode) {
                                                     viewModel.toggleFriendSelection(friend.friendId)
                                                 } else {
-                                                    onOpenChat(friend.friendId, friend.friendUsername, friend.friendDisplayName)
+                                                    onOpenChat(friend.friendId, friend.friendUsername, friend.friendUsername)
                                                 }
                                             },
                                             sendMessageText = t(UiTextKey.FriendsUnreadMessageDesc),
@@ -487,13 +491,6 @@ fun FriendCard(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    if (friend.friendDisplayName.isNotEmpty() && friend.friendDisplayName != friend.friendUsername) {
-                        Text(
-                            text = friend.friendDisplayName,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                     // Show "unread messages" hint text below name when there are unread messages
                     if (unreadCount > 0 && !isDeleteMode) {
                         Text(
@@ -552,7 +549,7 @@ fun SearchUsersDialog(
     isSearching: Boolean,
     onQueryChange: (String) -> Unit,
     onSendRequest: (String) -> Unit,
-    canSendRequestTo: (String) -> Boolean,
+    requestStatusFor: (String) -> RequestStatus,
     onDismiss: () -> Unit,
     t: (UiTextKey) -> String
 ) {
@@ -600,7 +597,7 @@ fun SearchUsersDialog(
                                 SearchResultCard(
                                     user = user,
                                     onSendRequest = { onSendRequest(user.uid) },
-                                    canSendRequest = canSendRequestTo(user.uid),
+                                    requestStatus = requestStatusFor(user.uid),
                                     addButtonText = t(UiTextKey.FriendsSendRequestButton)
                                 )
                             }
@@ -621,7 +618,7 @@ fun SearchUsersDialog(
 fun SearchResultCard(
     user: PublicUserProfile,
     onSendRequest: () -> Unit,
-    canSendRequest: Boolean,
+    requestStatus: RequestStatus,
     addButtonText: String
 ) {
     ElevatedCard(
@@ -642,24 +639,35 @@ fun SearchResultCard(
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
-                if (!canSendRequest) {
+                val statusText = when (requestStatus) {
+                    RequestStatus.ALREADY_FRIENDS -> "Already friends"
+                    RequestStatus.REQUEST_SENT    -> "✓ Request sent — awaiting reply"
+                    RequestStatus.REQUEST_RECEIVED -> "This user sent you a request"
+                    RequestStatus.NONE            -> null
+                }
+                if (statusText != null) {
                     Text(
-                        text = "Already connected or pending",
+                        text = statusText,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = when (requestStatus) {
+                            RequestStatus.REQUEST_SENT -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
                 }
             }
-            Button(
-                onClick = onSendRequest,
-                enabled = canSendRequest,
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-            ) {
-                Icon(
-                    Icons.Default.PersonAdd,
-                    contentDescription = addButtonText,
-                    modifier = Modifier.size(16.dp)
-                )
+            // Only show the Add button when there is no existing connection
+            if (requestStatus == RequestStatus.NONE) {
+                Button(
+                    onClick = onSendRequest,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        Icons.Default.PersonAdd,
+                        contentDescription = addButtonText,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ package com.example.fyp.screens.friends
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.MarkMessagesAsReadUseCase
@@ -12,6 +13,7 @@ import com.example.fyp.domain.friends.TranslateAllMessagesUseCase
 import com.example.fyp.data.friends.ChatRepository
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.FriendMessage
+import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.user.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -38,7 +40,9 @@ data class ChatUiState(
     val showTranslation: Boolean = false,
     val translationError: String? = null,
     val isLoadingOlder: Boolean = false,
-    val hasMoreMessages: Boolean = true  // Assume more until proven otherwise
+    val hasMoreMessages: Boolean = true,  // Assume more until proven otherwise
+    /** Friend's public profile — loaded on screen open for the profile dialog. */
+    val friendProfile: PublicUserProfile? = null
 )
 
 @HiltViewModel
@@ -50,7 +54,8 @@ class ChatViewModel @Inject constructor(
     private val markMessagesAsReadUseCase: MarkMessagesAsReadUseCase,
     private val translateAllMessagesUseCase: TranslateAllMessagesUseCase,
     private val userSettingsRepository: UserSettingsRepository,
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
+    private val friendsRepository: FriendsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -81,6 +86,7 @@ class ChatViewModel @Inject constructor(
                         _uiState.value = _uiState.value.copy(currentUserId = auth.user.uid)
                         loadMessages(UserId(auth.user.uid))
                         markMessagesAsRead(UserId(auth.user.uid))
+                        loadFriendProfile()
                     }
                     AuthState.LoggedOut -> {
                         messagesJob?.cancel()
@@ -133,6 +139,18 @@ class ChatViewModel @Inject constructor(
                 markMessagesAsReadUseCase(userId, friendId)
             } catch (_: Exception) {
                 // Non-critical: ignore errors marking messages as read
+            }
+        }
+    }
+
+    /** Loads the friend's public profile so the chat header can show profile details. */
+    private fun loadFriendProfile() {
+        viewModelScope.launch {
+            try {
+                val profile = friendsRepository.getPublicProfile(friendId)
+                _uiState.value = _uiState.value.copy(friendProfile = profile)
+            } catch (_: Exception) {
+                // Non-critical — profile dialog will just show minimal info from nav args
             }
         }
     }
