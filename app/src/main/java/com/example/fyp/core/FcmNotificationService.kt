@@ -22,60 +22,14 @@ import com.google.firebase.messaging.RemoteMessage
  *    the Cloud Functions backend can reach this device.
  * 2. `onMessageReceived` — show a system notification for data messages
  *    (e.g., new chat messages) received while the app is in the background or foreground.
+ *    Each notification type is gated by a user preference stored in [PREFS_NAME].
  *
  * Token storage path: users/{userId}/fcm_tokens/{tokenId}
  * (covered by the existing `match /users/{userId}/{document=**}` read/write rule)
  */
 class FcmNotificationService : FirebaseMessagingService() {
 
-    companion object {
-        const val CHANNEL_ID_CHAT = "chat_messages"
-        const val CHANNEL_NAME_CHAT = "Chat Messages"
-        const val CHANNEL_DESC_CHAT = "Notifications for new chat messages from friends"
-
-        /**
-         * Upload the current FCM token to Firestore for the signed-in user.
-         * Call this once at login and whenever `onNewToken` fires.
-         */
-        fun uploadTokenIfLoggedIn(context: Context) {
-            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-            com.google.firebase.messaging.FirebaseMessaging.getInstance().token
-                .addOnSuccessListener { token ->
-                    if (token.isNullOrBlank()) return@addOnSuccessListener
-                    FirebaseFirestore.getInstance()
-                        .collection("users").document(uid)
-                        .collection("fcm_tokens").document(token)
-                        .set(mapOf(
-                            "token" to token,
-                            "platform" to "android",
-                            "updatedAt" to com.google.firebase.Timestamp.now()
-                        ))
-                        .addOnFailureListener { e ->
-                            AppLogger.e("FcmService", "Failed to upload FCM token", e)
-                        }
-                }
-                .addOnFailureListener { e ->
-                    AppLogger.e("FcmService", "Failed to get FCM token", e)
-                }
-        }
-
-        /** Create the notification channel (call from Application.onCreate). */
-        fun createNotificationChannels(context: Context) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(
-                    CHANNEL_ID_CHAT,
-                    CHANNEL_NAME_CHAT,
-                    NotificationManager.IMPORTANCE_HIGH
-                ).apply {
-                    description = CHANNEL_DESC_CHAT
-                    enableVibration(true)
-                }
-                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                        as NotificationManager
-                manager.createNotificationChannel(channel)
-            }
-        }
-    }
+    // ── Notification dispatch ─────────────────────────────────────────────────
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
@@ -89,20 +43,48 @@ class FcmNotificationService : FirebaseMessagingService() {
         val data = remoteMessage.data
         val type = data["type"] ?: return
 
+        // Gate each notification type on the user's local preference cache.
+        // The cache is a SharedPreferences file written by saveNotifPrefToCache()
+        // immediately after Firestore persistence — no blocking I/O needed here.
         when (type) {
-            "new_message" -> showChatNotification(
-                senderUsername = data["senderUsername"] ?: "Friend",
-                messagePreview = data["messagePreview"] ?: "Sent you a message",
-                friendId = data["senderId"] ?: ""
-            )
-            "friend_request" -> showFriendRequestNotification(
-                senderUsername = data["senderUsername"] ?: "Someone"
-            )
-            "request_accepted" -> showRequestAcceptedNotification(
-                friendUsername = data["friendUsername"] ?: "Someone"
-            )
+            "new_message" -> {
+                if (isNotifEnabled("notifyNewMessages")) {
+                    showChatNotification(
+                        senderUsername = data["senderUsername"] ?: "Friend",
+                        messagePreview = data["messagePreview"] ?: "Sent you a message",
+                        friendId = data["senderId"] ?: ""
+                    )
+                }
+            }
+            "friend_request" -> {
+                if (isNotifEnabled("notifyFriendRequests")) {
+                    showFriendRequestNotification(
+                        senderUsername = data["senderUsername"] ?: "Someone"
+                    )
+                }
+            }
+            "request_accepted" -> {
+                if (isNotifEnabled("notifyRequestAccepted")) {
+                    showRequestAcceptedNotification(
+                        friendUsername = data["friendUsername"] ?: "Someone"
+                    )
+                }
+            }
         }
     }
+
+    /**
+     * Reads a notification preference from the local SharedPreferences cache.
+     * Returns `true` (show notification) when the key is absent — fail-open so
+     * first-time users always receive notifications before they touch the settings.
+     * No Firestore or network I/O is performed here.
+     */
+    private fun isNotifEnabled(field: String): Boolean =
+        applicationContext
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean(field, true)
+
+    // ── Notification builders ─────────────────────────────────────────────────
 
     private fun showChatNotification(senderUsername: String, messagePreview: String, friendId: String) {
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -125,8 +107,8 @@ class FcmNotificationService : FirebaseMessagingService() {
             .build()
 
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        // Use friendId hashcode as notification ID so multiple messages from the
-        // same friend update the same notification instead of stacking.
+        // Use friendId hashcode as notification ID so messages from the same friend
+        // update the existing notification instead of creating new stacked ones.
         manager.notify(friendId.hashCode(), notification)
     }
 
@@ -174,5 +156,71 @@ class FcmNotificationService : FirebaseMessagingService() {
 
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify("req_accepted_$friendUsername".hashCode(), notification)
+    }
+
+    companion object {
+        const val CHANNEL_ID_CHAT = "chat_messages"
+        const val CHANNEL_NAME_CHAT = "Chat Messages"
+        const val CHANNEL_DESC_CHAT = "Notifications for new chat messages from friends"
+
+        /** SharedPreferences file used to cache notification preference toggles. */
+        const val PREFS_NAME = "notif_prefs"
+
+        /**
+         * Write a single notification preference to the local SharedPreferences cache.
+         *
+         * Call this from [com.example.fyp.screens.settings.SettingsViewModel.updateNotificationPref]
+         * immediately after persisting to Firestore so that [isNotifEnabled] has the latest
+         * value without any Firestore I/O on the FCM worker thread.
+         */
+        fun saveNotifPrefToCache(context: Context, field: String, enabled: Boolean) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(field, enabled)
+                .apply()
+        }
+
+        /**
+         * Upload the current FCM token to Firestore for the signed-in user.
+         * Call this once at login and whenever `onNewToken` fires.
+         */
+        fun uploadTokenIfLoggedIn(context: Context) {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().token
+                .addOnSuccessListener { token ->
+                    if (token.isNullOrBlank()) return@addOnSuccessListener
+                    FirebaseFirestore.getInstance()
+                        .collection("users").document(uid)
+                        .collection("fcm_tokens").document(token)
+                        .set(mapOf(
+                            "token" to token,
+                            "platform" to "android",
+                            "updatedAt" to com.google.firebase.Timestamp.now()
+                        ))
+                        .addOnFailureListener { e ->
+                            AppLogger.e("FcmService", "Failed to upload FCM token", e)
+                        }
+                }
+                .addOnFailureListener { e ->
+                    AppLogger.e("FcmService", "Failed to get FCM token", e)
+                }
+        }
+
+        /** Create the notification channel (call from Application.onCreate). */
+        fun createNotificationChannels(context: Context) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                    CHANNEL_ID_CHAT,
+                    CHANNEL_NAME_CHAT,
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = CHANNEL_DESC_CHAT
+                    enableVibration(true)
+                }
+                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
+                        as NotificationManager
+                manager.createNotificationChannel(channel)
+            }
+        }
     }
 }

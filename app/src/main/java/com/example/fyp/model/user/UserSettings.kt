@@ -14,6 +14,11 @@ data class UserSettings(
     val voiceSettings: Map<String, String> = emptyMap(), // language code -> voice name
     val historyViewLimit: Int = 50, // Default 50 records displayed, expandable to 100
     val autoThemeEnabled: Boolean = false, // Enable time-based theme switching (6 AM - 6 PM light, 6 PM - 6 AM dark)
+    // --- Push notification toggles (all enabled by default) ---
+    val notifyNewMessages: Boolean = true,       // Chat message notifications
+    val notifyFriendRequests: Boolean = true,    // Incoming friend request notifications
+    val notifyRequestAccepted: Boolean = true,   // "Your request was accepted" notifications
+    val notifySharedInbox: Boolean = true,       // Shared-inbox item notifications
 ) {
     companion object {
         const val BASE_HISTORY_LIMIT = 50

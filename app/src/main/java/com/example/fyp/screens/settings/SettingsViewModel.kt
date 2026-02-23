@@ -2,6 +2,8 @@ package com.example.fyp.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import com.example.fyp.core.validateScale
 import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
@@ -14,6 +16,7 @@ import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase
 import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase.Result as UnlockResult
 import com.example.fyp.domain.settings.SetVoiceForLanguageUseCase
 import com.example.fyp.domain.settings.SetAutoThemeEnabledUseCase
+import com.example.fyp.domain.settings.SetNotificationPrefUseCase
 import com.example.fyp.model.LanguageCode
 import com.example.fyp.model.PaletteId
 import com.example.fyp.model.UserId
@@ -43,6 +46,7 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    application: Application,
     private val authRepo: FirebaseAuthRepository,
     private val sharedSettings: SharedSettingsDataSource,
     private val friendsRepo: FriendsRepository,
@@ -53,8 +57,9 @@ class SettingsViewModel @Inject constructor(
     private val unlockColorPaletteWithCoins: UnlockColorPaletteWithCoinsUseCase,
     private val setVoiceForLanguage: SetVoiceForLanguageUseCase,
     private val setAutoThemeEnabled: SetAutoThemeEnabledUseCase,
+    private val setNotificationPref: SetNotificationPrefUseCase,
     private val quizRepo: com.example.fyp.data.learning.FirestoreQuizRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -355,6 +360,44 @@ class SettingsViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         errorKey = null,
                         errorRaw = e.message ?: "Failed to update auto theme setting"
+                    )
+                }
+        }
+    }
+
+    /**
+     * Toggle a specific push-notification type on or off.
+     *
+     * @param field  One of "notifyNewMessages", "notifyFriendRequests",
+     *               "notifyRequestAccepted", "notifySharedInbox".
+     */
+    fun updateNotificationPref(field: String, enabled: Boolean) {
+        val uid = _uiState.value.uid ?: return
+        viewModelScope.launch {
+            runCatching { setNotificationPref(UserId(uid), field, enabled) }
+                .onSuccess {
+                    // Update in-memory state immediately for snappy UI feedback
+                    val updated = when (field) {
+                        "notifyNewMessages"    -> _uiState.value.settings.copy(notifyNewMessages = enabled)
+                        "notifyFriendRequests" -> _uiState.value.settings.copy(notifyFriendRequests = enabled)
+                        "notifyRequestAccepted"-> _uiState.value.settings.copy(notifyRequestAccepted = enabled)
+                        "notifySharedInbox"    -> _uiState.value.settings.copy(notifySharedInbox = enabled)
+                        else -> _uiState.value.settings
+                    }
+                    _uiState.value = _uiState.value.copy(settings = updated)
+                    // Mirror to SharedPreferences so FcmNotificationService can read it
+                    // without any Firestore I/O on the FCM worker thread
+                    com.example.fyp.core.FcmNotificationService
+                        .saveNotifPrefToCache(getApplication(), field, enabled)
+                }
+                .onFailure { e ->
+                    com.example.fyp.core.AppLogger.e(
+                        "SettingsViewModel",
+                        "Failed to save notification preference $field=$enabled",
+                        e
+                    )
+                    _uiState.value = _uiState.value.copy(
+                        errorRaw = "Failed to save notification setting. Please try again."
                     )
                 }
         }

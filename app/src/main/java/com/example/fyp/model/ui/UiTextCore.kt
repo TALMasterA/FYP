@@ -617,6 +617,15 @@ enum class UiTextKey {
     SettingsTesterFeedback,
     SettingsSystemNotesButton,
     SystemNotesTitle,
+
+    // --- Friends Notification Settings ---
+    FriendsNotifSettingsButton,
+    FriendsNotifSettingsTitle,
+    FriendsNotifNewMessages,
+    FriendsNotifFriendRequests,
+    FriendsNotifRequestAccepted,
+    FriendsNotifSharedInbox,
+    FriendsNotifCloseButton,
 }
 
 // Core Ui Texts list

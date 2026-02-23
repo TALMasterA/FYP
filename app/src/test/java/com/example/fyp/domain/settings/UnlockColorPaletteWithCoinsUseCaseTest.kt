@@ -41,6 +41,7 @@ private class FakeUserSettingsRepository : UserSettingsRepository {
     override suspend fun setColorPalette(userId: UserId, paletteId: PaletteId) {}
     override suspend fun setVoiceForLanguage(userId: UserId, languageCode: LanguageCode, voiceName: VoiceName) {}
     override suspend fun setAutoThemeEnabled(userId: UserId, enabled: Boolean) {}
+    override suspend fun setNotificationPref(userId: UserId, field: String, enabled: Boolean) {}
     override suspend fun expandHistoryViewLimit(userId: UserId, newLimit: Int) {}
 }
 

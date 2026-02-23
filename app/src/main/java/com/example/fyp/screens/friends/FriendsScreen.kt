@@ -38,15 +38,18 @@ fun FriendsScreen(
     onOpenSharedInbox: () -> Unit = {},
     hasUnseenSharedItems: Boolean = false,
     hasUnreadMessages: Boolean = false,
-    viewModel: FriendsViewModel = hiltViewModel()
+    viewModel: FriendsViewModel = hiltViewModel(),
+    settingsViewModel: com.example.fyp.screens.settings.SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val settingsState by settingsViewModel.uiState.collectAsStateWithLifecycle()
     val (uiText) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     var showSearchDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showInfoDialog by remember { mutableStateOf(false) }
+    var showNotifSettingsDialog by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
 
     LaunchedEffect(isRefreshing) {
@@ -91,6 +94,52 @@ fun FriendsScreen(
             confirmButton = {
                 TextButton(onClick = { showInfoDialog = false }) {
                     Text(t(UiTextKey.FriendsInfoGotItButton))
+                }
+            }
+        )
+    }
+
+    // Notification settings dialog
+    if (showNotifSettingsDialog) {
+        val settings = settingsState.settings
+        AlertDialog(
+            onDismissRequest = { showNotifSettingsDialog = false },
+            title = { Text(t(UiTextKey.FriendsNotifSettingsTitle)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    NotifToggleRow(
+                        label = t(UiTextKey.FriendsNotifNewMessages),
+                        checked = settings.notifyNewMessages,
+                        onCheckedChange = {
+                            settingsViewModel.updateNotificationPref("notifyNewMessages", it)
+                        }
+                    )
+                    NotifToggleRow(
+                        label = t(UiTextKey.FriendsNotifFriendRequests),
+                        checked = settings.notifyFriendRequests,
+                        onCheckedChange = {
+                            settingsViewModel.updateNotificationPref("notifyFriendRequests", it)
+                        }
+                    )
+                    NotifToggleRow(
+                        label = t(UiTextKey.FriendsNotifRequestAccepted),
+                        checked = settings.notifyRequestAccepted,
+                        onCheckedChange = {
+                            settingsViewModel.updateNotificationPref("notifyRequestAccepted", it)
+                        }
+                    )
+                    NotifToggleRow(
+                        label = t(UiTextKey.FriendsNotifSharedInbox),
+                        checked = settings.notifySharedInbox,
+                        onCheckedChange = {
+                            settingsViewModel.updateNotificationPref("notifySharedInbox", it)
+                        }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showNotifSettingsDialog = false }) {
+                    Text(t(UiTextKey.FriendsNotifCloseButton))
                 }
             }
         )
@@ -148,6 +197,15 @@ fun FriendsScreen(
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
+            // Notification settings (bell icon)
+            IconButton(onClick = { showNotifSettingsDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = t(UiTextKey.FriendsNotifSettingsButton),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            // Info / help
             IconButton(onClick = { showInfoDialog = true }) {
                 Icon(
                     imageVector = Icons.Default.Info,
@@ -670,5 +728,33 @@ fun SearchResultCard(
                 }
             }
         }
+    }
+}
+
+/** A single row with a label and a Switch for notification toggles. */
+@Composable
+private fun NotifToggleRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            // Minimum 48dp touch target per Material Design accessibility guidelines
+            .heightIn(min = 48.dp)
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f)
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
     }
 }

@@ -1324,4 +1324,20 @@ val ScreenUiTexts: List<String> = listOf(
     "System Notes & Info",
     // SystemNotesTitle
     "System Notes",
+
+    // --- Friends Notification Settings ---
+    // FriendsNotifSettingsButton
+    "Notification Settings",
+    // FriendsNotifSettingsTitle
+    "Notification Preferences",
+    // FriendsNotifNewMessages
+    "New chat messages",
+    // FriendsNotifFriendRequests
+    "Incoming friend requests",
+    // FriendsNotifRequestAccepted
+    "Friend request accepted",
+    // FriendsNotifSharedInbox
+    "New shared-inbox items",
+    // FriendsNotifCloseButton
+    "Done",
 )
