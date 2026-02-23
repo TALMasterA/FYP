@@ -306,6 +306,7 @@ class FirestoreHistoryRepository @Inject constructor(
             val snapshot = firestore.collection("users")
                 .document(userId)
                 .collection("history")
+                .limit(10_000)
                 .get()
                 .await()
 
@@ -343,6 +344,7 @@ class FirestoreHistoryRepository @Inject constructor(
         val listener = firestore.collection("users")
             .document(userId.value)
             .collection("sessions")
+            .limit(1_000)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
