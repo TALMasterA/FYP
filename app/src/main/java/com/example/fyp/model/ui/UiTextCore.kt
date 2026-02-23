@@ -666,9 +666,9 @@ val CoreUiTexts: List<String> = listOf(
     // AppUiLanguageLabel
     "App UI language",
     // DetectLanguageLabel
-    "Detect",
+    "From",
     // TranslateToLabel
-    "Translate",
+    "To",
 
     // --- Language Names ---
     // LangEnUs

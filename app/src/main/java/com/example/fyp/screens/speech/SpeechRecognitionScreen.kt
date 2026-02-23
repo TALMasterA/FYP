@@ -3,13 +3,14 @@ package com.example.fyp.screens.speech
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
@@ -17,7 +18,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,7 +43,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.AudioRecorder
 import com.example.fyp.core.RecordAudioPermissionRequest
 import com.example.fyp.core.RequestCameraPermission
@@ -256,15 +260,6 @@ fun SpeechRecognitionScreen(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    AppLanguageDropdown(
-                        uiLanguages = uiLanguages,
-                        appLanguageState = appLanguageState,
-                        onUpdateAppLanguage = onUpdateAppLanguage,
-                        uiText = uiText,
-                        enabled = isLoggedIn,
-                        isLoggedIn = isLoggedIn
-                    )
-
                     SpeechLanguagePickers(
                         detectLabel = t(UiTextKey.DetectLanguageLabel),
                         translateToLabel = t(UiTextKey.TranslateToLabel),
@@ -300,42 +295,52 @@ fun SpeechRecognitionScreen(
                         candidates.take(MAX_AUTO_DETECT_LANGUAGES)
                     }
 
-                    RecognizeButton(
-                        recognizePhase = recognizePhase,
-                        idleLabel = t(UiTextKey.AzureRecognizeButton),
-                        preparingLabel = t(UiTextKey.StatusRecognizePreparing),
-                        listeningLabel = t(UiTextKey.StatusRecognizeListening),
-                        onClick = {
-                            haptic.click()
-                            if (selectedLanguage == "auto") {
-                                // Use auto-detect recognition
-                                viewModel.recognizeWithAutoDetect(
-                                    candidateLanguages = autoDetectCandidates,
-                                    onDetectedLanguage = { detected ->
-                                        detectedSourceLanguage = detected
-                                    }
-                                )
-                            } else {
-                                // Use specific language recognition
-                                viewModel.recognize(selectedLanguage)
-                            }
-                        },
-                        enabled = !isRecognizing && !AudioRecorder.isRecording,
+                    // Mic + Camera icon buttons in one row
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                    )
-
-                    // Camera/Image button for OCR
-                    OutlinedButton(
-                        onClick = { showImageSourceDialog = true },
-                        enabled = !isRecognizing,
-                        modifier = Modifier.fillMaxWidth()
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = t(UiTextKey.ImageRecognitionButton)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(t(UiTextKey.ImageRecognitionButton))
+                        // Microphone button (icon-only)
+                        Button(
+                            onClick = {
+                                haptic.click()
+                                if (selectedLanguage == "auto") {
+                                    viewModel.recognizeWithAutoDetect(
+                                        candidateLanguages = autoDetectCandidates,
+                                        onDetectedLanguage = { detected ->
+                                            detectedSourceLanguage = detected
+                                        }
+                                    )
+                                } else {
+                                    viewModel.recognize(selectedLanguage)
+                                }
+                            },
+                            enabled = !isRecognizing && !AudioRecorder.isRecording,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(vertical = 14.dp),
+                            colors = if (recognizePhase == RecognizePhase.Listening)
+                                ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            else ButtonDefaults.buttonColors(),
+                        ) {
+                            Icon(
+                                imageVector = if (recognizePhase == RecognizePhase.Listening)
+                                    Icons.Filled.Stop else Icons.Filled.Mic,
+                                contentDescription = t(UiTextKey.AzureRecognizeButton),
+                            )
+                        }
+
+                        // Camera / OCR button (icon-only)
+                        OutlinedButton(
+                            onClick = { showImageSourceDialog = true },
+                            enabled = !isRecognizing,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(vertical = 14.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = t(UiTextKey.ImageRecognitionButton),
+                            )
+                        }
                     }
 
 
@@ -378,25 +383,27 @@ fun SpeechRecognitionScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    Column(
-                        modifier = Modifier.bringIntoViewRequester(bringIntoViewRequester)
-                    ) {
-                        TranslatedResultBox(
-                            text = translatedText,
-                            placeholder = t(UiTextKey.SpeechTranslatedPlaceholder),
-                            modifier = Modifier.bringIntoViewRequester(bringIntoViewRequester),
-                        )
+                    if (translatedText.isNotBlank()) {
+                        Column(
+                            modifier = Modifier.bringIntoViewRequester(bringIntoViewRequester)
+                        ) {
+                            TranslatedResultBox(
+                                text = translatedText,
+                                placeholder = t(UiTextKey.SpeechTranslatedPlaceholder),
+                                modifier = Modifier.bringIntoViewRequester(bringIntoViewRequester),
+                            )
 
-                        TranslationActionsRow(
-                            copyLabel = t(UiTextKey.CopyTranslationButton),
-                            speakLabel = t(UiTextKey.SpeakTranslationButton),
-                            isTtsRunning = isTtsRunning,
-                            enableCopy = translatedText.isNotBlank(),
-                            enableSpeak = isLoggedIn && translatedText.isNotBlank() && !isTtsRunning,
-                            onCopy = { clipboardManager.setText(AnnotatedString(translatedText)) },
-                            onSpeak = { viewModel.speakTranslation(selectedTargetLanguage) },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                            TranslationActionsRow(
+                                copyLabel = t(UiTextKey.CopyTranslationButton),
+                                speakLabel = t(UiTextKey.SpeakTranslationButton),
+                                isTtsRunning = isTtsRunning,
+                                enableCopy = true,
+                                enableSpeak = isLoggedIn && !isTtsRunning,
+                                onCopy = { clipboardManager.setText(AnnotatedString(translatedText)) },
+                                onSpeak = { viewModel.speakTranslation(selectedTargetLanguage) },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                     }
                 }
 

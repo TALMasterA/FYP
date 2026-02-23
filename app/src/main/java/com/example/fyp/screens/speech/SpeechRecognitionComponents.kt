@@ -266,13 +266,15 @@ fun SourceTextEditor(
             }
         }
 
-        TextActionsRow(
-            leftText = copyLabel,
-            leftEnabled = enableCopy,
-            onLeft = onCopy,
-            rightText = if (isTtsRunning) "..." else speakLabel,
-            rightEnabled = enableSpeak,
-            onRight = onSpeak,
-        )
+        if (value.isNotBlank()) {
+            TextActionsRow(
+                leftText = copyLabel,
+                leftEnabled = enableCopy,
+                onLeft = onCopy,
+                rightText = if (isTtsRunning) "..." else speakLabel,
+                rightEnabled = enableSpeak,
+                onRight = onSpeak,
+            )
+        }
     }
 }

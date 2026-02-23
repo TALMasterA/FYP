@@ -38,7 +38,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.RecordAudioPermissionRequest
 import com.example.fyp.core.StandardScreenScaffold
@@ -202,15 +201,6 @@ fun ContinuousConversationScreen(
                                 .onGloballyPositioned { coords -> controlsHeightPx = coords.size.height },
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            AppLanguageDropdown(
-                                uiLanguages = uiLanguages,
-                                appLanguageState = appLanguageState,
-                                onUpdateAppLanguage = onUpdateAppLanguage,
-                                uiText = uiText,
-                                enabled = isLoggedIn,
-                                isLoggedIn = isLoggedIn
-                            )
-
                             Text(
                                 text = t(UiTextKey.ContinuousInstructions),
                                 style = MaterialTheme.typography.bodyMedium,
