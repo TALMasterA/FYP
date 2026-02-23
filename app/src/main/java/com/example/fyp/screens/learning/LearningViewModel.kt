@@ -101,6 +101,19 @@ class LearningViewModel @Inject constructor(
     // Debounce tracking for quiz generation
     private var lastQuizGenerationTime = 0L
 
+    // Cache for sheet metadata to avoid repeated Firestore reads
+    // Using LRU cache with max entries to prevent memory leaks
+    private val sheetMetaCache = object : LinkedHashMap<String, SheetMetaCache>(
+        16,  // Initial capacity
+        0.75f,  // Load factor
+        true  // Access order (for LRU)
+    ) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SheetMetaCache>): Boolean {
+            return size > MAX_SHEET_CACHE_SIZE
+        }
+    }
+    private var lastPrimaryForCache: String? = null
+
     init {
         viewModelScope.launch {
             authRepo.currentUserState.collect { auth ->
@@ -235,19 +248,6 @@ class LearningViewModel @Inject constructor(
             .map { (code, count) -> LanguageClusterUi(code, count) }
             .sortedWith(compareByDescending<LanguageClusterUi> { it.count }.thenBy { it.languageCode })
     }
-
-    // Cache for sheet metadata to avoid repeated Firestore reads
-    // Using LRU cache with max entries to prevent memory leaks
-    private val sheetMetaCache = object : LinkedHashMap<String, SheetMetaCache>(
-        16,  // Initial capacity
-        0.75f,  // Load factor
-        true  // Access order (for LRU)
-    ) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SheetMetaCache>): Boolean {
-            return size > MAX_SHEET_CACHE_SIZE
-        }
-    }
-    private var lastPrimaryForCache: String? = null
 
     private data class SheetMetaCache(
         val exists: Boolean,
