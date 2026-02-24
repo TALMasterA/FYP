@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -263,6 +264,32 @@ fun LearningScreen(
                                     containerColor = MaterialTheme.colorScheme.secondaryContainer
                                 )
                             )
+
+                            // Progress indicator towards generation threshold
+                            val progressTarget = if (isFirstTime) GenerationEligibility.MIN_RECORDS_FOR_LEARNING_SHEET
+                                                 else (lastCount ?: 0) + GenerationEligibility.MIN_RECORDS_FOR_LEARNING_SHEET
+                            val progress = if (progressTarget > 0) (c.count.toFloat() / progressTarget.toFloat()).coerceIn(0f, 1f) else 1f
+                            val recordsNeeded = (progressTarget - c.count).coerceAtLeast(0)
+
+                            if (!generateEnabled && c.count > 0 && recordsNeeded > 0) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    LinearProgressIndicator(
+                                        progress = { progress },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    Text(
+                                        text = t(UiTextKey.LearningProgressNeededTemplate)
+                                            .replace("{needed}", "$recordsNeeded"),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
 
                             // Buttons
                             Column(

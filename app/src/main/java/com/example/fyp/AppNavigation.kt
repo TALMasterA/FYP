@@ -40,6 +40,8 @@ import com.example.fyp.data.azure.AzureLanguageConfig
 import com.example.fyp.data.azure.LanguageDisplayNames
 import com.example.fyp.data.ui.rememberUiLanguageState
 import com.example.fyp.screens.help.HelpScreen
+import com.example.fyp.screens.onboarding.OnboardingScreen
+import com.example.fyp.screens.onboarding.isOnboardingComplete
 import com.example.fyp.screens.history.HistoryScreen
 import com.example.fyp.screens.home.HomeScreen
 import com.example.fyp.screens.favorites.FavoritesScreen
@@ -89,6 +91,7 @@ sealed class AppScreen(val route: String) {
     object Friends : AppScreen("friends")
     object MyProfile : AppScreen("my_profile")
     object SharedInbox : AppScreen("shared_inbox")
+    object Onboarding : AppScreen("onboarding")
 
     object SharedMaterialDetail : AppScreen("shared_material_detail/{itemId}") {
         fun routeFor(itemId: String) =
@@ -115,6 +118,10 @@ sealed class AppScreen(val route: String) {
 fun AppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
+
+    val isOnboardingDone = remember {
+        isOnboardingComplete(context)
+    }
 
     val supported by produceState(initialValue = listOf("en-US")) {
         value = AzureLanguageConfig.loadSupportedLanguagesSuspend(context)
@@ -189,13 +196,24 @@ fun AppNavigation() {
 
                     NavHost(
                         navController = navController,
-                        startDestination = AppScreen.Home.route,
+                        startDestination = if (isOnboardingDone) AppScreen.Home.route else AppScreen.Onboarding.route,
                         enterTransition = { fadeIn(animationSpec = tween(300)) },
                         exitTransition = { fadeOut(animationSpec = tween(300)) },
                         popEnterTransition = { fadeIn(animationSpec = tween(300)) },
                         popExitTransition = { fadeOut(animationSpec = tween(300)) },
                         modifier = Modifier.weight(1f)
                     ) {
+                    composable(AppScreen.Onboarding.route) {
+                        OnboardingScreen(
+                            onComplete = {
+                                navController.navigate(AppScreen.Home.route) {
+                                    popUpTo(AppScreen.Onboarding.route) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
+
                     composable(AppScreen.Home.route) {
                         HomeScreen(
                             uiLanguages = UiLanguageList(uiLanguages),
