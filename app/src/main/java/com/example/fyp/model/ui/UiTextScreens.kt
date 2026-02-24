@@ -1340,4 +1340,14 @@ val ScreenUiTexts: List<String> = listOf(
     "New shared-inbox items",
     // FriendsNotifCloseButton
     "Done",
+
+    // --- In-App Badge Settings ---
+    // InAppBadgeSectionTitle
+    "In-App Badges (Red Dots)",
+    // InAppBadgeMessages
+    "Unread chat message badge",
+    // InAppBadgeFriendRequests
+    "Pending friend request badge",
+    // InAppBadgeSharedInbox
+    "Unseen shared-inbox badge",
 )

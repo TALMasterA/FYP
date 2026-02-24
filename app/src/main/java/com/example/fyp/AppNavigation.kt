@@ -1,5 +1,9 @@
 package com.example.fyp
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
@@ -10,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -132,6 +137,18 @@ fun AppNavigation() {
     // One SettingsViewModel shared across app
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val settingsUiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+
+    // Request POST_NOTIFICATIONS permission on Android 13+ after the user logs in,
+    // so the prompt appears in a meaningful context (they are about to use social features).
+    val notifPermLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* result handled by the system; no action needed */ }
+    val settingsUidForPerm = settingsUiState.uid
+    LaunchedEffect(settingsUidForPerm) {
+        if (settingsUidForPerm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     // One LearningViewModel shared for Learning + Sheet
     val learningViewModel: LearningViewModel = hiltViewModel()

@@ -626,6 +626,12 @@ enum class UiTextKey {
     FriendsNotifRequestAccepted,
     FriendsNotifSharedInbox,
     FriendsNotifCloseButton,
+
+    // --- In-App Badge Settings ---
+    InAppBadgeSectionTitle,
+    InAppBadgeMessages,
+    InAppBadgeFriendRequests,
+    InAppBadgeSharedInbox,
 }
 
 // Core Ui Texts list

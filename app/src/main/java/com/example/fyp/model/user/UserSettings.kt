@@ -19,6 +19,10 @@ data class UserSettings(
     val notifyFriendRequests: Boolean = true,    // Incoming friend request notifications
     val notifyRequestAccepted: Boolean = true,   // "Your request was accepted" notifications
     val notifySharedInbox: Boolean = true,       // Shared-inbox item notifications
+    // --- In-app badge (red dot) toggles (all enabled by default) ---
+    val inAppBadgeMessages: Boolean = true,      // Red dot for unread chat messages
+    val inAppBadgeFriendRequests: Boolean = true,// Red dot for pending friend requests
+    val inAppBadgeSharedInbox: Boolean = true,   // Red dot for unseen shared-inbox items
 ) {
     companion object {
         const val BASE_HISTORY_LIMIT = 50
