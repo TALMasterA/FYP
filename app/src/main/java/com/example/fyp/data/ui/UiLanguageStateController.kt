@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.model.ui.ZhTwUiTexts
 import com.example.fyp.model.ui.baseUiTextsHash
 import com.example.fyp.model.ui.LanguageNameTranslations
 import com.example.fyp.model.ui.LanguageNameKeys
@@ -62,6 +63,15 @@ fun rememberUiLanguageState(
             appLanguageState = appLanguageState.copy(
                 selectedUiLanguage = selected,
                 uiTexts = emptyMap()
+            )
+            return@LaunchedEffect
+        }
+
+        // Traditional Chinese (zh-TW): use hardcoded map, no API call needed
+        if (selected == "zh-TW") {
+            appLanguageState = appLanguageState.copy(
+                selectedUiLanguage = "zh-TW",
+                uiTexts = ZhTwUiTexts
             )
             return@LaunchedEffect
         }

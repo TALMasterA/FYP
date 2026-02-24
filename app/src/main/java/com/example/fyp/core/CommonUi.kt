@@ -61,6 +61,7 @@ fun rememberUiTextFunctions(
     val uiLanguageNameFor: (String) -> String = { code ->
         val key = when (code) {
             "en-US" -> UiTextKey.LangEnUs
+            "zh-TW" -> UiTextKey.LangZhTw
             "zh-HK" -> UiTextKey.LangZhHk
             "ja-JP" -> UiTextKey.LangJaJp
             "zh-CN" -> UiTextKey.LangZhCn
@@ -162,6 +163,14 @@ fun AppLanguageDropdown(
                     // English: no translated map, always fallback to BaseUiTexts (no API call needed)
                     if (code.startsWith("en")) {
                         onUpdateAppLanguage(code, emptyMap())
+                        cache.setSelectedLanguage(code)
+                        cache.setBaseHash(code, baseUiTextsHash())
+                        return@launch
+                    }
+
+                    // Traditional Chinese (zh-TW): use hardcoded map, no API call needed
+                    if (code == "zh-TW") {
+                        onUpdateAppLanguage(code, com.example.fyp.model.ui.ZhTwUiTexts)
                         cache.setSelectedLanguage(code)
                         cache.setBaseHash(code, baseUiTextsHash())
                         return@launch

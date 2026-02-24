@@ -394,12 +394,20 @@ fun HistoryScreen(
                             containerColor = MaterialTheme.colorScheme.errorContainer
                         )
                     ) {
-                        Text(
-                            text = uiState.error.orEmpty(),
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = uiState.error.orEmpty(),
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = { viewModel.retryLoad() },
+                                modifier = Modifier.align(Alignment.End)
+                            ) {
+                                Text(t(UiTextKey.ErrorRetryButton))
+                            }
+                        }
                     }
 
                     selectedTab == 0 -> {

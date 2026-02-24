@@ -50,7 +50,9 @@ data class WordBankUiState(
     val isSharing: Boolean = false,
     val shareSuccess: String? = null,
     val shareError: String? = null,
-    val pendingShareWord: WordBankItem? = null
+    val pendingShareWord: WordBankItem? = null,
+    // Generation completion event (consumed once by banner)
+    val wordBankGenerationCompleted: String? = null
 )
 
 /**

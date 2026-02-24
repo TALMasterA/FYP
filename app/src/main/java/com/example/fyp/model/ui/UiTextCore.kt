@@ -665,6 +665,21 @@ enum class UiTextKey {
     UnblockUserMessage,
     UnblockUserSuccess,
     BlockedUsersManageButton,
+
+    // --- Friend Request Note ---
+    FriendsRequestNoteLabel,
+    FriendsRequestNotePlaceholder,
+
+    // --- Generation Completion Banners ---
+    GenerationBannerSheet,
+    GenerationBannerWordBank,
+    GenerationBannerQuiz,
+
+    // --- Notification Settings Quick Link ---
+    NotifSettingsQuickLink,
+
+    // --- Language Name for Traditional Chinese ---
+    LangZhTw,
 }
 
 // Core Ui Texts list
