@@ -37,11 +37,14 @@ data class ChatUiState(
     val friendDisplayName: String = "",
     val currentUserId: String = "",
     val isTranslating: Boolean = false,
-    val translatedMessages: Map<String, String> = emptyMap(), // original -> translated
+    val translatedMessages: Map<String, String> = emptyMap(),
     val showTranslation: Boolean = false,
     val translationError: String? = null,
     val isLoadingOlder: Boolean = false,
-    val hasMoreMessages: Boolean = true,  // Assume more until proven otherwise
+    val hasMoreMessages: Boolean = true,
+    val clearSuccess: Boolean = false,
+    val isBlocked: Boolean = false,           // current user has blocked this friend
+    val isBlockedBy: Boolean = false,         // friend has blocked current user
     /** Friend's public profile — loaded on screen open for the profile dialog. */
     val friendProfile: PublicUserProfile? = null
 )
@@ -94,6 +97,7 @@ class ChatViewModel @Inject constructor(
                         // Only load profile once on first login, or if not yet loaded
                         if (isFirstLogin || _uiState.value.friendProfile == null) {
                             loadFriendProfile()
+                            checkBlockStatus(UserId(auth.user.uid))
                         }
                     }
                     AuthState.LoggedOut -> {
@@ -171,6 +175,45 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    /** Check block status in both directions and update UI state. */
+    private fun checkBlockStatus(userId: UserId) {
+        viewModelScope.launch {
+            try {
+                val blocked = friendsRepository.isBlocked(userId, friendId)
+                val blockedBy = friendsRepository.isBlockedBy(userId, friendId)
+                _uiState.value = _uiState.value.copy(isBlocked = blocked, isBlockedBy = blockedBy)
+            } catch (_: Exception) { /* non-fatal */ }
+        }
+    }
+
+    fun blockFriend() {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            friendsRepository.blockUser(userId, friendId).fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(isBlocked = true, error = null)
+                },
+                onFailure = {
+                    _uiState.value = _uiState.value.copy(error = "Failed to block user.")
+                }
+            )
+        }
+    }
+
+    fun unblockFriend() {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            friendsRepository.unblockUser(userId, friendId).fold(
+                onSuccess = {
+                    _uiState.value = _uiState.value.copy(isBlocked = false, error = null)
+                },
+                onFailure = {
+                    _uiState.value = _uiState.value.copy(error = "Failed to unblock user.")
+                }
+            )
+        }
+    }
+
     fun onMessageTextChange(text: String) {
         _uiState.value = _uiState.value.copy(messageText = text)
     }
@@ -179,6 +222,12 @@ class ChatViewModel @Inject constructor(
         val userId = currentUserId ?: return
         val messageText = _uiState.value.messageText.trim()
         if (messageText.isBlank() || _uiState.value.isSending) return
+
+        // Prevent sending if blocked by the friend
+        if (_uiState.value.isBlockedBy) {
+            _uiState.value = _uiState.value.copy(error = "You cannot send messages to this user.")
+            return
+        }
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSending = true, error = null)
@@ -241,11 +290,26 @@ class ChatViewModel @Inject constructor(
             try {
                 val settings = userSettingsRepository.fetchUserSettings(userId)
                 val targetLanguage = settings.primaryLanguageCode.substringBefore("-")
-                val result = translateAllMessagesUseCase(messages, targetLanguage, userId.value)
+
+                // Only translate friend's messages not already in the cache
+                val existingCache = _uiState.value.translatedMessages
+                val uncachedMessages = messages.filter { msg ->
+                    msg.senderId != userId.value && !existingCache.containsKey(msg.content)
+                }
+
+                if (uncachedMessages.isEmpty()) {
+                    // All already cached — just show translations
+                    _uiState.value = _uiState.value.copy(showTranslation = true, isTranslating = false)
+                    return@launch
+                }
+
+                // Build a messages list with only uncached items for the use case
+                val result = translateAllMessagesUseCase(uncachedMessages, targetLanguage, userId.value)
                 result.fold(
-                    onSuccess = { translations ->
+                    onSuccess = { newTranslations ->
+                        // Merge new translations into existing cache
                         _uiState.value = _uiState.value.copy(
-                            translatedMessages = translations,
+                            translatedMessages = existingCache + newTranslations,
                             showTranslation = true,
                             isTranslating = false
                         )
@@ -266,6 +330,27 @@ class ChatViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /**
+     * Hides all messages locally for this session only.
+     * Does NOT delete anything from Firestore — full deletion only happens on unfriend.
+     * The messages will reappear if the user leaves and re-enters the chat.
+     */
+    fun clearConversation() {
+        // Stop observing new messages temporarily so the UI stays blank
+        messagesJob?.cancel()
+        _uiState.value = _uiState.value.copy(
+            messages = emptyList(),
+            translatedMessages = emptyMap(),
+            showTranslation = false,
+            clearSuccess = true,
+            hasMoreMessages = false  // prevent load-older trigger
+        )
+    }
+
+    fun dismissClearSuccess() {
+        _uiState.value = _uiState.value.copy(clearSuccess = false)
     }
 
     fun toggleTranslation() {

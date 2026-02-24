@@ -14,6 +14,18 @@ service cloud.firestore {
     }
 
     // ============================================
+    // Block List: /users/{userId}/blocked_users/{blockedId}
+    // Only the owner can read/write their block list.
+    // Other users can read IF they are the blocked party (to check if they're blocked).
+    // ============================================
+    match /users/{userId}/blocked_users/{blockedId} {
+      // Owner can fully manage their block list
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Blocked user can check if they are blocked (needed for UI block-status check)
+      allow read: if request.auth != null && request.auth.uid == blockedId;
+    }
+
+    // ============================================
     // Main User Document: /users/{userId}
     // Two access patterns:
     // 1. Owner can read/write their own document
@@ -145,24 +157,22 @@ service cloud.firestore {
         && request.resource.data.fromUserId == request.auth.uid
         && request.resource.data.status == "PENDING";
 
-      // Update if receiver (accept/reject) or sender (cancel OR update own fromUsername)
-      allow update: if request.auth != null && (
-        (resource.data.toUserId == request.auth.uid &&
-         request.resource.data.status in ["ACCEPTED", "REJECTED"]) ||
-        (resource.data.fromUserId == request.auth.uid &&
-         request.resource.data.status == "CANCELLED") ||
-        // Allow sender to update fromUsername when they rename themselves
-        (resource.data.fromUserId == request.auth.uid &&
-         resource.data.status == "PENDING" &&
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(["fromUsername"]))
-      );
+      // Update: only allowed for sender renaming their username on pending requests.
+      // Accept/reject/cancel all now DELETE the doc instead of updating status.
+      allow update: if request.auth != null &&
+        resource.data.fromUserId == request.auth.uid &&
+        resource.data.status == "PENDING" &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(["fromUsername"]);
 
-      // Allow sender or receiver to delete completed (non-PENDING) requests
-      // Enables cleanup when unfriending so users can re-send requests later
+      // Allow sender or receiver to delete ANY of their requests (any status).
+      // This covers:
+      //   - Recipient accepting (deletes the PENDING request atomically with friend creation)
+      //   - Cleanup of stale docs when unfriending (so re-add always works)
+      //   - Safety: sender can retract a PENDING request by deleting instead of cancelling
       allow delete: if request.auth != null && (
         resource.data.fromUserId == request.auth.uid ||
         resource.data.toUserId == request.auth.uid
-      ) && resource.data.status != "PENDING";
+      );
     }
 
     // ============================================

@@ -53,21 +53,21 @@ interface FriendsRepository {
     
     /**
      * Search users by username prefix (case-insensitive).
-     * Returns up to [limit] matching users who are discoverable.
+     * Returns up to [limit] matching users who are discoverable and not blocking [callerUserId].
      */
-    suspend fun searchByUsername(query: String, limit: Long = 20): List<PublicUserProfile>
+    suspend fun searchByUsername(query: String, limit: Long = 20, callerUserId: UserId? = null): List<PublicUserProfile>
 
     /**
      * Search users by username, returning a Result wrapper.
      */
-    suspend fun searchUsersByUsername(query: String, limit: Long = 20): Result<List<PublicUserProfile>>
+    suspend fun searchUsersByUsername(query: String, limit: Long = 20, callerUserId: UserId? = null): Result<List<PublicUserProfile>>
 
     /**
      * Find user by exact user ID.
-     * Returns null if user not found or not discoverable.
+     * Returns null if user not found, not discoverable, or has blocked [callerUserId].
      */
-    suspend fun findByUserId(userId: UserId): PublicUserProfile?
-    
+    suspend fun findByUserId(userId: UserId, callerUserId: UserId? = null): PublicUserProfile?
+
     // ============================================
     // Friend Requests
     // ============================================
@@ -152,4 +152,33 @@ interface FriendsRepository {
      * Returns a map of friendId -> latestUsername for in-memory update.
      */
     suspend fun syncFriendUsernames(userId: UserId): Map<String, String>
+
+    // ============================================
+    // Block / Unblock
+    // ============================================
+
+    /**
+     * Block a user. Blocked users cannot send friend requests or messages.
+     */
+    suspend fun blockUser(userId: UserId, blockedUserId: UserId): Result<Unit>
+
+    /**
+     * Unblock a previously blocked user.
+     */
+    suspend fun unblockUser(userId: UserId, blockedUserId: UserId): Result<Unit>
+
+    /**
+     * Check if [userId] has blocked [otherUserId].
+     */
+    suspend fun isBlocked(userId: UserId, otherUserId: UserId): Boolean
+
+    /**
+     * Check if [userId] is blocked by [otherUserId].
+     */
+    suspend fun isBlockedBy(userId: UserId, otherUserId: UserId): Boolean
+
+    /**
+     * Get list of user IDs blocked by [userId].
+     */
+    suspend fun getBlockedUserIds(userId: UserId): List<String>
 }

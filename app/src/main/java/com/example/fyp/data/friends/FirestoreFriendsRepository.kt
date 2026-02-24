@@ -175,46 +175,63 @@ class FirestoreFriendsRepository @Inject constructor(
      * the search query results — no additional per-user reads needed.
      * Previous cost: 1 query + N reads. New cost: 1 query.
      */
-    override suspend fun searchByUsername(query: String, limit: Long): List<PublicUserProfile> = try {
-        val lowerQuery = query.lowercase()
-        val endQuery = lowerQuery + '\uf8ff'
+    override suspend fun searchByUsername(query: String, limit: Long, callerUserId: UserId?): List<PublicUserProfile> {
+        return try {
+            val lowerQuery = query.lowercase()
+            val endQuery = lowerQuery + '\uf8ff'
 
-        db.collection("user_search")
-            .whereEqualTo("isDiscoverable", true)
-            .whereGreaterThanOrEqualTo("username_lowercase", lowerQuery)
-            .whereLessThanOrEqualTo("username_lowercase", endQuery)
-            .limit(limit)
-            .get()
-            .await()
-            .documents
-            .mapNotNull { doc ->
-                val username = doc.getString("username") ?: return@mapNotNull null
-                @Suppress("UNCHECKED_CAST")
-                val learningLangs = (doc.get("learningLanguages") as? List<String>) ?: emptyList()
-                PublicUserProfile(
-                    uid = doc.id,
-                    username = username,
-                    displayName = doc.getString("displayName") ?: "",
-                    avatarUrl = doc.getString("avatarUrl") ?: "",
-                    isDiscoverable = doc.getBoolean("isDiscoverable") ?: true,
-                    primaryLanguage = doc.getString("primaryLanguage") ?: "",
-                    learningLanguages = learningLangs,
-                    lastActiveAt = doc.getTimestamp("lastActiveAt") ?: Timestamp.now()
-                )
+            val rawResults = db.collection("user_search")
+                .whereEqualTo("isDiscoverable", true)
+                .whereGreaterThanOrEqualTo("username_lowercase", lowerQuery)
+                .whereLessThanOrEqualTo("username_lowercase", endQuery)
+                .limit(limit)
+                .get()
+                .await()
+                .documents
+                .mapNotNull { doc ->
+                    val username = doc.getString("username") ?: return@mapNotNull null
+                    @Suppress("UNCHECKED_CAST")
+                    val learningLangs = (doc.get("learningLanguages") as? List<String>) ?: emptyList()
+                    PublicUserProfile(
+                        uid = doc.id,
+                        username = username,
+                        displayName = doc.getString("displayName") ?: "",
+                        avatarUrl = doc.getString("avatarUrl") ?: "",
+                        isDiscoverable = doc.getBoolean("isDiscoverable") ?: true,
+                        primaryLanguage = doc.getString("primaryLanguage") ?: "",
+                        learningLanguages = learningLangs,
+                        lastActiveAt = doc.getTimestamp("lastActiveAt") ?: Timestamp.now()
+                    )
+                }
+
+            if (callerUserId == null) {
+                rawResults
+            } else {
+                // Filter out users who have blocked the caller OR who the caller has blocked
+                val blockedByCallerIds = getBlockedUserIds(callerUserId).toSet()
+                rawResults.filter { profile ->
+                    profile.uid !in blockedByCallerIds &&
+                        !isBlockedBy(callerUserId, UserId(profile.uid))
+                }
             }
-    } catch (e: Exception) {
-        emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
-    override suspend fun searchUsersByUsername(query: String, limit: Long): Result<List<PublicUserProfile>> = try {
-        Result.success(searchByUsername(query, limit))
+    override suspend fun searchUsersByUsername(query: String, limit: Long, callerUserId: UserId?): Result<List<PublicUserProfile>> = try {
+        Result.success(searchByUsername(query, limit, callerUserId))
     } catch (e: Exception) {
         Result.failure(e)
     }
 
-    override suspend fun findByUserId(userId: UserId): PublicUserProfile? {
+    override suspend fun findByUserId(userId: UserId, callerUserId: UserId?): PublicUserProfile? {
         val profile = getPublicProfile(userId)
-        return if (profile?.isDiscoverable == true) profile else null
+        if (profile?.isDiscoverable != true) return null
+        if (callerUserId == null) return profile
+        // Hide from search if either side has blocked the other
+        if (isBlocked(callerUserId, userId) || isBlockedBy(callerUserId, userId)) return null
+        return profile
     }
 
     // ============================================
@@ -229,6 +246,14 @@ class FirestoreFriendsRepository @Inject constructor(
             // Check if already friends
             if (areFriends(fromUserId, toUserId)) {
                 return Result.failure(IllegalStateException("Already friends"))
+            }
+
+            // Check block status in both directions
+            if (isBlocked(fromUserId, toUserId)) {
+                return Result.failure(IllegalStateException("You have blocked this user"))
+            }
+            if (isBlockedBy(fromUserId, toUserId)) {
+                return Result.failure(IllegalStateException("Unable to send friend request"))
             }
 
             // Check for existing pending request
@@ -298,17 +323,14 @@ class FirestoreFriendsRepository @Inject constructor(
 
             val now = Timestamp.now()
 
-            // Use batch write for atomicity
+            // Use batch write for atomicity:
+            // DELETE the request doc (so re-adding after unfriend is always clean)
+            // and add both users to each other's friends list.
             val batch = db.batch()
 
-            // Update request status
-            batch.update(
-                requestRef,
-                mapOf(
-                    "status" to RequestStatus.ACCEPTED.name,
-                    "updatedAt" to now
-                )
-            )
+            // Delete the request document instead of updating to ACCEPTED.
+            // This ensures there is never a stale ACCEPTED doc that complicates re-adding.
+            batch.delete(requestRef)
 
             // Add to fromUser's friends list
             val fromFriendRef = db.collection("users")
@@ -350,18 +372,15 @@ class FirestoreFriendsRepository @Inject constructor(
     }
 
     override suspend fun rejectFriendRequest(requestId: String): Result<Unit> = try {
+        // Delete the request doc instead of updating to REJECTED.
+        // This keeps the collection clean and allows the sender to re-send a request later.
         NetworkRetry.withRetry(
             maxAttempts = 3,
             shouldRetry = NetworkRetry::isRetryableFirebaseException
         ) {
             db.collection("friend_requests")
                 .document(requestId)
-                .update(
-                    mapOf(
-                        "status" to RequestStatus.REJECTED.name,
-                        "updatedAt" to Timestamp.now()
-                    )
-                )
+                .delete()
                 .await()
         }
         Result.success(Unit)
@@ -370,14 +389,10 @@ class FirestoreFriendsRepository @Inject constructor(
     }
 
     override suspend fun cancelFriendRequest(requestId: String): Result<Unit> = try {
+        // Delete instead of updating to CANCELLED for a clean collection state.
         db.collection("friend_requests")
             .document(requestId)
-            .update(
-                mapOf(
-                    "status" to RequestStatus.CANCELLED.name,
-                    "updatedAt" to Timestamp.now()
-                )
-            )
+            .delete()
             .await()
         Result.success(Unit)
     } catch (e: Exception) {
@@ -458,25 +473,29 @@ class FirestoreFriendsRepository @Inject constructor(
 
         batch.commit().await()
 
-        // Clean up old accepted/rejected friend_request documents in both directions
-        // so the two users can re-send friend requests to each other later.
+        // Clean up ALL friend_request documents in both directions (any status).
+        // This ensures users can re-add each other after unfriending.
+        // Failure is non-fatal since the friendship is already removed.
         try {
-            val oldRequests1 = db.collection("friend_requests")
+            val snap1 = db.collection("friend_requests")
                 .whereEqualTo("fromUserId", userId.value)
                 .whereEqualTo("toUserId", friendId.value)
                 .get().await()
-            val oldRequests2 = db.collection("friend_requests")
+            val snap2 = db.collection("friend_requests")
                 .whereEqualTo("fromUserId", friendId.value)
                 .whereEqualTo("toUserId", userId.value)
                 .get().await()
-            val cleanupBatch = db.batch()
-            (oldRequests1.documents + oldRequests2.documents).forEach { doc ->
-                cleanupBatch.delete(doc.reference)
+            val allDocs = snap1.documents + snap2.documents
+            if (allDocs.isNotEmpty()) {
+                allDocs.chunked(500).forEach { chunk ->
+                    val cleanupBatch = db.batch()
+                    chunk.forEach { doc -> cleanupBatch.delete(doc.reference) }
+                    cleanupBatch.commit().await()
+                }
             }
-            cleanupBatch.commit().await()
-        } catch (_: Exception) {
-            // Non-fatal: cleanup is best-effort; the PENDING check in sendFriendRequest
-            // still filters correctly since old docs won't be PENDING.
+        } catch (e: Exception) {
+            // Non-fatal: cleanup best-effort.
+            AppLogger.w("FriendsRepository", "friend_request cleanup failed (non-fatal): ${e.message}")
         }
 
         Result.success(Unit)
@@ -649,6 +668,73 @@ class FirestoreFriendsRepository @Inject constructor(
         } catch (e: Exception) {
             android.util.Log.e("FriendsRepository", "Failed to ensure user doc exists", e)
         }
+    }
+
+    // ============================================
+    // Block / Unblock
+    // ============================================
+
+    override suspend fun blockUser(userId: UserId, blockedUserId: UserId): Result<Unit> = try {
+        db.collection("users")
+            .document(userId.value)
+            .collection("blocked_users")
+            .document(blockedUserId.value)
+            .set(mapOf(
+                "blockedUserId" to blockedUserId.value,
+                "blockedAt" to Timestamp.now()
+            ))
+            .await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun unblockUser(userId: UserId, blockedUserId: UserId): Result<Unit> = try {
+        db.collection("users")
+            .document(userId.value)
+            .collection("blocked_users")
+            .document(blockedUserId.value)
+            .delete()
+            .await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun isBlocked(userId: UserId, otherUserId: UserId): Boolean = try {
+        db.collection("users")
+            .document(userId.value)
+            .collection("blocked_users")
+            .document(otherUserId.value)
+            .get()
+            .await()
+            .exists()
+    } catch (e: Exception) {
+        false
+    }
+
+    override suspend fun isBlockedBy(userId: UserId, otherUserId: UserId): Boolean = try {
+        db.collection("users")
+            .document(otherUserId.value)
+            .collection("blocked_users")
+            .document(userId.value)
+            .get()
+            .await()
+            .exists()
+    } catch (e: Exception) {
+        false
+    }
+
+    override suspend fun getBlockedUserIds(userId: UserId): List<String> = try {
+        db.collection("users")
+            .document(userId.value)
+            .collection("blocked_users")
+            .get()
+            .await()
+            .documents
+            .map { it.id }
+    } catch (e: Exception) {
+        emptyList()
     }
 
     companion object {

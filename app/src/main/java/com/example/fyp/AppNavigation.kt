@@ -224,7 +224,6 @@ fun AppNavigation() {
                     AppScreen.Learning.route,
                     AppScreen.Friends.route,
                     AppScreen.Settings.route,
-                    AppScreen.Continuous.route
                 )
 
                 // Helper for navigating to login
@@ -277,17 +276,28 @@ fun AppNavigation() {
                                                 Icon(item.icon, contentDescription = item.label)
                                             }
                                         },
-                                        label = { Text(item.label) },
+                                        label = { Text(item.label, style = MaterialTheme.typography.labelSmall) },
                                         selected = isSelected,
                                         enabled = !isDisabled,
                                         onClick = {
                                             // Skip navigation when we're already on this tab to
                                             // avoid a no-op that can feel unresponsive.
                                             if (isSelected) return@NavigationBarItem
-                                            navController.navigate(item.route) {
-                                                popUpTo(AppScreen.Home.route) { saveState = true }
-                                                launchSingleTop = true
-                                                restoreState = true
+                                            if (item.route == AppScreen.Home.route) {
+                                                // Always navigate to Home cleanly, clearing back stack
+                                                navController.navigate(AppScreen.Home.route) {
+                                                    popUpTo(0) { inclusive = true }
+                                                    launchSingleTop = true
+                                                }
+                                            } else {
+                                                navController.navigate(item.route) {
+                                                    popUpTo(AppScreen.Home.route) {
+                                                        saveState = true
+                                                        inclusive = false
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
                                             }
                                         }
                                     )

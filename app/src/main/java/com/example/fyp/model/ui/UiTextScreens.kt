@@ -1368,4 +1368,16 @@ val ScreenUiTexts: List<String> = listOf(
     // --- Quick Translate shortcut ---
     // SpeechSwitchToConversation
     "Switch to Live Conversation →",
+
+    // --- Chat Clear Conversation ---
+    // ChatClearConversationButton
+    "Clear Chat",
+    // ChatClearConversationTitle
+    "Clear Conversation",
+    // ChatClearConversationMessage
+    "Delete all messages in this conversation? This cannot be undone.",
+    // ChatClearConversationConfirm
+    "Clear All",
+    // ChatClearConversationSuccess
+    "Conversation cleared",
 )

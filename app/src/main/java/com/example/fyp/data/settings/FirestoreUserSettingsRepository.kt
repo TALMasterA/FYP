@@ -37,7 +37,7 @@ class FirestoreUserSettingsRepository @Inject constructor(
         val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
         val historyViewLimit = snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT
         val autoThemeEnabled = snap?.getBoolean("autoThemeEnabled") ?: false
-        val notifyNewMessages = snap?.getBoolean("notifyNewMessages") ?: true
+        val notifyNewMessages = snap?.getBoolean("notifyNewMessages") ?: false
         val notifyFriendRequests = snap?.getBoolean("notifyFriendRequests") ?: true
         val notifyRequestAccepted = snap?.getBoolean("notifyRequestAccepted") ?: true
         val notifySharedInbox = snap?.getBoolean("notifySharedInbox") ?: true
