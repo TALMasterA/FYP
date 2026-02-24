@@ -234,10 +234,15 @@ fun AppNavigation() {
                     bottomBar = {
                         if (showBottomNav) {
                             NavigationBar {
+                                // Badge for Friends tab: sum of pending requests + unread messages + unseen shared items
+                                val friendsBadgeCount = pendingFriendRequestCount +
+                                    (if (hasUnreadMessages) 1 else 0) +
+                                    (if (hasUnseenSharedItems) 1 else 0)
+
                                 bottomNavItems.forEach { item ->
                                     val isSelected = currentRoute == item.route
                                     val badgeCount = when (item.route) {
-                                        AppScreen.Friends.route -> pendingFriendRequestCount + (if (hasUnreadMessages) 1 else 0) + (if (hasUnseenSharedItems) 1 else 0)
+                                        AppScreen.Friends.route -> friendsBadgeCount
                                         else -> 0
                                     }
                                     NavigationBarItem(
