@@ -16,7 +16,8 @@ data class FriendRequest(
     val toDisplayName: String = "",      // Recipient's display name (cached at send time)
     val status: RequestStatus = RequestStatus.PENDING,
     val createdAt: Timestamp = Timestamp.now(),
-    val updatedAt: Timestamp = Timestamp.now()
+    val updatedAt: Timestamp = Timestamp.now(),
+    val note: String = ""                // Optional short note from sender
 )
 
 /**

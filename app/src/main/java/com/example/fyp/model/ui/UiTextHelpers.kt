@@ -15,6 +15,7 @@ val BaseUiTexts: List<String>
 val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     "id-ID" to mapOf(
         UiTextKey.LangEnUs to "Inggris",
+        UiTextKey.LangZhTw to "Tionghoa Tradisional",
         UiTextKey.LangZhHk to "Kanton",
         UiTextKey.LangJaJp to "Jepang",
         UiTextKey.LangZhCn to "Mandarin",
@@ -33,6 +34,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "zh-HK" to mapOf(
         UiTextKey.LangEnUs to "英文",
+        UiTextKey.LangZhTw to "繁體中文",
         UiTextKey.LangZhHk to "廣東話",
         UiTextKey.LangJaJp to "日文",
         UiTextKey.LangZhCn to "普通話",
@@ -51,6 +53,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "zh-CN" to mapOf(
         UiTextKey.LangEnUs to "英语",
+        UiTextKey.LangZhTw to "繁体中文",
         UiTextKey.LangZhHk to "粤语",
         UiTextKey.LangJaJp to "日语",
         UiTextKey.LangZhCn to "普通话",
@@ -69,6 +72,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "ja-JP" to mapOf(
         UiTextKey.LangEnUs to "英語",
+        UiTextKey.LangZhTw to "繁体字中国語",
         UiTextKey.LangZhHk to "広東語",
         UiTextKey.LangJaJp to "日本語",
         UiTextKey.LangZhCn to "中国語",
@@ -87,6 +91,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "ko-KR" to mapOf(
         UiTextKey.LangEnUs to "영어",
+        UiTextKey.LangZhTw to "번체 중국어",
         UiTextKey.LangZhHk to "광둥어",
         UiTextKey.LangJaJp to "일본어",
         UiTextKey.LangZhCn to "중국어",
@@ -105,6 +110,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "vi-VN" to mapOf(
         UiTextKey.LangEnUs to "Tiếng Anh",
+        UiTextKey.LangZhTw to "Tiếng Trung Phồn thể",
         UiTextKey.LangZhHk to "Tiếng Quảng Đông",
         UiTextKey.LangJaJp to "Tiếng Nhật",
         UiTextKey.LangZhCn to "Tiếng Trung",
@@ -123,6 +129,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "th-TH" to mapOf(
         UiTextKey.LangEnUs to "ภาษาอังกฤษ",
+        UiTextKey.LangZhTw to "ภาษาจีนตัวเต็ม",
         UiTextKey.LangZhHk to "ภาษากวางตุ้ง",
         UiTextKey.LangJaJp to "ภาษาญี่ปุ่น",
         UiTextKey.LangZhCn to "ภาษาจีนกลาง",
@@ -141,6 +148,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "fr-FR" to mapOf(
         UiTextKey.LangEnUs to "Anglais",
+        UiTextKey.LangZhTw to "Chinois traditionnel",
         UiTextKey.LangZhHk to "Cantonais",
         UiTextKey.LangJaJp to "Japonais",
         UiTextKey.LangZhCn to "Mandarin",
@@ -159,6 +167,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "de-DE" to mapOf(
         UiTextKey.LangEnUs to "Englisch",
+        UiTextKey.LangZhTw to "Traditionelles Chinesisch",
         UiTextKey.LangZhHk to "Kantonesisch",
         UiTextKey.LangJaJp to "Japanisch",
         UiTextKey.LangZhCn to "Mandarin",
@@ -177,6 +186,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "es-ES" to mapOf(
         UiTextKey.LangEnUs to "Inglés",
+        UiTextKey.LangZhTw to "Chino tradicional",
         UiTextKey.LangZhHk to "Cantonés",
         UiTextKey.LangJaJp to "Japonés",
         UiTextKey.LangZhCn to "Mandarín",
@@ -195,6 +205,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "pt-BR" to mapOf(
         UiTextKey.LangEnUs to "Inglês",
+        UiTextKey.LangZhTw to "Chinês tradicional",
         UiTextKey.LangZhHk to "Cantonês",
         UiTextKey.LangJaJp to "Japonês",
         UiTextKey.LangZhCn to "Mandarim",
@@ -213,6 +224,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "it-IT" to mapOf(
         UiTextKey.LangEnUs to "Inglese",
+        UiTextKey.LangZhTw to "Cinese tradizionale",
         UiTextKey.LangZhHk to "Cantonese",
         UiTextKey.LangJaJp to "Giapponese",
         UiTextKey.LangZhCn to "Mandarino",
@@ -231,6 +243,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "ru-RU" to mapOf(
         UiTextKey.LangEnUs to "Английский",
+        UiTextKey.LangZhTw to "Традиционный китайский",
         UiTextKey.LangZhHk to "Кантонский",
         UiTextKey.LangJaJp to "Японский",
         UiTextKey.LangZhCn to "Китайский",
@@ -249,6 +262,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "fil-PH" to mapOf(
         UiTextKey.LangEnUs to "Ingles",
+        UiTextKey.LangZhTw to "Tradisyonal na Intsik",
         UiTextKey.LangZhHk to "Cantonese",
         UiTextKey.LangJaJp to "Hapon",
         UiTextKey.LangZhCn to "Mandarin",
@@ -267,6 +281,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
     ),
     "ms-MY" to mapOf(
         UiTextKey.LangEnUs to "Inggeris",
+        UiTextKey.LangZhTw to "Cina Tradisional",
         UiTextKey.LangZhHk to "Kantonis",
         UiTextKey.LangJaJp to "Jepun",
         UiTextKey.LangZhCn to "Mandarin",
@@ -282,6 +297,25 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
         UiTextKey.LangPtBr to "Portugis",
         UiTextKey.LangItIt to "Itali",
         UiTextKey.LangRuRu to "Rusia"
+    ),
+    "zh-TW" to mapOf(
+        UiTextKey.LangEnUs to "英語",
+        UiTextKey.LangZhTw to "繁體中文",
+        UiTextKey.LangZhHk to "粵語",
+        UiTextKey.LangJaJp to "日語",
+        UiTextKey.LangZhCn to "普通話",
+        UiTextKey.LangFrFr to "法語",
+        UiTextKey.LangDeDe to "德語",
+        UiTextKey.LangKoKr to "韓語",
+        UiTextKey.LangEsEs to "西班牙語",
+        UiTextKey.LangIdId to "印尼語",
+        UiTextKey.LangViVn to "越南語",
+        UiTextKey.LangThTh to "泰語",
+        UiTextKey.LangFilPh to "菲律賓語",
+        UiTextKey.LangMsMy to "馬來語",
+        UiTextKey.LangPtBr to "葡萄牙語",
+        UiTextKey.LangItIt to "義大利語",
+        UiTextKey.LangRuRu to "俄語"
     )
 )
 
@@ -290,6 +324,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
  */
 val LanguageNameKeys: Set<UiTextKey> = setOf(
     UiTextKey.LangEnUs,
+    UiTextKey.LangZhTw,
     UiTextKey.LangZhHk,
     UiTextKey.LangJaJp,
     UiTextKey.LangZhCn,

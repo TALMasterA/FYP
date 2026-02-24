@@ -63,6 +63,7 @@ fun SettingsScreen(
     onOpenShop: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
     onOpenFeedback: () -> Unit = {},
+    onOpenNotificationSettings: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -216,6 +217,18 @@ fun SettingsScreen(
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                             }
+                        }
+
+                        // Notification Settings button
+                        TextButton(
+                            onClick = onOpenNotificationSettings,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = t(UiTextKey.NotifSettingsQuickLink),
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
                         }
 
                         // Feedback buttons - Two separate options

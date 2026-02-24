@@ -240,7 +240,8 @@ class FirestoreFriendsRepository @Inject constructor(
 
     override suspend fun sendFriendRequest(
         fromUserId: UserId,
-        toUserId: UserId
+        toUserId: UserId,
+        note: String
     ): Result<FriendRequest> {
         return try {
             // Check if already friends
@@ -289,7 +290,8 @@ class FirestoreFriendsRepository @Inject constructor(
                 toDisplayName = toProfile?.displayName ?: "",
                 status = RequestStatus.PENDING,
                 createdAt = Timestamp.now(),
-                updatedAt = Timestamp.now()
+                updatedAt = Timestamp.now(),
+                note = note.take(80).trim()
             )
 
             requestRef.set(request).await()

@@ -584,6 +584,10 @@ class WordBankViewModel @Inject constructor(
         )
     }
 
+    fun consumeWordBankGenerationCompleted() {
+        _uiState.value = _uiState.value.copy(wordBankGenerationCompleted = null)
+    }
+
     fun refreshLanguageCounts() {
         viewModelScope.launch {
             sharedHistoryDataSource.forceRefreshLanguageCounts(primaryLanguageCode)
@@ -693,7 +697,8 @@ class WordBankViewModel @Inject constructor(
 
                 _uiState.value = _uiState.value.copy(
                     isGenerating = false,
-                    currentWordBank = updatedWordBank
+                    currentWordBank = updatedWordBank,
+                    wordBankGenerationCompleted = targetLanguageCode
                 )
             } catch (ce: CancellationException) {
                 // Don't update state on cancellation - cancelGeneration() handles it

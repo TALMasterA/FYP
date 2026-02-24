@@ -54,6 +54,10 @@ data class LearningUiState(
     val quizCountByLanguage: Map<String, Int> = emptyMap(),
     // languageCode -> history count when last coins were awarded (for anti-cheat)
     val lastAwardedQuizCountByLanguage: Map<String, Int> = emptyMap(),
+
+    // Generation completion events (consumed once by the banner)
+    val sheetGenerationCompleted: String? = null,   // languageCode of completed sheet
+    val quizGenerationCompleted: String? = null,    // languageCode of completed quiz
 )
 
 @HiltViewModel
@@ -399,6 +403,7 @@ class LearningViewModel @Inject constructor(
                     generatingLanguageCode = null,
                     sheetExistsByLanguage = uiState.value.sheetExistsByLanguage + (languageCode to true),
                     sheetCountByLanguage = uiState.value.sheetCountByLanguage + (languageCode to countNow),
+                    sheetGenerationCompleted = languageCode,
                     error = null
                 )
             } catch (ce: CancellationException) {
@@ -485,6 +490,7 @@ class LearningViewModel @Inject constructor(
                 _uiState.value = uiState.value.copy(
                     generatingQuizLanguageCode = null,
                     quizCountByLanguage = uiState.value.quizCountByLanguage + (languageCode to sheetHistoryCount),
+                    quizGenerationCompleted = languageCode,
                     error = null
                 )
             } catch (ce: CancellationException) {
@@ -507,6 +513,14 @@ class LearningViewModel @Inject constructor(
         quizGenerationJob?.cancel()
         quizGenerationJob = null
         _uiState.value = uiState.value.copy(generatingQuizLanguageCode = null)
+    }
+
+    fun consumeSheetGenerationCompleted() {
+        _uiState.value = uiState.value.copy(sheetGenerationCompleted = null)
+    }
+
+    fun consumeQuizGenerationCompleted() {
+        _uiState.value = uiState.value.copy(quizGenerationCompleted = null)
     }
 
     fun setPrimaryLanguage(languageCode: String) {

@@ -31,6 +31,7 @@ object AzureLanguageConfig {
 object LanguageDisplayNames {
     private val map = mapOf(
         "en-US" to "English",
+        "zh-TW" to "Traditional Chinese",
         "zh-HK" to "Cantonese",
         "zh-CN" to "Mandarin",
         "ja-JP" to "Japanese",

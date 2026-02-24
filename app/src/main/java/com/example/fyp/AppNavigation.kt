@@ -37,6 +37,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.compose.NavHost
@@ -117,6 +121,7 @@ sealed class AppScreen(val route: String) {
     object SharedInbox : AppScreen("shared_inbox")
     object BlockedUsers : AppScreen("blocked_users")
     object Onboarding : AppScreen("onboarding")
+    object NotificationSettings : AppScreen("notification_settings")
 
     object SharedMaterialDetail : AppScreen("shared_material_detail/{itemId}") {
         fun routeFor(itemId: String) =
@@ -184,9 +189,11 @@ fun AppNavigation() {
 
     // One LearningViewModel shared for Learning + Sheet
     val learningViewModel: LearningViewModel = hiltViewModel()
+    val learningUiState by learningViewModel.uiState.collectAsStateWithLifecycle()
 
     // One WordBankViewModel shared across app (so generation continues when leaving page)
     val wordBankViewModel: WordBankViewModel = hiltViewModel()
+    val wordBankUiState by wordBankViewModel.uiState.collectAsStateWithLifecycle()
 
     val fontSizeScale = validateScale(settingsUiState.settings.fontSizeScale)
     val scaledTypography = createScaledTypography(AppTypography, fontSizeScale)
@@ -198,6 +205,66 @@ fun AppNavigation() {
 
     // Observe network connectivity for offline indicator
     val isConnected by rememberConnectivityState()
+
+    // Snackbar state for generation banners
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Observe generation completion events and show banners
+    val sheetDone = learningUiState.sheetGenerationCompleted
+    LaunchedEffect(sheetDone) {
+        if (sheetDone != null) {
+            val result = snackbarHostState.showSnackbar(
+                message = appLanguageState.uiTexts[com.example.fyp.model.ui.UiTextKey.GenerationBannerSheet]
+                    ?: "Learning sheet ready! Tap to open.",
+                actionLabel = appLanguageState.uiTexts[com.example.fyp.model.ui.UiTextKey.ActionOpen] ?: "Open",
+                duration = SnackbarDuration.Long
+            )
+            learningViewModel.consumeSheetGenerationCompleted()
+            if (result == SnackbarResult.ActionPerformed) {
+                navController.navigate(
+                    AppScreen.LearningSheet.routeFor(
+                        learningUiState.primaryLanguageCode, sheetDone
+                    )
+                ) { launchSingleTop = true }
+            }
+        }
+    }
+
+    val quizDone = learningUiState.quizGenerationCompleted
+    LaunchedEffect(quizDone) {
+        if (quizDone != null) {
+            val result = snackbarHostState.showSnackbar(
+                message = appLanguageState.uiTexts[com.example.fyp.model.ui.UiTextKey.GenerationBannerQuiz]
+                    ?: "Quiz ready! Tap to start.",
+                actionLabel = appLanguageState.uiTexts[com.example.fyp.model.ui.UiTextKey.ActionOpen] ?: "Open",
+                duration = SnackbarDuration.Long
+            )
+            learningViewModel.consumeQuizGenerationCompleted()
+            if (result == SnackbarResult.ActionPerformed) {
+                navController.navigate(
+                    AppScreen.Quiz.routeFor(
+                        learningUiState.primaryLanguageCode, quizDone
+                    )
+                ) { launchSingleTop = true }
+            }
+        }
+    }
+
+    val wordBankDone = wordBankUiState.wordBankGenerationCompleted
+    LaunchedEffect(wordBankDone) {
+        if (wordBankDone != null) {
+            val result = snackbarHostState.showSnackbar(
+                message = appLanguageState.uiTexts[com.example.fyp.model.ui.UiTextKey.GenerationBannerWordBank]
+                    ?: "Word bank ready! Tap to view.",
+                actionLabel = appLanguageState.uiTexts[com.example.fyp.model.ui.UiTextKey.ActionOpen] ?: "Open",
+                duration = SnackbarDuration.Long
+            )
+            wordBankViewModel.consumeWordBankGenerationCompleted()
+            if (result == SnackbarResult.ActionPerformed) {
+                navController.navigate(AppScreen.WordBank.route) { launchSingleTop = true }
+            }
+        }
+    }
 
     val bottomNavItems = listOf(
         BottomNavItem(AppScreen.Home.route, Icons.Default.Home, "Home"),
@@ -240,6 +307,7 @@ fun AppNavigation() {
                     // already includes the nav-bar inset) takes precedence, so no double-
                     // padding occurs.
                     contentWindowInsets = WindowInsets.navigationBars,
+                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                     bottomBar = {
                         if (showBottomNav) {
                             NavigationBar {
@@ -460,6 +528,7 @@ fun AppNavigation() {
                             onOpenShop = { navController.navigate(AppScreen.Shop.route) { launchSingleTop = true } },
                             onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) { launchSingleTop = true } },
                             onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) { launchSingleTop = true } },
+                            onOpenNotificationSettings = { navController.navigate(AppScreen.NotificationSettings.route) { launchSingleTop = true } },
                             viewModel = settingsViewModel
                         )
                     }
@@ -589,6 +658,9 @@ fun AppNavigation() {
                             onOpenBlockedUsers = {
                                 navController.navigate(AppScreen.BlockedUsers.route) { launchSingleTop = true }
                             },
+                            onOpenNotifSettings = {
+                                navController.navigate(AppScreen.NotificationSettings.route) { launchSingleTop = true }
+                            },
                             hasUnseenSharedItems = hasUnseenSharedItems,
                             hasUnreadMessages = hasUnreadMessages
                         )
@@ -652,6 +724,17 @@ fun AppNavigation() {
                         BlockedUsersScreen(
                             appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composableRequireLogin(
+                        route = AppScreen.NotificationSettings.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        com.example.fyp.screens.settings.NotificationSettingsScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() },
+                            viewModel = settingsViewModel
                         )
                     }
 

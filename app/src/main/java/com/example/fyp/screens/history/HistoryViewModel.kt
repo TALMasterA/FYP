@@ -349,4 +349,9 @@ class HistoryViewModel @Inject constructor(
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
+
+    fun retryLoad() {
+        val uid = currentUserId ?: return
+        startListening(uid)
+    }
 }

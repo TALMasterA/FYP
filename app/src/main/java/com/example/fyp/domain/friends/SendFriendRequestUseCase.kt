@@ -10,10 +10,10 @@ import javax.inject.Inject
 class SendFriendRequestUseCase @Inject constructor(
     private val friendsRepository: FriendsRepository
 ) {
-    suspend operator fun invoke(fromUserId: UserId, toUserId: UserId): Result<Unit> {
+    suspend operator fun invoke(fromUserId: UserId, toUserId: UserId, note: String = ""): Result<Unit> {
         if (fromUserId == toUserId) {
             return Result.failure(IllegalArgumentException("Cannot send friend request to yourself"))
         }
-        return friendsRepository.sendFriendRequest(fromUserId, toUserId).map { }
+        return friendsRepository.sendFriendRequest(fromUserId, toUserId, note).map { }
     }
 }

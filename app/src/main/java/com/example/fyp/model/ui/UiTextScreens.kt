@@ -1406,4 +1406,26 @@ val ScreenUiTexts: List<String> = listOf(
     "User unblocked.",
     // BlockedUsersManageButton
     "Manage Blocked Users",
+
+    // --- Friend Request Note ---
+    // FriendsRequestNoteLabel
+    "Request Note (optional)",
+    // FriendsRequestNotePlaceholder
+    "Add a short note to your request...",
+
+    // --- Generation Completion Banners ---
+    // GenerationBannerSheet
+    "Learning sheet ready! Tap to open.",
+    // GenerationBannerWordBank
+    "Word bank ready! Tap to view.",
+    // GenerationBannerQuiz
+    "Quiz ready! Tap to start.",
+
+    // --- Notification Settings Quick Link ---
+    // NotifSettingsQuickLink
+    "Notifications",
+
+    // --- Language Name for Traditional Chinese ---
+    // LangZhTw
+    "Traditional Chinese",
 )

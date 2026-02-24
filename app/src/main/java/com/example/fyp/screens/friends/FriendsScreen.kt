@@ -37,20 +37,19 @@ fun FriendsScreen(
     onOpenChat: (friendId: String, friendUsername: String, friendDisplayName: String) -> Unit = { _, _, _ -> },
     onOpenSharedInbox: () -> Unit = {},
     onOpenBlockedUsers: () -> Unit = {},
+    onOpenNotifSettings: () -> Unit = {},
     hasUnseenSharedItems: Boolean = false,
     hasUnreadMessages: Boolean = false,
     viewModel: FriendsViewModel = hiltViewModel(),
     settingsViewModel: com.example.fyp.screens.settings.SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val settingsState by settingsViewModel.uiState.collectAsStateWithLifecycle()
     val (uiText) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     var showSearchDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showInfoDialog by remember { mutableStateOf(false) }
-    var showNotifSettingsDialog by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
     // Block confirmation dialog state
     var blockTargetId by remember { mutableStateOf<String?>(null) }
@@ -103,88 +102,6 @@ fun FriendsScreen(
         )
     }
 
-    // Notification settings dialog
-    if (showNotifSettingsDialog) {
-        val settings = settingsState.settings
-        AlertDialog(
-            onDismissRequest = { showNotifSettingsDialog = false },
-            title = { Text(t(UiTextKey.FriendsNotifSettingsTitle)) },
-            text = {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    // Push notification toggles
-                    NotifToggleRow(
-                        label = t(UiTextKey.FriendsNotifNewMessages),
-                        checked = settings.notifyNewMessages,
-                        onCheckedChange = {
-                            settingsViewModel.updateNotificationPref("notifyNewMessages", it)
-                        }
-                    )
-                    NotifToggleRow(
-                        label = t(UiTextKey.FriendsNotifFriendRequests),
-                        checked = settings.notifyFriendRequests,
-                        onCheckedChange = {
-                            settingsViewModel.updateNotificationPref("notifyFriendRequests", it)
-                        }
-                    )
-                    NotifToggleRow(
-                        label = t(UiTextKey.FriendsNotifRequestAccepted),
-                        checked = settings.notifyRequestAccepted,
-                        onCheckedChange = {
-                            settingsViewModel.updateNotificationPref("notifyRequestAccepted", it)
-                        }
-                    )
-                    NotifToggleRow(
-                        label = t(UiTextKey.FriendsNotifSharedInbox),
-                        checked = settings.notifySharedInbox,
-                        onCheckedChange = {
-                            settingsViewModel.updateNotificationPref("notifySharedInbox", it)
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                    HorizontalDivider()
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    // In-app badge toggles
-                    Text(
-                        text = t(UiTextKey.InAppBadgeSectionTitle),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    NotifToggleRow(
-                        label = t(UiTextKey.InAppBadgeMessages),
-                        checked = settings.inAppBadgeMessages,
-                        onCheckedChange = {
-                            settingsViewModel.updateNotificationPref("inAppBadgeMessages", it)
-                        }
-                    )
-                    NotifToggleRow(
-                        label = t(UiTextKey.InAppBadgeFriendRequests),
-                        checked = settings.inAppBadgeFriendRequests,
-                        onCheckedChange = {
-                            settingsViewModel.updateNotificationPref("inAppBadgeFriendRequests", it)
-                        }
-                    )
-                    NotifToggleRow(
-                        label = t(UiTextKey.InAppBadgeSharedInbox),
-                        checked = settings.inAppBadgeSharedInbox,
-                        onCheckedChange = {
-                            settingsViewModel.updateNotificationPref("inAppBadgeSharedInbox", it)
-                        }
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showNotifSettingsDialog = false }) {
-                    Text(t(UiTextKey.FriendsNotifCloseButton))
-                }
-            }
-        )
-    }
-
     // Search dialog
     if (showSearchDialog) {
         SearchUsersDialog(
@@ -192,7 +109,7 @@ fun FriendsScreen(
             searchResults = uiState.searchResults,
             isSearching = uiState.isSearching,
             onQueryChange = { viewModel.onSearchQueryChange(it) },
-            onSendRequest = { viewModel.sendFriendRequest(it) },
+            onSendRequest = { userId, note -> viewModel.sendFriendRequest(userId, note) },
             requestStatusFor = { userId -> viewModel.getRequestStatusFor(userId) },
             onDismiss = {
                 showSearchDialog = false
@@ -274,7 +191,7 @@ fun FriendsScreen(
                 )
             }
             // Notification settings (bell icon)
-            IconButton(onClick = { showNotifSettingsDialog = true }) {
+            IconButton(onClick = onOpenNotifSettings) {
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = t(UiTextKey.FriendsNotifSettingsButton),
@@ -569,6 +486,14 @@ fun FriendRequestCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
+                if (request.note.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "\"${request.note}\"",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             Row {
                 IconButton(onClick = onAccept) {
@@ -702,7 +627,7 @@ fun SearchUsersDialog(
     searchResults: List<PublicUserProfile>,
     isSearching: Boolean,
     onQueryChange: (String) -> Unit,
-    onSendRequest: (String) -> Unit,
+    onSendRequest: (String, String) -> Unit,
     requestStatusFor: (String) -> RequestStatus,
     onDismiss: () -> Unit,
     t: (UiTextKey) -> String
@@ -750,9 +675,11 @@ fun SearchUsersDialog(
                             items(searchResults, key = { it.uid }) { user ->
                                 SearchResultCard(
                                     user = user,
-                                    onSendRequest = { onSendRequest(user.uid) },
+                                    onSendRequest = { note -> onSendRequest(user.uid, note) },
                                     requestStatus = requestStatusFor(user.uid),
-                                    addButtonText = t(UiTextKey.FriendsSendRequestButton)
+                                    addButtonText = t(UiTextKey.FriendsSendRequestButton),
+                                    noteLabel = t(UiTextKey.FriendsRequestNoteLabel),
+                                    notePlaceholder = t(UiTextKey.FriendsRequestNotePlaceholder)
                                 )
                             }
                         }
@@ -771,57 +698,79 @@ fun SearchUsersDialog(
 @Composable
 fun SearchResultCard(
     user: PublicUserProfile,
-    onSendRequest: () -> Unit,
+    onSendRequest: (String) -> Unit,
     requestStatus: RequestStatus,
-    addButtonText: String
+    addButtonText: String,
+    noteLabel: String = "Request Note (optional)",
+    notePlaceholder: String = "Add a short note..."
 ) {
+    var noteText by remember(user.uid) { mutableStateOf("") }
+
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .padding(12.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = user.username,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                val statusText = when (requestStatus) {
-                    RequestStatus.ALREADY_FRIENDS -> "Already friends"
-                    RequestStatus.REQUEST_SENT    -> "✓ Request sent — awaiting reply"
-                    RequestStatus.REQUEST_RECEIVED -> "This user sent you a request"
-                    RequestStatus.NONE            -> null
-                }
-                if (statusText != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = statusText,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = when (requestStatus) {
-                            RequestStatus.REQUEST_SENT -> MaterialTheme.colorScheme.primary
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        text = user.username,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
                     )
+                    val statusText = when (requestStatus) {
+                        RequestStatus.ALREADY_FRIENDS -> "Already friends"
+                        RequestStatus.REQUEST_SENT    -> "✓ Request sent — awaiting reply"
+                        RequestStatus.REQUEST_RECEIVED -> "This user sent you a request"
+                        RequestStatus.NONE            -> null
+                    }
+                    if (statusText != null) {
+                        Text(
+                            text = statusText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = when (requestStatus) {
+                                RequestStatus.REQUEST_SENT -> MaterialTheme.colorScheme.primary
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                    }
+                }
+                // Only show the Add button when there is no existing connection
+                if (requestStatus == RequestStatus.NONE) {
+                    Button(
+                        onClick = { onSendRequest(noteText) },
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.PersonAdd,
+                            contentDescription = addButtonText,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
-            // Only show the Add button when there is no existing connection
+            // Note text field - only shown for users who can receive requests
             if (requestStatus == RequestStatus.NONE) {
-                Button(
-                    onClick = onSendRequest,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                ) {
-                    Icon(
-                        Icons.Default.PersonAdd,
-                        contentDescription = addButtonText,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = noteText,
+                    onValueChange = { if (it.length <= 80) noteText = it },
+                    placeholder = { Text(notePlaceholder, style = MaterialTheme.typography.bodySmall) },
+                    label = { Text(noteLabel, style = MaterialTheme.typography.labelSmall) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    supportingText = { Text("${noteText.length}/80", style = MaterialTheme.typography.labelSmall) }
+                )
             }
         }
     }

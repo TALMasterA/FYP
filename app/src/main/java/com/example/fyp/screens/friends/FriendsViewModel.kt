@@ -324,7 +324,7 @@ class FriendsViewModel @Inject constructor(
         }
     }
 
-    fun sendFriendRequest(toUserId: String) {
+    fun sendFriendRequest(toUserId: String, note: String = "") {
         val fromUserId = currentUserId ?: return
         // Require a username before sending any request so the recipient sees a real name
         if (!_uiState.value.currentUserHasUsername) {
@@ -342,7 +342,7 @@ class FriendsViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            sendFriendRequestUseCase(fromUserId, UserId(toUserId)).fold(
+            sendFriendRequestUseCase(fromUserId, UserId(toUserId), note).fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         successMessage = "Friend request sent! They will be notified.",

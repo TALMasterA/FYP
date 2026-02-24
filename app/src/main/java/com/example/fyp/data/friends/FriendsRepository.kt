@@ -82,7 +82,7 @@ interface FriendsRepository {
     /**
      * Send a friend request to another user.
      */
-    suspend fun sendFriendRequest(fromUserId: UserId, toUserId: UserId): Result<FriendRequest>
+    suspend fun sendFriendRequest(fromUserId: UserId, toUserId: UserId, note: String = ""): Result<FriendRequest>
     
     /**
      * Accept a friend request.
