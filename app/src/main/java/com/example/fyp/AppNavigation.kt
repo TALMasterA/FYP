@@ -78,7 +78,6 @@ import com.example.fyp.screens.settings.SettingsScreen
 import com.example.fyp.screens.settings.SettingsViewModel
 import com.example.fyp.screens.settings.ShopScreen
 import com.example.fyp.screens.settings.VoiceSettingsScreen
-import com.example.fyp.screens.settings.SystemNotesScreen
 import com.example.fyp.screens.speech.ContinuousConversationScreen
 import com.example.fyp.screens.speech.SpeechRecognitionScreen
 import com.example.fyp.screens.wordbank.WordBankScreen
@@ -420,7 +419,7 @@ fun AppNavigation() {
                             onOpenShop = { navController.navigate(AppScreen.Shop.route) { launchSingleTop = true } },
                             onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) { launchSingleTop = true } },
                             onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) { launchSingleTop = true } },
-                            onOpenSystemNotes = { navController.navigate(AppScreen.SystemNotes.route) { launchSingleTop = true } },
+                            onOpenSystemNotes = { navController.navigate(AppScreen.Help.route) { launchSingleTop = true } },
                             pendingFriendRequestCount = pendingFriendRequestCount,
                             hasUnreadMessages = hasUnreadMessages,
                             hasUnseenSharedItems = hasUnseenSharedItems,
@@ -606,12 +605,6 @@ fun AppNavigation() {
                         )
                     }
 
-                    composable(AppScreen.SystemNotes.route) {
-                        SystemNotesScreen(
-                            appLanguageState = appLanguageState,
-                            onBack = { navController.popBackStack() }
-                        )
-                    }
                 }
                 }
                 }

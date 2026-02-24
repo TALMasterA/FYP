@@ -10,6 +10,7 @@ import com.example.fyp.domain.friends.GetCurrentUserProfileUseCase
 import com.example.fyp.model.UserId
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.friends.PublicUserProfile
+import com.example.fyp.core.AppLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -84,8 +85,9 @@ class MyProfileViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
+                AppLogger.e("MyProfileViewModel", "loadProfile failed", e)
                 _uiState.update {
-                    it.copy(isLoading = false, error = e.message ?: "Failed to load profile")
+                    it.copy(isLoading = false, error = "Failed to load profile. Please try again.")
                 }
             }
         }
@@ -115,8 +117,9 @@ class MyProfileViewModel @Inject constructor(
                 }
                 showSuccessMessage(if (isPublic) "Profile set to Public" else "Profile set to Private")
             }.onFailure { e ->
+                AppLogger.e("MyProfileViewModel", "updateVisibility failed", e)
                 _uiState.update {
-                    it.copy(isUpdatingVisibility = false, error = e.message ?: "Failed to update visibility")
+                    it.copy(isUpdatingVisibility = false, error = "Failed to update visibility. Please try again.")
                 }
             }
         }
