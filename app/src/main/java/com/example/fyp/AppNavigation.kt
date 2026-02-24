@@ -22,8 +22,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.fyp.core.LocalAppLanguageState
 import com.example.fyp.core.LocalFontSizeScale
@@ -70,6 +86,12 @@ import com.example.fyp.screens.wordbank.WordBankViewModel
 import com.example.fyp.ui.theme.FYPTheme
 import com.example.fyp.ui.theme.ThemeHelper
 import com.example.fyp.ui.theme.Typography as AppTypography
+
+private data class BottomNavItem(
+    val route: String,
+    val icon: ImageVector,
+    val label: String
+)
 
 sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
@@ -174,6 +196,14 @@ fun AppNavigation() {
     // Observe network connectivity for offline indicator
     val isConnected by rememberConnectivityState()
 
+    val bottomNavItems = listOf(
+        BottomNavItem(AppScreen.Home.route, Icons.Default.Home, "Home"),
+        BottomNavItem(AppScreen.Speech.route, Icons.Default.Mic, "Translate"),
+        BottomNavItem(AppScreen.Learning.route, Icons.AutoMirrored.Filled.MenuBook, "Learn"),
+        BottomNavItem(AppScreen.Friends.route, Icons.Default.People, "Friends"),
+        BottomNavItem(AppScreen.Settings.route, Icons.Default.Settings, "Settings"),
+    )
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -185,14 +215,63 @@ fun AppNavigation() {
             LocalUpdateAppLanguage provides updateAppLanguage
         ) {
             FYPTheme(darkTheme = darkTheme, colorPaletteId = colorPaletteId, typography = scaledTypography) {
-                Column(modifier = Modifier.fillMaxSize()) {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+                val showBottomNav = currentRoute in setOf(
+                    AppScreen.Home.route,
+                    AppScreen.Speech.route,
+                    AppScreen.Learning.route,
+                    AppScreen.Friends.route,
+                    AppScreen.Settings.route
+                )
+
+                // Helper for navigating to login
+                val navigateToLogin: () -> Unit = {
+                    navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
+                }
+
+                Scaffold(
+                    bottomBar = {
+                        if (showBottomNav) {
+                            NavigationBar {
+                                bottomNavItems.forEach { item ->
+                                    val isSelected = currentRoute == item.route
+                                    val badgeCount = when (item.route) {
+                                        AppScreen.Friends.route -> pendingFriendRequestCount + (if (hasUnreadMessages) 1 else 0) + (if (hasUnseenSharedItems) 1 else 0)
+                                        else -> 0
+                                    }
+                                    NavigationBarItem(
+                                        icon = {
+                                            BadgedBox(
+                                                badge = {
+                                                    if (badgeCount > 0) {
+                                                        Badge {
+                                                            Text(if (badgeCount > 99) "99+" else "$badgeCount")
+                                                        }
+                                                    }
+                                                }
+                                            ) {
+                                                Icon(item.icon, contentDescription = item.label)
+                                            }
+                                        },
+                                        label = { Text(item.label) },
+                                        selected = isSelected,
+                                        onClick = {
+                                            navController.navigate(item.route) {
+                                                popUpTo(AppScreen.Home.route) { saveState = true }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                ) { scaffoldPadding ->
+                Column(modifier = Modifier.padding(scaffoldPadding).fillMaxSize()) {
                     // Offline banner shown at the top when no internet
                     OfflineBanner(isConnected = isConnected)
-
-                    // Helper for navigating to login
-                    val navigateToLogin: () -> Unit = {
-                        navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
-                    }
 
                     NavHost(
                         navController = navController,
@@ -528,6 +607,7 @@ fun AppNavigation() {
                             onBack = { navController.popBackStack() }
                         )
                     }
+                }
                 }
                 }
             }
