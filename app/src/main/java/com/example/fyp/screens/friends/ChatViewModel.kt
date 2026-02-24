@@ -15,6 +15,7 @@ import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.FriendMessage
 import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.user.AuthState
+import com.example.fyp.core.AppLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -134,9 +135,10 @@ class ChatViewModel @Inject constructor(
             } catch (_: kotlinx.coroutines.CancellationException) {
                 // Normal cancellation — e.g. user navigated away or loadMessages called again
             } catch (e: Exception) {
+                AppLogger.e("ChatViewModel", "loadMessages failed", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Failed to load messages"
+                    error = "Failed to load messages. Please try again."
                 )
             }
         }
@@ -249,15 +251,17 @@ class ChatViewModel @Inject constructor(
                         )
                     },
                     onFailure = { error ->
+                        AppLogger.e("ChatViewModel", "translateAllMessages failed", error)
                         _uiState.value = _uiState.value.copy(
-                            translationError = error.message ?: "Translation failed",
+                            translationError = "Translation failed. Please try again.",
                             isTranslating = false
                         )
                     }
                 )
             } catch (e: Exception) {
+                AppLogger.e("ChatViewModel", "translateAllMessages catch failed", e)
                 _uiState.value = _uiState.value.copy(
-                    translationError = e.message ?: "Translation failed",
+                    translationError = "Translation failed. Please try again.",
                     isTranslating = false
                 )
             }

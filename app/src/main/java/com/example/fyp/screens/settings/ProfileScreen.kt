@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.StandardScreenScaffold
+import com.example.fyp.core.UiConstants
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
@@ -62,6 +63,20 @@ fun ProfileScreen(
     LaunchedEffect(uiState.accountDeleted) {
         if (uiState.accountDeleted) {
             onAccountDeleted()
+        }
+    }
+
+    // Auto-dismiss error and success after a delay
+    LaunchedEffect(uiState.error) {
+        if (uiState.error != null) {
+            kotlinx.coroutines.delay(UiConstants.ERROR_AUTO_DISMISS_MS)
+            viewModel.clearError()
+        }
+    }
+    LaunchedEffect(uiState.successMessage) {
+        if (uiState.successMessage != null) {
+            kotlinx.coroutines.delay(UiConstants.SUCCESS_MESSAGE_DURATION_MS)
+            viewModel.clearSuccessMessage()
         }
     }
 

@@ -8,6 +8,7 @@ import com.example.fyp.data.friends.SharingRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.SharedItem
+import com.example.fyp.core.AppLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -83,9 +84,10 @@ class SharedMaterialDetailViewModel @Inject constructor(
                 // vs null which means "still loading"
                 _uiState.value = _uiState.value.copy(fullContent = fullContent ?: "")
             } catch (e: Exception) {
+                AppLogger.e("SharedMaterialDetailViewModel", "Failed to load shared material: $itemId", e)
                 _uiState.value = SharedMaterialDetailUiState(
                     isLoading = false,
-                    error = e.message ?: "Failed to load"
+                    error = "Failed to load shared material. Please try again."
                 )
             }
         }

@@ -30,6 +30,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.LaunchedEffect
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.rememberHapticFeedback
+import com.example.fyp.core.UiConstants
 import com.example.fyp.ui.components.TranslationCardSkeleton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,6 +49,14 @@ fun HistoryScreen(
     // Refresh coin stats when screen becomes visible (on-demand instead of real-time listener)
     LaunchedEffect(Unit) {
         viewModel.refreshCoinStats()
+    }
+
+    // Auto-dismiss error after 3 seconds
+    LaunchedEffect(uiState.error) {
+        if (uiState.error != null) {
+            kotlinx.coroutines.delay(UiConstants.ERROR_AUTO_DISMISS_MS)
+            viewModel.clearError()
+        }
     }
 
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
@@ -377,11 +386,21 @@ fun HistoryScreen(
                         }
                     }
 
-                    uiState.error != null -> Text(
-                        text = uiState.error.orEmpty(),
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(8.dp),
-                    )
+                    uiState.error != null -> Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = uiState.error.orEmpty(),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
 
                     selectedTab == 0 -> {
                         Column(modifier = Modifier.fillMaxSize()) {

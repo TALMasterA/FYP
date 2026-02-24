@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
+import com.example.fyp.core.AppLogger
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.domain.history.DeleteHistoryRecordUseCase
@@ -111,7 +112,8 @@ class HistoryViewModel @Inject constructor(
             // Pass language codes so the repository can skip the pre-read (saves 1 read per delete)
             runCatching { deleteHistoryRecord(uid, record.id, record.sourceLang, record.targetLang) }
                 .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(error = e.message ?: "Delete failed")
+                    AppLogger.e("HistoryViewModel", "deleteRecord failed", e)
+                    _uiState.value = _uiState.value.copy(error = "Delete failed. Please try again.")
                 }
         }
     }
@@ -123,7 +125,8 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { renameSession(UserId(uid), SessionId(sessionId), name) }
                 .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(error = e.message ?: "Rename failed")
+                    AppLogger.e("HistoryViewModel", "renameSession failed", e)
+                    _uiState.value = _uiState.value.copy(error = "Rename failed. Please try again.")
                 }
         }
     }
@@ -135,7 +138,8 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { this@HistoryViewModel.deleteSession.invoke(uid, sessionId) }
                 .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(error = e.message ?: "Delete session failed")
+                    AppLogger.e("HistoryViewModel", "deleteSession failed", e)
+                    _uiState.value = _uiState.value.copy(error = "Delete session failed. Please try again.")
                 }
         }
     }
@@ -172,6 +176,7 @@ class HistoryViewModel @Inject constructor(
                     isLoadingMore = false
                 )
             } catch (e: Exception) {
+                AppLogger.e("HistoryViewModel", "loadMoreHistory failed", e)
                 _uiState.value = _uiState.value.copy(
                     isLoadingMore = false,
                     error = "Failed to load more records"
@@ -339,5 +344,9 @@ class HistoryViewModel @Inject constructor(
 
         // Load favorited texts to show correct bookmark state
         loadFavoritedTexts(userId)
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 }
