@@ -241,8 +241,9 @@ fun ChatScreen(
                     )
                 }
             }
-            // Translate button
-            if (uiState.messages.isNotEmpty()) {
+            // Translate button — only shown when the friend has sent at least one message
+            val hasFriendMessages = uiState.messages.any { it.senderId != uiState.currentUserId }
+            if (hasFriendMessages) {
                 if (uiState.isTranslating) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp).padding(end = 8.dp),

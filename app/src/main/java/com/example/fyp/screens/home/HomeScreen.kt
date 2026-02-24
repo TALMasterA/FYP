@@ -3,13 +3,15 @@ package com.example.fyp.screens.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Mic
@@ -29,11 +31,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,17 +43,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.AppLanguageDropdown
 import com.example.fyp.core.StandardScreenScaffold
-import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.core.UiLanguageList
-import com.example.fyp.screens.login.AuthViewModel
+import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.ui.AppLanguageState
-import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.Alignment
-import kotlinx.coroutines.delay
+import com.example.fyp.model.user.AuthState
+import com.example.fyp.screens.login.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -215,7 +213,6 @@ fun HomeScreen(
             // Speech Translation Card
             FeatureCard(
                 title = t(UiTextKey.HomeStartButton),
-                description = t(UiTextKey.HomeDiscreteDescription),
                 icon = Icons.Filled.Mic,
                 enabled = isLoggedIn,
                 onClick = onStartSpeech,
@@ -225,7 +222,6 @@ fun HomeScreen(
             // Continuous Conversation Card
             FeatureCard(
                 title = t(UiTextKey.ContinuousStartScreenButton),
-                description = t(UiTextKey.HomeContinuousDescription),
                 icon = Icons.Filled.RecordVoiceOver,
                 enabled = isLoggedIn,
                 onClick = onStartContinuous,
@@ -235,7 +231,6 @@ fun HomeScreen(
             // Learning Card
             FeatureCard(
                 title = t(UiTextKey.LearningTitle),
-                description = t(UiTextKey.HomeLearningDescription),
                 icon = Icons.Filled.School,
                 enabled = isLoggedIn,
                 onClick = onOpenLearning,
@@ -249,7 +244,6 @@ fun HomeScreen(
 @Composable
 private fun FeatureCard(
     title: String,
-    description: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     enabled: Boolean,
     onClick: () -> Unit,
@@ -275,59 +269,18 @@ private fun FeatureCard(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
                 tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
-
-            // Text content
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                )
-            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            )
         }
     }
-}
-
-@Composable
-private fun GreetingTitle(
-    defaultTitle: String,
-    userName: String?
-) {
-    var showUserName by remember { mutableStateOf(false) }
-
-    // Toggle between title and username every 3 seconds if user has a display name
-    LaunchedEffect(userName) {
-        if (!userName.isNullOrBlank()) {
-            while (true) {
-                delay(3000)
-                showUserName = !showUserName
-            }
-        } else {
-            showUserName = false
-        }
-    }
-
-    val displayTitle = if (!userName.isNullOrBlank() && showUserName) {
-        "👋 $userName"
-    } else {
-        defaultTitle
-    }
-
-    Text(displayTitle)
 }

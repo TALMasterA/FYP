@@ -2,7 +2,6 @@ package com.example.fyp.screens.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,8 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,15 +60,9 @@ fun SettingsScreen(
     onOpenProfile: () -> Unit = {},
     onOpenFavorites: () -> Unit = {},
     onOpenMyProfile: () -> Unit = {},
-    onOpenFriends: () -> Unit = {},
-    onOpenSharedInbox: () -> Unit = {},
     onOpenShop: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
     onOpenFeedback: () -> Unit = {},
-    onOpenSystemNotes: () -> Unit = {},
-    pendingFriendRequestCount: Int = 0,
-    hasUnreadMessages: Boolean = false,
-    hasUnseenSharedItems: Boolean = false,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -99,14 +90,6 @@ fun SettingsScreen(
         if (settingsErrorText != null) {
             delay(UiConstants.ERROR_AUTO_DISMISS_MS)
             viewModel.clearError()
-        }
-    }
-
-    // Auto-dismiss unlock error after delay
-    LaunchedEffect(uiState.unlockError) {
-        if (uiState.unlockError != null) {
-            delay(UiConstants.COIN_UNLOCK_SUCCESS_DURATION_MS)
-            viewModel.clearUnlockError()
         }
     }
 
@@ -208,65 +191,6 @@ fun SettingsScreen(
                             )
                         }
 
-                        // Friends button
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // Friends button with red dot for pending requests or unread messages
-                            val showFriendsBadge = pendingFriendRequestCount > 0 || hasUnreadMessages
-                            Box(
-                                modifier = Modifier.weight(1f),
-                                contentAlignment = androidx.compose.ui.Alignment.Center
-                            ) {
-                                TextButton(
-                                    onClick = onOpenFriends,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = t(UiTextKey.FriendsMenuButton),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                    )
-                                }
-                                // Badge positioned at top-end of the button
-                                if (showFriendsBadge) {
-                                    Badge(
-                                        containerColor = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier
-                                            .align(androidx.compose.ui.Alignment.TopEnd)
-                                            .padding(top = 4.dp, end = 4.dp)
-                                    )
-                                }
-                            }
-                            
-                            // Shared Inbox button with red dot for unseen shared items
-                            Box(
-                                modifier = Modifier.weight(1f),
-                                contentAlignment = androidx.compose.ui.Alignment.Center
-                            ) {
-                                TextButton(
-                                    onClick = onOpenSharedInbox,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = t(UiTextKey.ShareInboxTitle),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                    )
-                                }
-                                // Badge positioned at top-end of the button
-                                if (hasUnseenSharedItems) {
-                                    Badge(
-                                        containerColor = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier
-                                            .align(androidx.compose.ui.Alignment.TopEnd)
-                                            .padding(top = 4.dp, end = 4.dp)
-                                    )
-                                }
-                            }
-                        }
-
                         // Shop and Voice Settings buttons
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -330,46 +254,7 @@ fun SettingsScreen(
                                 )
                             }
                         }
-
-                        // System Notes Button
-                        TextButton(
-                            onClick = onOpenSystemNotes,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = t(UiTextKey.SettingsSystemNotesButton),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
                     }
-                }
-            }
-
-
-            // Color Palette (only for logged in users)
-            if (isLoggedIn) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        t(UiTextKey.SettingsColorPaletteTitle),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = t(UiTextKey.SettingsColorPaletteDesc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    ColorPaletteSelector(
-                        currentPaletteId = uiState.settings.colorPaletteId,
-                        unlockedPalettes = uiState.settings.unlockedPalettes,
-                        coinBalance = uiState.coinStats.coinTotal,
-                        onPaletteSelected = { viewModel.updateColorPalette(it) },
-                        onUnlockClicked = { paletteId, cost -> viewModel.unlockPaletteWithCoins(paletteId, cost) },
-                        unlockError = uiState.unlockError,
-                        t = t
-                    )
                 }
             }
 

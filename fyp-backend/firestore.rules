@@ -152,10 +152,12 @@ service cloud.firestore {
         resource.data.toUserId == request.auth.uid
       );
 
-      // Create if authenticated and sender
-      allow create: if request.auth != null 
+      // Create if authenticated, is sender, AND sender is not blocked by recipient.
+      // This server-side check prevents a client from bypassing the client-side block check.
+      allow create: if request.auth != null
         && request.resource.data.fromUserId == request.auth.uid
-        && request.resource.data.status == "PENDING";
+        && request.resource.data.status == "PENDING"
+        && !exists(/databases/$(database)/documents/users/$(request.resource.data.toUserId)/blocked_users/$(request.auth.uid));
 
       // Update: only allowed for sender renaming their username on pending requests.
       // Accept/reject/cancel all now DELETE the doc instead of updating status.
