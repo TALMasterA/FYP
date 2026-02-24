@@ -638,6 +638,9 @@ enum class UiTextKey {
     ErrorSaveFailedRetry,
     ErrorLoadFailedRetry,
     ErrorNetworkRetry,
+
+    // --- Learning Progress ---
+    LearningProgressNeededTemplate,
 }
 
 // Core Ui Texts list

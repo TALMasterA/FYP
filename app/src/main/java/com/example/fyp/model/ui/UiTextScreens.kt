@@ -1360,4 +1360,8 @@ val ScreenUiTexts: List<String> = listOf(
     "Load failed. Please try again.",
     // ErrorNetworkRetry
     "Network error. Please check your connection and try again.",
+
+    // --- Learning Progress ---
+    // LearningProgressNeededTemplate
+    "{needed} more translations needed to generate material",
 )
