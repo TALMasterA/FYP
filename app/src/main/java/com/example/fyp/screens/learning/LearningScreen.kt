@@ -284,11 +284,15 @@ fun LearningScreen(
                                 )
                             )
 
-                            // Progress indicator towards generation threshold
-                            val progressTarget = if (isFirstTime) GenerationEligibility.MIN_RECORDS_FOR_LEARNING_SHEET
-                                                 else (lastCount ?: 0) + GenerationEligibility.MIN_RECORDS_FOR_LEARNING_SHEET
-                            val progress = if (progressTarget > 0) (c.count.toFloat() / progressTarget.toFloat()).coerceIn(0f, 1f) else 1f
-                            val recordsNeeded = (progressTarget - c.count).coerceAtLeast(0)
+                            // Progress indicator towards generation threshold.
+                            // For first generation: progress = records so far / required minimum.
+                            // For regen: progress = NEW records added since last gen / required minimum.
+                            // This gives a meaningful 0→100% bar in both cases.
+                            val threshold = GenerationEligibility.MIN_RECORDS_FOR_LEARNING_SHEET
+                            val recordsAdded = if (isFirstTime) c.count
+                                               else (c.count - (lastCount ?: 0)).coerceAtLeast(0)
+                            val progress = (recordsAdded.toFloat() / threshold.toFloat()).coerceIn(0f, 1f)
+                            val recordsNeeded = (threshold - recordsAdded).coerceAtLeast(0)
 
                             if (!generateEnabled && c.count > 0 && recordsNeeded > 0) {
                                 Column(
