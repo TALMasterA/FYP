@@ -106,7 +106,7 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                 ) {
                     Icon(
                         imageVector = data.icon,
-                        contentDescription = null,
+                        contentDescription = data.title,
                         modifier = Modifier.size(96.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )

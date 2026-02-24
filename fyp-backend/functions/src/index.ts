@@ -857,6 +857,8 @@ export const sendFriendRequestNotification = onDocumentCreated(
 /**
  * Prune FCM tokens older than 60 days to prevent unbounded growth.
  * Runs daily at 3 AM UTC.
+ * Users are processed in cursor-based pages of 500 to avoid loading the entire
+ * users collection into memory at once.
  */
 export const pruneStaleTokens = onSchedule(
   {
@@ -869,23 +871,36 @@ export const pruneStaleTokens = onSchedule(
     const cutoff = admin.firestore.Timestamp.fromDate(
       new Date(Date.now() - SIXTY_DAYS_MS)
     );
-
-    const usersSnap = await getFirestore().collection("users").select().get();
+    const firestore = getFirestore();
+    const PAGE_SIZE = 500;
     let pruned = 0;
+    let lastDoc: admin.firestore.QueryDocumentSnapshot | null = null;
 
-    for (const userDoc of usersSnap.docs) {
-      const tokensSnap = await getFirestore()
-        .collection("users").doc(userDoc.id)
-        .collection("fcm_tokens")
-        .where("updatedAt", "<", cutoff)
-        .get();
+    // Paginate through users to avoid loading all at once
+    while (true) {
+      let query = firestore.collection("users").select().limit(PAGE_SIZE);
+      if (lastDoc) query = query.startAfter(lastDoc);
 
-      if (!tokensSnap.empty) {
-        const batch = getFirestore().batch();
-        tokensSnap.docs.forEach((doc) => batch.delete(doc.ref));
-        await batch.commit();
-        pruned += tokensSnap.size;
+      const usersSnap = await query.get();
+      if (usersSnap.empty) break;
+      lastDoc = usersSnap.docs[usersSnap.docs.length - 1];
+
+      for (const userDoc of usersSnap.docs) {
+        const tokensSnap = await firestore
+          .collection("users").doc(userDoc.id)
+          .collection("fcm_tokens")
+          .where("updatedAt", "<", cutoff)
+          .get();
+
+        if (!tokensSnap.empty) {
+          const batch = firestore.batch();
+          tokensSnap.docs.forEach((doc) => batch.delete(doc.ref));
+          await batch.commit();
+          pruned += tokensSnap.size;
+        }
       }
+
+      if (usersSnap.size < PAGE_SIZE) break;
     }
 
     console.log(`pruneStaleTokens: removed ${pruned} stale tokens`);

@@ -13,7 +13,9 @@ import com.example.fyp.model.friends.RequestStatus
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
@@ -584,34 +586,42 @@ class FirestoreFriendsRepository @Inject constructor(
 
             if (friendDocs.isEmpty()) return emptyMap()
 
+            val cachedByFriendId: Map<String, String> = friendDocs.associate { doc ->
+                val fId = doc.getString("friendId") ?: doc.id
+                fId to (doc.getString("friendUsername") ?: "")
+            }
+
+            // Fetch all friends' public profiles in parallel (1 read per friend, all concurrent)
+            val freshUsernames: Map<String, String> = coroutineScope {
+                cachedByFriendId.keys
+                    .map { fId ->
+                        fId to async<String> {
+                            try {
+                                db.collection("users").document(fId)
+                                    .collection("profile").document("public")
+                                    .get().await()
+                                    .getString("username").orEmpty()
+                            } catch (_: Exception) { "" }
+                        }
+                    }
+                    .associate { (fId, deferred) -> fId to deferred.await() }
+                    .filterValues { it.isNotBlank() }
+            }
+
             val latestUsernames = mutableMapOf<String, String>()
             val batch = db.batch()
             var hasStaleDocs = false
 
-            for (doc in friendDocs) {
-                val friendId = doc.getString("friendId") ?: doc.id
-                val cachedUsername = doc.getString("friendUsername") ?: ""
-
-                // Fetch the friend's current public profile
-                val profile = try {
-                    db.collection("users").document(friendId)
-                        .collection("profile").document("public")
-                        .get().await()
-                } catch (_: Exception) { null }
-
-                val currentUsername = profile?.getString("username").orEmpty()
-                if (currentUsername.isNotBlank()) {
-                    latestUsernames[friendId] = currentUsername
-                    // Only write if stale to avoid unnecessary writes
-                    if (currentUsername != cachedUsername) {
-                        batch.set(
-                            db.collection("users").document(userId.value)
-                                .collection("friends").document(friendId),
-                            mapOf("friendUsername" to currentUsername),
-                            com.google.firebase.firestore.SetOptions.merge()
-                        )
-                        hasStaleDocs = true
-                    }
+            for ((friendId, currentUsername) in freshUsernames) {
+                latestUsernames[friendId] = currentUsername
+                if (currentUsername != (cachedByFriendId[friendId] ?: "")) {
+                    batch.set(
+                        db.collection("users").document(userId.value)
+                            .collection("friends").document(friendId),
+                        mapOf("friendUsername" to currentUsername),
+                        com.google.firebase.firestore.SetOptions.merge()
+                    )
+                    hasStaleDocs = true
                 }
             }
 
