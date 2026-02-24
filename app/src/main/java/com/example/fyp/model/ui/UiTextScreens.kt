@@ -49,8 +49,8 @@ val ScreenUiTexts: List<String> = listOf(
 
     // HelpCurrentFeatures
     "TRANSLATION FEATURES:\n" +
-            "  • Discrete Mode - Real-time voice translation for short phrases and sentences\n" +
-            "  • Continuous Mode - Live conversation capture with automatic speaker detection\n" +
+            "  • Quick Translate - Real-time voice translation for short phrases and sentences\n" +
+            "  • Live Conversation - Multi-turn conversation mode with automatic speaker detection\n" +
             "  • Multi-language support including English, Cantonese, Japanese, Mandarin, and more\n" +
             "  • Text-to-speech playback for both original and translated text\n\n" +
             
@@ -70,7 +70,7 @@ val ScreenUiTexts: List<String> = listOf(
             "HISTORY & ORGANIZATION:\n" +
             "  • Translation History - Recent records (expandable via Shop)\n" +
             "  • Filter & Search - Find translations by language or keyword\n" +
-            "  • Session Management - Organize continuous conversations by session\n" +
+            "  • Session Management - Organize Live Conversation recordings by session\n" +
             "  • Cloud Sync - All data synced to your Firebase account\n\n" +
             
             "COINS & REWARDS:\n" +
@@ -91,7 +91,7 @@ val ScreenUiTexts: List<String> = listOf(
             "  • Grant microphone permissions for speech features to work\n\n" +
             
             "Audio:\n" +
-            "  • Use earphones during continuous mode to prevent audio feedback loops\n" +
+            "  • Use earphones during Live Conversation mode to prevent audio feedback loops\n" +
             "  • The app may re-capture its own TTS output if using speakers\n\n" +
             
             "Accuracy & Limitations:\n" +
@@ -112,7 +112,7 @@ val ScreenUiTexts: List<String> = listOf(
             "For Best Translation Results:\n" +
             "  • Speak clearly and at a moderate pace\n" +
             "  • Minimize background noise for better recognition accuracy\n" +
-            "  • Short, simple sentences work best in discrete mode\n\n" +
+            "  • Short, simple sentences work best in Quick Translate mode\n\n" +
             
             "UI Language:\n" +
             "  • Base language is English; other UI languages are AI-translated\n" +
@@ -155,7 +155,7 @@ val ScreenUiTexts: List<String> = listOf(
 
     // --- Continuous Mode ---
     // ContinuousTitle
-    "Continuous mode",
+    "Live Conversation",
 
     // ContinuousStartButton
     "Start conversation",
@@ -195,10 +195,10 @@ val ScreenUiTexts: List<String> = listOf(
     "History",
 
     // HistoryTabDiscrete
-    "Discrete",
+    "Quick Translate",
 
     // HistoryTabContinuous
-    "Continuous",
+    "Live Conversation",
 
     // HistoryNoContinuousSessions
     "No session(s) yet.",
@@ -1364,4 +1364,8 @@ val ScreenUiTexts: List<String> = listOf(
     // --- Learning Progress ---
     // LearningProgressNeededTemplate
     "{needed} more translations needed to generate material",
+
+    // --- Quick Translate shortcut ---
+    // SpeechSwitchToConversation
+    "Switch to Live Conversation →",
 )

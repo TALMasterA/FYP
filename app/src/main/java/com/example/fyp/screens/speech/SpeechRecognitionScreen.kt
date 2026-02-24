@@ -67,6 +67,7 @@ fun SpeechRecognitionScreen(
     appLanguageState: AppLanguageState,
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     onBack: () -> Unit,
+    onOpenConversation: (() -> Unit)? = null,
 ) {
     val viewModel: SpeechViewModel = hiltViewModel()
 
@@ -405,6 +406,16 @@ fun SpeechRecognitionScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             )
                         }
+                    }
+                }
+
+                // Shortcut to Live Conversation mode
+                if (onOpenConversation != null) {
+                    OutlinedButton(
+                        onClick = onOpenConversation,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(t(UiTextKey.SpeechSwitchToConversation))
                     }
                 }
 

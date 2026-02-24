@@ -48,16 +48,9 @@ import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.ui.Alignment
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,8 +65,8 @@ fun HomeScreen(
     onOpenLogin: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenLearning: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenWordBank: () -> Unit,
+    onOpenSettings: () -> Unit = {},
+    onOpenWordBank: () -> Unit = {},
     totalNotificationCount: Int = 0,
 ) {
     val authViewModel: AuthViewModel = hiltViewModel()
@@ -143,157 +136,111 @@ fun HomeScreen(
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            AppLanguageDropdown(
+                uiLanguages = uiLanguages,
+                appLanguageState = appLanguageState,
+                onUpdateAppLanguage = onUpdateAppLanguage,
+                uiText = uiText,
+                enabled = true,
+                isLoggedIn = isLoggedIn
+            )
 
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .padding(16.dp)
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                AppLanguageDropdown(
-                    uiLanguages = uiLanguages,
-                    appLanguageState = appLanguageState,
-                    onUpdateAppLanguage = onUpdateAppLanguage,
-                    uiText = uiText,
-                    enabled = true,
-                    isLoggedIn = isLoggedIn
+            // Welcome back greeting (logged-in users only)
+            if (isLoggedIn && !userName.isNullOrBlank()) {
+                Text(
+                    text = "👋 Welcome back, $userName!",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
                 )
+            }
 
-                // Welcome back greeting (logged-in users only)
-                if (isLoggedIn && !userName.isNullOrBlank()) {
-                    Text(
-                        text = "👋 Welcome back, $userName!",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                // Guest warning messages - styled card
-                if (!isLoggedIn) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = t(UiTextKey.DisableText),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = t(UiTextKey.GuestTranslationLimitMessage),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                    }
-                }
-
-                // Welcome message card
-                ElevatedCard(
+            // Guest warning messages - styled card
+            if (!isLoggedIn) {
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = t(UiTextKey.HomeInstructions),
+                            text = t(UiTextKey.DisableText),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = t(UiTextKey.GuestTranslationLimitMessage),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onErrorContainer
                         )
                     }
                 }
-
-                // Main Features Section
-                Text(
-                    text = t(UiTextKey.HomeFeaturesTitle),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                // Speech Translation Card
-                FeatureCard(
-                    title = t(UiTextKey.HomeStartButton),
-                    description = t(UiTextKey.HomeDiscreteDescription),
-                    icon = Icons.Filled.Mic,
-                    enabled = isLoggedIn,
-                    onClick = onStartSpeech,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-
-                // Continuous Conversation Card
-                FeatureCard(
-                    title = t(UiTextKey.ContinuousStartScreenButton),
-                    description = t(UiTextKey.HomeContinuousDescription),
-                    icon = Icons.Filled.RecordVoiceOver,
-                    enabled = isLoggedIn,
-                    onClick = onStartContinuous,
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                )
-
-                // Learning Card
-                FeatureCard(
-                    title = t(UiTextKey.LearningTitle),
-                    description = t(UiTextKey.HomeLearningDescription),
-                    icon = Icons.Filled.School,
-                    enabled = isLoggedIn,
-                    onClick = onOpenLearning,
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                )
-                
-                // Extra bottom spacing to ensure content isn't blocked by FABs
-                // Accounts for FAB height (56dp) + padding (16dp) + navigation bar padding + extra clearance
-                Spacer(modifier = Modifier.height(100.dp))
             }
 
-            // FABs positioned to avoid overlap on all screen sizes
-            BadgedBox(
-                badge = {
-                    if (totalNotificationCount > 0) {
-                        Badge(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError
-                        ) {
-                            Text(if (totalNotificationCount > 99) "99+" else "$totalNotificationCount")
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .navigationBarsPadding()
+            // Welcome message card
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
             ) {
-                FloatingActionButton(
-                    onClick = onOpenSettings
-                ) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Open Settings")
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = t(UiTextKey.HomeInstructions),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
 
-            // Word Bank FAB on the left side (only show when logged in)
-            if (isLoggedIn) {
-                FloatingActionButton(
-                    onClick = onOpenWordBank,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp)
-                        .navigationBarsPadding(),
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Open Word Bank")
-                }
-            }
+            // Main Features Section
+            Text(
+                text = t(UiTextKey.HomeFeaturesTitle),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            // Speech Translation Card
+            FeatureCard(
+                title = t(UiTextKey.HomeStartButton),
+                description = t(UiTextKey.HomeDiscreteDescription),
+                icon = Icons.Filled.Mic,
+                enabled = isLoggedIn,
+                onClick = onStartSpeech,
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+
+            // Continuous Conversation Card
+            FeatureCard(
+                title = t(UiTextKey.ContinuousStartScreenButton),
+                description = t(UiTextKey.HomeContinuousDescription),
+                icon = Icons.Filled.RecordVoiceOver,
+                enabled = isLoggedIn,
+                onClick = onStartContinuous,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer
+            )
+
+            // Learning Card
+            FeatureCard(
+                title = t(UiTextKey.LearningTitle),
+                description = t(UiTextKey.HomeLearningDescription),
+                icon = Icons.Filled.School,
+                enabled = isLoggedIn,
+                onClick = onOpenLearning,
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+            )
         }
     }
 }
