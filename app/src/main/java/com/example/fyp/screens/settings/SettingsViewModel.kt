@@ -378,10 +378,13 @@ class SettingsViewModel @Inject constructor(
                 .onSuccess {
                     // Update in-memory state immediately for snappy UI feedback
                     val updated = when (field) {
-                        "notifyNewMessages"    -> _uiState.value.settings.copy(notifyNewMessages = enabled)
-                        "notifyFriendRequests" -> _uiState.value.settings.copy(notifyFriendRequests = enabled)
-                        "notifyRequestAccepted"-> _uiState.value.settings.copy(notifyRequestAccepted = enabled)
-                        "notifySharedInbox"    -> _uiState.value.settings.copy(notifySharedInbox = enabled)
+                        "notifyNewMessages"      -> _uiState.value.settings.copy(notifyNewMessages = enabled)
+                        "notifyFriendRequests"   -> _uiState.value.settings.copy(notifyFriendRequests = enabled)
+                        "notifyRequestAccepted"  -> _uiState.value.settings.copy(notifyRequestAccepted = enabled)
+                        "notifySharedInbox"      -> _uiState.value.settings.copy(notifySharedInbox = enabled)
+                        "inAppBadgeMessages"     -> _uiState.value.settings.copy(inAppBadgeMessages = enabled)
+                        "inAppBadgeFriendRequests" -> _uiState.value.settings.copy(inAppBadgeFriendRequests = enabled)
+                        "inAppBadgeSharedInbox"  -> _uiState.value.settings.copy(inAppBadgeSharedInbox = enabled)
                         else -> _uiState.value.settings
                     }
                     _uiState.value = _uiState.value.copy(settings = updated)

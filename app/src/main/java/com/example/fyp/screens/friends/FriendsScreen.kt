@@ -106,7 +106,11 @@ fun FriendsScreen(
             onDismissRequest = { showNotifSettingsDialog = false },
             title = { Text(t(UiTextKey.FriendsNotifSettingsTitle)) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Push notification toggles
                     NotifToggleRow(
                         label = t(UiTextKey.FriendsNotifNewMessages),
                         checked = settings.notifyNewMessages,
@@ -133,6 +137,38 @@ fun FriendsScreen(
                         checked = settings.notifySharedInbox,
                         onCheckedChange = {
                             settingsViewModel.updateNotificationPref("notifySharedInbox", it)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // In-app badge toggles
+                    Text(
+                        text = t(UiTextKey.InAppBadgeSectionTitle),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    NotifToggleRow(
+                        label = t(UiTextKey.InAppBadgeMessages),
+                        checked = settings.inAppBadgeMessages,
+                        onCheckedChange = {
+                            settingsViewModel.updateNotificationPref("inAppBadgeMessages", it)
+                        }
+                    )
+                    NotifToggleRow(
+                        label = t(UiTextKey.InAppBadgeFriendRequests),
+                        checked = settings.inAppBadgeFriendRequests,
+                        onCheckedChange = {
+                            settingsViewModel.updateNotificationPref("inAppBadgeFriendRequests", it)
+                        }
+                    )
+                    NotifToggleRow(
+                        label = t(UiTextKey.InAppBadgeSharedInbox),
+                        checked = settings.inAppBadgeSharedInbox,
+                        onCheckedChange = {
+                            settingsViewModel.updateNotificationPref("inAppBadgeSharedInbox", it)
                         }
                     )
                 }

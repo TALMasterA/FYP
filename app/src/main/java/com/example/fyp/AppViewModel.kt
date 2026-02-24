@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -49,18 +50,23 @@ class AppViewModel @Inject constructor(
 
     // ── Notification state (read-only for UI) ──────────────────────────────
 
-    /** Pending incoming friend requests — derived from shared in-memory state. */
+    /** Pending incoming friend requests — gated by inAppBadgeFriendRequests setting. */
     val pendingFriendRequestCount: StateFlow<Int> =
-        sharedFriendsDataSource.incomingRequests
-            .map { it.size }
+        combine(
+            sharedFriendsDataSource.incomingRequests.map { it.size },
+            sharedSettingsDataSource.settings.map { it.inAppBadgeFriendRequests }
+        ) { count, enabled -> if (enabled) count else 0 }
             .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
-    /** Whether there are unseen shared inbox items (red dot, no count). */
+    /** Whether there are unseen shared inbox items — gated by inAppBadgeSharedInbox setting. */
     val hasUnseenSharedItems: StateFlow<Boolean> =
-        sharedFriendsDataSource.hasUnseenSharedItems
+        combine(
+            sharedFriendsDataSource.hasUnseenSharedItems,
+            sharedSettingsDataSource.settings.map { it.inAppBadgeSharedInbox }
+        ) { hasUnseen, enabled -> hasUnseen && enabled }
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    /** Whether there are any unread chat messages (red dot, no count). */
+    /** Whether there are any unread chat messages — gated by inAppBadgeMessages setting. */
     private val _hasUnreadMessages = MutableStateFlow(false)
     val hasUnreadMessages: StateFlow<Boolean> = _hasUnreadMessages.asStateFlow()
 
@@ -106,9 +112,14 @@ class AppViewModel @Inject constructor(
         unreadJob?.cancel()
         unreadJob = viewModelScope.launch {
             try {
-                chatRepository.observeTotalUnreadCount(UserId(userId)).collect { count ->
-                    android.util.Log.d("AppViewModel", "Unread count updated: $count")
-                    _hasUnreadMessages.value = count > 0
+                combine(
+                    chatRepository.observeTotalUnreadCount(UserId(userId)),
+                    sharedSettingsDataSource.settings.map { it.inAppBadgeMessages }
+                ) { count, enabled ->
+                    enabled && count > 0
+                }.collect { showBadge ->
+                    android.util.Log.d("AppViewModel", "Unread badge: $showBadge")
+                    _hasUnreadMessages.value = showBadge
                 }
             } catch (e: Exception) {
                 android.util.Log.e("AppViewModel", "Error observing unread messages", e)

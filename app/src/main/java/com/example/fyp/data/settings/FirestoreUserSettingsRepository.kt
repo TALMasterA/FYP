@@ -41,6 +41,9 @@ class FirestoreUserSettingsRepository @Inject constructor(
         val notifyFriendRequests = snap?.getBoolean("notifyFriendRequests") ?: true
         val notifyRequestAccepted = snap?.getBoolean("notifyRequestAccepted") ?: true
         val notifySharedInbox = snap?.getBoolean("notifySharedInbox") ?: true
+        val inAppBadgeMessages = snap?.getBoolean("inAppBadgeMessages") ?: true
+        val inAppBadgeFriendRequests = snap?.getBoolean("inAppBadgeFriendRequests") ?: true
+        val inAppBadgeSharedInbox = snap?.getBoolean("inAppBadgeSharedInbox") ?: true
 
         return UserSettings(
             primaryLanguageCode = code.ifBlank { "en-US" },
@@ -55,6 +58,9 @@ class FirestoreUserSettingsRepository @Inject constructor(
             notifyFriendRequests = notifyFriendRequests,
             notifyRequestAccepted = notifyRequestAccepted,
             notifySharedInbox = notifySharedInbox,
+            inAppBadgeMessages = inAppBadgeMessages,
+            inAppBadgeFriendRequests = inAppBadgeFriendRequests,
+            inAppBadgeSharedInbox = inAppBadgeSharedInbox,
         )
     }
 
@@ -131,7 +137,8 @@ class FirestoreUserSettingsRepository @Inject constructor(
 
     /** Allowed field names for notification preferences. */
     private val notificationFields = setOf(
-        "notifyNewMessages", "notifyFriendRequests", "notifyRequestAccepted", "notifySharedInbox"
+        "notifyNewMessages", "notifyFriendRequests", "notifyRequestAccepted", "notifySharedInbox",
+        "inAppBadgeMessages", "inAppBadgeFriendRequests", "inAppBadgeSharedInbox"
     )
 
     override suspend fun setNotificationPref(userId: UserId, field: String, enabled: Boolean) {
