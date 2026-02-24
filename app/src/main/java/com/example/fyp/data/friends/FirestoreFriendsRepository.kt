@@ -571,6 +571,58 @@ class FirestoreFriendsRepository @Inject constructor(
         }
     }
 
+    override suspend fun syncFriendUsernames(userId: UserId): Map<String, String> {
+        return try {
+            // Read own friends list
+            val friendDocs = db.collection("users")
+                .document(userId.value)
+                .collection("friends")
+                .limit(MAX_FRIENDS_PER_SYNC)
+                .get()
+                .await()
+                .documents
+
+            if (friendDocs.isEmpty()) return emptyMap()
+
+            val latestUsernames = mutableMapOf<String, String>()
+            val batch = db.batch()
+            var hasStaleDocs = false
+
+            for (doc in friendDocs) {
+                val friendId = doc.getString("friendId") ?: doc.id
+                val cachedUsername = doc.getString("friendUsername") ?: ""
+
+                // Fetch the friend's current public profile
+                val profile = try {
+                    db.collection("users").document(friendId)
+                        .collection("profile").document("public")
+                        .get().await()
+                } catch (_: Exception) { null }
+
+                val currentUsername = profile?.getString("username").orEmpty()
+                if (currentUsername.isNotBlank()) {
+                    latestUsernames[friendId] = currentUsername
+                    // Only write if stale to avoid unnecessary writes
+                    if (currentUsername != cachedUsername) {
+                        batch.set(
+                            db.collection("users").document(userId.value)
+                                .collection("friends").document(friendId),
+                            mapOf("friendUsername" to currentUsername),
+                            com.google.firebase.firestore.SetOptions.merge()
+                        )
+                        hasStaleDocs = true
+                    }
+                }
+            }
+
+            if (hasStaleDocs) batch.commit().await()
+            latestUsernames
+        } catch (e: Exception) {
+            AppLogger.e("FriendsRepository", "syncFriendUsernames failed", e)
+            emptyMap()
+        }
+    }
+
     /**
      * Ensure the main user document (/users/{userId}) exists so that
      * subsequent update() calls from chat operations don't fail with NOT_FOUND.
@@ -587,5 +639,10 @@ class FirestoreFriendsRepository @Inject constructor(
         } catch (e: Exception) {
             android.util.Log.e("FriendsRepository", "Failed to ensure user doc exists", e)
         }
+    }
+
+    companion object {
+        /** Maximum number of friends to sync usernames for in a single batch. */
+        private const val MAX_FRIENDS_PER_SYNC = 100L
     }
 }

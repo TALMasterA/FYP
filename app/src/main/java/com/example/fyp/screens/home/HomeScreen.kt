@@ -162,6 +162,16 @@ fun HomeScreen(
                     isLoggedIn = isLoggedIn
                 )
 
+                // Welcome back greeting (logged-in users only)
+                if (isLoggedIn && !userName.isNullOrBlank()) {
+                    Text(
+                        text = "👋 Welcome back, $userName!",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
                 // Guest warning messages - styled card
                 if (!isLoggedIn) {
                     Card(
@@ -266,7 +276,7 @@ fun HomeScreen(
                 FloatingActionButton(
                     onClick = onOpenSettings
                 ) {
-                    Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                    Icon(Icons.Filled.Settings, contentDescription = "Open Settings")
                 }
             }
 
@@ -281,7 +291,7 @@ fun HomeScreen(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Word Bank")
+                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Open Word Bank")
                 }
             }
         }

@@ -374,6 +374,15 @@ class SpeechViewModel @Inject constructor(
         speechState = speechState.copy(recognizedText = text)
     }
 
+    fun swapTexts() {
+        val recognized = speechState.recognizedText
+        val translated = speechState.translatedText
+        speechState = speechState.copy(
+            recognizedText = translated,
+            translatedText = recognized
+        )
+    }
+
     override fun onCleared() {
         super.onCleared()
         stopContinuous()

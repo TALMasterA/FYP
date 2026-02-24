@@ -197,5 +197,25 @@ class SharedFriendsDataSource @Inject constructor(
      */
     fun isFriend(friendId: String): Boolean =
         _friends.value.any { it.friendId == friendId }
+
+    /**
+     * Update in-memory friend display names from a freshly-fetched username map.
+     * Called after syncFriendUsernames() returns so the UI shows the latest names
+     * without waiting for the real-time listener to pick up the Firestore write.
+     */
+    fun applyUsernameUpdates(updates: Map<String, String>) {
+        if (updates.isEmpty()) return
+        val current = _friends.value
+        val updated = current.map { rel ->
+            val newName = updates[rel.friendId]
+            if (newName != null && newName != rel.friendUsername) rel.copy(friendUsername = newName)
+            else rel
+        }
+        if (updated != current) {
+            _friends.value = updated
+            // Also update the username cache
+            updates.forEach { (uid, name) -> if (name.isNotBlank()) usernameCache[uid] = name }
+        }
+    }
 }
 

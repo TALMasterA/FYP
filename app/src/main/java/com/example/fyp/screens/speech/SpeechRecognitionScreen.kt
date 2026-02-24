@@ -227,6 +227,7 @@ fun SpeechRecognitionScreen(
                         val tmp = selectedLanguage
                         selectedLanguage = selectedTargetLanguage
                         selectedTargetLanguage = tmp
+                        viewModel.swapTexts()
                     }
                 },
                 enabled = selectedLanguage != "auto"

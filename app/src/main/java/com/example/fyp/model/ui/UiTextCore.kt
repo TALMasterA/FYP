@@ -632,6 +632,12 @@ enum class UiTextKey {
     InAppBadgeMessages,
     InAppBadgeFriendRequests,
     InAppBadgeSharedInbox,
+
+    // --- Common Error Messages ---
+    ErrorNotLoggedIn,
+    ErrorSaveFailedRetry,
+    ErrorLoadFailedRetry,
+    ErrorNetworkRetry,
 }
 
 // Core Ui Texts list
