@@ -303,6 +303,10 @@ fun StandardScreenScaffold(
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        // Consume no additional window insets — the outer AppNavigation Scaffold already
+        // handles bottom navigation bar insets. Without this, the inner Scaffold would add
+        // extra bottom padding causing a blank/black bar above the bottom nav bar.
+        contentWindowInsets = WindowInsets(0),
         topBar = {
             StandardTopAppBar(
                 title = title,
