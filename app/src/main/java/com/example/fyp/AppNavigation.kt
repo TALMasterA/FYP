@@ -240,12 +240,22 @@ fun AppNavigation() {
                                     (if (hasUnreadMessages) 1 else 0) +
                                     (if (hasUnseenSharedItems) 1 else 0)
 
+                                // Check if user is logged in
+                                val isUserLoggedIn = settingsUiState.uid != null
+
                                 bottomNavItems.forEach { item ->
                                     val isSelected = currentRoute == item.route
                                     val badgeCount = when (item.route) {
                                         AppScreen.Friends.route -> friendsBadgeCount
                                         else -> 0
                                     }
+
+                                    // Disable buttons except Home and Settings when not logged in
+                                    val isDisabled = !isUserLoggedIn && item.route !in listOf(
+                                        AppScreen.Home.route,
+                                        AppScreen.Settings.route
+                                    )
+
                                     NavigationBarItem(
                                         icon = {
                                             BadgedBox(
@@ -262,6 +272,7 @@ fun AppNavigation() {
                                         },
                                         label = { Text(item.label) },
                                         selected = isSelected,
+                                        enabled = !isDisabled,
                                         onClick = {
                                             navController.navigate(item.route) {
                                                 popUpTo(AppScreen.Home.route) { saveState = true }
@@ -407,6 +418,9 @@ fun AppNavigation() {
                             viewModel = learningViewModel,
                             onOpenSheet = { primary, target ->
                                 navController.navigate(AppScreen.LearningSheet.routeFor(primary, target)) { launchSingleTop = true }
+                            },
+                            onOpenWordBank = {
+                                navController.navigate(AppScreen.WordBank.route) { launchSingleTop = true }
                             }
                         )
                     }

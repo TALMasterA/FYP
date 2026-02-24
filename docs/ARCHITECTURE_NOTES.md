@@ -130,14 +130,3 @@ Write a test that asserts the cleanup path count stays in sync.
 **Rule:** If you rename a Firestore field in code, update the security rules too. Run `firebase deploy --only firestore:rules` after any rule change.
 
 ---
-
-## Testing Checklist for Complex Changes
-
-Before merging changes to the above areas, verify:
-
-- [ ] `UiTextAlignmentTest` passes (enum ↔ strings alignment)
-- [ ] `./gradlew testDebugUnitTest` passes (all unit tests)
-- [ ] Firestore rules deployed if changed
-- [ ] Manual test: Friend rename → pull-to-refresh → correct name shown
-- [ ] Manual test: Delete account → verify no orphaned docs
-- [ ] Manual test: Quiz completion → coins awarded once per eligibility window

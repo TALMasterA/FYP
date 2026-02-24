@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -20,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -60,6 +62,7 @@ fun LearningScreen(
     onBack: () -> Unit,
     viewModel: LearningViewModel = hiltViewModel(),
     onOpenSheet: (primaryCode: String, targetCode: String) -> Unit,
+    onOpenWordBank: (() -> Unit)? = null,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -179,6 +182,22 @@ fun LearningScreen(
                     onSelected = { viewModel.setPrimaryLanguage(it) },
                     enabled = true
                 )
+            }
+
+            if (onOpenWordBank != null) {
+                item {
+                    OutlinedButton(
+                        onClick = onOpenWordBank,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(t(UiTextKey.WordBankTitle))
+                    }
+                }
             }
 
             item {
