@@ -489,8 +489,10 @@ fun FriendRequestCard(
                 if (request.note.isNotBlank()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "\"${request.note}\"",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = request.note,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                        ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
