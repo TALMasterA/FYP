@@ -64,6 +64,7 @@ import com.example.fyp.screens.history.HistoryScreen
 import com.example.fyp.screens.home.HomeScreen
 import com.example.fyp.screens.favorites.FavoritesScreen
 import com.example.fyp.screens.feedback.FeedbackScreen
+import com.example.fyp.screens.friends.BlockedUsersScreen
 import com.example.fyp.screens.friends.ChatScreen
 import com.example.fyp.screens.friends.FriendsScreen
 import com.example.fyp.screens.friends.MyProfileScreen
@@ -114,6 +115,7 @@ sealed class AppScreen(val route: String) {
     object Friends : AppScreen("friends")
     object MyProfile : AppScreen("my_profile")
     object SharedInbox : AppScreen("shared_inbox")
+    object BlockedUsers : AppScreen("blocked_users")
     object Onboarding : AppScreen("onboarding")
 
     object SharedMaterialDetail : AppScreen("shared_material_detail/{itemId}") {
@@ -590,6 +592,9 @@ fun AppNavigation() {
                             onOpenSharedInbox = {
                                 navController.navigate(AppScreen.SharedInbox.route) { launchSingleTop = true }
                             },
+                            onOpenBlockedUsers = {
+                                navController.navigate(AppScreen.BlockedUsers.route) { launchSingleTop = true }
+                            },
                             hasUnseenSharedItems = hasUnseenSharedItems,
                             hasUnreadMessages = hasUnreadMessages
                         )
@@ -641,6 +646,16 @@ fun AppNavigation() {
                         onNeedLogin = navigateToLogin
                     ) { backStackEntry ->
                         ChatScreen(
+                            appLanguageState = appLanguageState,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+
+                    composableRequireLogin(
+                        route = AppScreen.BlockedUsers.route,
+                        onNeedLogin = navigateToLogin
+                    ) {
+                        BlockedUsersScreen(
                             appLanguageState = appLanguageState,
                             onBack = { navController.popBackStack() }
                         )

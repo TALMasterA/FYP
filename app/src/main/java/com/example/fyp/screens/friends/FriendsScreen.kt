@@ -36,6 +36,7 @@ fun FriendsScreen(
     onBack: () -> Unit,
     onOpenChat: (friendId: String, friendUsername: String, friendDisplayName: String) -> Unit = { _, _, _ -> },
     onOpenSharedInbox: () -> Unit = {},
+    onOpenBlockedUsers: () -> Unit = {},
     hasUnseenSharedItems: Boolean = false,
     hasUnreadMessages: Boolean = false,
     viewModel: FriendsViewModel = hiltViewModel(),
@@ -51,6 +52,9 @@ fun FriendsScreen(
     var showInfoDialog by remember { mutableStateOf(false) }
     var showNotifSettingsDialog by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
+    // Block confirmation dialog state
+    var blockTargetId by remember { mutableStateOf<String?>(null) }
+    var blockTargetUsername by remember { mutableStateOf("") }
 
     LaunchedEffect(isRefreshing) {
         if (isRefreshing) {
@@ -228,11 +232,47 @@ fun FriendsScreen(
         )
     }
 
+    // Block user confirmation dialog
+    if (blockTargetId != null) {
+        AlertDialog(
+            onDismissRequest = { blockTargetId = null },
+            title = { Text(t(UiTextKey.BlockUserTitle)) },
+            text = {
+                Text(
+                    t(UiTextKey.BlockUserMessage).replace("{username}", blockTargetUsername)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        blockTargetId?.let { viewModel.blockAndRemoveFriend(it, blockTargetUsername) }
+                        blockTargetId = null
+                    }
+                ) {
+                    Text(t(UiTextKey.BlockUserConfirm), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { blockTargetId = null }) {
+                    Text(t(UiTextKey.FriendsCancelButton))
+                }
+            }
+        )
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.FriendsTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
+            // Manage blocked users
+            IconButton(onClick = onOpenBlockedUsers) {
+                Icon(
+                    imageVector = Icons.Default.Block,
+                    contentDescription = t(UiTextKey.BlockedUsersManageButton),
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
             // Notification settings (bell icon)
             IconButton(onClick = { showNotifSettingsDialog = true }) {
                 Icon(
@@ -442,7 +482,12 @@ fun FriendsScreen(
                                             sendMessageText = t(UiTextKey.FriendsUnreadMessageDesc),
                                             isDeleteMode = uiState.isDeleteMode,
                                             isSelected = uiState.selectedFriendIds.contains(friend.friendId),
-                                            onToggleSelect = { viewModel.toggleFriendSelection(friend.friendId) }
+                                            onToggleSelect = { viewModel.toggleFriendSelection(friend.friendId) },
+                                            blockButtonText = t(UiTextKey.BlockUserButton),
+                                            onBlock = {
+                                                blockTargetId = friend.friendId
+                                                blockTargetUsername = friend.friendUsername
+                                            }
                                         )
                                     }
                                 }
@@ -554,7 +599,9 @@ fun FriendCard(
     sendMessageText: String = "Send message",
     isDeleteMode: Boolean = false,
     isSelected: Boolean = false,
-    onToggleSelect: () -> Unit = {}
+    onToggleSelect: () -> Unit = {},
+    blockButtonText: String = "Block",
+    onBlock: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier.fillMaxWidth()
@@ -595,6 +642,19 @@ fun FriendCard(
                     }
                 }
                 if (!isDeleteMode) {
+                    // Block icon button
+                    IconButton(
+                        onClick = onBlock,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Block,
+                            contentDescription = blockButtonText,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
                     // Unread message badge — red dot + count when unread > 0
                     BadgedBox(
                         badge = {

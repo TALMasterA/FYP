@@ -7,6 +7,13 @@ import com.example.fyp.model.friends.FriendRequest
 import com.example.fyp.model.friends.PublicUserProfile
 import kotlinx.coroutines.flow.Flow
 
+/** A user that has been blocked, with their cached username for display. */
+data class BlockedUser(
+    val userId: String,
+    val username: String,
+    val blockedAt: Long = 0L
+)
+
 /**
  * Repository for managing friends, friend requests, and user profiles.
  */
@@ -158,9 +165,10 @@ interface FriendsRepository {
     // ============================================
 
     /**
-     * Block a user. Blocked users cannot send friend requests or messages.
+     * Block a user. Also stores the blocked user's username for later display.
+     * Blocked users cannot send friend requests or messages.
      */
-    suspend fun blockUser(userId: UserId, blockedUserId: UserId): Result<Unit>
+    suspend fun blockUser(userId: UserId, blockedUserId: UserId, blockedUsername: String = ""): Result<Unit>
 
     /**
      * Unblock a previously blocked user.
@@ -181,4 +189,9 @@ interface FriendsRepository {
      * Get list of user IDs blocked by [userId].
      */
     suspend fun getBlockedUserIds(userId: UserId): List<String>
+
+    /**
+     * Get list of blocked users (with cached usernames) for [userId].
+     */
+    suspend fun getBlockedUsers(userId: UserId): List<BlockedUser>
 }

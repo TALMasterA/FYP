@@ -1380,4 +1380,30 @@ val ScreenUiTexts: List<String> = listOf(
     "Clear All",
     // ChatClearConversationSuccess
     "Conversation cleared",
+
+    // --- Block User ---
+    // BlockUserButton
+    "Block",
+    // BlockUserTitle
+    "Block User?",
+    // BlockUserMessage
+    "Block {username}? They will be removed from your friends list and will no longer be able to contact you.",
+    // BlockUserConfirm
+    "Block",
+    // BlockUserSuccess
+    "User blocked and removed from friends.",
+    // BlockedUsersTitle
+    "Blocked Users",
+    // BlockedUsersEmpty
+    "No blocked users.",
+    // UnblockUserButton
+    "Unblock",
+    // UnblockUserTitle
+    "Unblock User?",
+    // UnblockUserMessage
+    "Unblock {username}? They will be able to send you friend requests again.",
+    // UnblockUserSuccess
+    "User unblocked.",
+    // BlockedUsersManageButton
+    "Manage Blocked Users",
 )

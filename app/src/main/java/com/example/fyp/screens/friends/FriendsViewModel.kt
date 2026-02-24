@@ -41,7 +41,9 @@ data class FriendsUiState(
     val selectedFriendIds: Set<String> = emptySet(),
     val currentUserHasUsername: Boolean = false,
     /** IDs the current user has blocked. */
-    val blockedUserIds: Set<String> = emptySet()
+    val blockedUserIds: Set<String> = emptySet(),
+    /** Full blocked-user records (with usernames) for the Blocked Users screen. */
+    val blockedUsers: List<com.example.fyp.data.friends.BlockedUser> = emptyList()
 )
 
 /** Status of the local user's relationship with a search result. */
@@ -481,9 +483,48 @@ class FriendsViewModel @Inject constructor(
     private fun loadBlockedUsers(userId: UserId) {
         viewModelScope.launch {
             try {
-                val blocked = friendsRepository.getBlockedUserIds(userId).toSet()
-                _uiState.value = _uiState.value.copy(blockedUserIds = blocked)
+                val blockedList = friendsRepository.getBlockedUsers(userId)
+                _uiState.value = _uiState.value.copy(
+                    blockedUsers = blockedList,
+                    blockedUserIds = blockedList.map { it.userId }.toSet()
+                )
             } catch (_: Exception) { /* non-fatal */ }
+        }
+    }
+
+    /**
+     * Block a friend and remove the friendship atomically.
+     * Removes the friendship first, then adds to the block list.
+     */
+    fun blockAndRemoveFriend(targetUserId: String, targetUsername: String) {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            // Step 1: remove from friends list (best effort — may not be friends)
+            friendsRepository.removeFriend(userId, UserId(targetUserId))
+
+            // Step 2: block the user
+            friendsRepository.blockUser(userId, UserId(targetUserId), targetUsername).fold(
+                onSuccess = {
+                    val newBlockedUser = com.example.fyp.data.friends.BlockedUser(
+                        userId = targetUserId,
+                        username = targetUsername
+                    )
+                    val updatedIds = _uiState.value.blockedUserIds + targetUserId
+                    val updatedList = _uiState.value.blockedUsers + newBlockedUser
+                    // Also remove from friends list in UI immediately
+                    val updatedFriends = _uiState.value.friends.filter { it.friendId != targetUserId }
+                    _uiState.value = _uiState.value.copy(
+                        blockedUserIds = updatedIds,
+                        blockedUsers = updatedList,
+                        friends = updatedFriends,
+                        successMessage = "User blocked and removed from friends.",
+                        error = null
+                    )
+                },
+                onFailure = {
+                    _uiState.value = _uiState.value.copy(error = "Failed to block user. Please try again.")
+                }
+            )
         }
     }
 
@@ -511,9 +552,11 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             friendsRepository.unblockUser(userId, UserId(targetUserId)).fold(
                 onSuccess = {
-                    val updated = _uiState.value.blockedUserIds - targetUserId
+                    val updatedIds = _uiState.value.blockedUserIds - targetUserId
+                    val updatedList = _uiState.value.blockedUsers.filter { it.userId != targetUserId }
                     _uiState.value = _uiState.value.copy(
-                        blockedUserIds = updated,
+                        blockedUserIds = updatedIds,
+                        blockedUsers = updatedList,
                         successMessage = "User unblocked.",
                         error = null
                     )
