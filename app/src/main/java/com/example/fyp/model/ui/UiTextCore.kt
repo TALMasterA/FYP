@@ -651,6 +651,20 @@ enum class UiTextKey {
     ChatClearConversationMessage,
     ChatClearConversationConfirm,
     ChatClearConversationSuccess,
+
+    // --- Block User ---
+    BlockUserButton,
+    BlockUserTitle,
+    BlockUserMessage,
+    BlockUserConfirm,
+    BlockUserSuccess,
+    BlockedUsersTitle,
+    BlockedUsersEmpty,
+    UnblockUserButton,
+    UnblockUserTitle,
+    UnblockUserMessage,
+    UnblockUserSuccess,
+    BlockedUsersManageButton,
 }
 
 // Core Ui Texts list

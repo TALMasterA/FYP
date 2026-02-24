@@ -674,13 +674,14 @@ class FirestoreFriendsRepository @Inject constructor(
     // Block / Unblock
     // ============================================
 
-    override suspend fun blockUser(userId: UserId, blockedUserId: UserId): Result<Unit> = try {
+    override suspend fun blockUser(userId: UserId, blockedUserId: UserId, blockedUsername: String): Result<Unit> = try {
         db.collection("users")
             .document(userId.value)
             .collection("blocked_users")
             .document(blockedUserId.value)
             .set(mapOf(
                 "blockedUserId" to blockedUserId.value,
+                "blockedUsername" to blockedUsername,
                 "blockedAt" to Timestamp.now()
             ))
             .await()
@@ -733,6 +734,24 @@ class FirestoreFriendsRepository @Inject constructor(
             .await()
             .documents
             .map { it.id }
+    } catch (e: Exception) {
+        emptyList()
+    }
+
+    override suspend fun getBlockedUsers(userId: UserId): List<BlockedUser> = try {
+        db.collection("users")
+            .document(userId.value)
+            .collection("blocked_users")
+            .get()
+            .await()
+            .documents
+            .map { doc ->
+                BlockedUser(
+                    userId = doc.id,
+                    username = doc.getString("blockedUsername") ?: doc.id,
+                    blockedAt = doc.getTimestamp("blockedAt")?.seconds ?: 0L
+                )
+            }
     } catch (e: Exception) {
         emptyList()
     }
