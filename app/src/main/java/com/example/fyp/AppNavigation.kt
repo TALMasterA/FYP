@@ -457,15 +457,9 @@ fun AppNavigation() {
                             onOpenProfile = { navController.navigate(AppScreen.Profile.route) { launchSingleTop = true } },
                             onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) { launchSingleTop = true } },
                             onOpenMyProfile = { navController.navigate(AppScreen.MyProfile.route) { launchSingleTop = true } },
-                            onOpenFriends = { navController.navigate(AppScreen.Friends.route) { launchSingleTop = true } },
-                            onOpenSharedInbox = { navController.navigate(AppScreen.SharedInbox.route) { launchSingleTop = true } },
                             onOpenShop = { navController.navigate(AppScreen.Shop.route) { launchSingleTop = true } },
                             onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) { launchSingleTop = true } },
                             onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) { launchSingleTop = true } },
-                            onOpenSystemNotes = { navController.navigate(AppScreen.Help.route) { launchSingleTop = true } },
-                            pendingFriendRequestCount = pendingFriendRequestCount,
-                            hasUnreadMessages = hasUnreadMessages,
-                            hasUnseenSharedItems = hasUnseenSharedItems,
                             viewModel = settingsViewModel
                         )
                     }
