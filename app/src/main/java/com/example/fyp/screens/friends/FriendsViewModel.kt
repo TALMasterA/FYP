@@ -446,7 +446,7 @@ class FriendsViewModel @Inject constructor(
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
-                        error = "Failed to remove friend: ${e.message ?: "please try again."}"
+                        error = "Failed to remove friend. Please try again."
                     )
                 }
             )
@@ -470,6 +470,11 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             sharedFriendsDataSource.stopObserving()
             sharedFriendsDataSource.startObserving(userId)
+            // Sync latest usernames in background (best-effort)
+            val updates = friendsRepository.syncFriendUsernames(UserId(userId))
+            if (updates.isNotEmpty()) {
+                sharedFriendsDataSource.applyUsernameUpdates(updates)
+            }
         }
     }
 

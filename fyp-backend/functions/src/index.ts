@@ -2,6 +2,7 @@ import {setGlobalOptions} from "firebase-functions";
 import {defineSecret} from "firebase-functions/params";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {onDocumentCreated, onDocumentUpdated} from "firebase-functions/v2/firestore";
+import {onSchedule} from "firebase-functions/v2/scheduler";
 import fetch from "node-fetch";
 import * as admin from "firebase-admin";
 
@@ -851,5 +852,42 @@ export const sendFriendRequestNotification = onDocumentCreated(
     } catch (err: any) {
       console.error("sendFriendRequestNotification: error", { message: err?.message });
     }
+  }
+);
+/**
+ * Prune FCM tokens older than 60 days to prevent unbounded growth.
+ * Runs daily at 3 AM UTC.
+ */
+export const pruneStaleTokens = onSchedule(
+  {
+    schedule: "0 3 * * *",
+    timeZone: "UTC",
+    region: "us-central1",
+  },
+  async () => {
+    const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
+    const cutoff = admin.firestore.Timestamp.fromDate(
+      new Date(Date.now() - SIXTY_DAYS_MS)
+    );
+
+    const usersSnap = await getFirestore().collection("users").select().get();
+    let pruned = 0;
+
+    for (const userDoc of usersSnap.docs) {
+      const tokensSnap = await getFirestore()
+        .collection("users").doc(userDoc.id)
+        .collection("fcm_tokens")
+        .where("updatedAt", "<", cutoff)
+        .get();
+
+      if (!tokensSnap.empty) {
+        const batch = getFirestore().batch();
+        tokensSnap.docs.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+        pruned += tokensSnap.size;
+      }
+    }
+
+    console.log(`pruneStaleTokens: removed ${pruned} stale tokens`);
   }
 );

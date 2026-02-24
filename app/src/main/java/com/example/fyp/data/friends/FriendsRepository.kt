@@ -145,4 +145,11 @@ interface FriendsRepository {
      * Path updated: users/{friendId}/friends/{userId}.friendUsername
      */
     suspend fun propagateUsernameChange(userId: UserId, newUsername: String): Result<Unit>
+
+    /**
+     * Fetch each friend's latest public profile username and update any stale
+     * FriendRelation documents.  Called on pull-to-refresh and app start.
+     * Returns a map of friendId -> latestUsername for in-memory update.
+     */
+    suspend fun syncFriendUsernames(userId: UserId): Map<String, String>
 }

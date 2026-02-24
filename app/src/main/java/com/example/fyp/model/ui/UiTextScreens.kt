@@ -24,19 +24,19 @@ val ScreenUiTexts: List<String> = listOf(
     "Notes & Cautions",
 
     // SpeechTitle
-    "Discrete mode",
+    "Quick Translate",
 
     // HomeStartButton
-    "Discrete speech translation",
+    "Quick Translate",
 
     // HomeFeaturesTitle
     "Features",
 
     // HomeDiscreteDescription
-    "Real-time voice translation",
+    "Short phrases & voice translation",
 
     // HomeContinuousDescription
-    "Multi-turn conversation mode",
+    "Multi-turn live conversation",
 
     // HomeLearningDescription
     "Study vocabulary and take quizzes",
@@ -164,7 +164,7 @@ val ScreenUiTexts: List<String> = listOf(
     "Stop listening",
 
     // ContinuousStartScreenButton
-    "Continuous translation mode",
+    "Live Conversation",
 
     // ContinuousPersonALabel
     "A speaking",
@@ -1350,4 +1350,14 @@ val ScreenUiTexts: List<String> = listOf(
     "Pending friend request badge",
     // InAppBadgeSharedInbox
     "Unseen shared-inbox badge",
+
+    // --- Common Error Messages ---
+    // ErrorNotLoggedIn
+    "Please log in to continue.",
+    // ErrorSaveFailedRetry
+    "Save failed. Please try again.",
+    // ErrorLoadFailedRetry
+    "Load failed. Please try again.",
+    // ErrorNetworkRetry
+    "Network error. Please check your connection and try again.",
 )
