@@ -108,11 +108,7 @@ fun ContinuousConversationScreen(
 
     StandardScreenScaffold(
         title = t(UiTextKey.ContinuousTitle),
-        onBack = {
-            viewModel.endContinuousSession()
-            onBack()
-        },
-        backContentDescription = t(UiTextKey.NavBack),
+        onBack = null,
     ) { outerPadding ->
         RecordAudioPermissionRequest {
             BoxWithConstraints(

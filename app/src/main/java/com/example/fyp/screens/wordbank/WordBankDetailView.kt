@@ -260,14 +260,33 @@ private fun WordBankHeader(
                     )
                 }
 
-                // Show history count (similar to Learning Sheet)
-                Text(
-                    text = t(UiTextKey.WordBankHistoryCountTemplate)
-                        .replace("{nowCount}", currentHistoryCount.toString())
-                        .replace("{savedCount}", (wordBank?.historyCountAtGenerate?.toString() ?: "-")),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                // Progress bar towards next generation / regen threshold.
+                // For first generation: progress = currentHistoryCount / minRecordsForRegen.
+                // For regen: progress = newRecordCount (records added since last gen) / minRecordsForRegen.
+                val isFirstGeneration = wordBank == null
+                val recordsTowardThreshold = if (isFirstGeneration) currentHistoryCount else newRecordCount
+                val progressFraction = (recordsTowardThreshold.toFloat() / minRecordsForRegen.toFloat()).coerceIn(0f, 1f)
+                val recordsNeeded = (minRecordsForRegen - recordsTowardThreshold).coerceAtLeast(0)
+
+                if (!canRegenerate && recordsNeeded > 0) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        LinearProgressIndicator(
+                            progress = { progressFraction },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        Text(
+                            text = t(UiTextKey.LearningProgressNeededTemplate)
+                                .replace("{needed}", "$recordsNeeded"),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -305,7 +324,6 @@ private fun WordBankHeader(
                         }
                     }
                 } else {
-                    val isFirstGeneration = wordBank == null
                     val buttonEnabled = isFirstGeneration || canRegenerate
 
                     Button(

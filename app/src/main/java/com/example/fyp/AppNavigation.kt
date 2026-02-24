@@ -24,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Home
@@ -222,7 +223,8 @@ fun AppNavigation() {
                     AppScreen.Speech.route,
                     AppScreen.Learning.route,
                     AppScreen.Friends.route,
-                    AppScreen.Settings.route
+                    AppScreen.Settings.route,
+                    AppScreen.Continuous.route
                 )
 
                 // Helper for navigating to login
@@ -231,7 +233,12 @@ fun AppNavigation() {
                 }
 
                 Scaffold(
-                    contentWindowInsets = WindowInsets(0),
+                    // Use navigationBars insets so screens that don't have a bottom bar
+                    // still get bottom padding above the system navigation keys.
+                    // When the bottom NavigationBar IS present its measured height (which
+                    // already includes the nav-bar inset) takes precedence, so no double-
+                    // padding occurs.
+                    contentWindowInsets = WindowInsets.navigationBars,
                     bottomBar = {
                         if (showBottomNav) {
                             NavigationBar {
@@ -274,6 +281,9 @@ fun AppNavigation() {
                                         selected = isSelected,
                                         enabled = !isDisabled,
                                         onClick = {
+                                            // Skip navigation when we're already on this tab to
+                                            // avoid a no-op that can feel unresponsive.
+                                            if (isSelected) return@NavigationBarItem
                                             navController.navigate(item.route) {
                                                 popUpTo(AppScreen.Home.route) { saveState = true }
                                                 launchSingleTop = true
