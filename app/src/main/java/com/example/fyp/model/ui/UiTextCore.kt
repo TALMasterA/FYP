@@ -641,6 +641,9 @@ enum class UiTextKey {
 
     // --- Learning Progress ---
     LearningProgressNeededTemplate,
+
+    // --- Quick Translate shortcut ---
+    SpeechSwitchToConversation,
 }
 
 // Core Ui Texts list

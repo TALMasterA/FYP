@@ -1,9 +1,11 @@
 package com.example.fyp.core
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -33,25 +35,31 @@ fun PaginationRow(
         .replace("{page}", (page + 1).toString())
         .replace("{total}", totalPages.toString())
 
-    Row(
+    // Centre a compact row so the buttons aren't stretched across the full screen width
+    Box(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        contentAlignment = Alignment.Center
     ) {
-        IconButton(onClick = onPrev, enabled = page > 0) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = prevLabel,
-                modifier = Modifier.size(28.dp)
-            )
-        }
-        Text(pageText)
-        IconButton(onClick = onNext, enabled = page < totalPages - 1) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = nextLabel,
-                modifier = Modifier.size(28.dp)
-            )
+        Row(
+            modifier = Modifier.widthIn(max = 280.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onPrev, enabled = page > 0) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    contentDescription = prevLabel,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            Text(pageText)
+            IconButton(onClick = onNext, enabled = page < totalPages - 1) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = nextLabel,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
     }
 }

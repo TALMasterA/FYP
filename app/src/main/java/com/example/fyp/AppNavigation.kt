@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Home
@@ -230,6 +231,7 @@ fun AppNavigation() {
                 }
 
                 Scaffold(
+                    contentWindowInsets = WindowInsets(0),
                     bottomBar = {
                         if (showBottomNav) {
                             NavigationBar {
@@ -322,7 +324,12 @@ fun AppNavigation() {
                             uiLanguages = uiLanguages,
                             appLanguageState = appLanguageState,
                             onUpdateAppLanguage = updateAppLanguage,
-                            onBack = { navController.popBackStack() }
+                            onBack = { navController.popBackStack() },
+                            onOpenConversation = {
+                                navController.navigate(AppScreen.Continuous.route) {
+                                    launchSingleTop = true
+                                }
+                            }
                         )
                     }
 
