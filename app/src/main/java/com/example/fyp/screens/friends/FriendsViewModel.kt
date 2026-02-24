@@ -35,13 +35,13 @@ data class FriendsUiState(
     val isSearching: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
-    val newRequestCount: Int = 0,   // For snackbar notification badge
-    val unreadCountPerFriend: Map<String, Int> = emptyMap(), // friendId -> unread message count
-    // Multi-select delete mode
+    val newRequestCount: Int = 0,
+    val unreadCountPerFriend: Map<String, Int> = emptyMap(),
     val isDeleteMode: Boolean = false,
     val selectedFriendIds: Set<String> = emptySet(),
-    /** Whether the current user has set a username (required to send requests). */
-    val currentUserHasUsername: Boolean = false
+    val currentUserHasUsername: Boolean = false,
+    /** IDs the current user has blocked. */
+    val blockedUserIds: Set<String> = emptySet()
 )
 
 /** Status of the local user's relationship with a search result. */
@@ -101,6 +101,8 @@ class FriendsViewModel @Inject constructor(
                         startUnreadPerFriendObserver(UserId(auth.user.uid))
                         // Load own profile to determine if username is set
                         loadOwnUsername(auth.user.uid)
+                        // Load blocked users list
+                        loadBlockedUsers(UserId(auth.user.uid))
                     }
                     AuthState.LoggedOut -> {
                         outgoingRequestsJob?.cancel()
@@ -216,16 +218,18 @@ class FriendsViewModel @Inject constructor(
     private suspend fun performCombinedSearch(query: String) {
         _uiState.value = _uiState.value.copy(isSearching = true)
 
+        val caller = currentUserId
+
         // Parallel execution: Search by Username AND by UserID (if applicable)
         val (usernameResults, idResult) = coroutineScope {
             val usernameSearchDeferred = async {
-                searchUsersUseCase(query).getOrElse { emptyList() }
+                searchUsersUseCase(query, callerUserId = caller).getOrElse { emptyList() }
             }
 
             val idSearchDeferred = if (!query.contains(' ')) {
                 async {
                     try {
-                        friendsRepository.findByUserId(UserId(query))
+                        friendsRepository.findByUserId(UserId(query), callerUserId = caller)
                     } catch (_: Exception) {
                         null
                     }
@@ -296,6 +300,8 @@ class FriendsViewModel @Inject constructor(
                 successMessage = "Friend(s) removed.",
                 error = null
             )
+            // Refresh to sync Firestore state so re-search shows correct status
+            refreshFriendsList()
         }
     }
 
@@ -338,7 +344,10 @@ class FriendsViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         successMessage = "Friend request sent! They will be notified.",
-                        error = null
+                        error = null,
+                        // Clear search so the outgoing-requests listener re-evaluates status
+                        searchResults = emptyList(),
+                        searchQuery = ""
                     )
                 },
                 onFailure = { e ->
@@ -349,6 +358,10 @@ class FriendsViewModel @Inject constructor(
                             "You already have a pending request to this user. Please wait for their reply."
                         e.message?.contains("profile not found", ignoreCase = true) == true ->
                             "Could not find the user's profile. They may have deleted their account."
+                        e.message?.contains("blocked this user", ignoreCase = true) == true ->
+                            "You have blocked this user. Unblock them first."
+                        e.message?.contains("Unable to send", ignoreCase = true) == true ->
+                            "Unable to send friend request."
                         else -> "Failed to send friend request. Please try again."
                     }
                     _uiState.value = _uiState.value.copy(error = message)
@@ -443,8 +456,10 @@ class FriendsViewModel @Inject constructor(
                         successMessage = "Friend removed.",
                         error = null
                     )
+                    // Refresh to sync Firestore state so re-search shows correct status
+                    refreshFriendsList()
                 },
-                onFailure = { e ->
+                onFailure = {
                     _uiState.value = _uiState.value.copy(
                         error = "Failed to remove friend. Please try again."
                     )
@@ -460,6 +475,58 @@ class FriendsViewModel @Inject constructor(
     fun clearNewRequestCount() {
         _uiState.value = _uiState.value.copy(newRequestCount = 0)
     }
+
+    // ── Block / Unblock ───────────────────────────────────────────────────────
+
+    private fun loadBlockedUsers(userId: UserId) {
+        viewModelScope.launch {
+            try {
+                val blocked = friendsRepository.getBlockedUserIds(userId).toSet()
+                _uiState.value = _uiState.value.copy(blockedUserIds = blocked)
+            } catch (_: Exception) { /* non-fatal */ }
+        }
+    }
+
+    fun blockUser(targetUserId: String) {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            friendsRepository.blockUser(userId, UserId(targetUserId)).fold(
+                onSuccess = {
+                    val updated = _uiState.value.blockedUserIds + targetUserId
+                    _uiState.value = _uiState.value.copy(
+                        blockedUserIds = updated,
+                        successMessage = "User blocked.",
+                        error = null
+                    )
+                },
+                onFailure = {
+                    _uiState.value = _uiState.value.copy(error = "Failed to block user. Please try again.")
+                }
+            )
+        }
+    }
+
+    fun unblockUser(targetUserId: String) {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            friendsRepository.unblockUser(userId, UserId(targetUserId)).fold(
+                onSuccess = {
+                    val updated = _uiState.value.blockedUserIds - targetUserId
+                    _uiState.value = _uiState.value.copy(
+                        blockedUserIds = updated,
+                        successMessage = "User unblocked.",
+                        error = null
+                    )
+                },
+                onFailure = {
+                    _uiState.value = _uiState.value.copy(error = "Failed to unblock user. Please try again.")
+                }
+            )
+        }
+    }
+
+    fun isUserBlocked(targetUserId: String): Boolean =
+        _uiState.value.blockedUserIds.contains(targetUserId)
 
     /**
      * Manually refresh friends list by restarting the shared data source.

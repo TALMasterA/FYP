@@ -644,6 +644,13 @@ enum class UiTextKey {
 
     // --- Quick Translate shortcut ---
     SpeechSwitchToConversation,
+
+    // --- Chat Clear Conversation ---
+    ChatClearConversationButton,
+    ChatClearConversationTitle,
+    ChatClearConversationMessage,
+    ChatClearConversationConfirm,
+    ChatClearConversationSuccess,
 }
 
 // Core Ui Texts list

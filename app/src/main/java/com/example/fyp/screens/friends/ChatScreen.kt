@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -43,6 +45,8 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     var showTranslateDialog by remember { mutableStateOf(false) }
     var showProfileDialog by remember { mutableStateOf(false) }
+    var showClearDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Auto-scroll to bottom when new messages arrive
     LaunchedEffect(uiState.messages.size) {
@@ -50,7 +54,15 @@ fun ChatScreen(
             listState.animateScrollToItem(uiState.messages.size - 1)
         }
     }
-    
+
+    // Show clear success snackbar
+    LaunchedEffect(uiState.clearSuccess) {
+        if (uiState.clearSuccess) {
+            snackbarHostState.showSnackbar(t(UiTextKey.ChatClearConversationSuccess))
+            viewModel.dismissClearSuccess()
+        }
+    }
+
     // Show translate confirmation dialog
     if (showTranslateDialog) {
         TranslateConfirmDialog(
@@ -63,6 +75,37 @@ fun ChatScreen(
                 showTranslateDialog = false
             },
             onDismiss = { showTranslateDialog = false }
+        )
+    }
+
+    // Clear conversation confirmation dialog
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDialog = false },
+            title = { Text(t(UiTextKey.ChatClearConversationTitle)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(t(UiTextKey.ChatClearConversationMessage))
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.clearConversation()
+                        showClearDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(t(UiTextKey.ChatClearConversationConfirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDialog = false }) {
+                    Text(t(UiTextKey.FriendsCancelButton))
+                }
+            }
         )
     }
 
@@ -164,6 +207,7 @@ fun ChatScreen(
         title = t(UiTextKey.ChatTitle).replace("{username}", uiState.friendUsername),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         actions = {
             // Profile info icon — tapping opens the friend's profile dialog
             IconButton(onClick = { showProfileDialog = true }) {
@@ -172,6 +216,30 @@ fun ChatScreen(
                     contentDescription = "View friend profile",
                     tint = MaterialTheme.colorScheme.primary
                 )
+            }
+            // Block / Unblock button
+            IconButton(
+                onClick = {
+                    if (uiState.isBlocked) viewModel.unblockFriend()
+                    else viewModel.blockFriend()
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Block,
+                    contentDescription = if (uiState.isBlocked) "Unblock user" else "Block user",
+                    tint = if (uiState.isBlocked) MaterialTheme.colorScheme.error
+                           else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            // Clear conversation button (local-only)
+            if (uiState.messages.isNotEmpty()) {
+                IconButton(onClick = { showClearDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Clear chat",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                    )
+                }
             }
             // Translate button
             if (uiState.messages.isNotEmpty()) {
@@ -204,6 +272,24 @@ fun ChatScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            // Blocked-by banner
+            if (uiState.isBlockedBy) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = "You cannot send messages to this user.",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
             // Error message
             uiState.error?.let { error ->
                 Card(
@@ -341,7 +427,8 @@ fun ChatScreen(
                 onMessageTextChange = { viewModel.onMessageTextChange(it) },
                 onSendClick = { viewModel.sendMessage() },
                 isSending = uiState.isSending,
-                placeholder = t(UiTextKey.ChatInputPlaceholder),
+                isDisabled = uiState.isBlockedBy,
+                placeholder = if (uiState.isBlockedBy) "Cannot send messages" else t(UiTextKey.ChatInputPlaceholder),
                 sendButtonText = t(UiTextKey.ChatSendButton)
             )
         }
@@ -425,6 +512,7 @@ fun MessageInput(
     onMessageTextChange: (String) -> Unit,
     onSendClick: () -> Unit,
     isSending: Boolean,
+    isDisabled: Boolean = false,
     placeholder: String,
     sendButtonText: String
 ) {
@@ -444,12 +532,12 @@ fun MessageInput(
                 modifier = Modifier.weight(1f),
                 placeholder = { Text(placeholder) },
                 maxLines = 4,
-                enabled = !isSending
+                enabled = !isSending && !isDisabled
             )
             Spacer(modifier = Modifier.width(8.dp))
             IconButton(
                 onClick = onSendClick,
-                enabled = messageText.isNotBlank() && !isSending
+                enabled = messageText.isNotBlank() && !isSending && !isDisabled
             ) {
                 if (isSending) {
                     CircularProgressIndicator(
