@@ -8,4 +8,33 @@
     <path
         android:fillColor="#1A237E"
         android:pathData="M0,0h108v108h-108z" />
+
+    <!-- Subtle Background Elements (matching new design) -->
+    <!-- Opacity handled by alpha on color or separate path attributes, but here just solid colors for simplicity or with alpha if supported -->
+    <!-- Android vector supports android:fillAlpha -->
+
+    <!-- Deco 1: Blue circle bottom-left (approx) -->
+    <group android:translateX="10" android:translateY="80">
+        <path
+            android:fillColor="#29B6F6"
+            android:fillAlpha="0.3"
+            android:pathData="M 0,4 A 4,4 0 1,1 0,-4 A 4,4 0 1,1 0,4 Z" />
+    </group>
+
+    <!-- Deco 2: White circle top-right -->
+    <group android:translateX="90" android:translateY="20">
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillAlpha="0.2"
+             android:pathData="M 0,2 A 2,2 0 1,1 0,-2 A 2,2 0 1,1 0,2 Z" />
+    </group>
+
+    <!-- Deco 3: Large faint circle bottom-right -->
+    <group android:translateX="90" android:translateY="90">
+         <path
+            android:fillColor="#FFFFFF"
+            android:fillAlpha="0.1"
+            android:pathData="M 0,12 A 12,12 0 1,1 0,-12 A 12,12 0 1,1 0,12 Z" />
+    </group>
+
 </vector>

@@ -9,7 +9,7 @@
       "name": "Designs",
       "clip": true,
       "width": 1400,
-      "height": 700,
+      "height": 1200,
       "fill": "#F0F2F5",
       "gap": 80,
       "children": [
@@ -78,83 +78,103 @@
               "height": 36
             },
             {
-              "type": "frame",
-              "id": "GMA5z",
-              "x": 168,
-              "y": 168,
-              "name": "arrows",
-              "width": 200,
-              "height": 72,
-              "fill": "#00000000",
-              "layout": "none",
-              "children": [
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 8,
-                  "id": "zcxo3",
-                  "x": 4,
-                  "y": 8,
-                  "name": "rarrow_body",
-                  "fill": "#1A237E",
-                  "width": 80,
-                  "height": 16
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 4,
-                  "id": "wJ6Kv",
-                  "x": 72,
-                  "y": -2,
-                  "name": "rarrow_h1",
-                  "fill": "#1A237E",
-                  "width": 28,
-                  "height": 16
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 4,
-                  "id": "oLNkQ",
-                  "x": 72,
-                  "y": 16,
-                  "name": "rarrow_h2",
-                  "fill": "#1A237E",
-                  "width": 28,
-                  "height": 16
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 8,
-                  "id": "HrAF6",
-                  "x": 88,
-                  "y": 40,
-                  "name": "larrow_body",
-                  "fill": "#FFFFFF",
-                  "width": 80,
-                  "height": 16
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 4,
-                  "id": "3kV7N",
-                  "x": 80,
-                  "y": 30,
-                  "name": "larrow_h1",
-                  "fill": "#FFFFFF",
-                  "width": 28,
-                  "height": 16
-                },
-                {
-                  "type": "rectangle",
-                  "cornerRadius": 4,
-                  "id": "AWZOK",
-                  "x": 80,
-                  "y": 48,
-                  "name": "larrow_h2",
-                  "fill": "#FFFFFF",
-                  "width": 28,
-                  "height": 16
-                }
-              ]
+              "type": "ellipse",
+              "id": "7bynr",
+              "x": 40,
+              "y": 400,
+              "name": "deco1",
+              "opacity": 0.3,
+              "fill": "#29B6F6",
+              "width": 40,
+              "height": 40
+            },
+            {
+              "type": "ellipse",
+              "id": "uRWUm",
+              "x": 450,
+              "y": 80,
+              "name": "deco2",
+              "opacity": 0.2,
+              "fill": "#FFFFFF",
+              "width": 20,
+              "height": 20
+            },
+            {
+              "type": "ellipse",
+              "id": "La2ZR",
+              "x": 420,
+              "y": 420,
+              "name": "deco3",
+              "opacity": 0.1,
+              "fill": "#FFFFFF",
+              "width": 60,
+              "height": 60
+            },
+            {
+              "type": "rectangle",
+              "id": "NmbcW",
+              "x": 400,
+              "y": 120,
+              "name": "star1",
+              "rotation": 45,
+              "fill": "#FFD700",
+              "width": 14,
+              "height": 14
+            },
+            {
+              "type": "rectangle",
+              "id": "k9hJs",
+              "x": 430,
+              "y": 150,
+              "name": "star2",
+              "rotation": 45,
+              "fill": "#FFD700",
+              "width": 10,
+              "height": 10
+            },
+            {
+              "type": "ellipse",
+              "id": "rbNtY",
+              "x": 250,
+              "y": 150,
+              "name": "dotL1",
+              "opacity": 0.5,
+              "fill": "#1565C0",
+              "width": 8,
+              "height": 8
+            },
+            {
+              "type": "ellipse",
+              "id": "RSqjz",
+              "x": 230,
+              "y": 170,
+              "name": "dotL2",
+              "opacity": 0.3,
+              "fill": "#1565C0",
+              "width": 6,
+              "height": 6
+            },
+            {
+              "type": "ellipse",
+              "id": "ZDTVP",
+              "x": 250,
+              "y": 350,
+              "name": "dotR1",
+              "opacity": 0.5,
+              "fill": "#FFFFFF",
+              "width": 8,
+              "height": 8
+            },
+            {
+              "type": "ellipse",
+              "id": "sOAD4",
+              "x": 270,
+              "y": 330,
+              "name": "dotR2",
+              "opacity": 0.3,
+              "fill": "#FFFFFF",
+              "width": 6,
+              "height": 6
             }
           ]
         },
@@ -317,6 +337,39 @@
               "fill": "#29B6F6",
               "width": 8,
               "height": 8
+            },
+            {
+              "type": "ellipse",
+              "id": "NRRkL",
+              "x": 40,
+              "y": 100,
+              "name": "splashDeco1",
+              "opacity": 0.2,
+              "fill": "#29B6F6",
+              "width": 20,
+              "height": 20
+            },
+            {
+              "type": "ellipse",
+              "id": "T9dbK",
+              "x": 400,
+              "y": 800,
+              "name": "splashDeco2",
+              "opacity": 0.05,
+              "fill": "#1565C0",
+              "width": 100,
+              "height": 100
+            },
+            {
+              "type": "rectangle",
+              "id": "meRK7",
+              "x": 380,
+              "y": 300,
+              "name": "splashStar1",
+              "rotation": 45,
+              "fill": "#FFD700",
+              "width": 10,
+              "height": 10
             }
           ]
         }

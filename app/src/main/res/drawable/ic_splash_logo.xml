@@ -35,26 +35,42 @@
         android:fillColor="#29B6F6"
         android:pathData="M 212,128 H 224 A 4,4,0,0,1,228,132 V 148 A 4,4,0,0,1,224,152 H 212 A 4,4,0,0,1,208,148 V 132 A 4,4,0,0,1,212,128 Z" />
 
-    <!-- Right-pointing arrow (dark navy, inside white bubble) -->
-    <path
-        android:fillColor="#1565C0"
-        android:pathData="M 96,121 H 148 A 5,5,0,0,1,153,126 A 5,5,0,0,1,148,131 H 96 A 5,5,0,0,1,91,126 A 5,5,0,0,1,96,121 Z" />
-    <path
-        android:fillColor="#1565C0"
-        android:pathData="M 142,112 H 156 A 3,3,0,0,1,159,115 V 124 A 3,3,0,0,1,156,127 H 142 A 3,3,0,0,1,139,124 V 115 A 3,3,0,0,1,142,112 Z" />
-    <path
-        android:fillColor="#1565C0"
-        android:pathData="M 142,127 H 156 A 3,3,0,0,1,159,130 V 139 A 3,3,0,0,1,156,142 H 142 A 3,3,0,0,1,139,139 V 130 A 3,3,0,0,1,142,127 Z" />
+    <!-- Letter A (Blue, inside white bubble) -->
+    <!-- Viewport 288. Target ~90,82 (120-30=90, 112-30=82). Scale 0.6 (60x60). -->
+    <group
+        android:scaleX="0.6"
+        android:scaleY="0.6"
+        android:translateX="90"
+        android:translateY="82">
+        <path
+            android:fillColor="#1565C0"
+            android:pathData="M 18,90 L 42,20 L 58,20 L 82,90 L 68,90 L 62,70 L 38,70 L 32,90 Z M 42,57 L 58,57 L 50,32 Z" />
+    </group>
 
-    <!-- Left-pointing arrow (white, inside light-blue bubble) -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M 140,159 H 192 A 5,5,0,0,1,197,164 A 5,5,0,0,1,192,169 H 140 A 5,5,0,0,1,135,164 A 5,5,0,0,1,140,159 Z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M 130,150 H 144 A 3,3,0,0,1,147,153 V 162 A 3,3,0,0,1,144,165 H 130 A 3,3,0,0,1,127,162 V 153 A 3,3,0,0,1,130,150 Z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M 130,165 H 144 A 3,3,0,0,1,147,168 V 177 A 3,3,0,0,1,144,180 H 130 A 3,3,0,0,1,127,177 V 168 A 3,3,0,0,1,130,165 Z" />
+    <!-- Character 文 (White, inside blue bubble) -->
+    <!-- Target ~150,138 (180-30=150, 168-30=138). Scale 0.6. -->
+    <group
+        android:scaleX="0.6"
+        android:scaleY="0.6"
+        android:translateX="150"
+        android:translateY="138">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M 45,5 L 55,5 L 54,23 L 88,23 L 88,34 L 53,34 C 49,60 38,80 12,94 L 6,84 C 27,73 38,58 41,34 L 12,34 L 12,23 L 44,23 Z M 46,38 C 58,54 70,72 88,88 L 79,95 C 62,78 50,60 42,42 Z" />
+    </group>
+
+
+    <!-- Decorative Sparkles (Gold) -->
+    <group
+        android:translateX="220"
+        android:translateY="70"
+        android:scaleX="0.2"
+        android:scaleY="0.2"
+        android:rotation="45">
+        <path
+            android:fillColor="#FFD700"
+            android:pathData="M0,0h100v100h-100z" />
+    </group>
+
 
 </vector>

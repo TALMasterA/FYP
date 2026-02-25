@@ -24,34 +24,49 @@
         android:fillColor="#29B6F6"
         android:pathData="M 87.31,61.16 H 92.36 A 1.27,1.27,0,0,1,93.63,62.43 V 67.48 A 1.27,1.27,0,0,1,92.36,68.75 H 87.31 A 1.27,1.27,0,0,1,86.04,67.48 V 62.43 A 1.27,1.27,0,0,1,87.31,61.16 Z" />
 
-    <!-- Right-pointing arrow body (dark navy, on white bubble) -->
-    <path
-        android:fillColor="#1A237E"
-        android:pathData="M 37.96,37.13 H 51.46 A 1.69,1.69,0,0,1,53.15,38.82 A 1.69,1.69,0,0,1,51.46,40.51 H 37.96 A 1.69,1.69,0,0,1,36.27,38.82 A 1.69,1.69,0,0,1,37.96,37.13 Z" />
+    <!-- Letter A (Blue, inside white bubble) -->
+    <group
+        android:scaleX="0.25"
+        android:scaleY="0.25"
+        android:translateX="24"
+        android:translateY="25">
+        <path
+            android:fillColor="#1565C0"
+            android:pathData="M 18,90 L 42,20 L 58,20 L 82,90 L 68,90 L 62,70 L 38,70 L 32,90 Z M 42,57 L 58,57 L 50,32 Z" />
+    </group>
 
-    <!-- Right-arrow head upper barb -->
-    <path
-        android:fillColor="#1A237E"
-        android:pathData="M 51.47,35.02 H 55.70 A 0.84,0.84,0,0,1,56.54,35.86 V 37.56 A 0.84,0.84,0,0,1,55.70,38.40 H 51.47 A 0.84,0.84,0,0,1,50.63,37.56 V 35.86 A 0.84,0.84,0,0,1,51.47,35.02 Z" />
+    <!-- Character 文 (White, inside blue bubble) -->
+    <group
+        android:scaleX="0.25"
+        android:scaleY="0.25"
+        android:translateX="58"
+        android:translateY="53">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M 45,5 L 55,5 L 54,23 L 88,23 L 88,34 L 53,34 C 49,60 38,80 12,94 L 6,84 C 27,73 38,58 41,34 L 12,34 L 12,23 L 44,23 Z M 46,38 C 58,54 70,72 88,88 L 79,95 C 62,78 50,60 42,42 Z" />
+    </group>
 
-    <!-- Right-arrow head lower barb -->
-    <path
-        android:fillColor="#1A237E"
-        android:pathData="M 51.47,38.81 H 55.70 A 0.84,0.84,0,0,1,56.54,39.65 V 41.35 A 0.84,0.84,0,0,1,55.70,42.19 H 51.47 A 0.84,0.84,0,0,1,50.63,41.35 V 39.65 A 0.84,0.84,0,0,1,51.47,38.81 Z" />
+    <!-- Decorative Sparkles (Gold/Yellow) -->
+    <group
+        android:translateX="80"
+        android:translateY="20"
+        android:scaleX="0.1"
+        android:scaleY="0.1"
+        android:rotation="45">
+        <path
+            android:fillColor="#FFD700"
+             android:pathData="M0,0h100v100h-100z" />
+    </group>
+    <group
+        android:translateX="90"
+        android:translateY="30"
+        android:scaleX="0.06"
+        android:scaleY="0.06"
+        android:rotation="45">
+        <path
+            android:fillColor="#FFD700"
+            android:pathData="M0,0h100v100h-100z" />
+    </group>
 
-    <!-- Left-pointing arrow body (white, on blue bubble) -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M 55.65,43.88 H 69.15 A 1.69,1.69,0,0,1,70.84,45.57 A 1.69,1.69,0,0,1,69.15,47.26 H 55.65 A 1.69,1.69,0,0,1,53.96,45.57 A 1.69,1.69,0,0,1,55.65,43.88 Z" />
-
-    <!-- Left-arrow head upper barb -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M 53.14,41.77 H 57.37 A 0.84,0.84,0,0,1,58.21,42.61 V 44.31 A 0.84,0.84,0,0,1,57.37,45.15 H 53.14 A 0.84,0.84,0,0,1,52.30,44.31 V 42.61 A 0.84,0.84,0,0,1,53.14,41.77 Z" />
-
-    <!-- Left-arrow head lower barb -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M 53.14,45.57 H 57.37 A 0.84,0.84,0,0,1,58.21,46.41 V 48.11 A 0.84,0.84,0,0,1,57.37,48.95 H 53.14 A 0.84,0.84,0,0,1,52.30,48.11 V 46.41 A 0.84,0.84,0,0,1,53.14,45.57 Z" />
 
 </vector>
