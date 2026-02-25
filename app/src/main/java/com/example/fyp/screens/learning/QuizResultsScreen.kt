@@ -123,7 +123,7 @@ fun QuizResultsScreen(
 
                     if (selectedIndex >= 0 && selectedIndex < question.options.size) {
                         Text(
-                            t(UiTextKey.QuizYourAnswerTemplate).replace("{answer}", question.options[selectedIndex]),
+                            t(UiTextKey.QuizYourAnswerTemplate).replace("{Answer}", question.options[selectedIndex]),
                             style = MaterialTheme.typography.bodySmall,
                             color = if (isCorrect) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                         )
@@ -131,7 +131,7 @@ fun QuizResultsScreen(
 
                     if (!isCorrect && question.correctOptionIndex < question.options.size) {
                         Text(
-                            t(UiTextKey.QuizCorrectAnswerTemplate).replace("{answer}", question.options[question.correctOptionIndex]),
+                            t(UiTextKey.QuizCorrectAnswerTemplate).replace("{Answer}", question.options[question.correctOptionIndex]),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
