@@ -731,4 +731,79 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Language name for Traditional Chinese
     UiTextKey.LangZhTw to "繁體中文",
+
+    // Help extra sections
+    UiTextKey.HelpFriendSystemTitle to "朋友系統",
+    UiTextKey.HelpFriendSystemBody to "• 透過用戶名或用戶 ID 搵朋友\n" +
+            "• 發送、接受或拒絕朋友請求\n" +
+            "• 同朋友即時傾偈，仲可以翻譯對話\n" +
+            "• 同朋友分享生字同學習資料\n" +
+            "• 共享收件匣可收到並管理朋友傳嚟嘅嘢\n" +
+            "• 朋友卡片或收件匣上嘅紅點 (●) 表示有未讀訊息或新嘢\n" +
+            "• 向下掹嚟重新整理朋友名單同請求",
+    UiTextKey.HelpProfileVisibilityTitle to "個人資料可見度",
+    UiTextKey.HelpProfileVisibilityBody to "• 你可以喺「我嘅個人資料」設定度將個人資料設為公開或私人\n" +
+            "• 公開：任何人都可以搵到你同發送朋友請求\n" +
+            "• 私人：你嘅資料唔會喺搜尋結果中出現\n" +
+            "• 即使設為私人，仲可以分享用戶 ID 嚟加朋友",
+    UiTextKey.HelpColorPalettesTitle to "色彩主題同金幣",
+    UiTextKey.HelpColorPalettesBody to "• 1 個免費主題：天藍（預設）\n" +
+            "• 10 個可解鎖主題，每個要 10 枚金幣\n" +
+            "• 完成測驗就可以攞金幣\n" +
+            "• 金幣可以用嚟解鎖色彩主題或擴充歷史紀錄上限\n" +
+            "• 自動主題：早上 6 點至下午 6 點淺色模式，下午 6 點至早上 6 點深色模式",
+    UiTextKey.HelpPrivacyTitle to "私隱同資料",
+    UiTextKey.HelpPrivacyBody to "• 聲音只係用嚟辨識語音，唔會永久儲存\n" +
+            "• OCR 喺裝置上處理（私隱優先）\n" +
+            "• 你可以隨時刪除帳號同所有資料\n" +
+            "• 將個人資料設為私人可以防止其他人透過搜尋搵到你\n" +
+            "• 所有資料透過 Firebase 安全同步",
+    UiTextKey.HelpAppVersionTitle to "應用程式版本",
+    UiTextKey.HelpAppVersionNotes to "• 歷史紀錄上限係 50–100 筆（可以用金幣擴充）\n" +
+            "• 用戶名必須唯一——改名後舊名就釋出\n" +
+            "• 應用程式版本更新時會自動登出保障安全\n" +
+            "• 所有翻譯由 Azure AI 服務提供",
+
+    // Onboarding
+    UiTextKey.OnboardingPage1Title to "即時翻譯",
+    UiTextKey.OnboardingPage1Desc to "快速翻譯適合短句，即時對話適合多輪傾偈。",
+    UiTextKey.OnboardingPage2Title to "學習詞彙",
+    UiTextKey.OnboardingPage2Desc to "根據你嘅翻譯歷史生成詞彙表同測驗。",
+    UiTextKey.OnboardingPage3Title to "同朋友聯繫",
+    UiTextKey.OnboardingPage3Desc to "傾偈、分享詞彙，一齊學習。",
+    UiTextKey.OnboardingSkipButton to "跳過",
+    UiTextKey.OnboardingNextButton to "下一步",
+    UiTextKey.OnboardingGetStartedButton to "開始啦",
+
+    // Home welcome
+    UiTextKey.HomeWelcomeBack to "👋 歡迎返嚟，{name}！",
+
+    // Chat labels
+    UiTextKey.ChatUsernameLabel to "用戶名：",
+    UiTextKey.ChatUserIdLabel to "用戶 ID：",
+    UiTextKey.ChatLearningLabel to "學緊：",
+    UiTextKey.ChatBlockedMessage to "你唔可以向呢個用戶發送訊息。",
+
+    // Custom word bank
+    UiTextKey.CustomWordsSearchPlaceholder to "搜尋",
+    UiTextKey.CustomWordsEmptyState to "未有自訂生字",
+    UiTextKey.CustomWordsEmptyHint to "撳 + 嚟加你嘅生字",
+    UiTextKey.CustomWordsNoSearchResults to "冇符合搜尋嘅生字",
+    UiTextKey.AddCustomWordHintTemplate to "喺 {from} 輸入生字，喺 {to} 輸入翻譯",
+
+    // Word bank records count
+    UiTextKey.WordBankRecordsCountTemplate to "{count} 筆紀錄",
+
+    // Blocked user ID
+    UiTextKey.BlockedUserIdTemplate to "ID：{id}…",
+
+    // Profile extra
+    UiTextKey.ProfileEmailTemplate to "電郵：{email}",
+    UiTextKey.ProfileUsernameHintFull to "供朋友搜尋嘅用戶名（3-20 個字，字母/數字/_）",
+
+    // Voice settings
+    UiTextKey.VoiceSettingsNoOptions to "呢個語言冇可用嘅語音選項",
+
+    // Login
+    UiTextKey.AuthUpdatedLoginAgain to "應用程式已更新，請重新登入",
 )

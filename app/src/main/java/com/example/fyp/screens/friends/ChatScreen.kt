@@ -118,7 +118,7 @@ fun ChatScreen(
                     text = if (uiState.friendUsername.isNotEmpty()) {
                         "@${uiState.friendUsername}"
                     } else {
-                        "Friend Profile"
+                        t(UiTextKey.ChatTitle)
                     }
                 )
             },
@@ -132,7 +132,7 @@ fun ChatScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "Username: ",
+                                    text = t(UiTextKey.ChatUsernameLabel),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -149,7 +149,7 @@ fun ChatScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "User ID: ",
+                                text = t(UiTextKey.ChatUserIdLabel),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -168,7 +168,7 @@ fun ChatScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "Learning: ",
+                                    text = t(UiTextKey.ChatLearningLabel),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -181,13 +181,13 @@ fun ChatScreen(
                     } else {
                         // Fallback when profile couldn't load
                         Text(
-                            text = "Username: ${uiState.friendUsername}",
+                            text = "${t(UiTextKey.ChatUsernameLabel)}${uiState.friendUsername}",
                             style = MaterialTheme.typography.bodyMedium
                         )
                         if (uiState.friendDisplayName.isNotEmpty() &&
                             uiState.friendDisplayName != uiState.friendUsername) {
                             Text(
-                                text = "Display name: ${uiState.friendDisplayName}",
+                                text = "${t(UiTextKey.MyProfileDisplayName)}: ${uiState.friendDisplayName}",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -196,7 +196,7 @@ fun ChatScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showProfileDialog = false }) {
-                    Text("Close")
+                    Text(t(UiTextKey.FriendsCloseButton))
                 }
             }
         )
@@ -269,7 +269,7 @@ fun ChatScreen(
                     )
                 ) {
                     Text(
-                        text = "You cannot send messages to this user.",
+                        text = t(UiTextKey.ChatBlockedMessage),
                         modifier = Modifier.padding(16.dp),
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         style = MaterialTheme.typography.bodyMedium

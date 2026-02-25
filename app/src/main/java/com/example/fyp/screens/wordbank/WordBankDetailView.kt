@@ -475,9 +475,9 @@ private fun WordBankList(
                 PaginationRow(
                     page = currentPage,
                     totalPages = totalPages,
-                    prevLabel = "< Prev",
-                    nextLabel = "Next >",
-                    pageLabelTemplate = "Page {page} of {total}",
+                    prevLabel = t(UiTextKey.PaginationPrevLabel),
+                    nextLabel = t(UiTextKey.PaginationNextLabel),
+                    pageLabelTemplate = t(UiTextKey.PaginationPageLabelTemplate),
                     onPrev = { if (currentPage > 0) onPageChange(currentPage - 1) },
                     onNext = { if (currentPage < totalPages - 1) onPageChange(currentPage + 1) },
                     modifier = Modifier.padding(16.dp)
@@ -607,11 +607,11 @@ private fun WordBankFilterDialog(
                                 FilterChip(
                                     selected = false,
                                     onClick = { draftDifficulty = "" },
-                                    label = { Text("All") },
+                                    label = { Text(t(UiTextKey.WordBankFilterCategoryAll)) },
                                     leadingIcon = {
                                         Icon(
                                             imageVector = Icons.Default.Clear,
-                                            contentDescription = "Clear",
+                                            contentDescription = t(UiTextKey.FilterClear),
                                             modifier = Modifier.size(16.dp)
                                         )
                                     }

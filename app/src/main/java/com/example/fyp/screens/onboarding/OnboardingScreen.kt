@@ -21,6 +21,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.fyp.core.rememberUiTextFunctions
+import com.example.fyp.model.ui.AppLanguageState
+import com.example.fyp.model.ui.BaseUiTexts
+import com.example.fyp.model.ui.UiTextKey
 import kotlinx.coroutines.launch
 
 private const val ONBOARDING_PREFS = "onboarding_prefs"
@@ -37,34 +41,27 @@ private fun markOnboardingComplete(context: Context) {
 
 private data class OnboardingPage(
     val icon: ImageVector,
-    val title: String,
-    val description: String
+    val titleKey: UiTextKey,
+    val descKey: UiTextKey
 )
 
 private val onboardingPages = listOf(
-    OnboardingPage(
-        icon = Icons.Default.Mic,
-        title = "Translate in Real-Time",
-        description = "Quick Translate for short phrases, Live Conversation for multi-turn dialogue."
-    ),
-    OnboardingPage(
-        icon = Icons.Default.School,
-        title = "Learn Vocabulary",
-        description = "Generate vocabulary sheets and quizzes from your translation history."
-    ),
-    OnboardingPage(
-        icon = Icons.Default.People,
-        title = "Connect with Friends",
-        description = "Chat, share vocabulary, and learn together."
-    )
+    OnboardingPage(Icons.Default.Mic, UiTextKey.OnboardingPage1Title, UiTextKey.OnboardingPage1Desc),
+    OnboardingPage(Icons.Default.School, UiTextKey.OnboardingPage2Title, UiTextKey.OnboardingPage2Desc),
+    OnboardingPage(Icons.Default.People, UiTextKey.OnboardingPage3Title, UiTextKey.OnboardingPage3Desc)
 )
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun OnboardingScreen(onComplete: () -> Unit) {
+fun OnboardingScreen(
+    appLanguageState: AppLanguageState,
+    onComplete: () -> Unit
+) {
     val context = LocalContext.current
     val pagerState = rememberPagerState(pageCount = { onboardingPages.size })
     val scope = rememberCoroutineScope()
+    val (uiText) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     val dismiss: () -> Unit = {
         markOnboardingComplete(context)
@@ -86,7 +83,7 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = dismiss) {
-                    Text("Skip")
+                    Text(t(UiTextKey.OnboardingSkipButton))
                 }
             }
 
@@ -106,13 +103,13 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                 ) {
                     Icon(
                         imageVector = data.icon,
-                        contentDescription = data.title,
+                        contentDescription = t(data.titleKey),
                         modifier = Modifier.size(96.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Text(
-                        text = data.title,
+                        text = t(data.titleKey),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
@@ -120,7 +117,7 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = data.description,
+                        text = t(data.descKey),
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -164,7 +161,10 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                     .padding(bottom = 32.dp)
             ) {
                 Text(
-                    if (pagerState.currentPage < onboardingPages.size - 1) "Next" else "Get Started"
+                    if (pagerState.currentPage < onboardingPages.size - 1)
+                        t(UiTextKey.OnboardingNextButton)
+                    else
+                        t(UiTextKey.OnboardingGetStartedButton)
                 )
             }
         }

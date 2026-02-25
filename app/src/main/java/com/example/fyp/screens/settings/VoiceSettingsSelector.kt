@@ -99,7 +99,7 @@ fun VoiceSettingsSelector(
             }
         } else {
             Text(
-                text = "No voice options available for this language",
+                text = t(UiTextKey.VoiceSettingsNoOptions),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

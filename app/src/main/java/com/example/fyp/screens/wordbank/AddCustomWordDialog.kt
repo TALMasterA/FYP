@@ -59,7 +59,9 @@ fun AddCustomWordDialog(
             ) {
                 // Hint text
                 Text(
-                    text = "Enter word in $primaryLanguageName and its translation in $targetLanguageName",
+                    text = t(UiTextKey.AddCustomWordHintTemplate)
+                        .replace("{from}", primaryLanguageName)
+                        .replace("{to}", targetLanguageName),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

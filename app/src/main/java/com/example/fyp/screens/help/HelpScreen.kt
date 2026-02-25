@@ -138,18 +138,12 @@ fun HelpScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Friend System",
+                        text = t(UiTextKey.HelpFriendSystemTitle),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "• Search and add friends by username or User ID\n" +
-                                "• Send, accept, or reject friend requests\n" +
-                                "• Real-time chat with friends and translate conversations\n" +
-                                "• Share words and learning materials with friends\n" +
-                                "• Shared Inbox to receive and manage items from friends\n" +
-                                "• A red dot (●) on friend cards or inbox indicates unread messages or new items\n" +
-                                "• Pull down to refresh friend list and requests",
+                        text = t(UiTextKey.HelpFriendSystemBody),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -167,15 +161,12 @@ fun HelpScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Profile Visibility",
+                        text = t(UiTextKey.HelpProfileVisibilityTitle),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "• You can set your profile to Public or Private in My Profile settings\n" +
-                                "• Public: any user can search for you and send a friend request\n" +
-                                "• Private: your profile will not appear in search results\n" +
-                                "• You can still add friends by sharing your User ID even when set to Private",
+                        text = t(UiTextKey.HelpProfileVisibilityBody),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -193,16 +184,12 @@ fun HelpScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Color Palettes & Coins",
+                        text = t(UiTextKey.HelpColorPalettesTitle),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "• 1 Free palette: Sky Blue (default)\n" +
-                                "• 10 Unlockable palettes cost 10 coins each: Ocean, Sunset, Lavender, Rose, Mint, Crimson, Amber, Indigo, Emerald, Coral\n" +
-                                "• Earn coins by completing quizzes\n" +
-                                "• Spend coins to unlock color palettes or expand history limit\n" +
-                                "• Auto Theme: Light Mode 6 AM–6 PM, Dark Mode 6 PM–6 AM",
+                        text = t(UiTextKey.HelpColorPalettesBody),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -220,17 +207,13 @@ fun HelpScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Privacy & Data",
+                        text = t(UiTextKey.HelpPrivacyTitle),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error
                     )
                     Text(
-                        text = "• Audio is only captured for recognition, never stored permanently\n" +
-                                "• OCR processing happens on-device (privacy-first)\n" +
-                                "• You can delete your account and all data anytime\n" +
-                                "• Set your profile to Private to prevent others from finding you via search\n" +
-                                "• All data synced securely via Firebase",
+                        text = t(UiTextKey.HelpPrivacyBody),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -248,7 +231,7 @@ fun HelpScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "App Version",
+                        text = t(UiTextKey.HelpAppVersionTitle),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -257,10 +240,7 @@ fun HelpScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        text = "• History limited to 50-100 records (expandable with coins)\n" +
-                                "• Usernames must be unique — changing releases old name\n" +
-                                "• Auto sign-out occurs on app version updates for security\n" +
-                                "• All translations powered by Azure AI services",
+                        text = t(UiTextKey.HelpAppVersionNotes),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

@@ -49,8 +49,8 @@ class LanguageDisplayNamesTest {
     }
 
     @Test
-    fun `mapDetectedToSupportedCode maps zh-Hant to zh-HK`() {
-        assertEquals("zh-HK", LanguageDisplayNames.mapDetectedToSupportedCode("zh-Hant"))
+    fun `mapDetectedToSupportedCode maps zh-Hant to zh-TW`() {
+        assertEquals("zh-TW", LanguageDisplayNames.mapDetectedToSupportedCode("zh-Hant"))
     }
 
     @Test
