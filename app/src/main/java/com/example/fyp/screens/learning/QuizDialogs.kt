@@ -163,7 +163,7 @@ fun CoinsEarnedDialog(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    t(UiTextKey.QuizCoinsEarnedMessageTemplate).replace("{coins}", coinsEarned.toString()),
+                    t(UiTextKey.QuizCoinsEarnedMessageTemplate).replace("{Coins}", coinsEarned.toString()),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text("\n📜 " + t(UiTextKey.QuizCoinRulesTitle), style = MaterialTheme.typography.labelMedium)

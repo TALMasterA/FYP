@@ -58,54 +58,66 @@ Firebase login is required.
 ## 🎯 Core Features
 
 **Translation Modes:**
-- **Discrete Mode:** Real-time voice translation for short phrases with auto-detect or manual language selection
-- **Continuous Mode:** Live conversation translation with automatic speaker detection (Person A/B)
-- Multi-language support (English, Cantonese, Japanese, Mandarin, and more via Azure)
+- **Quick Translate (Discrete):** Real-time voice translation for short phrases with auto-detect or manual language selection; shortcut button to switch to Live Conversation mode
+- **Live Conversation (Continuous):** Live conversation translation with automatic speaker detection (Person A/B)
+- Multi-language support: English, Cantonese (zh-HK), Traditional Chinese (zh-TW), Simplified Chinese (zh-CN), Japanese, and 10+ more via Azure
+- Language swap button also swaps the recognised/translated text
 
 **Learning System:**
 - AI-generated learning sheets based on translation history (requires 20+ records per language pair)
 - Quiz system with multiple question types and coin rewards
-- Word bank automatically generated from user translations
+- In-app banner notification when generation completes (tapping opens the relevant screen)
+- Word bank automatically generated from user translations; progress bar shows records toward next regen
 - Custom word bank for user-defined vocabulary entries
 - Favorites system for bookmarking important translations
 
 **Friend System:**
 - **My Profile:** Display and share your User ID and Username for easy friend discovery
 - **Profile Visibility:** Set profile to Public (searchable) or Private (hidden from search)
-- Search and add friends by username or User ID
-- Send/accept/reject friend requests
-- Real-time chat with friends
-- Translate entire conversations to your language
+- Search and add friends by username or User ID; attach an optional note (≤80 chars) with your request
+- Send/accept/reject/cancel friend requests
+- Real-time chat with friends; translate entire conversation to your language (shown only when friend has sent at least one message)
 - Share words and learning materials with friends
 - Shared inbox for received items with accept/dismiss confirmation
-- Red dot notifications for unread messages and new shared items
+- **Block / Unblock:** Block icon on each friend card; blocked users managed in a dedicated Blocked Users screen; Firestore security rules prevent blocked users from sending new friend requests
+- Red dot (badge) notifications for unread messages and new shared items
+- Friend username automatically synced on app launch and pull-to-refresh
 - Usernames are unique; changing your username releases the old one for others
 
 **Customization:**
-- UI language translation (supports 16+ languages)
-- Theme settings (Light/Dark/System)
-- Font size adjustment (80%-150%)
-- 11 color palettes (1 free default + 10 unlockable at 10 coins each: Ocean, Sunset, Lavender, Rose, Mint, Crimson, Amber, Indigo, Emerald, Coral)
+- UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, and 10+ more via Azure Translator API
+- Language dropdown order: English → Cantonese → Traditional Chinese → other languages (Auto Detect keeps default)
+- Theme settings (Light / Dark / System)
+- Font size adjustment (80%–150%)
+- 11 color palettes (1 free default + 10 unlockable at 10 coins each: Ocean, Sunset, Lavender, Rose, Mint, Crimson, Amber, Indigo, Emerald, Coral); palette settings accessible from the in-app Shop
 - Voice settings per language
+- Notification settings screen (push notifications + in-app badge toggles)
 
-**History & Organization:**
-- Translation history
-- Filter by language or keyword
-- Session management for continuous conversations (rename, delete)
-- Cloud sync via Firestore
+**History & Organisation:**
+- Translation history (recent 50–100 records, configurable)
+- Filter by language or keyword; retry button on load error
+- Session management for Live Conversation (rename, delete)
+- Cloud sync via Firestore with offline persistence
 - Favorites for quick access
 
 **Coin System:**
 - Earn coins through quiz performance (first-attempt anti-cheat verification)
 - Unlock color palettes (10 coins each)
 - Expand history view limit (1000 coins per 10-record increment)
-- Anti-cheat: history count snapshots at quiz generation time
+- Anti-cheat: history count snapshotted at quiz generation time
 
 **User Accounts:**
 - Email/password authentication via Firebase
 - Profile management (display name, account deletion)
 - Password reset via email
 - Auto sign-out on app version update
+- First-launch onboarding (3-step welcome screen)
+
+**Navigation & UI:**
+- Bottom navigation bar (Home, Quick Translate, Learn, Friends, Settings) with unread badge on Friends tab
+- Edge-to-edge display; all screens properly padded above system navigation keys
+- Help & Notes screen with ordered sections (Cautions, Features, Tips, Friend System, Privacy) using card layout
+- Centralised error handling: user-facing errors auto-dismiss after 3 s; system errors logged to Crashlytics via `AppLogger.e`
 
 --------------------------------------------------------------
 
@@ -115,44 +127,49 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
 
 **Key Directories:**
 - `app/src/main/java/com/example/fyp/`
+    - `AppNavigation.kt` - Compose navigation graph (routes, auth guards, bottom nav, generation banners)
+    - `AppScreens.kt` - Sealed class of all `AppScreen` route destinations
+    - `AppViewModel.kt` - Top-level state (auth, unread badge counts, offline flag)
     - `screens/` - UI screens and ViewModels
-        - `home/` - Home screen
-        - `speech/` - Discrete & continuous translation screens
-        - `history/` - Translation history with discrete/continuous tabs
-        - `learning/` - Learning sheets, quiz taking & results
-        - `wordbank/` - Generated & custom word banks
+        - `home/` - Home screen (welcome greeting, Quick Translate / Live Conversation cards)
+        - `speech/` - Discrete (Quick Translate) & continuous (Live Conversation) translation screens
+        - `history/` - Translation history with discrete/continuous tabs; pagination, retry
+        - `learning/` - Learning sheets, quiz taking & results, quiz dialogs
+        - `wordbank/` - Generated & custom word banks with progress bars
         - `favorites/` - Bookmarked translations
-        - `friends/` - Friend management, chat, and shared inbox (NEW!)
-        - `settings/` - Settings, profile, shop, voice settings
+        - `friends/` - Friend management, chat, shared inbox, blocked users
+        - `settings/` - Settings, profile, shop, voice settings, notification settings
         - `login/` - Login, registration, password reset
-        - `help/` - Help & info screen
-    - `model/` - Data models (`TranslationRecord`, `Quiz`, `UserSettings`, etc.)
-        - `ui/` - UI text localization keys and translations
-        - `user/` - User-related models (`AuthState`, `UserProfile`, `UserSettings`)
-        - `friends/` - Friend system models (`FriendRequest`, `FriendMessage`, `SharedItem`, etc.) (NEW!)
+        - `help/` - Help, notes & cautions screen
+        - `onboarding/` - First-launch 3-step welcome screen
+    - `model/` - Data models
+        - `ui/` - `UiTextKey` enum, `BaseUiTexts` (English), `ZhTwUiTexts` (zh-TW hardcoded), `CantoneseUiTexts` (zh-HK hardcoded), `UiTextHelpers` (language name translations)
+        - `user/` - `AuthState`, `UserProfile`, `UserSettings`
+        - `friends/` - `FriendRequest`, `FriendRelation`, `FriendMessage`, `SharedItem`, `PublicUserProfile`, `BlockedUser`
     - `data/` - Repository implementations and data sources
-        - `azure/` - Azure Speech & language configuration
+        - `azure/` - Azure Speech & language configuration, `LanguageDisplayNames`
         - `cloud/` - Cloud function clients and caching (translation, language detection)
         - `clients/` - Speech token and translation HTTP clients
         - `di/` - Hilt dependency injection modules
         - `history/` - History repository and shared data source
         - `learning/` - Quiz, learning sheet, and content repositories
-        - `friends/` - Friend, chat, and sharing repositories (NEW!)
+        - `friends/` - Friend, chat, and sharing repositories
         - `repositories/` - Speech and translation repositories
         - `settings/` - User settings repository and shared data source
-        - `ui/` - UI language cache and state controller
+        - `ui/` - UI language cache and state controller (intercepts zh-TW/zh-HK for hardcoded maps)
         - `user/` - Auth, profile, and favorites repositories
         - `wordbank/` - Word bank repositories, cache, and generation
     - `domain/` - Use cases for business logic
         - `auth/` - Login use case
         - `history/` - History CRUD operations and repository interface
         - `learning/` - Learning materials, quiz generation, eligibility checks, repository interfaces
-        - `friends/` - Friend management, chat, and sharing use cases (NEW!)
+        - `friends/` - Friend management, chat, and sharing use cases
         - `settings/` - Settings modification use cases
         - `speech/` - Speech recognition, translation, TTS use cases
-    - `core/` - Common composables and utilities (logging, audio, permissions, pagination, font scaling)
+    - `core/` - Common composables and utilities (logging via `AppLogger`, audio, permissions, pagination, font scaling)
     - `ui/` - Theme configuration (colors, palettes, dimensions, typography, animated components)
-- `fyp-backend/functions/` - Firebase Cloud Functions (TypeScript)
+- `fyp-backend/functions/` - Firebase Cloud Functions (TypeScript): translation, speech token, AI generation, FCM notifications, daily stale-token pruning
+- `docs/` - Architecture notes (`ARCHITECTURE_NOTES.md`), app improvement suggestions (`APP_SUGGESTIONS.md`)
 
 --------------------------------------------------------------
 
@@ -183,16 +200,22 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
 
 **Adding New UI Text:**
 For now, to add new UI text to the UI language translation scope, you need to:
-1. Add the key to enum class in `UiTextCore.kt`
-2. Add the English text to val `BaseUiTexts` in `UiTextScreens.kt`, you will manage the UI description here
-3. Apply the UI text composable using the key
+1. Add the key to `enum class UiTextKey` in `UiTextCore.kt`
+2. Add the English text to `val BaseUiTexts` in `UiTextScreens.kt` (keep order in sync with enum)
+3. If the string contains a template placeholder that is also a common English word (e.g. `coins`, `answer`), use a **capitalised placeholder** (e.g. `{Coins}`, `{Answer}`) so Azure Translator API does not translate the placeholder token
+4. Add corresponding entries to `ZhTwUiTexts.kt` (Traditional Chinese) and `CantoneseUiTexts.kt` (Cantonese) — use the same capitalised placeholder
+5. Apply the UI text composable using the key with `t(UiTextKey.YourKey)`
+6. Run `UiTextAlignmentTest` to verify enum count matches `BaseUiTexts` list count
 
 **Translation System:**
-- Base language is English
-- UI translations are generated via Azure Translator API
+- Base language is English (hardcoded in `UiTextScreens.kt`)
+- Traditional Chinese (zh-TW) and Cantonese (zh-HK) are hardcoded in `ZhTwUiTexts.kt` and `CantoneseUiTexts.kt`; no API call is made for these languages
+- All other UI languages are translated via Azure Translator API
 - Cached locally via DataStore for performance (30-day TTL, max 1000 entries)
 - Language name corrections applied for accuracy
-- Guest users get 1 free UI language change, unlimited for logged-in users
+- Guest users get 1 free UI language change; unlimited for logged-in users
+- Language dropdown order: English → Cantonese → Traditional Chinese → other languages (Auto Detect keeps default position)
+- Azure language codes are normalised before API calls: `zh-HK → yue`, `zh-TW → zh-Hant`, `zh-CN → zh-Hans`
 
 **Data Flow:**
 1. User interacts with UI (Compose screens)
@@ -245,7 +268,7 @@ gh auth login
 
 **Key Models:**
 - `TranslationRecord` - Individual translation entry (source/target text, languages, mode, session, speaker, timestamp)
-- `UserSettings` - User preferences (language, font scale, theme, color palette, voice settings, history limit)
+- `UserSettings` - User preferences (language, font scale, theme, color palette, voice settings, history limit, notification toggles)
 - `UserProfile` - Display name, photo URL, timestamps
 - `QuizQuestion` - Quiz question with options, correct answer, and explanation
 - `QuizAttempt` - Full quiz attempt with answers, scores, and timestamps
@@ -255,17 +278,19 @@ gh auth login
 - `CustomWord` - User-defined vocabulary entry with pronunciation and example
 - `HistorySession` - Continuous conversation session metadata
 - `SpeechResult` - Sealed class for speech recognition results (Success/Error)
-- `PublicUserProfile` - User profile with username for friend system (NEW!)
-- `FriendRequest` - Friend request with sender/receiver info and status (NEW!)
-- `FriendRelation` - Bidirectional friendship record (NEW!)
-- `FriendMessage` - Chat message with sender, text, timestamp, read status (NEW!)
-- `SharedItem` - Shared word/material with sender, type, content (NEW!)
+- `PublicUserProfile` - Searchable user profile with username and `isDiscoverable` flag
+- `FriendRequest` - Friend request with sender/receiver info, status, and optional note (≤80 chars)
+- `FriendRelation` - Bidirectional friendship record with cached friend username
+- `FriendMessage` - Chat message with sender, text, timestamp, read status
+- `SharedItem` - Shared word/material with sender, type, content
+- `BlockedUser` - Blocked user record with userId, username, and blocked timestamp
 
 **Firestore Collections:**
 - `users/{uid}/history` - Translation records
 - `users/{uid}/sessions` - Continuous conversation sessions
 - `users/{uid}/profile/settings` - User settings document
 - `users/{uid}/profile/info` - User profile document
+- `users/{uid}/profile/public` - Public profile (username, isDiscoverable)
 - `users/{uid}/learning_sheets/{primary}_{target}` - AI-generated learning content per language pair
 - `users/{uid}/quiz_attempts` - Quiz attempt records
 - `users/{uid}/quiz_stats/{primary}_{target}` - Quiz statistics per language pair
@@ -277,11 +302,14 @@ gh auth login
 - `users/{uid}/favorites` - Bookmarked translations
 - `users/{uid}/word_banks/{primary}_{target}` - Generated vocabulary per language pair
 - `users/{uid}/custom_words` - User-defined vocabulary entries
-- `usernames` - Username registry for uniqueness enforcement (NEW!)
-- `user_search` - Searchable user index by username (NEW!)
-- `friend_requests` - Friend requests between users (NEW!)
-- `chats/{chatId}/messages` - Chat messages between friends (NEW!)
-- `users/{uid}/shared_inbox` - Items shared with user by friends (NEW!)
+- `users/{uid}/friends` - Friend relation records
+- `users/{uid}/shared_inbox` - Items shared with user by friends
+- `users/{uid}/blocked_users` - Blocked user records
+- `users/{uid}/fcm_tokens` - FCM push notification tokens (pruned after 60 days by Cloud Function)
+- `usernames` - Username registry for uniqueness enforcement
+- `user_search` - Searchable user index by username
+- `friend_requests` - Friend requests between users
+- `chats/{chatId}/messages` - Chat messages between friends
 
 --------------------------------------------------------------
 
@@ -294,6 +322,8 @@ gh auth login
 - Firebase Authentication handles secure login
 - Auto sign-out on app version update for security
 - Profile visibility setting: users can set their profile to Private to prevent discovery via search
+- Block system: Firestore security rules prevent blocked users from creating new friend requests (server-side enforcement)
+- FCM tokens pruned automatically after 60 days by scheduled Cloud Function
 
 **API Security:**
 Using Firebase Cloud Functions to protect API keys (backend).
@@ -308,5 +338,5 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** February 22, 2026 - Profile Visibility, Shared Inbox Updates, Username Release
+**Last Updated:** February 25, 2026 - Block system, Cantonese/Traditional Chinese hardcoded UI, Notification settings, Generation banners, Bottom navigation, Edge-to-edge insets, Friend request notes, Language order fix, Simplified Chinese rename
 (Some content is by github copilot agent and may contain error)

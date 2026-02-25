@@ -561,10 +561,10 @@ val ScreenUiTexts: List<String> = listOf(
     "Answer Review",
 
     // QuizYourAnswerTemplate
-    "Your answer: {answer}",
+    "Your answer: {Answer}",
 
     // QuizCorrectAnswerTemplate
-    "Correct: {answer}",
+    "Correct: {Answer}",
 
     // QuizQuestionTemplate
     "Question {current} of {total}",
@@ -639,7 +639,7 @@ val ScreenUiTexts: List<String> = listOf(
     "✨ Coins Earned!",
 
     // QuizCoinsEarnedMessageTemplate
-    "Congratulations! You earned {coins} coins!",
+    "Congratulations! You earned {Coins} coins!",
 
     // QuizCoinsRule1
     "• 1 coin per correct answer on first attempt only",
