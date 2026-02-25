@@ -94,11 +94,26 @@ export const getSpeechToken = onCall(
   }
 );
 
+/**
+ * Normalize app language codes to Azure Translator API codes.
+ * The app uses speech-SDK codes (zh-HK, zh-TW, zh-CN) which differ from
+ * what the Azure Translator Text API expects (yue, zh-Hant, zh-Hans).
+ * Other codes like "en-US" are accepted by the Translator API as-is.
+ */
+function toTranslatorCode(code: string): string {
+  const mapping: Record<string, string> = {
+    "zh-HK": "yue",       // Cantonese
+    "zh-TW": "zh-Hant",   // Traditional Chinese
+    "zh-CN": "zh-Hans",   // Simplified Chinese
+  };
+  return mapping[code] ?? code;
+}
+
 function buildTranslateUrl(params: { to: string; from?: string }) {
   const url = new URL(`${ENDPOINT}/translate`);
   url.searchParams.set("api-version", API_VERSION);
-  url.searchParams.set("to", params.to);
-  if (params.from) url.searchParams.set("from", params.from);
+  url.searchParams.set("to", toTranslatorCode(params.to));
+  if (params.from) url.searchParams.set("from", toTranslatorCode(params.from));
   return url.toString();
 }
 

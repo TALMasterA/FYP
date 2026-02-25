@@ -31,7 +31,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LangEnUs to "英語",
     UiTextKey.LangZhHk to "粵語",
     UiTextKey.LangJaJp to "日語",
-    UiTextKey.LangZhCn to "普通話",
+    UiTextKey.LangZhCn to "簡體中文",
     UiTextKey.LangFrFr to "法語",
     UiTextKey.LangDeDe to "德語",
     UiTextKey.LangKoKr to "韓語",
