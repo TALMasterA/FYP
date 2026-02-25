@@ -21,7 +21,7 @@ import com.example.fyp.model.ui.baseUiTextsHash
 import com.example.fyp.model.ui.buildUiTextMap
 import com.example.fyp.model.ui.LanguageNameTranslations
 import com.example.fyp.model.ui.LanguageNameKeys
-import com.example.fyp.model.ui.YueUiTexts
+import com.example.fyp.model.ui.CantoneseUiTexts
 import kotlinx.coroutines.launch
 
 @Immutable
@@ -179,7 +179,7 @@ fun AppLanguageDropdown(
 
                     // Cantonese (zh-HK): use hardcoded map, no API call needed
                     if (code == "zh-HK") {
-                        onUpdateAppLanguage(code, YueUiTexts)
+                        onUpdateAppLanguage(code, CantoneseUiTexts)
                         cache.setSelectedLanguage(code)
                         cache.setBaseHash(code, baseUiTextsHash())
                         return@launch

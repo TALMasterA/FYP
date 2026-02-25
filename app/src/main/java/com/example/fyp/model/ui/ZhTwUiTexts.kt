@@ -73,7 +73,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     // Pagination
     UiTextKey.PaginationPrevLabel to "上一頁",
     UiTextKey.PaginationNextLabel to "下一頁",
-    UiTextKey.PaginationPageLabelTemplate to "第 {current} / {total} 頁",
+    UiTextKey.PaginationPageLabelTemplate to "第 {page} / {total} 頁",
 
     // Toast
     UiTextKey.ToastCopied to "已複製",

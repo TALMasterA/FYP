@@ -5,7 +5,7 @@ package com.example.fyp.model.ui
  * All strings are hardcoded — no API translation required.
  * Order matches UiTextKey enum ordinal.
  */
-val YueUiTexts: Map<UiTextKey, String> = mapOf(
+val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     // Core UI
     UiTextKey.AzureRecognizeButton to "收音",
     UiTextKey.CopyButton to "複製",
@@ -73,7 +73,7 @@ val YueUiTexts: Map<UiTextKey, String> = mapOf(
     // Pagination
     UiTextKey.PaginationPrevLabel to "上一頁",
     UiTextKey.PaginationNextLabel to "下一頁",
-    UiTextKey.PaginationPageLabelTemplate to "第 {current} / {total} 頁",
+    UiTextKey.PaginationPageLabelTemplate to "第 {page} / {total} 頁",
 
     // Toast
     UiTextKey.ToastCopied to "已複製",
