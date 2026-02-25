@@ -400,15 +400,15 @@ fun buildUiTextMap(translatedJoined: String, uiLanguageCode: String?): Map<UiTex
     ensureContains(UiTextKey.QuizTitleTemplate, "{language}")
     ensureContains(UiTextKey.QuizMaterialsQuizTemplate, "{materials}", "{quiz}")
     ensureContains(UiTextKey.QuizNeedMoreRecordsTemplate, "{count}")
-    ensureContains(UiTextKey.QuizYourAnswerTemplate, "{answer}")
-    ensureContains(UiTextKey.QuizCorrectAnswerTemplate, "{answer}")
+    ensureContains(UiTextKey.QuizYourAnswerTemplate, "{Answer}")
+    ensureContains(UiTextKey.QuizCorrectAnswerTemplate, "{Answer}")
     ensureContains(UiTextKey.QuizQuestionTemplate, "{current}", "{total}")
     ensureContains(UiTextKey.QuizCannotRegenTemplate, "{materials}", "{quiz}")
     ensureContains(UiTextKey.QuizCoinRulesNeedMoreTemplate, "{count}")
     ensureContains(UiTextKey.QuizCoinRuleMaterialsTemplate, "{count}")
     ensureContains(UiTextKey.QuizCoinRuleQuizTemplate, "{count}")
     ensureContains(UiTextKey.QuizRegenNeedMoreTemplate, "{count}")
-    ensureContains(UiTextKey.QuizCoinsEarnedMessageTemplate, "{coins}")
+    ensureContains(UiTextKey.QuizCoinsEarnedMessageTemplate, "{Coins}")
 
     return map
 }

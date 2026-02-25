@@ -10,7 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.ui.ZhTwUiTexts
-import com.example.fyp.model.ui.YueUiTexts
+import com.example.fyp.model.ui.CantoneseUiTexts
 import com.example.fyp.model.ui.baseUiTextsHash
 import com.example.fyp.model.ui.LanguageNameTranslations
 import com.example.fyp.model.ui.LanguageNameKeys
@@ -81,7 +81,7 @@ fun rememberUiLanguageState(
         if (selected == "zh-HK") {
             appLanguageState = appLanguageState.copy(
                 selectedUiLanguage = "zh-HK",
-                uiTexts = YueUiTexts
+                uiTexts = CantoneseUiTexts
             )
             return@LaunchedEffect
         }

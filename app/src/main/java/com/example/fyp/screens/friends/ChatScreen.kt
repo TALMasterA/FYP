@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
@@ -215,20 +214,6 @@ fun ChatScreen(
                     imageVector = Icons.Default.Info,
                     contentDescription = "View friend profile",
                     tint = MaterialTheme.colorScheme.primary
-                )
-            }
-            // Block / Unblock button
-            IconButton(
-                onClick = {
-                    if (uiState.isBlocked) viewModel.unblockFriend()
-                    else viewModel.blockFriend()
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Block,
-                    contentDescription = if (uiState.isBlocked) "Unblock user" else "Block user",
-                    tint = if (uiState.isBlocked) MaterialTheme.colorScheme.error
-                           else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             // Clear conversation button (local-only)

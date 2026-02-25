@@ -202,14 +202,6 @@ fun HomeScreen(
                 }
             }
 
-            // Main Features Section
-            Text(
-                text = t(UiTextKey.HomeFeaturesTitle),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-
             // Speech Translation Card
             FeatureCard(
                 title = t(UiTextKey.HomeStartButton),
