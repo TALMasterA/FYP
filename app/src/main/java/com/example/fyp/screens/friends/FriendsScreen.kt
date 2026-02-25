@@ -569,6 +569,14 @@ fun FriendCard(
                     }
                 }
                 if (!isDeleteMode) {
+                    // Block icon button
+                    IconButton(onClick = onBlock) {
+                        Icon(
+                            imageVector = Icons.Default.Block,
+                            contentDescription = blockButtonText,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                     // Unread message badge — red dot + count when unread > 0
                     BadgedBox(
                         badge = {

@@ -615,8 +615,6 @@ enum class UiTextKey {
 
     // --- Settings Hard-coded Strings ---
     SettingsTesterFeedback,
-    SettingsSystemNotesButton,
-    SystemNotesTitle,
 
     // --- Friends Notification Settings ---
     FriendsNotifSettingsButton,

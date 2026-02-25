@@ -46,9 +46,7 @@ class UiTextAlignmentTest {
     }
 
     @Test
-    fun `new settings UI text keys have correct defaults`() {
+    fun `settings tester feedback key has correct default`() {
         assertEquals("T.Feedback", BaseUiTexts[UiTextKey.SettingsTesterFeedback.ordinal])
-        assertEquals("System Notes & Info", BaseUiTexts[UiTextKey.SettingsSystemNotesButton.ordinal])
-        assertEquals("System Notes", BaseUiTexts[UiTextKey.SystemNotesTitle.ordinal])
     }
 }
