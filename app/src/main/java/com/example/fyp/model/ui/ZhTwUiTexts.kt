@@ -666,8 +666,6 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Settings hardcoded
     UiTextKey.SettingsTesterFeedback to "T.回饋",
-    UiTextKey.SettingsSystemNotesButton to "系統備註與資訊",
-    UiTextKey.SystemNotesTitle to "系統備註",
 
     // Friends notification settings
     UiTextKey.FriendsNotifSettingsButton to "通知設定",

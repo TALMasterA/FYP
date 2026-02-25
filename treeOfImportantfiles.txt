@@ -29,7 +29,8 @@ FYP/
 │       │       ├── MainActivity.kt
 │       │       ├── AppViewModel.kt
 │       │       ├── FYPApplication.kt
-│       │       ├── AppNavigation.kt
+│       │       ├── AppNavigation.kt         ← composable nav graph
+│       │       ├── AppScreens.kt            ← AppScreen sealed class (all route destinations)
 │       │       │
 │       │       ├── utils/
 │       │       │   └── ErrorMessageMapper.kt
@@ -192,11 +193,11 @@ FYP/
 │       │       │   │   └── SharedItem.kt
 │       │       │   ├── ui/
 │       │       │   │   ├── AppLanguageState.kt
-│       │       │   │   ├── CantoneseUiTexts.kt
-│       │       │   │   ├── UiTextCore.kt
-│       │       │   │   ├── UiTextHelpers.kt
-│       │       │   │   ├── UiTextScreens.kt
-│       │       │   │   └── ZhTwUiTexts.kt
+│       │       │   │   ├── CantoneseUiTexts.kt  ← hardcoded zh-HK UI strings (Cantonese)
+│       │       │   │   ├── UiTextCore.kt         ← UiTextKey enum + BaseUiTexts list
+│       │       │   │   ├── UiTextHelpers.kt      ← helper fns (language names, etc.)
+│       │       │   │   ├── UiTextScreens.kt      ← English base UI strings list
+│       │       │   │   └── ZhTwUiTexts.kt        ← hardcoded zh-TW UI strings
 │       │       │   ├── user/
 │       │       │   │   ├── AuthState.kt
 │       │       │   │   ├── User.kt
