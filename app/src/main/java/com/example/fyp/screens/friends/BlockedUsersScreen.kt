@@ -130,6 +130,7 @@ fun BlockedUsersScreen(
                         BlockedUserCard(
                             blockedUser = blocked,
                             unblockText = t(UiTextKey.UnblockUserButton),
+                            idTemplate = t(UiTextKey.BlockedUserIdTemplate),
                             onUnblock = {
                                 unblockTargetId = blocked.userId
                                 unblockTargetUsername = blocked.username
@@ -146,6 +147,7 @@ fun BlockedUsersScreen(
 private fun BlockedUserCard(
     blockedUser: BlockedUser,
     unblockText: String,
+    idTemplate: String,
     onUnblock: () -> Unit
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
@@ -163,7 +165,7 @@ private fun BlockedUserCard(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "ID: ${blockedUser.userId.take(12)}…",
+                    text = idTemplate.replace("{id}", blockedUser.userId.take(12)),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

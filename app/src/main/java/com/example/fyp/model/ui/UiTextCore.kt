@@ -680,6 +680,61 @@ enum class UiTextKey {
 
     // --- Language Name for Traditional Chinese ---
     LangZhTw,
+
+    // --- Help Screen Extra Sections ---
+    HelpFriendSystemTitle,
+    HelpFriendSystemBody,
+    HelpProfileVisibilityTitle,
+    HelpProfileVisibilityBody,
+    HelpColorPalettesTitle,
+    HelpColorPalettesBody,
+    HelpPrivacyTitle,
+    HelpPrivacyBody,
+    HelpAppVersionTitle,
+    HelpAppVersionNotes,
+
+    // --- Onboarding Screen ---
+    OnboardingPage1Title,
+    OnboardingPage1Desc,
+    OnboardingPage2Title,
+    OnboardingPage2Desc,
+    OnboardingPage3Title,
+    OnboardingPage3Desc,
+    OnboardingSkipButton,
+    OnboardingNextButton,
+    OnboardingGetStartedButton,
+
+    // --- Home Welcome ---
+    HomeWelcomeBack,
+
+    // --- Chat Extra Labels ---
+    ChatUsernameLabel,
+    ChatUserIdLabel,
+    ChatLearningLabel,
+    ChatBlockedMessage,
+
+    // --- Custom Word Bank Extra ---
+    CustomWordsSearchPlaceholder,
+    CustomWordsEmptyState,
+    CustomWordsEmptyHint,
+    CustomWordsNoSearchResults,
+    AddCustomWordHintTemplate,
+
+    // --- Word Bank Records Count ---
+    WordBankRecordsCountTemplate,
+
+    // --- Blocked Users ID ---
+    BlockedUserIdTemplate,
+
+    // --- Profile Extra ---
+    ProfileEmailTemplate,
+    ProfileUsernameHintFull,
+
+    // --- Voice Settings ---
+    VoiceSettingsNoOptions,
+
+    // --- Login ---
+    AuthUpdatedLoginAgain,
 }
 
 // Core Ui Texts list

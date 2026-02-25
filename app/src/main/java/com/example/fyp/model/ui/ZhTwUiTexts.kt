@@ -729,6 +729,81 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     // Notification settings quick link (new)
     UiTextKey.NotifSettingsQuickLink to "通知",
 
-    // Language name for Traditional Chinese (new)
+    // Language name for Traditional Chinese
     UiTextKey.LangZhTw to "繁體中文",
+
+    // Help extra sections
+    UiTextKey.HelpFriendSystemTitle to "好友系統",
+    UiTextKey.HelpFriendSystemBody to "• 透過用戶名或用戶 ID 搜尋並新增好友\n" +
+            "• 發送、接受或拒絕好友請求\n" +
+            "• 與好友即時聊天並翻譯對話\n" +
+            "• 與好友分享單字和學習材料\n" +
+            "• 共享收件匣可接收和管理好友傳送的項目\n" +
+            "• 好友卡片或收件匣上的紅點 (●) 表示有未讀訊息或新項目\n" +
+            "• 向下拉動以重新整理好友名單和請求",
+    UiTextKey.HelpProfileVisibilityTitle to "個人資料可見度",
+    UiTextKey.HelpProfileVisibilityBody to "• 您可以在「我的個人資料」設定中將個人資料設為公開或私人\n" +
+            "• 公開：任何用戶均可搜尋您並發送好友請求\n" +
+            "• 私人：您的個人資料不會出現在搜尋結果中\n" +
+            "• 即使設為私人，仍可透過分享用戶 ID 新增好友",
+    UiTextKey.HelpColorPalettesTitle to "色彩主題與金幣",
+    UiTextKey.HelpColorPalettesBody to "• 1 個免費主題：天藍（預設）\n" +
+            "• 10 個可解鎖主題，每個需 10 枚金幣\n" +
+            "• 完成測驗即可獲得金幣\n" +
+            "• 金幣可用於解鎖色彩主題或擴充歷史紀錄上限\n" +
+            "• 自動主題：早上 6 點至下午 6 點為淺色模式，下午 6 點至早上 6 點為深色模式",
+    UiTextKey.HelpPrivacyTitle to "隱私與資料",
+    UiTextKey.HelpPrivacyBody to "• 音訊僅用於語音辨識，不會永久儲存\n" +
+            "• OCR 處理在裝置端進行（隱私優先）\n" +
+            "• 您可以隨時刪除帳號及所有資料\n" +
+            "• 將個人資料設為私人可防止他人透過搜尋找到您\n" +
+            "• 所有資料透過 Firebase 安全同步",
+    UiTextKey.HelpAppVersionTitle to "應用程式版本",
+    UiTextKey.HelpAppVersionNotes to "• 歷史紀錄上限為 50–100 筆（可使用金幣擴充）\n" +
+            "• 用戶名必須唯一——更改後舊名稱即釋出\n" +
+            "• 應用程式版本更新時將自動登出以確保安全\n" +
+            "• 所有翻譯由 Azure AI 服務提供支援",
+
+    // Onboarding
+    UiTextKey.OnboardingPage1Title to "即時翻譯",
+    UiTextKey.OnboardingPage1Desc to "快速翻譯適合短句，即時對話適合多輪對話。",
+    UiTextKey.OnboardingPage2Title to "學習詞彙",
+    UiTextKey.OnboardingPage2Desc to "根據您的翻譯歷史生成詞彙表和測驗。",
+    UiTextKey.OnboardingPage3Title to "與好友連結",
+    UiTextKey.OnboardingPage3Desc to "聊天、分享詞彙，一起學習。",
+    UiTextKey.OnboardingSkipButton to "跳過",
+    UiTextKey.OnboardingNextButton to "下一步",
+    UiTextKey.OnboardingGetStartedButton to "開始使用",
+
+    // Home welcome
+    UiTextKey.HomeWelcomeBack to "👋 歡迎回來，{name}！",
+
+    // Chat labels
+    UiTextKey.ChatUsernameLabel to "用戶名：",
+    UiTextKey.ChatUserIdLabel to "用戶 ID：",
+    UiTextKey.ChatLearningLabel to "學習語言：",
+    UiTextKey.ChatBlockedMessage to "您無法向此用戶發送訊息。",
+
+    // Custom word bank
+    UiTextKey.CustomWordsSearchPlaceholder to "搜尋",
+    UiTextKey.CustomWordsEmptyState to "尚無自訂單字",
+    UiTextKey.CustomWordsEmptyHint to "點擊 + 新增您的單字",
+    UiTextKey.CustomWordsNoSearchResults to "無符合搜尋的單字",
+    UiTextKey.AddCustomWordHintTemplate to "在 {from} 中輸入單字，並在 {to} 中輸入翻譯",
+
+    // Word bank records count
+    UiTextKey.WordBankRecordsCountTemplate to "{count} 筆紀錄",
+
+    // Blocked user ID
+    UiTextKey.BlockedUserIdTemplate to "ID：{id}…",
+
+    // Profile extra
+    UiTextKey.ProfileEmailTemplate to "電子郵件：{email}",
+    UiTextKey.ProfileUsernameHintFull to "供好友搜尋的用戶名（3-20 個字元，字母/數字/_）",
+
+    // Voice settings
+    UiTextKey.VoiceSettingsNoOptions to "此語言沒有可用的語音選項",
+
+    // Login
+    UiTextKey.AuthUpdatedLoginAgain to "應用程式已更新，請重新登入",
 )

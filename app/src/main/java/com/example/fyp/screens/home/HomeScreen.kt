@@ -154,7 +154,7 @@ fun HomeScreen(
             // Welcome back greeting (logged-in users only)
             if (isLoggedIn && !userName.isNullOrBlank()) {
                 Text(
-                    text = "👋 Welcome back, $userName!",
+                    text = t(UiTextKey.HomeWelcomeBack).replace("{name}", userName),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary

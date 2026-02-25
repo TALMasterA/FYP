@@ -131,7 +131,8 @@ fun LanguageSelectionView(
                     LanguageClusterCard(
                         cluster = cluster,
                         languageName = uiLanguageNameFor(cluster.languageCode),
-                        onClick = { onSelectLanguage(cluster.languageCode) }
+                        onClick = { onSelectLanguage(cluster.languageCode) },
+                        t = t
                     )
                 }
             }
@@ -212,7 +213,8 @@ private fun CustomWordBankCard(
 private fun LanguageClusterCard(
     cluster: WordBankLanguageCluster,
     languageName: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    t: (UiTextKey) -> String
 ) {
     Card(
         modifier = Modifier
@@ -249,7 +251,7 @@ private fun LanguageClusterCard(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "${cluster.recordCount} records",
+                    text = t(UiTextKey.WordBankRecordsCountTemplate).replace("{count}", cluster.recordCount.toString()),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -258,7 +260,7 @@ private fun LanguageClusterCard(
             if (cluster.hasWordBank) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Word bank exists",
+                    contentDescription = t(UiTextKey.AccessibilityWordBankExists),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )

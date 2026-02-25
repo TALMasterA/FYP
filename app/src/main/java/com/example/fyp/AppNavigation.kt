@@ -391,6 +391,7 @@ fun AppNavigation() {
                     ) {
                     composable(AppScreen.Onboarding.route) {
                         OnboardingScreen(
+                            appLanguageState = appLanguageState,
                             onComplete = {
                                 navController.navigate(AppScreen.Home.route) {
                                     popUpTo(AppScreen.Onboarding.route) { inclusive = true }

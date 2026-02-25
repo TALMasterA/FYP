@@ -116,7 +116,7 @@ fun ProfileScreen(
                     // Email (read-only)
                     uiState.email?.let { email ->
                         Text(
-                            text = "Email: $email",
+                            text = t(UiTextKey.ProfileEmailTemplate).replace("{email}", email),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -131,7 +131,7 @@ fun ProfileScreen(
                         singleLine = true,
                         supportingText = {
                             Text(
-                                text = "Username for friends to find you (3-20 characters, letters/numbers/_)",
+                                text = t(UiTextKey.ProfileUsernameHintFull),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }

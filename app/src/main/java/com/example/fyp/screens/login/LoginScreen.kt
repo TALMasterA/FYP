@@ -68,7 +68,7 @@ fun LoginScreen(
         val prefs = context.getSharedPreferences("app_update_prefs", Context.MODE_PRIVATE)
         val reason = prefs.getString("logout_reason", null)
         if (reason == "updated") {
-            updateLogoutMsg = "App updated, please log in again"
+            updateLogoutMsg = t(UiTextKey.AuthUpdatedLoginAgain)
             prefs.edit().remove("logout_reason").apply()
         }
     }

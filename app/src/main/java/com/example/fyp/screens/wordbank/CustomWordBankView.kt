@@ -123,12 +123,12 @@ fun CustomWordBankView(
         OutlinedTextField(
             value = filterKeyword,
             onValueChange = { filterKeyword = it },
-            label = { Text("Search") },
+            label = { Text(t(UiTextKey.CustomWordsSearchPlaceholder)) },
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             trailingIcon = {
                 if (filterKeyword.isNotBlank()) {
                     IconButton(onClick = { filterKeyword = "" }) {
-                        Icon(Icons.Default.Clear, contentDescription = "Clear")
+                        Icon(Icons.Default.Clear, contentDescription = t(UiTextKey.ActionCancel))
                     }
                 }
             },
@@ -159,13 +159,13 @@ fun CustomWordBankView(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No custom words yet",
+                        text = t(UiTextKey.CustomWordsEmptyState),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Tap + to add your own words",
+                        text = t(UiTextKey.CustomWordsEmptyHint),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -186,7 +186,7 @@ fun CustomWordBankView(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No words match your search",
+                    text = t(UiTextKey.CustomWordsNoSearchResults),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -208,7 +208,8 @@ fun CustomWordBankView(
                         onSpeakOriginal = { onSpeakWord(word, SpeakingType.ORIGINAL) },
                         onSpeakTranslated = { onSpeakWord(word, SpeakingType.TRANSLATED) },
                         onDelete = { onDeleteWord(word) },
-                        uiLanguageNameFor = uiLanguageNameFor
+                        uiLanguageNameFor = uiLanguageNameFor,
+                        t = t
                     )
                 }
             }
@@ -218,9 +219,9 @@ fun CustomWordBankView(
                 PaginationRow(
                     page = currentPage,
                     totalPages = totalPages,
-                    prevLabel = "< Prev",
-                    nextLabel = "Next >",
-                    pageLabelTemplate = "Page {page} of {total}",
+                    prevLabel = t(UiTextKey.PaginationPrevLabel),
+                    nextLabel = t(UiTextKey.PaginationNextLabel),
+                    pageLabelTemplate = t(UiTextKey.PaginationPageLabelTemplate),
                     onPrev = { if (currentPage > 0) currentPage-- },
                     onNext = { if (currentPage < totalPages - 1) currentPage++ },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -238,7 +239,8 @@ private fun CustomWordCard(
     onSpeakOriginal: () -> Unit,
     onSpeakTranslated: () -> Unit,
     onDelete: () -> Unit,
-    uiLanguageNameFor: (String) -> String
+    uiLanguageNameFor: (String) -> String,
+    t: (UiTextKey) -> String
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
@@ -257,8 +259,8 @@ private fun CustomWordCard(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Word") },
-            text = { Text("Are you sure you want to delete \"${word.originalWord}\"?") },
+            title = { Text(t(UiTextKey.CustomWordsDelete)) },
+            text = { Text(t(UiTextKey.DialogDeleteRecordMessage)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -269,12 +271,12 @@ private fun CustomWordCard(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Delete")
+                    Text(t(UiTextKey.ActionDelete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
+                    Text(t(UiTextKey.ActionCancel))
                 }
             }
         )
