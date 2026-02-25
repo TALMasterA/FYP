@@ -112,12 +112,11 @@ Ordered by estimated user impact and implementation effort ratio (highest value 
 
 ---
 
-## 13. Localisation — Chinese (Traditional/Simplified) UI
+## 13. Localisation — Chinese (Traditional/Simplified) UI ✅ IMPLEMENTED
 
-**What**: Add zh-TW and zh-CN as selectable **app UI** languages (not just translation target languages).  
-**Why**: The app's primary audience speaks Cantonese / Mandarin; having the UI in English creates friction.  
-**How**: Add `zh-TW` and `zh-CN` entries to `UiLanguages`. Provide Chinese `BaseUiTexts` lists in `UiTextScreens.kt`. The existing `AppLanguageState` system handles the rest.  
-**Files**: `UiTextScreens.kt`, `AppLanguageState`, `AppNavigation` (language list).
+**What**: Add zh-TW and zh-HK (Cantonese) as selectable **app UI** languages with hardcoded text (no API), plus zh-TW as a translation target via Azure Translator.  
+**Why**: The app's primary audience speaks Cantonese / Traditional Chinese; having the UI in English creates friction.  
+**Done**: `ZhTwUiTexts.kt` (Traditional Chinese), `YueUiTexts.kt` (Cantonese), both bypass API. `azure_languages.json` reordered: en-US → zh-HK → zh-TW → … Cloud Function maps zh-HK→yue, zh-TW→zh-Hant, zh-CN→zh-Hans for Azure Translator API. "Mandarin" renamed to "Simplified Chinese".
 
 ---
 

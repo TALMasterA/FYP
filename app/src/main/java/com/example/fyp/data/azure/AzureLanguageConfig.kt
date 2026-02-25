@@ -33,7 +33,7 @@ object LanguageDisplayNames {
         "en-US" to "English",
         "zh-TW" to "Traditional Chinese",
         "zh-HK" to "Cantonese",
-        "zh-CN" to "Mandarin",
+        "zh-CN" to "Simplified Chinese",
         "ja-JP" to "Japanese",
         "fr-FR" to "French",
         "de-DE" to "German",
@@ -71,10 +71,10 @@ object LanguageDisplayNames {
         "pt" to "pt-BR",
         "it" to "it-IT",
         "ru" to "ru-RU",
-        "zh-Hans" to "zh-CN",  // Simplified Chinese -> Mandarin
-        "zh-Hant" to "zh-HK",  // Traditional Chinese -> Cantonese
-        "yue" to "zh-HK",       // Cantonese
-        "zh" to "zh-CN"         // Generic Chinese -> Mandarin
+        "zh-Hans" to "zh-CN",  // Simplified Chinese detected -> zh-CN
+        "zh-Hant" to "zh-TW",  // Traditional Chinese detected -> zh-TW
+        "yue" to "zh-HK",       // Cantonese detected -> zh-HK
+        "zh" to "zh-CN"         // Generic Chinese detected -> zh-CN
     )
 
     /**

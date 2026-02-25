@@ -732,7 +732,7 @@ val CoreUiTexts: List<String> = listOf(
     // LangJaJp
     "Japanese",
     // LangZhCn
-    "Mandarin",
+    "Simplified Chinese",
     // LangFrFr
     "French",
     // LangDeDe
