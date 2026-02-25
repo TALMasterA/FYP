@@ -396,7 +396,3 @@ FYP/
         ├── .eslintrc.js
         └── src/
             └── index.ts
-
-docs/
-    ├── ARCHITECTURE_NOTES.md
-    └── APP_SUGGESTIONS.md
