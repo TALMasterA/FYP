@@ -478,6 +478,32 @@ class FriendsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(newRequestCount = 0)
     }
 
+    /**
+     * Dismiss all in-app notification dots:
+     * - Marks all unread chat messages as read for each friend.
+     * - Clears the unread badge count locally.
+     */
+    fun dismissAllUnreadDots() {
+        val userId = currentUserId ?: return
+        val friends = _uiState.value.friends
+        viewModelScope.launch {
+            friends.forEach { friend ->
+                try {
+                    val chatId = chatRepository.generateChatId(userId, UserId(friend.friendId))
+                    chatRepository.markAllMessagesAsRead(chatId, userId)
+                } catch (_: Exception) { /* best-effort */ }
+            }
+            _uiState.value = _uiState.value.copy(unreadCountPerFriend = emptyMap())
+        }
+    }
+
+    /**
+     * Dismiss the shared inbox notification dot by marking all items as seen.
+     */
+    fun dismissSharedInboxDot() {
+        sharedFriendsDataSource.markSharedItemsSeen()
+    }
+
     // ── Block / Unblock ───────────────────────────────────────────────────────
 
     private fun loadBlockedUsers(userId: UserId) {
@@ -495,12 +521,13 @@ class FriendsViewModel @Inject constructor(
     /**
      * Block a friend and remove the friendship atomically.
      * Removes the friendship first, then adds to the block list.
+     * Also deletes the chat conversation so messages don't persist.
      */
     fun blockAndRemoveFriend(targetUserId: String, targetUsername: String) {
         val userId = currentUserId ?: return
         viewModelScope.launch {
-            // Step 1: remove from friends list (best effort — may not be friends)
-            friendsRepository.removeFriend(userId, UserId(targetUserId))
+            // Step 1: remove friend relationship AND delete chat (mirrors RemoveFriendUseCase)
+            removeFriendUseCase(userId, UserId(targetUserId))
 
             // Step 2: block the user
             friendsRepository.blockUser(userId, UserId(targetUserId), targetUsername).fold(

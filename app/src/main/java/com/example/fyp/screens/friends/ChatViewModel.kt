@@ -46,7 +46,9 @@ data class ChatUiState(
     val isBlocked: Boolean = false,           // current user has blocked this friend
     val isBlockedBy: Boolean = false,         // friend has blocked current user
     /** Friend's public profile — loaded on screen open for the profile dialog. */
-    val friendProfile: PublicUserProfile? = null
+    val friendProfile: PublicUserProfile? = null,
+    /** Timestamp at which this user cleared the conversation (messages before this are hidden). */
+    val clearedAt: com.google.firebase.Timestamp? = null
 )
 
 @HiltViewModel
@@ -91,7 +93,8 @@ class ChatViewModel @Inject constructor(
                         val isFirstLogin = currentUserId == null
                         currentUserId = UserId(auth.user.uid)
                         _uiState.value = _uiState.value.copy(currentUserId = auth.user.uid)
-                        loadMessages(UserId(auth.user.uid))
+                        // Load cleared timestamp first, then start message observation
+                        loadClearedAt(UserId(auth.user.uid))
                         markMessagesAsRead(UserId(auth.user.uid))
 
                         // Only load profile once on first login, or if not yet loaded
@@ -119,11 +122,23 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    /** Load the user's clearedAt timestamp, then start observing messages filtered by it. */
+    private fun loadClearedAt(userId: UserId) {
+        viewModelScope.launch {
+            try {
+                val chatId = chatRepository.generateChatId(userId, friendId)
+                val clearedAt = chatRepository.getClearedAt(chatId, userId)
+                _uiState.value = _uiState.value.copy(clearedAt = clearedAt)
+            } catch (_: Exception) { /* non-fatal: proceed without filter */ }
+            loadMessages(userId)
+        }
+    }
+
     private fun loadMessages(userId: UserId) {
         messagesJob?.cancel()
         messagesJob = viewModelScope.launch {
             try {
-                observeMessagesUseCase(userId, friendId).collect { messages ->
+                observeMessagesUseCase(userId, friendId, _uiState.value.clearedAt).collect { messages ->
                     _uiState.value = _uiState.value.copy(
                         messages = messages,
                         isLoading = false
@@ -333,19 +348,30 @@ class ChatViewModel @Inject constructor(
     }
 
     /**
-     * Hides all messages locally for this session only.
-     * Does NOT delete anything from Firestore — full deletion only happens on unfriend.
-     * The messages will reappear if the user leaves and re-enters the chat.
+     * Persists a "clearedAt" timestamp for this user in Firestore so that
+     * messages sent before this moment are permanently hidden — even after
+     * re-entering the chat or re-adding the friend.
+     * The actual Firestore documents are NOT deleted; only the view is filtered.
      */
     fun clearConversation() {
-        // Stop observing new messages temporarily so the UI stays blank
+        val userId = currentUserId ?: return
+        val chatId = chatRepository.generateChatId(userId, friendId)
+        val now = com.google.firebase.Timestamp.now()
+
+        // Persist the clearedAt timestamp
+        viewModelScope.launch {
+            chatRepository.clearConversationForUser(chatId, userId)
+        }
+
+        // Stop observing and clear local state
         messagesJob?.cancel()
         _uiState.value = _uiState.value.copy(
             messages = emptyList(),
             translatedMessages = emptyMap(),
             showTranslation = false,
             clearSuccess = true,
-            hasMoreMessages = false  // prevent load-older trigger
+            hasMoreMessages = false,
+            clearedAt = now
         )
     }
 

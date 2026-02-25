@@ -1,6 +1,7 @@
 package com.example.fyp.screens.history
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
@@ -19,8 +22,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.fyp.ui.components.EmptyStateView
 
 @Composable
 fun HistoryContinuousTab(
@@ -42,7 +47,13 @@ fun HistoryContinuousTab(
     if (selectedSessionId != null) return
 
     if (sessions.isEmpty()) {
-        Text(noSessionsText, modifier = Modifier.padding(8.dp))
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            EmptyStateView(
+                icon = Icons.Filled.Forum,
+                title = "No Conversations Yet",
+                message = noSessionsText,
+            )
+        }
         return
     }
 

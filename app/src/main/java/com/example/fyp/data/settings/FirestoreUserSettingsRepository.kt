@@ -38,9 +38,9 @@ class FirestoreUserSettingsRepository @Inject constructor(
         val historyViewLimit = snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT
         val autoThemeEnabled = snap?.getBoolean("autoThemeEnabled") ?: false
         val notifyNewMessages = snap?.getBoolean("notifyNewMessages") ?: false
-        val notifyFriendRequests = snap?.getBoolean("notifyFriendRequests") ?: true
-        val notifyRequestAccepted = snap?.getBoolean("notifyRequestAccepted") ?: true
-        val notifySharedInbox = snap?.getBoolean("notifySharedInbox") ?: true
+        val notifyFriendRequests = snap?.getBoolean("notifyFriendRequests") ?: false
+        val notifyRequestAccepted = snap?.getBoolean("notifyRequestAccepted") ?: false
+        val notifySharedInbox = snap?.getBoolean("notifySharedInbox") ?: false
         val inAppBadgeMessages = snap?.getBoolean("inAppBadgeMessages") ?: true
         val inAppBadgeFriendRequests = snap?.getBoolean("inAppBadgeFriendRequests") ?: true
         val inAppBadgeSharedInbox = snap?.getBoolean("inAppBadgeSharedInbox") ?: true

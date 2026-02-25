@@ -2,8 +2,10 @@ package com.example.fyp.screens.learning
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,7 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
 import com.example.fyp.ui.components.LearningSheetSkeleton
+import com.example.fyp.ui.components.EmptyStates
 
 @Suppress("UNUSED_PARAMETER", "SENSELESS_COMPARISON")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,6 +90,15 @@ fun LearningScreen(
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
+            if (onOpenWordBank != null) {
+                IconButton(onClick = onOpenWordBank) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                        contentDescription = t(UiTextKey.WordBankTitle),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
             IconButton(onClick = { showScreenInfo = true }) {
                 Icon(
                     imageVector = Icons.Default.Info,
@@ -140,6 +151,12 @@ fun LearningScreen(
                 text = {
                     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                         Text(t(UiTextKey.LearningInfoMessage))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            t(UiTextKey.LearningHintCount),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 },
                 confirmButton = {
@@ -184,33 +201,20 @@ fun LearningScreen(
                 )
             }
 
-            if (onOpenWordBank != null) {
-                item {
-                    OutlinedButton(
-                        onClick = onOpenWordBank,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
-                        Text(t(UiTextKey.WordBankTitle))
-                    }
-                }
-            }
-
-            item {
-                Text(
-                    t(UiTextKey.LearningHintCount),
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
-            }
 
             if (uiState.isLoading) {
                 items(3) {
                     LearningSheetSkeleton()
+                }
+            }
+
+            // Empty state when not loading and no language clusters exist
+            if (!uiState.isLoading && uiState.clusters.isEmpty() && uiState.error == null) {
+                item {
+                    EmptyStates.NoLearningSheets(
+                        message = t(UiTextKey.LearningEmptyMessage),
+                        modifier = androidx.compose.ui.Modifier.fillParentMaxSize()
+                    )
                 }
             }
 

@@ -436,13 +436,6 @@ class FirestoreChatRepository @Inject constructor(
 
     // ── Delete chat conversation ─────────────────────────────────────────────
 
-    /**
-     * Delete entire chat conversation including all messages and metadata.
-     * Used when unfriending. Uses batched deletes for efficiency.
-     *
-     * NOTE: Firestore batch writes have a limit of 500 operations per batch.
-     * For large conversations, this may need to be called multiple times.
-     */
     override suspend fun deleteChatConversation(chatId: String): Result<Unit> = try {
         // Delete all messages in batches (max 500 per batch)
         var deletedCount: Int
@@ -477,6 +470,17 @@ class FirestoreChatRepository @Inject constructor(
                 .await()
         } catch (_: Exception) { /* best-effort */ }
 
+        // Delete cleared timestamps subcollection (chats/{chatId}/cleared/*)
+        try {
+            val clearedSnap = db.collection("chats").document(chatId)
+                .collection("cleared").get().await()
+            if (clearedSnap.documents.isNotEmpty()) {
+                val batch = db.batch()
+                clearedSnap.documents.forEach { batch.delete(it.reference) }
+                batch.commit().await()
+            }
+        } catch (_: Exception) { /* best-effort */ }
+
         // Clean up per-friend unread counters on both user documents
         try {
             // chatId is "smallerUid_largerUid"
@@ -497,4 +501,30 @@ class FirestoreChatRepository @Inject constructor(
     } catch (e: Exception) {
         Result.failure(e)
     }
+
+    // ── Per-user conversation clear timestamp ────────────────────────────────
+
+    /**
+     * Store a clearedAt timestamp at chats/{chatId}/cleared/{userId}.
+     * Messages with createdAt <= clearedAt are hidden from this user's view.
+     * The document is under a sub-collection so Firestore rules can allow each
+     * user to write only their own entry (rule: auth.uid == userId).
+     */
+    override suspend fun clearConversationForUser(chatId: String, userId: UserId): Result<Unit> = try {
+        val now = Timestamp.now()
+        db.collection("chats").document(chatId)
+            .collection("cleared").document(userId.value)
+            .set(mapOf("clearedAt" to now))
+            .await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    override suspend fun getClearedAt(chatId: String, userId: UserId): Timestamp? = try {
+        db.collection("chats").document(chatId)
+            .collection("cleared").document(userId.value)
+            .get().await()
+            .getTimestamp("clearedAt")
+    } catch (_: Exception) { null }
 }

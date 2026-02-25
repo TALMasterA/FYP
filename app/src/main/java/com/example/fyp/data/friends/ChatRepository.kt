@@ -119,4 +119,16 @@ interface ChatRepository {
      * Used when removing a friend.
      */
     suspend fun deleteChatConversation(chatId: String): Result<Unit>
+
+    /**
+     * Persist a "cleared at" timestamp for this user in this chat.
+     * Messages with createdAt <= clearedAt will be hidden from this user's view.
+     */
+    suspend fun clearConversationForUser(chatId: String, userId: UserId): Result<Unit>
+
+    /**
+     * Retrieve the timestamp at which the user cleared this conversation.
+     * Returns null if the user has never cleared it.
+     */
+    suspend fun getClearedAt(chatId: String, userId: UserId): com.google.firebase.Timestamp?
 }

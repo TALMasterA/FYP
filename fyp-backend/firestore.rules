@@ -237,6 +237,16 @@ service cloud.firestore {
     }
 
     // ============================================
+    // NEW: Friends Feature - Chat Cleared Timestamps
+    // Each user stores their own "clearedAt" timestamp so messages before
+    // that time are hidden from their view.  Only the owner can read/write
+    // their own cleared document.
+    // ============================================
+    match /chats/{chatId}/cleared/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ============================================
     // DEFAULT: Deny all other access
     // ============================================
     match /{document=**} {
