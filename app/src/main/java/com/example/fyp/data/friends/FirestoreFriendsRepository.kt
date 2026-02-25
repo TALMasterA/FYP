@@ -698,6 +698,32 @@ class FirestoreFriendsRepository @Inject constructor(
                 "blockedAt" to Timestamp.now()
             ))
             .await()
+
+        // Delete all pending friend requests between the two users in both directions.
+        // This ensures the blocked user does not see a stale red-dot / pending request
+        // card on their Friends screen after being blocked.
+        try {
+            val snap1 = db.collection("friend_requests")
+                .whereEqualTo("fromUserId", userId.value)
+                .whereEqualTo("toUserId", blockedUserId.value)
+                .get().await()
+            val snap2 = db.collection("friend_requests")
+                .whereEqualTo("fromUserId", blockedUserId.value)
+                .whereEqualTo("toUserId", userId.value)
+                .get().await()
+            val allDocs = snap1.documents + snap2.documents
+            if (allDocs.isNotEmpty()) {
+                allDocs.chunked(500).forEach { chunk ->
+                    val cleanupBatch = db.batch()
+                    chunk.forEach { doc -> cleanupBatch.delete(doc.reference) }
+                    cleanupBatch.commit().await()
+                }
+            }
+        } catch (e: Exception) {
+            // Non-fatal: friend-request cleanup is best-effort.
+            AppLogger.w("FriendsRepository", "blockUser: friend_request cleanup failed (non-fatal): ${e.message}")
+        }
+
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
