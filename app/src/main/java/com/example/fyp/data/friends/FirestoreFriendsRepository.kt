@@ -257,17 +257,28 @@ class FirestoreFriendsRepository @Inject constructor(
                 return Result.failure(IllegalStateException("Unable to send friend request"))
             }
 
-            // Check for existing pending request
-            val existingRequest = db.collection("friend_requests")
-                .whereEqualTo("fromUserId", fromUserId.value)
-                .whereEqualTo("toUserId", toUserId.value)
-                .whereEqualTo("status", RequestStatus.PENDING.name)
-                .limit(1)
-                .get()
-                .await()
-
-            if (!existingRequest.isEmpty) {
-                return Result.failure(IllegalStateException("Friend request already sent"))
+            // Clean up any stale request documents in both directions before proceeding.
+            // This ensures users can re-add each other after unfriending, even if the
+            // removeFriend cleanup was partial (best-effort) or failed silently.
+            try {
+                val stale1 = db.collection("friend_requests")
+                    .whereEqualTo("fromUserId", fromUserId.value)
+                    .whereEqualTo("toUserId", toUserId.value)
+                    .get().await()
+                val stale2 = db.collection("friend_requests")
+                    .whereEqualTo("fromUserId", toUserId.value)
+                    .whereEqualTo("toUserId", fromUserId.value)
+                    .get().await()
+                val staleDocs = stale1.documents + stale2.documents
+                if (staleDocs.isNotEmpty()) {
+                    staleDocs.chunked(500).forEach { chunk ->
+                        val cleanBatch = db.batch()
+                        chunk.forEach { doc -> cleanBatch.delete(doc.reference) }
+                        cleanBatch.commit().await()
+                    }
+                }
+            } catch (e: Exception) {
+                AppLogger.w("FriendsRepository", "Pre-send request cleanup failed (non-fatal): ${e.message}")
             }
 
             // Get sender profile

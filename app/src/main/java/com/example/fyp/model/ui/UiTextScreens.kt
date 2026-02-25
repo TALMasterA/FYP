@@ -1221,10 +1221,14 @@ val ScreenUiTexts: List<String> = listOf(
     // FriendsInfoMessage
     "• Pull down to manually refresh your friends list, requests, and friend status.\n" +
     "• Tap a friend card to open chat.\n" +
-    "• A red dot (●) in the top-left corner of a friend card means unread messages.\n" +
-    "• Use the 📥 inbox icon to view shared materials.\n" +
+    "• A red dot (●) on a friend card means unread messages. Tap ✓✓ to dismiss all at once.\n" +
+    "• Use the 📥 inbox icon to view shared materials. Tap ✓✓ next to it to dismiss the dot.\n" +
+    "• Use the 🚫 icon on a friend card to block that user — they are removed from your list and cannot contact you.\n" +
+    "• Blocking a user will also clear your chat history with them.\n" +
     "• Use the trash icon to enter delete mode and remove friends.\n" +
-    "• Use the search button to find and add new friends by username or User ID.\n",
+    "• Removing a friend also deletes all chat messages between you.\n" +
+    "• Use the search button to find and add new friends by username or User ID.\n" +
+    "• Push notifications are off by default — enable them in Notification Settings.\n",
     // FriendsEmptyTitle
     "No Friends Yet",
     // FriendsEmptyMessage
@@ -1371,7 +1375,7 @@ val ScreenUiTexts: List<String> = listOf(
     // ChatClearConversationTitle
     "Clear Conversation",
     // ChatClearConversationMessage
-    "Delete all messages in this conversation? This cannot be undone.",
+    "Hide all messages in this conversation? Messages will be hidden permanently for you even if you leave and re-enter the chat. The other person is not affected.",
     // ChatClearConversationConfirm
     "Clear All",
     // ChatClearConversationSuccess
