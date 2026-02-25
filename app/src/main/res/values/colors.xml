@@ -7,4 +7,12 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Splash screen colors (matching pen-file design) -->
+    <color name="splash_background">#FAFAFA</color>
+    <color name="splash_icon_bg">#1565C0</color>
+
+    <!-- App brand colors -->
+    <color name="brand_primary">#1565C0</color>
+    <color name="brand_primary_light">#29B6F6</color>
 </resources>

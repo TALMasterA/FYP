@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Main app theme (no action bar, Compose handles UI) -->
     <style name="Theme.FYP" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!--
+        Splash screen theme using AndroidX core-splashscreen.
+        postSplashScreenTheme switches to the real app theme after the splash.
+    -->
+    <style name="Theme.FYP.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/splash_icon_bg</item>
+        <item name="postSplashScreenTheme">@style/Theme.FYP</item>
+    </style>
+
 </resources>

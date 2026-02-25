@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Splash screen background: solid near-white matching the pen-file design (#FAFAFA).
+    This is used as the windowSplashScreenBackground color drawable.
+-->
+<color xmlns:android="http://schemas.android.com/apk/res/android">#FAFAFA</color>

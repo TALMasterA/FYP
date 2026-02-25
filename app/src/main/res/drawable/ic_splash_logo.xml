@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Splash screen icon: Two overlapping speech bubbles (white + light blue)
+    inside a navy circle — matches the improved pen file design.
+    Sized for a 288dp splash icon (Android 12+ windowSplashScreenAnimatedIcon).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+
+    <!-- Navy circle background -->
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M144,0 A144,144 0 1,1 143.9999,0 Z" />
+
+    <!-- White speech bubble (top-left) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 74,68 H 166 A 24,24,0,0,1,190,92 V 146 A 24,24,0,0,1,166,170 H 74 A 24,24,0,0,1,50,146 V 92 A 24,24,0,0,1,74,68 Z" />
+
+    <!-- White bubble tail (bottom-left corner) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 60,158 H 72 A 4,4,0,0,1,76,162 V 178 A 4,4,0,0,1,72,182 H 60 A 4,4,0,0,1,56,178 V 162 A 4,4,0,0,1,60,158 Z" />
+
+    <!-- Light-blue speech bubble (bottom-right) -->
+    <path
+        android:fillColor="#29B6F6"
+        android:pathData="M 122,118 H 214 A 24,24,0,0,1,238,142 V 196 A 24,24,0,0,1,214,220 H 122 A 24,24,0,0,1,98,196 V 142 A 24,24,0,0,1,122,118 Z" />
+
+    <!-- Light-blue bubble tail (bottom-right corner) -->
+    <path
+        android:fillColor="#29B6F6"
+        android:pathData="M 212,128 H 224 A 4,4,0,0,1,228,132 V 148 A 4,4,0,0,1,224,152 H 212 A 4,4,0,0,1,208,148 V 132 A 4,4,0,0,1,212,128 Z" />
+
+    <!-- Right-pointing arrow (dark navy, inside white bubble) -->
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M 96,121 H 148 A 5,5,0,0,1,153,126 A 5,5,0,0,1,148,131 H 96 A 5,5,0,0,1,91,126 A 5,5,0,0,1,96,121 Z" />
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M 142,112 H 156 A 3,3,0,0,1,159,115 V 124 A 3,3,0,0,1,156,127 H 142 A 3,3,0,0,1,139,124 V 115 A 3,3,0,0,1,142,112 Z" />
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M 142,127 H 156 A 3,3,0,0,1,159,130 V 139 A 3,3,0,0,1,156,142 H 142 A 3,3,0,0,1,139,139 V 130 A 3,3,0,0,1,142,127 Z" />
+
+    <!-- Left-pointing arrow (white, inside light-blue bubble) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 140,159 H 192 A 5,5,0,0,1,197,164 A 5,5,0,0,1,192,169 H 140 A 5,5,0,0,1,135,164 A 5,5,0,0,1,140,159 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 130,150 H 144 A 3,3,0,0,1,147,153 V 162 A 3,3,0,0,1,144,165 H 130 A 3,3,0,0,1,127,162 V 153 A 3,3,0,0,1,130,150 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 130,165 H 144 A 3,3,0,0,1,147,168 V 177 A 3,3,0,0,1,144,180 H 130 A 3,3,0,0,1,127,177 V 168 A 3,3,0,0,1,130,165 Z" />
+
+</vector>
