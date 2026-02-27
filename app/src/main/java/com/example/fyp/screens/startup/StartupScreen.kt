@@ -88,7 +88,8 @@ fun StartupScreen(onFinished: () -> Unit) {
         // ── Large faint decoration circle – bottom-right ──────────────────
         Box(
             modifier = Modifier
-                .padding(end = (-20).dp, bottom = 80.dp)
+                .padding(end = 0.dp, bottom = 80.dp)
+                .offset(x = 50.dp)
                 .size(100.dp)
                 .clip(CircleShape)
                 .background(NavyBlue.copy(alpha = 0.05f))
@@ -100,9 +101,11 @@ fun StartupScreen(onFinished: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.Center)
-                .offset(y = (-48).dp)
+                .align(Alignment.Center),
+            verticalArrangement = Arrangement.Center
         ) {
+            Spacer(modifier = Modifier.height(48.dp))
+
             // Navy circle with speech bubbles (ic_splash_logo vector)
             Icon(
                 painter = painterResource(id = R.drawable.ic_splash_logo),
@@ -130,6 +133,8 @@ fun StartupScreen(onFinished: () -> Unit) {
                 color = LightBlue,
                 textAlign = TextAlign.Center
             )
+
+            Spacer(modifier = Modifier.height(48.dp))
         }
 
         // ── Bottom: three accent dots + short navy bar ────────────────────
