@@ -41,3 +41,18 @@ fyp-backend/.firebase/
 
 # VS Code settings folder
 .vscode/
+
+# AI agent & MCP tool directories (auto-generated, machine-local)
+.agent/
+.agents/
+.claude/skills/
+.commandcode/
+.crush/
+.mcpjam/
+.serena/
+
+# Temporary Claude Code working files
+tmpclaude-*
+
+# Windows null device artifact
+nul
