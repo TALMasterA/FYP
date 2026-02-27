@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.fyp.core.AudioRecorder
 import com.example.fyp.ui.theme.FYPTheme
 import com.google.firebase.auth.FirebaseAuth
@@ -20,10 +19,6 @@ private const val LOGOUT_REASON_UPDATED = "updated"
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Install the splash screen — must be called before super.onCreate / setContent.
-        // The splash is shown with Theme.FYP.Splash (ic_splash_logo on #FAFAFA background).
-        installSplashScreen()
-
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 

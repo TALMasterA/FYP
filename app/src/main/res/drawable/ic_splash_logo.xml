@@ -12,7 +12,7 @@
 
     <!-- Navy circle background -->
     <path
-        android:fillColor="#1565C0"
+        android:fillColor="#1A237E"
         android:pathData="M144,0 A144,144 0 1,1 143.9999,0 Z" />
 
     <!-- White speech bubble (top-left) -->
@@ -20,20 +20,20 @@
         android:fillColor="#FFFFFF"
         android:pathData="M 74,68 H 166 A 24,24,0,0,1,190,92 V 146 A 24,24,0,0,1,166,170 H 74 A 24,24,0,0,1,50,146 V 92 A 24,24,0,0,1,74,68 Z" />
 
-    <!-- White bubble tail (bottom-left corner) -->
+    <!-- White bubble tail (bottom-left) — natural triangle blending with bubble -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M 60,158 H 72 A 4,4,0,0,1,76,162 V 178 A 4,4,0,0,1,72,182 H 60 A 4,4,0,0,1,56,178 V 162 A 4,4,0,0,1,60,158 Z" />
+        android:pathData="M 50,130 L 89,130 L 50,184 Z" />
 
     <!-- Light-blue speech bubble (bottom-right) -->
     <path
         android:fillColor="#29B6F6"
         android:pathData="M 122,118 H 214 A 24,24,0,0,1,238,142 V 196 A 24,24,0,0,1,214,220 H 122 A 24,24,0,0,1,98,196 V 142 A 24,24,0,0,1,122,118 Z" />
 
-    <!-- Light-blue bubble tail (bottom-right corner) -->
+    <!-- Light-blue bubble tail (bottom-right) — natural triangle blending with bubble -->
     <path
         android:fillColor="#29B6F6"
-        android:pathData="M 212,128 H 224 A 4,4,0,0,1,228,132 V 148 A 4,4,0,0,1,224,152 H 212 A 4,4,0,0,1,208,148 V 132 A 4,4,0,0,1,212,128 Z" />
+        android:pathData="M 199,180 L 238,180 L 238,234 Z" />
 
     <!-- Letter A (Blue, inside white bubble) -->
     <!-- Viewport 288. Target ~90,82 (120-30=90, 112-30=82). Scale 0.6 (60x60). -->
