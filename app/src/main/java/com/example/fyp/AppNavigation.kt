@@ -64,6 +64,7 @@ import com.example.fyp.data.ui.rememberUiLanguageState
 import com.example.fyp.screens.help.HelpScreen
 import com.example.fyp.screens.onboarding.OnboardingScreen
 import com.example.fyp.screens.onboarding.isOnboardingComplete
+import com.example.fyp.screens.startup.StartupScreen
 import com.example.fyp.screens.history.HistoryScreen
 import com.example.fyp.screens.home.HomeScreen
 import com.example.fyp.screens.favorites.FavoritesScreen
@@ -339,13 +340,26 @@ fun AppNavigation() {
 
                     NavHost(
                         navController = navController,
-                        startDestination = if (isOnboardingDone) AppScreen.Home.route else AppScreen.Onboarding.route,
+                        startDestination = AppScreen.Startup.route,
                         enterTransition = { fadeIn(animationSpec = tween(300)) },
                         exitTransition = { fadeOut(animationSpec = tween(300)) },
                         popEnterTransition = { fadeIn(animationSpec = tween(300)) },
                         popExitTransition = { fadeOut(animationSpec = tween(300)) },
                         modifier = Modifier.weight(1f)
                     ) {
+                    composable(AppScreen.Startup.route) {
+                        StartupScreen(
+                            onFinished = {
+                                val destination = if (isOnboardingDone) AppScreen.Home.route
+                                                  else AppScreen.Onboarding.route
+                                navController.navigate(destination) {
+                                    popUpTo(AppScreen.Startup.route) { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
+
                     composable(AppScreen.Onboarding.route) {
                         OnboardingScreen(
                             appLanguageState = appLanguageState,

@@ -27,6 +27,7 @@ sealed class AppScreen(val route: String) {
     object BlockedUsers : AppScreen("blocked_users")
     object Onboarding : AppScreen("onboarding")
     object NotificationSettings : AppScreen("notification_settings")
+    object Startup : AppScreen("startup")
 
     object SharedMaterialDetail : AppScreen("shared_material_detail/{itemId}") {
         fun routeFor(itemId: String) =
