@@ -153,157 +153,26 @@ class WordBankViewModel @Inject constructor(
         // This avoids loading all cache entries at once
     }
 
-    /**
-     * Add a custom word to the custom word bank
-     */
-    fun addCustomWord(
-        originalWord: String,
-        translatedWord: String,
-        pronunciation: String = "",
-        example: String = "",
-        sourceLang: String,
-        targetLang: String
-    ) {
-        val uid = currentUserId ?: return
+    // Custom word CRUD operations are now in CustomWordsViewModel.
 
-        viewModelScope.launch {
-            customWordsRepo.addCustomWord(
-                userId = uid,
-                originalWord = originalWord,
-                translatedWord = translatedWord,
-                pronunciation = pronunciation,
-                example = example,
-                sourceLang = sourceLang,
-                targetLang = targetLang
-            ).onSuccess {
-                cachedCustomWordsCount = null // invalidate cache after add
-                // Refresh custom words if we're viewing the custom word bank
-                if (_uiState.value.isCustomWordBankSelected) {
-                    loadCustomWords()
-                }
-            }.onFailure {
-                _uiState.value = _uiState.value.copy(error = "Failed to add word")
-            }
-        }
+    /**
+     * Called by the screen when the custom word bank is selected/deselected.
+     * Keeps this ViewModel's flag in sync for TTS and sharing language logic.
+     */
+    fun setCustomWordBankSelected(selected: Boolean) {
+        _uiState.value = _uiState.value.copy(isCustomWordBankSelected = selected)
     }
 
-    /**
-     * Load all custom words for the custom word bank view
-     */
-    private fun loadCustomWords() {
-        val uid = currentUserId ?: return
-
-        viewModelScope.launch {
-            try {
-                val customWords = customWordsRepo.getAllCustomWordsOnce(uid)
-                val customWordItems = customWords.map { cw ->
-                    WordBankItem(
-                        id = "custom_${cw.id}",
-                        originalWord = cw.originalWord,
-                        translatedWord = cw.translatedWord,
-                        pronunciation = cw.pronunciation,
-                        example = cw.example,
-                        category = "${cw.sourceLang} → ${cw.targetLang}",
-                        difficulty = ""
-                    )
-                }
-                _uiState.value = _uiState.value.copy(
-                    customWords = customWordItems,
-                    customWordsCount = customWordItems.size,
-                    isLoading = false
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = "Failed to load custom words"
-                )
-            }
-        }
-    }
-
-    /**
-     * Select the custom word bank view
-     */
-    fun selectCustomWordBank() {
-        _uiState.value = _uiState.value.copy(
-            isCustomWordBankSelected = true,
-            selectedLanguageCode = null,
-            currentWordBank = null,
-            isLoading = true
-        )
-        loadCustomWords()
-    }
-
-    /**
-     * Translate a word from source language to target language
-     */
-    fun translateCustomWord(
-        text: String,
-        targetLanguageCode: String,
-        onResult: (String) -> Unit
-    ) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isTranslatingCustomWord = true)
-
-            when (val result = translateTextUseCase(text, primaryLanguageCode, targetLanguageCode)) {
-                is SpeechResult.Success -> {
-                    onResult(result.text)
-                }
-                is SpeechResult.Error -> {
-                    _uiState.value = _uiState.value.copy(error = "Translation failed: ${result.message}")
-                }
-            }
-
-            _uiState.value = _uiState.value.copy(isTranslatingCustomWord = false)
-        }
-    }
-
-    /**
-     * Translate a word for custom word bank (with custom source and target languages)
-     */
-    fun translateForCustomWord(
-        text: String,
-        sourceLang: String,
-        targetLang: String,
-        onResult: (String) -> Unit
-    ) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isTranslatingCustomWord = true)
-
-            when (val result = translateTextUseCase(text, sourceLang, targetLang)) {
-                is SpeechResult.Success -> {
-                    onResult(result.text)
-                }
-                is SpeechResult.Error -> {
-                    _uiState.value = _uiState.value.copy(error = "Translation failed: ${result.message}")
-                }
-            }
-
-            _uiState.value = _uiState.value.copy(isTranslatingCustomWord = false)
-        }
+    /** Invalidate cached custom words count so the next refreshClusters() re-fetches it. */
+    fun invalidateCustomWordsCount() {
+        cachedCustomWordsCount = null
+        refreshClusters()
     }
 
     /**
      * Get primary language code for display
      */
     fun getPrimaryLanguageCode(): String = primaryLanguageCode
-
-    /**
-     * Delete a custom word
-     */
-    fun deleteCustomWord(wordId: String) {
-        val uid = currentUserId ?: return
-
-        viewModelScope.launch {
-            customWordsRepo.deleteCustomWord(uid, wordId).onSuccess {
-                cachedCustomWordsCount = null // invalidate cache after delete
-                // Refresh the custom word bank if we're viewing it
-                if (_uiState.value.isCustomWordBankSelected) {
-                    loadCustomWords()
-                }
-            }
-        }
-    }
 
     /**
      * Delete a word from the generated word bank

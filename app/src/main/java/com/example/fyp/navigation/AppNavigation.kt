@@ -16,8 +16,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -78,8 +81,11 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    val isOnboardingDone = remember {
-        isOnboardingComplete(context)
+    // Async check — avoids blocking the main thread with SharedPreferences I/O
+    val isOnboardingDone by produceState(initialValue = true) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            isOnboardingComplete(context)
+        }
     }
 
     val supported by produceState(initialValue = listOf("en-US")) {
@@ -99,19 +105,23 @@ fun AppNavigation() {
     val pendingFriendRequestCount by appViewModel.pendingFriendRequestCount.collectAsStateWithLifecycle()
     val hasUnreadMessages by appViewModel.hasUnreadMessages.collectAsStateWithLifecycle()
     val hasUnseenSharedItems by appViewModel.hasUnseenSharedItems.collectAsStateWithLifecycle()
+    val unreadMessageCount by appViewModel.unreadMessageCount.collectAsStateWithLifecycle()
+    val unseenSharedItemsCount by appViewModel.unseenSharedItemsCount.collectAsStateWithLifecycle()
 
     // One SettingsViewModel shared across app
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val settingsUiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
 
-    // Request POST_NOTIFICATIONS permission on Android 13+ after the user logs in,
-    // so the prompt appears in a meaningful context (they are about to use social features).
+    // Request POST_NOTIFICATIONS permission on Android 13+ after the user logs in.
+    // Session flag prevents the prompt from refiring every time the uid observable re-emits.
     val notifPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { /* result handled by the system; no action needed */ }
+    var notifPermAsked by rememberSaveable { mutableStateOf(false) }
     val settingsUidForPerm = settingsUiState.uid
     LaunchedEffect(settingsUidForPerm) {
-        if (settingsUidForPerm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (!notifPermAsked && settingsUidForPerm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notifPermAsked = true
             notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
@@ -123,6 +133,7 @@ fun AppNavigation() {
     // One WordBankViewModel shared across app (so generation continues when leaving page)
     val wordBankViewModel: WordBankViewModel = hiltViewModel()
     val wordBankUiState by wordBankViewModel.uiState.collectAsStateWithLifecycle()
+    val customWordsViewModel: com.example.fyp.screens.wordbank.CustomWordsViewModel = hiltViewModel()
 
     val fontSizeScale = validateScale(settingsUiState.settings.fontSizeScale)
     val scaledTypography = createScaledTypography(AppTypography, fontSizeScale)
@@ -235,8 +246,8 @@ fun AppNavigation() {
                         if (showBottomNav) {
                             NavigationBar {
                                 val friendsBadgeCount = pendingFriendRequestCount +
-                                    (if (hasUnreadMessages) 1 else 0) +
-                                    (if (hasUnseenSharedItems) 1 else 0)
+                                    unreadMessageCount +
+                                    unseenSharedItemsCount
 
                                 val isUserLoggedIn = settingsUiState.uid != null
 
@@ -320,8 +331,8 @@ fun AppNavigation() {
                                 updateAppLanguage = updateAppLanguage,
                                 uiLanguages = uiLanguages,
                                 pendingFriendRequestCount = pendingFriendRequestCount,
-                                hasUnreadMessages = hasUnreadMessages,
-                                hasUnseenSharedItems = hasUnseenSharedItems,
+                                unreadMessageCount = unreadMessageCount,
+                                unseenSharedItemsCount = unseenSharedItemsCount,
                             )
                             learningWordBankGraph(
                                 navController = navController,
@@ -331,6 +342,7 @@ fun AppNavigation() {
                                 uiLanguages = uiLanguages,
                                 learningViewModel = learningViewModel,
                                 wordBankViewModel = wordBankViewModel,
+                                customWordsViewModel = customWordsViewModel,
                                 primaryLanguageCode = settingsUiState.settings.primaryLanguageCode,
                             )
                             friendsChatGraph(

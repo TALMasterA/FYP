@@ -40,10 +40,8 @@ data class WordBankUiState(
     val isSpeaking: Boolean = false,
     val speakingItemId: String? = null,
     val speakingType: SpeakingType? = null,
-    val isTranslatingCustomWord: Boolean = false,
-    // Custom word bank specific state
+    // Custom word bank selection flag (used by TTS/sharing logic)
     val isCustomWordBankSelected: Boolean = false,
-    val customWords: List<WordBankItem> = emptyList(),
     val customWordsCount: Int = 0,
     // Share feature state
     val friends: List<FriendRelation> = emptyList(),

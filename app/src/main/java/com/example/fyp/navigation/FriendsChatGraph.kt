@@ -69,8 +69,12 @@ internal fun NavGraphBuilder.friendsChatGraph(
         onNeedLogin = navigateToLogin
     ) { backStackEntry ->
         val itemId = java.net.URLDecoder.decode(
-            backStackEntry.arguments?.getString("itemId").orEmpty(), "UTF-8"
+            backStackEntry.arguments?.getString("itemId").orEmpty(), Charsets.UTF_8.name()
         )
+        if (itemId.isBlank()) {
+            navController.popBackStack()
+            return@composableRequireLoginWithArgs
+        }
         SharedMaterialDetailScreen(
             itemId = itemId,
             appLanguageState = appLanguageState,

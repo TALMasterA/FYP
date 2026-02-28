@@ -77,6 +77,12 @@ class SharedFriendsDataSource @Inject constructor(
             items.any { it.itemId !in seen }
         }
 
+    /** Count of unseen shared inbox items (for accurate badge display). */
+    val unseenSharedItemsCount: kotlinx.coroutines.flow.Flow<Int> =
+        kotlinx.coroutines.flow.combine(_pendingSharedItems, _seenSharedItemIds) { items, seen ->
+            items.count { it.itemId !in seen }
+        }
+
     /**
      * Call this when the user opens the Shared Inbox screen so all currently
      * pending items are considered "seen" and the notification badge clears.

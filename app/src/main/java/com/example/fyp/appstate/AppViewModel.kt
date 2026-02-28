@@ -66,9 +66,21 @@ class AppViewModel @Inject constructor(
         ) { hasUnseen, enabled -> hasUnseen && enabled }
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    /** Accurate count of unseen shared inbox items — gated by inAppBadgeSharedInbox setting. */
+    val unseenSharedItemsCount: StateFlow<Int> =
+        combine(
+            sharedFriendsDataSource.unseenSharedItemsCount,
+            sharedSettingsDataSource.settings.map { it.inAppBadgeSharedInbox }
+        ) { count, enabled -> if (enabled) count else 0 }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+
     /** Whether there are any unread chat messages — gated by inAppBadgeMessages setting. */
     private val _hasUnreadMessages = MutableStateFlow(false)
     val hasUnreadMessages: StateFlow<Boolean> = _hasUnreadMessages.asStateFlow()
+
+    /** Accurate count of unread chat messages — gated by inAppBadgeMessages setting. */
+    private val _unreadMessageCount = MutableStateFlow(0)
+    val unreadMessageCount: StateFlow<Int> = _unreadMessageCount.asStateFlow()
 
     private var unreadJob: Job? = null
 
@@ -101,6 +113,7 @@ class AppViewModel @Inject constructor(
                         sharedHistoryDataSource.stopObserving()
                         unreadJob?.cancel()
                         _hasUnreadMessages.value = false
+                        _unreadMessageCount.value = 0
                     }
                     is AuthState.Loading -> Unit
                 }
@@ -124,6 +137,19 @@ class AppViewModel @Inject constructor(
             } catch (e: Exception) {
                 android.util.Log.e("AppViewModel", "Error observing unread messages", e)
             }
+        }
+        // Also track the actual count for accurate badge numbers
+        viewModelScope.launch {
+            try {
+                combine(
+                    chatRepository.observeTotalUnreadCount(UserId(userId)),
+                    sharedSettingsDataSource.settings.map { it.inAppBadgeMessages }
+                ) { count, enabled ->
+                    if (enabled) count else 0
+                }.collect { count ->
+                    _unreadMessageCount.value = count
+                }
+            } catch (_: Exception) { /* non-fatal */ }
         }
     }
 

@@ -12,6 +12,7 @@ import com.example.fyp.screens.learning.LearningViewModel
 import com.example.fyp.screens.learning.QuizScreen
 import com.example.fyp.screens.wordbank.WordBankScreen
 import com.example.fyp.screens.wordbank.WordBankViewModel
+import com.example.fyp.screens.wordbank.CustomWordsViewModel
 
 /**
  * Navigation sub-graph: Learning sheets, quizzes, and word bank.
@@ -24,6 +25,7 @@ internal fun NavGraphBuilder.learningWordBankGraph(
     uiLanguages: List<Pair<String, String>>,
     learningViewModel: LearningViewModel,
     wordBankViewModel: WordBankViewModel,
+    customWordsViewModel: CustomWordsViewModel,
     primaryLanguageCode: String,
 ) {
     composableRequireLogin(
@@ -62,6 +64,11 @@ internal fun NavGraphBuilder.learningWordBankGraph(
         val primaryCode = backStackEntry.arguments?.getString("primaryCode").orEmpty()
         val targetCode  = backStackEntry.arguments?.getString("targetCode").orEmpty()
 
+        if (primaryCode.isBlank() || targetCode.isBlank()) {
+            navController.popBackStack()
+            return@composableRequireLoginWithArgs
+        }
+
         LearningSheetScreen(
             uiLanguages = uiLanguages,
             appLanguageState = appLanguageState,
@@ -86,6 +93,11 @@ internal fun NavGraphBuilder.learningWordBankGraph(
         val primaryCode = backStackEntry.arguments?.getString("primaryCode").orEmpty()
         val targetCode  = backStackEntry.arguments?.getString("targetCode").orEmpty()
 
+        if (primaryCode.isBlank() || targetCode.isBlank()) {
+            navController.popBackStack()
+            return@composableRequireLoginWithArgs
+        }
+
         QuizScreen(
             appLanguageState = appLanguageState,
             primaryCode = primaryCode,
@@ -101,6 +113,7 @@ internal fun NavGraphBuilder.learningWordBankGraph(
     ) {
         WordBankScreen(
             viewModel = wordBankViewModel,
+            customWordsViewModel = customWordsViewModel,
             appLanguageState = appLanguageState,
             primaryLanguageCode = primaryLanguageCode,
             onBack = { navController.popBackStack() }

@@ -19,6 +19,7 @@ import com.example.fyp.domain.settings.SetAutoThemeEnabledUseCase
 import com.example.fyp.core.AppLogger
 import com.example.fyp.core.FcmNotificationService
 import com.example.fyp.domain.settings.SetNotificationPrefUseCase
+import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.model.LanguageCode
 import com.example.fyp.model.PaletteId
 import com.example.fyp.model.UserId
@@ -60,7 +61,7 @@ class SettingsViewModel @Inject constructor(
     private val setVoiceForLanguage: SetVoiceForLanguageUseCase,
     private val setAutoThemeEnabled: SetAutoThemeEnabledUseCase,
     private val setNotificationPref: SetNotificationPrefUseCase,
-    private val quizRepo: com.example.fyp.data.learning.FirestoreQuizRepository
+    private val quizRepo: QuizRepository
 ) : AndroidViewModel(application) {
 
     companion object {

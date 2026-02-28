@@ -23,8 +23,8 @@ internal fun NavGraphBuilder.mainFeatureGraph(
     updateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     uiLanguages: List<Pair<String, String>>,
     pendingFriendRequestCount: Int,
-    hasUnreadMessages: Boolean,
-    hasUnseenSharedItems: Boolean,
+    unreadMessageCount: Int,
+    unseenSharedItemsCount: Int,
 ) {
     composable(AppScreen.Home.route) {
         HomeScreen(
@@ -40,8 +40,8 @@ internal fun NavGraphBuilder.mainFeatureGraph(
             onOpenSettings = { navController.navigate(AppScreen.Settings.route) { launchSingleTop = true } },
             onOpenWordBank = { navController.navigate(AppScreen.WordBank.route) { launchSingleTop = true } },
             totalNotificationCount = pendingFriendRequestCount +
-                (if (hasUnreadMessages) 1 else 0) +
-                (if (hasUnseenSharedItems) 1 else 0),
+                unreadMessageCount +
+                unseenSharedItemsCount,
         )
     }
 

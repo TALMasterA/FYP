@@ -9,20 +9,20 @@
         android:fillColor="#FFFFFF"
         android:pathData="M 18.56,17.31 H 55.27 A 9.28,9.28,0,0,1,64.55,26.59 V 48.10 A 9.28,9.28,0,0,1,55.27,57.38 H 18.56 A 9.28,9.28,0,0,1,9.28,48.10 V 26.59 A 9.28,9.28,0,0,1,18.56,17.31 Z" />
 
-    <!-- bubble_left tail -->
+    <!-- bubble_left tail (triangle, matching splash logo style) -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M 14.36,53.15 H 19.41 A 1.27,1.27,0,0,1,20.68,54.42 V 59.47 A 1.27,1.27,0,0,1,19.41,60.74 H 14.36 A 1.27,1.27,0,0,1,13.09,59.47 V 54.42 A 1.27,1.27,0,0,1,14.36,53.15 Z" />
+        android:pathData="M 9.28,42 L 24,42 L 9.28,63 Z" />
 
     <!-- bubble_right (light blue, bottom-right) -->
     <path
         android:fillColor="#29B6F6"
         android:pathData="M 52.73,50.20 H 88.59 A 9.28,9.28,0,0,1,97.87,59.48 V 80.57 A 9.28,9.28,0,0,1,88.59,89.85 H 52.73 A 9.28,9.28,0,0,1,43.45,80.57 V 59.48 A 9.28,9.28,0,0,1,52.73,50.20 Z" />
 
-    <!-- bubble_right tail -->
+    <!-- bubble_right tail (triangle, matching splash logo style) -->
     <path
         android:fillColor="#29B6F6"
-        android:pathData="M 87.31,61.16 H 92.36 A 1.27,1.27,0,0,1,93.63,62.43 V 67.48 A 1.27,1.27,0,0,1,92.36,68.75 H 87.31 A 1.27,1.27,0,0,1,86.04,67.48 V 62.43 A 1.27,1.27,0,0,1,87.31,61.16 Z" />
+        android:pathData="M 83,74 L 97.87,74 L 97.87,95 Z" />
 
     <!-- Letter A (Blue, inside white bubble) -->
     <group

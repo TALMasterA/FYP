@@ -1,5 +1,3 @@
-@file:Suppress("AssignedValueIsNeverRead")
-
 package com.example.fyp.screens.history
 
 import androidx.compose.foundation.layout.*
@@ -21,7 +19,7 @@ import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.ui.UiTextKey
-import com.example.fyp.screens.speech.SpeechViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fyp.core.PaginationRow
 import com.example.fyp.core.pageCount
 import androidx.compose.material3.AlertDialog
@@ -42,8 +40,7 @@ fun HistoryScreen(
     onBack: () -> Unit,
 ) {
     val viewModel: HistoryViewModel = hiltViewModel()
-    val speechVm: SpeechViewModel = hiltViewModel()
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val haptic = rememberHapticFeedback()
 
     // Refresh coin stats when screen becomes visible (on-demand instead of real-time listener)
@@ -417,18 +414,18 @@ fun HistoryScreen(
                                 languageNameFor = uiLanguageNameFor,
                                 speakingRecordId = speakingRecordId,
                                 speakingType = speakingType,
-                                isTtsRunning = speechVm.isTtsRunning,
-                                ttsStatus = speechVm.ttsStatus,
+                                isTtsRunning = uiState.isTtsRunning,
+                                ttsStatus = uiState.ttsStatus,
                                 noRecordsText = t(UiTextKey.HistoryNoDiscreteRecords),
                                 onSpeakOriginal = { rec ->
                                     speakingRecordId = rec.id
                                     speakingType = "O"
-                                    speechVm.speakTextOriginal(rec.sourceLang, rec.sourceText)
+                                    viewModel.speakTextOriginal(rec.sourceLang, rec.sourceText)
                                 },
                                 onSpeakTranslation = { rec ->
                                     speakingRecordId = rec.id
                                     speakingType = "T"
-                                    speechVm.speakText(rec.targetLang, rec.targetText)
+                                    viewModel.speakText(rec.targetLang, rec.targetText)
                                 },
                                 onDelete = { rec -> pendingDeleteRecord = rec },
                                 onToggleFavorite = { rec -> viewModel.toggleFavorite(rec) },
@@ -511,17 +508,17 @@ fun HistoryScreen(
                                     speakerBName = t(UiTextKey.ContinuousSpeakerBName),
                                     speakingRecordId = speakingRecordId,
                                     speakingType = speakingType,
-                                    isTtsRunning = speechVm.isTtsRunning,
-                                    ttsStatus = speechVm.ttsStatus,
+                                    isTtsRunning = uiState.isTtsRunning,
+                                    ttsStatus = uiState.ttsStatus,
                                     onSpeakOriginal = { rec ->
                                         speakingRecordId = rec.id
                                         speakingType = "O"
-                                        speechVm.speakTextOriginal(rec.sourceLang, rec.sourceText)
+                                        viewModel.speakTextOriginal(rec.sourceLang, rec.sourceText)
                                     },
                                     onSpeakTranslation = { rec ->
                                         speakingRecordId = rec.id
                                         speakingType = "T"
-                                        speechVm.speakText(rec.targetLang, rec.targetText)
+                                        viewModel.speakText(rec.targetLang, rec.targetText)
                                     },
                                     onDelete = { rec -> pendingDeleteRecord = rec },
                                     onToggleFavorite = { rec -> viewModel.toggleFavorite(rec) },

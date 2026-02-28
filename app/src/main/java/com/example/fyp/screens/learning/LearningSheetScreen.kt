@@ -22,7 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,7 +54,7 @@ fun LearningSheetScreen(
     onOpenQuiz: () -> Unit,
     viewModel: LearningSheetViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
@@ -66,7 +66,7 @@ fun LearningSheetScreen(
     var showRegenBlockedAlert by remember { mutableStateOf(false) }
     var showRegenInfo by remember { mutableStateOf(false) }
 
-    val learningUiState by learningViewModel.uiState.collectAsState()
+    val learningUiState by learningViewModel.uiState.collectAsStateWithLifecycle()
     val isGeneratingMaterials = learningUiState.generatingLanguageCode != null
     val isGeneratingThis = learningUiState.generatingLanguageCode == targetCode
     val isGeneratingAnyQuiz = learningUiState.generatingQuizLanguageCode != null

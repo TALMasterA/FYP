@@ -6,12 +6,15 @@ import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.core.AppLogger
+import com.example.fyp.core.UiConstants
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.domain.history.DeleteHistoryRecordUseCase
 import com.example.fyp.domain.history.DeleteSessionUseCase
 import com.example.fyp.domain.history.ObserveSessionNamesUseCase
 import com.example.fyp.domain.history.RenameSessionUseCase
+import com.example.fyp.domain.speech.SpeakTextUseCase
+import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.UserSettings
 import com.example.fyp.model.TranslationRecord
@@ -20,6 +23,7 @@ import com.example.fyp.model.UserId
 import com.example.fyp.model.SessionId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,7 +43,9 @@ data class HistoryUiState(
     val historyViewLimit: Int = UserSettings.BASE_HISTORY_LIMIT, // Current history view limit
     val hasMoreRecords: Boolean = false, // Whether there are more records to load
     val isLoadingMore: Boolean = false, // Whether we're currently loading more records
-    val totalRecordsCount: Int = 0 // Total count of all records
+    val totalRecordsCount: Int = 0, // Total count of all records
+    val isTtsRunning: Boolean = false,
+    val ttsStatus: String = ""
 )
 
 @HiltViewModel
@@ -53,7 +59,8 @@ class HistoryViewModel @Inject constructor(
     private val deleteSession: DeleteSessionUseCase,
     private val quizRepo: QuizRepository,
     private val favoritesRepo: FirestoreFavoritesRepository,
-    private val historyRepo: com.example.fyp.domain.history.HistoryRepository
+    private val historyRepo: com.example.fyp.domain.history.HistoryRepository,
+    private val speakTextUseCase: SpeakTextUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HistoryUiState())
@@ -348,6 +355,42 @@ class HistoryViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    // --- TTS playback (previously in SpeechViewModel, moved here per architecture review) ---
+
+    fun speakText(languageCode: String, text: String) {
+        val voiceName = sharedSettings.settings.value.voiceSettings[languageCode]
+        speak(text = text, languageCode = languageCode, isTranslation = true, voiceName = voiceName)
+    }
+
+    fun speakTextOriginal(languageCode: String, text: String) {
+        val voiceName = sharedSettings.settings.value.voiceSettings[languageCode]
+        speak(text = text, languageCode = languageCode, isTranslation = false, voiceName = voiceName)
+    }
+
+    private fun speak(text: String, languageCode: String, isTranslation: Boolean, voiceName: String?) {
+        if (text.isBlank() || _uiState.value.isTtsRunning) return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isTtsRunning = true,
+                ttsStatus = if (isTranslation) "Speaking translation..." else "Speaking..."
+            )
+            try {
+                when (val result = speakTextUseCase(text, languageCode, voiceName)) {
+                    is SpeechResult.Success -> {
+                        _uiState.value = _uiState.value.copy(ttsStatus = "✓ Spoken")
+                        delay(UiConstants.TTS_START_DELAY_MS)
+                    }
+                    is SpeechResult.Error -> {
+                        _uiState.value = _uiState.value.copy(ttsStatus = "✗ ${result.message}")
+                        delay(UiConstants.TTS_ERROR_WAIT_MS)
+                    }
+                }
+            } finally {
+                _uiState.value = _uiState.value.copy(isTtsRunning = false, ttsStatus = "")
+            }
+        }
     }
 
     fun retryLoad() {

@@ -127,9 +127,12 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
 
 **Key Directories:**
 - `app/src/main/java/com/example/fyp/`
-    - `AppNavigation.kt` - Compose navigation graph (routes, auth guards, bottom nav, generation banners)
-    - `AppScreens.kt` - Sealed class of all `AppScreen` route destinations
-    - `AppViewModel.kt` - Top-level state (auth, unread badge counts, offline flag)
+    - `navigation/` - Compose navigation graph & sub-graphs
+        - `AppNavigation.kt` - Main composable nav graph (routes, auth guards, bottom nav, generation banners)
+        - `AppScreens.kt` - Sealed class of all `AppScreen` route destinations
+        - `MainFeatureGraph.kt`, `LearningWordBankGraph.kt`, `FriendsChatGraph.kt`, `SettingsProfileGraph.kt`, `StartupAuthGraph.kt` - Modular sub-graphs
+    - `appstate/`
+        - `AppViewModel.kt` - Top-level state (auth, unread badge counts, offline flag)
     - `screens/` - UI screens and ViewModels
         - `home/` - Home screen (welcome greeting, Quick Translate / Live Conversation cards)
         - `speech/` - Discrete (Quick Translate) & continuous (Live Conversation) translation screens
@@ -169,7 +172,7 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
     - `core/` - Common composables and utilities (logging via `AppLogger`, audio, permissions, pagination, font scaling)
     - `ui/` - Theme configuration (colors, palettes, dimensions, typography, animated components)
 - `fyp-backend/functions/` - Firebase Cloud Functions (TypeScript): translation, speech token, AI generation, FCM notifications, daily stale-token pruning
-- `docs/` - Architecture notes (`ARCHITECTURE_NOTES.md`), app improvement suggestions (`APP_SUGGESTIONS.md`)
+- `docs/` - Architecture notes (`ARCHITECTURE_NOTES.md`)
 
 --------------------------------------------------------------
 
@@ -338,5 +341,5 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** February 25, 2026 - Block system, Cantonese/Traditional Chinese hardcoded UI, Notification settings, Generation banners, Bottom navigation, Edge-to-edge insets, Friend request notes, Language order fix, Simplified Chinese rename
+**Last Updated:** February 28, 2026 - Split WordBankViewModel (CustomWordsViewModel), improved lifecycle-aware state collection, async onboarding check, accurate badge counts, triangle speech bubble tails on app icon
 (Some content is by github copilot agent and may contain error)

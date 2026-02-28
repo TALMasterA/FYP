@@ -40,8 +40,7 @@ fun FriendsScreen(
     onOpenNotifSettings: () -> Unit = {},
     hasUnseenSharedItems: Boolean = false,
     hasUnreadMessages: Boolean = false,
-    viewModel: FriendsViewModel = hiltViewModel(),
-    settingsViewModel: com.example.fyp.screens.settings.SettingsViewModel = hiltViewModel()
+    viewModel: FriendsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val (uiText) = rememberUiTextFunctions(appLanguageState)

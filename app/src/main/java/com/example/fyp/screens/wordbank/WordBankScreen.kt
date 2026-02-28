@@ -26,11 +26,13 @@ import com.example.fyp.ui.components.WordBankItemSkeleton
 @Composable
 fun WordBankScreen(
     viewModel: WordBankViewModel,
+    customWordsViewModel: CustomWordsViewModel,
     appLanguageState: AppLanguageState,
     primaryLanguageCode: String,
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val customWordsState by customWordsViewModel.uiState.collectAsStateWithLifecycle()
 
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
@@ -47,6 +49,7 @@ fun WordBankScreen(
     // Set primary language code on first load
     LaunchedEffect(primaryLanguageCode) {
         viewModel.setPrimaryLanguageCode(primaryLanguageCode)
+        customWordsViewModel.setPrimaryLanguageCode(primaryLanguageCode)
         currentPrimaryCode = primaryLanguageCode
     }
 
@@ -76,6 +79,7 @@ fun WordBankScreen(
         onBack = {
             if (selectedLanguage != null || uiState.isCustomWordBankSelected) {
                 viewModel.clearSelection()
+                customWordsViewModel.clearSelection()
             } else {
                 onBack()
             }
@@ -132,20 +136,21 @@ fun WordBankScreen(
                     }
                 }
                 uiState.isCustomWordBankSelected -> {
-                    // Show custom word bank view
+                    // Show custom word bank view (data from CustomWordsViewModel)
                     CustomWordBankView(
-                        customWords = uiState.customWords,
+                        customWords = customWordsState.customWords,
                         isSpeaking = uiState.isSpeaking,
                         speakingItemId = uiState.speakingItemId,
                         speakingType = uiState.speakingType,
-                        isTranslating = uiState.isTranslatingCustomWord,
+                        isTranslating = customWordsState.isTranslatingCustomWord,
                         onSpeakWord = { word, type -> viewModel.speakWord(word, type) },
                         onDeleteWord = { word ->
                             val realId = word.id.removePrefix("custom_")
-                            viewModel.deleteCustomWord(realId)
+                            customWordsViewModel.deleteCustomWord(realId)
+                            viewModel.invalidateCustomWordsCount()
                         },
                         onAddWord = { original, translated, pronunciation, example, sourceLang, targetLang ->
-                            viewModel.addCustomWord(
+                            customWordsViewModel.addCustomWord(
                                 originalWord = original,
                                 translatedWord = translated,
                                 pronunciation = pronunciation,
@@ -153,9 +158,10 @@ fun WordBankScreen(
                                 sourceLang = sourceLang,
                                 targetLang = targetLang
                             )
+                            viewModel.invalidateCustomWordsCount()
                         },
                         onTranslate = { text, sourceLang, targetLang, onResult ->
-                            viewModel.translateForCustomWord(text, sourceLang, targetLang, onResult)
+                            customWordsViewModel.translateForCustomWord(text, sourceLang, targetLang, onResult)
                         },
                         supportedLanguages = supportedLanguages,
                         uiLanguageNameFor = uiLanguageNameFor,
@@ -255,9 +261,13 @@ fun WordBankScreen(
                         onPrimaryLanguageChange = { newCode ->
                             currentPrimaryCode = newCode
                             viewModel.setPrimaryLanguageCode(newCode)
+                            customWordsViewModel.setPrimaryLanguageCode(newCode)
                         },
                         customWordsCount = uiState.customWordsCount,
-                        onSelectCustomWordBank = { viewModel.selectCustomWordBank() },
+                        onSelectCustomWordBank = {
+                            viewModel.setCustomWordBankSelected(true)
+                            customWordsViewModel.selectCustomWordBank()
+                        },
                         onRefresh = { viewModel.refreshLanguageCounts() },
                         t = t
                     )

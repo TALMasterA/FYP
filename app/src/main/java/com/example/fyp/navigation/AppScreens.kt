@@ -31,12 +31,12 @@ sealed class AppScreen(val route: String) {
 
     object SharedMaterialDetail : AppScreen("shared_material_detail/{itemId}") {
         fun routeFor(itemId: String) =
-            "shared_material_detail/${java.net.URLEncoder.encode(itemId, "UTF-8")}"
+            "shared_material_detail/${java.net.URLEncoder.encode(itemId, Charsets.UTF_8.name())}"
     }
 
     object Chat : AppScreen("chat/{friendId}/{friendUsername}/{friendDisplayName}") {
         fun routeFor(friendId: String, friendUsername: String, friendDisplayName: String = "") =
-            "chat/${java.net.URLEncoder.encode(friendId, "UTF-8")}/${java.net.URLEncoder.encode(friendUsername, "UTF-8")}/${java.net.URLEncoder.encode(friendDisplayName, "UTF-8")}"
+            "chat/${java.net.URLEncoder.encode(friendId, Charsets.UTF_8.name())}/${java.net.URLEncoder.encode(friendUsername, Charsets.UTF_8.name())}/${java.net.URLEncoder.encode(friendDisplayName, Charsets.UTF_8.name())}"
     }
 
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {
