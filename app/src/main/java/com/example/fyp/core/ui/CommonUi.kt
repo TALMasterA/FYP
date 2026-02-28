@@ -48,6 +48,28 @@ private fun applyLanguageNameCorrections(
     return correctedMap
 }
 
+/** Maps BCP-47 language codes to their [UiTextKey] for translated display names.
+ *  Adding support for a new language requires only one entry here. */
+private val languageCodeToUiTextKey: Map<String, UiTextKey> = mapOf(
+    "en-US" to UiTextKey.LangEnUs,
+    "zh-TW" to UiTextKey.LangZhTw,
+    "zh-HK" to UiTextKey.LangZhHk,
+    "ja-JP" to UiTextKey.LangJaJp,
+    "zh-CN" to UiTextKey.LangZhCn,
+    "fr-FR" to UiTextKey.LangFrFr,
+    "de-DE" to UiTextKey.LangDeDe,
+    "ko-KR" to UiTextKey.LangKoKr,
+    "es-ES" to UiTextKey.LangEsEs,
+    "id-ID" to UiTextKey.LangIdId,
+    "vi-VN" to UiTextKey.LangViVn,
+    "th-TH" to UiTextKey.LangThTh,
+    "fil-PH" to UiTextKey.LangFilPh,
+    "ms-MY" to UiTextKey.LangMsMy,
+    "pt-BR" to UiTextKey.LangPtBr,
+    "it-IT" to UiTextKey.LangItIt,
+    "ru-RU" to UiTextKey.LangRuRu,
+)
+
 @Composable
 fun rememberUiTextFunctions(
     appLanguageState: AppLanguageState
@@ -60,27 +82,7 @@ fun rememberUiTextFunctions(
     }
 
     val uiLanguageNameFor: (String) -> String = { code ->
-        val key = when (code) {
-            "en-US" -> UiTextKey.LangEnUs
-            "zh-TW" -> UiTextKey.LangZhTw
-            "zh-HK" -> UiTextKey.LangZhHk
-            "ja-JP" -> UiTextKey.LangJaJp
-            "zh-CN" -> UiTextKey.LangZhCn
-            "fr-FR" -> UiTextKey.LangFrFr
-            "de-DE" -> UiTextKey.LangDeDe
-            "ko-KR" -> UiTextKey.LangKoKr
-            "es-ES" -> UiTextKey.LangEsEs
-            "id-ID" -> UiTextKey.LangIdId
-            "vi-VN" -> UiTextKey.LangViVn
-            "th-TH" -> UiTextKey.LangThTh
-            "fil-PH" -> UiTextKey.LangFilPh
-            "ms-MY" -> UiTextKey.LangMsMy
-            "pt-BR" -> UiTextKey.LangPtBr
-            "it-IT" -> UiTextKey.LangItIt
-            "ru-RU" -> UiTextKey.LangRuRu
-            else -> null
-        }
-
+        val key = languageCodeToUiTextKey[code]
         val fallback = LanguageDisplayNames.displayName(code)
         key?.let { uiTexts[it] } ?: fallback
     }

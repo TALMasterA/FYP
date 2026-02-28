@@ -16,6 +16,8 @@ import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase
 import com.example.fyp.domain.settings.UnlockColorPaletteWithCoinsUseCase.Result as UnlockResult
 import com.example.fyp.domain.settings.SetVoiceForLanguageUseCase
 import com.example.fyp.domain.settings.SetAutoThemeEnabledUseCase
+import com.example.fyp.core.AppLogger
+import com.example.fyp.core.FcmNotificationService
 import com.example.fyp.domain.settings.SetNotificationPrefUseCase
 import com.example.fyp.model.LanguageCode
 import com.example.fyp.model.PaletteId
@@ -60,6 +62,18 @@ class SettingsViewModel @Inject constructor(
     private val setNotificationPref: SetNotificationPrefUseCase,
     private val quizRepo: com.example.fyp.data.learning.FirestoreQuizRepository
 ) : AndroidViewModel(application) {
+
+    companion object {
+        // Notification preference field name constants — shared with SetNotificationPrefUseCase
+        // and FcmNotificationService. Keeping them here prevents typos at call-sites.
+        const val PREF_NOTIFY_NEW_MESSAGES       = "notifyNewMessages"
+        const val PREF_NOTIFY_FRIEND_REQUESTS    = "notifyFriendRequests"
+        const val PREF_NOTIFY_REQUEST_ACCEPTED   = "notifyRequestAccepted"
+        const val PREF_NOTIFY_SHARED_INBOX       = "notifySharedInbox"
+        const val PREF_BADGE_MESSAGES            = "inAppBadgeMessages"
+        const val PREF_BADGE_FRIEND_REQUESTS     = "inAppBadgeFriendRequests"
+        const val PREF_BADGE_SHARED_INBOX        = "inAppBadgeSharedInbox"
+    }
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -117,15 +131,6 @@ class SettingsViewModel @Inject constructor(
                 }
             } catch (_: Exception) { /* non-fatal */ }
         }
-    }
-
-    /**
-     * Refresh coin stats on demand (kept for backward-compat; the real-time observer
-     * already keeps the value current, so this is mostly a no-op).
-     */
-    fun refreshCoinStats(uid: String? = _uiState.value.uid) {
-        // Real-time observer in start() keeps coinStats up-to-date.
-        // This method is retained so existing call-sites compile without changes.
     }
 
     fun updatePrimaryLanguage(newCode: String) {
@@ -378,23 +383,23 @@ class SettingsViewModel @Inject constructor(
                 .onSuccess {
                     // Update in-memory state immediately for snappy UI feedback
                     val updated = when (field) {
-                        "notifyNewMessages"      -> _uiState.value.settings.copy(notifyNewMessages = enabled)
-                        "notifyFriendRequests"   -> _uiState.value.settings.copy(notifyFriendRequests = enabled)
-                        "notifyRequestAccepted"  -> _uiState.value.settings.copy(notifyRequestAccepted = enabled)
-                        "notifySharedInbox"      -> _uiState.value.settings.copy(notifySharedInbox = enabled)
-                        "inAppBadgeMessages"     -> _uiState.value.settings.copy(inAppBadgeMessages = enabled)
-                        "inAppBadgeFriendRequests" -> _uiState.value.settings.copy(inAppBadgeFriendRequests = enabled)
-                        "inAppBadgeSharedInbox"  -> _uiState.value.settings.copy(inAppBadgeSharedInbox = enabled)
+                        PREF_NOTIFY_NEW_MESSAGES     -> _uiState.value.settings.copy(notifyNewMessages = enabled)
+                        PREF_NOTIFY_FRIEND_REQUESTS  -> _uiState.value.settings.copy(notifyFriendRequests = enabled)
+                        PREF_NOTIFY_REQUEST_ACCEPTED -> _uiState.value.settings.copy(notifyRequestAccepted = enabled)
+                        PREF_NOTIFY_SHARED_INBOX     -> _uiState.value.settings.copy(notifySharedInbox = enabled)
+                        PREF_BADGE_MESSAGES          -> _uiState.value.settings.copy(inAppBadgeMessages = enabled)
+                        PREF_BADGE_FRIEND_REQUESTS   -> _uiState.value.settings.copy(inAppBadgeFriendRequests = enabled)
+                        PREF_BADGE_SHARED_INBOX      -> _uiState.value.settings.copy(inAppBadgeSharedInbox = enabled)
                         else -> _uiState.value.settings
                     }
                     _uiState.value = _uiState.value.copy(settings = updated)
                     // Mirror to SharedPreferences so FcmNotificationService can read it
                     // without any Firestore I/O on the FCM worker thread
-                    com.example.fyp.core.FcmNotificationService
+                    FcmNotificationService
                         .saveNotifPrefToCache(getApplication(), field, enabled)
                 }
                 .onFailure { e ->
-                    com.example.fyp.core.AppLogger.e(
+                    AppLogger.e(
                         "SettingsViewModel",
                         "Failed to save notification preference $field=$enabled",
                         e
