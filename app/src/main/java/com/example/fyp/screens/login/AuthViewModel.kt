@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.utils.ErrorMessageMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -49,7 +50,7 @@ class AuthViewModel @Inject constructor(
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                errorRaw = result.exceptionOrNull()?.message
+                errorRaw = result.exceptionOrNull()?.let { ErrorMessageMapper.map(it) }
             )
         }
     }
@@ -75,7 +76,7 @@ class AuthViewModel @Inject constructor(
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                errorRaw = result.exceptionOrNull()?.message,
+                errorRaw = result.exceptionOrNull()?.let { ErrorMessageMapper.map(it) },
                 messageKey = if (result.isSuccess) UiTextKey.AuthResetEmailSent else null
             )
         }

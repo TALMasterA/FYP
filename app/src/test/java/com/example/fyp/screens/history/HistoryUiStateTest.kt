@@ -167,4 +167,58 @@ class HistoryUiStateTest {
         assertEquals("Travel", state.sessionNames["session1"])
         assertEquals("Restaurant", state.sessionNames["session2"])
     }
+
+    // --- Session Favourites ---
+
+    @Test
+    fun `favouritedSessionIds tracks which sessions are favourited`() {
+        val state = HistoryUiState(
+            favouritedSessionIds = setOf("session1", "session3")
+        )
+        assertTrue(state.favouritedSessionIds.contains("session1"))
+        assertFalse(state.favouritedSessionIds.contains("session2"))
+        assertTrue(state.favouritedSessionIds.contains("session3"))
+    }
+
+    @Test
+    fun `favouritingSessionId tracks in-progress favouriting`() {
+        val state = HistoryUiState(favouritingSessionId = "session1")
+        assertEquals("session1", state.favouritingSessionId)
+    }
+
+    @Test
+    fun `favouritingSessionId is null by default`() {
+        val state = HistoryUiState()
+        assertNull(state.favouritingSessionId)
+    }
+
+    @Test
+    fun `favouritedSessionIds is empty by default`() {
+        val state = HistoryUiState()
+        assertTrue(state.favouritedSessionIds.isEmpty())
+    }
+
+    @Test
+    fun `session favourite can be added`() {
+        val state = HistoryUiState(
+            favouritedSessionIds = setOf("session1")
+        )
+        val updated = state.copy(
+            favouritedSessionIds = state.favouritedSessionIds + "session2"
+        )
+        assertEquals(2, updated.favouritedSessionIds.size)
+        assertTrue(updated.favouritedSessionIds.contains("session2"))
+    }
+
+    @Test
+    fun `session favourite can be removed`() {
+        val state = HistoryUiState(
+            favouritedSessionIds = setOf("session1", "session2")
+        )
+        val updated = state.copy(
+            favouritedSessionIds = state.favouritedSessionIds - "session1"
+        )
+        assertEquals(1, updated.favouritedSessionIds.size)
+        assertFalse(updated.favouritedSessionIds.contains("session1"))
+    }
 }
