@@ -2,6 +2,7 @@
 // Last Updated: 2026-03-01
 // RESTRUCTURED: Root-level nav files, core utilities, and model strings reorganized
 // REVIEWED: Full codebase scan — added docs/, startup screen, and missing test files
+// UPDATED: Added accessibility, extensions, security expansion, database utils, and 5 new test files (59 total)
 
 FYP/
 ├── README.md
@@ -23,7 +24,8 @@ FYP/
 │
 ├── docs/
 │   ├── treeOfImportantfiles.txt                    ← This file
-│   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants
+│   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants (13 sections)
+│   ├── APP_SUGGESTIONS.md                          ← Implemented improvements & recommendations
 │   └── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
 │
 ├── app/
@@ -82,6 +84,21 @@ FYP/
 │       │       │   │
 │       │       │   ├── notifications/                   ← FCM & push notifications
 │       │       │   │   └── FcmNotificationService.kt
+│       │       │   │
+│       │       │   ├── performance/                     ← Performance optimization utilities
+│       │       │   │   └── PerformanceUtils.kt          ← Debouncing, throttling, memoization, batching
+│       │       │   │
+│       │       │   ├── security/                        ← Security validation & hardening
+│       │       │   │   ├── SecurityUtils.kt             ← Input validation, sanitization, rate limiting
+│       │       │   │   ├── AuditLogger.kt               ← Security event logging (login, rate-limit, etc.)
+│       │       │   │   ├── CertificatePinning.kt        ← HTTPS certificate pinning for OkHttp
+│       │       │   │   └── SecureStorage.kt             ← Android Keystore-backed encrypted SharedPrefs
+│       │       │   │
+│       │       │   ├── accessibility/                   ← Accessibility helpers
+│       │       │   │   └── AccessibilityUtils.kt        ← Semantic modifiers & screen-reader helpers
+│       │       │   │
+│       │       │   ├── extensions/                      ← Kotlin extension functions
+│       │       │   │   └── ExtensionFunctions.kt        ← String, Modifier, List extensions
 │       │       │   │
 │       │       │   └── navigation/                      ← Navigation helpers
 │       │       │       └── NavigationHelpers.kt
@@ -144,11 +161,14 @@ FYP/
 │       │       │   │   ├── FirebaseAuthRepository.kt
 │       │       │   │   ├── FirestoreFavoritesRepository.kt
 │       │       │   │   └── FirestoreProfileRepository.kt
-│       │       │   └── wordbank/
-│       │       │       ├── FirestoreCustomWordsRepository.kt
-│       │       │       ├── FirestoreWordBankRepository.kt
-│       │       │       ├── WordBankCacheDataStore.kt
-│       │       │       └── WordBankGenerationRepository.kt
+│       │       │   ├── wordbank/
+│       │       │   │   ├── FirestoreCustomWordsRepository.kt
+│       │       │   │   ├── FirestoreWordBankRepository.kt
+│       │       │   │   ├── WordBankCacheDataStore.kt
+│       │       │   │   └── WordBankGenerationRepository.kt
+│       │       │   └── database/                        ← Database utilities
+│       │       │       ├── DatabaseUtils.kt              ← Batch write/delete/set/update helpers
+│       │       │       └── DataCleanupUtils.kt           ← Old doc deletion, archive, orphan cleanup
 │       │       │
 │       │       ├── domain/
 │       │       │   ├── auth/
@@ -337,7 +357,10 @@ FYP/
 │       │           │   ├── EmptyStateView.kt
 │       │           │   ├── FriendSelectorDialog.kt
 │       │           │   ├── LoadingSkeletons.kt
-│       │           │   └── StandardComponents.kt
+│       │           │   ├── StandardComponents.kt           ← Cards, empty states, error cards
+│       │           │   ├── StandardButtons.kt              ← Standardized button components
+│       │           │   ├── StandardTextFields.kt           ← Standardized text field components
+│       │           │   └── StandardDialogs.kt              ← Standardized dialog components
 │       │           └── theme/
 │       │               ├── Color.kt
 │       │               ├── ColorPalette.kt
@@ -348,10 +371,16 @@ FYP/
 │       │
 │       └── test/java/com/example/fyp/
 │           ├── core/
-│           │   └── PaginationTest.kt
+│           │   ├── PaginationTest.kt
+│           │   ├── performance/
+│           │   │   └── PerformanceUtilsTest.kt              ← Debounce, throttle, cache tests
+│           │   └── security/
+│           │       └── SecurityUtilsTest.kt                 ← Validation & sanitization tests
 │           ├── data/
 │           │   ├── azure/
 │           │   │   └── LanguageDisplayNamesTest.kt
+│           │   ├── friends/
+│           │   │   └── FirestoreChatRepositoryTest.kt       ← Chat repository integration test
 │           │   ├── learning/
 │           │   │   ├── CoinEligibilityTest.kt
 │           │   │   ├── ContentCleanerTest.kt
@@ -411,19 +440,24 @@ FYP/
 │           │   ├── SpeechResultTest.kt
 │           │   ├── TranslationRecordTest.kt
 │           │   └── ValueTypesTest.kt
-│           └── screens/
-│               ├── favorites/
-│               │   └── FavoritesViewModelTest.kt
-│               ├── feedback/
-│               │   └── FeedbackViewModelTest.kt
-│               ├── friends/
-│               │   └── SharedInboxViewModelTest.kt
-│               ├── history/
-│               │   ├── HistoryUiStateTest.kt
-│               │   └── HistoryViewModelTest.kt
-│               └── settings/
-│                   ├── ProfileViewModelTest.kt
-│                   └── ShopViewModelTest.kt
+│           ├── screens/
+│           │   ├── favorites/
+│           │   │   └── FavoritesViewModelTest.kt
+│           │   ├── feedback/
+│           │   │   └── FeedbackViewModelTest.kt
+│           │   ├── friends/
+│           │   │   └── SharedInboxViewModelTest.kt
+│           │   ├── history/
+│           │   │   ├── HistoryUiStateTest.kt
+│           │   │   └── HistoryViewModelTest.kt
+│           │   └── settings/
+│           │       ├── ProfileViewModelTest.kt
+│           │       └── ShopViewModelTest.kt
+│           └── ui/
+│               └── components/
+│                   ├── StandardButtonsTest.kt               ← Button click/state tests
+│                   ├── StandardDialogsTest.kt               ← Dialog display/dismiss tests
+│                   └── StandardTextFieldsTest.kt            ← Input/validation toggle tests
 │
 └── fyp-backend/
     ├── firebase.json

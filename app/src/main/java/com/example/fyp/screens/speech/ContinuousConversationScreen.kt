@@ -47,6 +47,7 @@ import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.ui.theme.AppSpacing
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -188,14 +189,14 @@ fun ContinuousConversationScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(pagePadding),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.medium),
                     ) {
                         // Controls area (non-slide)
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .onGloballyPositioned { coords -> controlsHeightPx = coords.size.height },
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(AppSpacing.medium),
                         ) {
                             Text(
                                 text = t(UiTextKey.ContinuousInstructions),
@@ -204,7 +205,7 @@ fun ContinuousConversationScreen(
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     LanguageDropdownField(
@@ -255,7 +256,7 @@ private fun ConversationSheet(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 240.dp)
-            .padding(12.dp),
+            .padding(AppSpacing.medium),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         ConversationHeaderRow(
@@ -288,7 +289,7 @@ private fun ConversationSheet(
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
             state = listState,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.small),
             contentPadding = PaddingValues(bottom = 12.dp),
         ) {
             items(messages, key = { it.id }) { msg ->

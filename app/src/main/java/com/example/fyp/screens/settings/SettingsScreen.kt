@@ -48,6 +48,8 @@ import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import com.google.firebase.appdistribution.FirebaseAppDistribution
 import kotlinx.coroutines.delay
+import com.example.fyp.ui.theme.AppSpacing
+import com.example.fyp.ui.theme.AppCorners
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,9 +105,9 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(AppSpacing.large)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.extraLarge)
         ) {
             AppLanguageDropdown(
                 uiLanguages = uiLanguages,
@@ -140,18 +142,18 @@ fun SettingsScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
                     ),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(AppCorners.medium)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                            .padding(AppSpacing.large),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                     ) {
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                         ) {
                             TextButton(
                                 onClick = onOpenProfile,
@@ -195,7 +197,7 @@ fun SettingsScreen(
                         // Shop and Voice Settings buttons
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                         ) {
                             TextButton(
                                 onClick = onOpenShop,
@@ -234,7 +236,7 @@ fun SettingsScreen(
                         // Feedback buttons - Two separate options
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                         ) {
                             // Tester Feedback (Firebase App Distribution)
                             TextButton(
@@ -279,19 +281,19 @@ fun SettingsScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
                     ),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(AppCorners.medium)
                 ) {
                     Text(
                         text = errorMsg,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(AppSpacing.large)
                     )
                 }
             }
 
             // Primary Language
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
                 Text(
                     t(UiTextKey.SettingsPrimaryLanguageTitle),
                     style = MaterialTheme.typography.titleLarge,
@@ -317,7 +319,7 @@ fun SettingsScreen(
             }
 
             // Font size
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
                 Text(
                     t(UiTextKey.SettingsFontSizeTitle),
                     style = MaterialTheme.typography.titleLarge,
@@ -342,8 +344,8 @@ fun SettingsScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(AppSpacing.medium),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
                     ) {
                         Text(
                             text = t(UiTextKey.SettingsPreviewHeadline),
@@ -378,7 +380,7 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = AppSpacing.small),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
@@ -405,7 +407,7 @@ fun SettingsScreen(
             }
 
             // Theme
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
                 Text(
                     t(UiTextKey.SettingsThemeTitle),
                     style = MaterialTheme.typography.titleLarge,
@@ -443,18 +445,18 @@ fun SettingsScreen(
                             text = title,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(12.dp),
+                                .padding(AppSpacing.medium),
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
                     // Row 1: System & Scheduled
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                     ) {
                         ThemeOption(
                             title = t(UiTextKey.SettingsThemeSystem),
@@ -473,7 +475,7 @@ fun SettingsScreen(
                     // Row 2: Light & Dark
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                     ) {
                         ThemeOption(
                             title = t(UiTextKey.SettingsThemeLight),
@@ -497,12 +499,12 @@ fun SettingsScreen(
                     text = t(UiTextKey.SettingsAutoThemePreview),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 4.dp)
+                    modifier = Modifier.padding(start = AppSpacing.extraSmall)
                 )
             }
 
             // About
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
                 Text(
                     t(UiTextKey.SettingsAboutTitle),
                     style = MaterialTheme.typography.titleLarge,
