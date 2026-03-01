@@ -27,7 +27,11 @@ data class FavoritesUiState(
     val error: String? = null,
     val speakingId: String? = null,
     val visibleCount: Int = 20, // Initial visible count for lazy loading
-    val hasMore: Boolean = false // Whether there are more favorites to load
+    val hasMore: Boolean = false, // Whether there are more favorites to load
+    val isDeleteMode: Boolean = false,
+    val selectedRecordIds: Set<String> = emptySet(),
+    val selectedSessionIds: Set<String> = emptySet(),
+    val isDeleting: Boolean = false
 )
 
 @HiltViewModel
@@ -197,5 +201,76 @@ class FavoritesViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun toggleDeleteMode() {
+        val state = _uiState.value
+        if (state.isDeleteMode) {
+            // Already in delete mode — exit it
+            _uiState.value = state.copy(
+                isDeleteMode = false,
+                selectedRecordIds = emptySet(),
+                selectedSessionIds = emptySet()
+            )
+        } else {
+            _uiState.value = state.copy(
+                isDeleteMode = true,
+                selectedRecordIds = emptySet(),
+                selectedSessionIds = emptySet()
+            )
+        }
+    }
+
+    fun exitDeleteMode() {
+        _uiState.value = _uiState.value.copy(
+            isDeleteMode = false,
+            selectedRecordIds = emptySet(),
+            selectedSessionIds = emptySet()
+        )
+    }
+
+    fun toggleRecordSelection(id: String) {
+        val current = _uiState.value.selectedRecordIds
+        _uiState.value = _uiState.value.copy(
+            selectedRecordIds = if (id in current) current - id else current + id
+        )
+    }
+
+    fun toggleSessionSelection(id: String) {
+        val current = _uiState.value.selectedSessionIds
+        _uiState.value = _uiState.value.copy(
+            selectedSessionIds = if (id in current) current - id else current + id
+        )
+    }
+
+    fun deleteSelected() {
+        val userId = currentUserId ?: return
+        val state = _uiState.value
+        if (state.selectedRecordIds.isEmpty() && state.selectedSessionIds.isEmpty()) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isDeleting = true)
+            try {
+                state.selectedRecordIds.forEach { id ->
+                    favoritesRepo.removeFavorite(userId, id)
+                }
+                state.selectedSessionIds.forEach { id ->
+                    favoritesRepo.removeFavoriteSession(userId, id).getOrThrow()
+                }
+                _uiState.value = _uiState.value.copy(
+                    favorites = _uiState.value.favorites.filter { it.id !in state.selectedRecordIds },
+                    sessions = _uiState.value.sessions.filter { it.id !in state.selectedSessionIds },
+                    isDeleteMode = false,
+                    selectedRecordIds = emptySet(),
+                    selectedSessionIds = emptySet(),
+                    isDeleting = false
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isDeleting = false,
+                    error = "Failed to delete selected items"
+                )
+            }
+        }
     }
 }

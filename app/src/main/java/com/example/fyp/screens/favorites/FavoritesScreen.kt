@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Forum
@@ -28,6 +29,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -98,6 +101,10 @@ fun FavoritesScreen(
         .drop(sessionsPage * pageSize)
         .take(pageSize)
 
+    // Delete mode confirmation dialog
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    val totalSelected = uiState.selectedRecordIds.size + uiState.selectedSessionIds.size
+
     // Auto-dismiss error after delay
     LaunchedEffect(uiState.error) {
         if (uiState.error != null) {
@@ -106,10 +113,59 @@ fun FavoritesScreen(
         }
     }
 
+    // Delete confirm dialog
+    if (showDeleteConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmDialog = false },
+            title = { Text(t(UiTextKey.ActionDelete)) },
+            text = { Text("Delete $totalSelected selected item(s)? This cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteSelected()
+                        showDeleteConfirmDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) { Text(t(UiTextKey.ActionDelete)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                    Text(t(UiTextKey.ActionCancel))
+                }
+            }
+        )
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.FavoritesTitle),
         onBack = onBack,
-        backContentDescription = t(UiTextKey.NavBack)
+        backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            if (uiState.isDeleting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                IconButton(onClick = {
+                    haptic.click()
+                    when {
+                        !uiState.isDeleteMode -> viewModel.toggleDeleteMode()
+                        totalSelected > 0 -> showDeleteConfirmDialog = true
+                        else -> viewModel.exitDeleteMode()
+                    }
+                }) {
+                    Icon(
+                        imageVector = if (uiState.isDeleteMode) Icons.Default.DeleteForever else Icons.Default.Delete,
+                        contentDescription = if (uiState.isDeleteMode) "Confirm delete" else "Delete mode",
+                        tint = if (uiState.isDeleteMode) MaterialTheme.colorScheme.error
+                               else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -144,7 +200,10 @@ fun FavoritesScreen(
                 tabs.forEachIndexed { index, label ->
                     Tab(
                         selected = selectedTab == index,
-                        onClick = { selectedTab = index },
+                        onClick = {
+                            selectedTab = index
+                            viewModel.exitDeleteMode()
+                        },
                         text = { Text(label) },
                     )
                 }
@@ -194,12 +253,14 @@ fun FavoritesScreen(
                                         haptic.click()
                                         viewModel.speak(favorite.targetText, favorite.targetLang, favorite.id + "_target")
                                     },
-                                    onDelete = {
-                                        haptic.reject()
-                                        viewModel.removeFavorite(favorite.id)
-                                    },
                                     isSpeakingSource = uiState.speakingId == (favorite.id + "_source"),
                                     isSpeakingTarget = uiState.speakingId == (favorite.id + "_target"),
+                                    isDeleteMode = uiState.isDeleteMode,
+                                    isSelected = favorite.id in uiState.selectedRecordIds,
+                                    onToggleSelect = {
+                                        haptic.click()
+                                        viewModel.toggleRecordSelection(favorite.id)
+                                    },
                                     t = t
                                 )
                             }
@@ -249,6 +310,12 @@ fun FavoritesScreen(
                                     itemsTemplate = t(UiTextKey.FavoritesSessionItemsTemplate),
                                     openLabel = t(UiTextKey.ActionOpen),
                                     speakingId = uiState.speakingId,
+                                    isDeleteMode = uiState.isDeleteMode,
+                                    isSelected = session.id in uiState.selectedSessionIds,
+                                    onToggleSelect = {
+                                        haptic.click()
+                                        viewModel.toggleSessionSelection(session.id)
+                                    },
                                     onSpeak = { text, lang, id ->
                                         haptic.click()
                                         viewModel.speak(text, lang, id)
@@ -294,6 +361,9 @@ fun FavoriteSessionCard(
     itemsTemplate: String,
     openLabel: String,
     speakingId: String?,
+    isDeleteMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelect: () -> Unit = {},
     onSpeak: (text: String, lang: String, id: String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -301,7 +371,8 @@ fun FavoriteSessionCard(
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.outlinedCardColors(
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = if (isSelected) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                             else MaterialTheme.colorScheme.background
         )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -311,6 +382,14 @@ fun FavoriteSessionCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Checkbox in delete mode
+                if (isDeleteMode) {
+                    Checkbox(
+                        checked = isSelected,
+                        onCheckedChange = { onToggleSelect() },
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = session.sessionName,
@@ -322,12 +401,14 @@ fun FavoriteSessionCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                // Open/Close toggle
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = openLabel
-                    )
+                // Open/Close toggle (hidden in delete mode)
+                if (!isDeleteMode) {
+                    IconButton(onClick = { expanded = !expanded }) {
+                        Icon(
+                            imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = openLabel
+                        )
+                    }
                 }
             }
 
@@ -454,53 +535,27 @@ fun FavoriteCard(
     languageNameFor: (String) -> String,
     onSpeakSource: () -> Unit,
     onSpeakTarget: () -> Unit,
-    onDelete: () -> Unit,
     isSpeakingSource: Boolean,
     isSpeakingTarget: Boolean,
+    isDeleteMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelect: () -> Unit = {},
     t: (UiTextKey) -> String
 ) {
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-
-    // Delete confirmation dialog
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(t(UiTextKey.ActionDelete)) },
-            text = { Text("Are you sure you want to delete this favorite?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDelete()
-                        showDeleteConfirm = false
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text(t(UiTextKey.ActionDelete))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(t(UiTextKey.ActionCancel))
-                }
-            }
-        )
-    }
-
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
+            containerColor = if (isSelected) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                             else MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header row with language info and delete button
+            // Header row with language info and selection checkbox
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -513,14 +568,11 @@ fun FavoriteCard(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
-                IconButton(
-                    onClick = { showDeleteConfirm = true },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.error
+                if (isDeleteMode) {
+                    Checkbox(
+                        checked = isSelected,
+                        onCheckedChange = { onToggleSelect() },
+                        modifier = Modifier.size(40.dp)
                     )
                 }
             }
