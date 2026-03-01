@@ -90,6 +90,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
 
+    // Security - Encrypted SharedPreferences
+    implementation(libs.androidx.security.crypto)
+
     // Networking
     implementation(libs.okhttp)
 

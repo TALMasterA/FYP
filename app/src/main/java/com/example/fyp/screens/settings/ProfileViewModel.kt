@@ -9,6 +9,10 @@ import com.example.fyp.model.UserId
 import com.example.fyp.model.Username
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.friends.PublicUserProfile
+import com.example.fyp.core.security.AuditLogger
+import com.example.fyp.core.security.ValidationResult
+import com.example.fyp.core.security.sanitizeInput
+import com.example.fyp.core.security.validateTextLength
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -163,6 +167,16 @@ class ProfileViewModel @Inject constructor(
     fun updateDisplayName(displayName: String) {
         val userId = currentUserId ?: return
 
+        // Validate display name length (1-50 chars)
+        val lengthValidation = validateTextLength(displayName, minLength = 1, maxLength = 50, fieldName = "Display name")
+        if (lengthValidation is ValidationResult.Invalid) {
+            _uiState.value = _uiState.value.copy(error = lengthValidation.message)
+            return
+        }
+
+        // Sanitize display name
+        val sanitizedName = sanitizeInput(displayName)
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
@@ -170,7 +184,7 @@ class ProfileViewModel @Inject constructor(
                 successMessage = null
             )
 
-            profileRepo.updateDisplayName(userId, displayName)
+            profileRepo.updateDisplayName(userId, sanitizedName)
                 .onSuccess {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -202,6 +216,7 @@ class ProfileViewModel @Inject constructor(
                     // Then delete account
                     profileRepo.deleteAccount(userId)
                         .onSuccess {
+                            AuditLogger.logAccountDeleted(userId = userId)
                             _uiState.value = _uiState.value.copy(
                                 isDeletingAccount = false,
                                 accountDeleted = true

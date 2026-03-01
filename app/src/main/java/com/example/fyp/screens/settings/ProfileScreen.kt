@@ -39,6 +39,8 @@ import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.ui.theme.AppSpacing
+import com.example.fyp.ui.theme.AppCorners
 
 @Composable
 fun ProfileScreen(
@@ -89,22 +91,22 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(AppSpacing.large)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.extraLarge)
         ) {
             // Profile Section
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(AppCorners.large),
                 colors = CardDefaults.elevatedCardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
                 Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier = Modifier.padding(AppSpacing.extraLarge),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
                 ) {
                     Text(
                         text = t(UiTextKey.ProfileTitle),
@@ -181,8 +183,8 @@ fun ProfileScreen(
                 )
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.padding(AppSpacing.large),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
                     Text(
                         text = t(UiTextKey.AccountDeleteTitle),
@@ -221,7 +223,7 @@ fun ProfileScreen(
             text = {
                 Column(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
                     Text(t(UiTextKey.AccountDeleteConfirmMessage))
 

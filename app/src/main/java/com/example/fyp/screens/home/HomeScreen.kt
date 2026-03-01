@@ -50,6 +50,9 @@ import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.screens.login.AuthViewModel
+import com.example.fyp.ui.theme.AppCorners
+import com.example.fyp.ui.theme.AppElevation
+import com.example.fyp.ui.theme.AppSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -129,7 +132,7 @@ fun HomeScreen(
             IconButton(onClick = onOpenHelp) {
                 Icon(
                     imageVector = Icons.Filled.Info,
-                    contentDescription = "Help / instructions"
+                    contentDescription = t(UiTextKey.HomeTitle)
                 )
             }
         }
@@ -137,10 +140,10 @@ fun HomeScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(AppSpacing.large)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.extraLarge)
         ) {
             AppLanguageDropdown(
                 uiLanguages = uiLanguages,
@@ -168,16 +171,16 @@ fun HomeScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(AppCorners.medium)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(AppSpacing.large)) {
                         Text(
                             text = t(UiTextKey.DisableText),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.extraSmall))
                         Text(
                             text = t(UiTextKey.GuestTranslationLimitMessage),
                             style = MaterialTheme.typography.bodySmall,
@@ -190,10 +193,10 @@ fun HomeScreen(
             // Welcome message card
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                shape = RoundedCornerShape(AppCorners.large),
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = AppElevation.small)
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(modifier = Modifier.padding(AppSpacing.extraLarge)) {
                     Text(
                         text = t(UiTextKey.HomeInstructions),
                         style = MaterialTheme.typography.bodySmall,
@@ -246,9 +249,9 @@ private fun FeatureCard(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(AppCorners.large),
         elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = if (enabled) 4.dp else 1.dp
+            defaultElevation = if (enabled) AppElevation.medium else AppElevation.none
         ),
         colors = CardDefaults.elevatedCardColors(
             containerColor = if (enabled) containerColor else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -257,8 +260,8 @@ private fun FeatureCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(AppSpacing.extraLarge),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.large),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

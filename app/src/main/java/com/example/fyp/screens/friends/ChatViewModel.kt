@@ -16,6 +16,10 @@ import com.example.fyp.model.friends.FriendMessage
 import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.core.AppLogger
+import com.example.fyp.core.security.RateLimiter
+import com.example.fyp.core.security.ValidationResult
+import com.example.fyp.core.security.sanitizeInput
+import com.example.fyp.core.security.validateTextLength
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,6 +67,10 @@ class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val friendsRepository: FriendsRepository
 ) : ViewModel() {
+
+    companion object {
+        private val messageRateLimiter = RateLimiter(maxAttempts = 10, windowMillis = 60_000L)
+    }
 
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
@@ -238,16 +246,32 @@ class ChatViewModel @Inject constructor(
         val messageText = _uiState.value.messageText.trim()
         if (messageText.isBlank() || _uiState.value.isSending) return
 
+        // Validate message length (max 2000 chars)
+        val lengthValidation = validateTextLength(messageText, minLength = 1, maxLength = 2000, fieldName = "Message")
+        if (lengthValidation is ValidationResult.Invalid) {
+            _uiState.value = _uiState.value.copy(error = lengthValidation.message)
+            return
+        }
+
+        // Check rate limiter
+        if (!messageRateLimiter.isAllowed(userId.value)) {
+            _uiState.value = _uiState.value.copy(error = "You are sending messages too quickly. Please wait a moment.")
+            return
+        }
+
         // Prevent sending if blocked by the friend
         if (_uiState.value.isBlockedBy) {
             _uiState.value = _uiState.value.copy(error = "You cannot send messages to this user.")
             return
         }
 
+        // Sanitize message content before sending
+        val sanitizedMessage = sanitizeInput(messageText)
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSending = true, error = null)
             val chatId = chatRepository.generateChatId(userId, friendId)
-            val result = sendMessageUseCase(chatId, userId, friendId, messageText)
+            val result = sendMessageUseCase(chatId, userId, friendId, sanitizedMessage)
             result.fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(messageText = "", isSending = false)

@@ -2,21 +2,18 @@ package com.example.fyp.data.friends
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.fyp.model.friends.FriendMessage
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
+import com.example.fyp.model.UserId
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNotNull
+import junit.framework.TestCase.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.*
-import org.mockito.kotlin.any
-import org.mockito.kotlin.whenever
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
  * Tests for FirestoreChatRepository to ensure correct chat operations.
  * Tests critical operations like sending messages, marking as read, and metadata updates.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class FirestoreChatRepositoryTest {
 
     private lateinit var repository: FirestoreChatRepository
@@ -29,53 +26,49 @@ class FirestoreChatRepositoryTest {
     }
 
     @Test
-    fun `getChatId generates consistent chat IDs`() {
-        val userId1 = "user-123"
-        val userId2 = "user-456"
+    fun `generateChatId generates consistent chat IDs`() {
+        val userId1 = UserId("user-123")
+        val userId2 = UserId("user-456")
 
-        val chatId1 = repository.getChatId(userId1, userId2)
-        val chatId2 = repository.getChatId(userId2, userId1)
+        val chatId1 = repository.generateChatId(userId1, userId2)
+        val chatId2 = repository.generateChatId(userId2, userId1)
 
         // Chat ID should be the same regardless of parameter order
-        assert(chatId1 == chatId2) {
-            "Chat IDs should be identical regardless of user order"
-        }
+        assertEquals("Chat IDs should be identical regardless of user order", chatId1, chatId2)
     }
 
     @Test
-    fun `getChatId generates different IDs for different user pairs`() {
-        val user1 = "user-123"
-        val user2 = "user-456"
-        val user3 = "user-789"
+    fun `generateChatId generates different IDs for different user pairs`() {
+        val user1 = UserId("user-123")
+        val user2 = UserId("user-456")
+        val user3 = UserId("user-789")
 
-        val chatId1 = repository.getChatId(user1, user2)
-        val chatId2 = repository.getChatId(user1, user3)
+        val chatId1 = repository.generateChatId(user1, user2)
+        val chatId2 = repository.generateChatId(user1, user3)
 
         // Different user pairs should have different chat IDs
-        assert(chatId1 != chatId2) {
-            "Different user pairs should generate different chat IDs"
-        }
+        assertTrue(
+            "Different user pairs should generate different chat IDs",
+            chatId1 != chatId2
+        )
     }
 
     @Test
     fun `createFriendMessage creates valid message object`() {
         val senderId = "sender-123"
-        val text = "Hello, friend!"
-        val timestamp = System.currentTimeMillis()
+        val content = "Hello, friend!"
 
         val message = FriendMessage(
-            id = "msg-1",
+            messageId = "msg-1",
             senderId = senderId,
-            text = text,
-            timestamp = timestamp,
+            content = content,
             isRead = false
         )
 
-        assertNotNull(message.id)
-        assert(message.senderId == senderId)
-        assert(message.text == text)
-        assert(message.timestamp == timestamp)
-        assert(!message.isRead)
+        assertNotNull(message.messageId)
+        assertEquals(senderId, message.senderId)
+        assertEquals(content, message.content)
+        assertTrue(!message.isRead)
     }
 
     @Test
@@ -84,14 +77,16 @@ class FirestoreChatRepositoryTest {
         val validText = "a".repeat(1000)  // Within limits
 
         // Valid text should be accepted
-        assertTrue(validText.length <= 5000) {
-            "Valid text should be within reasonable limits"
-        }
+        assertTrue(
+            "Valid text should be within reasonable limits",
+            validText.length <= 5000
+        )
 
         // Long text should be detected
-        assertTrue(longText.length > 5000) {
-            "Excessively long text should be detected"
-        }
+        assertTrue(
+            "Excessively long text should be detected",
+            longText.length > 5000
+        )
     }
 
     @Test
@@ -105,8 +100,10 @@ class FirestoreChatRepositoryTest {
         }
 
         // All IDs should be unique
-        assert(messages.size == 100) {
-            "All generated message IDs should be unique"
-        }
+        assertEquals(
+            "All generated message IDs should be unique",
+            100,
+            messages.size
+        )
     }
 }

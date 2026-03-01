@@ -28,6 +28,9 @@ import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
+import com.example.fyp.ui.theme.AppSpacing
+import com.example.fyp.ui.theme.AppCorners
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +93,7 @@ fun LoginScreen(
         StandardScreenBody(
             innerPadding = innerPadding,
             scrollable = true,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.extraLarge)
         ) {
             AppLanguageDropdown(
                 uiLanguages = uiLanguages,
@@ -106,13 +109,13 @@ fun LoginScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                     ),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(AppCorners.medium)
                 ) {
                     Text(
                         text = it,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(AppSpacing.large)
                     )
                 }
             }
@@ -139,7 +142,7 @@ fun LoginScreen(
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                            contentDescription = if (passwordVisible) t(UiTextKey.AuthPasswordLabel) else t(UiTextKey.AuthPasswordLabel)
                         )
                     }
                 },
@@ -156,7 +159,7 @@ fun LoginScreen(
                         IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                             Icon(
                                 imageVector = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
+                                contentDescription = if (confirmPasswordVisible) t(UiTextKey.AuthConfirmPasswordLabel) else t(UiTextKey.AuthConfirmPasswordLabel)
                             )
                         }
                     },
@@ -207,13 +210,13 @@ fun LoginScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
                     ),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(AppCorners.medium)
                 ) {
                     Text(
                         text = errorMsg,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(AppSpacing.large)
                     )
                 }
             }

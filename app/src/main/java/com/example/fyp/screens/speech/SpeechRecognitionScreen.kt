@@ -56,6 +56,7 @@ import com.example.fyp.model.ui.UiTextKey
 import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
 import com.example.fyp.core.rememberHapticFeedback
+import com.example.fyp.ui.theme.AppSpacing
 
 /** Maximum number of candidate languages for auto-detection (Azure SDK limit) */
 private const val MAX_AUTO_DETECT_LANGUAGES = 4
@@ -252,15 +253,15 @@ fun SpeechRecognitionScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                    .padding(AppSpacing.large),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.medium),
             ) {
                 // Scrollable main content
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium),
                 ) {
                     SpeechLanguagePickers(
                         detectLabel = t(UiTextKey.DetectLanguageLabel),
@@ -300,7 +301,7 @@ fun SpeechRecognitionScreen(
                     // Mic + Camera icon buttons in one row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
                     ) {
                         // Microphone button (icon-only)
                         Button(

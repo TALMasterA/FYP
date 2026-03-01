@@ -30,6 +30,7 @@ import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.rememberHapticFeedback
 import com.example.fyp.core.UiConstants
 import com.example.fyp.ui.components.TranslationCardSkeleton
+import com.example.fyp.ui.theme.AppSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -213,7 +214,7 @@ fun HistoryScreen(
                     modifier = Modifier
                         .heightIn(max = 300.dp)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
                     LanguageDropdownField(
                         label = t(UiTextKey.FilterLangDrop),
@@ -247,7 +248,7 @@ fun HistoryScreen(
             dismissButton = {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
                 ) {
                     TextButton(
                         onClick = {
@@ -300,7 +301,7 @@ fun HistoryScreen(
                 icon = { Icon(Icons.Default.Info, contentDescription = null) },
                 title = { Text(t(UiTextKey.HistoryInfoTitle)) },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
                         Text(
                             text = t(UiTextKey.HistoryInfoLimitMessage).replace("{limit}", historyLimit.toString()),
                             style = MaterialTheme.typography.bodyMedium
@@ -344,7 +345,7 @@ fun HistoryScreen(
         StandardScreenBody(
             innerPadding = innerPadding,
             scrollable = false,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.medium),
         ) {
             TabRow(
                 selectedTabIndex = selectedTab,
@@ -374,8 +375,8 @@ fun HistoryScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                                .padding(AppSpacing.large),
+                            verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                         ) {
                             repeat(5) {
                                 TranslationCardSkeleton()
@@ -386,12 +387,12 @@ fun HistoryScreen(
                     uiState.error != null -> Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp),
+                            .padding(AppSpacing.small),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer
                         )
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.padding(AppSpacing.large)) {
                             Text(
                                 text = uiState.error.orEmpty(),
                                 color = MaterialTheme.colorScheme.onErrorContainer,

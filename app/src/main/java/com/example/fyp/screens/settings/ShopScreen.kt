@@ -21,6 +21,7 @@ import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.user.UserSettings
 import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
+import com.example.fyp.ui.theme.AppSpacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,9 +100,9 @@ fun ShopScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(AppSpacing.large)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.extraLarge)
         ) {
             // Coin balance display
             Card(
@@ -113,7 +114,7 @@ fun ShopScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(AppSpacing.large),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -147,8 +148,8 @@ fun ShopScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(AppSpacing.large),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
                     Text(
                         text = t(UiTextKey.ShopHistoryExpansionDesc),
@@ -241,8 +242,8 @@ fun ShopScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(AppSpacing.large),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
                     Text(
                         text = t(UiTextKey.ShopColorPaletteDesc),
@@ -273,7 +274,7 @@ fun ShopScreen(
                         text = error,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(AppSpacing.large)
                     )
                 }
             }

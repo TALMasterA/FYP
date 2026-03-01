@@ -53,6 +53,8 @@ import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
 import com.example.fyp.ui.components.LearningSheetSkeleton
 import com.example.fyp.ui.components.EmptyStates
+import com.example.fyp.ui.theme.AppSpacing
+import com.example.fyp.ui.theme.AppCorners
 
 @Suppress("UNUSED_PARAMETER", "SENSELESS_COMPARISON")
 @OptIn(ExperimentalMaterial3Api::class)

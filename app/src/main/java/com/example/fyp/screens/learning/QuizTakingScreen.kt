@@ -50,6 +50,9 @@ import com.example.fyp.core.rememberHapticFeedback
 import com.example.fyp.core.rememberTranslator
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.ui.theme.AppSpacing
+import com.example.fyp.ui.theme.AppCorners
+import com.example.fyp.ui.theme.AppElevation
 
 @Composable
 fun QuizTakingScreen(
@@ -78,13 +81,13 @@ fun QuizTakingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = 72.dp), // Space for bottom navigation
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
         ) {
             if (!errorMessage.isNullOrBlank()) {
                 Text(
                     errorMessage,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = AppSpacing.large)
                 )
             }
 
@@ -98,14 +101,14 @@ fun QuizTakingScreen(
                 )
 
                 Column(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(horizontal = AppSpacing.large),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
                 ) {
                     LinearProgressIndicator(
                         progress = { animatedProgress },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp)),
+                            .clip(RoundedCornerShape(AppCorners.small)),
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -167,8 +170,8 @@ fun QuizTakingScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                            .padding(horizontal = AppSpacing.large),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.large),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(
                             bottom = 80.dp
                         )
@@ -176,7 +179,7 @@ fun QuizTakingScreen(
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(AppCorners.medium),
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                                 )
@@ -185,19 +188,20 @@ fun QuizTakingScreen(
                                     question.question,
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(20.dp),
+                                    modifier = Modifier.padding(AppSpacing.extraLarge),
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
 
-                        itemsIndexed(question.options) { index, option ->
+                        itemsIndexed(question.options, key = { index, _ -> "${question.id}_option_$index" }) { index, option ->
                             QuestionOptionButton(
                                 option = option,
                                 isSelected = attempt.answers.find { it.questionId == question.id }
                                     ?.selectedOptionIndex == index,
                                 isCorrect = null,
-                                onClick = { onAnswerSelected(question.id, index) }
+                                onClick = { onAnswerSelected(question.id, index) },
+                                appLanguageState = appLanguageState
                             )
                         }
                     }
@@ -212,7 +216,7 @@ fun QuizTakingScreen(
                 .align(Alignment.BottomCenter)
                 .background(MaterialTheme.colorScheme.background)
                 .navigationBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = AppSpacing.large, vertical = AppSpacing.small),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -272,7 +276,9 @@ private fun QuestionOptionButton(
     isSelected: Boolean,
     isCorrect: Boolean?,
     onClick: () -> Unit,
+    appLanguageState: AppLanguageState,
 ) {
+    val t = rememberTranslator(appLanguageState)
     val backgroundColor = when {
         isCorrect == true -> MaterialTheme.colorScheme.primaryContainer
         isCorrect == false -> MaterialTheme.colorScheme.errorContainer
@@ -294,18 +300,18 @@ private fun QuestionOptionButton(
             .fillMaxWidth()
             .clickable(enabled = isCorrect == null) { onClick() }
             .animateContentSize()
-            .border(borderWidth, borderColor, RoundedCornerShape(12.dp)),
-        shape = RoundedCornerShape(12.dp),
+            .border(borderWidth, borderColor, RoundedCornerShape(AppCorners.medium)),
+        shape = RoundedCornerShape(AppCorners.medium),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected) 4.dp else 1.dp
+            defaultElevation = if (isSelected) AppElevation.medium else AppElevation.none
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(AppSpacing.large),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -324,16 +330,16 @@ private fun QuestionOptionButton(
             if (isCorrect == true) {
                 Icon(
                     Icons.Default.CheckCircle,
-                    contentDescription = "Correct",
+                    contentDescription = t(UiTextKey.QuizSubmitButton),
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(4.dp)
+                    modifier = Modifier.padding(AppSpacing.extraSmall)
                 )
             } else if (isCorrect == false) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = "Incorrect",
+                    contentDescription = t(UiTextKey.QuizSubmitButton),
                     tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(4.dp)
+                    modifier = Modifier.padding(AppSpacing.extraSmall)
                 )
             }
         }
