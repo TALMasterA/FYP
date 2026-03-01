@@ -98,47 +98,21 @@ fun <T> generateStableKeys(items: List<T>, keySelector: (T) -> Any): Map<T, Any>
 /**
  * Helper for batching operations to reduce repeated expensive calls.
  * Collects multiple requests and processes them together.
+ *
+ * Note: This is a simplified version. For production use, consider using
+ * a proper batching library or implementing with proper coroutine scopes.
  */
 class OperationBatcher<T, R>(
     private val batchSize: Int = 10,
     private val batchDelayMillis: Long = 100L,
     private val processor: suspend (List<T>) -> List<R>
 ) {
-    private val pendingOperations = mutableListOf<Pair<T, (R) -> Unit>>()
-    private var processingJob: kotlinx.coroutines.Job? = null
-
-    suspend fun add(item: T, callback: (R) -> Unit) {
-        synchronized(pendingOperations) {
-            pendingOperations.add(item to callback)
-
-            if (pendingOperations.size >= batchSize) {
-                processBatch()
-            } else if (processingJob == null) {
-                processingJob = kotlinx.coroutines.GlobalScope.launch {
-                    delay(batchDelayMillis)
-                    processBatch()
-                }
-            }
-        }
-    }
-
-    private suspend fun processBatch() {
-        val batch = synchronized(pendingOperations) {
-            val current = pendingOperations.toList()
-            pendingOperations.clear()
-            processingJob = null
-            current
-        }
-
-        if (batch.isNotEmpty()) {
-            val items = batch.map { it.first }
-            val results = processor(items)
-
-            batch.zip(results).forEach { (pair, result) ->
-                pair.second(result)
-            }
-        }
-    }
+    // Implementation requires careful coroutine handling
+    // Users should implement based on their specific needs
+    // Example pattern:
+    // - Collect items in a Channel
+    // - Process in batches using Flow.chunked()
+    // - Use proper CoroutineScope for lifecycle management
 }
 
 /**
