@@ -127,21 +127,27 @@ fun StandardPasswordField(
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
-    StandardTextField(
+    OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = label,
-        modifier = modifier,
-        trailingIcon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-        onTrailingIconClick = { passwordVisible = !passwordVisible },
+        label = { Text(label) },
+        modifier = modifier.fillMaxWidth(),
+        trailingIcon = {
+            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                Icon(
+                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                    contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        },
+        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
         isError = isError,
-        supportingText = supportingText,
+        supportingText = supportingText?.let { { Text(it) } },
         enabled = enabled,
         singleLine = true,
-        keyboardOptions = KeyboardOptions.Default.copy(
-            autoCorrect = false
-        ),
-        keyboardActions = keyboardActions
+        keyboardActions = keyboardActions,
+        shape = RoundedCornerShape(AppCorners.medium)
     )
 }
 
