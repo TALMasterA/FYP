@@ -18,6 +18,7 @@ import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.UserSettings
 import com.example.fyp.model.TranslationRecord
+import com.example.fyp.model.FavoriteSessionRecord
 import com.example.fyp.model.UserCoinStats
 import com.example.fyp.model.UserId
 import com.example.fyp.model.SessionId
@@ -254,7 +255,8 @@ class HistoryViewModel @Inject constructor(
 
     /**
      * Favourite an entire live conversation session.
-     * Adds all records from the session to favourites (skips already-favourited ones).
+     * Saves the whole session as a FavoriteSession document so it can be
+     * viewed later in the Favorites screen with an "Open" button.
      */
     fun favouriteSession(sessionId: String, sessionRecords: List<TranslationRecord>) {
         val uid = currentUserId ?: return
@@ -263,83 +265,78 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(favouritingSessionId = sessionId)
 
-            var failCount = 0
-            val newFavTexts = mutableSetOf<String>()
-            val newFavIds = mutableSetOf<String>()
+            val sessionName = _uiState.value.sessionNames[sessionId]
+                ?: "Session ${sessionId.take(8)}"
 
-            for (record in sessionRecords) {
-                val recordKey = "${record.sourceText}|${record.targetText}"
-                // Skip already-favourited records
-                if (_uiState.value.favoritedTexts.contains(recordKey)) continue
-
-                favoritesRepo.addFavorite(
-                    userId = uid,
-                    sourceText = record.sourceText,
-                    targetText = record.targetText,
-                    sourceLang = record.sourceLang,
-                    targetLang = record.targetLang,
-                    note = "Session: $sessionId"
-                ).onSuccess {
-                    newFavTexts.add(recordKey)
-                    newFavIds.add(record.id)
-                }.onFailure {
-                    failCount++
-                }
+            val sessionRecordModels = sessionRecords.map { rec ->
+                FavoriteSessionRecord(
+                    sourceText = rec.sourceText,
+                    targetText = rec.targetText,
+                    sourceLang = rec.sourceLang,
+                    targetLang = rec.targetLang,
+                    speaker = rec.speaker.orEmpty(),
+                    direction = rec.direction.orEmpty(),
+                    sequence = rec.sequence?.toInt() ?: 0
+                )
             }
 
-            _uiState.value = _uiState.value.copy(
-                favouritingSessionId = null,
-                favoritedTexts = _uiState.value.favoritedTexts + newFavTexts,
-                favoriteIds = _uiState.value.favoriteIds + newFavIds,
-                favouritedSessionIds = _uiState.value.favouritedSessionIds + sessionId,
-                error = if (failCount > 0) "Failed to favourite $failCount record(s)" else null
-            )
+            favoritesRepo.addFavoriteSession(
+                userId = uid,
+                sessionId = sessionId,
+                sessionName = sessionName,
+                records = sessionRecordModels
+            ).onSuccess {
+                _uiState.value = _uiState.value.copy(
+                    favouritingSessionId = null,
+                    favouritedSessionIds = _uiState.value.favouritedSessionIds + sessionId
+                )
+            }.onFailure {
+                _uiState.value = _uiState.value.copy(
+                    favouritingSessionId = null,
+                    error = "Failed to favourite session"
+                )
+            }
         }
     }
 
     /**
      * Unfavourite an entire live conversation session.
-     * Removes all records from the session from favourites.
+     * Removes the FavoriteSession document from Firestore.
      */
     fun unfavouriteSession(sessionId: String, sessionRecords: List<TranslationRecord>) {
         val uid = currentUserId ?: return
-        if (sessionRecords.isEmpty()) return
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(favouritingSessionId = sessionId)
 
-            val removedTexts = mutableSetOf<String>()
-            val removedIds = mutableSetOf<String>()
-
-            for (record in sessionRecords) {
-                val recordKey = "${record.sourceText}|${record.targetText}"
-                val favId = favoritesRepo.getFavoriteId(uid, record.sourceText, record.targetText)
-                if (favId != null) {
-                    favoritesRepo.removeFavorite(uid, favId).onSuccess {
-                        removedTexts.add(recordKey)
-                        removedIds.add(record.id)
+            val favSession = favoritesRepo.findFavoriteSession(uid, sessionId)
+            if (favSession != null) {
+                favoritesRepo.removeFavoriteSession(uid, favSession.id)
+                    .onSuccess {
+                        _uiState.value = _uiState.value.copy(
+                            favouritingSessionId = null,
+                            favouritedSessionIds = _uiState.value.favouritedSessionIds - sessionId
+                        )
                     }
-                }
+                    .onFailure {
+                        _uiState.value = _uiState.value.copy(
+                            favouritingSessionId = null,
+                            error = "Failed to unfavourite session"
+                        )
+                    }
+            } else {
+                _uiState.value = _uiState.value.copy(favouritingSessionId = null)
             }
-
-            _uiState.value = _uiState.value.copy(
-                favouritingSessionId = null,
-                favoritedTexts = _uiState.value.favoritedTexts - removedTexts,
-                favoriteIds = _uiState.value.favoriteIds - removedIds,
-                favouritedSessionIds = _uiState.value.favouritedSessionIds - sessionId
-            )
         }
     }
 
     /**
-     * Check if a session is fully favourited (all records are in favourites).
+     * Check if a session is favourited (stored as a FavoriteSession).
      */
     fun isSessionFavourited(sessionRecords: List<TranslationRecord>): Boolean {
         if (sessionRecords.isEmpty()) return false
-        return sessionRecords.all { record ->
-            val recordKey = "${record.sourceText}|${record.targetText}"
-            _uiState.value.favoritedTexts.contains(recordKey)
-        }
+        val sid = sessionRecords.firstOrNull()?.sessionId ?: return false
+        return _uiState.value.favouritedSessionIds.contains(sid)
     }
 
     /**
@@ -358,6 +355,18 @@ class HistoryViewModel @Inject constructor(
             val favorites = favoritesRepo.getAllFavoritesOnce(userId)
             val favoritedTexts = favorites.map { "${it.sourceText}|${it.targetText}" }.toSet()
             _uiState.value = _uiState.value.copy(favoritedTexts = favoritedTexts)
+        }
+    }
+
+    /**
+     * Load IDs of sessions that have been favourited, so the heart icon
+     * shows the correct state when the user opens the History screen.
+     */
+    private fun loadFavouritedSessionIds(userId: String) {
+        viewModelScope.launch {
+            val sessions = favoritesRepo.getAllFavoriteSessionsOnce(userId)
+            val sessionIds = sessions.map { it.sessionId }.toSet()
+            _uiState.value = _uiState.value.copy(favouritedSessionIds = sessionIds)
         }
     }
 
@@ -443,6 +452,9 @@ class HistoryViewModel @Inject constructor(
 
         // Load favorited texts to show correct bookmark state
         loadFavoritedTexts(userId)
+
+        // Load favourited session IDs so heart icons show correctly on startup
+        loadFavouritedSessionIds(userId)
     }
 
     fun clearError() {

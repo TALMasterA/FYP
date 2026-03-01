@@ -5,6 +5,7 @@ import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.model.FavoriteRecord
+import com.example.fyp.model.FavoriteSession
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.User
 import com.example.fyp.model.user.UserSettings
@@ -52,7 +53,9 @@ class FavoritesViewModelTest {
             on { currentUserState } doReturn authStateFlow
         }
 
-        favoritesRepo = mock()
+        favoritesRepo = mock {
+            onBlocking { getAllFavoriteSessionsOnce(any()) } doReturn emptyList()
+        }
         speakTextUseCase = mock()
 
         sharedSettings = mock {

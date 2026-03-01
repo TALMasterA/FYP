@@ -1,6 +1,10 @@
 package com.example.fyp.screens.favorites
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,11 +14,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -24,6 +32,9 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,8 +60,11 @@ import com.example.fyp.core.rememberHapticFeedback
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.FavoriteRecord
+import com.example.fyp.model.FavoriteSession
+import com.example.fyp.model.FavoriteSessionRecord
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.ui.components.EmptyStates
+import com.example.fyp.ui.components.EmptyStateView
 import com.example.fyp.ui.components.TranslationCardSkeleton
 import kotlinx.coroutines.delay
 
@@ -65,12 +79,23 @@ fun FavoritesScreen(
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
     val haptic = rememberHapticFeedback()
 
-    // Pagination state
-    var currentPage by remember { mutableIntStateOf(0) }
+    // Tab state
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val tabs = listOf(t(UiTextKey.FavoritesTabRecords), t(UiTextKey.FavoritesTabSessions))
+
+    // Records pagination
+    var recordsPage by remember { mutableIntStateOf(0) }
     val pageSize = 10
-    val totalPages = pageCount(uiState.favorites.size, pageSize)
+    val recordsTotalPages = pageCount(uiState.favorites.size, pageSize)
     val pagedFavorites = uiState.favorites
-        .drop(currentPage * pageSize)
+        .drop(recordsPage * pageSize)
+        .take(pageSize)
+
+    // Sessions pagination
+    var sessionsPage by remember { mutableIntStateOf(0) }
+    val sessionsTotalPages = pageCount(uiState.sessions.size, pageSize)
+    val pagedSessions = uiState.sessions
+        .drop(sessionsPage * pageSize)
         .take(pageSize)
 
     // Auto-dismiss error after delay
@@ -111,9 +136,22 @@ fun FavoritesScreen(
                 }
             }
 
+            // Tabs
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = MaterialTheme.colorScheme.background,
+            ) {
+                tabs.forEachIndexed { index, label ->
+                    Tab(
+                        selected = selectedTab == index,
+                        onClick = { selectedTab = index },
+                        text = { Text(label) },
+                    )
+                }
+            }
+
             when {
                 uiState.isLoading -> {
-                    // Show loading skeletons
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -127,78 +165,283 @@ fun FavoritesScreen(
                         }
                     }
                 }
-                uiState.favorites.isEmpty() -> {
-                    // Enhanced empty state
-                    EmptyStates.NoFavorites(
-                        message = t(UiTextKey.FavoritesEmpty),
-                        modifier = Modifier.fillMaxSize()
+
+                selectedTab == 0 -> {
+                    // Records tab
+                    if (uiState.favorites.isEmpty()) {
+                        EmptyStates.NoFavorites(
+                            message = t(UiTextKey.FavoritesEmpty),
+                            modifier = Modifier.weight(1f).fillMaxWidth()
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(horizontal = 16.dp),
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(pagedFavorites, key = { it.id }) { favorite ->
+                                FavoriteCard(
+                                    favorite = favorite,
+                                    languageNameFor = uiLanguageNameFor,
+                                    onSpeakSource = {
+                                        haptic.click()
+                                        viewModel.speak(favorite.sourceText, favorite.sourceLang, favorite.id + "_source")
+                                    },
+                                    onSpeakTarget = {
+                                        haptic.click()
+                                        viewModel.speak(favorite.targetText, favorite.targetLang, favorite.id + "_target")
+                                    },
+                                    onDelete = {
+                                        haptic.reject()
+                                        viewModel.removeFavorite(favorite.id)
+                                    },
+                                    isSpeakingSource = uiState.speakingId == (favorite.id + "_source"),
+                                    isSpeakingTarget = uiState.speakingId == (favorite.id + "_target"),
+                                    t = t
+                                )
+                            }
+                        }
+
+                        if (uiState.hasMore && recordsPage == recordsTotalPages - 1) {
+                            Button(
+                                onClick = {
+                                    viewModel.loadMoreFavorites()
+                                    recordsPage = 0
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                Text(text = "Load More")
+                            }
+                        }
+                    }
+                }
+
+                else -> {
+                    // Sessions tab (view-only)
+                    if (uiState.sessions.isEmpty()) {
+                        Box(
+                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            EmptyStateView(
+                                icon = Icons.Filled.Forum,
+                                title = t(UiTextKey.FavoritesSessionsEmpty),
+                                message = t(UiTextKey.FavoritesSessionsEmpty),
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(horizontal = 16.dp),
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(pagedSessions, key = { it.id }) { session ->
+                                FavoriteSessionCard(
+                                    session = session,
+                                    itemsTemplate = t(UiTextKey.FavoritesSessionItemsTemplate),
+                                    openLabel = t(UiTextKey.ActionOpen),
+                                    speakingId = uiState.speakingId,
+                                    onSpeak = { text, lang, id ->
+                                        haptic.click()
+                                        viewModel.speak(text, lang, id)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Pagination controls
+            val page = if (selectedTab == 0) recordsPage else sessionsPage
+            val totalPages = if (selectedTab == 0) recordsTotalPages else sessionsTotalPages
+            if (totalPages > 1) {
+                PaginationRow(
+                    page = page,
+                    totalPages = totalPages,
+                    prevLabel = uiText(UiTextKey.PaginationPrevLabel, BaseUiTexts[UiTextKey.PaginationPrevLabel.ordinal]),
+                    nextLabel = uiText(UiTextKey.PaginationNextLabel, BaseUiTexts[UiTextKey.PaginationNextLabel.ordinal]),
+                    pageLabelTemplate = uiText(
+                        UiTextKey.PaginationPageLabelTemplate,
+                        BaseUiTexts[UiTextKey.PaginationPageLabelTemplate.ordinal]
+                    ),
+                    onPrev = {
+                        if (selectedTab == 0 && recordsPage > 0) recordsPage--
+                        if (selectedTab == 1 && sessionsPage > 0) sessionsPage--
+                    },
+                    onNext = {
+                        if (selectedTab == 0 && recordsPage < recordsTotalPages - 1) recordsPage++
+                        if (selectedTab == 1 && sessionsPage < sessionsTotalPages - 1) sessionsPage++
+                    },
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FavoriteSessionCard(
+    session: FavoriteSession,
+    itemsTemplate: String,
+    openLabel: String,
+    speakingId: String?,
+    onSpeak: (text: String, lang: String, id: String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    OutlinedCard(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = MaterialTheme.colorScheme.background
+        )
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            // Session header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = session.sessionName,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = itemsTemplate.replace("{count}", session.records.size.toString()),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                else -> {
-                    // Favorites list with pagination
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .padding(horizontal = 16.dp),
-                        contentPadding = PaddingValues(vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        items(pagedFavorites, key = { it.id }) { favorite ->
-                            FavoriteCard(
-                                favorite = favorite,
-                                languageNameFor = uiLanguageNameFor,
-                                onSpeakSource = {
-                                    haptic.click()
-                                    viewModel.speak(favorite.sourceText, favorite.sourceLang, favorite.id + "_source")
-                                },
-                                onSpeakTarget = {
-                                    haptic.click()
-                                    viewModel.speak(favorite.targetText, favorite.targetLang, favorite.id + "_target")
-                                },
-                                onDelete = {
-                                    haptic.reject()
-                                    viewModel.removeFavorite(favorite.id)
-                                },
-                                isSpeakingSource = uiState.speakingId == (favorite.id + "_source"),
-                                isSpeakingTarget = uiState.speakingId == (favorite.id + "_target"),
-                                t = t
+                // Open/Close toggle
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = openLabel
+                    )
+                }
+            }
+
+            // Expand to show conversation bubbles (view-only)
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    session.records.sortedBy { it.sequence }.forEachIndexed { index, record ->
+                        FavoriteSessionBubble(
+                            record = record,
+                            sessionId = session.id,
+                            index = index,
+                            speakingId = speakingId,
+                            onSpeak = onSpeak
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FavoriteSessionBubble(
+    record: FavoriteSessionRecord,
+    sessionId: String,
+    index: Int,
+    speakingId: String?,
+    onSpeak: (text: String, lang: String, id: String) -> Unit
+) {
+    val isPersonA = record.speaker == "A"
+    val alignment = if (isPersonA) Alignment.Start else Alignment.End
+    val bubbleColor = if (isPersonA)
+        MaterialTheme.colorScheme.primaryContainer
+    else
+        MaterialTheme.colorScheme.tertiaryContainer
+
+    val speakSourceId = "${sessionId}_${index}_source"
+    val speakTargetId = "${sessionId}_${index}_target"
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = alignment
+    ) {
+        // Speaker label
+        Text(
+            text = if (isPersonA) "Person A" else "Person B",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+
+        Card(
+            modifier = Modifier.widthIn(max = 300.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = bubbleColor)
+        ) {
+            Column(modifier = Modifier.padding(10.dp)) {
+                // Source text
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = record.sourceText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (record.sourceLang.isNotBlank()) {
+                        IconButton(
+                            onClick = { onSpeak(record.sourceText, record.sourceLang, speakSourceId) },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = "Speak",
+                                modifier = Modifier.size(16.dp),
+                                tint = if (speakingId == speakSourceId) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
+                }
 
-                // Show "Load More" button if there are more favorites (Lazy Loading - Priority 2 #9)
-                if (uiState.hasMore && currentPage == totalPages - 1) {
-                    Button(
-                        onClick = {
-                            viewModel.loadMoreFavorites()
-                            // Reset to first page to show newly loaded items
-                            currentPage = 0
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        Text(text = "Load More")
+                // Target text (translation)
+                if (record.targetText.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = record.targetText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (record.targetLang.isNotBlank()) {
+                            IconButton(
+                                onClick = { onSpeak(record.targetText, record.targetLang, speakTargetId) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                                    contentDescription = "Speak translation",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = if (speakingId == speakTargetId) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
-                }
-
-                // Pagination controls
-                if (totalPages > 1) {
-                    PaginationRow(
-                        page = currentPage,
-                        totalPages = totalPages,
-                        prevLabel = uiText(UiTextKey.PaginationPrevLabel, BaseUiTexts[UiTextKey.PaginationPrevLabel.ordinal]),
-                        nextLabel = uiText(UiTextKey.PaginationNextLabel, BaseUiTexts[UiTextKey.PaginationNextLabel.ordinal]),
-                        pageLabelTemplate = uiText(
-                            UiTextKey.PaginationPageLabelTemplate,
-                            BaseUiTexts[UiTextKey.PaginationPageLabelTemplate.ordinal]
-                        ),
-                        onPrev = { if (currentPage > 0) currentPage-- },
-                        onNext = { if (currentPage < totalPages - 1) currentPage++ },
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
                 }
             }
         }

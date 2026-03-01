@@ -889,6 +889,18 @@ val ScreenUiTexts: List<String> = listOf(
     // FavoritesNoteHint
     "Add a note (optional)",
 
+    // FavoritesTabRecords
+    "Records",
+
+    // FavoritesTabSessions
+    "Sessions",
+
+    // FavoritesSessionsEmpty
+    "No saved sessions yet",
+
+    // FavoritesSessionItemsTemplate
+    "{count} message(s)",
+
     // --- Custom Words ---
     // CustomWordsTitle
     "Custom Words",

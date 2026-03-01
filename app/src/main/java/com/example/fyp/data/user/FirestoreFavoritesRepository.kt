@@ -3,6 +3,8 @@
 package com.example.fyp.data.user
 
 import com.example.fyp.model.FavoriteRecord
+import com.example.fyp.model.FavoriteSession
+import com.example.fyp.model.FavoriteSessionRecord
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -23,6 +25,9 @@ class FirestoreFavoritesRepository @Inject constructor(
 
     private fun colRef(uid: String) =
         db.collection("users").document(uid).collection("favorites")
+
+    private fun sessionColRef(uid: String) =
+        db.collection("users").document(uid).collection("favorite_sessions")
 
     /**
      * Observe all favorites in real-time
@@ -156,6 +161,74 @@ class FirestoreFavoritesRepository @Inject constructor(
             .get()
             .await()
         snapshot.toObjects(FavoriteRecord::class.java)
+    } catch (e: Exception) {
+        emptyList()
+    }
+
+    // ── Favorite Sessions ─────────────────────────────────────────────────
+
+    /**
+     * Save a full conversation session as a favourite.
+     * The session document contains embedded records (no subcollection needed).
+     */
+    suspend fun addFavoriteSession(
+        userId: String,
+        sessionId: String,
+        sessionName: String,
+        records: List<FavoriteSessionRecord>
+    ): Result<FavoriteSession> = try {
+        val docRef = sessionColRef(userId).document()
+        val session = FavoriteSession(
+            id = docRef.id,
+            userId = userId,
+            sessionId = sessionId,
+            sessionName = sessionName,
+            records = records,
+            createdAt = Timestamp.now()
+        )
+        docRef.set(session).await()
+        Result.success(session)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    /**
+     * Remove a favorited session by its Firestore document ID.
+     */
+    suspend fun removeFavoriteSession(userId: String, favoriteSessionId: String): Result<Unit> = try {
+        sessionColRef(userId).document(favoriteSessionId).delete().await()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    /**
+     * Find a favorited session by the original sessionId.
+     */
+    suspend fun findFavoriteSession(
+        userId: String,
+        sessionId: String
+    ): FavoriteSession? = try {
+        val snapshot = sessionColRef(userId)
+            .whereEqualTo("sessionId", sessionId)
+            .limit(1)
+            .get()
+            .await()
+        snapshot.documents.firstOrNull()?.toObject(FavoriteSession::class.java)
+    } catch (e: Exception) {
+        null
+    }
+
+    /**
+     * Get all favourite sessions once (not real-time) for loading in FavoritesScreen.
+     */
+    suspend fun getAllFavoriteSessionsOnce(userId: String): List<FavoriteSession> = try {
+        val snapshot = sessionColRef(userId)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .limit(QUERY_LIMIT)
+            .get()
+            .await()
+        snapshot.toObjects(FavoriteSession::class.java)
     } catch (e: Exception) {
         emptyList()
     }

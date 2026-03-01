@@ -402,6 +402,10 @@ enum class UiTextKey {
     FavoritesRemoveButton,
     FavoritesNoteLabel,
     FavoritesNoteHint,
+    FavoritesTabRecords,
+    FavoritesTabSessions,
+    FavoritesSessionsEmpty,
+    FavoritesSessionItemsTemplate,
 
     // --- Custom Words ---
     CustomWordsTitle,

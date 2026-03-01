@@ -8,6 +8,7 @@ import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.FavoriteRecord
+import com.example.fyp.model.FavoriteSession
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +23,7 @@ data class FavoritesUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
     val favorites: List<FavoriteRecord> = emptyList(),
+    val sessions: List<FavoriteSession> = emptyList(),
     val error: String? = null,
     val speakingId: String? = null,
     val visibleCount: Int = 20, // Initial visible count for lazy loading
@@ -82,6 +84,7 @@ class FavoritesViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
                 val allFavorites = favoritesRepo.getAllFavoritesOnce(userId)
+                val allSessions = favoritesRepo.getAllFavoriteSessionsOnce(userId)
                 val visibleCount = _uiState.value.visibleCount
                 val visibleFavorites = allFavorites.take(visibleCount)
                 val hasMore = allFavorites.size > visibleCount
@@ -89,6 +92,7 @@ class FavoritesViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     favorites = visibleFavorites,
+                    sessions = allSessions,
                     hasMore = hasMore,
                     error = null
                 )
@@ -135,6 +139,7 @@ class FavoritesViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isRefreshing = true)
             try {
                 val allFavorites = favoritesRepo.getAllFavoritesOnce(userId)
+                val allSessions = favoritesRepo.getAllFavoriteSessionsOnce(userId)
                 val visibleCount = _uiState.value.visibleCount
                 val visibleFavorites = allFavorites.take(visibleCount)
                 val hasMore = allFavorites.size > visibleCount
@@ -142,6 +147,7 @@ class FavoritesViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isRefreshing = false,
                     favorites = visibleFavorites,
+                    sessions = allSessions,
                     hasMore = hasMore,
                     error = null
                 )

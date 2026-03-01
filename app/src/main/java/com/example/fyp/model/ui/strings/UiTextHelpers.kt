@@ -387,6 +387,7 @@ fun buildUiTextMap(translatedJoined: String, uiLanguageCode: String?): Map<UiTex
     // Template strings that must contain specific tokens
     ensureContains(UiTextKey.HistorySessionTitleTemplate, "{id}")
     ensureContains(UiTextKey.HistoryItemsCountTemplate, "{count}")
+    ensureContains(UiTextKey.FavoritesSessionItemsTemplate, "{count}")
     ensureContains(UiTextKey.PaginationPageLabelTemplate, "{page}", "{total}")
 
     ensureContains(UiTextKey.LearningOpenSheetTemplate, "{speclanguage}")
