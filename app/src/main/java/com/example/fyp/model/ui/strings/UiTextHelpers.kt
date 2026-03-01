@@ -411,6 +411,60 @@ fun buildUiTextMap(translatedJoined: String, uiLanguageCode: String?): Map<UiTex
     ensureContains(UiTextKey.QuizRegenNeedMoreTemplate, "{count}")
     ensureContains(UiTextKey.QuizCoinsEarnedMessageTemplate, "{Coins}")
 
+    // Shop templates
+    ensureContains(UiTextKey.ShopCurrentLimit, "{limit}")
+    ensureContains(UiTextKey.ShopBuyHistoryExpansion, "{increment}", "{cost}")
+    ensureContains(UiTextKey.ShopHistoryExpandedMessage, "{limit}")
+    ensureContains(UiTextKey.SettingsColorCostTemplate, "{cost}")
+
+    // History info templates
+    ensureContains(UiTextKey.HistoryInfoLimitMessage, "{limit}")
+    ensureContains(UiTextKey.HistoryInfoFilterMessage, "{limit}")
+
+    // Word bank templates
+    ensureContains(UiTextKey.WordBankHistoryCountTemplate, "{nowCount}", "{savedCount}")
+    ensureContains(UiTextKey.WordBankRecordsCountTemplate, "{count}")
+
+    // Learning templates
+    ensureContains(UiTextKey.LearningRegenBlockedMessage, "{needed}")
+    ensureContains(UiTextKey.LearningRegenNeedMoreRecords, "{needed}")
+    ensureContains(UiTextKey.LearningProgressNeededTemplate, "{needed}")
+
+    // Language detection
+    ensureContains(UiTextKey.LanguageDetectedTemplate, "{language}")
+
+    // Cache
+    ensureContains(UiTextKey.CacheStatsTemplate, "{count}")
+
+    // Friends templates
+    ensureContains(UiTextKey.FriendsRequestsSection, "{count}")
+    ensureContains(UiTextKey.FriendsSectionTitle, "{count}")
+    ensureContains(UiTextKey.FriendsRemoveDialogMessage, "{username}")
+    ensureContains(UiTextKey.FriendsNewRequestsTemplate, "{count}")
+    ensureContains(UiTextKey.FriendsSentRequestsSection, "{count}")
+    ensureContains(UiTextKey.FriendsDeleteMultipleMessage, "{count}")
+
+    // Chat templates
+    ensureContains(UiTextKey.ChatTitle, "{username}")
+    ensureContains(UiTextKey.ChatUnreadBadge, "{count}")
+
+    // Share templates
+    ensureContains(UiTextKey.ShareWordWith, "{username}")
+    ensureContains(UiTextKey.ShareMaterialWith, "{username}")
+    ensureContains(UiTextKey.ShareReceivedFrom, "{username}")
+    ensureContains(UiTextKey.ShareNewItemsTemplate, "{count}")
+    ensureContains(UiTextKey.ShareLearningSheetLanguageLabel, "{language}")
+
+    // Block/Unblock templates
+    ensureContains(UiTextKey.BlockUserMessage, "{username}")
+    ensureContains(UiTextKey.UnblockUserMessage, "{username}")
+    ensureContains(UiTextKey.BlockedUserIdTemplate, "{id}")
+
+    // Home/Profile templates
+    ensureContains(UiTextKey.HomeWelcomeBack, "{name}")
+    ensureContains(UiTextKey.ProfileEmailTemplate, "{email}")
+    ensureContains(UiTextKey.AddCustomWordHintTemplate, "{from}", "{to}")
+
     return map
 }
 

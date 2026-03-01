@@ -406,7 +406,7 @@ val ScreenUiTexts: List<String> = listOf(
     "Reset password here",
 
     // SettingsQuickLinks
-    "Details Settings",
+    "Detailed Settings",
 
     // SettingsNotLoggedInWarning
     "Not logged in. Changes below will not be saved.",

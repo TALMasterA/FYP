@@ -757,7 +757,7 @@ val CoreUiTexts: List<String> = listOf(
 
     // --- Status Messages ---
     // RecognizingStatus
-    "Recording with Azure, SPEAK and please WAIT...(Stop listening after slient)",
+    "Recording... Speak now. (Stops automatically after silence)",
     // TranslatingStatus
     "Translating, please wait...",
     // SpeakingOriginalStatus

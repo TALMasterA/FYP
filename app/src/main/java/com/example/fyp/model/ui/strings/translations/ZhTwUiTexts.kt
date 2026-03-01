@@ -13,14 +13,14 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.TranslateButton to "翻譯",
     UiTextKey.CopyTranslationButton to "複製翻譯",
     UiTextKey.SpeakTranslationButton to "朗讀翻譯",
-    UiTextKey.RecognizingStatus to "正在辨識語音...",
+    UiTextKey.RecognizingStatus to "錄音中...請說話，靜音後自動停止。",
     UiTextKey.TranslatingStatus to "翻譯中...",
     UiTextKey.SpeakingOriginalStatus to "正在朗讀原文...",
     UiTextKey.SpeakingTranslationStatus to "正在朗讀翻譯...",
     UiTextKey.SpeakingLabel to "朗讀中",
     UiTextKey.FinishedSpeakingOriginal to "原文朗讀完畢",
     UiTextKey.FinishedSpeakingTranslation to "翻譯朗讀完畢",
-    UiTextKey.TtsErrorTemplate to "語音錯誤：{error}",
+    UiTextKey.TtsErrorTemplate to "語音錯誤：%s",
 
     // Language labels
     UiTextKey.AppUiLanguageLabel to "介面語言",
@@ -62,13 +62,13 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.GuestTranslationLimitMessage to "您已更換一次介面語言。請登入後再次更換。已登入用戶可無限次更換介面語言並享有本地快取功能。",
 
     // Speech
-    UiTextKey.SpeechInputPlaceholder to "語音辨識結果將顯示於此...",
+    UiTextKey.SpeechInputPlaceholder to "在此輸入或使用麥克風...",
     UiTextKey.SpeechTranslatedPlaceholder to "翻譯結果將顯示於此...",
-    UiTextKey.StatusAzureErrorTemplate to "Azure 錯誤：{error}",
-    UiTextKey.StatusTranslationErrorTemplate to "翻譯錯誤：{error}",
+    UiTextKey.StatusAzureErrorTemplate to "Azure 錯誤：%s",
+    UiTextKey.StatusTranslationErrorTemplate to "翻譯錯誤：%s",
     UiTextKey.StatusLoginRequiredTranslation to "請登入以使用翻譯功能",
-    UiTextKey.StatusRecognizePreparing to "準備麥克風...",
-    UiTextKey.StatusRecognizeListening to "正在聆聽...",
+    UiTextKey.StatusRecognizePreparing to "準備麥克風中...（請勿說話）",
+    UiTextKey.StatusRecognizeListening to "正在聆聽...請說話。",
 
     // Pagination
     UiTextKey.PaginationPrevLabel to "上一頁",
@@ -77,7 +77,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Toast
     UiTextKey.ToastCopied to "已複製",
-    UiTextKey.DisableText to "停用",
+    UiTextKey.DisableText to "需要登入以使用翻譯功能及儲存翻譯紀錄。",
 
     // Error
     UiTextKey.ErrorRetryButton to "重試",
@@ -85,16 +85,16 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Shop
     UiTextKey.ShopTitle to "商店",
-    UiTextKey.ShopCoinBalance to "硬幣餘額：{balance}",
+    UiTextKey.ShopCoinBalance to "您的硬幣",
     UiTextKey.ShopHistoryExpansionTitle to "擴充歷史紀錄上限",
     UiTextKey.ShopHistoryExpansionDesc to "將歷史紀錄查看上限增加 50 筆，費用 10 枚硬幣",
     UiTextKey.ShopCurrentLimit to "目前上限：{limit} 筆",
-    UiTextKey.ShopMaxLimit to "已達最高上限 ({limit} 筆)",
+    UiTextKey.ShopMaxLimit to "最高上限：",
     UiTextKey.ShopBuyHistoryExpansion to "購買 (+50 筆，10 枚硬幣)",
     UiTextKey.ShopInsufficientCoins to "硬幣不足",
     UiTextKey.ShopMaxLimitReached to "已達最高上限",
     UiTextKey.ShopHistoryExpandedTitle to "擴充成功！",
-    UiTextKey.ShopHistoryExpandedMessage to "歷史紀錄上限已增加！",
+    UiTextKey.ShopHistoryExpandedMessage to "您的歷史紀錄上限已擴充至 {limit} 筆，現在可以查看更多翻譯紀錄了！",
     UiTextKey.ShopColorPaletteTitle to "色彩主題",
     UiTextKey.ShopColorPaletteDesc to "選擇您的應用程式色彩主題，每個新主題 10 枚硬幣",
     UiTextKey.ShopEntry to "商店",
@@ -114,7 +114,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SpeechTitle to "快速翻譯",
     UiTextKey.HomeStartButton to "開始翻譯",
     UiTextKey.HomeFeaturesTitle to "功能介紹",
-    UiTextKey.HomeDiscreteDescription to "快速翻譯語音並查看歷史紀錄",
+    UiTextKey.HomeDiscreteDescription to "短句和語音翻譯",
     UiTextKey.HomeContinuousDescription to "即時雙向對話翻譯",
     UiTextKey.HomeLearningDescription to "從翻譯紀錄生成學習教材和測驗",
 
@@ -432,6 +432,10 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FavoritesRemoveButton to "從最愛移除",
     UiTextKey.FavoritesNoteLabel to "備註",
     UiTextKey.FavoritesNoteHint to "新增備註（可選）",
+    UiTextKey.FavoritesTabRecords to "紀錄",
+    UiTextKey.FavoritesTabSessions to "對話",
+    UiTextKey.FavoritesSessionsEmpty to "尚無已儲存的對話",
+    UiTextKey.FavoritesSessionItemsTemplate to "{count} 則訊息",
 
     // Custom words
     UiTextKey.CustomWordsTitle to "自訂單字",
@@ -598,10 +602,14 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsInfoTitle to "好友頁面說明",
     UiTextKey.FriendsInfoMessage to "• 下拉以手動重新整理好友名單、請求和好友狀態。\n" +
             "• 點擊好友卡片以開啟聊天。\n" +
-            "• 好友卡片左上角的紅點（●）表示有未讀訊息。\n" +
-            "• 使用 📥 收件匣圖示查看共享教材。\n" +
+            "• 好友卡片上的紅點（●）表示有未讀訊息，點擊 ✓✓ 可一次全部標記已讀。\n" +
+            "• 使用 📥 收件匣圖示查看共享教材，點擊旁邊的 ✓✓ 可消除紅點。\n" +
+            "• 使用好友卡片上的 🚫 圖示封鎖該用戶——對方將從您的名單中移除，且無法再聯繫您。\n" +
+            "• 封鎖用戶後，您與對方的聊天紀錄也將被清除。\n" +
             "• 使用垃圾桶圖示進入刪除模式以移除好友。\n" +
-            "• 使用搜尋按鈕透過用戶名稱或 ID 尋找並新增新好友。\n",
+            "• 移除好友後，您們之間的所有聊天訊息也將被刪除。\n" +
+            "• 使用搜尋按鈕透過用戶名稱或用戶 ID 尋找並新增新好友。\n" +
+            "• 推播通知預設為關閉——可在通知設定中開啟。\n",
     UiTextKey.FriendsEmptyTitle to "尚無好友",
     UiTextKey.FriendsEmptyMessage to "使用「新增好友」按鈕，透過用戶名稱或用戶 ID 搜尋好友。\n",
     UiTextKey.FriendsInfoGotItButton to "明白了",
@@ -697,7 +705,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     // Chat clear
     UiTextKey.ChatClearConversationButton to "清除聊天",
     UiTextKey.ChatClearConversationTitle to "清除對話",
-    UiTextKey.ChatClearConversationMessage to "刪除此對話中的所有訊息？此操作無法復原。",
+    UiTextKey.ChatClearConversationMessage to "隱藏此對話中的所有訊息？即使您離開並重新進入聊天室，訊息仍將對您永久隱藏。對方不受影響。",
     UiTextKey.ChatClearConversationConfirm to "全部清除",
     UiTextKey.ChatClearConversationSuccess to "對話已清除",
 
