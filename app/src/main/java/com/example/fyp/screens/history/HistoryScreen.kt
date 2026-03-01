@@ -466,6 +466,16 @@ fun HistoryScreen(
                                     onRequestDelete = { sid ->
                                         pendingDeleteSessionId = sid
                                     },
+                                    onFavouriteSession = { sid, records ->
+                                        viewModel.favouriteSession(sid, records)
+                                    },
+                                    onUnfavouriteSession = { sid, records ->
+                                        viewModel.unfavouriteSession(sid, records)
+                                    },
+                                    isSessionFavourited = { records ->
+                                        viewModel.isSessionFavourited(records)
+                                    },
+                                    favouritingSessionId = uiState.favouritingSessionId,
                                     modifier = Modifier.weight(1f),
                                 )
                             }

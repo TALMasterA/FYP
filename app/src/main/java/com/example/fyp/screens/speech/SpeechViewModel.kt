@@ -222,7 +222,12 @@ class SpeechViewModel @Inject constructor(
         toLanguage: String,
         onDetectedSourceLanguage: ((String) -> Unit)? = null
     ) {
-        if (recognizedText.isBlank()) return
+        if (recognizedText.isBlank()) {
+            speechState = speechState.copy(
+                statusMessage = "Please enter or speak text to translate.",
+            )
+            return
+        }
 
         if (!isLoggedIn()) {
             speechState = speechState.copy(

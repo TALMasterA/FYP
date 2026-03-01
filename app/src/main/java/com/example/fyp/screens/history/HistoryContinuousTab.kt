@@ -26,6 +26,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.fyp.ui.components.EmptyStateView
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.Icon
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.IconButton
 
 @Composable
 fun HistoryContinuousTab(
@@ -41,6 +47,10 @@ fun HistoryContinuousTab(
     onOpenSession: (String) -> Unit,
     onRequestRename: (String) -> Unit,
     onRequestDelete: (String) -> Unit,
+    onFavouriteSession: (String, List<com.example.fyp.model.TranslationRecord>) -> Unit = { _, _ -> },
+    onUnfavouriteSession: (String, List<com.example.fyp.model.TranslationRecord>) -> Unit = { _, _ -> },
+    isSessionFavourited: (List<com.example.fyp.model.TranslationRecord>) -> Boolean = { false },
+    favouritingSessionId: String? = null,
     modifier: Modifier = Modifier,
 ) {
     // Session details view stays in HistoryScreen.
@@ -78,11 +88,40 @@ fun HistoryContinuousTab(
                 )
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text(title, style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        formatItemsCount(template = itemsCountTemplate, count = records.size),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(title, style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                formatItemsCount(template = itemsCountTemplate, count = records.size),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+
+                        // Session favourite button
+                        val isFavouriting = favouritingSessionId == sid
+                        val isFav = isSessionFavourited(records)
+                        if (isFavouriting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            IconButton(onClick = {
+                                if (isFav) onUnfavouriteSession(sid, records)
+                                else onFavouriteSession(sid, records)
+                            }) {
+                                Icon(
+                                    imageVector = if (isFav) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                    contentDescription = if (isFav) "Unfavourite session" else "Favourite session",
+                                    tint = if (isFav) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
 
                     Spacer(Modifier.height(10.dp))
 

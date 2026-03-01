@@ -440,9 +440,8 @@ class LearningViewModel @Inject constructor(
         val primary = current.primaryLanguageCode
         val lastQuizCount = current.quizCountByLanguage[languageCode]
 
-        // ANTI-CHEAT Rule 1: Quiz can ONLY be generated when material version changes
-        // If a quiz already exists for the current material version, NO regen allowed
-        if (lastQuizCount != null && lastQuizCount == sheetHistoryCount) {
+        // Use domain logic for quiz regeneration eligibility
+        if (!GenerationEligibility.canRegenerateQuiz(sheetHistoryCount, lastQuizCount)) {
             _uiState.value = current.copy(
                 generatingQuizLanguageCode = null
             )

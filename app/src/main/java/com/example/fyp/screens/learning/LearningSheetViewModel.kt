@@ -274,12 +274,7 @@ class LearningSheetViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(quizLoading = true)
             try {
                 val completedAttempt = parseAndStoreQuiz.completeAttempt(attempt)
-                val attemptId = parseAndStoreQuiz.saveAttempt(uidNow, completedAttempt) // This calls ParseAndStoreQuizUseCase.saveAttempt which I fixed to take String wrapper inside. Wait, I updated ParseAndStoreQuizUseCase to take String and wrap it. So here passing String is correct!
-                // ERROR: "Argument type mismatch: actual type is 'kotlin.String', but 'com.example.fyp.model.UserId' was expected."
-                // Wait, did I fix ParseAndStoreQuizUseCase signature?
-                // Yes, I changed `saveAttempt(uid: String, ...)` -> returns `quizRepository.saveAttempt(UserId(uid), ...)`.
-                // So calling it with String is CORRECT.
-                // The error was from BEFORE my fix.
+                val attemptId = parseAndStoreQuiz.saveAttempt(uidNow, completedAttempt)
 
                 val finalAttempt = completedAttempt.copy(id = attemptId)
 

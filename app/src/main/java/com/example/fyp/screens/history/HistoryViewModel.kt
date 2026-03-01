@@ -40,6 +40,8 @@ data class HistoryUiState(
     val favoriteIds: Set<String> = emptySet(), // Track which record IDs are favorited (session-only)
     val favoritedTexts: Set<String> = emptySet(), // Track favorited content "sourceText|targetText" (persisted)
     val addingFavoriteId: String? = null, // Track which record is being added/removed
+    val favouritingSessionId: String? = null, // Track which session is being favourited
+    val favouritedSessionIds: Set<String> = emptySet(), // Track which sessions are fully favourited
     val historyViewLimit: Int = UserSettings.BASE_HISTORY_LIMIT, // Current history view limit
     val hasMoreRecords: Boolean = false, // Whether there are more records to load
     val isLoadingMore: Boolean = false, // Whether we're currently loading more records
@@ -249,6 +251,96 @@ class HistoryViewModel @Inject constructor(
      * Legacy method - redirects to toggle
      */
     fun addToFavorites(record: TranslationRecord) = toggleFavorite(record)
+
+    /**
+     * Favourite an entire live conversation session.
+     * Adds all records from the session to favourites (skips already-favourited ones).
+     */
+    fun favouriteSession(sessionId: String, sessionRecords: List<TranslationRecord>) {
+        val uid = currentUserId ?: return
+        if (sessionRecords.isEmpty()) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(favouritingSessionId = sessionId)
+
+            var failCount = 0
+            val newFavTexts = mutableSetOf<String>()
+            val newFavIds = mutableSetOf<String>()
+
+            for (record in sessionRecords) {
+                val recordKey = "${record.sourceText}|${record.targetText}"
+                // Skip already-favourited records
+                if (_uiState.value.favoritedTexts.contains(recordKey)) continue
+
+                favoritesRepo.addFavorite(
+                    userId = uid,
+                    sourceText = record.sourceText,
+                    targetText = record.targetText,
+                    sourceLang = record.sourceLang,
+                    targetLang = record.targetLang,
+                    note = "Session: $sessionId"
+                ).onSuccess {
+                    newFavTexts.add(recordKey)
+                    newFavIds.add(record.id)
+                }.onFailure {
+                    failCount++
+                }
+            }
+
+            _uiState.value = _uiState.value.copy(
+                favouritingSessionId = null,
+                favoritedTexts = _uiState.value.favoritedTexts + newFavTexts,
+                favoriteIds = _uiState.value.favoriteIds + newFavIds,
+                favouritedSessionIds = _uiState.value.favouritedSessionIds + sessionId,
+                error = if (failCount > 0) "Failed to favourite $failCount record(s)" else null
+            )
+        }
+    }
+
+    /**
+     * Unfavourite an entire live conversation session.
+     * Removes all records from the session from favourites.
+     */
+    fun unfavouriteSession(sessionId: String, sessionRecords: List<TranslationRecord>) {
+        val uid = currentUserId ?: return
+        if (sessionRecords.isEmpty()) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(favouritingSessionId = sessionId)
+
+            val removedTexts = mutableSetOf<String>()
+            val removedIds = mutableSetOf<String>()
+
+            for (record in sessionRecords) {
+                val recordKey = "${record.sourceText}|${record.targetText}"
+                val favId = favoritesRepo.getFavoriteId(uid, record.sourceText, record.targetText)
+                if (favId != null) {
+                    favoritesRepo.removeFavorite(uid, favId).onSuccess {
+                        removedTexts.add(recordKey)
+                        removedIds.add(record.id)
+                    }
+                }
+            }
+
+            _uiState.value = _uiState.value.copy(
+                favouritingSessionId = null,
+                favoritedTexts = _uiState.value.favoritedTexts - removedTexts,
+                favoriteIds = _uiState.value.favoriteIds - removedIds,
+                favouritedSessionIds = _uiState.value.favouritedSessionIds - sessionId
+            )
+        }
+    }
+
+    /**
+     * Check if a session is fully favourited (all records are in favourites).
+     */
+    fun isSessionFavourited(sessionRecords: List<TranslationRecord>): Boolean {
+        if (sessionRecords.isEmpty()) return false
+        return sessionRecords.all { record ->
+            val recordKey = "${record.sourceText}|${record.targetText}"
+            _uiState.value.favoritedTexts.contains(recordKey)
+        }
+    }
 
     /**
      * Check if a record is already favorited (by text content)
