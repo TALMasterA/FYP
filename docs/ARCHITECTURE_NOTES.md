@@ -130,3 +130,118 @@ Write a test that asserts the cleanup path count stays in sync.
 **Rule:** If you rename a Firestore field in code, update the security rules too. Run `firebase deploy --only firestore:rules` after any rule change.
 
 ---
+
+## 11. Standard UI Components — Consistency Across Screens
+
+**Files:** `ui/components/StandardButtons.kt`, `StandardTextFields.kt`, `StandardDialogs.kt`, `StandardComponents.kt`
+
+**Invariant:** All interactive UI elements (buttons, text fields, dialogs) should use standardized components to ensure consistent styling, spacing, and behavior across the entire app.
+
+**Rule:** When adding new UI elements:
+1. Use `StandardPrimaryButton`, `StandardSecondaryButton`, or `StandardTextButton` instead of raw `Button`, `OutlinedButton`, or `TextButton`
+2. Use `StandardTextField`, `StandardPasswordField`, or `StandardSearchField` instead of raw `OutlinedTextField`
+3. Use `StandardAlertDialog`, `StandardConfirmDialog`, or `StandardInfoDialog` instead of raw `AlertDialog`
+4. Use `StandardEmptyState`, `StandardErrorCard`, or `StandardInfoCard` for empty/error states
+5. Always use `AppSpacing` constants instead of hardcoded dp values
+6. Always use `AppCorners` for shape definitions
+7. Always use `MaterialTheme.colorScheme` instead of hardcoded colors
+
+**Benefits:**
+- Consistent button heights (48dp), text field styling, and dialog layouts
+- Easier to update global styles (change once, applies everywhere)
+- Better accessibility (consistent content descriptions and semantic roles)
+- Reduced code duplication
+
+---
+
+## 12. Performance Optimization — Debouncing and Throttling
+
+**File:** `core/performance/PerformanceUtils.kt`
+
+**Invariant:** Expensive operations triggered by user input or rapid events should be debounced or throttled to prevent redundant API calls and improve responsiveness.
+
+**Patterns:**
+
+**Debouncing (delay emission until input stops):**
+```kotlin
+val searchQuery by remember { mutableStateOf("") }
+val debouncedQuery = rememberDebouncedValue(searchQuery, delayMillis = 300L)
+
+LaunchedEffect(debouncedQuery) {
+    // Only triggers 300ms after user stops typing
+    searchUsers(debouncedQuery)
+}
+```
+
+**Throttling (enforce minimum interval between executions):**
+```kotlin
+ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) {
+    // Only executes once per second even if refreshTrigger changes rapidly
+    refreshData()
+}
+```
+
+**Rule:** Apply debouncing to:
+- Search fields (300ms delay)
+- Text input that triggers translations or API calls (300-500ms delay)
+- Auto-save operations (1-2s delay)
+
+Apply throttling to:
+- Scroll-triggered data loading (500ms-1s interval)
+- Refresh operations (1s interval)
+- Analytics events (5s interval)
+
+**Benefits:**
+- Reduces API calls by 80-90% during typing
+- Improves UI responsiveness
+- Saves Firestore read quota and costs
+
+---
+
+## 13. Input Validation and Sanitization — Security Guards
+
+**File:** `core/security/SecurityUtils.kt`
+
+**Invariant:** All user input must be validated and sanitized before processing, storage, or display to prevent injection attacks and ensure data integrity.
+
+**Rule:** Always validate user input at entry points:
+1. **Email fields** - Use `validateEmail()` before authentication
+2. **Password fields** - Use `validatePassword()` to enforce strength requirements
+3. **Username fields** - Use `validateUsername()` for format and length
+4. **Text fields** - Use `validateTextLength()` to enforce bounds
+5. **Display user content** - Use `sanitizeInput()` to escape HTML entities
+6. **URLs** - Use `validateUrl()` to ensure safe protocols
+
+**Pattern:**
+```kotlin
+when (val result = validateUsername(username)) {
+    is ValidationResult.Valid -> proceedWithUsername(username)
+    is ValidationResult.Invalid -> showError(result.message)
+}
+
+val safeText = sanitizeInput(userInput) // Escape HTML entities
+```
+
+**Rate Limiting:**
+```kotlin
+val loginLimiter = RateLimiter(maxAttempts = 5, windowMillis = 60_000L)
+
+if (!loginLimiter.isAllowed(userId)) {
+    showError("Too many attempts. Try again later.")
+    return
+}
+```
+
+**Rule:** Apply rate limiting to:
+- Login attempts (5 per minute)
+- Friend requests (10 per hour)
+- API calls (100 per minute)
+- Password reset (3 per hour)
+
+**Benefits:**
+- Prevents XSS attacks (cross-site scripting)
+- Prevents SQL injection
+- Prevents brute force attacks
+- Enforces data integrity
+
+---
