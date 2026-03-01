@@ -235,6 +235,21 @@ For now, to add new UI text to the UI language translation scope, you need to:
 
 ## 🚀 Commands
 
+**Build & Test:**
+```bash
+# Compile Kotlin code
+./gradlew compileDebugKotlin
+
+# Run all unit tests (53 test files, 398+ tests)
+./gradlew testDebugUnitTest
+
+# Run specific test class
+./gradlew testDebugUnitTest --tests "com.example.fyp.domain.learning.GenerationEligibilityTest"
+
+# Build debug APK
+./gradlew assembleDebug
+```
+
 **Git Workflow:**
 ```bash
 # Update main branch from remote
@@ -264,6 +279,44 @@ gh --version
 # Authenticate
 gh auth login
 ```
+
+--------------------------------------------------------------
+
+## 🧪 Testing
+
+**Test Coverage:**
+- **53 test files** covering critical app logic
+- **398+ unit tests** passing
+- Test categories:
+  - Domain layer use cases (20+ test files)
+  - ViewModels (6 test files)
+  - Models and serialization (10+ test files)
+  - Repositories and data layer (8+ test files)
+  - Anti-cheat and generation eligibility (comprehensive)
+
+**Key Test Suites:**
+- `GenerationEligibilityTest` - Word bank and learning sheet regeneration rules
+- `CoinEligibilityTest` - Coin award anti-cheat logic
+- `CoinAndGenerationIntegrationTest` - End-to-end eligibility scenarios
+- `UiTextAlignmentTest` - Critical test preventing enum/list misalignment crashes
+- Friend system tests - Friend requests, chat operations, shared items
+- Repository tests - Firestore operations, caching, cleanup
+
+**Running Tests:**
+```bash
+# Run all tests
+./gradlew testDebugUnitTest
+
+# Run with coverage report
+./gradlew testDebugUnitTest jacocoTestReport
+
+# Run specific test class
+./gradlew testDebugUnitTest --tests "com.example.fyp.domain.learning.*"
+```
+
+**Test Requirements:**
+- Mock `google-services.json` file in `app/` folder (gitignored)
+- JUnit 4 + Mockito + Kotlin Coroutines Test utilities
 
 --------------------------------------------------------------
 
