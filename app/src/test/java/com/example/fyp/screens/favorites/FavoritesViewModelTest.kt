@@ -6,6 +6,7 @@ import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
 import com.example.fyp.model.FavoriteRecord
 import com.example.fyp.model.FavoriteSession
+import com.example.fyp.model.FavoriteSessionRecord
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.User
 import com.example.fyp.model.user.UserSettings
@@ -31,6 +32,10 @@ import org.mockito.kotlin.*
  * 3. Load more favorites (lazy loading)
  * 4. Remove favorite updates state correctly
  * 5. Error handling with auto-clear
+ * 6. Session loading on auth
+ * 7. Sessions empty by default
+ * 8. Refresh also reloads sessions
+ * 9. Logout clears sessions
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class FavoritesViewModelTest {
@@ -249,6 +254,119 @@ class FavoritesViewModelTest {
         // Verify state reset
         assertEquals(false, viewModel.uiState.value.isLoading)
         assertEquals(emptyList<FavoriteRecord>(), viewModel.uiState.value.favorites)
+    }
+
+    // ── Session loading ──
+
+    @Test
+    fun `sessions are empty by default`() {
+        assertEquals(emptyList<FavoriteSession>(), viewModel.uiState.value.sessions)
+    }
+
+    @Test
+    fun `login loads sessions alongside records`() = runTest {
+        val userId = "user123"
+        val testSessions = listOf(
+            FavoriteSession(
+                id = "fs1",
+                userId = userId,
+                sessionId = "sess1",
+                sessionName = "Travel Chat",
+                records = listOf(
+                    FavoriteSessionRecord(
+                        sourceText = "Hello",
+                        targetText = "Hola",
+                        sourceLang = "en-US",
+                        targetLang = "es-ES",
+                        speaker = "A",
+                        direction = "A_to_B",
+                        sequence = 1
+                    )
+                )
+            )
+        )
+
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn emptyList()
+            onBlocking { getAllFavoriteSessionsOnce(userId) } doReturn testSessions
+        }
+
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+
+        assertEquals(1, viewModel.uiState.value.sessions.size)
+        assertEquals("Travel Chat", viewModel.uiState.value.sessions[0].sessionName)
+        assertEquals(1, viewModel.uiState.value.sessions[0].records.size)
+    }
+
+    @Test
+    fun `refresh reloads sessions`() = runTest {
+        val userId = "user123"
+        val testSessions = listOf(
+            FavoriteSession(id = "fs1", sessionId = "s1", sessionName = "Chat 1")
+        )
+
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn emptyList()
+            onBlocking { getAllFavoriteSessionsOnce(userId) } doReturn testSessions
+        }
+
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+        assertEquals(1, viewModel.uiState.value.sessions.size)
+
+        viewModel.refresh()
+
+        // Sessions reloaded (called twice: login + refresh)
+        verify(favoritesRepo, times(2)).getAllFavoriteSessionsOnce(userId)
+    }
+
+    @Test
+    fun `logout clears sessions`() = runTest {
+        val userId = "user123"
+        val testSessions = listOf(
+            FavoriteSession(id = "fs1", sessionId = "s1", sessionName = "Chat 1")
+        )
+
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn emptyList()
+            onBlocking { getAllFavoriteSessionsOnce(userId) } doReturn testSessions
+        }
+
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+        assertEquals(1, viewModel.uiState.value.sessions.size)
+
+        authStateFlow.value = AuthState.LoggedOut
+
+        assertEquals(emptyList<FavoriteSession>(), viewModel.uiState.value.sessions)
+    }
+
+    @Test
+    fun `sessions with multiple records load correctly`() = runTest {
+        val userId = "user123"
+        val testSessions = listOf(
+            FavoriteSession(
+                id = "fs1",
+                userId = userId,
+                sessionId = "sess1",
+                sessionName = "Restaurant",
+                records = listOf(
+                    FavoriteSessionRecord(sourceText = "Table for two", targetText = "Mesa para dos", speaker = "A", sequence = 1),
+                    FavoriteSessionRecord(sourceText = "The menu please", targetText = "El menú por favor", speaker = "A", sequence = 2),
+                    FavoriteSessionRecord(sourceText = "Of course", targetText = "Por supuesto", speaker = "B", sequence = 3)
+                )
+            )
+        )
+
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn emptyList()
+            onBlocking { getAllFavoriteSessionsOnce(userId) } doReturn testSessions
+        }
+
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+
+        val session = viewModel.uiState.value.sessions[0]
+        assertEquals(3, session.records.size)
+        assertEquals("Table for two", session.records[0].sourceText)
+        assertEquals("B", session.records[2].speaker)
     }
 }
 

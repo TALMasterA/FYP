@@ -75,7 +75,7 @@ class LearningViewModel @Inject constructor(
 
     private companion object {
         /** Maximum number of entries in the sheet metadata cache */
-        const val MAX_SHEET_CACHE_SIZE = 100
+        const val MAX_SHEET_CACHE_SIZE = 30
 
         /** Number of quiz questions to generate and store */
         const val QUIZ_QUESTIONS_COUNT = 10

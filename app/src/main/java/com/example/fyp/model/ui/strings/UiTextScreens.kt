@@ -58,7 +58,7 @@ val ScreenUiTexts: List<String> = listOf(
             "  • Learning Sheets - AI-generated study materials based on your translation history\n" +
             "  • Quiz System - Test your knowledge and earn coins (🪙)\n" +
             "  • Word Bank - Automatically generated vocabulary list from your translations\n" +
-            "  • Favorites - Bookmark important translations for quick access\n\n" +
+            "  • Favorites - Bookmark important translations and save entire conversation sessions\n\n" +
             
             "CUSTOMIZATION:\n" +
             "  • UI Language - Change app interface language (English, Chinese, Japanese, etc.)\n" +

@@ -69,7 +69,7 @@ Firebase login is required.
 - In-app banner notification when generation completes (tapping opens the relevant screen)
 - Word bank automatically generated from user translations; progress bar shows records toward next regen
 - Custom word bank for user-defined vocabulary entries
-- Favorites system for bookmarking important translations
+- Favorites system for bookmarking important translations and saving entire live conversation sessions
 
 **Friend System:**
 - **My Profile:** Display and share your User ID and Username for easy friend discovery
@@ -98,7 +98,7 @@ Firebase login is required.
 - Filter by language or keyword; retry button on load error
 - Session management for Live Conversation (rename, delete)
 - Cloud sync via Firestore with offline persistence
-- Favorites for quick access
+- Favorites for quick access (individual records and full sessions with view-only conversation replay)
 
 **Coin System:**
 - Earn coins through quiz performance (first-attempt anti-cheat verification)
@@ -139,7 +139,7 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
         - `history/` - Translation history with discrete/continuous tabs; pagination, retry
         - `learning/` - Learning sheets, quiz taking & results, quiz dialogs
         - `wordbank/` - Generated & custom word banks with progress bars
-        - `favorites/` - Bookmarked translations
+        - `favorites/` - Bookmarked translations and saved sessions (Records/Sessions tabs)
         - `friends/` - Friend management, chat, shared inbox, blocked users
         - `settings/` - Settings, profile, shop, voice settings, notification settings
         - `login/` - Login, registration, password reset
@@ -172,7 +172,7 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
     - `core/` - Common composables and utilities (logging via `AppLogger`, audio, permissions, pagination, font scaling)
     - `ui/` - Theme configuration (colors, palettes, dimensions, typography, animated components)
 - `fyp-backend/functions/` - Firebase Cloud Functions (TypeScript): translation, speech token, AI generation, FCM notifications, daily stale-token pruning
-- `docs/` - Architecture notes (`ARCHITECTURE_NOTES.md`)
+- `docs/` - Architecture notes (`ARCHITECTURE_NOTES.md`), codebase review (`suggestions.md`)
 
 --------------------------------------------------------------
 
@@ -278,6 +278,8 @@ gh auth login
 - `QuizAttemptDoc` - Firestore storage format with serialized JSON
 - `UserCoinStats` - Coin balance and lifetime stats
 - `FavoriteRecord` - Bookmarked translation with optional note
+- `FavoriteSession` - Saved live conversation session with embedded records
+- `FavoriteSessionRecord` - Single record within a saved session
 - `CustomWord` - User-defined vocabulary entry with pronunciation and example
 - `HistorySession` - Continuous conversation session metadata
 - `SpeechResult` - Sealed class for speech recognition results (Success/Error)
@@ -303,6 +305,7 @@ gh auth login
 - `users/{uid}/coin_awards/{versionKey}` - Coin award tracking for anti-cheat
 - `users/{uid}/last_awarded_quiz/{primary}_{target}` - Last awarded quiz count per language pair
 - `users/{uid}/favorites` - Bookmarked translations
+- `users/{uid}/favorite_sessions` - Saved live conversation sessions
 - `users/{uid}/word_banks/{primary}_{target}` - Generated vocabulary per language pair
 - `users/{uid}/custom_words` - User-defined vocabulary entries
 - `users/{uid}/friends` - Friend relation records
@@ -341,5 +344,5 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** February 28, 2026 - Split WordBankViewModel (CustomWordsViewModel), improved lifecycle-aware state collection, async onboarding check, accurate badge counts, triangle speech bubble tails on app icon
+**Last Updated:** March 1, 2026 - Session favourite feature (save/view full conversations), codebase review (suggestions.md), expanded test coverage (HistoryViewModel, FavoritesViewModel sessions), CancellationException fix in WordBankViewModel
 (Some content is by github copilot agent and may contain error)

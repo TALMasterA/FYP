@@ -624,6 +624,8 @@ class WordBankViewModel @Inject constructor(
                         difficulty = wordObj["difficulty"]?.jsonPrimitive?.content ?: ""
                     )
                 }.filter { it.originalWord.isNotBlank() && it.translatedWord.isNotBlank() }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 android.util.Log.e("WordBankVM", "Failed to parse word bank: ${e.message}, content: $content")
                 emptyList()
