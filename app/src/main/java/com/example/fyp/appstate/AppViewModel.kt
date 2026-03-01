@@ -129,27 +129,14 @@ class AppViewModel @Inject constructor(
                     chatRepository.observeTotalUnreadCount(UserId(userId)),
                     sharedSettingsDataSource.settings.map { it.inAppBadgeMessages }
                 ) { count, enabled ->
-                    enabled && count > 0
-                }.collect { showBadge ->
-                    android.util.Log.d("AppViewModel", "Unread badge: $showBadge")
+                    Pair(enabled && count > 0, if (enabled) count else 0)
+                }.collect { (showBadge, count) ->
                     _hasUnreadMessages.value = showBadge
+                    _unreadMessageCount.value = count
                 }
             } catch (e: Exception) {
                 android.util.Log.e("AppViewModel", "Error observing unread messages", e)
             }
-        }
-        // Also track the actual count for accurate badge numbers
-        viewModelScope.launch {
-            try {
-                combine(
-                    chatRepository.observeTotalUnreadCount(UserId(userId)),
-                    sharedSettingsDataSource.settings.map { it.inAppBadgeMessages }
-                ) { count, enabled ->
-                    if (enabled) count else 0
-                }.collect { count ->
-                    _unreadMessageCount.value = count
-                }
-            } catch (_: Exception) { /* non-fatal */ }
         }
     }
 

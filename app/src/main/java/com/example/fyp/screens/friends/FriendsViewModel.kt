@@ -85,9 +85,7 @@ class FriendsViewModel @Inject constructor(
     private var currentUserId: UserId? = null
     private var previousIncomingCount = 0
 
-    // Per-friend chat unread observers: friendId -> Job
-    private val unreadJobs = mutableMapOf<String, Job>()
-    // Single document unread observer (replaces N per-chat observers)
+    // Single document unread observer
     private var unreadPerFriendJob: Job? = null
 
     init {
@@ -108,8 +106,6 @@ class FriendsViewModel @Inject constructor(
                     }
                     AuthState.LoggedOut -> {
                         outgoingRequestsJob?.cancel()
-                        unreadJobs.values.forEach { it.cancel() }
-                        unreadJobs.clear()
                         unreadPerFriendJob?.cancel()
                         currentUserId = null
                         previousIncomingCount = 0

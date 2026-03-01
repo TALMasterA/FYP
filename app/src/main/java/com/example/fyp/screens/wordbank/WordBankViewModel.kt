@@ -627,8 +627,8 @@ class WordBankViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                android.util.Log.e("WordBankVM", "Failed to parse word bank: ${e.message}, content: $content")
-                emptyList()
+                android.util.Log.e("WordBankVM", "Failed to parse word bank: ${e.message}", e)
+                throw IllegalStateException("Failed to parse generated content: ${e.message}", e)
             }
         }
     }

@@ -303,6 +303,9 @@ class FirestoreFriendsRepository @Inject constructor(
                 createdAt = Timestamp.now(),
                 updatedAt = Timestamp.now(),
                 note = note.take(80).trim()
+                    .replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
             )
 
             requestRef.set(request).await()
@@ -490,20 +493,31 @@ class FirestoreFriendsRepository @Inject constructor(
         // This ensures users can re-add each other after unfriending.
         // Failure is non-fatal since the friendship is already removed.
         try {
-            val snap1 = db.collection("friend_requests")
-                .whereEqualTo("fromUserId", userId.value)
-                .whereEqualTo("toUserId", friendId.value)
-                .get().await()
-            val snap2 = db.collection("friend_requests")
-                .whereEqualTo("fromUserId", friendId.value)
-                .whereEqualTo("toUserId", userId.value)
-                .get().await()
+            val (snap1, snap2) = coroutineScope {
+                val d1 = async {
+                    db.collection("friend_requests")
+                        .whereEqualTo("fromUserId", userId.value)
+                        .whereEqualTo("toUserId", friendId.value)
+                        .get().await()
+                }
+                val d2 = async {
+                    db.collection("friend_requests")
+                        .whereEqualTo("fromUserId", friendId.value)
+                        .whereEqualTo("toUserId", userId.value)
+                        .get().await()
+                }
+                Pair(d1.await(), d2.await())
+            }
             val allDocs = snap1.documents + snap2.documents
             if (allDocs.isNotEmpty()) {
-                allDocs.chunked(500).forEach { chunk ->
-                    val cleanupBatch = db.batch()
-                    chunk.forEach { doc -> cleanupBatch.delete(doc.reference) }
-                    cleanupBatch.commit().await()
+                coroutineScope {
+                    allDocs.chunked(500).map { chunk ->
+                        async {
+                            val cleanupBatch = db.batch()
+                            chunk.forEach { doc -> cleanupBatch.delete(doc.reference) }
+                            cleanupBatch.commit().await()
+                        }
+                    }.forEach { it.await() }
                 }
             }
         } catch (e: Exception) {
@@ -606,6 +620,11 @@ class FirestoreFriendsRepository @Inject constructor(
     }
 
     override suspend fun syncFriendUsernames(userId: UserId): Map<String, String> {
+        // Skip if recently synced (freshness check to reduce reads)
+        val now = System.currentTimeMillis()
+        if (now - lastUsernameSyncTime < USERNAME_SYNC_FRESHNESS_MS) return emptyMap()
+        lastUsernameSyncTime = now
+
         return try {
             // Read own friends list
             val friendDocs = db.collection("users")
@@ -798,5 +817,9 @@ class FirestoreFriendsRepository @Inject constructor(
     companion object {
         /** Maximum number of friends to sync usernames for in a single batch. */
         private const val MAX_FRIENDS_PER_SYNC = 100L
+        /** Only sync usernames if last sync was more than 1 hour ago. */
+        private const val USERNAME_SYNC_FRESHNESS_MS = 3_600_000L // 1 hour
     }
+
+    @Volatile private var lastUsernameSyncTime = 0L
 }

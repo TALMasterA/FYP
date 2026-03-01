@@ -420,9 +420,20 @@ class FirestoreHistoryRepository @Inject constructor(
     override suspend fun deleteSession(userId: UserId, sessionId: SessionId) {
         val col = firestore.collection("users").document(userId.value).collection("history")
 
+        // Collect language pairs from deleted records for incremental count decrement
+        val langPairs = mutableListOf<Pair<String, String>>()
+
         while (true) {
             val snapshot = col.whereEqualTo("sessionId", sessionId.value).limit(400).get().await()
             if (snapshot.isEmpty) break
+
+            snapshot.documents.forEach { doc ->
+                val src = doc.getString("sourceLang")?.trim().orEmpty()
+                val tgt = doc.getString("targetLang")?.trim().orEmpty()
+                if (src.isNotEmpty() || tgt.isNotEmpty()) {
+                    langPairs.add(src to tgt)
+                }
+            }
 
             val batch = firestore.batch()
             snapshot.documents.forEach { batch.delete(it.reference) }
@@ -436,14 +447,32 @@ class FirestoreHistoryRepository @Inject constructor(
             .delete()
             .await()
 
-        // Rebuild language counts cache after bulk deletion.
-        // Launched on background scope so the delete operation returns immediately —
-        // the UI is not blocked while the full history is re-read.
-        backgroundScope.launch {
-            try {
-                rebuildLanguageCountsCache(userId.value)
-            } catch (e: Exception) {
-                Log.w("FirestoreHistoryRepository", "Background cache rebuild failed after deleteSession", e)
+        // Incrementally decrement language counts instead of full rebuild
+        if (langPairs.isNotEmpty()) {
+            backgroundScope.launch {
+                try {
+                    val statsRef = firestore.collection("users")
+                        .document(userId.value)
+                        .collection("user_stats")
+                        .document("language_counts")
+
+                    // Aggregate decrements per language
+                    val decrements = mutableMapOf<String, Long>()
+                    langPairs.forEach { (src, tgt) ->
+                        if (src.isNotBlank()) decrements[src] = (decrements[src] ?: 0L) - 1
+                        if (tgt.isNotBlank() && tgt != src) decrements[tgt] = (decrements[tgt] ?: 0L) - 1
+                    }
+
+                    val updates = decrements.mapValues { (_, delta) ->
+                        com.google.firebase.firestore.FieldValue.increment(delta)
+                    }
+                    if (updates.isNotEmpty()) {
+                        statsRef.set(updates, com.google.firebase.firestore.SetOptions.merge()).await()
+                    }
+                } catch (e: Exception) {
+                    Log.w("FirestoreHistoryRepository", "Incremental count decrement failed, rebuilding cache", e)
+                    try { rebuildLanguageCountsCache(userId.value) } catch (_: Exception) {}
+                }
             }
         }
     }

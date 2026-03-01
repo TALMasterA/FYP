@@ -361,4 +361,96 @@ class FavoriteRecordTest {
         val categories = travelPhrases.map { it.note.split(" - ").last() }
         assertEquals(listOf("Essential", "Shopping", "Emergency"), categories)
     }
+
+    // --- FavoriteSession Tests ---
+
+    @Test
+    fun `favorite session stores session metadata`() {
+        val session = FavoriteSession(
+            id = "fs1",
+            userId = "user1",
+            sessionId = "sess1",
+            sessionName = "Airport Check-in"
+        )
+
+        assertEquals("fs1", session.id)
+        assertEquals("user1", session.userId)
+        assertEquals("sess1", session.sessionId)
+        assertEquals("Airport Check-in", session.sessionName)
+    }
+
+    @Test
+    fun `favorite session default values are empty`() {
+        val session = FavoriteSession()
+        assertEquals("", session.id)
+        assertEquals("", session.userId)
+        assertEquals("", session.sessionId)
+        assertEquals("", session.sessionName)
+        assertEquals(emptyList<FavoriteSessionRecord>(), session.records)
+    }
+
+    @Test
+    fun `favorite session contains embedded records`() {
+        val records = listOf(
+            FavoriteSessionRecord(sourceText = "Hello", targetText = "Hola", speaker = "A", sequence = 1),
+            FavoriteSessionRecord(sourceText = "How are you?", targetText = "¿Cómo estás?", speaker = "B", sequence = 2),
+            FavoriteSessionRecord(sourceText = "I am fine", targetText = "Estoy bien", speaker = "A", sequence = 3)
+        )
+        val session = FavoriteSession(id = "fs1", sessionId = "s1", records = records)
+
+        assertEquals(3, session.records.size)
+        assertEquals("A", session.records[0].speaker)
+        assertEquals("B", session.records[1].speaker)
+        assertEquals(3, session.records[2].sequence)
+    }
+
+    @Test
+    fun `favorite session records maintain conversation order`() {
+        val records = listOf(
+            FavoriteSessionRecord(sourceText = "Hi", sequence = 1),
+            FavoriteSessionRecord(sourceText = "Good morning", sequence = 2),
+            FavoriteSessionRecord(sourceText = "Nice weather", sequence = 3)
+        )
+        val session = FavoriteSession(id = "fs1", records = records)
+
+        val sorted = session.records.sortedBy { it.sequence }
+        assertEquals("Hi", sorted[0].sourceText)
+        assertEquals("Good morning", sorted[1].sourceText)
+        assertEquals("Nice weather", sorted[2].sourceText)
+    }
+
+    @Test
+    fun `favorite session record stores language info`() {
+        val record = FavoriteSessionRecord(
+            sourceText = "Thank you",
+            targetText = "Gracias",
+            sourceLang = "en-US",
+            targetLang = "es-ES",
+            speaker = "A",
+            direction = "A_to_B",
+            sequence = 1
+        )
+
+        assertEquals("en-US", record.sourceLang)
+        assertEquals("es-ES", record.targetLang)
+        assertEquals("A_to_B", record.direction)
+    }
+
+    @Test
+    fun `favorite session record default values`() {
+        val record = FavoriteSessionRecord()
+        assertEquals("", record.sourceText)
+        assertEquals("", record.targetText)
+        assertEquals("", record.sourceLang)
+        assertEquals("", record.targetLang)
+        assertEquals("", record.speaker)
+        assertEquals("", record.direction)
+        assertEquals(0, record.sequence)
+    }
+
+    @Test
+    fun `favorite session with empty records list`() {
+        val session = FavoriteSession(id = "fs1", sessionId = "s1", records = emptyList())
+        assertTrue(session.records.isEmpty())
+    }
 }

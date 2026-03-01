@@ -172,7 +172,7 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
     - `core/` - Common composables and utilities (logging via `AppLogger`, audio, permissions, pagination, font scaling)
     - `ui/` - Theme configuration (colors, palettes, dimensions, typography, animated components)
 - `fyp-backend/functions/` - Firebase Cloud Functions (TypeScript): translation, speech token, AI generation, FCM notifications, daily stale-token pruning
-- `docs/` - Architecture notes (`ARCHITECTURE_NOTES.md`), codebase review (`suggestions.md`)
+- `docs/` - Architecture notes (`ARCHITECTURE_NOTES.md`)
 
 --------------------------------------------------------------
 
@@ -344,5 +344,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** March 1, 2026 - Session favourite feature (save/view full conversations), codebase review (suggestions.md), expanded test coverage (HistoryViewModel, FavoritesViewModel sessions), CancellationException fix in WordBankViewModel
+**Last Updated:** March 1, 2026
+
 (Some content is by github copilot agent and may contain error)

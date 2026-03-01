@@ -161,7 +161,7 @@ class SettingsViewModel @Inject constructor(
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
                         errorKey = null,
-                        errorRaw = e.message ?: "Save failed"
+                        errorRaw = "Failed to save language setting. Please try again."
                     )
                 }
         }
@@ -187,7 +187,7 @@ class SettingsViewModel @Inject constructor(
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
                         errorKey = null,
-                        errorRaw = e.message ?: "Font size save failed"
+                        errorRaw = "Failed to save font size. Please try again."
                     )
                 }
         }
@@ -212,7 +212,7 @@ class SettingsViewModel @Inject constructor(
                     }
                     .onFailure { e ->
                         _uiState.value = _uiState.value.copy(
-                            errorRaw = e.message ?: "Theme save failed"
+                            errorRaw = "Failed to save theme setting. Please try again."
                         )
                     }
             } else {
@@ -240,7 +240,7 @@ class SettingsViewModel @Inject constructor(
                     .onFailure { e ->
                         _uiState.value = _uiState.value.copy(
                             errorKey = null,
-                            errorRaw = e.message ?: "Theme save failed"
+                            errorRaw = "Failed to save theme setting. Please try again."
                         )
                     }
             }
@@ -265,7 +265,7 @@ class SettingsViewModel @Inject constructor(
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
                         errorKey = null,
-                        errorRaw = e.message ?: "Color palette save failed"
+                        errorRaw = "Failed to save color palette. Please try again."
                     )
                 }
         }
@@ -333,7 +333,7 @@ class SettingsViewModel @Inject constructor(
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
                         errorKey = null,
-                        errorRaw = e.message ?: "Failed to update voice"
+                        errorRaw = "Failed to save voice setting. Please try again."
                     )
                 }
         }
@@ -365,7 +365,7 @@ class SettingsViewModel @Inject constructor(
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
                         errorKey = null,
-                        errorRaw = e.message ?: "Failed to update auto theme setting"
+                        errorRaw = "Failed to save auto theme setting. Please try again."
                     )
                 }
         }

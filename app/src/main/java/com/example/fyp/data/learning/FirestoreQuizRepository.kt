@@ -25,6 +25,12 @@ class FirestoreQuizRepository @Inject constructor(
 ) : QuizRepository {
     private val json = Json { ignoreUnknownKeys = true }
 
+    // Client-side debounce for coin awards to prevent accidental double-calls
+    @Volatile private var lastCoinAwardTime = 0L
+    private companion object {
+        const val COIN_AWARD_DEBOUNCE_MS = 10_000L // 10 seconds
+    }
+
     private fun docRef(uid: String, attemptId: String) =
         db.collection("users")
             .document(uid)
@@ -367,6 +373,11 @@ class FirestoreQuizRepository @Inject constructor(
         attempt: QuizAttempt,
         latestHistoryCount: Int?
     ): Boolean {
+        // Client-side debounce to prevent rapid duplicate calls
+        val now = System.currentTimeMillis()
+        if (now - lastCoinAwardTime < COIN_AWARD_DEBOUNCE_MS) return false
+        lastCoinAwardTime = now
+
         // Use server-side Cloud Function for tamper-proof verification
         val result = cloudQuizClient.awardQuizCoins(
             attemptId = attempt.id,
