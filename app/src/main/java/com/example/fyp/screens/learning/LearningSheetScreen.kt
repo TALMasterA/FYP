@@ -39,6 +39,7 @@ import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.ui.components.FriendSelectorDialog
+import com.example.fyp.ui.theme.AppSpacing
 
 @Suppress("UNUSED_PARAMETER", "SENSELESS_COMPARISON")
 @OptIn(ExperimentalMaterial3Api::class)

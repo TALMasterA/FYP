@@ -11,6 +11,9 @@ import com.example.fyp.model.friends.FriendRelation
 import com.example.fyp.model.friends.FriendRequest
 import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.user.AuthState
+import com.example.fyp.core.security.ValidationResult
+import com.example.fyp.core.security.sanitizeInput
+import com.example.fyp.core.security.validateTextLength
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -337,8 +340,19 @@ class FriendsViewModel @Inject constructor(
             )
             return
         }
+
+        // Validate note length (max 200 chars)
+        val noteValidation = validateTextLength(note, minLength = 0, maxLength = 200, fieldName = "Note")
+        if (noteValidation is ValidationResult.Invalid) {
+            _uiState.value = _uiState.value.copy(error = noteValidation.message)
+            return
+        }
+
+        // Sanitize the note
+        val sanitizedNote = sanitizeInput(note)
+
         viewModelScope.launch {
-            sendFriendRequestUseCase(fromUserId, UserId(toUserId), note).fold(
+            sendFriendRequestUseCase(fromUserId, UserId(toUserId), sanitizedNote).fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         successMessage = "Friend request sent! They will be notified.",

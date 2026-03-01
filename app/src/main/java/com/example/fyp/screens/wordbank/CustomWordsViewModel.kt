@@ -7,6 +7,9 @@ import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
 import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.user.AuthState
+import com.example.fyp.core.security.ValidationResult
+import com.example.fyp.core.security.sanitizeInput
+import com.example.fyp.core.security.validateTextLength
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -91,13 +94,47 @@ class CustomWordsViewModel @Inject constructor(
     ) {
         val uid = currentUserId ?: return
 
+        // Validate originalWord (1-100 chars)
+        val originalValidation = validateTextLength(originalWord, minLength = 1, maxLength = 100, fieldName = "Original word")
+        if (originalValidation is ValidationResult.Invalid) {
+            _uiState.value = _uiState.value.copy(error = originalValidation.message)
+            return
+        }
+
+        // Validate translatedWord (1-100 chars)
+        val translatedValidation = validateTextLength(translatedWord, minLength = 1, maxLength = 100, fieldName = "Translated word")
+        if (translatedValidation is ValidationResult.Invalid) {
+            _uiState.value = _uiState.value.copy(error = translatedValidation.message)
+            return
+        }
+
+        // Validate pronunciation (0-200 chars)
+        val pronunciationValidation = validateTextLength(pronunciation, minLength = 0, maxLength = 200, fieldName = "Pronunciation")
+        if (pronunciationValidation is ValidationResult.Invalid) {
+            _uiState.value = _uiState.value.copy(error = pronunciationValidation.message)
+            return
+        }
+
+        // Validate example (0-500 chars)
+        val exampleValidation = validateTextLength(example, minLength = 0, maxLength = 500, fieldName = "Example")
+        if (exampleValidation is ValidationResult.Invalid) {
+            _uiState.value = _uiState.value.copy(error = exampleValidation.message)
+            return
+        }
+
+        // Sanitize all text inputs
+        val sanitizedOriginal = sanitizeInput(originalWord)
+        val sanitizedTranslated = sanitizeInput(translatedWord)
+        val sanitizedPronunciation = sanitizeInput(pronunciation)
+        val sanitizedExample = sanitizeInput(example)
+
         viewModelScope.launch {
             customWordsRepo.addCustomWord(
                 userId = uid,
-                originalWord = originalWord,
-                translatedWord = translatedWord,
-                pronunciation = pronunciation,
-                example = example,
+                originalWord = sanitizedOriginal,
+                translatedWord = sanitizedTranslated,
+                pronunciation = sanitizedPronunciation,
+                example = sanitizedExample,
                 sourceLang = sourceLang,
                 targetLang = targetLang
             ).onSuccess {
