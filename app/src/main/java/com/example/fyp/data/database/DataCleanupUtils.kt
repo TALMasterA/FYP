@@ -1,5 +1,6 @@
 package com.example.fyp.data.database
 
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
@@ -54,6 +55,10 @@ object DataCleanupUtils {
      * Removes friend requests that have been in "pending" state for longer
      * than [maxAgeDays].
      *
+     * Queries the root-level `friend_requests` collection (NOT a per-user subcollection)
+     * for stale PENDING requests where [userId] is either sender or recipient.
+     * Two queries are required because Firestore does not support OR on different fields.
+     *
      * @param userId The user whose pending requests should be cleaned
      * @param maxAgeDays Maximum age in days before a request is considered stale
      * @return Number of stale requests removed
@@ -62,12 +67,36 @@ object DataCleanupUtils {
         userId: String,
         maxAgeDays: Int = 30
     ): Int {
-        val cutoff = System.currentTimeMillis() - maxAgeDays.toLong() * 24 * 60 * 60 * 1000
-        return deleteOldDocuments(
-            collectionPath = "users/$userId/friendRequests",
-            timestampField = "sentAt",
-            cutoffTimestamp = cutoff
+        val db = FirebaseFirestore.getInstance()
+        val cutoff = Timestamp(
+            (System.currentTimeMillis() - maxAgeDays.toLong() * 24 * 60 * 60 * 1000) / 1000,
+            0
         )
+
+        // Stale outgoing PENDING requests
+        val outgoingSnap = db.collection("friend_requests")
+            .whereEqualTo("fromUserId", userId)
+            .whereEqualTo("status", "PENDING")
+            .whereLessThan("createdAt", cutoff)
+            .get()
+            .await()
+
+        // Stale incoming PENDING requests
+        val incomingSnap = db.collection("friend_requests")
+            .whereEqualTo("toUserId", userId)
+            .whereEqualTo("status", "PENDING")
+            .whereLessThan("createdAt", cutoff)
+            .get()
+            .await()
+
+        val allStaleRefs = (outgoingSnap.documents + incomingSnap.documents)
+            .distinctBy { it.id }
+            .map { it.reference }
+
+        if (allStaleRefs.isNotEmpty()) {
+            DatabaseUtils.batchDelete(allStaleRefs)
+        }
+        return allStaleRefs.size
     }
 
     /**
@@ -104,7 +133,7 @@ object DataCleanupUtils {
         existingSenderIds: Set<String>
     ): Int {
         val db = FirebaseFirestore.getInstance()
-        val snapshot = db.collection("users/$userId/sharedInbox")
+        val snapshot = db.collection("users/$userId/shared_inbox")
             .get()
             .await()
 

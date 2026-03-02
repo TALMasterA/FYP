@@ -1202,6 +1202,10 @@ val ScreenUiTexts: List<String> = listOf(
     "Item not found.",
     // ShareNoContent
     "No content available for this material.",
+    // ShareSaveToSelf
+    "Save to Myself",
+    // ShareSavedToSelf
+    "Saved to your inbox!",
 
     // --- My Profile ---
     // MyProfileTitle

@@ -584,6 +584,8 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareViewButton to "查看",
     UiTextKey.ShareItemNotFound to "搵唔到項目。",
     UiTextKey.ShareNoContent to "呢個材料冇可用內容。",
+    UiTextKey.ShareSaveToSelf to "儲存俾自己嘅收件箱",
+    UiTextKey.ShareSavedToSelf to "已儲存到你嘅收件箱！",
 
     // My profile
     UiTextKey.MyProfileTitle to "我嘅個人資料",

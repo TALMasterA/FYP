@@ -1,7 +1,7 @@
 import {setGlobalOptions} from "firebase-functions";
 import {defineSecret} from "firebase-functions/params";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {onDocumentCreated, onDocumentUpdated} from "firebase-functions/v2/firestore";
+import {onDocumentCreated} from "firebase-functions/v2/firestore";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import fetch from "node-fetch";
 import * as admin from "firebase-admin";
@@ -161,17 +161,22 @@ export const translateText = onCall(
 export const translateTexts = onCall(
   {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
   async (request) => {
-    // No auth required - allows UI language translation for all users
-    // Non-logged-in users can only call this once (enforced client-side)
+    // No auth required — this translates fixed app UI strings (UiTextKey entries) that are
+    // determined at compile time (~600 strings) and results are cached on-device.
+    // ⚠️  DO NOT add per-request text-count or text-length limits here. The string set is
+    // bounded by the UiTextKey enum (not user input), so adding limits would silently break
+    // full-batch UI translations for languages with many strings.
     const to = requireString(request.data?.to, "to");
     const from = optionalString(request.data?.from);
-    const texts = request.data?.texts ?? [];
+    const texts: string[] = Array.isArray(request.data?.texts)
+      ? request.data.texts.map((t: unknown) => String(t ?? ""))
+      : [];
 
     const key = AZURE_TRANSLATOR_KEY.value();
     const region = AZURE_TRANSLATOR_REGION.value();
 
     const url = buildTranslateUrl({to, from: from || undefined});
-    const reqBody = texts.map((t: any) => ({Text: String(t ?? "")}));
+    const reqBody = texts.map((t: string) => ({Text: t}));
 
     const resp = await fetch(url, {
       method: "POST",
@@ -757,64 +762,6 @@ export const sendChatNotification = onDocumentCreated(
 );
 
 /**
- * Sends an FCM push notification to the sender when their friend request is accepted.
- *
- * Trigger: Firestore document update at friend_requests/{requestId}
- * Only fires when status changes to "ACCEPTED".
- */
-export const sendRequestAcceptedNotification = onDocumentUpdated(
-  {
-    document: "friend_requests/{requestId}",
-    region: "us-central1",
-  },
-  async (event) => {
-    const before = event.data?.before?.data();
-    const after = event.data?.after?.data();
-    if (!before || !after) return;
-
-    // Only notify when status transitions to ACCEPTED
-    if (before.status === after.status || after.status !== "ACCEPTED") return;
-
-    const senderId: string = after.fromUserId ?? "";
-    const accepterUsername: string = after.toUsername ?? "your friend";
-
-    if (!senderId) return;
-
-    try {
-      const tokensSnap = await getFirestore()
-        .collection("users").doc(senderId)
-        .collection("fcm_tokens")
-        .get();
-
-      if (tokensSnap.empty) return;
-
-      const tokens: string[] = tokensSnap.docs
-        .map((doc) => doc.data().token as string)
-        .filter((t) => !!t);
-
-      if (tokens.length === 0) return;
-
-      const fcmMessage: admin.messaging.MulticastMessage = {
-        tokens,
-        data: {
-          type: "request_accepted",
-          friendUsername: accepterUsername,
-        },
-        android: { priority: "normal" },
-      };
-
-      const response = await admin.messaging().sendEachForMulticast(fcmMessage);
-      console.log(
-        `sendRequestAcceptedNotification: sent to ${tokens.length} tokens, ` +
-        `success=${response.successCount}, failure=${response.failureCount}`
-      );
-    } catch (err: any) {
-      console.error("sendRequestAcceptedNotification: error", { message: err?.message });
-    }
-  }
-);
-
-/**
  * Sends an FCM push notification to the recipient when a new friend request is created.
  *
  * Trigger: Firestore document create at friend_requests/{requestId}
@@ -919,5 +866,41 @@ export const pruneStaleTokens = onSchedule(
     }
 
     console.log(`pruneStaleTokens: removed ${pruned} stale tokens`);
+  }
+);
+
+/**
+ * Prune rate_limit documents for users who have been inactive for >30 days.
+ * Keeps storage costs low by removing one document per inactive user.
+ * Runs weekly on Sundays at 4 AM UTC.
+ */
+export const pruneStaleRateLimits = onSchedule(
+  {
+    schedule: "0 4 * * 0",
+    timeZone: "UTC",
+    region: "us-central1",
+  },
+  async () => {
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const cutoff = admin.firestore.Timestamp.fromDate(
+      new Date(Date.now() - THIRTY_DAYS_MS)
+    );
+    const firestore = getFirestore();
+
+    const snap = await firestore
+      .collection("rate_limits")
+      .where("updatedAt", "<", cutoff)
+      .get();
+
+    if (snap.empty) {
+      console.log("pruneStaleRateLimits: nothing to prune");
+      return;
+    }
+
+    const batch = firestore.batch();
+    snap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+
+    console.log(`pruneStaleRateLimits: removed ${snap.size} stale rate-limit docs`);
   }
 );
