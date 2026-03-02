@@ -17,6 +17,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,11 +47,17 @@ fun SharedMaterialDetailScreen(
     itemId: String,
     appLanguageState: AppLanguageState,
     onBack: () -> Unit,
-    viewModel: SharedMaterialDetailViewModel = hiltViewModel()
+    detailViewModel: SharedMaterialDetailViewModel = hiltViewModel(),
+    inboxViewModel: SharedInboxViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by detailViewModel.uiState.collectAsStateWithLifecycle()
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+
+    // Mark this item's red dot as seen when the detail screen opens
+    LaunchedEffect(itemId) {
+        inboxViewModel.markItemSeen(itemId)
+    }
 
     // ── Loading ──────────────────────────────────────────────────────────────
     if (uiState.isLoading) {

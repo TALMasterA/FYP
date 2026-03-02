@@ -13,7 +13,7 @@ class PublicUserProfileTest {
         val profile = PublicUserProfile()
         assertEquals("", profile.uid)
         assertEquals("", profile.username)
-        assertEquals("", profile.displayName)
+        assertEquals("", profile.avatarUrl)
         assertEquals("", profile.avatarUrl)
         assertEquals("", profile.primaryLanguage)
         assertTrue(profile.isDiscoverable)
@@ -24,7 +24,7 @@ class PublicUserProfileTest {
         val profile = PublicUserProfile(
             uid = "user123",
             username = "test_user",
-            displayName = "Test User",
+
             avatarUrl = "https://example.com/avatar.jpg",
             primaryLanguage = "en-US",
             learningLanguages = listOf("ja-JP", "es-ES"),
@@ -32,7 +32,7 @@ class PublicUserProfileTest {
         )
         assertEquals("user123", profile.uid)
         assertEquals("test_user", profile.username)
-        assertEquals("Test User", profile.displayName)
+
         assertEquals("https://example.com/avatar.jpg", profile.avatarUrl)
         assertEquals("en-US", profile.primaryLanguage)
         assertEquals(2, profile.learningLanguages?.size)

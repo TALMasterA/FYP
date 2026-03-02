@@ -34,14 +34,12 @@ class SearchUsersUseCaseTest {
             PublicUserProfile(
                 uid = "user1",
                 username = "john_doe",
-                displayName = "John Doe",
                 primaryLanguage = "en-US",
                 learningLanguages = listOf("es-ES")
             ),
             PublicUserProfile(
                 uid = "user2",
                 username = "johnny",
-                displayName = "Johnny Smith",
                 primaryLanguage = "en-US",
                 learningLanguages = listOf("fr-FR")
             )

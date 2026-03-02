@@ -38,7 +38,6 @@ data class ChatUiState(
     val isSending: Boolean = false,
     val error: String? = null,
     val friendUsername: String = "",
-    val friendDisplayName: String = "",
     val currentUserId: String = "",
     val isTranslating: Boolean = false,
     val translatedMessages: Map<String, String> = emptyMap(),
@@ -81,17 +80,14 @@ class ChatViewModel @Inject constructor(
     private var currentUserId: UserId? = null
     private val friendId: UserId
     private val friendUsername: String
-    private val friendDisplayName: String
 
     init {
         // Get navigation arguments
         friendId = UserId(checkNotNull(savedStateHandle.get<String>("friendId")))
         friendUsername = checkNotNull(savedStateHandle.get<String>("friendUsername"))
-        friendDisplayName = savedStateHandle.get<String>("friendDisplayName") ?: ""
 
         _uiState.value = _uiState.value.copy(
-            friendUsername = friendUsername,
-            friendDisplayName = friendDisplayName
+            friendUsername = friendUsername
         )
 
         viewModelScope.launch {
@@ -118,8 +114,7 @@ class ChatViewModel @Inject constructor(
                         currentUserId = null
                         _uiState.value = ChatUiState(
                             isLoading = false,
-                            friendUsername = friendUsername,
-                            friendDisplayName = friendDisplayName
+                            friendUsername = friendUsername
                         )
                     }
                     AuthState.Loading -> {

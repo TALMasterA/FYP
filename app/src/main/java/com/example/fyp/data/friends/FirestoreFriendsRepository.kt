@@ -47,7 +47,6 @@ class FirestoreFriendsRepository @Inject constructor(
         val searchData = mapOf(
             "username_lowercase" to profile.username.lowercase(),
             "username" to profile.username,
-            "displayName" to profile.displayName,
             "avatarUrl" to profile.avatarUrl,
             "isDiscoverable" to profile.isDiscoverable,
             "primaryLanguage" to profile.primaryLanguage,
@@ -99,7 +98,7 @@ class FirestoreFriendsRepository @Inject constructor(
             searchUpdates["username_lowercase"] = (it as String).lowercase()
             searchUpdates["username"] = it
         }
-        updates["displayName"]?.let { searchUpdates["displayName"] = it }
+        updates["displayName"]?.let { /* displayName field removed — username is the sole identity field */ }
         updates["avatarUrl"]?.let { searchUpdates["avatarUrl"] = it }
         updates["isDiscoverable"]?.let { searchUpdates["isDiscoverable"] = it }
         updates["lastActiveAt"]?.let { searchUpdates["lastActiveAt"] = it }
@@ -195,7 +194,6 @@ class FirestoreFriendsRepository @Inject constructor(
                     PublicUserProfile(
                         uid = doc.id,
                         username = username,
-                        displayName = doc.getString("displayName") ?: "",
                         avatarUrl = doc.getString("avatarUrl") ?: "",
                         isDiscoverable = doc.getBoolean("isDiscoverable") ?: true,
                         primaryLanguage = doc.getString("primaryLanguage") ?: "",
@@ -294,11 +292,9 @@ class FirestoreFriendsRepository @Inject constructor(
                 requestId = requestRef.id,
                 fromUserId = fromUserId.value,
                 fromUsername = fromProfile.username,
-                fromDisplayName = fromProfile.displayName,
                 fromAvatarUrl = fromProfile.avatarUrl,
                 toUserId = toUserId.value,
                 toUsername = toProfile?.username ?: "",
-                toDisplayName = toProfile?.displayName ?: "",
                 status = RequestStatus.PENDING,
                 createdAt = Timestamp.now(),
                 updatedAt = Timestamp.now(),
@@ -358,7 +354,6 @@ class FirestoreFriendsRepository @Inject constructor(
                 mapOf(
                     "friendId" to currentUserId.value,
                     "friendUsername" to toProfile.username,
-                    "friendDisplayName" to toProfile.displayName,
                     "friendAvatarUrl" to toProfile.avatarUrl,
                     "addedAt" to now
                 )
@@ -374,7 +369,6 @@ class FirestoreFriendsRepository @Inject constructor(
                 mapOf(
                     "friendId" to request.fromUserId,
                     "friendUsername" to fromProfile.username,
-                    "friendDisplayName" to fromProfile.displayName,
                     "friendAvatarUrl" to fromProfile.avatarUrl,
                     "addedAt" to now
                 )

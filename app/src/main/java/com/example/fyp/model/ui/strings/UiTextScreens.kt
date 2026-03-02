@@ -824,12 +824,6 @@ val ScreenUiTexts: List<String> = listOf(
     // ProfileUsernameHint
     "Enter your username",
 
-    // ProfileDisplayNameLabel
-    "Display Name",
-
-    // ProfileDisplayNameHint
-    "Enter your display name",
-
     // ProfileUpdateButton
     "Update Profile",
 

@@ -15,7 +15,6 @@ import com.google.firebase.Timestamp
 data class PublicUserProfile(
     val uid: String = "",                         // Firestore document ID
     val username: String = "",                    // Unique, searchable username
-    val displayName: String = "",                 // Optional display name
     val avatarUrl: String = "",                   // Profile picture URL (optional)
     val primaryLanguage: String = "",             // User's primary language code (e.g., "en-US")
     val learningLanguages: List<String>? = emptyList(),  // Languages being learned (nullable for Firestore compat)

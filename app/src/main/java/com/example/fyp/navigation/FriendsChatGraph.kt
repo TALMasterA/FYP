@@ -29,9 +29,9 @@ internal fun NavGraphBuilder.friendsChatGraph(
         FriendsScreen(
             appLanguageState = appLanguageState,
             onBack = { navController.popBackStack() },
-            onOpenChat = { friendId, friendUsername, friendDisplayName ->
+            onOpenChat = { friendId, friendUsername ->
                 navController.navigate(
-                    AppScreen.Chat.routeFor(friendId, friendUsername, friendDisplayName)
+                    AppScreen.Chat.routeFor(friendId, friendUsername)
                 ) { launchSingleTop = true }
             },
             onOpenSharedInbox = {
@@ -94,7 +94,7 @@ internal fun NavGraphBuilder.friendsChatGraph(
 
     composableRequireLoginWithArgs(
         route = AppScreen.Chat.route,
-        argNames = listOf("friendId", "friendUsername", "friendDisplayName"),
+        argNames = listOf("friendId", "friendUsername"),
         onNeedLogin = navigateToLogin
     ) {
         ChatScreen(

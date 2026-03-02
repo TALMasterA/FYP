@@ -188,16 +188,9 @@ private fun FriendSelectorItem(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
-                    friend.friendDisplayName.ifBlank { friend.friendUsername },
+                    friend.friendUsername,
                     style = MaterialTheme.typography.bodyLarge
                 )
-                if (friend.friendDisplayName.isNotBlank()) {
-                    Text(
-                        "@${friend.friendUsername}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
         }
     }

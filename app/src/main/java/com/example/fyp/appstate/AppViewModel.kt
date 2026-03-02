@@ -10,7 +10,6 @@ import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.core.FcmNotificationService
 import com.example.fyp.domain.friends.EnsurePublicProfileExistsUseCase
-import com.example.fyp.model.UserId
 import com.example.fyp.model.user.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -43,7 +42,7 @@ class AppViewModel @Inject constructor(
     private val sharedFriendsDataSource: SharedFriendsDataSource,
     private val sharedSettingsDataSource: SharedSettingsDataSource,
     private val sharedHistoryDataSource: SharedHistoryDataSource,
-    private val chatRepository: ChatRepository
+    private val chatRepository: ChatRepository,
 ) : AndroidViewModel(application) {
 
     private var lastInitializedUserId: String? = null

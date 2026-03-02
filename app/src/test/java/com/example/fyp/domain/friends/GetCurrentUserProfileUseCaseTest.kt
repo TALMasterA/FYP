@@ -33,7 +33,6 @@ class GetCurrentUserProfileUseCaseTest {
         val expectedProfile = PublicUserProfile(
             uid = "user1",
             username = "john_doe",
-            displayName = "John Doe",
             primaryLanguage = "en-US",
             learningLanguages = listOf("es-ES", "fr-FR")
         )
@@ -73,7 +72,6 @@ class GetCurrentUserProfileUseCaseTest {
         val profile1 = PublicUserProfile(
             uid = "user1",
             username = "user1",
-            displayName = "User One",
             primaryLanguage = "en-US",
             learningLanguages = listOf()
         )
@@ -81,7 +79,6 @@ class GetCurrentUserProfileUseCaseTest {
         val profile2 = PublicUserProfile(
             uid = "user2",
             username = "user2",
-            displayName = "User Two",
             primaryLanguage = "es-ES",
             learningLanguages = listOf("en-US")
         )

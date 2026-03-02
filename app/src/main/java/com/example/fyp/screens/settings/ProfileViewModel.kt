@@ -164,42 +164,6 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun updateDisplayName(displayName: String) {
-        val userId = currentUserId ?: return
-
-        // Validate display name length (1-50 chars)
-        val lengthValidation = validateTextLength(displayName, minLength = 1, maxLength = 50, fieldName = "Display name")
-        if (lengthValidation is ValidationResult.Invalid) {
-            _uiState.value = _uiState.value.copy(error = lengthValidation.message)
-            return
-        }
-
-        // Sanitize display name
-        val sanitizedName = sanitizeInput(displayName)
-
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isLoading = true,
-                error = null,
-                successMessage = null
-            )
-
-            profileRepo.updateDisplayName(userId, sanitizedName)
-                .onSuccess {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        successMessage = "Profile updated successfully"
-                    )
-                }
-                .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "Failed to update profile"
-                    )
-                }
-        }
-    }
-
     fun deleteAccount(password: String) {
         val userId = currentUserId ?: return
         val email = _uiState.value.email ?: return
