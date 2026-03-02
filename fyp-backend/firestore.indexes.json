@@ -81,6 +81,24 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "custom_words",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "sourceLang",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "targetLang",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

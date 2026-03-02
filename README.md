@@ -77,7 +77,7 @@ Firebase login is required.
 - Search and add friends by username or User ID; attach an optional note (≤80 chars) with your request
 - Send/accept/reject/cancel friend requests
 - Real-time chat with friends; translate entire conversation to your language (shown only when friend has sent at least one message)
-- Share words and learning materials with friends
+- Share words and learning materials with friends; learning sheets can also be saved to your own shared inbox to archive a snapshot of the current version
 - Shared inbox for received items with accept/dismiss confirmation
 - **Block / Unblock:** Block icon on each friend card; blocked users managed in a dedicated Blocked Users screen; Firestore security rules prevent blocked users from sending new friend requests
 - Red dot (badge) notifications for unread messages and new shared items
@@ -397,6 +397,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** March 1, 2026
+**Last Updated:** March 2, 2026
 
 (Some content is by github copilot agent and may contain error)

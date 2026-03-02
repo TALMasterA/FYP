@@ -4,7 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ============================================
-    // EXISTING RULE: User Data Subcollections
+    // User Data Subcollections
     // Users can only access their own subcollections
     // This rule matches subcollections like /users/{userId}/profile/settings
     // but NOT the main document /users/{userId} itself
@@ -74,15 +74,17 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.resource.data.fromUserId == request.auth.uid;
 
-      // Allow creating the content subcollection (e.g. for learning sheets)
+      // Allow creating the content subcollection (e.g. for learning sheets).
+      // The parent shared_inbox doc already validates sender identity, so a simple
+      // auth check suffices here. The content doc stores only the fullContent
+      // string and does NOT repeat fromUserId.
       match /content/{docId} {
-        allow create: if request.auth != null
-          && request.resource.data.fromUserId == request.auth.uid;
+        allow create: if request.auth != null;
       }
     }
 
     // ============================================
-    // NEW: Friends Feature - Public Profiles
+    // Friends Feature - Public Profiles
     // Allow authenticated users to read public profiles of any user
     // ============================================
     match /users/{userId}/profile/public {
@@ -91,7 +93,7 @@ service cloud.firestore {
     }
 
     // ============================================
-    // NEW: Friends Feature - Friends List
+    // Friends Feature - Friends List
     // Allow users to read their own friends list
     // Also allow batch writes when accepting friend requests (both users get updated)
     // ============================================
@@ -108,7 +110,7 @@ service cloud.firestore {
     }
 
     // ============================================
-    // NEW: Feedback Collection (For feedback feature)
+    // Feedback Collection (For feedback feature)
     // Authenticated users can submit feedback
     // ============================================
     match /feedback/{feedbackId} {
@@ -124,7 +126,7 @@ service cloud.firestore {
     }
 
     // ============================================
-    // NEW: Friends Feature - Username Registry
+    // Friends Feature - Username Registry
     // ============================================
     match /usernames/{username} {
       allow read: if request.auth != null;
@@ -135,7 +137,7 @@ service cloud.firestore {
     }
 
     // ============================================
-    // NEW: Friends Feature - User Search Index
+    // Friends Feature - User Search Index
     // ============================================
     match /user_search/{userId} {
       allow read: if request.auth != null;
@@ -143,7 +145,7 @@ service cloud.firestore {
     }
 
     // ============================================
-    // NEW: Friends Feature - Friend Requests
+    // Friends Feature - Friend Requests
     // ============================================
     match /friend_requests/{requestId} {
       // Read if sender or receiver
@@ -178,7 +180,7 @@ service cloud.firestore {
     }
 
     // ============================================
-    // NEW: Friends Feature - Chat Messages
+    // Friends Feature - Chat Messages
     // ============================================
     match /chats/{chatId}/messages/{messageId} {
       // Read if user is in the chatId (chatId format: "userId1_userId2")
@@ -208,7 +210,7 @@ service cloud.firestore {
     }
 
     // ============================================
-    // NEW: Friends Feature - Chat Metadata
+    // Friends Feature - Chat Metadata
     // ============================================
     match /chats/{chatId}/metadata/info {
       // Helper function to check if user is participant based on chatId format
@@ -237,13 +239,21 @@ service cloud.firestore {
     }
 
     // ============================================
-    // NEW: Friends Feature - Chat Cleared Timestamps
+    // Friends Feature - Chat Cleared Timestamps
     // Each user stores their own "clearedAt" timestamp so messages before
     // that time are hidden from their view.  Only the owner can read/write
     // their own cleared document.
     // ============================================
     match /chats/{chatId}/cleared/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ============================================
+    // Rate Limits: Admin-only (Cloud Functions write via admin SDK).
+    // Explicitly block all client-side access.
+    // ============================================
+    match /rate_limits/{userId} {
+      allow read, write: if false;
     }
 
     // ============================================

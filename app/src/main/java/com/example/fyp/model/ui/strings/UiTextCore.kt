@@ -555,6 +555,8 @@ enum class UiTextKey {
     ShareViewButton,
     ShareItemNotFound,
     ShareNoContent,
+    ShareSaveToSelf,
+    ShareSavedToSelf,
 
     // --- My Profile ---
     MyProfileTitle,

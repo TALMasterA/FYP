@@ -7,6 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -130,6 +134,10 @@ fun LoginScreen(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text(t(UiTextKey.AuthEmailLabel)) },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -138,6 +146,18 @@ fun LoginScreen(
                 onValueChange = { password = it },
                 label = { Text(t(UiTextKey.AuthPasswordLabel)) },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = if (isLogin) ImeAction.Done else ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        if (isLogin) {
+                            localError = null
+                            viewModel.login(email.trim(), password)
+                        }
+                    }
+                ),
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
@@ -155,6 +175,22 @@ fun LoginScreen(
                     onValueChange = { confirmPassword = it },
                     label = { Text(t(UiTextKey.AuthConfirmPasswordLabel)) },
                     visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (!isLogin) {
+                                localError = when {
+                                    password != confirmPassword -> t(UiTextKey.AuthErrorPasswordsMismatch)
+                                    password.length < 6 -> t(UiTextKey.AuthErrorPasswordTooShort)
+                                    else -> null
+                                }
+                                if (localError == null) viewModel.register(email.trim(), password)
+                            }
+                        }
+                    ),
                     trailingIcon = {
                         IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                             Icon(

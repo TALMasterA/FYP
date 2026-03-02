@@ -18,6 +18,7 @@ import com.example.fyp.model.QuizQuestion
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.UserId
 import com.example.fyp.model.LanguageCode
+import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.core.decodeOrDefault
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -53,7 +54,7 @@ data class LearningSheetUiState(
     // Share feature
     val friends: List<FriendRelation> = emptyList(),
     val isSharing: Boolean = false,
-    val shareSuccess: String? = null,
+    val shareSuccessKey: UiTextKey? = null,
     val shareError: String? = null,
     val showShareDialog: Boolean = false,
 )
@@ -319,14 +320,28 @@ class LearningSheetViewModel @Inject constructor(
     // ============================================
 
     fun showShareDialog() {
-        _uiState.value = _uiState.value.copy(showShareDialog = true, shareError = null, shareSuccess = null)
+        _uiState.value = _uiState.value.copy(showShareDialog = true, shareError = null, shareSuccessKey = null)
     }
 
     fun dismissShareDialog() {
         _uiState.value = _uiState.value.copy(showShareDialog = false)
     }
 
+    /** Share the current sheet with a friend. */
     fun shareSheet(toUserId: UserId) {
+        shareSheetInternal(toUserId = toUserId, successKey = UiTextKey.ShareSuccess)
+    }
+
+    /**
+     * Save a snapshot of the current learning sheet to the user's own shared inbox.
+     * This lets the user archive the current version for later reading.
+     */
+    fun saveSheetToSelf() {
+        val selfId = uid ?: return
+        shareSheetInternal(toUserId = UserId(selfId), successKey = UiTextKey.ShareSavedToSelf)
+    }
+
+    private fun shareSheetInternal(toUserId: UserId, successKey: UiTextKey) {
         val fromId = uid ?: return
         val state = _uiState.value
 
@@ -337,7 +352,7 @@ class LearningSheetViewModel @Inject constructor(
         val fromUsername = sharedFriendsDataSource.getCachedUsername(fromId) ?: ""
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isSharing = true, shareError = null, shareSuccess = null, showShareDialog = false)
+            _uiState.value = _uiState.value.copy(isSharing = true, shareError = null, shareSuccessKey = null, showShareDialog = false)
             shareLearningMaterialUseCase(
                 fromUserId = UserId(fromId),
                 fromUsername = fromUsername,
@@ -348,7 +363,7 @@ class LearningSheetViewModel @Inject constructor(
                 description = state.content?.take(200) ?: "",
                 fullContent = state.content ?: ""
             ).onSuccess {
-                _uiState.value = _uiState.value.copy(isSharing = false, shareSuccess = "Shared successfully!")
+                _uiState.value = _uiState.value.copy(isSharing = false, shareSuccessKey = successKey)
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(isSharing = false, shareError = e.message ?: "Failed to share")
             }
@@ -356,6 +371,6 @@ class LearningSheetViewModel @Inject constructor(
     }
 
     fun clearShareMessages() {
-        _uiState.value = _uiState.value.copy(shareSuccess = null, shareError = null)
+        _uiState.value = _uiState.value.copy(shareSuccessKey = null, shareError = null)
     }
 }

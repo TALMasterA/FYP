@@ -134,6 +134,7 @@ fun LearningSheetScreen(
                 isLoading = uiState.isSharing,
                 t = t,
                 onFriendSelected = { friendId -> viewModel.shareSheet(friendId) },
+                onSaveToSelf = { viewModel.saveSheetToSelf() },
                 onDismiss = { viewModel.dismissShareDialog() }
             )
         }
@@ -279,8 +280,8 @@ fun LearningSheetScreen(
         } // end Column
 
         // Share feedback snackbar
-        uiState.shareSuccess?.let { msg ->
-            LaunchedEffect(msg) {
+        uiState.shareSuccessKey?.let { key ->
+            LaunchedEffect(key) {
                 kotlinx.coroutines.delay(3000)
                 viewModel.clearShareMessages()
             }
@@ -288,7 +289,7 @@ fun LearningSheetScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(16.dp)
-            ) { Text(msg) }
+            ) { Text(t(key)) }
         }
         uiState.shareError?.let { err ->
             LaunchedEffect(err) {

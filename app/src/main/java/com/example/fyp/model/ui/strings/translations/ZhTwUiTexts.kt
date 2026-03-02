@@ -584,6 +584,8 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareViewButton to "查看",
     UiTextKey.ShareItemNotFound to "找不到項目。",
     UiTextKey.ShareNoContent to "此教材無可用內容。",
+    UiTextKey.ShareSaveToSelf to "儲存到自己的收件匣",
+    UiTextKey.ShareSavedToSelf to "已儲存到您的收件匣！",
 
     // My profile
     UiTextKey.MyProfileTitle to "我的個人資料",
