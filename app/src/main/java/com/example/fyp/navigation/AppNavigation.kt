@@ -244,7 +244,7 @@ fun AppNavigation() {
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                     bottomBar = {
                         if (showBottomNav) {
-                            NavigationBar {
+                            NavigationBar(windowInsets = WindowInsets(0)) {
                                 val friendsBadgeCount = pendingFriendRequestCount +
                                     unreadMessageCount +
                                     unseenSharedItemsCount
