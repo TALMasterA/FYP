@@ -63,14 +63,11 @@ class SharedFriendsDataSource @Inject constructor(
     /** IDs of shared inbox items the user has already seen (opened the inbox). */
     private val _seenSharedItemIds = MutableStateFlow<Set<String>>(emptySet())
 
-    /** Whether the initial inbox load has finished — used to suppress badge on app start. */
-    private var initialLoadComplete = false
-
     /**
-     * Whether there are NEW shared inbox items the user hasn't seen yet.
-     * On app start, all existing items are auto-marked as seen so the badge
-     * does NOT reappear after restart. Only items arriving AFTER the initial
-     * load trigger the red dot.
+     * Whether there are unseen shared inbox items.
+     * Starts empty every session — ALL pending items are unseen until the user opens
+     * the inbox (markSharedItemsSeen) or taps DoneAll (dismissSharedInboxDot).
+     * Badge and red dot show reliably on app start whenever items are waiting.
      */
     val hasUnseenSharedItems: kotlinx.coroutines.flow.Flow<Boolean> =
         kotlinx.coroutines.flow.combine(_pendingSharedItems, _seenSharedItemIds) { items, seen ->
@@ -161,12 +158,6 @@ class SharedFriendsDataSource @Inject constructor(
                 sharingRepository.observeSharedInbox(uid).collect { list ->
                     _pendingSharedItems.value = list
                     val currentIds = list.map { it.itemId }.toSet()
-                    if (!initialLoadComplete) {
-                        // First load after app start: mark ALL existing items as seen
-                        // so the badge does NOT reappear on restart.
-                        _seenSharedItemIds.value = currentIds
-                        initialLoadComplete = true
-                    }
                     // Remove IDs from seenSet that are no longer pending (accepted/dismissed)
                     _seenSharedItemIds.value = _seenSharedItemIds.value.intersect(currentIds)
                 }
@@ -189,7 +180,6 @@ class SharedFriendsDataSource @Inject constructor(
         requestsJob = null
         inboxJob = null
         currentUserId = null
-        initialLoadComplete = false
         _friends.value = emptyList()
         _incomingRequests.value = emptyList()
         _pendingSharedItems.value = emptyList()
