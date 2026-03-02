@@ -35,7 +35,7 @@ import com.example.fyp.ui.theme.AppSpacing
 fun FriendsScreen(
     appLanguageState: AppLanguageState,
     onBack: () -> Unit,
-    onOpenChat: (friendId: String, friendUsername: String, friendDisplayName: String) -> Unit = { _, _, _ -> },
+    onOpenChat: (friendId: String, friendUsername: String) -> Unit = { _, _ -> },
     onOpenSharedInbox: () -> Unit = {},
     onOpenBlockedUsers: () -> Unit = {},
     onOpenNotifSettings: () -> Unit = {},
@@ -415,7 +415,7 @@ fun FriendsScreen(
                                                 if (uiState.isDeleteMode) {
                                                     viewModel.toggleFriendSelection(friend.friendId)
                                                 } else {
-                                                    onOpenChat(friend.friendId, friend.friendUsername, friend.friendUsername)
+                                                    onOpenChat(friend.friendId, friend.friendUsername)
                                                 }
                                             },
                                             sendMessageText = t(UiTextKey.FriendsUnreadMessageDesc),

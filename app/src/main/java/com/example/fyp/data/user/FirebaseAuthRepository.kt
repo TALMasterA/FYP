@@ -64,7 +64,6 @@ class FirebaseAuthRepository @Inject constructor(
 
     private fun FirebaseUser.toUser() = User(
         uid = uid,
-        email = email,
-        displayName = displayName
+        email = email
     )
 }

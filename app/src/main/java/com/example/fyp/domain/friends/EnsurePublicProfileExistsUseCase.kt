@@ -39,7 +39,6 @@ class EnsurePublicProfileExistsUseCase @Inject constructor(
             val newProfile = PublicUserProfile(
                 uid = userId,
                 username = "",
-                displayName = "",
                 avatarUrl = "",
                 primaryLanguage = currentPrimaryLanguage,
                 learningLanguages = emptyList(),

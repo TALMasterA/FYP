@@ -377,8 +377,6 @@ enum class UiTextKey {
     ProfileTitle,
     ProfileUsernameLabel,
     ProfileUsernameHint,
-    ProfileDisplayNameLabel,
-    ProfileDisplayNameHint,
     ProfileUpdateButton,
     ProfileUpdateSuccess,
     ProfileUpdateError,

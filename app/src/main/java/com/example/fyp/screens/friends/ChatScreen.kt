@@ -184,13 +184,6 @@ fun ChatScreen(
                             text = "${t(UiTextKey.ChatUsernameLabel)}${uiState.friendUsername}",
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        if (uiState.friendDisplayName.isNotEmpty() &&
-                            uiState.friendDisplayName != uiState.friendUsername) {
-                            Text(
-                                text = "${t(UiTextKey.MyProfileDisplayName)}: ${uiState.friendDisplayName}",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
                     }
                 }
             },

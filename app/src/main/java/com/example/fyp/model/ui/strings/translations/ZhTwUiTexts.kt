@@ -407,8 +407,6 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ProfileTitle to "個人資料",
     UiTextKey.ProfileUsernameLabel to "用戶名稱",
     UiTextKey.ProfileUsernameHint to "輸入您的用戶名稱",
-    UiTextKey.ProfileDisplayNameLabel to "顯示名稱",
-    UiTextKey.ProfileDisplayNameHint to "輸入您的顯示名稱",
     UiTextKey.ProfileUpdateButton to "更新個人資料",
     UiTextKey.ProfileUpdateSuccess to "個人資料更新成功",
     UiTextKey.ProfileUpdateError to "個人資料更新失敗",

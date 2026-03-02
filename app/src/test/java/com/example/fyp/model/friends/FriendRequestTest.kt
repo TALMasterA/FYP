@@ -30,20 +30,16 @@ class FriendRequestTest {
             requestId = "req1",
             fromUserId = "user1",
             fromUsername = "sender",
-            fromDisplayName = "Sender Name",
             fromAvatarUrl = "https://example.com/avatar1.jpg",
             toUserId = "user2",
             toUsername = "recipient",
-            toDisplayName = "Recipient Name",
             status = RequestStatus.PENDING
         )
         assertEquals("req1", request.requestId)
         assertEquals("user1", request.fromUserId)
         assertEquals("sender", request.fromUsername)
-        assertEquals("Sender Name", request.fromDisplayName)
         assertEquals("user2", request.toUserId)
         assertEquals("recipient", request.toUsername)
-        assertEquals("Recipient Name", request.toDisplayName)
     }
 
     @Test

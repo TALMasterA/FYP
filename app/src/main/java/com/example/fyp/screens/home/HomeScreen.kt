@@ -81,7 +81,8 @@ fun HomeScreen(
 
     // Alternating title logic
     val defaultTitle = t(UiTextKey.HomeTitle)
-    val userName = (authState as? AuthState.LoggedIn)?.user?.displayName?.takeIf { it.isNotBlank() }
+    val userName = (authState as? AuthState.LoggedIn)?.user?.email
+        ?.takeWhile { it != '@' }?.takeIf { it.isNotBlank() }
 
     if (showLogoutDialog) {
         AlertDialog(

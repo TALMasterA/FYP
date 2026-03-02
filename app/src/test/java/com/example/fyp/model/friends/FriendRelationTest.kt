@@ -54,7 +54,7 @@ class FriendRelationTest {
         assertEquals("", request.toUserId)
         assertEquals("", request.fromUsername)
         assertEquals("", request.toUsername)
-        assertEquals("", request.fromDisplayName)
+        assertEquals("", request.fromUsername)
         assertEquals("", request.fromAvatarUrl)
     }
 
@@ -65,12 +65,10 @@ class FriendRelationTest {
         val friend = FriendRelation(
             friendId = "user2",
             friendUsername = "john_doe",
-            friendDisplayName = "John Doe",
             friendAvatarUrl = "https://example.com/avatar.jpg"
         )
         assertEquals("user2", friend.friendId)
         assertEquals("john_doe", friend.friendUsername)
-        assertEquals("John Doe", friend.friendDisplayName)
         assertEquals("https://example.com/avatar.jpg", friend.friendAvatarUrl)
     }
 
@@ -79,7 +77,6 @@ class FriendRelationTest {
         val friend = FriendRelation()
         assertEquals("", friend.friendId)
         assertEquals("", friend.friendUsername)
-        assertEquals("", friend.friendDisplayName)
         assertEquals("", friend.friendAvatarUrl)
     }
 
@@ -108,14 +105,14 @@ class FriendRelationTest {
     }
 
     @Test
-    fun `friends list can be filtered by display name`() {
+    fun `friends list can be filtered by username`() {
         val friends = listOf(
-            FriendRelation(friendId = "1", friendUsername = "alice", friendDisplayName = "Alice Smith"),
-            FriendRelation(friendId = "2", friendUsername = "bob", friendDisplayName = "Bob Jones"),
-            FriendRelation(friendId = "3", friendUsername = "alice2", friendDisplayName = "Alice Brown")
+            FriendRelation(friendId = "1", friendUsername = "alice"),
+            FriendRelation(friendId = "2", friendUsername = "bob"),
+            FriendRelation(friendId = "3", friendUsername = "alice2")
         )
 
-        val alices = friends.filter { it.friendDisplayName.startsWith("Alice") }
+        val alices = friends.filter { it.friendUsername.startsWith("alice") }
         assertEquals(2, alices.size)
     }
 }

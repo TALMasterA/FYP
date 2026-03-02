@@ -34,9 +34,9 @@ sealed class AppScreen(val route: String) {
             "shared_material_detail/${java.net.URLEncoder.encode(itemId, Charsets.UTF_8.name())}"
     }
 
-    object Chat : AppScreen("chat/{friendId}/{friendUsername}/{friendDisplayName}") {
-        fun routeFor(friendId: String, friendUsername: String, friendDisplayName: String = "") =
-            "chat/${java.net.URLEncoder.encode(friendId, Charsets.UTF_8.name())}/${java.net.URLEncoder.encode(friendUsername, Charsets.UTF_8.name())}/${java.net.URLEncoder.encode(friendDisplayName, Charsets.UTF_8.name())}"
+    object Chat : AppScreen("chat/{friendId}/{friendUsername}") {
+        fun routeFor(friendId: String, friendUsername: String) =
+            "chat/${java.net.URLEncoder.encode(friendId, Charsets.UTF_8.name())}/${java.net.URLEncoder.encode(friendUsername, Charsets.UTF_8.name())}"
     }
 
     object LearningSheet : AppScreen("learning_sheet/{primaryCode}/{targetCode}") {

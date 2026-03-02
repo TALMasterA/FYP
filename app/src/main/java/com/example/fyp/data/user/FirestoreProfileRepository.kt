@@ -1,10 +1,8 @@
 package com.example.fyp.data.user
 
 import com.example.fyp.model.user.UserProfile
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.channels.awaitClose
@@ -34,7 +32,6 @@ class FirestoreProfileRepository @Inject constructor(
             }
 
             val profile = UserProfile(
-                displayName = snap?.getString("displayName") ?: "",
                 photoUrl = snap?.getString("photoUrl"),
                 createdAt = snap?.getTimestamp("createdAt"),
                 updatedAt = snap?.getTimestamp("updatedAt")
@@ -42,32 +39,6 @@ class FirestoreProfileRepository @Inject constructor(
             trySend(profile)
         }
         awaitClose { reg.remove() }
-    }
-
-    /**
-     * Update user display name in both FirebaseAuth and Firestore
-     */
-    suspend fun updateDisplayName(userId: String, displayName: String): Result<Unit> = try {
-        // Update FirebaseAuth profile
-        auth.currentUser?.let { user ->
-            val profileUpdates = userProfileChangeRequest {
-                this.displayName = displayName
-            }
-            user.updateProfile(profileUpdates).await()
-        }
-
-        // Update Firestore profile
-        docRef(userId).set(
-            mapOf(
-                "displayName" to displayName,
-                "updatedAt" to Timestamp.now()
-            ),
-            SetOptions.merge()
-        ).await()
-
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
     }
 
     /**

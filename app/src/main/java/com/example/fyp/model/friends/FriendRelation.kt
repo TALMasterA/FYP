@@ -9,7 +9,6 @@ import com.google.firebase.Timestamp
 data class FriendRelation(
     val friendId: String = "",                   // The friend's user ID
     val friendUsername: String = "",             // Cached for display
-    val friendDisplayName: String = "",          // Cached for display
     val friendAvatarUrl: String = "",            // Cached for display (optional)
     val addedAt: Timestamp = Timestamp.now()
 )
