@@ -355,6 +355,7 @@ fun AppNavigation() {
                                 appLanguageState = appLanguageState,
                                 hasUnseenSharedItems = hasUnseenSharedItems,
                                 hasUnreadMessages = hasUnreadMessages,
+                                unseenFriendRequestCount = pendingFriendRequestCount,
                             )
                             settingsProfileGraph(
                                 navController = navController,

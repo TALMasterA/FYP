@@ -220,6 +220,7 @@ fun SpeechRecognitionScreen(
         title = t(UiTextKey.SpeechTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
+        hasBottomNav = true,
         actions = {
             // Language swap button (circle button with ⇄)
             IconButton(

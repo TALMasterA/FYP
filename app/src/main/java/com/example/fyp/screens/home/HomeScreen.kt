@@ -124,6 +124,7 @@ fun HomeScreen(
     StandardScreenScaffold(
         title = defaultTitle,
         onBack = null,
+        hasBottomNav = true,
         actions = {
             when (authState) {
                 is AuthState.LoggedIn -> {

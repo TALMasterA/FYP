@@ -99,7 +99,8 @@ fun SettingsScreen(
     StandardScreenScaffold(
         title = t(UiTextKey.SettingsTitle),
         onBack = onBack,
-        backContentDescription = t(UiTextKey.NavBack)
+        backContentDescription = t(UiTextKey.NavBack),
+        hasBottomNav = true
     ) { padding ->
         Column(
             modifier = Modifier

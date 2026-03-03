@@ -91,6 +91,7 @@ fun LearningScreen(
         title = t(UiTextKey.LearningTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
+        hasBottomNav = true,
         actions = {
             if (onOpenWordBank != null) {
                 IconButton(onClick = onOpenWordBank) {

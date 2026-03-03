@@ -21,6 +21,7 @@ internal fun NavGraphBuilder.friendsChatGraph(
     appLanguageState: AppLanguageState,
     hasUnseenSharedItems: Boolean,
     hasUnreadMessages: Boolean,
+    unseenFriendRequestCount: Int,
 ) {
     composableRequireLogin(
         route = AppScreen.Friends.route,
@@ -44,7 +45,8 @@ internal fun NavGraphBuilder.friendsChatGraph(
                 navController.navigate(AppScreen.NotificationSettings.route) { launchSingleTop = true }
             },
             hasUnseenSharedItems = hasUnseenSharedItems,
-            hasUnreadMessages = hasUnreadMessages
+            hasUnreadMessages = hasUnreadMessages,
+            unseenFriendRequestCount = unseenFriendRequestCount
         )
     }
 
