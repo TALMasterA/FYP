@@ -319,16 +319,17 @@ fun StandardScreenScaffold(
     backContentDescription: String = "Back",
     actions: @Composable RowScope.() -> Unit = {},
     snackbarHost: @Composable () -> Unit = {},
+    hasBottomNav: Boolean = false,
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        // IMPORTANT: For screens without bottom nav (detail screens), we need to add
-        // bottom padding for system navigation bars to prevent content from being blocked.
-        // The outer AppNavigation Scaffold uses contentWindowInsets = WindowInsets(0) to avoid
-        // double padding on screens WITH bottom nav. Therefore, detail screens must add their own
-        // bottom padding here to respect system bars (gesture navigation, 3-button nav, etc.).
-        contentWindowInsets = WindowInsets.Companion.navigationBars,
+        // IMPORTANT: Screens WITH bottom nav should NOT add navigation bar insets here
+        // (to avoid black gap between content and bottom nav). The outer AppNavigation Scaffold
+        // already handles insets via its bottomBar windowInsets parameter.
+        // Screens WITHOUT bottom nav (detail screens) need to add navigation bar insets
+        // to prevent content from being blocked by system bars (gesture nav, 3-button nav, etc.).
+        contentWindowInsets = if (hasBottomNav) WindowInsets(0) else WindowInsets.Companion.navigationBars,
         topBar = {
             StandardTopAppBar(
                 title = title,

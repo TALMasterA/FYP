@@ -41,6 +41,7 @@ fun FriendsScreen(
     onOpenNotifSettings: () -> Unit = {},
     hasUnseenSharedItems: Boolean = false,
     hasUnreadMessages: Boolean = false,
+    unseenFriendRequestCount: Int = 0,
     viewModel: FriendsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -186,6 +187,7 @@ fun FriendsScreen(
         title = t(UiTextKey.FriendsTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
+        hasBottomNav = true,
         actions = {
             // Manage blocked users
             IconButton(onClick = onOpenBlockedUsers) {
@@ -361,12 +363,25 @@ fun FriendsScreen(
                                 // Friend requests section
                                 if (uiState.incomingRequests.isNotEmpty()) {
                                     item {
-                                        Text(
-                                            text = t(UiTextKey.FriendsRequestsSection).replace("{count}", "${uiState.incomingRequests.size}"),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier.padding(vertical = 8.dp)
-                                        )
+                                        ) {
+                                            Text(
+                                                text = t(UiTextKey.FriendsRequestsSection).replace("{count}", "${uiState.incomingRequests.size}"),
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            if (unseenFriendRequestCount > 0) {
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Badge(
+                                                    containerColor = MaterialTheme.colorScheme.error,
+                                                    contentColor = MaterialTheme.colorScheme.onError
+                                                ) {
+                                                    Text("$unseenFriendRequestCount")
+                                                }
+                                            }
+                                        }
                                     }
                                     items(uiState.incomingRequests, key = { it.requestId }) { request ->
                                         FriendRequestCard(
