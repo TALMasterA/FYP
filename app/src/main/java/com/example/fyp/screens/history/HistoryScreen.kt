@@ -579,6 +579,7 @@ fun HistoryScreen(
                         selectedSessionId != null -> sessionPage++
                     }
                 },
+                modifier = Modifier.padding(bottom = AppSpacing.medium)
             )
         }
     }

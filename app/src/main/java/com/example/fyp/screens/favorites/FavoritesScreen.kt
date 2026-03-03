@@ -348,7 +348,7 @@ fun FavoritesScreen(
                         if (selectedTab == 0 && recordsPage < recordsTotalPages - 1) recordsPage++
                         if (selectedTab == 1 && sessionsPage < sessionsTotalPages - 1) sessionsPage++
                     },
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(16.dp).padding(bottom = 8.dp)
                 )
             }
         }

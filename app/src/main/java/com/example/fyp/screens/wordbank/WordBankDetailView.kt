@@ -480,7 +480,7 @@ private fun WordBankList(
                     pageLabelTemplate = t(UiTextKey.PaginationPageLabelTemplate),
                     onPrev = { if (currentPage > 0) onPageChange(currentPage - 1) },
                     onNext = { if (currentPage < totalPages - 1) onPageChange(currentPage + 1) },
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(16.dp).padding(bottom = 8.dp)
                 )
             }
         }
