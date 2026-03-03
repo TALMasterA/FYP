@@ -1,4 +1,4 @@
-package com.example.fyp
+package com.example.fyp.appstate
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
