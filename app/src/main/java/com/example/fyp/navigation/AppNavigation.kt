@@ -242,6 +242,7 @@ fun AppNavigation() {
                 }
 
                 Scaffold(
+                    containerColor = MaterialTheme.colorScheme.background,
                     contentWindowInsets = WindowInsets(0),
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                     bottomBar = {
@@ -249,6 +250,10 @@ fun AppNavigation() {
                             NavigationBar(
                                 windowInsets = WindowInsets.navigationBars
                             ) {
+                                // Friends button badge shows ALL three notification types:
+                                // 1. Friend requests (badge ONLY on Friends button)
+                                // 2. Chat messages (badge on Friends button AND individual friend cards)
+                                // 3. Shared inbox items (badge on Friends button AND shared inbox icon)
                                 val friendsBadgeCount = pendingFriendRequestCount +
                                     unreadMessageCount +
                                     unseenSharedItemsCount
