@@ -278,13 +278,17 @@ fun FriendsScreen(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Dismiss all unread dots — only shown when there are unread messages
+                        // Dismiss all unread dots — shown when there are unread messages OR unseen shared items
                         val hasAnyUnread = uiState.unreadCountPerFriend.values.any { it > 0 }
-                        if (hasAnyUnread) {
-                            IconButton(onClick = { viewModel.dismissAllUnreadDots() }) {
+                        val hasAnyNotifications = hasAnyUnread || hasUnseenSharedItems
+                        if (hasAnyNotifications) {
+                            IconButton(onClick = {
+                                if (hasAnyUnread) viewModel.dismissAllUnreadDots()
+                                if (hasUnseenSharedItems) viewModel.dismissSharedInboxDot()
+                            }) {
                                 Icon(
                                     Icons.Default.DoneAll,
-                                    contentDescription = "Mark all messages as read",
+                                    contentDescription = "Dismiss all notifications",
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -318,16 +322,6 @@ fun FriendsScreen(
                                 Icon(
                                     Icons.Default.Inbox,
                                     contentDescription = t(UiTextKey.ShareInboxTitle)
-                                )
-                            }
-                        }
-                        // Dismiss shared-inbox dot — only shown when there are unseen items
-                        if (hasUnseenSharedItems) {
-                            IconButton(onClick = { viewModel.dismissSharedInboxDot() }) {
-                                Icon(
-                                    Icons.Default.DoneAll,
-                                    contentDescription = "Dismiss inbox notifications",
-                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }

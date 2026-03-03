@@ -248,6 +248,8 @@ fun AppNavigation() {
                     bottomBar = {
                         if (showBottomNav) {
                             NavigationBar(
+                                containerColor = MaterialTheme.colorScheme.background,
+                                tonalElevation = 0.dp,
                                 windowInsets = WindowInsets.navigationBars
                             ) {
                                 // Friends button badge shows ALL three notification types:
