@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.friends.ChatRepository
+import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.settings.SharedSettingsDataSource
@@ -44,6 +45,7 @@ class AppViewModel @Inject constructor(
     private val sharedSettingsDataSource: SharedSettingsDataSource,
     private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val chatRepository: ChatRepository,
+    private val friendsRepository: FriendsRepository,
 ) : AndroidViewModel(application) {
 
     private var lastInitializedUserId: String? = null
@@ -82,7 +84,12 @@ class AppViewModel @Inject constructor(
     private val _unreadMessageCount = MutableStateFlow(0)
     val unreadMessageCount: StateFlow<Int> = _unreadMessageCount.asStateFlow()
 
+    /** Current user's username from PublicUserProfile (null if not set or not loaded yet). */
+    private val _currentUsername = MutableStateFlow<String?>(null)
+    val currentUsername: StateFlow<String?> = _currentUsername.asStateFlow()
+
     private var unreadJob: Job? = null
+    private var usernameJob: Job? = null
 
     // ── Init ─────────────────────────────────────────────────────────────────
 
@@ -102,6 +109,7 @@ class AppViewModel @Inject constructor(
                             lastInitializedUserId = userId
                             initializeUserProfile(userId)
                             startObservingUnread(userId)
+                            startObservingUsername(userId)
                             // Upload FCM token so backend can send push notifications
                             FcmNotificationService.uploadTokenIfLoggedIn(getApplication())
                         }
@@ -112,8 +120,10 @@ class AppViewModel @Inject constructor(
                         sharedSettingsDataSource.stopObserving()
                         sharedHistoryDataSource.stopObserving()
                         unreadJob?.cancel()
+                        usernameJob?.cancel()
                         _hasUnreadMessages.value = false
                         _unreadMessageCount.value = 0
+                        _currentUsername.value = null
                     }
                     is AuthState.Loading -> Unit
                 }
@@ -150,6 +160,20 @@ class AppViewModel @Inject constructor(
                 ensurePublicProfileExistsUseCase(userId, cachedPrimaryLang)
             } catch (e: Exception) {
                 android.util.Log.e("AppViewModel", "Failed to initialize profile for user $userId", e)
+            }
+        }
+    }
+
+    private fun startObservingUsername(userId: String) {
+        usernameJob?.cancel()
+        usernameJob = viewModelScope.launch {
+            try {
+                // Fetch the user's public profile to get their username
+                val profile = friendsRepository.getPublicProfile(UserId(userId))
+                _currentUsername.value = profile?.username?.takeIf { it.isNotBlank() }
+            } catch (e: Exception) {
+                android.util.Log.e("AppViewModel", "Error fetching username", e)
+                _currentUsername.value = null
             }
         }
     }

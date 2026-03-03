@@ -50,6 +50,7 @@ import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.screens.login.AuthViewModel
+import com.example.fyp.appstate.AppViewModel
 import com.example.fyp.ui.theme.AppCorners
 import com.example.fyp.ui.theme.AppElevation
 import com.example.fyp.ui.theme.AppSpacing
@@ -73,16 +74,21 @@ fun HomeScreen(
     val authViewModel: AuthViewModel = hiltViewModel()
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
 
+    val appViewModel: AppViewModel = hiltViewModel()
+    val currentUsername by appViewModel.currentUsername.collectAsStateWithLifecycle()
+
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     val isLoggedIn = authState is AuthState.LoggedIn
 
-    // Alternating title logic
-    val defaultTitle = t(UiTextKey.HomeTitle)
-    val userName = (authState as? AuthState.LoggedIn)?.user?.email
-        ?.takeWhile { it != '@' }?.takeIf { it.isNotBlank() }
+    // Username with fallback: username → email prefix → null
+    val displayName = when {
+        currentUsername?.isNotBlank() == true -> currentUsername
+        else -> (authState as? AuthState.LoggedIn)?.user?.email
+            ?.takeWhile { it != '@' }?.takeIf { it.isNotBlank() }
+    }
 
     if (showLogoutDialog) {
         AlertDialog(
@@ -112,6 +118,8 @@ fun HomeScreen(
             }
         )
     }
+
+    val defaultTitle = t(UiTextKey.HomeTitle)
 
     StandardScreenScaffold(
         title = defaultTitle,
@@ -156,9 +164,9 @@ fun HomeScreen(
             )
 
             // Welcome back greeting (logged-in users only)
-            if (isLoggedIn && !userName.isNullOrBlank()) {
+            if (isLoggedIn && !displayName.isNullOrBlank()) {
                 Text(
-                    text = t(UiTextKey.HomeWelcomeBack).replace("{name}", userName),
+                    text = t(UiTextKey.HomeWelcomeBack).replace("{name}", displayName),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
