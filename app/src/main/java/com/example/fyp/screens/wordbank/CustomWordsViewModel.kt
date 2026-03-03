@@ -84,6 +84,21 @@ class CustomWordsViewModel @Inject constructor(
         )
     }
 
+    /**
+     * Adds a new custom word entry to the user's personal vocabulary.
+     *
+     * Validation Flow:
+     * 1. Validates text length for all fields using SecurityUtils validation
+     * 2. Sanitizes all inputs to escape HTML entities and prevent XSS
+     * 3. Stores word in Firestore with language pair for categorization
+     *
+     * Language Code Extraction:
+     * The category field "${sourceLang} → ${targetLang}" allows filtering custom
+     * words by language pair without additional Firestore queries.
+     *
+     * Auto-refresh: If custom word bank is currently selected, triggers reload
+     * to immediately show the new word in the UI.
+     */
     fun addCustomWord(
         originalWord: String,
         translatedWord: String,
@@ -94,35 +109,35 @@ class CustomWordsViewModel @Inject constructor(
     ) {
         val uid = currentUserId ?: return
 
-        // Validate originalWord (1-100 chars)
+        // Validate originalWord (1-100 chars) - required field
         val originalValidation = validateTextLength(originalWord, minLength = 1, maxLength = 100, fieldName = "Original word")
         if (originalValidation is ValidationResult.Invalid) {
             _uiState.value = _uiState.value.copy(error = originalValidation.message)
             return
         }
 
-        // Validate translatedWord (1-100 chars)
+        // Validate translatedWord (1-100 chars) - required field
         val translatedValidation = validateTextLength(translatedWord, minLength = 1, maxLength = 100, fieldName = "Translated word")
         if (translatedValidation is ValidationResult.Invalid) {
             _uiState.value = _uiState.value.copy(error = translatedValidation.message)
             return
         }
 
-        // Validate pronunciation (0-200 chars)
+        // Validate pronunciation (0-200 chars) - optional field
         val pronunciationValidation = validateTextLength(pronunciation, minLength = 0, maxLength = 200, fieldName = "Pronunciation")
         if (pronunciationValidation is ValidationResult.Invalid) {
             _uiState.value = _uiState.value.copy(error = pronunciationValidation.message)
             return
         }
 
-        // Validate example (0-500 chars)
+        // Validate example (0-500 chars) - optional field
         val exampleValidation = validateTextLength(example, minLength = 0, maxLength = 500, fieldName = "Example")
         if (exampleValidation is ValidationResult.Invalid) {
             _uiState.value = _uiState.value.copy(error = exampleValidation.message)
             return
         }
 
-        // Sanitize all text inputs
+        // Sanitize all text inputs to escape HTML entities (prevents XSS attacks)
         val sanitizedOriginal = sanitizeInput(originalWord)
         val sanitizedTranslated = sanitizeInput(translatedWord)
         val sanitizedPronunciation = sanitizeInput(pronunciation)
@@ -159,6 +174,15 @@ class CustomWordsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Translates text using the primary language as source.
+     * Uses TranslateTextUseCase which handles caching and API calls.
+     *
+     * Translation Caching Strategy:
+     * - The use case layer caches translations to reduce Azure API calls
+     * - Cache key: "${sourceLang}_${targetLang}_$text"
+     * - Callback pattern allows UI to update fields without state management
+     */
     fun translateCustomWord(
         text: String,
         targetLanguageCode: String,
@@ -178,6 +202,14 @@ class CustomWordsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Translates text with explicit source and target languages.
+     * Used when user wants to translate between any two languages (not just primary).
+     *
+     * This method is separate from translateCustomWord() to provide flexibility
+     * for custom word entries where the user may want to specify both languages
+     * independently of their primary language setting.
+     */
     fun translateForCustomWord(
         text: String,
         sourceLang: String,
@@ -202,6 +234,20 @@ class CustomWordsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(error = null)
     }
 
+    /**
+     * Loads all custom words for the current user from Firestore.
+     *
+     * Language Code Extraction from Category:
+     * Custom words are stored with sourceLang and targetLang fields.
+     * The category "${sourceLang} → ${targetLang}" format allows:
+     * - Visual grouping in the UI by language pair
+     * - Potential future filtering without re-querying Firestore
+     * - Clear indication of translation direction
+     *
+     * ID Prefix Strategy:
+     * Custom words use "custom_${cw.id}" prefix to differentiate them
+     * from AI-generated word bank items in the UI and prevent ID collisions.
+     */
     private fun loadCustomWords() {
         val uid = currentUserId ?: return
 
