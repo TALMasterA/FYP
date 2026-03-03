@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.friends.FriendsRepository
+import com.example.fyp.data.friends.SeenItemsStorage
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.MarkMessagesAsReadUseCase
@@ -21,6 +22,7 @@ import com.example.fyp.core.security.ValidationResult
 import com.example.fyp.core.security.sanitizeInput
 import com.example.fyp.core.security.validateTextLength
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,6 +59,7 @@ data class ChatUiState(
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    @ApplicationContext private val context: android.content.Context,
     private val authRepo: FirebaseAuthRepository,
     private val observeMessagesUseCase: ObserveMessagesUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
@@ -170,6 +173,9 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 markMessagesAsReadUseCase(userId, friendId)
+                // Mark this friend's messages as seen in persistent storage
+                // This prevents the red dot badge from reappearing on app restart
+                SeenItemsStorage.addSeenMessageFriendId(context, userId.value, friendId.value)
             } catch (_: Exception) {
                 // Non-critical
             }
