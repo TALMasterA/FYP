@@ -489,6 +489,14 @@ class FriendsViewModel @Inject constructor(
     }
 
     /**
+     * Mark all visible friend requests as seen.
+     * Called when user views the FriendsScreen to prevent badges from reappearing on app restart.
+     */
+    fun markFriendRequestsSeen() {
+        sharedFriendsDataSource.markFriendRequestsSeen()
+    }
+
+    /**
      * Dismiss all in-app notification dots:
      * - Marks all unread chat messages as read for each friend.
      * - Clears the unread badge count locally.

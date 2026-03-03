@@ -66,6 +66,9 @@ class SharedFriendsDataSource @Inject constructor(
     /** IDs of shared inbox items the user has already seen (opened the inbox). */
     private val _seenSharedItemIds = MutableStateFlow<Set<String>>(emptySet())
 
+    /** IDs of friend requests the user has already seen (opened Friends screen). */
+    private val _seenFriendRequestIds = MutableStateFlow<Set<String>>(emptySet())
+
     /**
      * Whether there are unseen shared inbox items.
      * Starts empty every session — ALL pending items are unseen until the user opens
@@ -83,6 +86,12 @@ class SharedFriendsDataSource @Inject constructor(
             items.count { it.itemId !in seen }
         }
 
+    /** Count of unseen friend requests (persisted across app restarts). */
+    val unseenFriendRequestCount: kotlinx.coroutines.flow.Flow<Int> =
+        kotlinx.coroutines.flow.combine(_incomingRequests, _seenFriendRequestIds) { requests, seen ->
+            requests.count { it.requestId !in seen }
+        }
+
     /**
      * Call this when the user opens the Shared Inbox screen so all currently
      * pending items are considered "seen" and the notification badge clears.
@@ -98,6 +107,24 @@ class SharedFriendsDataSource @Inject constructor(
         // Persist to storage so red dots don't reappear on app restart
         scope.launch(Dispatchers.IO) {
             SeenItemsStorage.saveSeenItemIds(context, userId, _seenSharedItemIds.value)
+        }
+    }
+
+    /**
+     * Call this when the user opens the Friends screen so all currently
+     * visible friend requests are considered "seen" and the badge count reflects only new ones.
+     *
+     * **Persistence:** Seen request IDs are saved to SharedPreferences so the badge
+     * shows only truly NEW requests after app restart.
+     */
+    fun markFriendRequestsSeen() {
+        val userId = currentUserId ?: return
+        val currentIds = _incomingRequests.value.map { it.requestId }.toSet()
+        _seenFriendRequestIds.value = _seenFriendRequestIds.value + currentIds
+
+        // Persist to storage so badges don't reappear on app restart
+        scope.launch(Dispatchers.IO) {
+            SeenItemsStorage.saveSeenFriendRequestIds(context, userId, _seenFriendRequestIds.value)
         }
     }
 
@@ -136,10 +163,13 @@ class SharedFriendsDataSource @Inject constructor(
         currentUserId = userId
         val uid = UserId(userId)
 
-        // Load previously seen item IDs from persistent storage
+        // Load previously seen item IDs and friend request IDs from persistent storage
         scope.launch(Dispatchers.IO) {
             val persistedSeenIds = SeenItemsStorage.loadSeenItemIds(context, userId)
             _seenSharedItemIds.value = persistedSeenIds
+
+            val persistedSeenRequestIds = SeenItemsStorage.loadSeenFriendRequestIds(context, userId)
+            _seenFriendRequestIds.value = persistedSeenRequestIds
         }
 
         friendsJob = scope.launch {
@@ -163,6 +193,9 @@ class SharedFriendsDataSource @Inject constructor(
             try {
                 friendsRepository.observeIncomingRequests(uid).collect { list ->
                     _incomingRequests.value = list
+                    val currentRequestIds = list.map { it.requestId }.toSet()
+                    // Remove IDs from seenSet that are no longer pending (accepted/rejected)
+                    _seenFriendRequestIds.value = _seenFriendRequestIds.value.intersect(currentRequestIds)
                 }
             } catch (e: Exception) {
                 Log.w("SharedFriendsDS", "Requests listener error, restarting in 5s", e)
