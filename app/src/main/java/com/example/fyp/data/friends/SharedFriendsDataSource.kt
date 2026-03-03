@@ -1,10 +1,12 @@
 package com.example.fyp.data.friends
 
+import android.content.Context
 import android.util.Log
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.FriendRelation
 import com.example.fyp.model.friends.FriendRequest
 import com.example.fyp.model.friends.SharedItem
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,6 +39,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class SharedFriendsDataSource @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val friendsRepository: FriendsRepository,
     private val sharingRepository: SharingRepository
 ) {
@@ -83,10 +86,19 @@ class SharedFriendsDataSource @Inject constructor(
     /**
      * Call this when the user opens the Shared Inbox screen so all currently
      * pending items are considered "seen" and the notification badge clears.
+     *
+     * **Persistence:** Seen item IDs are saved to SharedPreferences so the red dot
+     * does not reappear on app restart for items the user has already viewed.
      */
     fun markSharedItemsSeen() {
+        val userId = currentUserId ?: return
         val currentIds = _pendingSharedItems.value.map { it.itemId }.toSet()
         _seenSharedItemIds.value = _seenSharedItemIds.value + currentIds
+
+        // Persist to storage so red dots don't reappear on app restart
+        scope.launch(Dispatchers.IO) {
+            SeenItemsStorage.saveSeenItemIds(context, userId, _seenSharedItemIds.value)
+        }
     }
 
     // ── In-memory username cache (avoid re-fetching sender profile on share) ──
@@ -123,6 +135,12 @@ class SharedFriendsDataSource @Inject constructor(
         stopObserving()
         currentUserId = userId
         val uid = UserId(userId)
+
+        // Load previously seen item IDs from persistent storage
+        scope.launch(Dispatchers.IO) {
+            val persistedSeenIds = SeenItemsStorage.loadSeenItemIds(context, userId)
+            _seenSharedItemIds.value = persistedSeenIds
+        }
 
         friendsJob = scope.launch {
             try {
@@ -171,6 +189,7 @@ class SharedFriendsDataSource @Inject constructor(
 
     /**
      * Stop observing and clear cached state (e.g., on logout).
+     * Also clears persisted seen item IDs for the logged-out user.
      */
     fun stopObserving() {
         friendsJob?.cancel()
@@ -179,6 +198,14 @@ class SharedFriendsDataSource @Inject constructor(
         friendsJob = null
         requestsJob = null
         inboxJob = null
+
+        // Clear persisted seen items for this user
+        currentUserId?.let { userId ->
+            scope.launch(Dispatchers.IO) {
+                SeenItemsStorage.clearSeenItemIds(context, userId)
+            }
+        }
+
         currentUserId = null
         _friends.value = emptyList()
         _incomingRequests.value = emptyList()

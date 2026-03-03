@@ -245,3 +245,67 @@ if (!loginLimiter.isAllowed(userId)) {
 - Enforces data integrity
 
 ---
+## 14. Bottom Navigation Bar — System Bar Insets Protection
+
+**File:** `navigation/AppNavigation.kt`
+
+**Invariant:** The bottom NavigationBar must include `windowInsets = WindowInsets.navigationBars` to ensure it adds proper padding above device system navigation keys (home, back, recent apps buttons).
+
+**Rule:** Without this parameter, the NavigationBar will be drawn behind the system navigation bar, making bottom icons difficult to tap on devices with gesture navigation or hardware buttons.
+
+**Pattern:**
+```kotlin
+NavigationBar(
+    windowInsets = WindowInsets.navigationBars  // REQUIRED
+) {
+    // navigation items
+}
+```
+
+**Benefits:**
+- Bottom navigation items remain fully accessible on all devices
+- Proper spacing above system gesture bar on gesture navigation devices
+- No overlapping with physical navigation buttons on older devices
+
+---
+
+## 15. Red Dot Notification Persistence — Seen Items Storage
+
+**Files:** `data/friends/SeenItemsStorage.kt`, `data/friends/SharedFriendsDataSource.kt`, `screens/friends/SharedInboxViewModel.kt`
+
+**Invariant:** When a user views shared inbox items, those item IDs must be persisted to SharedPreferences so the red dot notification badge does NOT reappear on app restart for already-seen items.
+
+**Implementation:**
+1. `SeenItemsStorage` stores/loads seen item IDs per user in SharedPreferences
+2. `SharedFriendsDataSource.startObserving()` loads persisted seen IDs on app start
+3. `SharedFriendsDataSource.markSharedItemsSeen()` saves seen IDs to persistent storage
+4. `SharedFriendsDataSource.stopObserving()` clears persisted IDs on logout
+
+**Rule:**
+- NEVER store seen item IDs only in memory (MutableStateFlow/private var)
+- ALWAYS call `SeenItemsStorage.saveSeenItemIds()` after marking items as seen
+- ALWAYS load persisted IDs in `startObserving()` to restore state across app restarts
+- ALWAYS clear persisted IDs in `stopObserving()` to prevent leaking data between user accounts
+
+**Pattern:**
+```kotlin
+// In startObserving()
+scope.launch(Dispatchers.IO) {
+    val persistedSeenIds = SeenItemsStorage.loadSeenItemIds(context, userId)
+    _seenSharedItemIds.value = persistedSeenIds
+}
+
+// In markSharedItemsSeen()
+_seenSharedItemIds.value = _seenSharedItemIds.value + currentIds
+scope.launch(Dispatchers.IO) {
+    SeenItemsStorage.saveSeenItemIds(context, userId, _seenSharedItemIds.value)
+}
+```
+
+**Benefits:**
+- Consistent badge behavior: red dots only appear for truly new items
+- Better UX: users don't see stale notifications on app restart
+- Multi-account safe: each user has separate seen items storage
+- Simple implementation: uses existing SharedPreferences pattern
+
+---
