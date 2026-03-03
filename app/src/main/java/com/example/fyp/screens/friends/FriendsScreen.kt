@@ -47,6 +47,11 @@ fun FriendsScreen(
     val (uiText) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
+    // Mark friend requests as seen when screen loads (persists across app restarts)
+    LaunchedEffect(Unit) {
+        viewModel.markFriendRequestsSeen()
+    }
+
     var showSearchDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var showInfoDialog by remember { mutableStateOf(false) }

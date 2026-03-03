@@ -52,10 +52,10 @@ class AppViewModel @Inject constructor(
 
     // ── Notification state (read-only for UI) ──────────────────────────────
 
-    /** Pending incoming friend requests — gated by inAppBadgeFriendRequests setting. */
+    /** Unseen incoming friend requests (persisted across app restarts) — gated by inAppBadgeFriendRequests setting. */
     val pendingFriendRequestCount: StateFlow<Int> =
         combine(
-            sharedFriendsDataSource.incomingRequests.map { it.size },
+            sharedFriendsDataSource.unseenFriendRequestCount,
             sharedSettingsDataSource.settings.map { it.inAppBadgeFriendRequests }
         ) { count, enabled -> if (enabled) count else 0 }
             .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
