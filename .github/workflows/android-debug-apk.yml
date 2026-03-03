@@ -2,36 +2,76 @@ name: Build Debug APK
 
 on:
   workflow_dispatch:
-    push:
-        branches: [ "main", "master" ]
-          pull_request:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
 
-          jobs:
-            build-debug-apk:
-                runs-on: ubuntu-latest
+jobs:
+  build-debug-apk:
+    runs-on: ubuntu-latest
 
-                    steps:
-                          - name: Checkout
-                                  uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-                                        - name: Set up JDK 17
-                                                uses: actions/setup-java@v4
-                                                        with:
-                                                                  distribution: temurin
-                                                                            java-version: "17"
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
 
-                                                                                  - name: Setup Gradle
-                                                                                          uses: gradle/actions/setup-gradle@v4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-                                                                                                - name: Grant execute permission for gradlew
-                                                                                                        run: chmod +x ./gradlew
+      - name: Create mock google-services.json
+        run: |
+          cat > app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "123456789000",
+              "firebase_url": "https://mock-project.firebaseio.com",
+              "project_id": "mock-project-id",
+              "storage_bucket": "mock-project-id.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:123456789000:android:0000000000000000000000",
+                  "android_client_info": {
+                    "package_name": "com.example.fyp"
+                  }
+                },
+                "oauth_client": [
+                  {
+                    "client_id": "123456789000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com",
+                    "client_type": 3
+                  }
+                ],
+                "api_key": [
+                  {
+                    "current_key": "AIzaSyDMockKeyForBuildPurposesOnly00000000000"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
 
-                                                                                                              - name: Build debug APK
-                                                                                                                      run: ./gradlew assembleDebug
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
 
-                                                                                                                            - name: Upload debug APK artifact
-                                                                                                                                    uses: actions/upload-artifact@v4
-                                                                                                                                            with:
-                                                                                                                                                      name: app-debug-apk
-                                                                                                                                                                path: app/build/outputs/apk/debug/*.apk
-                                                                                                                                                                          if-no-files-found: error9
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
