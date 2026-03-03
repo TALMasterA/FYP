@@ -54,23 +54,18 @@ The Android build requires a Firebase configuration file (`google-services.json`
 - ✅ Fixed all step indentations (2-space indents throughout)
 - ✅ Removed trailing "error9" text
 
-### Added Mock Firebase Configuration
-Added a step to create a mock `google-services.json` file during the CI build:
+### Added Real Firebase Configuration from Secrets
+Added a step to use the real `google-services.json` file stored in GitHub Secrets:
 
 ```yaml
-- name: Create mock google-services.json
+- name: Create google-services.json from secret
+  env:
+    GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
   run: |
-    cat > app/google-services.json << 'EOF'
-    {
-      "project_info": {
-        "project_number": "123456789000",
-        ...
-      }
-    }
-    EOF
+    echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
 ```
 
-This mock file contains placeholder values that are sufficient for building the APK but won't work for actual Firebase features.
+This uses the actual Firebase configuration stored in your repository secrets, so the APK will have full Firebase functionality (authentication, Firestore, FCM notifications, etc.).
 
 ### Added CI-Friendly Gradle Flag
 Changed the build command from:
@@ -107,13 +102,35 @@ The workflow should now:
 2. ✅ Check out your code
 3. ✅ Set up JDK 17
 4. ✅ Set up Gradle
-5. ✅ Create mock google-services.json
-6. ✅ Build the debug APK
+5. ✅ Create google-services.json from GitHub Secrets (real Firebase config)
+6. ✅ Build the debug APK with full Firebase functionality
 7. ✅ Upload the APK as an artifact
 
-You can download the built APK from the "Artifacts" section of any successful workflow run.
+You can download the built APK from the "Artifacts" section of any successful workflow run. The APK will work exactly like a locally-built APK with full Firebase features (auth, Firestore, notifications, etc.).
 
 ## For Future Reference
+
+### Setting Up the GOOGLE_SERVICES_JSON Secret
+
+If you need to update or add the `google-services.json` secret to another repository:
+
+1. **Get your google-services.json content:**
+   - Copy the entire content of your `app/google-services.json` file
+
+2. **Add it to GitHub Secrets:**
+   - Go to your repository on GitHub
+   - Click "Settings" → "Secrets and variables" → "Actions"
+   - Click "New repository secret"
+   - Name: `GOOGLE_SERVICES_JSON`
+   - Value: Paste the entire content of your google-services.json file
+   - Click "Add secret"
+
+3. **The workflow will automatically use it:**
+   - The secret is accessed as `${{ secrets.GOOGLE_SERVICES_JSON }}`
+   - It's written to `app/google-services.json` during the build
+   - The file is never committed to the repository
+
+**Important:** Keep your `google-services.json` file in `.gitignore` to prevent accidentally committing Firebase credentials to your repository.
 
 ### Common YAML Pitfalls to Avoid
 
