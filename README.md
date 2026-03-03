@@ -188,6 +188,9 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
 
 **Configuration Files:**
 1. `google-services.json` - Place in `app/` folder (from Firebase Console)
+   - For local/CI builds without Firebase: A mock `google-services.json` is provided
+   - The mock file contains placeholder values sufficient for compilation
+   - Replace with actual Firebase configuration for production deployment
 2. Backend environment variables for Cloud Functions (Azure API keys configured via Firebase Functions config)
 
 **Firebase Services Used:**
@@ -285,13 +288,16 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **53 test files** covering critical app logic
-- **398+ unit tests** passing
+- **59 test files** covering critical app logic (as of March 2026)
+- **400+ unit tests** passing
 - Test categories:
-  - Domain layer use cases (20+ test files)
+  - Domain layer use cases (25+ test files)
   - ViewModels (6 test files)
   - Models and serialization (10+ test files)
   - Repositories and data layer (8+ test files)
+  - UI components (StandardButtons, StandardTextFields, StandardDialogs)
+  - Security utilities (validation, sanitization, rate limiting)
+  - Performance utilities (debouncing, throttling)
   - Anti-cheat and generation eligibility (comprehensive)
 
 **Key Test Suites:**
@@ -299,7 +305,9 @@ gh auth login
 - `CoinEligibilityTest` - Coin award anti-cheat logic
 - `CoinAndGenerationIntegrationTest` - End-to-end eligibility scenarios
 - `UiTextAlignmentTest` - Critical test preventing enum/list misalignment crashes
-- Friend system tests - Friend requests, chat operations, shared items
+- `SecurityUtilsTest` - Input validation and sanitization security guards
+- `PerformanceUtilsTest` - Debouncing and throttling optimization patterns
+- Friend system tests - Friend requests, chat operations, shared items, blocking
 - Repository tests - Firestore operations, caching, cleanup
 
 **Running Tests:**
@@ -315,7 +323,7 @@ gh auth login
 ```
 
 **Test Requirements:**
-- Mock `google-services.json` file in `app/` folder (gitignored)
+- Mock `google-services.json` file in `app/` folder (gitignored, mock version for CI/local builds)
 - JUnit 4 + Mockito + Kotlin Coroutines Test utilities
 
 --------------------------------------------------------------
@@ -397,6 +405,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** March 2, 2026
+**Last Updated:** March 3, 2026
 
 (Some content is by github copilot agent and may contain error)
