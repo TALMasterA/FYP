@@ -10,13 +10,17 @@ jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest
     steps:
-      # This checks out FYP repository
       - name: Checkout repository
         uses: actions/checkout@v4
         
-      # Set up Java
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+          
+      # Authenticate Firebase for the MCP Server
+      - name: Authenticate Firebase
+        run: |
+          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}' > $GITHUB_WORKSPACE/firebase-sa.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$GITHUB_WORKSPACE/firebase-sa.json" >> $GITHUB_ENV
