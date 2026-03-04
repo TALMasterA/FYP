@@ -198,7 +198,8 @@ class ChatViewModelTest {
 
     @Test
     fun `sendMessage failure surfaces error`() = runTest {
-        whenever(sendMessageUseCase.invoke(eq("chat_friend1_user1"), eq(UserId("user1")), eq(UserId(friendId)), any()))
+        // Use raw values (no matchers) to avoid inline value class boxing mismatch
+        whenever(sendMessageUseCase.invoke("chat_friend1_user1", UserId("user1"), UserId(friendId), "Hello!"))
             .thenReturn(Result.failure(RuntimeException("Network error")))
 
         val vm = buildViewModel()
@@ -252,9 +253,7 @@ class ChatViewModelTest {
 
     @Test
     fun `sendMessage when blocked by friend shows error`() = runTest {
-        runTest {
-            whenever(friendsRepository.isBlockedBy(UserId("user1"), UserId(friendId))).thenReturn(true)
-        }
+        whenever(friendsRepository.isBlockedBy(UserId("user1"), UserId(friendId))).thenReturn(true)
 
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
@@ -270,7 +269,7 @@ class ChatViewModelTest {
 
     @Test
     fun `blockFriend updates isBlocked state`() = runTest {
-        whenever(friendsRepository.blockUser(UserId("user1"), UserId(friendId), anyOrNull())).thenReturn(Result.success(Unit))
+        whenever(friendsRepository.blockUser(eq(UserId("user1")), eq(UserId(friendId)), any())).thenReturn(Result.success(Unit))
 
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
@@ -298,7 +297,8 @@ class ChatViewModelTest {
 
     @Test
     fun `clearError clears error field`() = runTest {
-        whenever(sendMessageUseCase.invoke(eq("chat_friend1_user1"), eq(UserId("user1")), eq(UserId(friendId)), any()))
+        // Use raw values (no matchers) to avoid inline value class boxing mismatch
+        whenever(sendMessageUseCase.invoke("chat_friend1_user1", UserId("user1"), UserId(friendId), "test"))
             .thenReturn(Result.failure(RuntimeException("fail")))
 
         val vm = buildViewModel()

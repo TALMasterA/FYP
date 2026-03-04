@@ -171,10 +171,8 @@ class FriendsViewModelTest {
     @Test
     fun `sendFriendRequest without username shows error`() = runTest {
         whenever(sharedFriendsDataSource.getCachedUsername("user1")).thenReturn(null)
-        runTest {
-            whenever(friendsRepository.getPublicProfile(UserId("user1")))
-                .thenReturn(PublicUserProfile(uid = "user1", username = ""))
-        }
+        whenever(friendsRepository.getPublicProfile(UserId("user1")))
+            .thenReturn(PublicUserProfile(uid = "user1", username = ""))
 
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
@@ -205,7 +203,8 @@ class FriendsViewModelTest {
 
     @Test
     fun `sendFriendRequest duplicate shows specific error`() = runTest {
-        whenever(sendFriendRequestUseCase.invoke(eq(UserId("user1")), eq(UserId("target1")), any()))
+        // Use raw values to avoid inline value class boxing mismatch with eq() matchers
+        whenever(sendFriendRequestUseCase.invoke(UserId("user1"), UserId("target1"), ""))
             .thenReturn(Result.failure(RuntimeException("already sent")))
 
         val vm = buildViewModel()
@@ -432,9 +431,10 @@ class FriendsViewModelTest {
         )
         incomingRequestsFlow.value = requests
 
-        whenever(acceptFriendRequestUseCase.invoke(eq("req1"), eq(UserId("user1")), eq(UserId("s1"))))
+        // Use raw values to avoid inline value class boxing mismatch with eq() matchers
+        whenever(acceptFriendRequestUseCase.invoke("req1", UserId("user1"), UserId("s1")))
             .thenReturn(Result.success(Unit))
-        whenever(acceptFriendRequestUseCase.invoke(eq("req2"), eq(UserId("user1")), eq(UserId("s2"))))
+        whenever(acceptFriendRequestUseCase.invoke("req2", UserId("user1"), UserId("s2")))
             .thenReturn(Result.failure(RuntimeException("fail")))
 
         val vm = buildViewModel()
@@ -453,10 +453,8 @@ class FriendsViewModelTest {
     @Test
     fun `requireUsernameForAddFriends returns false and sets error when no username`() = runTest {
         whenever(sharedFriendsDataSource.getCachedUsername("user1")).thenReturn(null)
-        runTest {
-            whenever(friendsRepository.getPublicProfile(UserId("user1")))
-                .thenReturn(PublicUserProfile(uid = "user1", username = ""))
-        }
+        whenever(friendsRepository.getPublicProfile(UserId("user1")))
+            .thenReturn(PublicUserProfile(uid = "user1", username = ""))
 
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)

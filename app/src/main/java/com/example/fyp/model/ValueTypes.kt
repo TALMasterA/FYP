@@ -38,8 +38,8 @@ value class UserId(val value: String) {
 value class LanguageCode(val value: String) {
     init {
         require(value.isNotBlank()) { "LanguageCode cannot be blank" }
-        require(value.matches(Regex("^[a-z]{2}-[A-Z]{2}$"))) {
-            "LanguageCode must match format 'xx-XX' (e.g., 'en-US'), got: $value"
+        require(value.matches(Regex("^[a-z]{2}(-[A-Z]{2})?$"))) {
+            "LanguageCode must match format 'xx' or 'xx-XX' (e.g., 'ja' or 'en-US'), got: $value"
         }
     }
 }
