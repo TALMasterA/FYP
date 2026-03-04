@@ -142,7 +142,7 @@ fun FriendSelectorDialog(
                                         }
                                     )
                                     if (friend != friends.last()) {
-                                        Divider()
+                                        HorizontalDivider()
                                     }
                                 }
                             }

@@ -48,7 +48,12 @@ class RemoveFriendUseCaseTest {
     }
 
     @Test
-    fun `remove friend handles repository failure and skips chat deletion`() = runTest {
+    fun `remove friend handles repository failure after chat deletion`() = runTest {
+        // Chat is deleted first; if friend removal then fails, the result is failure
+        whenever(chatRepository.generateChatId(currentUserId, friendUserId))
+            .thenReturn(chatId)
+        whenever(chatRepository.deleteChatConversation(chatId))
+            .thenReturn(Result.success(Unit))
         val exception = Exception("Friendship not found")
         whenever(friendsRepository.removeFriend(currentUserId, friendUserId))
             .thenReturn(Result.failure(exception))
@@ -57,25 +62,27 @@ class RemoveFriendUseCaseTest {
 
         assertTrue(result.isFailure)
         assertEquals("Friendship not found", result.exceptionOrNull()?.message)
-        verify(chatRepository, never()).deleteChatConversation(any())
     }
 
     @Test
-    fun `remove self as friend returns error and skips chat deletion`() = runTest {
+    fun `remove self as friend returns error`() = runTest {
         val userId = UserId("user1")
+        whenever(chatRepository.generateChatId(userId, userId))
+            .thenReturn("user1_user1")
+        whenever(chatRepository.deleteChatConversation(any()))
+            .thenReturn(Result.success(Unit))
         whenever(friendsRepository.removeFriend(userId, userId))
             .thenReturn(Result.failure(Exception("Cannot remove yourself")))
 
         val result = useCase(userId, userId)
 
         assertTrue(result.isFailure)
-        verify(chatRepository, never()).deleteChatConversation(any())
     }
 
     @Test
-    fun `remove friend succeeds even if chat deletion fails`() = runTest {
-        whenever(friendsRepository.removeFriend(currentUserId, friendUserId))
-            .thenReturn(Result.success(Unit))
+    fun `remove friend fails when chat deletion fails`() = runTest {
+        // Chat is deleted FIRST for privacy. If deletion fails, the whole operation
+        // is aborted so private messages are never left accessible after unfriending.
         whenever(chatRepository.generateChatId(currentUserId, friendUserId))
             .thenReturn(chatId)
         whenever(chatRepository.deleteChatConversation(chatId))
@@ -83,8 +90,9 @@ class RemoveFriendUseCaseTest {
 
         val result = useCase(currentUserId, friendUserId)
 
-        assertTrue(result.isSuccess)
-        verify(friendsRepository).removeFriend(currentUserId, friendUserId)
+        assertTrue(result.isFailure)
+        // Friend removal must NOT have been attempted — chat must be gone first
+        verify(friendsRepository, never()).removeFriend(any(), any())
         verify(chatRepository).deleteChatConversation(chatId)
     }
 }

@@ -131,7 +131,7 @@ fun MyProfileScreen(
                             copyButtonText = t(UiTextKey.MyProfileCopyUserId)
                         )
 
-                        Divider(modifier = Modifier.padding(vertical = 16.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
                         // Username Section
                         ProfileInfoItem(
@@ -147,7 +147,7 @@ fun MyProfileScreen(
                             copyButtonText = t(UiTextKey.MyProfileCopyUsername)
                         )
 
-                        Divider(modifier = Modifier.padding(vertical = 16.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
                         // Primary Language - display human-readable name, not code
                         val primaryLangCode = profile.primaryLanguage

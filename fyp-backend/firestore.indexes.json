@@ -113,36 +113,6 @@
           "order": "ASCENDING"
         }
       ]
-    },
-    {
-      "collectionGroup": "messages",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "blocked_users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "blockedAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "friends",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "friendsSince",
-          "order": "ASCENDING"
-        }
-      ]
     }
   ],
   "fieldOverrides": []

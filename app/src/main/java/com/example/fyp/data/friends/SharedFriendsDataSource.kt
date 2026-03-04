@@ -70,6 +70,30 @@ class SharedFriendsDataSource @Inject constructor(
     private val _seenFriendRequestIds = MutableStateFlow<Set<String>>(emptySet())
 
     /**
+     * IDs of friends whose messages the user has already seen (opened their chat).
+     * Persisted across app restarts so red dots don't reappear for already-read chats.
+     */
+    private val _seenMessageFriendIds = MutableStateFlow<Set<String>>(emptySet())
+
+    /**
+     * Raw per-friend unread counts fed from the Firestore listener in AppViewModel/FriendsViewModel.
+     * Stored here so the seen-message filter can be applied centrally.
+     */
+    private val _rawUnreadPerFriend = MutableStateFlow<Map<String, Int>>(emptyMap())
+
+    /**
+     * Per-friend unread counts filtered by [_seenMessageFriendIds].
+     * A friend's unread count is zeroed out if the user has already opened that chat
+     * (i.e. their ID is in the seen set). This ensures red dots don't reappear on
+     * app restart for chats the user has already read.
+     */
+    val unseenUnreadPerFriend: kotlinx.coroutines.flow.Flow<Map<String, Int>> =
+        kotlinx.coroutines.flow.combine(_rawUnreadPerFriend, _seenMessageFriendIds) { raw, seen ->
+            raw.mapValues { (friendId, count) -> if (friendId in seen) 0 else count }
+                .filter { it.value > 0 }
+        }
+
+    /**
      * Whether there are unseen shared inbox items.
      * Starts empty every session — ALL pending items are unseen until the user opens
      * the inbox (markSharedItemsSeen) or taps DoneAll (dismissSharedInboxDot).
@@ -128,6 +152,53 @@ class SharedFriendsDataSource @Inject constructor(
         }
     }
 
+    /**
+     * Call when the user opens a chat with [friendId].
+     * That friend's messages are no longer counted as unseen; their red dot clears.
+     * Persisted so the red dot does not reappear on app restart.
+     */
+    fun markMessageFriendSeen(friendId: String) {
+        val userId = currentUserId ?: return
+        _seenMessageFriendIds.value = _seenMessageFriendIds.value + friendId
+        scope.launch(Dispatchers.IO) {
+            SeenItemsStorage.addSeenMessageFriendId(context, userId, friendId)
+        }
+    }
+
+    /**
+     * Update the raw per-friend unread map from the Firestore listener.
+     * Called by AppViewModel whenever the Firestore unreadPerFriend field changes.
+     * [unseenUnreadPerFriend] will automatically filter using [_seenMessageFriendIds].
+     *
+     * If a friend now has NEW unread messages (Firestore count > 0), they are removed
+     * from the seen set so their red dot reappears correctly.
+     */
+    fun updateRawUnreadPerFriend(unreadMap: Map<String, Int>) {
+        _rawUnreadPerFriend.value = unreadMap
+        val friendsWithNewMessages = unreadMap.filter { it.value > 0 }.keys
+        if (friendsWithNewMessages.isNotEmpty()) {
+            val currentSeen = _seenMessageFriendIds.value
+            val stillSeen = currentSeen - friendsWithNewMessages
+            if (stillSeen != currentSeen) {
+                _seenMessageFriendIds.value = stillSeen
+                val userId = currentUserId ?: return
+                scope.launch(Dispatchers.IO) {
+                    SeenItemsStorage.saveSeenMessageFriendIds(context, userId, stillSeen)
+                }
+            }
+        }
+    }
+
+    /**
+     * Explicitly clear all persisted notification-seen state for [userId].
+     * Call ONLY on explicit user logout so the next login starts fresh.
+     */
+    fun clearAllSeenStateForUser(userId: String) {
+        scope.launch(Dispatchers.IO) {
+            SeenItemsStorage.clearAllSeenState(context, userId)
+        }
+    }
+
     // ── In-memory username cache (avoid re-fetching sender profile on share) ──
 
     /** Cache: userId → username. Populated when friends list loads. */
@@ -163,13 +234,11 @@ class SharedFriendsDataSource @Inject constructor(
         currentUserId = userId
         val uid = UserId(userId)
 
-        // Load previously seen item IDs and friend request IDs from persistent storage
+        // Restore all persisted seen-state from SharedPreferences
         scope.launch(Dispatchers.IO) {
-            val persistedSeenIds = SeenItemsStorage.loadSeenItemIds(context, userId)
-            _seenSharedItemIds.value = persistedSeenIds
-
-            val persistedSeenRequestIds = SeenItemsStorage.loadSeenFriendRequestIds(context, userId)
-            _seenFriendRequestIds.value = persistedSeenRequestIds
+            _seenSharedItemIds.value = SeenItemsStorage.loadSeenItemIds(context, userId)
+            _seenFriendRequestIds.value = SeenItemsStorage.loadSeenFriendRequestIds(context, userId)
+            _seenMessageFriendIds.value = SeenItemsStorage.loadSeenMessageFriendIds(context, userId)
         }
 
         friendsJob = scope.launch {
@@ -221,8 +290,11 @@ class SharedFriendsDataSource @Inject constructor(
     }
 
     /**
-     * Stop observing and clear cached state (e.g., on logout).
-     * Also clears persisted seen item IDs for the logged-out user.
+     * Stop observing and clear in-memory state only.
+     *
+     * IMPORTANT: Persisted seen-item IDs are intentionally NOT cleared here.
+     * They must survive app restarts so badges don't reappear for already-viewed items.
+     * Use [clearAllSeenStateForUser] only on explicit user logout.
      */
     fun stopObserving() {
         friendsJob?.cancel()
@@ -232,18 +304,15 @@ class SharedFriendsDataSource @Inject constructor(
         requestsJob = null
         inboxJob = null
 
-        // Clear persisted seen items for this user
-        currentUserId?.let { userId ->
-            scope.launch(Dispatchers.IO) {
-                SeenItemsStorage.clearSeenItemIds(context, userId)
-            }
-        }
-
+        // Clear only in-memory state — do NOT touch SharedPreferences here
         currentUserId = null
         _friends.value = emptyList()
         _incomingRequests.value = emptyList()
         _pendingSharedItems.value = emptyList()
         _seenSharedItemIds.value = emptySet()
+        _seenFriendRequestIds.value = emptySet()
+        _seenMessageFriendIds.value = emptySet()
+        _rawUnreadPerFriend.value = emptyMap()
         usernameCache.clear()
     }
 
@@ -274,4 +343,3 @@ class SharedFriendsDataSource @Inject constructor(
         }
     }
 }
-

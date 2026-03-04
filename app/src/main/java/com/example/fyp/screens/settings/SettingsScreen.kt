@@ -46,7 +46,6 @@ import com.example.fyp.data.azure.AzureLanguageConfig
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
-import com.google.firebase.appdistribution.FirebaseAppDistribution
 import kotlinx.coroutines.delay
 import com.example.fyp.ui.theme.AppSpacing
 import com.example.fyp.ui.theme.AppCorners
@@ -239,14 +238,20 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                         ) {
-                            // Tester Feedback (Firebase App Distribution)
+                            // Tester Feedback (Firebase App Distribution — debug builds only)
                             TextButton(
                                 onClick = {
                                     try {
-                                        FirebaseAppDistribution.getInstance().startFeedback(R.string.feedback_additional_info)
+                                        // Use reflection so this compiles in release builds where
+                                        // the firebase-appdistribution SDK is not included.
+                                        val cls = Class.forName("com.google.firebase.appdistribution.FirebaseAppDistribution")
+                                        val getInstance = cls.getMethod("getInstance")
+                                        val instance = getInstance.invoke(null)
+                                        val startFeedback = cls.getMethod("startFeedback", Int::class.javaPrimitiveType)
+                                        startFeedback.invoke(instance, R.string.feedback_additional_info)
                                     } catch (e: Exception) {
                                         android.util.Log.e("SettingsScreen", "Firebase App Distribution not available: ${e.message}")
-                                        // Silently fail - this feature may not be available in all builds
+                                        // Silently fail - this feature is only available in debug/tester builds
                                     }
                                 },
                                 modifier = Modifier.weight(1f)
