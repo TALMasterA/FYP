@@ -20,6 +20,7 @@ internal fun NavGraphBuilder.friendsChatGraph(
     navigateToLogin: () -> Unit,
     appLanguageState: AppLanguageState,
     hasUnseenSharedItems: Boolean,
+    unseenSharedItemsCount: Int,
     hasUnreadMessages: Boolean,
     unseenFriendRequestCount: Int,
 ) {
@@ -45,6 +46,7 @@ internal fun NavGraphBuilder.friendsChatGraph(
                 navController.navigate(AppScreen.NotificationSettings.route) { launchSingleTop = true }
             },
             hasUnseenSharedItems = hasUnseenSharedItems,
+            unseenSharedItemsCount = unseenSharedItemsCount,
             hasUnreadMessages = hasUnreadMessages,
             unseenFriendRequestCount = unseenFriendRequestCount
         )

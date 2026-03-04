@@ -40,6 +40,7 @@ fun FriendsScreen(
     onOpenBlockedUsers: () -> Unit = {},
     onOpenNotifSettings: () -> Unit = {},
     hasUnseenSharedItems: Boolean = false,
+    unseenSharedItemsCount: Int = 0,
     hasUnreadMessages: Boolean = false,
     unseenFriendRequestCount: Int = 0,
     viewModel: FriendsViewModel = hiltViewModel()
@@ -310,12 +311,16 @@ fun FriendsScreen(
                             )
                         }
 
-                        // Shared Inbox button with red-dot badge
+                        // Shared Inbox button with count badge (FIX 3.2/10)
                         IconButton(onClick = onOpenSharedInbox) {
                             BadgedBox(
                                 badge = {
                                     if (hasUnseenSharedItems) {
-                                        Badge(containerColor = MaterialTheme.colorScheme.error)
+                                        Badge(containerColor = MaterialTheme.colorScheme.error) {
+                                            if (unseenSharedItemsCount > 0) {
+                                                Text("$unseenSharedItemsCount")
+                                            }
+                                        }
                                     }
                                 }
                             ) {
@@ -373,6 +378,18 @@ fun FriendsScreen(
                                                     contentColor = MaterialTheme.colorScheme.onError
                                                 ) {
                                                     Text("$unseenFriendRequestCount")
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.weight(1f))
+                                            // FIX 3.3: Bulk action buttons for friend requests
+                                            if (uiState.incomingRequests.size > 1) {
+                                                TextButton(
+                                                    onClick = { viewModel.acceptAllRequests() },
+                                                    contentPadding = PaddingValues(horizontal = 8.dp)
+                                                ) {
+                                                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Text("Accept All", style = MaterialTheme.typography.labelSmall)
                                                 }
                                             }
                                         }

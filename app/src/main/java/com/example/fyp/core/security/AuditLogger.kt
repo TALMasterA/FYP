@@ -24,7 +24,17 @@ object AuditLogger {
         ACCOUNT_DELETED,
         PASSWORD_RESET_REQUESTED,
         FRIEND_REQUEST_BLOCKED,
-        SUSPICIOUS_ACTIVITY
+        SUSPICIOUS_ACTIVITY,
+        SEND_FRIEND_REQUEST,
+        ACCEPT_FRIEND_REQUEST,
+        REJECT_FRIEND_REQUEST,
+        CANCEL_FRIEND_REQUEST,
+        REMOVE_FRIEND,
+        BLOCK_USER,
+        UNBLOCK_USER,
+        SEND_MESSAGE,
+        DELETE_CHAT,
+        PERMISSION_DENIED
     }
 
     /**
@@ -111,5 +121,42 @@ object AuditLogger {
      */
     fun logPasswordResetRequested(email: String) {
         log(EventType.PASSWORD_RESET_REQUESTED, details = "email=$email")
+    }
+
+    // FIX 5.4: Friend-system audit helpers
+
+    /** Logs a friend request being sent. */
+    fun logFriendRequestSent(userId: String, targetUserId: String) {
+        log(EventType.SEND_FRIEND_REQUEST, userId = userId, details = "target=$targetUserId")
+    }
+
+    /** Logs a friend request acceptance. */
+    fun logFriendRequestAccepted(userId: String, fromUserId: String) {
+        log(EventType.ACCEPT_FRIEND_REQUEST, userId = userId, details = "from=$fromUserId")
+    }
+
+    /** Logs a friend request rejection. */
+    fun logFriendRequestRejected(userId: String, fromUserId: String) {
+        log(EventType.REJECT_FRIEND_REQUEST, userId = userId, details = "from=$fromUserId")
+    }
+
+    /** Logs a friend removal. */
+    fun logFriendRemoved(userId: String, friendId: String) {
+        log(EventType.REMOVE_FRIEND, userId = userId, details = "friend=$friendId")
+    }
+
+    /** Logs a user being blocked. */
+    fun logUserBlocked(userId: String, blockedId: String) {
+        log(EventType.BLOCK_USER, userId = userId, details = "blocked=$blockedId")
+    }
+
+    /** Logs a user being unblocked. */
+    fun logUserUnblocked(userId: String, unblockedId: String) {
+        log(EventType.UNBLOCK_USER, userId = userId, details = "unblocked=$unblockedId")
+    }
+
+    /** Logs a permission denied event. */
+    fun logPermissionDenied(userId: String? = null, action: String) {
+        log(EventType.PERMISSION_DENIED, userId = userId, details = "action=$action")
     }
 }

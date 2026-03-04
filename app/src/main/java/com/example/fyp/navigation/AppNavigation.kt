@@ -362,6 +362,7 @@ fun AppNavigation() {
                                 navigateToLogin = navigateToLogin,
                                 appLanguageState = appLanguageState,
                                 hasUnseenSharedItems = hasUnseenSharedItems,
+                                unseenSharedItemsCount = unseenSharedItemsCount,
                                 hasUnreadMessages = hasUnreadMessages,
                                 unseenFriendRequestCount = pendingFriendRequestCount,
                             )
