@@ -250,9 +250,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideChatRepository(
-        db: FirebaseFirestore
+        db: FirebaseFirestore,
+        friendsRepository: com.example.fyp.data.friends.FriendsRepository
     ): com.example.fyp.data.friends.ChatRepository =
-        com.example.fyp.data.friends.FirestoreChatRepository(db)
+        com.example.fyp.data.friends.FirestoreChatRepository(db, friendsRepository)
 
     @Provides
     @Singleton

@@ -288,6 +288,8 @@ class FirestoreFriendsRepository @Inject constructor(
 
             // Create request
             val requestRef = db.collection("friend_requests").document()
+            // FIX 2.7: Add expiresAt field (30 days from now) so old requests auto-expire
+            val expiresAt = Timestamp(Timestamp.now().seconds + 30 * 24 * 3600, 0)
             val request = FriendRequest(
                 requestId = requestRef.id,
                 fromUserId = fromUserId.value,
@@ -301,7 +303,8 @@ class FirestoreFriendsRepository @Inject constructor(
                 note = note.take(80).trim()
                     .replace("&", "&amp;")
                     .replace("<", "&lt;")
-                    .replace(">", "&gt;")
+                    .replace(">", "&gt;"),
+                expiresAt = expiresAt
             )
 
             requestRef.set(request).await()
@@ -318,63 +321,87 @@ class FirestoreFriendsRepository @Inject constructor(
     ): Result<Unit> {
         return try {
             val requestRef = db.collection("friend_requests").document(requestId)
-            val requestDoc = requestRef.get().await()
-            val request = requestDoc.toObject(FriendRequest::class.java)
-                ?: return Result.failure(IllegalArgumentException("Request not found"))
 
-            // Verify the current user is the recipient
-            if (request.toUserId != currentUserId.value) {
-                return Result.failure(IllegalArgumentException("Not authorized"))
+            // FIX 1.3 + 2.2: Use Firestore transaction for atomicity and update
+            // request status to ACCEPTED instead of deleting, preserving history.
+            db.runTransaction { transaction ->
+                val requestDoc = transaction.get(requestRef)
+                val request = requestDoc.toObject(FriendRequest::class.java)
+                    ?: throw IllegalArgumentException("Request not found")
+
+                // Verify the current user is the recipient
+                if (request.toUserId != currentUserId.value) {
+                    throw IllegalArgumentException("Not authorized")
+                }
+
+                // Verify request is still PENDING (prevents race condition 2.2)
+                if (request.status != RequestStatus.PENDING) {
+                    throw IllegalStateException("This request has already been handled")
+                }
+
+                val now = Timestamp.now()
+
+                // Update request status to ACCEPTED (1.3: preserves history & audit trail)
+                transaction.update(requestRef, mapOf(
+                    "status" to RequestStatus.ACCEPTED.name,
+                    "updatedAt" to now
+                ))
+
+                // Add to fromUser's friends list
+                val fromFriendRef = db.collection("users")
+                    .document(request.fromUserId)
+                    .collection("friends")
+                    .document(currentUserId.value)
+                transaction.set(
+                    fromFriendRef,
+                    mapOf(
+                        "friendId" to currentUserId.value,
+                        "friendUsername" to (request.toUsername.ifBlank { currentUserId.value }),
+                        "friendAvatarUrl" to "",
+                        "addedAt" to now
+                    )
+                )
+
+                // Add to toUser's friends list
+                val toFriendRef = db.collection("users")
+                    .document(currentUserId.value)
+                    .collection("friends")
+                    .document(request.fromUserId)
+                transaction.set(
+                    toFriendRef,
+                    mapOf(
+                        "friendId" to request.fromUserId,
+                        "friendUsername" to request.fromUsername,
+                        "friendAvatarUrl" to request.fromAvatarUrl,
+                        "addedAt" to now
+                    )
+                )
+            }.await()
+
+            // Enrich profiles outside transaction (best-effort optimization)
+            try {
+                val fromProfile = getPublicProfile(friendUserId)
+                val toProfile = getPublicProfile(currentUserId)
+                if (fromProfile != null) {
+                    db.collection("users").document(currentUserId.value)
+                        .collection("friends").document(friendUserId.value)
+                        .update(mapOf(
+                            "friendUsername" to fromProfile.username,
+                            "friendAvatarUrl" to fromProfile.avatarUrl
+                        )).await()
+                }
+                if (toProfile != null) {
+                    db.collection("users").document(friendUserId.value)
+                        .collection("friends").document(currentUserId.value)
+                        .update(mapOf(
+                            "friendUsername" to toProfile.username,
+                            "friendAvatarUrl" to toProfile.avatarUrl
+                        )).await()
+                }
+            } catch (e: Exception) {
+                AppLogger.w("FriendsRepository", "Profile enrichment after accept failed (non-fatal): ${e.message}")
             }
 
-            // Get both profiles
-            val fromProfile = getPublicProfile(UserId(request.fromUserId))
-                ?: return Result.failure(IllegalStateException("Sender profile not found"))
-            val toProfile = getPublicProfile(currentUserId)
-                ?: return Result.failure(IllegalStateException("Recipient profile not found"))
-
-            val now = Timestamp.now()
-
-            // Use batch write for atomicity:
-            // DELETE the request doc (so re-adding after unfriend is always clean)
-            // and add both users to each other's friends list.
-            val batch = db.batch()
-
-            // Delete the request document instead of updating to ACCEPTED.
-            // This ensures there is never a stale ACCEPTED doc that complicates re-adding.
-            batch.delete(requestRef)
-
-            // Add to fromUser's friends list
-            val fromFriendRef = db.collection("users")
-                .document(request.fromUserId)
-                .collection("friends")
-                .document(currentUserId.value)
-            batch.set(
-                fromFriendRef,
-                mapOf(
-                    "friendId" to currentUserId.value,
-                    "friendUsername" to toProfile.username,
-                    "friendAvatarUrl" to toProfile.avatarUrl,
-                    "addedAt" to now
-                )
-            )
-
-            // Add to toUser's friends list
-            val toFriendRef = db.collection("users")
-                .document(currentUserId.value)
-                .collection("friends")
-                .document(request.fromUserId)
-            batch.set(
-                toFriendRef,
-                mapOf(
-                    "friendId" to request.fromUserId,
-                    "friendUsername" to fromProfile.username,
-                    "friendAvatarUrl" to fromProfile.avatarUrl,
-                    "addedAt" to now
-                )
-            )
-
-            batch.commit().await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -382,15 +409,18 @@ class FirestoreFriendsRepository @Inject constructor(
     }
 
     override suspend fun rejectFriendRequest(requestId: String): Result<Unit> = try {
-        // Delete the request doc instead of updating to REJECTED.
-        // This keeps the collection clean and allows the sender to re-send a request later.
+        // FIX 1.3: Update status to REJECTED instead of deleting, preserving
+        // request history for analytics and preventing duplicate requests.
         NetworkRetry.withRetry(
             maxAttempts = 3,
             shouldRetry = NetworkRetry::isRetryableFirebaseException
         ) {
             db.collection("friend_requests")
                 .document(requestId)
-                .delete()
+                .update(mapOf(
+                    "status" to RequestStatus.REJECTED.name,
+                    "updatedAt" to Timestamp.now()
+                ))
                 .await()
         }
         Result.success(Unit)
@@ -414,13 +444,19 @@ class FirestoreFriendsRepository @Inject constructor(
             .whereEqualTo("toUserId", userId.value)
             .whereEqualTo("status", RequestStatus.PENDING.name)
             .orderBy("createdAt", Query.Direction.DESCENDING)
-            .limit(100) // Limit to 100 incoming requests
+            .limit(100)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
                     return@addSnapshotListener
                 }
-                val requests = snapshot?.toObjects(FriendRequest::class.java) ?: emptyList()
+                val now = Timestamp.now()
+                // FIX 2.7: Filter out expired requests client-side
+                val requests = (snapshot?.toObjects(FriendRequest::class.java) ?: emptyList())
+                    .filter { request ->
+                        val expiresAt = request.expiresAt
+                        expiresAt == null || expiresAt.seconds > now.seconds
+                    }
                 trySend(requests)
             }
         awaitClose { listener.remove() }
@@ -452,7 +488,7 @@ class FirestoreFriendsRepository @Inject constructor(
             .document(userId.value)
             .collection("friends")
             .orderBy("addedAt", Query.Direction.DESCENDING)
-            .limit(100) // Limit to 100 friends (can be expanded with pagination)
+            .limit(500) // FIX 2.1: Increased from 100 to 500 for power users
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
@@ -701,6 +737,15 @@ class FirestoreFriendsRepository @Inject constructor(
     // ============================================
 
     override suspend fun blockUser(userId: UserId, blockedUserId: UserId, blockedUsername: String): Result<Unit> = try {
+        // FIX 1.4: Auto-remove friendship when blocking to prevent inconsistent state
+        // where a user is both a friend AND blocked simultaneously.
+        try {
+            removeFriend(userId, blockedUserId)
+        } catch (e: Exception) {
+            // Non-fatal: user might not be friends - that's OK
+            AppLogger.d("FriendsRepository", "blockUser: removeFriend skipped (may not be friends): ${e.message}")
+        }
+
         db.collection("users")
             .document(userId.value)
             .collection("blocked_users")
@@ -791,9 +836,12 @@ class FirestoreFriendsRepository @Inject constructor(
     }
 
     override suspend fun getBlockedUsers(userId: UserId): List<BlockedUser> = try {
+        // FIX 2.5: Added ordering for consistent pagination
         db.collection("users")
             .document(userId.value)
             .collection("blocked_users")
+            .orderBy("blockedAt", Query.Direction.DESCENDING)
+            .limit(200)
             .get()
             .await()
             .documents

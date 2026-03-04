@@ -11,6 +11,7 @@ import com.example.fyp.model.friends.FriendRelation
 import com.example.fyp.model.friends.FriendRequest
 import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.user.AuthState
+import com.example.fyp.core.ErrorMessages
 import com.example.fyp.core.security.ValidationResult
 import com.example.fyp.core.security.sanitizeInput
 import com.example.fyp.core.security.validateTextLength
@@ -465,17 +466,75 @@ class FriendsViewModel @Inject constructor(
             removeFriendUseCase(userId, UserId(friendId)).fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
-                        successMessage = "Friend removed.",
+                        successMessage = ErrorMessages.FRIEND_REMOVED,
                         error = null
                     )
                     // Refresh to sync Firestore state so re-search shows correct status
                     refreshFriendsList()
                 },
-                onFailure = {
+                onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
-                        error = "Failed to remove friend. Please try again."
+                        error = ErrorMessages.fromException(e, ErrorMessages.FRIEND_REMOVE_FAILED)
                     )
                 }
+            )
+        }
+    }
+
+    // ── FIX 3.3: Bulk actions ─────────────────────────────────────────────────
+
+    /**
+     * Accept all pending incoming friend requests at once.
+     * Shows progress feedback and handles partial failures gracefully.
+     */
+    fun acceptAllRequests() {
+        val userId = currentUserId ?: return
+        val requests = _uiState.value.incomingRequests
+        if (requests.isEmpty()) return
+
+        viewModelScope.launch {
+            var successCount = 0
+            var failCount = 0
+
+            requests.forEach { request ->
+                val friendUserId = UserId(request.fromUserId)
+                acceptFriendRequestUseCase(request.requestId, userId, friendUserId).fold(
+                    onSuccess = { successCount++ },
+                    onFailure = { failCount++ }
+                )
+            }
+
+            val message = when {
+                failCount == 0 -> "All $successCount friend requests accepted!"
+                successCount == 0 -> "Failed to accept requests. Please try again."
+                else -> "$successCount accepted, $failCount failed. Please retry for failed ones."
+            }
+
+            _uiState.value = _uiState.value.copy(
+                successMessage = if (successCount > 0) message else null,
+                error = if (successCount == 0 && failCount > 0) message else null
+            )
+        }
+    }
+
+    /**
+     * Reject all pending incoming friend requests at once.
+     */
+    fun rejectAllRequests() {
+        val requests = _uiState.value.incomingRequests
+        if (requests.isEmpty()) return
+
+        viewModelScope.launch {
+            var successCount = 0
+            requests.forEach { request ->
+                rejectFriendRequestUseCase(request.requestId).fold(
+                    onSuccess = { successCount++ },
+                    onFailure = { /* count silently */ }
+                )
+            }
+            _uiState.value = _uiState.value.copy(
+                successMessage = "Declined $successCount request(s).",
+                error = null
             )
         }
     }

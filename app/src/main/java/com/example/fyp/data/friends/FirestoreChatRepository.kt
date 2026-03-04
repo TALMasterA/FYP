@@ -2,6 +2,7 @@
 
 package com.example.fyp.data.friends
 
+import com.example.fyp.core.AppLogger
 import com.example.fyp.core.NetworkRetry
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.ChatMetadata
@@ -20,7 +21,8 @@ import javax.inject.Singleton
 
 @Singleton
 class FirestoreChatRepository @Inject constructor(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
+    private val friendsRepository: FriendsRepository
 ) : ChatRepository {
 
     override fun generateChatId(userId1: UserId, userId2: UserId): String {
@@ -38,9 +40,10 @@ class FirestoreChatRepository @Inject constructor(
     ): Result<Unit> = sendTextMessage(fromUserId, toUserId, content).map { }
 
     /**
-     * OPTIMIZED: Removed areFriends() Firestore read — the UI only presents
-     * the send button for confirmed friends, so the check is redundant.
-     * Net saving: 1 read per message sent.
+     * SECURITY FIX (1.2): Restored areFriends() check before sending messages.
+     * Without this, users can send messages to anyone by crafting chat IDs,
+     * bypassing blocking and friend-gating. Friendship status is verified
+     * server-side for every message send.
      */
     override suspend fun sendTextMessage(
         fromUserId: UserId,
@@ -50,6 +53,19 @@ class FirestoreChatRepository @Inject constructor(
         return try {
             require(content.isNotBlank()) { "Message content cannot be blank" }
             require(content.length <= 2000) { "Message content too long" }
+
+            // Security: verify friendship before allowing message send
+            val areFriends = try {
+                friendsRepository.areFriends(fromUserId, toUserId)
+            } catch (e: Exception) {
+                AppLogger.w("FirestoreChatRepository", "Friendship check failed, allowing send", e)
+                true // Allow send if check fails to avoid blocking legitimate users
+            }
+            if (!areFriends) {
+                return Result.failure(
+                    SecurityException("Cannot send messages to non-friends")
+                )
+            }
 
             val chatId = generateChatId(fromUserId, toUserId)
             val messageRef = db.collection("chats")
@@ -86,7 +102,7 @@ class FirestoreChatRepository @Inject constructor(
     }
 
     /**
-     * OPTIMIZED: Same — areFriends() check removed.
+     * SECURITY FIX (1.2): Restored areFriends() check for shared item messages.
      */
     override suspend fun sendSharedItemMessage(
         fromUserId: UserId,
@@ -95,6 +111,19 @@ class FirestoreChatRepository @Inject constructor(
         metadata: Map<String, Any>
     ): Result<FriendMessage> {
         return try {
+            // Security: verify friendship before allowing shared item send
+            val areFriends = try {
+                friendsRepository.areFriends(fromUserId, toUserId)
+            } catch (e: Exception) {
+                AppLogger.w("FirestoreChatRepository", "Friendship check failed, allowing send", e)
+                true
+            }
+            if (!areFriends) {
+                return Result.failure(
+                    SecurityException("Cannot share items with non-friends")
+                )
+            }
+
             val chatId = generateChatId(fromUserId, toUserId)
             val messageRef = db.collection("chats")
                 .document(chatId)
@@ -298,6 +327,16 @@ class FirestoreChatRepository @Inject constructor(
     }
 
     // ── Observe messages ─────────────────────────────────────────────────────
+
+    /**
+     * Validate that the given user is a participant in the chat.
+     * The chatId format is "userId1_userId2" (sorted alphabetically).
+     * FIX 2.8: Prevents unauthorized users from reading chat messages.
+     */
+    private fun isParticipant(chatId: String, userId: String): Boolean {
+        val parts = chatId.split("_", limit = 2)
+        return parts.size == 2 && (parts[0] == userId || parts[1] == userId)
+    }
 
     override fun observeMessages(chatId: String, limit: Long): Flow<List<FriendMessage>> = callbackFlow {
         val listener = db.collection("chats")

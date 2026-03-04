@@ -161,12 +161,22 @@ service cloud.firestore {
         && request.resource.data.status == "PENDING"
         && !exists(/databases/$(database)/documents/users/$(request.resource.data.toUserId)/blocked_users/$(request.auth.uid));
 
-      // Update: only allowed for sender renaming their username on pending requests.
-      // Accept/reject/cancel all now DELETE the doc instead of updating status.
-      allow update: if request.auth != null &&
-        resource.data.fromUserId == request.auth.uid &&
-        resource.data.status == "PENDING" &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(["fromUsername"]);
+      // Update: two cases are allowed:
+      // 1. Sender can rename their username on pending requests.
+      // 2. Recipient can update status to ACCEPTED or REJECTED (and optionally set
+      //    rejectionReason). This supports the updated accept/reject flow that preserves
+      //    request history instead of deleting the document.
+      allow update: if request.auth != null && (
+        // Sender updates their displayed username on a pending request
+        (resource.data.fromUserId == request.auth.uid &&
+         resource.data.status == "PENDING" &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(["fromUsername"])) ||
+        // Recipient accepts or rejects the request
+        (resource.data.toUserId == request.auth.uid &&
+         resource.data.status == "PENDING" &&
+         (request.resource.data.status == "ACCEPTED" || request.resource.data.status == "REJECTED") &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "rejectionReason"]))
+      );
 
       // Allow sender or receiver to delete ANY of their requests (any status).
       // This covers:
