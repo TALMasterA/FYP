@@ -1,209 +1,215 @@
 package com.example.fyp.domain.learning
 
-import junit.framework.TestCase.assertFalse
-import junit.framework.TestCase.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
 
 /**
- * Comprehensive unit tests for generation eligibility logic using GenerationEligibility domain object.
+ * Comprehensive unit tests for [GenerationEligibility].
  *
- * Tests the anti-cheat rules that prevent abuse of material generation:
- * 1. Word bank regeneration: need MIN_RECORDS_FOR_REGEN (20) more records, blocked if count decreases
- * 2. Quiz regeneration: sheet version must differ from quiz version
- * 3. Learning sheet regeneration: need 5 more records, blocked if count decreases
+ * Tests the eligibility rules that gate material regeneration:
+ * 1. Word bank: currentCount >= 20 AND currentCount > lastGeneratedCount (or null)
+ * 2. Learning sheet: currentCount >= 5 AND currentCount > lastGeneratedCount (or null)
+ * 3. Quiz: quizHistoryCount is null OR sheetHistoryCount > quizHistoryCount
  */
-class GenerationEligibilityIntegrationTest {
+class GenerationEligibilityTest {
 
-    // --- Word Bank Regeneration Eligibility ---
+    // ══════════════════════════════════════════
+    //  canRegenerateWordBank – below minimum
+    // ══════════════════════════════════════════
 
     @Test
-    fun `first word bank generation is always allowed`() {
-        assertTrue(GenerationEligibility.canRegenerateWordBank(50, 0))
+    fun `word bank - below minimum with null lastGenerated returns false`() {
+        assertFalse(GenerationEligibility.canRegenerateWordBank(0, null))
+        assertFalse(GenerationEligibility.canRegenerateWordBank(19, null))
     }
 
     @Test
-    fun `regeneration allowed with exactly minimum records`() {
-        assertTrue(GenerationEligibility.canRegenerateWordBank(70, 50))
+    fun `word bank - below minimum with non-null lastGenerated returns false`() {
+        assertFalse(GenerationEligibility.canRegenerateWordBank(10, 5))
+        assertFalse(GenerationEligibility.canRegenerateWordBank(19, 10))
+    }
+
+    // ══════════════════════════════════════════
+    //  canRegenerateWordBank – at minimum
+    // ══════════════════════════════════════════
+
+    @Test
+    fun `word bank - exactly at minimum with null lastGenerated returns true`() {
+        assertTrue(GenerationEligibility.canRegenerateWordBank(20, null))
     }
 
     @Test
-    fun `regeneration allowed with more than minimum records`() {
+    fun `word bank - at minimum equal to lastGenerated returns false`() {
+        assertFalse(GenerationEligibility.canRegenerateWordBank(20, 20))
+    }
+
+    @Test
+    fun `word bank - at minimum greater than lastGenerated returns true`() {
+        assertTrue(GenerationEligibility.canRegenerateWordBank(20, 10))
+    }
+
+    // ══════════════════════════════════════════
+    //  canRegenerateWordBank – above minimum
+    // ══════════════════════════════════════════
+
+    @Test
+    fun `word bank - above minimum with null lastGenerated returns true`() {
+        assertTrue(GenerationEligibility.canRegenerateWordBank(50, null))
+    }
+
+    @Test
+    fun `word bank - above minimum and greater than lastGenerated returns true`() {
+        assertTrue(GenerationEligibility.canRegenerateWordBank(51, 50))
         assertTrue(GenerationEligibility.canRegenerateWordBank(100, 50))
     }
 
     @Test
-    fun `regeneration not allowed with less than minimum records`() {
-        assertFalse(GenerationEligibility.canRegenerateWordBank(69, 50))
-    }
-
-    @Test
-    fun `regeneration not allowed with same record count`() {
+    fun `word bank - above minimum but equal to lastGenerated returns false`() {
         assertFalse(GenerationEligibility.canRegenerateWordBank(50, 50))
     }
 
     @Test
-    fun `regeneration not allowed with fewer records`() {
-        assertFalse(GenerationEligibility.canRegenerateWordBank(40, 50))
+    fun `word bank - above minimum but less than lastGenerated returns false`() {
+        assertFalse(GenerationEligibility.canRegenerateWordBank(25, 50))
     }
 
-    // --- Quiz Regeneration Eligibility ---
+    // ══════════════════════════════════════════
+    //  canRegenerateLearningSheet – below minimum
+    // ══════════════════════════════════════════
 
     @Test
-    fun `first quiz generation is always allowed`() {
+    fun `learning sheet - below minimum with null lastGenerated returns false`() {
+        assertFalse(GenerationEligibility.canRegenerateLearningSheet(0, null))
+        assertFalse(GenerationEligibility.canRegenerateLearningSheet(4, null))
+    }
+
+    @Test
+    fun `learning sheet - below minimum with non-null lastGenerated returns false`() {
+        assertFalse(GenerationEligibility.canRegenerateLearningSheet(3, 2))
+    }
+
+    // ══════════════════════════════════════════
+    //  canRegenerateLearningSheet – at minimum
+    // ══════════════════════════════════════════
+
+    @Test
+    fun `learning sheet - exactly at minimum with null lastGenerated returns true`() {
+        assertTrue(GenerationEligibility.canRegenerateLearningSheet(5, null))
+    }
+
+    @Test
+    fun `learning sheet - at minimum equal to lastGenerated returns false`() {
+        assertFalse(GenerationEligibility.canRegenerateLearningSheet(5, 5))
+    }
+
+    @Test
+    fun `learning sheet - at minimum greater than lastGenerated returns true`() {
+        assertTrue(GenerationEligibility.canRegenerateLearningSheet(5, 3))
+    }
+
+    // ══════════════════════════════════════════
+    //  canRegenerateLearningSheet – above minimum
+    // ══════════════════════════════════════════
+
+    @Test
+    fun `learning sheet - above minimum with null lastGenerated returns true`() {
+        assertTrue(GenerationEligibility.canRegenerateLearningSheet(30, null))
+    }
+
+    @Test
+    fun `learning sheet - above minimum and greater than lastGenerated returns true`() {
+        assertTrue(GenerationEligibility.canRegenerateLearningSheet(11, 10))
+        assertTrue(GenerationEligibility.canRegenerateLearningSheet(50, 10))
+    }
+
+    @Test
+    fun `learning sheet - above minimum but equal to lastGenerated returns false`() {
+        assertFalse(GenerationEligibility.canRegenerateLearningSheet(30, 30))
+    }
+
+    @Test
+    fun `learning sheet - above minimum but less than lastGenerated returns false`() {
+        assertFalse(GenerationEligibility.canRegenerateLearningSheet(20, 30))
+    }
+
+    // ══════════════════════════════════════════
+    //  canRegenerateQuiz
+    // ══════════════════════════════════════════
+
+    @Test
+    fun `quiz - null quizHistoryCount always returns true`() {
+        assertTrue(GenerationEligibility.canRegenerateQuiz(0, null))
         assertTrue(GenerationEligibility.canRegenerateQuiz(50, null))
     }
 
     @Test
-    fun `quiz regeneration allowed when sheet version differs from quiz version`() {
-        assertTrue(GenerationEligibility.canRegenerateQuiz(100, 50))
+    fun `quiz - sheetHistoryCount greater than quizHistoryCount returns true`() {
+        assertTrue(GenerationEligibility.canRegenerateQuiz(51, 50))
+        assertTrue(GenerationEligibility.canRegenerateQuiz(100, 1))
     }
 
     @Test
-    fun `quiz regeneration not allowed when sheet and quiz versions match`() {
-        assertFalse(GenerationEligibility.canRegenerateQuiz(100, 100))
+    fun `quiz - sheetHistoryCount equal to quizHistoryCount returns false`() {
+        assertFalse(GenerationEligibility.canRegenerateQuiz(50, 50))
+        assertFalse(GenerationEligibility.canRegenerateQuiz(0, 0))
     }
 
     @Test
-    fun `quiz regeneration allowed when sheet version is higher than quiz version`() {
-        assertTrue(GenerationEligibility.canRegenerateQuiz(150, 100))
+    fun `quiz - sheetHistoryCount less than quizHistoryCount returns false`() {
+        assertFalse(GenerationEligibility.canRegenerateQuiz(49, 50))
+        assertFalse(GenerationEligibility.canRegenerateQuiz(0, 10))
+    }
+
+    // ══════════════════════════════════════════
+    //  Constants
+    // ══════════════════════════════════════════
+
+    @Test
+    fun `constants have expected values`() {
+        assertEquals(20, GenerationEligibility.MIN_RECORDS_FOR_WORD_BANK)
+        assertEquals(5, GenerationEligibility.MIN_RECORDS_FOR_LEARNING_SHEET)
+    }
+
+    // ══════════════════════════════════════════
+    //  Scenario tests
+    // ══════════════════════════════════════════
+
+    @Test
+    fun `word bank workflow - first generation then incremental`() {
+        // Not enough records yet
+        assertFalse(GenerationEligibility.canRegenerateWordBank(10, null))
+
+        // Reaches minimum → first generation allowed
+        assertTrue(GenerationEligibility.canRegenerateWordBank(20, null))
+
+        // After generating at 20, same count blocked
+        assertFalse(GenerationEligibility.canRegenerateWordBank(20, 20))
+
+        // One more record → allowed
+        assertTrue(GenerationEligibility.canRegenerateWordBank(21, 20))
+
+        // Count decreased (e.g. records deleted) → blocked
+        assertFalse(GenerationEligibility.canRegenerateWordBank(15, 21))
     }
 
     @Test
-    fun `quiz regeneration allowed when sheet version is lower than quiz version`() {
-        // This edge case can happen if user regenerates materials at lower count
-        // The rule is simply: sheet version != quiz version
-        assertTrue(GenerationEligibility.canRegenerateQuiz(80, 100))
-    }
+    fun `quiz workflow - depends only on sheet vs quiz history`() {
+        // First quiz always allowed
+        assertTrue(GenerationEligibility.canRegenerateQuiz(5, null))
 
-    // --- Count Decrease Blocking (Anti-Cheat) ---
+        // After generating quiz at sheetCount 5, same count blocked
+        assertFalse(GenerationEligibility.canRegenerateQuiz(5, 5))
 
-    @Test
-    fun `word bank regen blocked when count decreases`() {
-        assertFalse(GenerationEligibility.canRegenerateWordBank(40, 50))
-        assertFalse(GenerationEligibility.canRegenerateWordBank(49, 50))
+        // New sheet generated → quiz allowed again
+        assertTrue(GenerationEligibility.canRegenerateQuiz(6, 5))
     }
 
     @Test
-    fun `learning sheet regen blocked when count decreases`() {
-        assertFalse(GenerationEligibility.canRegenerateLearningSheet(40, 50))
-        assertFalse(GenerationEligibility.canRegenerateLearningSheet(49, 50))
-    }
-
-    // --- Edge Cases ---
-
-    @Test
-    fun `exactly 1 less than minimum - not eligible`() {
-        assertFalse(GenerationEligibility.canRegenerateWordBank(69, 50))
-    }
-
-    @Test
-    fun `exactly minimum - eligible`() {
-        assertTrue(GenerationEligibility.canRegenerateWordBank(70, 50))
-    }
-
-    @Test
-    fun `zero records edge case`() {
-        assertTrue(GenerationEligibility.canRegenerateWordBank(100, 0))
-        assertFalse(GenerationEligibility.canRegenerateWordBank(10, 0))
-    }
-
-    @Test
-    fun `very large history counts`() {
-        assertTrue(GenerationEligibility.canRegenerateWordBank(10020, 10000))
-        assertFalse(GenerationEligibility.canRegenerateWordBank(10019, 10000))
-    }
-
-    // --- Scenario Tests ---
-
-    @Test
-    fun `typical word bank workflow`() {
-        // User starts with no word bank - (10 - 0 = 10, which is < 20, so false)
-        assertFalse(GenerationEligibility.canRegenerateWordBank(10, 0))
-
-        // User adds some history
-        assertFalse(GenerationEligibility.canRegenerateWordBank(25, 10))
-
-        // User adds more history
-        assertTrue(GenerationEligibility.canRegenerateWordBank(30, 10))
-
-        // After regeneration at count 30
-        assertFalse(GenerationEligibility.canRegenerateWordBank(49, 30))
-        assertTrue(GenerationEligibility.canRegenerateWordBank(50, 30))
-
-        // User deletes some records - regen blocked
-        assertFalse(GenerationEligibility.canRegenerateWordBank(25, 30))
-    }
-
-    @Test
-    fun `typical quiz workflow`() {
-        // First quiz - always allowed
-        assertTrue(GenerationEligibility.canRegenerateQuiz(50, null))
-
-        // Quiz generated at sheet version 50
-        val quizVersion = 50
-
-        // User hasn't regenerated learning sheet
-        assertFalse(GenerationEligibility.canRegenerateQuiz(50, quizVersion))
-
-        // User regenerates learning sheet at version 55
-        assertTrue(GenerationEligibility.canRegenerateQuiz(55, quizVersion))
-
-        // User regenerates learning sheet at version 70
-        assertTrue(GenerationEligibility.canRegenerateQuiz(70, quizVersion))
-    }
-
-    @Test
-    fun `preventing accidental regeneration spam`() {
-        // User at 100 records with word bank saved at 80
-        assertTrue(GenerationEligibility.canRegenerateWordBank(100, 80))
-
-        // Immediately tries again
-        assertFalse(GenerationEligibility.canRegenerateWordBank(100, 100))
-
-        // Adds just 10 more records
-        assertFalse(GenerationEligibility.canRegenerateWordBank(110, 100))
-
-        // Adds another 10 records
-        assertTrue(GenerationEligibility.canRegenerateWordBank(120, 100))
-    }
-
-    @Test
-    fun `test range around minimum 20 record increment`() {
-        val saved = 50
-
-        assertFalse(GenerationEligibility.canRegenerateWordBank(68, saved))  // +18
-        assertFalse(GenerationEligibility.canRegenerateWordBank(69, saved))  // +19
-        assertTrue(GenerationEligibility.canRegenerateWordBank(70, saved))   // +20
-        assertTrue(GenerationEligibility.canRegenerateWordBank(71, saved))   // +21
-    }
-
-    @Test
-    fun `multiple language pairs regenerate independently`() {
-        // Spanish word bank can regenerate
-        assertTrue(GenerationEligibility.canRegenerateWordBank(70, 50))
-
-        // French word bank cannot
-        assertFalse(GenerationEligibility.canRegenerateWordBank(65, 50))
-
-        // Regenerating Spanish doesn't affect French
-        assertFalse(GenerationEligibility.canRegenerateWordBank(65, 50))
-        assertTrue(GenerationEligibility.canRegenerateWordBank(70, 50))
-    }
-
-    @Test
-    fun `learning sheet regeneration requires 5 more records`() {
-        // Learning sheets have lower threshold (5) than word banks (20)
-        assertTrue(GenerationEligibility.canRegenerateLearningSheet(55, 50))
-        assertFalse(GenerationEligibility.canRegenerateLearningSheet(54, 50))
-
-        // First generation always allowed
-        assertTrue(GenerationEligibility.canRegenerateLearningSheet(10, 0))
-    }
-
-    @Test
-    fun `learning sheet regen blocked when count decreases even with large previous count`() {
-        // Had 100 records, deleted some, now at 80
-        assertFalse(GenerationEligibility.canRegenerateLearningSheet(80, 100))
+    fun `large counts work correctly`() {
+        assertTrue(GenerationEligibility.canRegenerateWordBank(10001, 10000))
+        assertFalse(GenerationEligibility.canRegenerateWordBank(10000, 10000))
+        assertTrue(GenerationEligibility.canRegenerateLearningSheet(10001, 10000))
+        assertFalse(GenerationEligibility.canRegenerateLearningSheet(10000, 10000))
     }
 }
 
