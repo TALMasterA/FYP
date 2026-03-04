@@ -119,6 +119,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.firebase.perf)
     implementation(libs.firebase.messaging)
+    implementation(libs.firebase.config)
     debugImplementation(libs.firebase.appdistribution)
 
     // Hilt DI

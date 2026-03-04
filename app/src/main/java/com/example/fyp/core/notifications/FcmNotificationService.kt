@@ -222,5 +222,25 @@ class FcmNotificationService : FirebaseMessagingService() {
                 manager.createNotificationChannel(channel)
             }
         }
+
+        /**
+         * FIX 5.5: Remove the current device's FCM token from Firestore on sign-out.
+         * This prevents push notifications from being sent to a device after the user
+         * logs out, which would be a security/privacy issue.
+         */
+        fun removeTokenOnSignOut() {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().token
+                .addOnSuccessListener { token ->
+                    if (token.isNullOrBlank()) return@addOnSuccessListener
+                    FirebaseFirestore.getInstance()
+                        .collection("users").document(uid)
+                        .collection("fcm_tokens").document(token)
+                        .delete()
+                        .addOnFailureListener { e ->
+                            AppLogger.e("FcmService", "Failed to remove FCM token on sign-out", e)
+                        }
+                }
+        }
     }
 }

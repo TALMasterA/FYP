@@ -1,10 +1,15 @@
 package com.example.fyp.model.friends
 
+import androidx.compose.runtime.Immutable
 import com.google.firebase.Timestamp
 
 /**
  * Represents a chat message between two friends.
+ *
+ * FIX 6.5: Marked @Immutable so Compose can skip recomposition when the
+ * reference hasn't changed, reducing unnecessary UI updates in chat LazyColumn.
  */
+@Immutable
 data class FriendMessage(
     val messageId: String = "",
     val chatId: String = "",                     // Composite ID: smaller_uid + "_" + larger_uid
