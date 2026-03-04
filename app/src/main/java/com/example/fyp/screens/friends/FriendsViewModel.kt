@@ -21,8 +21,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -84,6 +86,24 @@ class FriendsViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(FriendsUiState())
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
+
+    /**
+     * Reactive notification state sourced directly from [SharedFriendsDataSource].
+     * Collected here as StateFlows so [FriendsScreen] observes them via the ViewModel
+     * and always gets live updates — avoids the stale-parameter bug where plain Boolean/Int
+     * params captured in NavGraph lambdas do not recompose when flows emit new values.
+     */
+    val hasUnseenSharedItems: StateFlow<Boolean> =
+        sharedFriendsDataSource.hasUnseenSharedItems
+            .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val unseenSharedItemsCount: StateFlow<Int> =
+        sharedFriendsDataSource.unseenSharedItemsCount
+            .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+
+    val unseenFriendRequestCount: StateFlow<Int> =
+        sharedFriendsDataSource.unseenFriendRequestCount
+            .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     private var outgoingRequestsJob: Job? = null
     private var currentUserId: UserId? = null
@@ -175,16 +195,18 @@ class FriendsViewModel @Inject constructor(
     }
 
     /**
-     * OPTIMIZED (Medium #5): Single real-time listener on user document
-     * instead of one listener per friend chat metadata document.
-     * Observes users/{userId}.unreadPerFriend map for O(1) connections.
+     * Observes per-friend unseen unread counts from SharedFriendsDataSource.
+     * Uses the seen-filtered flow so red dots disappear once the user opens a chat
+     * and do NOT reappear on app restart.
+     * AppViewModel feeds the raw Firestore data into SharedFriendsDataSource via
+     * updateRawUnreadPerFriend(); new messages for a "seen" friend un-mark them seen.
      */
-    private fun startUnreadPerFriendObserver(userId: UserId) {
+    private fun startUnreadPerFriendObserver(@Suppress("UNUSED_PARAMETER") userId: UserId) {
         unreadPerFriendJob?.cancel()
         unreadPerFriendJob = viewModelScope.launch {
-            chatRepository.observeUnreadPerFriend(userId).collect { unreadMap ->
-                android.util.Log.d("FriendsViewModel", "Unread per friend updated: $unreadMap")
-                _uiState.value = _uiState.value.copy(unreadCountPerFriend = unreadMap)
+            sharedFriendsDataSource.unseenUnreadPerFriend.collect { unseenMap ->
+                android.util.Log.d("FriendsViewModel", "Unseen unread per friend updated: $unseenMap")
+                _uiState.value = _uiState.value.copy(unreadCountPerFriend = unseenMap)
             }
         }
     }
@@ -556,9 +578,10 @@ class FriendsViewModel @Inject constructor(
     }
 
     /**
-     * Dismiss all in-app notification dots:
-     * - Marks all unread chat messages as read for each friend.
-     * - Clears the unread badge count locally.
+     * Dismiss all in-app chat notification dots:
+     * - Marks all unread chat messages as read in Firestore.
+     * - Marks all friends as seen in SharedFriendsDataSource (clears filtered flow immediately).
+     * - Clears the local unread badge count.
      */
     fun dismissAllUnreadDots() {
         val userId = currentUserId ?: return
@@ -568,6 +591,8 @@ class FriendsViewModel @Inject constructor(
                 try {
                     val chatId = chatRepository.generateChatId(userId, UserId(friend.friendId))
                     chatRepository.markAllMessagesAsRead(chatId, userId)
+                    // Mark as seen in shared data source so unseenUnreadPerFriend flow clears immediately
+                    sharedFriendsDataSource.markMessageFriendSeen(friend.friendId)
                 } catch (_: Exception) { /* best-effort */ }
             }
             _uiState.value = _uiState.value.copy(unreadCountPerFriend = emptyMap())

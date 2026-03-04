@@ -115,6 +115,11 @@ class AppViewModel @Inject constructor(
                         }
                     }
                     is AuthState.LoggedOut -> {
+                        lastInitializedUserId?.let { uid ->
+                            // On explicit logout, clear persisted notification-seen state so the
+                            // next user (or same user after re-login) starts with a clean slate.
+                            sharedFriendsDataSource.clearAllSeenStateForUser(uid)
+                        }
                         lastInitializedUserId = null
                         sharedFriendsDataSource.stopObserving()
                         sharedSettingsDataSource.stopObserving()
@@ -133,19 +138,31 @@ class AppViewModel @Inject constructor(
 
     private fun startObservingUnread(userId: String) {
         unreadJob?.cancel()
+        // Job 1: Feed raw per-friend unread counts into SharedFriendsDataSource for seen-filtering
         unreadJob = viewModelScope.launch {
             try {
+                chatRepository.observeUnreadPerFriend(UserId(userId)).collect { rawMap ->
+                    sharedFriendsDataSource.updateRawUnreadPerFriend(rawMap)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("AppViewModel", "Error observing unreadPerFriend", e)
+            }
+        }
+        // Job 2: Derive badge signals from the seen-filtered flow
+        viewModelScope.launch {
+            try {
                 combine(
-                    chatRepository.observeTotalUnreadCount(UserId(userId)),
+                    sharedFriendsDataSource.unseenUnreadPerFriend,
                     sharedSettingsDataSource.settings.map { it.inAppBadgeMessages }
-                ) { count, enabled ->
-                    Pair(enabled && count > 0, if (enabled) count else 0)
+                ) { unseenMap, enabled ->
+                    val total = if (enabled) unseenMap.values.sum() else 0
+                    Pair(enabled && total > 0, total)
                 }.collect { (showBadge, count) ->
                     _hasUnreadMessages.value = showBadge
                     _unreadMessageCount.value = count
                 }
             } catch (e: Exception) {
-                android.util.Log.e("AppViewModel", "Error observing unread messages", e)
+                android.util.Log.e("AppViewModel", "Error observing unseen unread messages", e)
             }
         }
     }

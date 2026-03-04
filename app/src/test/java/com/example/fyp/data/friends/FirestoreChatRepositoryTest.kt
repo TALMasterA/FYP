@@ -1,6 +1,7 @@
 package com.example.fyp.data.friends
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.model.friends.FriendMessage
 import com.example.fyp.model.UserId
 import junit.framework.TestCase.assertEquals
@@ -18,11 +19,13 @@ class FirestoreChatRepositoryTest {
 
     private lateinit var repository: FirestoreChatRepository
     private lateinit var mockFirestore: FirebaseFirestore
+    private lateinit var mockFriendsRepository: FriendsRepository
 
     @Before
     fun setup() {
         mockFirestore = mock(FirebaseFirestore::class.java)
-        repository = FirestoreChatRepository(mockFirestore)
+        mockFriendsRepository = mock(FriendsRepository::class.java)
+        repository = FirestoreChatRepository(mockFirestore, mockFriendsRepository)
     }
 
     @Test

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.friends.SeenItemsStorage
+import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.MarkMessagesAsReadUseCase
@@ -67,7 +68,8 @@ class ChatViewModel @Inject constructor(
     private val translateAllMessagesUseCase: TranslateAllMessagesUseCase,
     private val userSettingsRepository: UserSettingsRepository,
     private val chatRepository: ChatRepository,
-    private val friendsRepository: FriendsRepository
+    private val friendsRepository: FriendsRepository,
+    private val sharedFriendsDataSource: SharedFriendsDataSource
 ) : ViewModel() {
 
     companion object {
@@ -173,8 +175,10 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 markMessagesAsReadUseCase(userId, friendId)
-                // Mark this friend's messages as seen in persistent storage
-                // This prevents the red dot badge from reappearing on app restart
+                // Mark this friend's messages as seen in the shared data source
+                // (updates in-memory filtered flow immediately) and in persistent storage
+                // (prevents the red dot badge from reappearing on app restart).
+                sharedFriendsDataSource.markMessageFriendSeen(friendId.value)
                 SeenItemsStorage.addSeenMessageFriendId(context, userId.value, friendId.value)
             } catch (_: Exception) {
                 // Non-critical

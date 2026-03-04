@@ -2,6 +2,7 @@ package com.example.fyp.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Inbox
 import androidx.compose.material3.*
@@ -133,7 +134,7 @@ object EmptyStates {
         onActionClick: (() -> Unit)? = null
     ) {
         EmptyStateView(
-            icon = Icons.Filled.LibraryBooks,
+            icon = Icons.AutoMirrored.Filled.LibraryBooks,
             title = "No Words Yet",
             message = message,
             modifier = modifier,

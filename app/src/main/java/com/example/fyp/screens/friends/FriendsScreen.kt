@@ -39,13 +39,22 @@ fun FriendsScreen(
     onOpenSharedInbox: () -> Unit = {},
     onOpenBlockedUsers: () -> Unit = {},
     onOpenNotifSettings: () -> Unit = {},
-    hasUnseenSharedItems: Boolean = false,
-    unseenSharedItemsCount: Int = 0,
-    hasUnreadMessages: Boolean = false,
-    unseenFriendRequestCount: Int = 0,
+    // NOTE: hasUnseenSharedItems / unseenSharedItemsCount / unseenFriendRequestCount are
+    // intentionally NOT parameters here. They are read directly from the ViewModel so
+    // the screen always reflects live StateFlow values and recomposes correctly.
+    // Passing them as plain Boolean/Int from the NavGraph lambda causes stale values
+    // because non-@Composable graph functions do not participate in Compose snapshot reads.
+    @Suppress("UNUSED_PARAMETER") hasUnseenSharedItems: Boolean = false,
+    @Suppress("UNUSED_PARAMETER") unseenSharedItemsCount: Int = 0,
+    @Suppress("UNUSED_PARAMETER") hasUnreadMessages: Boolean = false,
+    @Suppress("UNUSED_PARAMETER") unseenFriendRequestCount: Int = 0,
     viewModel: FriendsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    // Read notification state reactively from the ViewModel (live StateFlows)
+    val liveHasUnseenSharedItems by viewModel.hasUnseenSharedItems.collectAsStateWithLifecycle()
+    val liveUnseenSharedItemsCount by viewModel.unseenSharedItemsCount.collectAsStateWithLifecycle()
+    val liveUnseenFriendRequestCount by viewModel.unseenFriendRequestCount.collectAsStateWithLifecycle()
     val (uiText) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
@@ -279,13 +288,14 @@ fun FriendsScreen(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Dismiss all unread dots — shown when there are unread messages OR unseen shared items
+                        // Dismiss all unread dots — shown when there are unread messages, unseen shared items, OR unseen friend requests
                         val hasAnyUnread = uiState.unreadCountPerFriend.values.any { it > 0 }
-                        val hasAnyNotifications = hasAnyUnread || hasUnseenSharedItems
+                        val hasAnyNotifications = hasAnyUnread || liveHasUnseenSharedItems || liveUnseenFriendRequestCount > 0
                         if (hasAnyNotifications) {
                             IconButton(onClick = {
                                 if (hasAnyUnread) viewModel.dismissAllUnreadDots()
-                                if (hasUnseenSharedItems) viewModel.dismissSharedInboxDot()
+                                if (liveHasUnseenSharedItems) viewModel.dismissSharedInboxDot()
+                                if (liveUnseenFriendRequestCount > 0) viewModel.markFriendRequestsSeen()
                             }) {
                                 Icon(
                                     Icons.Default.DoneAll,
@@ -311,14 +321,14 @@ fun FriendsScreen(
                             )
                         }
 
-                        // Shared Inbox button with count badge (FIX 3.2/10)
+                        // Shared Inbox button with count badge
                         IconButton(onClick = onOpenSharedInbox) {
                             BadgedBox(
                                 badge = {
-                                    if (hasUnseenSharedItems) {
+                                    if (liveHasUnseenSharedItems) {
                                         Badge(containerColor = MaterialTheme.colorScheme.error) {
-                                            if (unseenSharedItemsCount > 0) {
-                                                Text("$unseenSharedItemsCount")
+                                            if (liveUnseenSharedItemsCount > 0) {
+                                                Text("$liveUnseenSharedItemsCount")
                                             }
                                         }
                                     }
@@ -371,13 +381,13 @@ fun FriendsScreen(
                                                 style = MaterialTheme.typography.titleMedium,
                                                 fontWeight = FontWeight.Bold
                                             )
-                                            if (unseenFriendRequestCount > 0) {
+                                            if (liveUnseenFriendRequestCount > 0) {
                                                 Spacer(modifier = Modifier.width(8.dp))
                                                 Badge(
                                                     containerColor = MaterialTheme.colorScheme.error,
                                                     contentColor = MaterialTheme.colorScheme.onError
                                                 ) {
-                                                    Text("$unseenFriendRequestCount")
+                                                    Text("$liveUnseenFriendRequestCount")
                                                 }
                                             }
                                             Spacer(modifier = Modifier.weight(1f))
