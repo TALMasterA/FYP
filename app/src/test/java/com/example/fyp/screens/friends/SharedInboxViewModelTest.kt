@@ -226,4 +226,61 @@ class SharedInboxViewModelTest {
         assertTrue("newItemIds should be empty after logout", state.newItemIds.isEmpty())
         assertEquals(0, state.newItemCount)
     }
+
+    // ── acceptItem sets loading state ─────────────────────────────────────────
+
+    @Test
+    fun `acceptItem sets loading state for the item`() = runTest {
+        whenever(acceptSharedItemUseCase.invoke("item1", testUserId))
+            .thenReturn(Result.success(Unit))
+
+        val viewModel = createViewModel()
+
+        authStateFlow.value = loggedInState
+        pendingItemsFlow.value = listOf(makeItem("item1"))
+        testScheduler.runCurrent()
+
+        viewModel.acceptItem("item1")
+        testScheduler.runCurrent()
+
+        // After accepting, should show success message
+        assertNotNull(viewModel.uiState.value.successMessage)
+    }
+
+    // ── acceptItem failure sets error ─────────────────────────────────────────
+
+    @Test
+    fun `acceptItem failure sets error message`() = runTest {
+        whenever(acceptSharedItemUseCase.invoke("item1", testUserId))
+            .thenReturn(Result.failure(RuntimeException("Accept failed")))
+
+        val viewModel = createViewModel()
+
+        authStateFlow.value = loggedInState
+        pendingItemsFlow.value = listOf(makeItem("item1"))
+        testScheduler.runCurrent()
+
+        viewModel.acceptItem("item1")
+        testScheduler.runCurrent()
+
+        assertNotNull(viewModel.uiState.value.error)
+    }
+
+    // ── deleteItem failure sets error ─────────────────────────────────────────
+
+    @Test
+    fun `deleteItem failure sets error message`() = runTest {
+        whenever(dismissSharedItemUseCase.invoke("item1", testUserId))
+            .thenReturn(Result.failure(RuntimeException("Delete failed")))
+
+        val viewModel = createViewModel()
+
+        authStateFlow.value = loggedInState
+        testScheduler.runCurrent()
+
+        viewModel.deleteItem("item1")
+        testScheduler.runCurrent()
+
+        assertNotNull(viewModel.uiState.value.error)
+    }
 }

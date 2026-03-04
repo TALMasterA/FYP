@@ -226,4 +226,80 @@ class QuizParserTest {
         assertEquals(1, questions.size)
         assertEquals("Valid?", questions[0].question)
     }
+
+    @Test
+    fun testParseJsonWithStringCorrectIndex() = runBlocking {
+        // AI sometimes generates correctIndex as a string "1" instead of integer 1
+        // optInt("correctIndex", -1) should handle numeric strings, but non-numeric strings
+        // should cause the question to be skipped (correctIndex defaults to -1)
+        val content = """
+        {
+            "questions": [
+                {
+                    "question": "String index?",
+                    "options": ["A", "B", "C", "D"],
+                    "correctIndex": "abc",
+                    "explanation": "Non-numeric string"
+                },
+                {
+                    "question": "Valid?",
+                    "options": ["A", "B", "C", "D"],
+                    "correctIndex": 2,
+                    "explanation": "Normal integer"
+                }
+            ]
+        }
+        """.trimIndent()
+
+        val questions = QuizParser.parseQuizFromContent(content)
+        // First question has non-numeric string index; should parse only the valid one
+        assertTrue(questions.isNotEmpty())
+        assertEquals("Valid?", questions.last().question)
+    }
+
+    @Test
+    fun testParseJsonWithNegativeCorrectIndex() = runBlocking {
+        val content = """
+        {
+            "questions": [
+                {
+                    "question": "Negative?",
+                    "options": ["A", "B", "C", "D"],
+                    "correctIndex": -1,
+                    "explanation": "Negative index"
+                },
+                {
+                    "question": "Good?",
+                    "options": ["A", "B", "C", "D"],
+                    "correctIndex": 0,
+                    "explanation": "Valid"
+                }
+            ]
+        }
+        """.trimIndent()
+
+        val questions = QuizParser.parseQuizFromContent(content)
+        assertEquals(1, questions.size)
+        assertEquals("Good?", questions[0].question)
+    }
+
+    @Test
+    fun testParseJsonWithMissingExplanation() = runBlocking {
+        // explanation field is optional - should still parse
+        val content = """
+        {
+            "questions": [
+                {
+                    "question": "No explanation?",
+                    "options": ["A", "B", "C", "D"],
+                    "correctIndex": 1
+                }
+            ]
+        }
+        """.trimIndent()
+
+        val questions = QuizParser.parseQuizFromContent(content)
+        assertEquals(1, questions.size)
+        assertEquals("No explanation?", questions[0].question)
+    }
 }

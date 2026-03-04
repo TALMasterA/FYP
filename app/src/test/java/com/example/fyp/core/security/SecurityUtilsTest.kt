@@ -276,4 +276,34 @@ class SecurityUtilsTest {
         assertTrue(limiter.isAllowed("user1"))
         assertTrue(limiter.isAllowed("user2"))
     }
+
+    @Test
+    fun `rateLimiter - window expiry resets attempts`() {
+        // Use a very short window so the test completes quickly
+        val shortWindowLimiter = RateLimiter(maxAttempts = 2, windowMillis = 50L)
+
+        // Exhaust attempts
+        assertTrue(shortWindowLimiter.isAllowed("user1"))
+        assertTrue(shortWindowLimiter.isAllowed("user1"))
+        assertFalse(shortWindowLimiter.isAllowed("user1"))
+
+        // Wait for window to expire
+        Thread.sleep(100)
+
+        // Should now be allowed again
+        assertTrue(shortWindowLimiter.isAllowed("user1"))
+    }
+
+    @Test
+    fun `rateLimiter - getRemainingAttempts reflects window expiry`() {
+        val shortWindowLimiter = RateLimiter(maxAttempts = 2, windowMillis = 50L)
+
+        shortWindowLimiter.isAllowed("user1")
+        assertEquals(1, shortWindowLimiter.getRemainingAttempts("user1"))
+
+        Thread.sleep(100)
+
+        // After window, all attempts should be available again
+        assertEquals(2, shortWindowLimiter.getRemainingAttempts("user1"))
+    }
 }
