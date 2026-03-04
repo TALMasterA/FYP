@@ -7,7 +7,7 @@ import org.junit.Test
 /**
  * Unit tests for FriendMessage data class, MessageType enum, and ChatMetadata.
  */
-class FriendMessageTest {
+class FriendMessageExtendedTest {
 
     // ── FriendMessage defaults ──────────────────────────────────────
 
