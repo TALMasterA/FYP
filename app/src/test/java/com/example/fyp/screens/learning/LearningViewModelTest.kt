@@ -148,21 +148,19 @@ class LearningViewModelTest {
     fun `generateFor rejected when lastCount equals countNow`() = runTest {
         languageCountsFlow.value = mapOf("ja" to 10)
 
+        // Mock batch metadata to return sheetCountByLanguage = 10 for "ja"
+        // so that lastCount == countNow and generation is rejected
+        whenever(sheetsRepo.getBatchSheetMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(mapOf("ja" to SheetMetadata(exists = true, historyCountAtGenerate = 10)))
+        whenever(quizRepo.getBatchQuizMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(emptyMap())
+
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
 
-        // Simulate sheet already generated at count 10
-        // The cluster has count 10, sheetCountByLanguage has 10
-        // We need to manually set the state since the metadata fetch is async
-        val currentState = vm.uiState.value
-        val updatedState = currentState.copy(
-            sheetCountByLanguage = mapOf("ja" to 10),
-            sheetExistsByLanguage = mapOf("ja" to true)
-        )
-        // Use reflection or just call generateFor - it checks uiState internally
         vm.generateFor("ja")
 
-        // Since clusters might not have count 10 established, verify no generation
+        // Since lastCount (10) == countNow (10), generation should be rejected
         verifyNoInteractions(generateLearningMaterials)
     }
 
@@ -180,13 +178,14 @@ class LearningViewModelTest {
             )
         )
 
-        whenever(sheetsRepo.getBatchSheetMetadata(eq(UserId("u1")), any(), any())).thenReturn(emptyMap())
-        whenever(quizRepo.getBatchQuizMetadata(eq(UserId("u1")), any(), any())).thenReturn(emptyMap())
+        // Use raw values to avoid inline value class boxing mismatch with eq() matchers
+        whenever(sheetsRepo.getBatchSheetMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(emptyMap())
+        whenever(quizRepo.getBatchQuizMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(emptyMap())
 
         whenever(generateLearningMaterials.invoke(any(), any(), any(), any()))
             .thenReturn("# Learning Material\nSome content here")
-        whenever(sheetsRepo.upsertSheet(eq(UserId("u1")), any(), any(), any(), any()))
-            .thenReturn(Unit)
 
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
@@ -212,8 +211,11 @@ class LearningViewModelTest {
             )
         )
 
-        whenever(sheetsRepo.getBatchSheetMetadata(eq(UserId("u1")), any(), any())).thenReturn(emptyMap())
-        whenever(quizRepo.getBatchQuizMetadata(eq(UserId("u1")), any(), any())).thenReturn(emptyMap())
+        // Use raw values to avoid inline value class boxing mismatch with eq() matchers
+        whenever(sheetsRepo.getBatchSheetMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(emptyMap())
+        whenever(quizRepo.getBatchQuizMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(emptyMap())
 
         whenever(generateLearningMaterials.invoke(any(), any(), any(), any()))
             .thenThrow(RuntimeException("AI service unavailable"))
@@ -279,7 +281,8 @@ class LearningViewModelTest {
 
         vm.setPrimaryLanguage("ja")
 
-        verify(userSettingsRepo).setPrimaryLanguage(eq(UserId("u1")), any())
+        // Use raw values instead of eq() matchers to avoid inline value class boxing mismatch
+        verify(userSettingsRepo).setPrimaryLanguage(UserId("u1"), LanguageCode("ja"))
     }
 
     // ── consumeSheetGenerationCompleted ──────────────────────────────

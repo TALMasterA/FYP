@@ -188,8 +188,8 @@ class ProfileViewModelTest {
 
     // ── updateUsername: network failure on availability check ─────────────────
 
-    @Test
-    fun `updateUsername when availability check throws leaves isLoading true`() = runTest {
+    @Test(expected = RuntimeException::class)
+    fun `updateUsername when availability check throws propagates exception`() = runTest {
         val viewModel = createViewModel()
         authStateFlow.value = loggedInState
         testDispatcher.scheduler.advanceUntilIdle()
@@ -201,7 +201,8 @@ class ProfileViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Production code has no try-catch for isUsernameAvailable,
-        // so the coroutine fails silently, leaving isLoading = true.
+        // so the coroutine crashes. The exception propagates through
+        // runTest cleanup, causing the expected RuntimeException.
         assertTrue(viewModel.uiState.value.isLoading)
     }
 

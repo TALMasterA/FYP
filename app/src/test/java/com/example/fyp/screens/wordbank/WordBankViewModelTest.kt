@@ -320,7 +320,8 @@ class WordBankViewModelTest {
         whenever(wordBankRepo.getWordBank(any(), any(), any())).thenReturn(wordBank)
         whenever(customWordsRepo.getCustomWordsOnce(any(), any(), any())).thenReturn(emptyList())
         whenever(sharedFriendsDataSource.getCachedUsername(any())).thenReturn("myuser")
-        whenever(shareWordUseCase.invoke(eq(UserId("u1")), any(), eq(UserId("friend1")), any(), any(), any(), any(), any()))
+        // Use raw values to avoid inline value class boxing mismatch with eq() matchers
+        whenever(shareWordUseCase.invoke(UserId("u1"), "myuser", UserId("friend1"), "hello", "こんにちは", "en-US", "ja", ""))
             .thenReturn(Result.failure(RuntimeException("Network error")))
 
         val vm = buildViewModel()
