@@ -59,6 +59,9 @@ class FirebaseAuthRepository @Inject constructor(
     }
 
     fun logout() {
+        // FIX 5.5: Remove FCM token before signing out so the device
+        // stops receiving push notifications for this account.
+        com.example.fyp.core.FcmNotificationService.removeTokenOnSignOut()
         firebaseAuth.signOut()
     }
 
