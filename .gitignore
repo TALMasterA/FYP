@@ -34,6 +34,10 @@ captures/
 *.log
 /app/google-services.json
 
+# Firebase service account credentials (sensitive - never commit)
+firebase-sa.json
+**/firebase-sa.json
+
 # Firebase backend
 fyp-backend/functions/node_modules/
 fyp-backend/functions/lib/
