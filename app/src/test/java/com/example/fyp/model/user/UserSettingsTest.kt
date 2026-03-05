@@ -29,6 +29,7 @@ class UserSettingsTest {
         assertEquals(listOf("default"), settings.unlockedPalettes)
         assertTrue(settings.voiceSettings.isEmpty())
         assertEquals(30, settings.historyViewLimit)  // Default is 30, expandable to 60
+        assertEquals(0L, settings.lastPrimaryLanguageChangeMs)  // Default: never changed
     }
 
     // --- Primary Language Tests ---
@@ -209,6 +210,17 @@ class UserSettingsTest {
         assertEquals(60, UserSettings.MAX_HISTORY_LIMIT)
         assertEquals(1000, UserSettings.HISTORY_EXPANSION_COST)
         assertEquals(10, UserSettings.HISTORY_EXPANSION_INCREMENT)
+    }
+
+    @Test
+    fun `favorites limit constant is defined`() {
+        assertEquals(20, UserSettings.MAX_FAVORITE_RECORDS)
+    }
+
+    @Test
+    fun `primary language cooldown constant is 30 days`() {
+        val thirtyDaysMs = 30L * 24 * 60 * 60 * 1000
+        assertEquals(thirtyDaysMs, UserSettings.PRIMARY_LANGUAGE_CHANGE_COOLDOWN_MS)
     }
 
     @Test
