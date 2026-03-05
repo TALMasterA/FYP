@@ -22,14 +22,7 @@ class LearningGenerationRulesTest {
     @Test
     fun `learning sheet first generation has no restriction`() {
         // First gen: savedHistoryCount = 0 (no previous generation)
-        val canGenerate = GenerationEligibility.canRegenerateLearningSheet(
-            currentHistoryCount = 1,
-            savedHistoryCount = 0
-        )
-        // When savedHistoryCount is 0 and current is >= 5, it should pass
-        // Actually, 1 - 0 = 1, which is < 5, so first gen needs domain rule
-        // The first generation should bypass minimum records check
-        // Let's test with enough records
+        // With enough records (>= MIN_RECORDS_FOR_LEARNING_SHEET), first gen is allowed
         val canGenerateWithRecords = GenerationEligibility.canRegenerateLearningSheet(
             currentHistoryCount = 5,
             savedHistoryCount = 0
