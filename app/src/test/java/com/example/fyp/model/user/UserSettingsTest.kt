@@ -28,7 +28,7 @@ class UserSettingsTest {
         assertEquals("default", settings.colorPaletteId)
         assertEquals(listOf("default"), settings.unlockedPalettes)
         assertTrue(settings.voiceSettings.isEmpty())
-        assertEquals(50, settings.historyViewLimit)  // Default is 50, not 100
+        assertEquals(30, settings.historyViewLimit)  // Default is 30, expandable to 60
     }
 
     // --- Primary Language Tests ---
@@ -189,31 +189,31 @@ class UserSettingsTest {
     // --- History View Limit Tests ---
 
     @Test
-    fun `history view limit has default value of 50`() {
+    fun `history view limit has default value of 30`() {
         val settings = UserSettings()
 
-        assertEquals(50, settings.historyViewLimit)
+        assertEquals(30, settings.historyViewLimit)
     }
 
     @Test
     fun `history view limit can be expanded`() {
-        val settings = UserSettings(historyViewLimit = 100)
+        val settings = UserSettings(historyViewLimit = 60)
 
-        assertEquals(100, settings.historyViewLimit)
-        assertTrue(settings.historyViewLimit > 50)
+        assertEquals(60, settings.historyViewLimit)
+        assertTrue(settings.historyViewLimit > 30)
     }
 
     @Test
     fun `history limit constants are defined`() {
-        assertEquals(50, UserSettings.BASE_HISTORY_LIMIT)
-        assertEquals(100, UserSettings.MAX_HISTORY_LIMIT)
+        assertEquals(30, UserSettings.BASE_HISTORY_LIMIT)
+        assertEquals(60, UserSettings.MAX_HISTORY_LIMIT)
         assertEquals(1000, UserSettings.HISTORY_EXPANSION_COST)
         assertEquals(10, UserSettings.HISTORY_EXPANSION_INCREMENT)
     }
 
     @Test
     fun `history limit expansion follows increment pattern`() {
-        val limits = listOf(50, 60, 70, 80, 90, 100)
+        val limits = listOf(30, 40, 50, 60)
 
         limits.forEach { limit ->
             val settings = UserSettings(historyViewLimit = limit)
@@ -223,7 +223,7 @@ class UserSettingsTest {
 
     @Test
     fun `history limit should not exceed maximum`() {
-        val settings = UserSettings(historyViewLimit = 100)
+        val settings = UserSettings(historyViewLimit = 60)
 
         assertTrue(settings.historyViewLimit <= UserSettings.MAX_HISTORY_LIMIT)
     }
@@ -239,14 +239,14 @@ class UserSettingsTest {
             colorPaletteId = "ocean",
             unlockedPalettes = listOf("default", "ocean", "sunset"),
             voiceSettings = mapOf("ja-JP" to "ja-JP-NanamiNeural"),
-            historyViewLimit = 100
+            historyViewLimit = 60
         )
 
         assertEquals("ja-JP", settings.primaryLanguageCode)
         assertEquals(1.8f, settings.fontSizeScale, 0.01f)
         assertEquals("dark", settings.themeMode)
         assertEquals("ocean", settings.colorPaletteId)
-        assertEquals(100, settings.historyViewLimit)
+        assertEquals(60, settings.historyViewLimit)
         assertTrue(settings.voiceSettings.containsKey("ja-JP"))
     }
 
@@ -273,7 +273,7 @@ class UserSettingsTest {
 
     @Test
     fun `user expanding history limit step by step`() {
-        val progression = listOf(100, 110, 120, 130, 140, 150)
+        val progression = listOf(30, 40, 50, 60)
 
         progression.forEachIndexed { index, limit ->
             val settings = UserSettings(historyViewLimit = limit)

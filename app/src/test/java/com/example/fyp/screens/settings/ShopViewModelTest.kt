@@ -64,7 +64,7 @@ class ShopViewModelTest {
         }
         settingsRepo = mock {
             onBlocking { fetchUserSettings(UserId(testUserId)) } doReturn UserSettings(
-                historyViewLimit = 50,
+                historyViewLimit = 30,
                 colorPaletteId = "default",
                 unlockedPalettes = listOf("default")
             )
@@ -97,7 +97,7 @@ class ShopViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
         assertEquals(2000, state.coinBalance)
-        assertEquals(50, state.currentHistoryLimit)
+        assertEquals(30, state.currentHistoryLimit)
         assertEquals("default", state.currentPaletteId)
         assertEquals(listOf("default"), state.unlockedPalettes)
     }
@@ -125,7 +125,7 @@ class ShopViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isPurchasing)
         assertEquals(1000, state.coinBalance)
-        assertEquals(50 + UserSettings.HISTORY_EXPANSION_INCREMENT, state.currentHistoryLimit)
+        assertEquals(30 + UserSettings.HISTORY_EXPANSION_INCREMENT, state.currentHistoryLimit)
         assertNull(state.purchaseError)
     }
 
