@@ -17,6 +17,16 @@ data class CoinAwardResult(
 )
 
 /**
+ * Result from server-side coin spending (shop purchases).
+ */
+data class SpendCoinsResult(
+    val success: Boolean,
+    val reason: String? = null,
+    val newBalance: Int = 0,
+    val newLimit: Int? = null
+)
+
+/**
  * Client for server-side quiz operations.
  * Uses Cloud Functions for tamper-proof coin eligibility verification.
  */
@@ -74,6 +84,50 @@ class CloudQuizClient @Inject constructor(
             // On error, don't award coins but don't crash
             CoinAwardResult(
                 awarded = false,
+                reason = "error: ${e.message}"
+            )
+        }
+    }
+
+    /**
+     * Server-side coin spending for history expansion.
+     * The server validates balance, deducts coins, and applies the new limit atomically.
+     */
+    suspend fun spendCoinsForHistoryExpansion(): SpendCoinsResult {
+        val data = hashMapOf<String, Any>("purchaseType" to "history_expansion")
+        return callSpendCoins(data)
+    }
+
+    /**
+     * Server-side coin spending for palette unlock.
+     * The server validates balance, checks palette validity, deducts coins, and unlocks atomically.
+     */
+    suspend fun spendCoinsForPaletteUnlock(paletteId: String): SpendCoinsResult {
+        val data = hashMapOf<String, Any>(
+            "purchaseType" to "palette_unlock",
+            "paletteId" to paletteId
+        )
+        return callSpendCoins(data)
+    }
+
+    private suspend fun callSpendCoins(data: HashMap<String, Any>): SpendCoinsResult {
+        return try {
+            val result = functions
+                .getHttpsCallable("spendCoins")
+                .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .call(data)
+                .await()
+
+            val map = result.data as? Map<*, *> ?: emptyMap<Any, Any>()
+            SpendCoinsResult(
+                success = map["success"] as? Boolean ?: false,
+                reason = map["reason"] as? String,
+                newBalance = (map["newBalance"] as? Number)?.toInt() ?: 0,
+                newLimit = (map["newLimit"] as? Number)?.toInt()
+            )
+        } catch (e: Exception) {
+            SpendCoinsResult(
+                success = false,
                 reason = "error: ${e.message}"
             )
         }

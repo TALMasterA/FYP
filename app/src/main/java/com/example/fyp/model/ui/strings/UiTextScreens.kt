@@ -895,6 +895,24 @@ val ScreenUiTexts: List<String> = listOf(
     // FavoritesSessionItemsTemplate
     "{count} message(s)",
 
+    // FavoritesLimitTitle
+    "Favorites Limit Reached",
+
+    // FavoritesLimitMessage
+    "You can only save up to 20 favorite items at a time. Please remove some favorites first before adding new ones.",
+
+    // FavoritesLimitGotIt
+    "OK",
+
+    // FavoritesInfoTitle
+    "About Favorites",
+
+    // FavoritesInfoMessage
+    "You can save up to 20 favorite items (individual records and sessions combined). This limit helps reduce database reads and keep the app running smoothly. To add more, remove some existing favorites first.",
+
+    // FavoritesInfoGotIt
+    "Got it",
+
     // --- Custom Words ---
     // CustomWordsTitle
     "Custom Words",

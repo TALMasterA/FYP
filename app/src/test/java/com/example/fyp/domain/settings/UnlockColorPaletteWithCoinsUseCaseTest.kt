@@ -1,25 +1,20 @@
 package com.example.fyp.domain.settings
 
+import com.example.fyp.data.cloud.CloudQuizClient
+import com.example.fyp.data.cloud.SpendCoinsResult
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.model.LanguageCode
 import com.example.fyp.model.PaletteId
 import com.example.fyp.model.UserId
 import com.example.fyp.model.VoiceName
 import com.example.fyp.model.user.UserSettings
-import com.example.fyp.domain.learning.GeneratedQuizDoc
-import com.example.fyp.domain.learning.QuizMetadata
-import com.example.fyp.domain.learning.QuizRepository
-import com.example.fyp.model.LanguageCode as LC
-import com.example.fyp.model.QuizAttempt
-import com.example.fyp.model.QuizQuestion
-import com.example.fyp.model.QuizStats
-import com.example.fyp.model.UserCoinStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.*
+import org.mockito.kotlin.*
 
 /**
  * Fake UserSettingsRepository that records calls to unlockColorPalette.
@@ -46,54 +41,28 @@ private class FakeUserSettingsRepository : UserSettingsRepository {
 }
 
 /**
- * Fake QuizRepository that returns a configurable deductCoins result.
- * Avoids Mockito, which cannot handle @JvmInline value class parameters.
- */
-private class FakeQuizRepository : QuizRepository {
-    var deductCoinsResult: Int = 0
-    var deductCoinsCalled = false
-
-    override suspend fun deductCoins(uid: UserId, amount: Int): Int {
-        deductCoinsCalled = true
-        return deductCoinsResult
-    }
-
-    // Unused stubs
-    override suspend fun saveAttempt(uid: UserId, attempt: QuizAttempt): String = ""
-    override suspend fun getAttempt(uid: UserId, attemptId: String): QuizAttempt? = null
-    override suspend fun getAttemptsByLanguagePair(uid: UserId, primaryCode: LC, targetCode: LC, limit: Long): List<QuizAttempt> = emptyList()
-    override suspend fun getQuizStats(uid: UserId, primaryCode: LC, targetCode: LC): QuizStats? = null
-    override suspend fun getRecentAttempts(uid: UserId, limit: Long): List<QuizAttempt> = emptyList()
-    override suspend fun getGeneratedQuizDoc(uid: UserId, primaryCode: LC, targetCode: LC): GeneratedQuizDoc? = null
-    override suspend fun getBatchQuizMetadata(uid: UserId, primary: LC, targets: List<String>): Map<String, QuizMetadata> = emptyMap()
-    override suspend fun upsertGeneratedQuiz(uid: UserId, primaryCode: LC, targetCode: LC, quizData: String, historyCountAtGenerate: Int) {}
-    override suspend fun getGeneratedQuizQuestions(uid: UserId, primaryCode: LC, targetCode: LC): List<QuizQuestion> = emptyList()
-    override fun observeUserCoinStats(uid: UserId): Flow<UserCoinStats> = emptyFlow()
-    override suspend fun fetchUserCoinStats(uid: UserId): UserCoinStats? = null
-    override suspend fun getLastAwardedQuizCount(uid: UserId, primaryCode: LC, targetCode: LC): Int? = null
-    override suspend fun awardCoinsIfEligible(uid: UserId, attempt: QuizAttempt, latestHistoryCount: Int?): Boolean = false
-}
-
-/**
  * Unit tests for UnlockColorPaletteWithCoinsUseCase.
+ *
+ * The use case delegates paid palette unlocks to the server-side spendCoins
+ * Cloud Function via CloudQuizClient. Free palettes are unlocked directly.
  */
 class UnlockColorPaletteWithCoinsUseCaseTest {
 
     private lateinit var settingsRepo: FakeUserSettingsRepository
-    private lateinit var quizRepo: FakeQuizRepository
+    private lateinit var cloudClient: CloudQuizClient
     private lateinit var useCase: UnlockColorPaletteWithCoinsUseCase
 
     @Before
     fun setup() {
         settingsRepo = FakeUserSettingsRepository()
-        quizRepo = FakeQuizRepository()
-        useCase = UnlockColorPaletteWithCoinsUseCase(settingsRepo, quizRepo)
+        cloudClient = mock()
+        useCase = UnlockColorPaletteWithCoinsUseCase(settingsRepo, cloudClient)
     }
 
     // --- Free Palette Tests ---
 
     @Test
-    fun `free palette unlocks without coin deduction`() = runBlocking {
+    fun `free palette unlocks directly without cloud call`() = runBlocking {
         val userId = UserId("user123")
         val paletteId = PaletteId("default")
 
@@ -102,117 +71,118 @@ class UnlockColorPaletteWithCoinsUseCaseTest {
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result)
         assertEquals(1, settingsRepo.unlockedPalettes.size)
         assertEquals(userId to paletteId, settingsRepo.unlockedPalettes[0])
-        assertFalse("Coins should NOT be deducted for free palette", quizRepo.deductCoinsCalled)
+        verifyNoInteractions(cloudClient)
+    }
+
+    @Test
+    fun `free palette with zero cost never calls cloud client`() = runBlocking {
+        useCase(UserId("user123"), PaletteId("freebie"), cost = 0)
+
+        verifyNoInteractions(cloudClient)
     }
 
     // --- Paid Palette Success Tests ---
 
     @Test
-    fun `paid palette unlocks when user has sufficient coins`() = runBlocking {
-        val userId = UserId("user123")
-        val paletteId = PaletteId("premium")
-        quizRepo.deductCoinsResult = 50 // 150 - 100 = 50 remaining
+    fun `paid palette returns success when server confirms`() = runBlocking {
+        val paletteId = PaletteId("ocean")
+        cloudClient.stub {
+            onBlocking { spendCoinsForPaletteUnlock("ocean") } doReturn SpendCoinsResult(
+                success = true, newBalance = 90
+            )
+        }
 
-        val result = useCase(userId, paletteId, cost = 100)
+        val result = useCase(UserId("user123"), paletteId, cost = 10)
 
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result)
-        assertTrue(quizRepo.deductCoinsCalled)
-        assertEquals(1, settingsRepo.unlockedPalettes.size)
-        assertEquals(userId to paletteId, settingsRepo.unlockedPalettes[0])
+        // Server handles the unlock — client settingsRepo must NOT be called for paid palettes
+        assertTrue("settingsRepo must NOT be called for paid palettes", settingsRepo.unlockedPalettes.isEmpty())
     }
 
     @Test
-    fun `paid palette unlocks when user has exact coins needed`() = runBlocking {
-        val userId = UserId("user123")
-        val paletteId = PaletteId("premium")
-        quizRepo.deductCoinsResult = 0 // 100 - 100 = 0 remaining
+    fun `paid palette passes paletteId to cloud client`() {
+        runBlocking {
+            cloudClient.stub {
+                onBlocking { spendCoinsForPaletteUnlock("sunset") } doReturn SpendCoinsResult(
+                    success = true, newBalance = 0
+                )
+            }
 
-        val result = useCase(userId, paletteId, cost = 100)
+            useCase(UserId("user123"), PaletteId("sunset"), cost = 10)
 
-        assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result)
-        assertTrue(quizRepo.deductCoinsCalled)
-        assertEquals(1, settingsRepo.unlockedPalettes.size)
+            verify(cloudClient).spendCoinsForPaletteUnlock("sunset")
+        }
     }
 
     // --- Insufficient Coins Tests ---
 
     @Test
-    fun `paid palette fails when user has insufficient coins`() = runBlocking {
-        val userId = UserId("user123")
-        val paletteId = PaletteId("premium")
-        quizRepo.deductCoinsResult = -1 // Insufficient
+    fun `paid palette returns insufficient when server reports insufficient_coins`() = runBlocking {
+        cloudClient.stub {
+            onBlocking { spendCoinsForPaletteUnlock("ocean") } doReturn SpendCoinsResult(
+                success = false, reason = "insufficient_coins"
+            )
+        }
 
-        val result = useCase(userId, paletteId, cost = 100)
-
-        assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins, result)
-        assertTrue(quizRepo.deductCoinsCalled)
-        assertTrue("Palette must NOT be unlocked on failure", settingsRepo.unlockedPalettes.isEmpty())
-    }
-
-    @Test
-    fun `paid palette fails when user has zero coins`() = runBlocking {
-        val userId = UserId("user123")
-        val paletteId = PaletteId("premium")
-        quizRepo.deductCoinsResult = -1 // 0 - 50 = insufficient
-
-        val result = useCase(userId, paletteId, cost = 50)
+        val result = useCase(UserId("user123"), PaletteId("ocean"), cost = 10)
 
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins, result)
-        assertTrue("Palette must NOT be unlocked on failure", settingsRepo.unlockedPalettes.isEmpty())
+        assertTrue("settingsRepo must NOT be called on failure", settingsRepo.unlockedPalettes.isEmpty())
     }
 
-    // --- Edge Cases ---
+    // --- Already Unlocked ---
 
     @Test
-    fun `expensive palette unlocks with sufficient high balance`() = runBlocking {
-        val userId = UserId("user123")
-        val paletteId = PaletteId("luxury")
-        quizRepo.deductCoinsResult = 500 // 1500 - 1000 = 500
+    fun `paid palette returns success when server reports already_unlocked`() = runBlocking {
+        cloudClient.stub {
+            onBlocking { spendCoinsForPaletteUnlock("ocean") } doReturn SpendCoinsResult(
+                success = false, reason = "already_unlocked"
+            )
+        }
 
-        val result = useCase(userId, paletteId, cost = 1000)
+        val result = useCase(UserId("user123"), PaletteId("ocean"), cost = 10)
 
         assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result)
-        assertTrue(quizRepo.deductCoinsCalled)
-        assertEquals(1, settingsRepo.unlockedPalettes.size)
+    }
+
+    // --- Unknown Error Fallback ---
+
+    @Test
+    fun `paid palette returns insufficient for unknown server error reason`() = runBlocking {
+        cloudClient.stub {
+            onBlocking { spendCoinsForPaletteUnlock("ocean") } doReturn SpendCoinsResult(
+                success = false, reason = "unknown_error"
+            )
+        }
+
+        val result = useCase(UserId("user123"), PaletteId("ocean"), cost = 10)
+
+        assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins, result)
     }
 
     @Test
-    fun `cheap palette unlocks with minimal cost`() = runBlocking {
-        val userId = UserId("user123")
-        val paletteId = PaletteId("basic")
-        quizRepo.deductCoinsResult = 99 // 100 - 1 = 99
+    fun `paid palette returns insufficient when server reason is null`() = runBlocking {
+        cloudClient.stub {
+            onBlocking { spendCoinsForPaletteUnlock("ocean") } doReturn SpendCoinsResult(
+                success = false, reason = null
+            )
+        }
 
-        val result = useCase(userId, paletteId, cost = 1)
+        val result = useCase(UserId("user123"), PaletteId("ocean"), cost = 10)
 
-        assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result)
-        assertTrue(quizRepo.deductCoinsCalled)
-        assertEquals(1, settingsRepo.unlockedPalettes.size)
+        assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins, result)
     }
 
     // --- Scenario Tests ---
 
     @Test
-    fun `multiple unlocks deplete coin balance correctly`() = runBlocking {
+    fun `multiple free palettes unlock directly each time`() = runBlocking {
         val userId = UserId("user123")
 
-        // First unlock: 500 - 100 = 400 remaining
-        quizRepo.deductCoinsResult = 400
-        val result1 = useCase(userId, PaletteId("palette1"), 100)
-        assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result1)
+        useCase(userId, PaletteId("palette1"), cost = 0)
+        useCase(userId, PaletteId("palette2"), cost = 0)
 
-        // Second unlock: 400 - 200 = 200 remaining
-        quizRepo.deductCoinsResult = 200
-        val result2 = useCase(userId, PaletteId("palette2"), 200)
-        assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.Success, result2)
-
-        // Third unlock fails: 200 - 300 = insufficient
-        quizRepo.deductCoinsResult = -1
-        val result3 = useCase(userId, PaletteId("palette3"), 300)
-        assertEquals(UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins, result3)
-
-        // Exactly 2 palettes unlocked (palette1 + palette2), palette3 was NOT unlocked
         assertEquals(2, settingsRepo.unlockedPalettes.size)
-        assertEquals(userId to PaletteId("palette1"), settingsRepo.unlockedPalettes[0])
-        assertEquals(userId to PaletteId("palette2"), settingsRepo.unlockedPalettes[1])
+        verifyNoInteractions(cloudClient)
     }
 }

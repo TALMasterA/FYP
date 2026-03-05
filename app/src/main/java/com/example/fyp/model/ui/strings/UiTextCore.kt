@@ -404,6 +404,12 @@ enum class UiTextKey {
     FavoritesTabSessions,
     FavoritesSessionsEmpty,
     FavoritesSessionItemsTemplate,
+    FavoritesLimitTitle,
+    FavoritesLimitMessage,
+    FavoritesLimitGotIt,
+    FavoritesInfoTitle,
+    FavoritesInfoMessage,
+    FavoritesInfoGotIt,
 
     // --- Custom Words ---
     CustomWordsTitle,
