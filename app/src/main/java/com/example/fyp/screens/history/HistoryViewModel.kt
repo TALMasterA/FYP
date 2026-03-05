@@ -48,7 +48,8 @@ data class HistoryUiState(
     val isLoadingMore: Boolean = false, // Whether we're currently loading more records
     val totalRecordsCount: Int = 0, // Total count of all records
     val isTtsRunning: Boolean = false,
-    val ttsStatus: String = ""
+    val ttsStatus: String = "",
+    val favoriteLimitExceeded: Boolean = false
 )
 
 @HiltViewModel
@@ -225,6 +226,14 @@ class HistoryViewModel @Inject constructor(
                         )
                     }
             } else {
+                // Check limit before adding
+                if (_uiState.value.favoritedTexts.size >= UserSettings.MAX_FAVORITE_RECORDS) {
+                    _uiState.value = _uiState.value.copy(
+                        addingFavoriteId = null,
+                        favoriteLimitExceeded = true
+                    )
+                    return@launch
+                }
                 // Add to favorites
                 favoritesRepo.addFavorite(
                     userId = uid,
@@ -278,6 +287,16 @@ class HistoryViewModel @Inject constructor(
                     direction = rec.direction.orEmpty(),
                     sequence = rec.sequence?.toInt() ?: 0
                 )
+            }
+
+            // Check if adding this session's records would exceed the limit
+            val currentCount = _uiState.value.favoritedTexts.size
+            if (currentCount + sessionRecords.size > UserSettings.MAX_FAVORITE_RECORDS) {
+                _uiState.value = _uiState.value.copy(
+                    favouritingSessionId = null,
+                    favoriteLimitExceeded = true
+                )
+                return@launch
             }
 
             favoritesRepo.addFavoriteSession(
@@ -459,6 +478,10 @@ class HistoryViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun clearFavoriteLimitExceeded() {
+        _uiState.value = _uiState.value.copy(favoriteLimitExceeded = false)
     }
 
     // --- TTS playback (previously in SpeechViewModel, moved here per architecture review) ---

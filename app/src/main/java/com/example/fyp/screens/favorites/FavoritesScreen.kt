@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -105,6 +106,9 @@ fun FavoritesScreen(
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     val totalSelected = uiState.selectedRecordIds.size + uiState.selectedSessionIds.size
 
+    // Info dialog
+    var showInfoDialog by remember { mutableStateOf(false) }
+
     // Auto-dismiss error after delay
     LaunchedEffect(uiState.error) {
         if (uiState.error != null) {
@@ -138,31 +142,54 @@ fun FavoritesScreen(
         )
     }
 
+    // Favorites info dialog
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            icon = { Icon(Icons.Default.Info, contentDescription = null) },
+            title = { Text(t(UiTextKey.FavoritesInfoTitle)) },
+            text = { Text(t(UiTextKey.FavoritesInfoMessage)) },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text(t(UiTextKey.FavoritesInfoGotIt))
+                }
+            }
+        )
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.FavoritesTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
-            if (uiState.isDeleting) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp
-                )
-            } else {
-                IconButton(onClick = {
-                    haptic.click()
-                    when {
-                        !uiState.isDeleteMode -> viewModel.toggleDeleteMode()
-                        totalSelected > 0 -> showDeleteConfirmDialog = true
-                        else -> viewModel.exitDeleteMode()
-                    }
-                }) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { showInfoDialog = true }) {
                     Icon(
-                        imageVector = if (uiState.isDeleteMode) Icons.Default.DeleteForever else Icons.Default.Delete,
-                        contentDescription = if (uiState.isDeleteMode) "Confirm delete" else "Delete mode",
-                        tint = if (uiState.isDeleteMode) MaterialTheme.colorScheme.error
-                               else MaterialTheme.colorScheme.onSurface
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Favorites Info"
                     )
+                }
+                if (uiState.isDeleting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    IconButton(onClick = {
+                        haptic.click()
+                        when {
+                            !uiState.isDeleteMode -> viewModel.toggleDeleteMode()
+                            totalSelected > 0 -> showDeleteConfirmDialog = true
+                            else -> viewModel.exitDeleteMode()
+                        }
+                    }) {
+                        Icon(
+                            imageVector = if (uiState.isDeleteMode) Icons.Default.DeleteForever else Icons.Default.Delete,
+                            contentDescription = if (uiState.isDeleteMode) "Confirm delete" else "Delete mode",
+                            tint = if (uiState.isDeleteMode) MaterialTheme.colorScheme.error
+                                   else MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }

@@ -1,5 +1,7 @@
 package com.example.fyp.screens.settings
 
+import com.example.fyp.data.cloud.CloudQuizClient
+import com.example.fyp.data.cloud.SpendCoinsResult
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.settings.UserSettingsRepository
@@ -22,26 +24,26 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.stub
-import org.mockito.kotlin.verify
+import org.mockito.kotlin.*
 
 /**
  * Unit tests for ShopViewModel.
+ *
+ * Coin spending is delegated to the server-side spendCoins Cloud Function
+ * via CloudQuizClient. Initial coin balance is loaded from QuizRepository.
  *
  * Tests:
  * 1. Initial loading state
  * 2. Login loads coin balance and settings
  * 3. Logout resets state
- * 4. Expand history limit succeeds
- * 5. Expand history limit fails with insufficient coins
- * 6. Expand history limit fails at max limit
- * 7. Unlock palette succeeds
- * 8. Unlock palette fails with insufficient coins
- * 9. Select palette updates state
- * 10. Clear error messages
+ * 4. Expand history limit - server success
+ * 5. Expand history limit - insufficient coins (client guard)
+ * 6. Expand history limit - max limit reached (client guard)
+ * 7. Expand history limit - server returns insufficient_coins error
+ * 8. Unlock palette - server success
+ * 9. Unlock palette - insufficient coins (client guard)
+ * 10. Select palette updates state
+ * 11. Clear error messages
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ShopViewModelTest {
@@ -49,6 +51,7 @@ class ShopViewModelTest {
     private lateinit var authRepo: FirebaseAuthRepository
     private lateinit var settingsRepo: UserSettingsRepository
     private lateinit var quizRepo: QuizRepository
+    private lateinit var cloudClient: CloudQuizClient
     private lateinit var viewModel: ShopViewModel
 
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -72,11 +75,13 @@ class ShopViewModelTest {
         quizRepo = mock {
             onBlocking { fetchUserCoinStats(UserId(testUserId)) } doReturn UserCoinStats(coinTotal = 2000)
         }
+        cloudClient = mock()
 
         viewModel = ShopViewModel(
             authRepo = authRepo,
             settingsRepo = settingsRepo,
-            quizRepo = quizRepo
+            quizRepo = quizRepo,
+            cloudClient = cloudClient
         )
     }
 
@@ -116,8 +121,11 @@ class ShopViewModelTest {
     fun `expand history limit succeeds`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "test@test.com"))
 
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), UserSettings.HISTORY_EXPANSION_COST) } doReturn 1000
+        val expectedLimit = 30 + UserSettings.HISTORY_EXPANSION_INCREMENT
+        cloudClient.stub {
+            onBlocking { spendCoinsForHistoryExpansion() } doReturn SpendCoinsResult(
+                success = true, newBalance = 1000, newLimit = expectedLimit
+            )
         }
 
         viewModel.expandHistoryLimit()
@@ -125,7 +133,7 @@ class ShopViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isPurchasing)
         assertEquals(1000, state.coinBalance)
-        assertEquals(30 + UserSettings.HISTORY_EXPANSION_INCREMENT, state.currentHistoryLimit)
+        assertEquals(expectedLimit, state.currentHistoryLimit)
         assertNull(state.purchaseError)
     }
 
@@ -139,6 +147,7 @@ class ShopViewModelTest {
         viewModel.expandHistoryLimit()
 
         assertEquals("Insufficient coins", viewModel.uiState.value.purchaseError)
+        verifyNoInteractions(cloudClient)
     }
 
     @Test
@@ -152,16 +161,18 @@ class ShopViewModelTest {
 
         viewModel.expandHistoryLimit()
 
-        // Should not start purchase when already at max
         assertFalse(viewModel.uiState.value.isPurchasing)
+        verifyNoInteractions(cloudClient)
     }
 
     @Test
-    fun `expand returns insufficient when server reports negative balance`() = runTest {
+    fun `expand returns insufficient when server reports insufficient_coins`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "test@test.com"))
 
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), UserSettings.HISTORY_EXPANSION_COST) } doReturn -1
+        cloudClient.stub {
+            onBlocking { spendCoinsForHistoryExpansion() } doReturn SpendCoinsResult(
+                success = false, reason = "insufficient_coins"
+            )
         }
 
         viewModel.expandHistoryLimit()
@@ -173,8 +184,10 @@ class ShopViewModelTest {
     fun `unlock palette succeeds`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "test@test.com"))
 
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), 10) } doReturn 1990
+        cloudClient.stub {
+            onBlocking { spendCoinsForPaletteUnlock("ocean") } doReturn SpendCoinsResult(
+                success = true, newBalance = 1990
+            )
         }
 
         viewModel.unlockPalette("ocean", 10)
@@ -196,6 +209,7 @@ class ShopViewModelTest {
         viewModel.unlockPalette("premium", 10)
 
         assertEquals("Insufficient coins", viewModel.uiState.value.unlockError)
+        verifyNoInteractions(cloudClient)
     }
 
     @Test

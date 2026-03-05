@@ -1,6 +1,6 @@
 package com.example.fyp.domain.settings
 
-import com.example.fyp.domain.learning.QuizRepository
+import com.example.fyp.data.cloud.CloudQuizClient
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.model.PaletteId
 import com.example.fyp.model.UserId
@@ -9,19 +9,18 @@ import javax.inject.Inject
 /**
  * Use case for unlocking color palettes using earned coins.
  *
- * This use case handles the transaction of:
- * 1. Checking if the user has sufficient coins
- * 2. Deducting the cost from the user's coin balance
- * 3. Unlocking the color palette if successful
+ * Delegates to the server-side spendCoins Cloud Function which validates
+ * balance, deducts coins, and unlocks the palette atomically in a
+ * Firestore transaction. This prevents client-side tampering.
  *
- * Free palettes (cost = 0) are unlocked without deducting coins.
+ * Free palettes (cost = 0) are unlocked directly without the cloud function.
  *
- * @property settingsRepo Repository for managing user settings
- * @property quizRepo Repository for managing quiz-related data including coins
+ * @property settingsRepo Repository for managing user settings (free palette unlock only)
+ * @property cloudClient Cloud Functions client for server-verified spending
  */
 class UnlockColorPaletteWithCoinsUseCase @Inject constructor(
     private val settingsRepo: UserSettingsRepository,
-    private val quizRepo: QuizRepository
+    private val cloudClient: CloudQuizClient
 ) {
     /**
      * Attempts to unlock a color palette for the user.
@@ -32,21 +31,23 @@ class UnlockColorPaletteWithCoinsUseCase @Inject constructor(
      * @return Result indicating success or insufficient coins
      */
     suspend operator fun invoke(userId: UserId, paletteId: PaletteId, cost: Int): Result {
-        // Free palette (default), just unlock it
+        // Free palette (default), just unlock it directly
         if (cost == 0) {
             settingsRepo.unlockColorPalette(userId, paletteId)
             return Result.Success
         }
 
-        // Deduct coins
-        val newBalance = quizRepo.deductCoins(userId, cost)
-        if (newBalance < 0) {
-            return Result.InsufficientCoins
+        // Server-side: validates balance, deducts coins, and unlocks atomically
+        val result = cloudClient.spendCoinsForPaletteUnlock(paletteId.value)
+        return if (result.success) {
+            Result.Success
+        } else {
+            when (result.reason) {
+                "insufficient_coins" -> Result.InsufficientCoins
+                "already_unlocked" -> Result.Success // Already unlocked is fine
+                else -> Result.InsufficientCoins
+            }
         }
-
-        // Unlock the palette
-        settingsRepo.unlockColorPalette(userId, paletteId)
-        return Result.Success
     }
 
     /**

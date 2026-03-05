@@ -5,12 +5,17 @@ service cloud.firestore {
 
     // ============================================
     // User Data Subcollections
-    // Users can only access their own subcollections
-    // This rule matches subcollections like /users/{userId}/profile/settings
-    // but NOT the main document /users/{userId} itself
+    // Users can only access their own subcollections.
+    // Coin-related subcollections (user_stats/coins, coin_awards, last_awarded_quiz)
+    // are READ-ONLY for clients — only the admin SDK (Cloud Functions like
+    // awardQuizCoins and spendCoins) can write to them.
     // ============================================
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    match /users/{userId}/{subCol}/{docId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId
+        && subCol != 'coin_awards'
+        && subCol != 'last_awarded_quiz'
+        && !(subCol == 'user_stats' && docId == 'coins');
     }
 
     // ============================================
@@ -56,10 +61,17 @@ service cloud.firestore {
       //
       // Note: When using dot notation like "unreadPerFriend.{friendId}", Firestore treats
       // the entire map field 'unreadPerFriend' as changed, not individual subfields.
+      //
+      // Type validation: totalUnreadMessages must be a non-negative integer to prevent
+      // a malicious sender from corrupting the counter with strings or negative values.
 
       return resource == null
         ? request.resource.data.keys().hasOnly(['totalUnreadMessages', 'unreadPerFriend'])
-        : request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalUnreadMessages', 'unreadPerFriend']);
+          && request.resource.data.totalUnreadMessages is int
+          && request.resource.data.totalUnreadMessages >= 0
+        : request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalUnreadMessages', 'unreadPerFriend'])
+          && request.resource.data.totalUnreadMessages is int
+          && request.resource.data.totalUnreadMessages >= 0;
     }
 
     // ============================================
@@ -75,11 +87,14 @@ service cloud.firestore {
         && request.resource.data.fromUserId == request.auth.uid;
 
       // Allow creating the content subcollection (e.g. for learning sheets).
-      // The parent shared_inbox doc already validates sender identity, so a simple
-      // auth check suffices here. The content doc stores only the fullContent
-      // string and does NOT repeat fromUserId.
+      // The parent shared_inbox doc and content doc are written together in a batch,
+      // so we cannot use get() to check the parent. Instead we validate that the
+      // fromUserId field written into the content doc matches the authenticated sender.
+      // This prevents any authenticated user from injecting content into another
+      // user's inbox.
       match /content/{docId} {
-        allow create: if request.auth != null;
+        allow create: if request.auth != null
+          && request.resource.data.fromUserId == request.auth.uid;
       }
     }
 
@@ -104,9 +119,11 @@ service cloud.firestore {
       // Users can write to their own friends list
       allow write: if request.auth != null && request.auth.uid == userId;
 
-      // Special case: Allow writing to friend's list when accepting friend request
-      // This happens in a batch transaction where both users' friends lists are updated
-      allow write: if request.auth != null && request.auth.uid == friendId;
+      // Special case: Allow CREATING in friend's list when accepting friend request.
+      // Only create is permitted (not update or delete) to prevent any authenticated user
+      // from unilaterally modifying or removing entries in another user's friends list.
+      // Unfriending and username updates are always done by the list owner via the rule above.
+      allow create: if request.auth != null && request.auth.uid == friendId;
     }
 
     // ============================================

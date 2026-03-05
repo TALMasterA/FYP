@@ -538,6 +538,16 @@ export const awardQuizCoins = onCall(
       throw new HttpsError("invalid-argument", "totalScore must be a non-negative number");
     }
 
+    // Validate language code format: only letters, digits, and hyphens (e.g. "en-US", "zh-HK").
+    // Codes are used as Firestore document IDs, so we must reject '/', '.', and excessively long values.
+    const LANG_CODE_RE = /^[a-zA-Z0-9-]{1,20}$/;
+    if (!LANG_CODE_RE.test(primaryCode) || !LANG_CODE_RE.test(targetCode)) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Language codes must be 1–20 characters long and contain only letters, digits, and hyphens"
+      );
+    }
+
     // No coins for zero score
     if (score === 0) {
       return { awarded: false, reason: "zero_score" };
@@ -635,6 +645,108 @@ export const awardQuizCoins = onCall(
     });
 
     return result;
+  }
+);
+
+// ============ Server-Side Shop Purchases (Anti-Cheat) ============
+
+// Shop constants — single source of truth (must match Android UserSettings / ColorPalette).
+const HISTORY_EXPANSION_COST = 1000;
+const HISTORY_EXPANSION_INCREMENT = 10;
+const BASE_HISTORY_LIMIT = 30;
+const MAX_HISTORY_LIMIT = 60;
+const PALETTE_UNLOCK_COST = 10;
+const VALID_PALETTE_IDS = [
+  "ocean", "sunset", "lavender", "rose", "mint",
+  "crimson", "amber", "indigo", "emerald", "coral",
+];
+
+/**
+ * Server-side coin spending for shop purchases.
+ * Runs the full balance check, deduction, and purchase application
+ * inside a Firestore transaction so nothing can be tampered with.
+ *
+ * purchaseType: "history_expansion" | "palette_unlock"
+ * paletteId: (required for palette_unlock) one of VALID_PALETTE_IDS
+ */
+export const spendCoins = onCall(
+  {},
+  async (request) => {
+    requireAuth(request.auth);
+    const uid = (request.auth as {uid: string}).uid;
+
+    const purchaseType = requireString(request.data?.purchaseType, "purchaseType");
+
+    const coinStatsRef = getFirestore()
+      .collection("users").doc(uid)
+      .collection("user_stats").doc("coins");
+    const settingsRef = getFirestore()
+      .collection("users").doc(uid)
+      .collection("profile").doc("settings");
+
+    if (purchaseType === "history_expansion") {
+      const result = await getFirestore().runTransaction(async (tx) => {
+        const statsDoc = await tx.get(coinStatsRef);
+        const currentTotal = statsDoc.data()?.coinTotal ?? 0;
+        const coinByLang = statsDoc.data()?.coinByLang ?? {};
+
+        const settingsDoc = await tx.get(settingsRef);
+        const currentLimit = settingsDoc.data()?.historyViewLimit ?? BASE_HISTORY_LIMIT;
+
+        if (currentLimit >= MAX_HISTORY_LIMIT) {
+          return {success: false, reason: "max_limit_reached"};
+        }
+        if (currentTotal < HISTORY_EXPANSION_COST) {
+          return {success: false, reason: "insufficient_coins"};
+        }
+
+        const newLimit = Math.min(currentLimit + HISTORY_EXPANSION_INCREMENT, MAX_HISTORY_LIMIT);
+        const newTotal = currentTotal - HISTORY_EXPANSION_COST;
+
+        tx.set(coinStatsRef, {coinTotal: newTotal, coinByLang}, {merge: true});
+        tx.set(settingsRef, {historyViewLimit: newLimit}, {merge: true});
+
+        return {success: true, newBalance: newTotal, newLimit};
+      });
+      return result;
+    } else if (purchaseType === "palette_unlock") {
+      const paletteId = requireString(request.data?.paletteId, "paletteId");
+
+      if (!VALID_PALETTE_IDS.includes(paletteId)) {
+        throw new HttpsError("invalid-argument", `Invalid palette ID: ${paletteId}`);
+      }
+
+      const result = await getFirestore().runTransaction(async (tx) => {
+        const statsDoc = await tx.get(coinStatsRef);
+        const currentTotal = statsDoc.data()?.coinTotal ?? 0;
+        const coinByLang = statsDoc.data()?.coinByLang ?? {};
+
+        const settingsDoc = await tx.get(settingsRef);
+        const unlockedPalettes: string[] = settingsDoc.data()?.unlockedPalettes ?? ["default"];
+
+        if (unlockedPalettes.includes(paletteId)) {
+          return {success: false, reason: "already_unlocked"};
+        }
+        if (currentTotal < PALETTE_UNLOCK_COST) {
+          return {success: false, reason: "insufficient_coins"};
+        }
+
+        const newTotal = currentTotal - PALETTE_UNLOCK_COST;
+
+        tx.set(coinStatsRef, {coinTotal: newTotal, coinByLang}, {merge: true});
+        tx.set(settingsRef, {
+          unlockedPalettes: admin.firestore.FieldValue.arrayUnion(paletteId),
+        }, {merge: true});
+
+        return {success: true, newBalance: newTotal};
+      });
+      return result;
+    } else {
+      throw new HttpsError(
+        "invalid-argument",
+        "purchaseType must be 'history_expansion' or 'palette_unlock'"
+      );
+    }
   }
 );
 
@@ -811,6 +923,32 @@ export const sendFriendRequestNotification = onDocumentCreated(
         `sendFriendRequestNotification: sent to ${tokens.length} tokens, ` +
         `success=${response.successCount}, failure=${response.failureCount}`
       );
+
+      // Clean up invalid/expired tokens (same pattern as sendChatNotification)
+      const invalidTokens: string[] = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          const errCode = resp.error?.code ?? "";
+          if (
+            errCode === "messaging/registration-token-not-registered" ||
+            errCode === "messaging/invalid-registration-token"
+          ) {
+            invalidTokens.push(tokens[idx]);
+          }
+        }
+      });
+
+      if (invalidTokens.length > 0) {
+        const batch = getFirestore().batch();
+        for (const token of invalidTokens) {
+          const ref = getFirestore()
+            .collection("users").doc(receiverId)
+            .collection("fcm_tokens").doc(token);
+          batch.delete(ref);
+        }
+        await batch.commit();
+        console.log(`sendFriendRequestNotification: removed ${invalidTokens.length} invalid tokens`);
+      }
     } catch (err: any) {
       console.error("sendFriendRequestNotification: error", { message: err?.message });
     }

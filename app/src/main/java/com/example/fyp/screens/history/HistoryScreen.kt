@@ -271,6 +271,20 @@ fun HistoryScreen(
         )
     }
 
+    // Favorites limit exceeded dialog
+    if (uiState.favoriteLimitExceeded) {
+        AlertDialog(
+            onDismissRequest = { viewModel.clearFavoriteLimitExceeded() },
+            title = { Text(t(UiTextKey.FavoritesLimitTitle)) },
+            text = { Text(t(UiTextKey.FavoritesLimitMessage)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearFavoriteLimitExceeded() }) {
+                    Text(t(UiTextKey.FavoritesLimitGotIt))
+                }
+            }
+        )
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.HistoryTitle),
         onBack = {

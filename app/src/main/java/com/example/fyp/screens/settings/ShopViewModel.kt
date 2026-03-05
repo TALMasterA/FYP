@@ -3,6 +3,7 @@ package com.example.fyp.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.data.cloud.CloudQuizClient
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.model.user.AuthState
@@ -32,7 +33,8 @@ data class ShopUiState(
 class ShopViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val settingsRepo: UserSettingsRepository,
-    private val quizRepo: QuizRepository
+    private val quizRepo: QuizRepository,
+    private val cloudClient: CloudQuizClient
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ShopUiState())
@@ -83,7 +85,7 @@ class ShopViewModel @Inject constructor(
     }
 
     fun expandHistoryLimit() {
-        val uid = currentUserId ?: return
+        currentUserId ?: return
         val current = _uiState.value
 
         if (current.currentHistoryLimit >= UserSettings.MAX_HISTORY_LIMIT) return
@@ -100,27 +102,25 @@ class ShopViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val newLimit = (current.currentHistoryLimit + UserSettings.HISTORY_EXPANSION_INCREMENT)
-                    .coerceAtMost(UserSettings.MAX_HISTORY_LIMIT)
-
-                // Deduct coins (returns new balance, avoiding a separate fetch)
-                val newBalance = quizRepo.deductCoins(UserId(uid), UserSettings.HISTORY_EXPANSION_COST)
-                if (newBalance < 0) {
+                // Server-side: validates balance, deducts coins, and applies new limit atomically
+                val result = cloudClient.spendCoinsForHistoryExpansion()
+                if (!result.success) {
                     _uiState.value = _uiState.value.copy(
                         isPurchasing = false,
-                        purchaseError = "Insufficient coins"
+                        purchaseError = when (result.reason) {
+                            "max_limit_reached" -> "Maximum limit reached!"
+                            "insufficient_coins" -> "Insufficient coins"
+                            else -> result.reason ?: "Purchase failed"
+                        }
                     )
                     return@launch
                 }
 
-                // Update history limit
-                settingsRepo.expandHistoryViewLimit(UserId(uid), newLimit)
-
                 _uiState.value = _uiState.value.copy(
                     isPurchasing = false,
-                    coinBalance = newBalance,
-                    currentHistoryLimit = newLimit,
-                    purchaseSuccess = "History limit expanded to $newLimit records!",
+                    coinBalance = result.newBalance,
+                    currentHistoryLimit = result.newLimit ?: _uiState.value.currentHistoryLimit,
+                    purchaseSuccess = "History limit expanded to ${result.newLimit} records!",
                     purchaseError = null
                 )
             } catch (e: Exception) {
@@ -146,7 +146,7 @@ class ShopViewModel @Inject constructor(
     }
 
     fun unlockPalette(paletteId: String, cost: Int) {
-        val uid = currentUserId ?: return
+        currentUserId ?: return
         val current = _uiState.value
 
         if (current.coinBalance < cost) {
@@ -158,22 +158,23 @@ class ShopViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                // Deduct coins (returns new balance, avoiding a separate fetch)
-                val newBalance = quizRepo.deductCoins(UserId(uid), cost)
-                if (newBalance < 0) {
+                // Server-side: validates balance, palette ID, deducts coins, and unlocks atomically
+                val result = cloudClient.spendCoinsForPaletteUnlock(paletteId)
+                if (!result.success) {
                     _uiState.value = _uiState.value.copy(
                         isPurchasing = false,
-                        unlockError = "Insufficient coins"
+                        unlockError = when (result.reason) {
+                            "already_unlocked" -> "Palette already unlocked"
+                            "insufficient_coins" -> "Insufficient coins"
+                            else -> result.reason ?: "Failed to unlock palette"
+                        }
                     )
                     return@launch
                 }
 
-                // Unlock palette
-                settingsRepo.unlockColorPalette(UserId(uid), PaletteId(paletteId))
-
                 _uiState.value = _uiState.value.copy(
                     isPurchasing = false,
-                    coinBalance = newBalance,
+                    coinBalance = result.newBalance,
                     unlockedPalettes = _uiState.value.unlockedPalettes + paletteId,
                     purchaseSuccess = "Palette unlocked!",
                     unlockError = null

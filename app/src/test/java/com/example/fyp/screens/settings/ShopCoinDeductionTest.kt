@@ -1,5 +1,7 @@
 package com.example.fyp.screens.settings
 
+import com.example.fyp.data.cloud.CloudQuizClient
+import com.example.fyp.data.cloud.SpendCoinsResult
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.settings.UserSettingsRepository
@@ -24,13 +26,18 @@ import org.mockito.kotlin.*
 /**
  * Comprehensive tests for shop coin deduction and palette unlocking (item 11).
  *
+ * Coin spending is now server-side via CloudQuizClient (spendCoins Cloud Function).
+ * The ViewModel receives updated balances and limits from the server response.
+ *
  * Verifies:
- * - Coin balance deduction works correctly
- * - Insufficient coins shows error
- * - Palette unlock deducts correct cost
- * - History expansion deducts correct cost
- * - Server negative balance is rejected
- * - Success messages displayed
+ * - Coin balance loads from server on login
+ * - Logout resets state
+ * - History expansion calls server and updates balance/limit from response
+ * - Insufficient coins guard fires client-side (no server call)
+ * - Max limit guard fires client-side (no server call)
+ * - Server-reported insufficient coins shows error
+ * - Palette unlock calls server and updates balance/unlocked list
+ * - Success messages are shown
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ShopCoinDeductionTest {
@@ -38,6 +45,7 @@ class ShopCoinDeductionTest {
     private lateinit var authRepo: FirebaseAuthRepository
     private lateinit var settingsRepo: UserSettingsRepository
     private lateinit var quizRepo: QuizRepository
+    private lateinit var cloudClient: CloudQuizClient
     private lateinit var viewModel: ShopViewModel
 
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -61,11 +69,13 @@ class ShopCoinDeductionTest {
         quizRepo = mock {
             onBlocking { fetchUserCoinStats(UserId(testUserId)) } doReturn UserCoinStats(coinTotal = 5000)
         }
+        cloudClient = mock()
 
         viewModel = ShopViewModel(
             authRepo = authRepo,
             settingsRepo = settingsRepo,
-            quizRepo = quizRepo
+            quizRepo = quizRepo,
+            cloudClient = cloudClient
         )
     }
 
@@ -91,14 +101,18 @@ class ShopCoinDeductionTest {
         assertEquals(0, viewModel.uiState.value.coinBalance)
     }
 
-    // ── History Expansion Coin Deduction ───────────────────────────
+    // ── History Expansion ───────────────────────────────────────
 
     @Test
-    fun `expand history deducts 1000 coins`() = runTest {
+    fun `expand history updates balance from server response`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "t@t.com"))
 
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), UserSettings.HISTORY_EXPANSION_COST) } doReturn 4000
+        cloudClient.stub {
+            onBlocking { spendCoinsForHistoryExpansion() } doReturn SpendCoinsResult(
+                success = true,
+                newBalance = 4000,
+                newLimit = UserSettings.BASE_HISTORY_LIMIT + UserSettings.HISTORY_EXPANSION_INCREMENT
+            )
         }
 
         viewModel.expandHistoryLimit()
@@ -110,13 +124,15 @@ class ShopCoinDeductionTest {
     fun `expand history updates limit by increment`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "t@t.com"))
 
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), UserSettings.HISTORY_EXPANSION_COST) } doReturn 4000
+        val expectedLimit = UserSettings.BASE_HISTORY_LIMIT + UserSettings.HISTORY_EXPANSION_INCREMENT
+        cloudClient.stub {
+            onBlocking { spendCoinsForHistoryExpansion() } doReturn SpendCoinsResult(
+                success = true, newBalance = 4000, newLimit = expectedLimit
+            )
         }
 
         viewModel.expandHistoryLimit()
 
-        val expectedLimit = UserSettings.BASE_HISTORY_LIMIT + UserSettings.HISTORY_EXPANSION_INCREMENT
         assertEquals(expectedLimit, viewModel.uiState.value.currentHistoryLimit)
     }
 
@@ -124,8 +140,11 @@ class ShopCoinDeductionTest {
     fun `expand history shows success message`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "t@t.com"))
 
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), UserSettings.HISTORY_EXPANSION_COST) } doReturn 4000
+        val expectedLimit = UserSettings.BASE_HISTORY_LIMIT + UserSettings.HISTORY_EXPANSION_INCREMENT
+        cloudClient.stub {
+            onBlocking { spendCoinsForHistoryExpansion() } doReturn SpendCoinsResult(
+                success = true, newBalance = 4000, newLimit = expectedLimit
+            )
         }
 
         viewModel.expandHistoryLimit()
@@ -135,7 +154,7 @@ class ShopCoinDeductionTest {
     }
 
     @Test
-    fun `expand history with insufficient coins shows error`() = runTest {
+    fun `expand history with insufficient coins shows error without calling server`() = runTest {
         quizRepo.stub {
             onBlocking { fetchUserCoinStats(UserId(testUserId)) } doReturn UserCoinStats(coinTotal = 500)
         }
@@ -144,6 +163,7 @@ class ShopCoinDeductionTest {
         viewModel.expandHistoryLimit()
 
         assertEquals("Insufficient coins", viewModel.uiState.value.purchaseError)
+        verifyNoInteractions(cloudClient)
     }
 
     @Test
@@ -157,16 +177,18 @@ class ShopCoinDeductionTest {
 
         viewModel.expandHistoryLimit()
 
-        // Should not start purchasing
         assertFalse(viewModel.uiState.value.isPurchasing)
+        verifyNoInteractions(cloudClient)
     }
 
     @Test
-    fun `expand history server negative balance is rejected`() = runTest {
+    fun `expand history server reports insufficient coins shows error`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "t@t.com"))
 
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), UserSettings.HISTORY_EXPANSION_COST) } doReturn -1
+        cloudClient.stub {
+            onBlocking { spendCoinsForHistoryExpansion() } doReturn SpendCoinsResult(
+                success = false, reason = "insufficient_coins"
+            )
         }
 
         viewModel.expandHistoryLimit()
@@ -174,14 +196,16 @@ class ShopCoinDeductionTest {
         assertEquals("Insufficient coins", viewModel.uiState.value.purchaseError)
     }
 
-    // ── Palette Unlock Coin Deduction ──────────────────────────────
+    // ── Palette Unlock ──────────────────────────────────────────────
 
     @Test
-    fun `unlock palette deducts correct cost`() = runTest {
+    fun `unlock palette updates balance from server response`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "t@t.com"))
 
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), 10) } doReturn 4990
+        cloudClient.stub {
+            onBlocking { spendCoinsForPaletteUnlock("ocean") } doReturn SpendCoinsResult(
+                success = true, newBalance = 4990
+            )
         }
 
         viewModel.unlockPalette("ocean", 10)
@@ -193,8 +217,10 @@ class ShopCoinDeductionTest {
     fun `unlock palette adds to unlocked list`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "t@t.com"))
 
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), 10) } doReturn 4990
+        cloudClient.stub {
+            onBlocking { spendCoinsForPaletteUnlock("ocean") } doReturn SpendCoinsResult(
+                success = true, newBalance = 4990
+            )
         }
 
         viewModel.unlockPalette("ocean", 10)
@@ -206,8 +232,10 @@ class ShopCoinDeductionTest {
     fun `unlock palette shows success message`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "t@t.com"))
 
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), 10) } doReturn 4990
+        cloudClient.stub {
+            onBlocking { spendCoinsForPaletteUnlock("ocean") } doReturn SpendCoinsResult(
+                success = true, newBalance = 4990
+            )
         }
 
         viewModel.unlockPalette("ocean", 10)
@@ -217,7 +245,7 @@ class ShopCoinDeductionTest {
     }
 
     @Test
-    fun `unlock palette with insufficient coins shows error`() = runTest {
+    fun `unlock palette with insufficient coins shows error without calling server`() = runTest {
         quizRepo.stub {
             onBlocking { fetchUserCoinStats(UserId(testUserId)) } doReturn UserCoinStats(coinTotal = 5)
         }
@@ -226,14 +254,17 @@ class ShopCoinDeductionTest {
         viewModel.unlockPalette("premium", 10)
 
         assertEquals("Insufficient coins", viewModel.uiState.value.unlockError)
+        verifyNoInteractions(cloudClient)
     }
 
     @Test
-    fun `unlock palette server negative balance is rejected`() = runTest {
+    fun `unlock palette server reports insufficient coins shows error`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "t@t.com"))
 
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), 10) } doReturn -1
+        cloudClient.stub {
+            onBlocking { spendCoinsForPaletteUnlock(any()) } doReturn SpendCoinsResult(
+                success = false, reason = "insufficient_coins"
+            )
         }
 
         viewModel.unlockPalette("premium", 10)
@@ -250,7 +281,8 @@ class ShopCoinDeductionTest {
         viewModel.selectPalette("ocean")
 
         assertEquals("ocean", viewModel.uiState.value.currentPaletteId)
-        assertEquals(5000, viewModel.uiState.value.coinBalance) // No coins deducted
+        assertEquals(5000, viewModel.uiState.value.coinBalance)
+        verifyNoInteractions(cloudClient)
     }
 
     // ── Error Clearing ────────────────────────────────────────────
@@ -279,13 +311,15 @@ class ShopCoinDeductionTest {
     fun `multiple expansions accumulate`() = runTest {
         authStateFlow.value = AuthState.LoggedIn(User(uid = testUserId, email = "t@t.com"))
 
-        // First expansion: 30 -> 40, costs 1000
-        quizRepo.stub {
-            onBlocking { deductCoins(UserId(testUserId), UserSettings.HISTORY_EXPANSION_COST) } doReturn 4000
+        val expectedLimit = UserSettings.BASE_HISTORY_LIMIT + UserSettings.HISTORY_EXPANSION_INCREMENT
+        cloudClient.stub {
+            onBlocking { spendCoinsForHistoryExpansion() } doReturn SpendCoinsResult(
+                success = true, newBalance = 4000, newLimit = expectedLimit
+            )
         }
         viewModel.expandHistoryLimit()
 
-        assertEquals(40, viewModel.uiState.value.currentHistoryLimit)
+        assertEquals(expectedLimit, viewModel.uiState.value.currentHistoryLimit)
         assertEquals(4000, viewModel.uiState.value.coinBalance)
     }
 }
