@@ -21,16 +21,15 @@ jobs:
           
       # Authenticate Firebase for the MCP Server and Copilot Agent
       - name: Authenticate Firebase
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
         run: |
-          # Create firebase-sa.json in the workspace root for Copilot agent access
-          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}' > firebase-sa.json
-          
-          # Also create in backend folder if needed for Cloud Functions
+
+          echo "$GOOGLE_CREDENTIALS_JSON" > firebase-sa.json
+
           mkdir -p fyp-backend
-          echo '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}' > fyp-backend/firebase-sa.json
-          
-          # Export the environment variable for any processes that need it
+          echo "$GOOGLE_CREDENTIALS_JSON" > fyp-backend/firebase-sa.json
+
           echo "GOOGLE_APPLICATION_CREDENTIALS=${{ github.workspace }}/firebase-sa.json" >> $GITHUB_ENV
-          
-          # Verify the file was created
+
           ls -la firebase-sa.json
