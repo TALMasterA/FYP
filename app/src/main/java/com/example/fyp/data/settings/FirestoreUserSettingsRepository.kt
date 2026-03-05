@@ -37,6 +37,7 @@ class FirestoreUserSettingsRepository @Inject constructor(
         val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
         val historyViewLimit = snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT
         val autoThemeEnabled = snap?.getBoolean("autoThemeEnabled") ?: false
+        val lastPrimaryLanguageChangeMs = snap?.getLong("lastPrimaryLanguageChangeMs") ?: 0L
         val notifyNewMessages = snap?.getBoolean("notifyNewMessages") ?: false
         val notifyFriendRequests = snap?.getBoolean("notifyFriendRequests") ?: false
         val notifyRequestAccepted = snap?.getBoolean("notifyRequestAccepted") ?: false
@@ -54,6 +55,7 @@ class FirestoreUserSettingsRepository @Inject constructor(
             voiceSettings = voiceSettings,
             historyViewLimit = historyViewLimit,
             autoThemeEnabled = autoThemeEnabled,
+            lastPrimaryLanguageChangeMs = lastPrimaryLanguageChangeMs,
             notifyNewMessages = notifyNewMessages,
             notifyFriendRequests = notifyFriendRequests,
             notifyRequestAccepted = notifyRequestAccepted,
@@ -90,7 +92,13 @@ class FirestoreUserSettingsRepository @Inject constructor(
 
     override suspend fun setPrimaryLanguage(userId: UserId, languageCode: LanguageCode) {
         docRef(userId.value)
-            .set(mapOf("primaryLanguageCode" to languageCode.value), SetOptions.merge())
+            .set(
+                mapOf(
+                    "primaryLanguageCode" to languageCode.value,
+                    "lastPrimaryLanguageChangeMs" to System.currentTimeMillis()
+                ),
+                SetOptions.merge()
+            )
             .await()
     }
 

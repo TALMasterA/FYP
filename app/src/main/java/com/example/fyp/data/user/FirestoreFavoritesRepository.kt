@@ -165,6 +165,17 @@ class FirestoreFavoritesRepository @Inject constructor(
         emptyList()
     }
 
+    /**
+     * Get the total number of favorite records for a user.
+     * Used for enforcing the MAX_FAVORITE_RECORDS limit.
+     */
+    suspend fun getFavoriteCount(userId: String): Int = try {
+        val snapshot = colRef(userId).get().await()
+        snapshot.size()
+    } catch (e: Exception) {
+        0
+    }
+
     // ── Favorite Sessions ─────────────────────────────────────────────────
 
     /**

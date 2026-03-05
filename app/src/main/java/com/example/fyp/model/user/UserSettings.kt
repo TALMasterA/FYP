@@ -14,6 +14,7 @@ data class UserSettings(
     val voiceSettings: Map<String, String> = emptyMap(), // language code -> voice name
     val historyViewLimit: Int = 30, // Default 30 records displayed, expandable to 60
     val autoThemeEnabled: Boolean = false, // Enable time-based theme switching (6 AM - 6 PM light, 6 PM - 6 AM dark)
+    val lastPrimaryLanguageChangeMs: Long = 0L, // Epoch ms of last primary language change (0 = never changed)
     // --- Push notification toggles (all off by default — user opts in) ---
     val notifyNewMessages: Boolean = false,      // Chat message notifications (default off)
     val notifyFriendRequests: Boolean = false,   // Incoming friend request notifications
@@ -29,5 +30,26 @@ data class UserSettings(
         const val MAX_HISTORY_LIMIT = 60
         const val HISTORY_EXPANSION_COST = 1000
         const val HISTORY_EXPANSION_INCREMENT = 10
+        const val MAX_FAVORITE_RECORDS = 20
+        const val PRIMARY_LANGUAGE_CHANGE_COOLDOWN_MS = 30L * 24 * 60 * 60 * 1000 // 30 days in ms
+
+        /**
+         * Check if the user can change their primary language based on cooldown.
+         * First change is always allowed (lastChangeMs == 0).
+         */
+        fun canChangePrimaryLanguage(lastChangeMs: Long, currentTimeMs: Long): Boolean {
+            if (lastChangeMs == 0L) return true
+            return (currentTimeMs - lastChangeMs) >= PRIMARY_LANGUAGE_CHANGE_COOLDOWN_MS
+        }
+
+        /**
+         * Calculate the remaining cooldown time in milliseconds.
+         * Returns 0 if the change is allowed.
+         */
+        fun primaryLanguageCooldownRemainingMs(lastChangeMs: Long, currentTimeMs: Long): Long {
+            if (lastChangeMs == 0L) return 0L
+            val elapsed = currentTimeMs - lastChangeMs
+            return (PRIMARY_LANGUAGE_CHANGE_COOLDOWN_MS - elapsed).coerceAtLeast(0L)
+        }
     }
 }
