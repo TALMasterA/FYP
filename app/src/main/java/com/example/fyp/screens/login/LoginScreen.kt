@@ -130,6 +130,25 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
+            // Error message displayed ABOVE input fields so it's visible when keyboard is open
+            val vmErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+            (localError ?: vmErrorText)?.let { errorMsg ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(AppCorners.medium)
+                ) {
+                    Text(
+                        text = errorMsg,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(AppSpacing.large)
+                    )
+                }
+            }
+
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -237,24 +256,6 @@ fun LoginScreen(
 
             TextButton(onClick = onOpenResetPassword) {
                 Text(t(UiTextKey.ForgotPwText))
-            }
-
-            val vmErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
-            (localError ?: vmErrorText)?.let { errorMsg ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                    ),
-                    shape = RoundedCornerShape(AppCorners.medium)
-                ) {
-                    Text(
-                        text = errorMsg,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(AppSpacing.large)
-                    )
-                }
             }
         }
     }

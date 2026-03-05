@@ -12,7 +12,7 @@ data class UserSettings(
     val colorPaletteId: String = "default", // Color palette selection
     val unlockedPalettes: List<String> = listOf("default"), // List of unlocked color palettes
     val voiceSettings: Map<String, String> = emptyMap(), // language code -> voice name
-    val historyViewLimit: Int = 50, // Default 50 records displayed, expandable to 100
+    val historyViewLimit: Int = 30, // Default 30 records displayed, expandable to 60
     val autoThemeEnabled: Boolean = false, // Enable time-based theme switching (6 AM - 6 PM light, 6 PM - 6 AM dark)
     // --- Push notification toggles (all off by default — user opts in) ---
     val notifyNewMessages: Boolean = false,      // Chat message notifications (default off)
@@ -25,8 +25,8 @@ data class UserSettings(
     val inAppBadgeSharedInbox: Boolean = true,   // Red dot for unseen shared-inbox items
 ) {
     companion object {
-        const val BASE_HISTORY_LIMIT = 50
-        const val MAX_HISTORY_LIMIT = 100
+        const val BASE_HISTORY_LIMIT = 30
+        const val MAX_HISTORY_LIMIT = 60
         const val HISTORY_EXPANSION_COST = 1000
         const val HISTORY_EXPANSION_INCREMENT = 10
     }
