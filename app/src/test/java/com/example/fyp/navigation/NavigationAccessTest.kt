@@ -133,26 +133,19 @@ class NavigationAccessTest {
     // ── Bottom bar height consistency (item 5) ─────────────────────
 
     @Test
-    fun `NavigationBar has consistent height across all screens`() {
-        // NavigationBar uses standard Material3 height (80dp)
-        // with windowInsets = WindowInsets.navigationBars for system bar protection
-        val standardNavBarHeight = 80 // dp
-        assertTrue(
-            "NavigationBar should have consistent height",
-            standardNavBarHeight > 0
-        )
-    }
-
-    @Test
-    fun `system navigation padding adds to NavigationBar height`() {
+    fun `system navigation padding is bounded`() {
         // windowInsets = WindowInsets.navigationBars adds system nav padding
-        val navBarHeight = 80 // dp
+        val navBarHeight = 80 // dp - standard Material3 NavigationBar
         val maxSystemNavHeight = 48 // dp (3-button nav)
         val totalMaxHeight = navBarHeight + maxSystemNavHeight
 
         assertTrue(
             "Total bottom area should not exceed reasonable bounds",
             totalMaxHeight <= 128
+        )
+        assertTrue(
+            "Total height should be positive",
+            totalMaxHeight > 0
         )
     }
 
@@ -213,37 +206,14 @@ class NavigationAccessTest {
     }
 
     // ── Device function key protection (item 13) ───────────────────
+    // Specification tests documenting the inset handling requirements.
+    // Actual verification is done through NavigationBarInsetsTest and UI tests.
 
     @Test
-    fun `NavigationBar uses windowInsets for system bar protection`() {
-        // Specification: NavigationBar must have windowInsets = WindowInsets.navigationBars
-        // to prevent being blocked by device function keys
-        val usesNavigationBarsInsets = true
-        assertTrue(
-            "NavigationBar must use WindowInsets.navigationBars",
-            usesNavigationBarsInsets
-        )
-    }
-
-    @Test
-    fun `detail screens use WindowInsets for navigation bars`() {
-        // StandardScreenScaffold with hasBottomNav=false uses WindowInsets.navigationBars
-        // to add padding at the bottom for system nav
-        val detailScreenUsesNavInsets = true
-        assertTrue(
-            "Detail screens must use WindowInsets.navigationBars",
-            detailScreenUsesNavInsets
-        )
-    }
-
-    @Test
-    fun `main screens with bottom nav use zero insets`() {
-        // StandardScreenScaffold with hasBottomNav=true uses WindowInsets(0)
-        // since the parent Scaffold handles bottom nav insets
-        val mainScreenUsesZeroInsets = true
-        assertTrue(
-            "Main screens with bottom nav should use WindowInsets(0)",
-            mainScreenUsesZeroInsets
-        )
+    fun `navigation modes list covers all Android types`() {
+        // Documents that Android devices have multiple navigation modes
+        // that WindowInsets.navigationBars handles automatically
+        val navigationModes = listOf("gesture", "3-button", "2-button")
+        assertEquals("All navigation modes covered", 3, navigationModes.size)
     }
 }
