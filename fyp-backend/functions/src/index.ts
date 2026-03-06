@@ -189,17 +189,24 @@ export const translateText = onCall(
 export const translateTexts = onCall(
   {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
   async (request) => {
-    // Auth IS required to prevent anonymous API abuse (Azure Translator costs per character).
-    // ⚠️  DO NOT add per-request text-count or text-length limits here. The string set is
-    // bounded by the UiTextKey enum (~600 compile-time strings, not user input), so adding
-    // limits would silently break full-batch UI translations for languages with many strings.
-    requireAuth(request.auth);
+    // Auth is NOT required — guests can switch UI language once before login.
+    // The client enforces a one-time guest limit; hardcoded languages (en, zh-TW, zh-HK)
+    // bypass the API entirely. A generous text count cap prevents abuse while allowing
+    // the full UiTextKey set (~600 compile-time strings) to be translated in one call.
+    const MAX_BATCH_TEXTS = 800;
 
     const to = requireString(request.data?.to, "to");
     const from = optionalString(request.data?.from);
     const texts: string[] = Array.isArray(request.data?.texts)
       ? request.data.texts.map((t: unknown) => String(t ?? ""))
       : [];
+
+    if (texts.length > MAX_BATCH_TEXTS) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Too many texts (max ${MAX_BATCH_TEXTS})`
+      );
+    }
 
     const key = AZURE_TRANSLATOR_KEY.value();
     const region = AZURE_TRANSLATOR_REGION.value();
@@ -526,7 +533,7 @@ export const detectLanguage = onCall(
 // ============ Quiz Coin Award (Server-Side Anti-Cheat) ============
 
 const MIN_INCREMENT_FOR_COINS = 10;
-const MAX_QUIZ_SCORE = 50; // Generous cap — typical quiz is 5-10 questions, 1 coin each
+const MAX_QUIZ_SCORE = 50; // Safety cap — quiz is fixed at 10 questions (1 coin each), so normal max is 10
 
 interface QuizAttemptData {
   attemptId: string;
