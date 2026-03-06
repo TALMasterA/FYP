@@ -1,0 +1,367 @@
+- displayName: Onboarding - Swipe through all pages and complete
+  id: onboarding_swipe_complete
+  steps:
+    - goal: Wait for the splash screen to finish loading
+    - goal: When the onboarding screen appears, swipe left to go to page 2
+      hint: There are 3 onboarding pages. Small dot indicators at the bottom show the current page.
+    - goal: Swipe left again to go to page 3
+      hint: The last page has a Get Started button instead of Next
+    - goal: Tap the Get Started button to complete onboarding
+      successCriteria: The Home screen is displayed with the bottom navigation bar visible
+
+- displayName: Onboarding - Skip directly to Home
+  id: onboarding_skip_to_home
+  steps:
+    - goal: Wait for the splash screen to finish loading
+    - goal: When the onboarding screen appears, tap the Skip button
+      hint: The Skip button may be in the top right corner
+      successCriteria: The Home screen is displayed with the bottom navigation bar
+
+- displayName: Onboarding - Navigate backward with right swipe
+  id: onboarding_backward_swipe
+  steps:
+    - goal: Wait for the splash screen to finish loading
+    - goal: When the onboarding screen appears, swipe left to go to page 2
+    - goal: Swipe left again to go to page 3
+    - goal: Swipe right to go back to page 2
+      hint: The page indicator dots should update when swiping backward
+    - goal: Swipe right again to go back to page 1
+      successCriteria: The first onboarding page is shown
+    - goal: Tap the Skip button to exit onboarding
+
+- displayName: Onboarding - Complete using Next buttons
+  id: onboarding_next_buttons
+  steps:
+    - goal: Wait for the splash screen to finish loading
+    - goal: When the onboarding screen appears, tap the Next button to go to page 2
+      hint: The Next button should be visible on pages 1 and 2
+    - goal: Tap the Next button again to go to page 3
+    - goal: Confirm the button label has changed to Get Started
+      successCriteria: The button reads Get Started
+    - goal: Tap the Get Started button to complete onboarding
+      successCriteria: The Home screen is displayed
+
+- displayName: Authentication - Login with valid credentials
+  id: auth_login_valid
+  steps:
+    - goal: Skip or complete onboarding to reach the Home screen
+    - goal: Tap the Login button in the top bar of the Home screen
+      hint: The Login button is near the top right area
+    - goal: Enter test@gmail.com into the email field
+    - goal: Enter tester into the password field
+    - goal: Tap the Login button to submit
+      successCriteria: The Home screen shows a welcome greeting and the guest warning card is gone
+
+- displayName: Authentication - Toggle between Login and Register forms
+  id: auth_toggle_forms
+  steps:
+    - goal: Skip onboarding to reach the Home screen without logging in
+    - goal: Tap the Login button in the top bar
+    - goal: On the login screen, tap the link that says Don't have an account? Register
+      hint: The toggle link is near the bottom of the form
+      successCriteria: The form switches to registration mode and shows a confirm password field
+    - goal: Tap the link that says Already have an account? Login
+      successCriteria: The form switches back to login mode
+
+- displayName: Authentication - Navigate to Reset Password screen
+  id: auth_reset_password
+  steps:
+    - goal: Skip onboarding to reach the Home screen without logging in
+    - goal: Tap the Login button in the top bar
+    - goal: On the login screen, tap the Forgot password link
+      hint: The Forgot password link is below the password field or login button
+      successCriteria: The Reset Password screen is displayed with an email input field
+    - goal: Navigate back to the login screen
+
+- displayName: Authentication - Logout
+  id: auth_logout
+  steps:
+    - goal: Skip onboarding to reach the Home screen
+    - goal: Tap the Login button
+    - goal: Enter test@gmail.com into the email field
+    - goal: Enter tester into the password field
+    - goal: Tap the Login button to submit
+      successCriteria: The Home screen shows a welcome greeting for the logged in user
+    - goal: Tap the Logout button in the top bar
+      successCriteria: The Home screen shows the guest warning card and the Login button appears again
+
+- displayName: Home - Guest warning card visible and feature cards locked
+  id: home_guest_warning
+  steps:
+    - goal: Skip onboarding to reach the Home screen without logging in
+    - goal: Scroll down on the Home screen to see all content
+    - goal: Confirm a guest warning card or banner is visible near the top
+      hint: The guest warning card may have a warning style
+      successCriteria: A guest warning card is visible
+    - goal: Confirm the Quick Translate feature card is visible but appears disabled or locked
+      hint: Disabled cards may be greyed out, faded, or show a lock icon
+    - goal: Confirm the Live Conversation feature card is visible but appears disabled or locked
+    - goal: Confirm the Learning feature card is visible but appears disabled or locked
+    - goal: Scroll back to the top of the Home screen
+
+- displayName: Home - Change app language using the language dropdown
+  id: home_change_language
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: On the Home screen, find the language dropdown or selector and tap it
+      hint: The language dropdown may be near the top of the Home screen
+    - goal: Select a different language such as Chinese or Japanese
+      successCriteria: The app UI language changes to the selected language
+    - goal: Open the language dropdown again and change the app language back to English
+
+- displayName: Translate - Open Speech Recognition screen and verify layout
+  id: translate_open_screen
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Tap the Translate tab in the bottom navigation bar
+      hint: The Translate tab may use a microphone icon
+      successCriteria: The Speech Recognition screen is displayed
+    - goal: Verify there are language selectors for source and target languages
+      hint: There should be one selector for the spoken language and one for the target language
+    - goal: Verify a microphone button or recording control is visible
+    - goal: Scroll down to check for additional controls
+    - goal: Scroll back to the top
+
+- displayName: Translate - Change source and target languages
+  id: translate_change_languages
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Navigate to the Translate tab
+    - goal: Tap the source language dropdown and select a different language
+      successCriteria: The source language selection is updated in the UI
+    - goal: Tap the target language dropdown and select a different language
+      successCriteria: Both language selections are updated in the UI
+
+- displayName: Live Conversation - Open screen and verify Speaker A and Speaker B layout
+  id: live_conversation_layout
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Tap the Live Conversation card on the Home screen
+      hint: Scroll down if the card is not immediately visible
+      successCriteria: The Continuous Conversation screen is displayed
+    - goal: Verify there are separate language selectors for Speaker A and Speaker B
+      hint: Speaker A may be in the upper area and Speaker B in the lower area
+    - goal: Verify there are separate microphone controls for each speaker
+      successCriteria: Both Speaker A and Speaker B sections are visible with their own controls
+
+- displayName: History - View Quick Translate and Live Conversation tabs
+  id: history_tabs
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Tap the History button from the Home screen top bar
+      hint: The History button is in the top bar
+      successCriteria: The History screen is shown
+    - goal: Tap the Quick Translate tab and verify it becomes active
+    - goal: Tap the Live Conversation tab and verify it becomes active
+      successCriteria: The Live Conversation history tab is active
+
+- displayName: Learning - Open Learning screen and navigate to Word Bank
+  id: learning_word_bank
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Tap the Learn tab in the bottom navigation bar
+      hint: The Learn tab may use a book icon
+      successCriteria: The Learning screen is displayed
+    - goal: Scroll down to reveal more sections including sheets and quiz
+    - goal: Scroll back to the top of the Learning screen
+    - goal: Find and tap the Word Bank button, link, or card
+      hint: The Word Bank may be shown as a button, tab, or card
+      successCriteria: The Word Bank screen is displayed with a vocabulary list
+    - goal: Scroll down through the Word Bank list
+    - goal: Navigate back to the Learning screen
+
+- displayName: Learning - View Learning Sheet for a language pair
+  id: learning_sheet
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Navigate to the Learn tab
+    - goal: Find a Learning Sheet item or section and tap it
+      hint: If no sheet exists yet, look for a generate or create button
+      successCriteria: The Learning Sheet screen loads with vocabulary and phrases
+    - goal: Scroll through the Learning Sheet content
+    - goal: Navigate back to the Learning screen
+
+- displayName: Learning - Take a Quiz
+  id: learning_quiz
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Navigate to the Learn tab
+    - goal: Find the Quiz section or button and tap it
+      hint: If no quiz exists yet, look for a generate button
+      successCriteria: The Quiz screen is displayed with a question
+    - goal: Answer the quiz question by selecting one option
+    - goal: Continue through a few more questions
+    - goal: Navigate back when done
+
+- displayName: Friends - Browse list and navigate to My Profile
+  id: friends_browse_profile
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Tap the Friends tab in the bottom navigation bar
+      hint: The Friends tab may use a person or group icon
+      successCriteria: The Friends list screen is displayed
+    - goal: Scroll down through the friends list
+    - goal: Scroll back to the top
+    - goal: Find and tap the My Profile option or button
+      hint: My Profile may be in the top bar or inside the Friends screen
+      successCriteria: The My Profile screen is shown with profile details
+    - goal: Navigate back to the Friends list
+
+- displayName: Friends - Open Shared Inbox
+  id: friends_shared_inbox
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Navigate to the Friends tab
+    - goal: Find and tap the Shared Inbox option
+      hint: Shared Inbox may contain materials shared between friends
+      successCriteria: The Shared Inbox screen is displayed
+    - goal: Navigate back to the Friends screen
+
+- displayName: Friends - Open Blocked Users screen
+  id: friends_blocked_users
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Navigate to the Friends tab
+    - goal: Find and tap the Blocked Users option
+      hint: Blocked Users may be in a menu or settings icon
+      successCriteria: The Blocked Users screen is displayed
+    - goal: Navigate back
+
+- displayName: Settings - Scroll through all settings options
+  id: settings_scroll
+  steps:
+    - goal: Skip onboarding without logging in
+    - goal: Tap the Settings tab in the bottom navigation bar
+      hint: Settings is the last tab and should be accessible without logging in
+      successCriteria: The Settings screen is displayed
+    - goal: Scroll down to see all settings options
+    - goal: Scroll back to the top
+
+- displayName: Settings - Change theme mode between light and dark
+  id: settings_theme
+  steps:
+    - goal: Navigate to the Settings tab
+    - goal: Find the theme mode toggle and tap it to switch the theme
+      hint: The toggle may be labeled Dark Mode, Night Mode, or Theme
+      successCriteria: The app appearance changes
+    - goal: Tap the toggle again to restore the original theme
+
+- displayName: Settings - Adjust font size using the slider
+  id: settings_font_size
+  steps:
+    - goal: Navigate to the Settings tab
+    - goal: Find the font size slider in settings
+      hint: It may be under Accessibility or Appearance
+    - goal: Drag the font size slider to the right to increase the font size
+      successCriteria: Text becomes visibly larger
+    - goal: Drag the slider back to the original position
+
+- displayName: Settings - Select a color palette
+  id: settings_color_palette
+  steps:
+    - goal: Navigate to the Settings tab
+    - goal: Find the color palette selector
+      hint: It may appear as a row of colored circles
+    - goal: Tap a different color option
+      successCriteria: The app accent colors change
+
+- displayName: Shop - Browse the coin shop and view items
+  id: shop_browse
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Navigate to the Settings tab
+    - goal: Find and tap the Shop option
+      hint: The Shop may be accessible from the Settings screen
+      successCriteria: The Shop screen is displayed with items and coin prices
+    - goal: Scroll through the shop items
+    - goal: Navigate back to Settings
+
+- displayName: Voice Settings - Open and verify options
+  id: voice_settings
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Navigate to the Settings tab
+    - goal: Find and tap Voice Settings
+      successCriteria: The Voice Settings screen is displayed
+    - goal: Scroll down to see if there are more voice options
+      hint: Voice Settings controls text to speech settings for translations
+    - goal: Navigate back to Settings
+
+- displayName: Profile - Open Profile screen and view details
+  id: profile_view
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Navigate to the Settings tab
+    - goal: Find and tap Profile
+      hint: Profile may show the user name, email, coin balance, and account information
+      successCriteria: The Profile screen is displayed
+    - goal: Navigate back
+
+- displayName: Favorites - Open Favorites screen and verify layout
+  id: favorites_view
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Navigate to the Settings tab
+    - goal: Find and tap Favorites
+      hint: Favorites may show saved translations or vocabulary items
+      successCriteria: The Favorites screen is displayed
+    - goal: Navigate back
+
+- displayName: Feedback - Accessible without login
+  id: feedback_no_login
+  steps:
+    - goal: Skip onboarding without logging in
+    - goal: Navigate to the Settings tab
+    - goal: Scroll through settings to find the Feedback option and tap it
+      hint: Feedback should be accessible without authentication
+      successCriteria: The Feedback screen opens successfully without requiring login
+    - goal: Navigate back
+
+- displayName: Notification Settings - Toggle notification options
+  id: notification_settings
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Navigate to the Settings tab
+    - goal: Find and tap Notification Settings
+      successCriteria: The Notification Settings screen is displayed with toggle switches
+    - goal: Toggle one notification option off
+    - goal: Toggle the same option back on
+    - goal: Navigate back
+
+- displayName: Bottom Navigation - Cycle through all five tabs
+  id: bottom_navigation_tabs
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+    - goal: Tap the Home tab and confirm the Home screen is visible
+      hint: The bottom navigation bar has 5 icons
+    - goal: Tap the Translate tab and confirm the Speech Recognition screen appears
+    - goal: Tap the Learn tab and confirm the Learning screen appears
+    - goal: Tap the Friends tab and confirm the Friends list appears
+    - goal: Tap the Settings tab and confirm the Settings screen appears
+    - goal: Tap the Home tab to return to the Home screen
+      successCriteria: All five tabs were opened successfully
+
+- displayName: Help - Open and scroll all content
+  id: help_scroll
+  steps:
+    - goal: Skip onboarding to reach the Home screen without logging in
+    - goal: Find the Help or Info icon in the top bar and tap it
+      hint: The icon may look like a question mark or info symbol
+      successCriteria: The Help screen is displayed with instructional content
+    - goal: Scroll down to see all help sections
+    - goal: Navigate back to the Home screen
+
+- displayName: End to End - Full authenticated user journey
+  id: end_to_end_journey
+  steps:
+    - goal: Skip onboarding and log in using test@gmail.com and tester
+      successCriteria: The Home screen shows a welcome greeting for the logged in user
+    - goal: Navigate to the Translate tab and confirm the Speech Recognition screen appears
+    - goal: Navigate to the Learn tab and confirm the Learning screen appears
+    - goal: Navigate to the Friends tab and confirm the Friends list appears
+    - goal: Navigate to the Settings tab and scroll through settings
+    - goal: Return to the Home screen using the bottom navigation
+    - goal: Tap the History button in the top bar and confirm the History screen opens
+      hint: The History button is in the Home screen top bar
+    - goal: Navigate back to the Home screen
+      successCriteria: The main app journey completed successfully
