@@ -173,7 +173,7 @@ fun LoginScreen(
                     onDone = {
                         if (isLogin) {
                             localError = null
-                            viewModel.login(email.trim(), password)
+                            viewModel.login(email.trim(), password.trim())
                         }
                     }
                 ),
@@ -202,11 +202,11 @@ fun LoginScreen(
                         onDone = {
                             if (!isLogin) {
                                 localError = when {
-                                    password != confirmPassword -> t(UiTextKey.AuthErrorPasswordsMismatch)
-                                    password.length < 6 -> t(UiTextKey.AuthErrorPasswordTooShort)
+                                    password.trim() != confirmPassword.trim() -> t(UiTextKey.AuthErrorPasswordsMismatch)
+                                    password.trim().length < 6 -> t(UiTextKey.AuthErrorPasswordTooShort)
                                     else -> null
                                 }
-                                if (localError == null) viewModel.register(email.trim(), password)
+                                if (localError == null) viewModel.register(email.trim(), password.trim())
                             }
                         }
                     ),
@@ -227,18 +227,18 @@ fun LoginScreen(
                     localError = null
 
                     if (!isLogin) {
-                        if (password != confirmPassword) {
+                        if (password.trim() != confirmPassword.trim()) {
                             localError = t(UiTextKey.AuthErrorPasswordsMismatch)
                             return@Button
                         }
-                        if (password.length < 6) {
+                        if (password.trim().length < 6) {
                             localError = t(UiTextKey.AuthErrorPasswordTooShort)
                             return@Button
                         }
                     }
 
-                    if (isLogin) viewModel.login(email.trim(), password)
-                    else viewModel.register(email.trim(), password)
+                    if (isLogin) viewModel.login(email.trim(), password.trim())
+                    else viewModel.register(email.trim(), password.trim())
                 },
                 modifier = modifier.fillMaxWidth(),
                 enabled = !uiState.isLoading

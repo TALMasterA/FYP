@@ -92,7 +92,7 @@ fun ResetPasswordScreen(
             )
 
             Button(
-                onClick = { viewModel.resetPassword(email) },
+                onClick = { viewModel.resetPassword(email.trim()) },
                 enabled = !uiState.isLoading && email.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) {
