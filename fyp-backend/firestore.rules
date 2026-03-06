@@ -9,6 +9,7 @@ service cloud.firestore {
     // Coin-related subcollections (user_stats/coins, coin_awards, last_awarded_quiz)
     // are READ-ONLY for clients — only the admin SDK (Cloud Functions like
     // awardQuizCoins and spendCoins) can write to them.
+    // Note: awardQuizCoins enforces a server-side MAX_QUIZ_SCORE = 50 cap.
     // ============================================
     match /users/{userId}/{subCol}/{docId} {
       allow read: if request.auth != null && request.auth.uid == userId;

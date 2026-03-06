@@ -26,6 +26,7 @@ const GENAI_API_KEY = defineSecret("GENAI_API_KEY");
 
 const ENDPOINT = "https://api.cognitive.microsofttranslator.com";
 const API_VERSION = "3.0";
+const MAX_TRANSLATE_TEXT_LENGTH = 5000; // characters — generous for language learning sentences
 
 
 function requireAuth(auth: unknown) {
@@ -59,6 +60,27 @@ function requireString(value: unknown, paramName: string): string {
  */
 function optionalString(value: unknown): string {
   return value ? String(value).trim() : "";
+}
+
+/**
+ * Safely parse a JSON response body, throwing a user-friendly HttpsError on failure.
+ * @param body The raw response text
+ * @param context A short label for the log message (e.g. "translation", "detection")
+ * @returns The parsed JSON value
+ */
+function safeParseJson(body: string, context: string): any {
+  try {
+    return JSON.parse(body);
+  } catch (e: any) {
+    console.error(`Failed to parse ${context} response`, {
+      error: e?.message,
+      responsePreview: body.substring(0, 200),
+    });
+    throw new HttpsError(
+      "internal",
+      `Invalid response from ${context} service. Please try again.`
+    );
+  }
 }
 
 export const getSpeechToken = onCall(
@@ -123,6 +145,12 @@ export const translateText = onCall(
     requireAuth(request.auth);
 
     const text = requireString(request.data?.text, "text");
+    if (text.length > MAX_TRANSLATE_TEXT_LENGTH) {
+      throw new HttpsError(
+        "invalid-argument",
+        `Text exceeds maximum length of ${MAX_TRANSLATE_TEXT_LENGTH} characters`
+      );
+    }
     const to = requireString(request.data?.to, "to");
     const from = optionalString(request.data?.from);
 
@@ -152,7 +180,7 @@ export const translateText = onCall(
       );
     }
 
-    const json = JSON.parse(bodyText);
+    const json = safeParseJson(bodyText, "translation");
     const translated = json?.[0]?.translations?.[0]?.text ?? "";
     return {translatedText: translated};
   }
@@ -161,11 +189,12 @@ export const translateText = onCall(
 export const translateTexts = onCall(
   {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
   async (request) => {
-    // No auth required — this translates fixed app UI strings (UiTextKey entries) that are
-    // determined at compile time (~600 strings) and results are cached on-device.
+    // Auth IS required to prevent anonymous API abuse (Azure Translator costs per character).
     // ⚠️  DO NOT add per-request text-count or text-length limits here. The string set is
-    // bounded by the UiTextKey enum (not user input), so adding limits would silently break
-    // full-batch UI translations for languages with many strings.
+    // bounded by the UiTextKey enum (~600 compile-time strings, not user input), so adding
+    // limits would silently break full-batch UI translations for languages with many strings.
+    requireAuth(request.auth);
+
     const to = requireString(request.data?.to, "to");
     const from = optionalString(request.data?.from);
     const texts: string[] = Array.isArray(request.data?.texts)
@@ -199,7 +228,7 @@ export const translateTexts = onCall(
       );
     }
 
-    const json = JSON.parse(bodyText);
+    const json = safeParseJson(bodyText, "batch translation");
     const translatedTexts: string[] = Array.isArray(json) ?
       json.map((item: any) => item?.translations?.[0]?.text ?? "") :
       [];
@@ -383,7 +412,7 @@ export const generateLearningContent = onCall(
         console.error("Azure OpenAI deployment not found", { deployment, baseUrl });
         throw new HttpsError(
           "not-found",
-          `AI deployment '${deployment}' not found in Azure. Check the deployment name in Azure Portal.`
+          "AI model configuration not found. Please contact support."
         );
       } else if (resp.status >= 500) {
         throw new HttpsError(
@@ -482,7 +511,7 @@ export const detectLanguage = onCall(
       );
     }
 
-    const json = JSON.parse(bodyText);
+    const json = safeParseJson(bodyText, "language detection");
     const detected = json?.[0];
 
     return {
@@ -497,6 +526,7 @@ export const detectLanguage = onCall(
 // ============ Quiz Coin Award (Server-Side Anti-Cheat) ============
 
 const MIN_INCREMENT_FOR_COINS = 10;
+const MAX_QUIZ_SCORE = 50; // Generous cap — typical quiz is 5-10 questions, 1 coin each
 
 interface QuizAttemptData {
   attemptId: string;
@@ -515,6 +545,7 @@ interface QuizAttemptData {
  * 3. Quiz count must be at least 10 HIGHER than previous awarded quiz count
  * 4. First quiz for a language pair is always eligible
  * 5. Each quiz version can only be awarded once
+ * 6. Score is capped at MAX_QUIZ_SCORE to prevent tampered clients minting coins
  */
 export const awardQuizCoins = onCall(
   {},
@@ -536,6 +567,12 @@ export const awardQuizCoins = onCall(
     }
     if (typeof score !== "number" || score < 0) {
       throw new HttpsError("invalid-argument", "totalScore must be a non-negative number");
+    }
+    if (score > MAX_QUIZ_SCORE) {
+      throw new HttpsError(
+        "invalid-argument",
+        `totalScore exceeds maximum of ${MAX_QUIZ_SCORE}`
+      );
     }
 
     // Validate language code format: only letters, digits, and hyphens (e.g. "en-US", "zh-HK").
@@ -755,19 +792,82 @@ export const spendCoins = onCall(
 const MAX_MESSAGE_PREVIEW_LENGTH = 100;
 
 /**
+ * Fetch a user's FCM tokens, send a multicast data message, and clean up invalid tokens.
+ *
+ * Centralises the token-fetch → send → cleanup logic that is shared by all
+ * push-notification triggers (chat, friend request, shared inbox).
+ *
+ * @param receiverId  The Firestore UID of the notification recipient
+ * @param fcmData     The data payload for the FCM message
+ * @param priority    Android delivery priority ("high" for chat, "normal" otherwise)
+ * @param logTag      Label used in console.log/warn/error messages
+ */
+async function sendFcmToUser(
+  receiverId: string,
+  fcmData: Record<string, string>,
+  priority: "high" | "normal",
+  logTag: string
+): Promise<void> {
+  const tokensSnap = await getFirestore()
+    .collection("users").doc(receiverId)
+    .collection("fcm_tokens")
+    .get();
+
+  if (tokensSnap.empty) {
+    console.log(`${logTag}: no FCM tokens for receiver=${receiverId}`);
+    return;
+  }
+
+  const tokens: string[] = tokensSnap.docs
+    .map((doc) => doc.data().token as string)
+    .filter((t) => !!t);
+
+  if (tokens.length === 0) return;
+
+  const fcmMessage: admin.messaging.MulticastMessage = {
+    tokens,
+    data: fcmData,
+    android: { priority },
+  };
+
+  const response = await admin.messaging().sendEachForMulticast(fcmMessage);
+  console.log(
+    `${logTag}: sent to ${tokens.length} tokens, ` +
+    `success=${response.successCount}, failure=${response.failureCount}`
+  );
+
+  const invalidTokens: string[] = [];
+  response.responses.forEach((resp, idx) => {
+    if (!resp.success) {
+      const errCode = resp.error?.code ?? "";
+      if (
+        errCode === "messaging/registration-token-not-registered" ||
+        errCode === "messaging/invalid-registration-token"
+      ) {
+        invalidTokens.push(tokens[idx]);
+      } else {
+        console.warn(`${logTag}: token[${idx}] error: ${resp.error?.message}`);
+      }
+    }
+  });
+
+  if (invalidTokens.length > 0) {
+    const batch = getFirestore().batch();
+    for (const token of invalidTokens) {
+      const ref = getFirestore()
+        .collection("users").doc(receiverId)
+        .collection("fcm_tokens").doc(token);
+      batch.delete(ref);
+    }
+    await batch.commit();
+    console.log(`${logTag}: removed ${invalidTokens.length} invalid tokens`);
+  }
+}
+
+/**
  * Sends an FCM push notification to the recipient when a new chat message is created.
  *
  * Trigger: Firestore document create at chats/{chatId}/messages/{messageId}
- *
- * Flow:
- *  1. Extract senderId and receiverId from the new message document.
- *  2. Fetch the sender's public profile to get their username.
- *  3. Fetch all FCM tokens registered for the receiver
- *     (stored at users/{receiverId}/fcm_tokens/{token}).
- *  4. Send a data-only FCM multicast message to all of the receiver's tokens.
- *  5. Remove any tokens that have become invalid (registration_id_not_found).
- *
- * Security: Runs with admin privileges — bypasses Firestore security rules.
  */
 export const sendChatNotification = onDocumentCreated(
   {
@@ -789,81 +889,27 @@ export const sendChatNotification = onDocumentCreated(
     if (type !== "TEXT") return;
 
     try {
-      // 1. Fetch sender's username from their public profile
       const senderProfileSnap = await getFirestore()
         .collection("users").doc(senderId)
         .collection("profile").doc("public")
         .get();
       const senderUsername: string = senderProfileSnap.data()?.username ?? "Friend";
 
-      // 2. Fetch all FCM tokens for the receiver
-      const tokensSnap = await getFirestore()
-        .collection("users").doc(receiverId)
-        .collection("fcm_tokens")
-        .get();
-
-      if (tokensSnap.empty) {
-        console.log(`sendChatNotification: no FCM tokens for receiver=${receiverId}`);
-        return;
-      }
-
-      const tokens: string[] = tokensSnap.docs
-        .map((doc) => doc.data().token as string)
-        .filter((t) => !!t);
-
-      if (tokens.length === 0) return;
-
-      // 3. Build data-only FCM message (handled by FcmNotificationService on Android)
       const messagePreview = content.length > MAX_MESSAGE_PREVIEW_LENGTH
-        ? content.substring(0, MAX_MESSAGE_PREVIEW_LENGTH) + "…"
+        ? content.substring(0, MAX_MESSAGE_PREVIEW_LENGTH) + "\u2026"
         : content;
-      const fcmMessage: admin.messaging.MulticastMessage = {
-        tokens,
-        data: {
+
+      await sendFcmToUser(
+        receiverId,
+        {
           type: "new_message",
           senderId,
           senderUsername,
           messagePreview,
         },
-        android: {
-          priority: "high",
-        },
-      };
-
-      // 4. Send the multicast message
-      const response = await admin.messaging().sendEachForMulticast(fcmMessage);
-      console.log(
-        `sendChatNotification: sent to ${tokens.length} tokens, ` +
-        `success=${response.successCount}, failure=${response.failureCount}`
+        "high",
+        "sendChatNotification"
       );
-
-      // 5. Clean up invalid/expired tokens
-      const invalidTokens: string[] = [];
-      response.responses.forEach((resp, idx) => {
-        if (!resp.success) {
-          const errCode = resp.error?.code ?? "";
-          if (
-            errCode === "messaging/registration-token-not-registered" ||
-            errCode === "messaging/invalid-registration-token"
-          ) {
-            invalidTokens.push(tokens[idx]);
-          } else {
-            console.warn(`sendChatNotification: token[${idx}] error: ${resp.error?.message}`);
-          }
-        }
-      });
-
-      if (invalidTokens.length > 0) {
-        const batch = getFirestore().batch();
-        for (const token of invalidTokens) {
-          const ref = getFirestore()
-            .collection("users").doc(receiverId)
-            .collection("fcm_tokens").doc(token);
-          batch.delete(ref);
-        }
-        await batch.commit();
-        console.log(`sendChatNotification: removed ${invalidTokens.length} invalid tokens`);
-      }
     } catch (err: any) {
       console.error("sendChatNotification: unexpected error", {
         message: err?.message,
@@ -896,64 +942,77 @@ export const sendFriendRequestNotification = onDocumentCreated(
     if (!receiverId) return;
 
     try {
-      const tokensSnap = await getFirestore()
-        .collection("users").doc(receiverId)
-        .collection("fcm_tokens")
-        .get();
-
-      if (tokensSnap.empty) return;
-
-      const tokens: string[] = tokensSnap.docs
-        .map((doc) => doc.data().token as string)
-        .filter((t) => !!t);
-
-      if (tokens.length === 0) return;
-
-      const fcmMessage: admin.messaging.MulticastMessage = {
-        tokens,
-        data: {
+      await sendFcmToUser(
+        receiverId,
+        {
           type: "friend_request",
           senderUsername,
         },
-        android: { priority: "normal" },
-      };
-
-      const response = await admin.messaging().sendEachForMulticast(fcmMessage);
-      console.log(
-        `sendFriendRequestNotification: sent to ${tokens.length} tokens, ` +
-        `success=${response.successCount}, failure=${response.failureCount}`
+        "normal",
+        "sendFriendRequestNotification"
       );
-
-      // Clean up invalid/expired tokens (same pattern as sendChatNotification)
-      const invalidTokens: string[] = [];
-      response.responses.forEach((resp, idx) => {
-        if (!resp.success) {
-          const errCode = resp.error?.code ?? "";
-          if (
-            errCode === "messaging/registration-token-not-registered" ||
-            errCode === "messaging/invalid-registration-token"
-          ) {
-            invalidTokens.push(tokens[idx]);
-          }
-        }
-      });
-
-      if (invalidTokens.length > 0) {
-        const batch = getFirestore().batch();
-        for (const token of invalidTokens) {
-          const ref = getFirestore()
-            .collection("users").doc(receiverId)
-            .collection("fcm_tokens").doc(token);
-          batch.delete(ref);
-        }
-        await batch.commit();
-        console.log(`sendFriendRequestNotification: removed ${invalidTokens.length} invalid tokens`);
-      }
     } catch (err: any) {
       console.error("sendFriendRequestNotification: error", { message: err?.message });
     }
   }
 );
+
+/**
+ * Sends an FCM push notification when a new item is added to a user's shared inbox.
+ *
+ * Trigger: Firestore document create at users/{userId}/shared_inbox/{itemId}
+ *
+ * SharedItem documents include fromUserId, fromUsername, type, and status.
+ * Only PENDING items trigger a notification (avoids re-notifying on status updates).
+ */
+export const sendSharedInboxNotification = onDocumentCreated(
+  {
+    document: "users/{userId}/shared_inbox/{itemId}",
+    region: "us-central1",
+  },
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    // Only notify for new PENDING items
+    if (data.status !== "PENDING") return;
+
+    const receiverId: string = event.params.userId;
+    const senderUsername: string = data.fromUsername ?? "A friend";
+    const itemType: string = data.type ?? "WORD";
+
+    if (!receiverId) return;
+
+    // Map SharedItemType to a human-readable label for the notification
+    const typeLabels: Record<string, string> = {
+      WORD: "a word",
+      LEARNING_SHEET: "a learning sheet",
+      QUIZ: "a quiz",
+    };
+    const typeLabel = typeLabels[itemType] ?? "an item";
+
+    try {
+      await sendFcmToUser(
+        receiverId,
+        {
+          type: "shared_item",
+          senderUsername,
+          itemType,
+          typeLabel,
+        },
+        "normal",
+        "sendSharedInboxNotification"
+      );
+    } catch (err: any) {
+      console.error("sendSharedInboxNotification: error", {
+        message: err?.message,
+        userId: event.params.userId,
+        itemId: event.params.itemId,
+      });
+    }
+  }
+);
+
 /**
  * Prune FCM tokens older than 60 days to prevent unbounded growth.
  * Runs daily at 3 AM UTC.
@@ -1011,6 +1070,7 @@ export const pruneStaleTokens = onSchedule(
  * Prune rate_limit documents for users who have been inactive for >30 days.
  * Keeps storage costs low by removing one document per inactive user.
  * Runs weekly on Sundays at 4 AM UTC.
+ * Uses cursor-based pagination to avoid exceeding the 500-operation batch limit.
  */
 export const pruneStaleRateLimits = onSchedule(
   {
@@ -1024,21 +1084,33 @@ export const pruneStaleRateLimits = onSchedule(
       new Date(Date.now() - THIRTY_DAYS_MS)
     );
     const firestore = getFirestore();
+    const PAGE_SIZE = 500;
+    let pruned = 0;
+    let lastDoc: admin.firestore.QueryDocumentSnapshot | null = null;
 
-    const snap = await firestore
-      .collection("rate_limits")
-      .where("updatedAt", "<", cutoff)
-      .get();
+    while (true) {
+      let query = firestore
+        .collection("rate_limits")
+        .where("updatedAt", "<", cutoff)
+        .limit(PAGE_SIZE);
+      if (lastDoc) query = query.startAfter(lastDoc);
 
-    if (snap.empty) {
-      console.log("pruneStaleRateLimits: nothing to prune");
-      return;
+      const snap = await query.get();
+      if (snap.empty) break;
+      lastDoc = snap.docs[snap.docs.length - 1];
+
+      const batch = firestore.batch();
+      snap.docs.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+      pruned += snap.size;
+
+      if (snap.size < PAGE_SIZE) break;
     }
 
-    const batch = firestore.batch();
-    snap.docs.forEach((doc) => batch.delete(doc.ref));
-    await batch.commit();
-
-    console.log(`pruneStaleRateLimits: removed ${snap.size} stale rate-limit docs`);
+    if (pruned === 0) {
+      console.log("pruneStaleRateLimits: nothing to prune");
+    } else {
+      console.log(`pruneStaleRateLimits: removed ${pruned} stale rate-limit docs`);
+    }
   }
 );

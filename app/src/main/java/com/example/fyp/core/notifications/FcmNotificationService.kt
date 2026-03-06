@@ -70,6 +70,14 @@ class FcmNotificationService : FirebaseMessagingService() {
                     )
                 }
             }
+            "shared_item" -> {
+                if (isNotifEnabled("notifySharedInbox")) {
+                    showSharedItemNotification(
+                        senderUsername = data["senderUsername"] ?: "A friend",
+                        title = data["title"] ?: "Shared something with you"
+                    )
+                }
+            }
         }
     }
 
@@ -156,6 +164,29 @@ class FcmNotificationService : FirebaseMessagingService() {
 
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify("req_accepted_$friendUsername".hashCode(), notification)
+    }
+
+    private fun showSharedItemNotification(senderUsername: String, title: String) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("open_shared_inbox", true)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this, "shared_item".hashCode(), intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID_CHAT)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle("$senderUsername shared with you")
+            .setContentText(title)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify("shared_$senderUsername".hashCode(), notification)
     }
 
     companion object {
