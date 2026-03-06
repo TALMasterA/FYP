@@ -309,3 +309,23 @@ scope.launch(Dispatchers.IO) {
 - Simple implementation: uses existing SharedPreferences pattern
 
 ---
+
+## 16. Onboarding Screen — Version-Based Re-Show
+
+**File:** `screens/onboarding/OnboardingScreen.kt`
+
+**Invariant:** The onboarding screen must be shown on both:
+1. First launch on a device (no prefs stored)
+2. After an app update (stored version differs from current `BuildConfig.VERSION_NAME`)
+
+**Implementation:**
+- `SharedPreferences` key `"onboarding_complete"` (boolean) tracks whether onboarding has been completed
+- `SharedPreferences` key `"onboarding_version"` (string) stores the app version at which onboarding was completed
+- `isOnboardingComplete()` returns `true` only when both the flag is `true` AND the stored version matches the current `BuildConfig.VERSION_NAME`
+- `markOnboardingComplete()` writes both the boolean flag and the current version name
+
+**Rule:** Never remove the version check. Users must see updated onboarding content after an app update. The version comparison uses `BuildConfig.VERSION_NAME` (not `VERSION_CODE`) so it triggers on name changes only.
+
+**Guard:** `OnboardingLogicTest` verifies all four cases: first launch, complete with matching version, version mismatch (update), and null version (legacy prefs).
+
+---

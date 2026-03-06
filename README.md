@@ -111,7 +111,7 @@ Firebase login is required.
 - Profile management (display name, account deletion)
 - Password reset via email
 - Auto sign-out on app version update
-- First-launch onboarding (3-step welcome screen)
+- First-launch and post-update onboarding (3-step welcome screen, re-shown after each app update)
 
 **Navigation & UI:**
 - Bottom navigation bar (Home, Quick Translate, Learn, Friends, Settings) with unread badge on Friends tab
@@ -243,7 +243,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (53 test files, 398+ tests)
+# Run all unit tests (129 test files, 1490+ tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -288,19 +288,23 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **59 test files** covering critical app logic (as of March 2026)
-- **400+ unit tests** passing
+- **129 test files** covering critical app logic (as of March 2026)
+- **1490+ unit tests** passing
 - Test categories:
-  - Domain layer use cases (25+ test files)
-  - ViewModels (6 test files)
-  - Models and serialization (10+ test files)
-  - Repositories and data layer (8+ test files)
-  - UI components (StandardButtons, StandardTextFields, StandardDialogs)
+  - Domain layer use cases (30+ test files)
+  - ViewModels (10+ test files)
+  - Models and serialization (15+ test files)
+  - Repositories and data layer (12+ test files)
+  - Navigation routes and rules (5 test files)
+  - UI components (StandardButtons, StandardTextFields, StandardDialogs, ThemeHelper, ColorPalette)
   - Security utilities (validation, sanitization, rate limiting)
   - Performance utilities (debouncing, throttling)
   - Anti-cheat and generation eligibility (comprehensive)
+  - Caching logic (translation, language detection)
+  - Onboarding persistence logic (first-launch and version-based re-show)
 
 **Key Test Suites:**
+- `OnboardingLogicTest` - Onboarding first-launch and version-based re-show logic
 - `GenerationEligibilityTest` - Word bank and learning sheet regeneration rules
 - `CoinEligibilityTest` - Coin award anti-cheat logic
 - `CoinAndGenerationIntegrationTest` - End-to-end eligibility scenarios
@@ -309,6 +313,8 @@ gh auth login
 - `PerformanceUtilsTest` - Debouncing and throttling optimization patterns
 - Friend system tests - Friend requests, chat operations, shared items, blocking
 - Repository tests - Firestore operations, caching, cleanup
+- Cache tests - Translation cache, language detection cache data models
+- Constant validation tests - UI, AI, data, and generation constants
 
 **Running Tests:**
 ```bash
@@ -405,6 +411,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** March 3, 2026
+**Last Updated:** March 6, 2026
 
 (Some content is by github copilot agent and may contain error)

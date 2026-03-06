@@ -29,14 +29,27 @@ import kotlinx.coroutines.launch
 
 private const val ONBOARDING_PREFS = "onboarding_prefs"
 private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
+private const val KEY_ONBOARDING_VERSION = "onboarding_version"
 
-fun isOnboardingComplete(context: Context): Boolean =
-    context.getSharedPreferences(ONBOARDING_PREFS, Context.MODE_PRIVATE)
-        .getBoolean(KEY_ONBOARDING_COMPLETE, false)
+/**
+ * Returns true when the user has completed onboarding for the current app version.
+ * Returns false (triggering the onboarding screen) on:
+ * - First launch on a device (no prefs stored)
+ * - App update (stored version differs from current [BuildConfig.VERSION_NAME])
+ */
+fun isOnboardingComplete(context: Context): Boolean {
+    val prefs = context.getSharedPreferences(ONBOARDING_PREFS, Context.MODE_PRIVATE)
+    if (!prefs.getBoolean(KEY_ONBOARDING_COMPLETE, false)) return false
+    val savedVersion = prefs.getString(KEY_ONBOARDING_VERSION, null)
+    return savedVersion == com.example.fyp.BuildConfig.VERSION_NAME
+}
 
 private fun markOnboardingComplete(context: Context) {
     context.getSharedPreferences(ONBOARDING_PREFS, Context.MODE_PRIVATE)
-        .edit().putBoolean(KEY_ONBOARDING_COMPLETE, true).apply()
+        .edit()
+        .putBoolean(KEY_ONBOARDING_COMPLETE, true)
+        .putString(KEY_ONBOARDING_VERSION, com.example.fyp.BuildConfig.VERSION_NAME)
+        .apply()
 }
 
 private data class OnboardingPage(
