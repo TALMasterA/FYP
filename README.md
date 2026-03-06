@@ -200,12 +200,6 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
 - Firebase Crashlytics for crash reporting
 - Firebase Performance Monitoring for performance tracking
 
-**Firebase MCP Server (for GitHub Copilot/Claude Code):**
-- Provides Firebase and Firestore access for AI-assisted development
-- Requires authentication via Firebase CLI login or service account key
-- Setup scripts available in `scripts/` directory
-- See [`docs/FIREBASE_MCP_SETUP_GUIDE.md`](docs/FIREBASE_MCP_SETUP_GUIDE.md) for complete setup instructions
-
 --------------------------------------------------------------
 
 ## 💻 Development Workflow
@@ -276,23 +270,6 @@ firebase deploy --only functions
 # Deploy all Firebase services
 firebase deploy
 ```
-
-**Firebase MCP Server Setup:**
-```bash
-# Quick setup (interactive)
-./scripts/setup-firebase-mcp.sh
-
-# Verify Firebase MCP configuration
-./scripts/verify-firebase-mcp.sh
-
-# Manual Firebase login
-firebase login
-
-# Check Firebase access
-firebase projects:list
-```
-
-For detailed setup instructions, see [`docs/FIREBASE_MCP_SETUP_GUIDE.md`](docs/FIREBASE_MCP_SETUP_GUIDE.md)
 
 **GitHub CLI:**
 ```bash
