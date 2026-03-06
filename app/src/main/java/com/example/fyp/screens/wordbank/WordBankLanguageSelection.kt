@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.model.ui.UiTextKey
 import kotlinx.coroutines.delay
 
@@ -28,9 +27,6 @@ fun LanguageSelectionView(
     clusters: List<WordBankLanguageCluster>,
     uiLanguageNameFor: (String) -> String,
     onSelectLanguage: (String) -> Unit,
-    currentPrimaryCode: String,
-    supportedLanguages: List<String>,
-    onPrimaryLanguageChange: (String) -> Unit,
     customWordsCount: Int = 0,
     onSelectCustomWordBank: () -> Unit = {},
     onRefresh: () -> Unit = {},
@@ -55,21 +51,6 @@ fun LanguageSelectionView(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-        // Primary language dropdown
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            LanguageDropdownField(
-                label = t(UiTextKey.SettingsPrimaryLanguageLabel),
-                selectedCode = currentPrimaryCode,
-                options = supportedLanguages,
-                nameFor = uiLanguageNameFor,
-                onSelected = onPrimaryLanguageChange,
-                enabled = true
-            )
-        }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),

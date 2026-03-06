@@ -45,6 +45,7 @@ data class SettingsUiState(
     val coinStats: UserCoinStats = UserCoinStats(),
     val unlockingPaletteId: String? = null,
     val unlockError: String? = null,
+    val primaryLanguageCooldownDays: Int? = null,
 )
 
 @HiltViewModel
@@ -141,30 +142,39 @@ class SettingsViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            runCatching {
-                // Update settings
-                setPrimaryLanguage(UserId(uid), LanguageCode(newCode))
-
-                // Also update public profile for friends feature
-                friendsRepo.updatePublicProfile(
-                    UserId(uid),
-                    mapOf("primaryLanguage" to newCode)
+            try {
+                when (val result = setPrimaryLanguage(UserId(uid), LanguageCode(newCode))) {
+                    is SetPrimaryLanguageUseCase.Result.Success -> {
+                        // Also update public profile for friends feature
+                        runCatching {
+                            friendsRepo.updatePublicProfile(
+                                UserId(uid),
+                                mapOf("primaryLanguage" to newCode)
+                            )
+                        }
+                        _uiState.value = _uiState.value.copy(
+                            settings = _uiState.value.settings.copy(primaryLanguageCode = newCode),
+                            errorKey = null,
+                            errorRaw = null
+                        )
+                    }
+                    is SetPrimaryLanguageUseCase.Result.CooldownActive -> {
+                        _uiState.value = _uiState.value.copy(
+                            primaryLanguageCooldownDays = result.remainingDays
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorKey = null,
+                    errorRaw = "Failed to save language setting. Please try again."
                 )
             }
-                .onSuccess {
-                    _uiState.value = _uiState.value.copy(
-                        settings = _uiState.value.settings.copy(primaryLanguageCode = newCode),
-                        errorKey = null,
-                        errorRaw = null
-                    )
-                }
-                .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(
-                        errorKey = null,
-                        errorRaw = "Failed to save language setting. Please try again."
-                    )
-                }
         }
+    }
+
+    fun dismissCooldownDialog() {
+        _uiState.value = _uiState.value.copy(primaryLanguageCooldownDays = null)
     }
 
     fun updateFontSizeScale(scale: Float) {

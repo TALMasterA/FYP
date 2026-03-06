@@ -256,13 +256,6 @@ fun WordBankScreen(
                         clusters = uiState.languageClusters,
                         uiLanguageNameFor = uiLanguageNameFor,
                         onSelectLanguage = { viewModel.selectLanguage(it) },
-                        currentPrimaryCode = currentPrimaryCode,
-                        supportedLanguages = supportedLanguages,
-                        onPrimaryLanguageChange = { newCode ->
-                            currentPrimaryCode = newCode
-                            viewModel.setPrimaryLanguageCode(newCode)
-                            customWordsViewModel.setPrimaryLanguageCode(newCode)
-                        },
                         customWordsCount = uiState.customWordsCount,
                         onSelectCustomWordBank = {
                             viewModel.setCustomWordBankSelected(true)

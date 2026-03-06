@@ -57,6 +57,9 @@ private class RecordingSharingRepository : SharingRepository {
  * 3. Handles repository failure
  * 4. Constructs correct material data map with fullContent
  * 5. Handles empty description and fullContent defaults
+ * 6. Full content over 200 chars is NOT truncated (unlike description)
+ * 7. Full content key is always included in materialData even when blank
+ * 8. Share to same user (self) succeeds — toUserId == fromUserId
  */
 class ShareLearningMaterialUseCaseTest {
 
@@ -166,5 +169,81 @@ class ShareLearningMaterialUseCaseTest {
         val data = repo.lastMaterialData!!
         assertEquals("", data["description"])
         assertEquals("", data["fullContent"])
+    }
+
+    /**
+     * Guards against accidentally truncating fullContent in the use case.
+     * The ViewModel passes description = content.take(200) (truncated preview)
+     * but fullContent must always be the COMPLETE text for the sub-document.
+     */
+    @Test
+    fun `full content over 200 chars is passed to repository untruncated`() = runTest {
+        repo.resultToReturn = Result.success(SharedItem(itemId = "item1"))
+        val longContent = "A".repeat(5000)
+
+        useCase(
+            fromUserId = UserId("user1"),
+            fromUsername = "sender",
+            toUserId = UserId("user2"),
+            type = SharedItemType.LEARNING_SHEET,
+            materialId = "sheet1",
+            title = "Title",
+            description = longContent.take(200),
+            fullContent = longContent
+        )
+
+        val data = repo.lastMaterialData!!
+        assertEquals(5000, (data["fullContent"] as String).length)
+        assertEquals(longContent, data["fullContent"])
+        // description IS truncated by caller, fullContent is NOT
+        assertEquals(200, (data["description"] as String).length)
+    }
+
+    /**
+     * Ensures fullContent key is always present in materialData map,
+     * even when blank. The repository uses this key to write the sub-document;
+     * omitting it would silently skip the sub-doc write (the original bug).
+     */
+    @Test
+    fun `fullContent key is always present in materialData even when blank`() = runTest {
+        repo.resultToReturn = Result.success(SharedItem(itemId = "item1"))
+
+        useCase(
+            fromUserId = UserId("user1"),
+            fromUsername = "sender",
+            toUserId = UserId("user2"),
+            type = SharedItemType.LEARNING_SHEET,
+            materialId = "sheet1",
+            title = "Title",
+            fullContent = ""
+        )
+
+        val data = repo.lastMaterialData!!
+        assertTrue("fullContent key must exist in materialData", data.containsKey("fullContent"))
+        assertEquals("", data["fullContent"])
+    }
+
+    /**
+     * Guards self-sharing: toUserId == fromUserId. This is the "Save to Self"
+     * feature that lets users archive a sheet to their own inbox.
+     */
+    @Test
+    fun `share to same user (self) succeeds`() = runTest {
+        repo.resultToReturn = Result.success(SharedItem(itemId = "self1", fromUserId = "user1", toUserId = "user1"))
+
+        val result = useCase(
+            fromUserId = UserId("user1"),
+            fromUsername = "myself",
+            toUserId = UserId("user1"),
+            type = SharedItemType.LEARNING_SHEET,
+            materialId = "sheet1",
+            title = "My Sheet",
+            fullContent = "Full content for self"
+        )
+
+        assertTrue(result.isSuccess)
+        assertEquals(UserId("user1"), repo.lastFromUserId)
+        assertEquals(UserId("user1"), repo.lastToUserId)
+        assertEquals("Full content for self", repo.lastMaterialData!!["fullContent"])
     }
 }

@@ -99,17 +99,17 @@ class FirestoreSharingRepository @Inject constructor(
                 createdAt = Timestamp.now()
             )
 
-            // Use a batch: write main item + full-content sub-doc atomically
+            // Use a batch: write main item + full-content sub-doc atomically.
+            // The sub-document is ALWAYS written so that fetchSharedItemFullContent
+            // can distinguish "content stored (possibly empty)" from "doc missing (error)".
             val batch = db.batch()
             batch.set(itemRef, sharedItem)
 
-            if (fullContent.isNotBlank()) {
-                val contentRef = itemRef.collection("content").document("body")
-                batch.set(contentRef, mapOf(
-                    "fullContent" to fullContent,
-                    "fromUserId" to fromUserId.value
-                ))
-            }
+            val contentRef = itemRef.collection("content").document("body")
+            batch.set(contentRef, mapOf(
+                "fullContent" to fullContent,
+                "fromUserId" to fromUserId.value
+            ))
 
             batch.commit().await()
             Result.success(sharedItem)

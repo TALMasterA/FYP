@@ -522,13 +522,6 @@ class LearningViewModel @Inject constructor(
         _uiState.value = uiState.value.copy(quizGenerationCompleted = null)
     }
 
-    fun setPrimaryLanguage(languageCode: String) {
-        val uid = this.uid ?: return
-        viewModelScope.launch {
-            userSettingsRepo.setPrimaryLanguage(UserId(uid), LanguageCode(languageCode))
-        }
-    }
-
     fun cancelGenerate() {
         generationJob?.cancel()
         generationJob = null

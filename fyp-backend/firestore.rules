@@ -93,6 +93,8 @@ service cloud.firestore {
       // This prevents any authenticated user from injecting content into another
       // user's inbox.
       match /content/{docId} {
+        // Owner (recipient) can read the full content of shared items in their inbox.
+        allow read: if request.auth != null && request.auth.uid == userId;
         allow create: if request.auth != null
           && request.resource.data.fromUserId == request.auth.uid;
       }

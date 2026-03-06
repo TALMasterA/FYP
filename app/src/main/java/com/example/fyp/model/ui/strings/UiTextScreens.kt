@@ -1566,4 +1566,19 @@ val ScreenUiTexts: List<String> = listOf(
     // --- Login ---
     // AuthUpdatedLoginAgain
     "App updated, please log in again",
+
+    // --- Primary Language Cooldown ---
+    // SettingsPrimaryLanguageCooldownTitle
+    "Language Change Unavailable",
+    // SettingsPrimaryLanguageCooldownMessage
+    "Your primary language can only be changed once every 30 days. Please try again in {days} days.",
+
+    // --- Help: Primary Language Info ---
+    // HelpPrimaryLanguageTitle
+    "Primary Language",
+    // HelpPrimaryLanguageBody
+    "• Your primary language is used for learning sheet explanations and recommendations\n" +
+            "• It can only be changed once every 30 days to maintain learning consistency\n" +
+            "• You can change your primary language in Settings\n" +
+            "• The primary language setting is global and applies to all screens",
 )

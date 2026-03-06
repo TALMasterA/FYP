@@ -126,6 +126,29 @@ fun HelpScreen(
                 }
             }
 
+            // Primary Language
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = t(UiTextKey.HelpPrimaryLanguageTitle),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = t(UiTextKey.HelpPrimaryLanguageBody),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
             // Friend System
             Card(
                 colors = CardDefaults.cardColors(

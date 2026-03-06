@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -93,6 +94,27 @@ fun SettingsScreen(
             delay(UiConstants.ERROR_AUTO_DISMISS_MS)
             viewModel.clearError()
         }
+    }
+
+    // ── Primary language cooldown alert dialog ──
+    uiState.primaryLanguageCooldownDays?.let { days ->
+        // Reset dropdown to current saved language since the change was rejected
+        selected = uiState.settings.primaryLanguageCode.ifBlank { "en-US" }
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissCooldownDialog() },
+            title = { Text(t(UiTextKey.SettingsPrimaryLanguageCooldownTitle)) },
+            text = {
+                Text(
+                    t(UiTextKey.SettingsPrimaryLanguageCooldownMessage)
+                        .replace("{days}", days.toString())
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.dismissCooldownDialog() }) {
+                    Text(t(UiTextKey.ActionConfirm))
+                }
+            }
+        )
     }
 
     StandardScreenScaffold(

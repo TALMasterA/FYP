@@ -353,6 +353,14 @@ class LearningSheetViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSharing = true, shareError = null, shareSuccessKey = null, showShareDialog = false)
+
+            // Guard: content must be loaded before sharing. Sharing with empty content
+            // would produce an inbox item the recipient cannot read (no full text stored).
+            if (state.content.isNullOrBlank()) {
+                _uiState.value = _uiState.value.copy(isSharing = false, shareError = "Sheet content is not ready. Please wait for it to load.")
+                return@launch
+            }
+
             shareLearningMaterialUseCase(
                 fromUserId = UserId(fromId),
                 fromUsername = fromUsername,
@@ -360,8 +368,8 @@ class LearningSheetViewModel @Inject constructor(
                 type = SharedItemType.LEARNING_SHEET,
                 materialId = materialId,
                 title = title,
-                description = state.content?.take(200) ?: "",
-                fullContent = state.content ?: ""
+                description = state.content.take(200),
+                fullContent = state.content
             ).onSuccess {
                 _uiState.value = _uiState.value.copy(isSharing = false, shareSuccessKey = successKey)
             }.onFailure { e ->

@@ -743,6 +743,14 @@ enum class UiTextKey {
 
     // --- Login ---
     AuthUpdatedLoginAgain,
+
+    // --- Primary Language Cooldown ---
+    SettingsPrimaryLanguageCooldownTitle,
+    SettingsPrimaryLanguageCooldownMessage,
+
+    // --- Help: Primary Language Info ---
+    HelpPrimaryLanguageTitle,
+    HelpPrimaryLanguageBody,
 }
 
 // Core Ui Texts list

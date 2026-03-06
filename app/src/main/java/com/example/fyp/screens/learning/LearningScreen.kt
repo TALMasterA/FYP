@@ -33,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.fyp.domain.learning.GenerationEligibility
@@ -46,7 +45,6 @@ import com.example.fyp.model.ui.UiTextKey
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.example.fyp.core.LanguageDropdownField
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.delay
@@ -72,8 +70,6 @@ fun LearningScreen(
 
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
-
-    val supported = remember { viewModel.supportedLanguages.toSet() }
 
     var pendingGenerateLang by remember { mutableStateOf<String?>(null) }
     var showRegenInfo by remember { mutableStateOf(false) }
@@ -193,17 +189,6 @@ fun LearningScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-            item {
-                LanguageDropdownField(
-                    label = t(UiTextKey.SettingsPrimaryLanguageLabel),
-                    selectedCode = uiState.primaryLanguageCode,
-                    options = supported.toList(),
-                    nameFor = uiLanguageNameFor,
-                    onSelected = { viewModel.setPrimaryLanguage(it) },
-                    enabled = true
-                )
-            }
-
 
             if (uiState.isLoading) {
                 items(3) {

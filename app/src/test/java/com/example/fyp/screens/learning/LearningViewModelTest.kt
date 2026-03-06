@@ -40,10 +40,9 @@ import org.mockito.kotlin.*
  * 9. generateQuizFor success stores quiz and updates state
  * 10. cancelGenerate resets generating state
  * 11. cancelQuizGenerate resets generating state
- * 12. setPrimaryLanguage calls UserSettingsRepository
- * 13. consumeSheetGenerationCompleted clears event
- * 14. consumeQuizGenerationCompleted clears event
- * 15. clearError clears error
+ * 12. consumeSheetGenerationCompleted clears event
+ * 13. consumeQuizGenerationCompleted clears event
+ * 14. clearError clears error
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class LearningViewModelTest {
@@ -270,19 +269,6 @@ class LearningViewModelTest {
         vm.cancelQuizGenerate()
 
         assertNull(vm.uiState.value.generatingQuizLanguageCode)
-    }
-
-    // ── setPrimaryLanguage calls repo ───────────────────────────────
-
-    @Test
-    fun `setPrimaryLanguage calls UserSettingsRepository`() = runTest {
-        val vm = buildViewModel()
-        authStateFlow.value = AuthState.LoggedIn(testUser)
-
-        vm.setPrimaryLanguage("ja")
-
-        // Use raw values instead of eq() matchers to avoid inline value class boxing mismatch
-        verify(userSettingsRepo).setPrimaryLanguage(UserId("u1"), LanguageCode("ja"))
     }
 
     // ── consumeSheetGenerationCompleted ──────────────────────────────
