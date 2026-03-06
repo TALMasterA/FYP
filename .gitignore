@@ -60,3 +60,7 @@ tmpclaude-*
 
 # Windows null device artifact
 nul
+
+#Test case file
+test-cases.yaml
+**/test-cases.yaml
