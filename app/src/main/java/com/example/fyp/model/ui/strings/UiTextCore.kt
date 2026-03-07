@@ -747,6 +747,36 @@ enum class UiTextKey {
     // --- Primary Language Cooldown ---
     SettingsPrimaryLanguageCooldownTitle,
     SettingsPrimaryLanguageCooldownMessage,
+    SettingsPrimaryLanguageCooldownMessageHours,
+    SettingsPrimaryLanguageConfirmTitle,
+    SettingsPrimaryLanguageConfirmMessage,
+
+    // --- Bottom Navigation ---
+    NavHome,
+    NavTranslate,
+    NavLearn,
+    NavFriends,
+    NavSettings,
+
+    // --- Permissions ---
+    CameraPermissionTitle,
+    CameraPermissionMessage,
+    CameraPermissionGrant,
+    MicPermissionMessage,
+
+    // --- Delete Confirmations ---
+    FavoritesDeleteConfirm,
+    WordBankDeleteConfirm,
+
+    // --- Friends Extras ---
+    FriendsAcceptAllButton,
+    ChatBlockedCannotSend,
+
+    // --- Shop / Unlock ---
+    ShopUnlockConfirmTitle,
+    ShopUnlockCost,
+    ShopYourCoins,
+    ShopUnlockButton,
 
     // --- Help: Primary Language Info ---
     HelpPrimaryLanguageTitle,

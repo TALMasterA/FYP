@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -112,6 +113,10 @@ class AppViewModel @Inject constructor(
                             startObservingUsername(userId)
                             // Upload FCM token so backend can send push notifications
                             FcmNotificationService.uploadTokenIfLoggedIn(getApplication())
+                            // Sync FCM notification prefs: on first login the SharedPreferences cache
+                            // defaults to true (fail-open) but the Firestore model defaults to false.
+                            // Wait for the first settings emission and write Firestore values to cache.
+                            syncFcmPrefsFromFirestore()
                         }
                     }
                     is AuthState.LoggedOut -> {
@@ -191,6 +196,27 @@ class AppViewModel @Inject constructor(
             } catch (e: Exception) {
                 android.util.Log.e("AppViewModel", "Error fetching username", e)
                 _currentUsername.value = null
+            }
+        }
+    }
+
+    /**
+     * One-time sync of FCM push notification preferences from Firestore to SharedPreferences.
+     * The FCM service reads from SharedPreferences (defaulting to true if absent), but the
+     * Firestore model defaults push toggles to false. Without this sync, first-time users
+     * would receive push notifications even though their Firestore settings say OFF.
+     */
+    private fun syncFcmPrefsFromFirestore() {
+        viewModelScope.launch {
+            try {
+                val settings = sharedSettingsDataSource.settings.first { !sharedSettingsDataSource.isLoading.value }
+                val ctx = getApplication<Application>()
+                FcmNotificationService.saveNotifPrefToCache(ctx, "notifyNewMessages", settings.notifyNewMessages)
+                FcmNotificationService.saveNotifPrefToCache(ctx, "notifyFriendRequests", settings.notifyFriendRequests)
+                FcmNotificationService.saveNotifPrefToCache(ctx, "notifyRequestAccepted", settings.notifyRequestAccepted)
+                FcmNotificationService.saveNotifPrefToCache(ctx, "notifySharedInbox", settings.notifySharedInbox)
+            } catch (e: Exception) {
+                android.util.Log.e("AppViewModel", "Failed to sync FCM prefs from Firestore", e)
             }
         }
     }

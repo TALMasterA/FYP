@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.data.friends.ChatRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.friends.*
 import com.example.fyp.model.UserId
@@ -24,6 +25,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -73,6 +76,7 @@ private const val MAX_PENDING_REQUESTS = 20
 class FriendsViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
+    private val sharedSettingsDataSource: SharedSettingsDataSource,
     private val chatRepository: ChatRepository,
     private val friendsRepository: com.example.fyp.data.friends.FriendsRepository,
     private val observeOutgoingRequestsUseCase: ObserveOutgoingRequestsUseCase,
@@ -88,21 +92,31 @@ class FriendsViewModel @Inject constructor(
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
 
     /**
-     * Reactive notification state sourced directly from [SharedFriendsDataSource].
+     * Reactive notification state sourced from [SharedFriendsDataSource], gated by
+     * the user's in-app badge settings from [SharedSettingsDataSource].
      * Collected here as StateFlows so [FriendsScreen] observes them via the ViewModel
      * and always gets live updates — avoids the stale-parameter bug where plain Boolean/Int
      * params captured in NavGraph lambdas do not recompose when flows emit new values.
      */
     val hasUnseenSharedItems: StateFlow<Boolean> =
-        sharedFriendsDataSource.hasUnseenSharedItems
+        combine(
+            sharedFriendsDataSource.hasUnseenSharedItems,
+            sharedSettingsDataSource.settings.map { it.inAppBadgeSharedInbox }
+        ) { hasUnseen, enabled -> hasUnseen && enabled }
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     val unseenSharedItemsCount: StateFlow<Int> =
-        sharedFriendsDataSource.unseenSharedItemsCount
+        combine(
+            sharedFriendsDataSource.unseenSharedItemsCount,
+            sharedSettingsDataSource.settings.map { it.inAppBadgeSharedInbox }
+        ) { count, enabled -> if (enabled) count else 0 }
             .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     val unseenFriendRequestCount: StateFlow<Int> =
-        sharedFriendsDataSource.unseenFriendRequestCount
+        combine(
+            sharedFriendsDataSource.unseenFriendRequestCount,
+            sharedSettingsDataSource.settings.map { it.inAppBadgeFriendRequests }
+        ) { count, enabled -> if (enabled) count else 0 }
             .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     private var outgoingRequestsJob: Job? = null
@@ -195,7 +209,8 @@ class FriendsViewModel @Inject constructor(
     }
 
     /**
-     * Observes per-friend unseen unread counts from SharedFriendsDataSource.
+     * Observes per-friend unseen unread counts from SharedFriendsDataSource,
+     * gated by the inAppBadgeMessages setting.
      * Uses the seen-filtered flow so red dots disappear once the user opens a chat
      * and do NOT reappear on app restart.
      * AppViewModel feeds the raw Firestore data into SharedFriendsDataSource via
@@ -204,9 +219,14 @@ class FriendsViewModel @Inject constructor(
     private fun startUnreadPerFriendObserver(@Suppress("UNUSED_PARAMETER") userId: UserId) {
         unreadPerFriendJob?.cancel()
         unreadPerFriendJob = viewModelScope.launch {
-            sharedFriendsDataSource.unseenUnreadPerFriend.collect { unseenMap ->
-                android.util.Log.d("FriendsViewModel", "Unseen unread per friend updated: $unseenMap")
-                _uiState.value = _uiState.value.copy(unreadCountPerFriend = unseenMap)
+            combine(
+                sharedFriendsDataSource.unseenUnreadPerFriend,
+                sharedSettingsDataSource.settings.map { it.inAppBadgeMessages }
+            ) { unseenMap, enabled ->
+                if (enabled) unseenMap else emptyMap()
+            }.collect { gatedMap ->
+                android.util.Log.d("FriendsViewModel", "Unseen unread per friend updated: $gatedMap")
+                _uiState.value = _uiState.value.copy(unreadCountPerFriend = gatedMap)
             }
         }
     }

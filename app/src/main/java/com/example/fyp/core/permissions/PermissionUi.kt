@@ -9,6 +9,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.model.ui.BaseUiTexts
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -27,6 +29,10 @@ fun RecordAudioPermissionRequest(
         }
     }
 
+    val appLanguageState = LocalAppLanguageState.current
+    val (uiText) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+
     when {
         permissionState.status.isGranted -> onPermissionGranted()
 
@@ -39,11 +45,11 @@ fun RecordAudioPermissionRequest(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "Microphone permission is needed for speech recognition. Please grant the permission.",
+                    t(UiTextKey.MicPermissionMessage),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Button(onClick = { permissionState.launchPermissionRequest() }) {
-                    Text("Grant Permission")
+                    Text(t(UiTextKey.CameraPermissionGrant))
                 }
             }
         }

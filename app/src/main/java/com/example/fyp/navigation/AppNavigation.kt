@@ -74,7 +74,8 @@ import com.example.fyp.ui.theme.Typography as AppTypography
 private data class BottomNavItem(
     val route: String,
     val icon: ImageVector,
-    val label: String
+    val labelKey: com.example.fyp.model.ui.UiTextKey,
+    val defaultLabel: String
 )
 
 // AppScreen route destinations are defined in AppScreens.kt
@@ -210,11 +211,11 @@ fun AppNavigation() {
     }
 
     val bottomNavItems = listOf(
-        BottomNavItem(AppScreen.Home.route, Icons.Default.Home, "Home"),
-        BottomNavItem(AppScreen.Speech.route, Icons.Default.Mic, "Translate"),
-        BottomNavItem(AppScreen.Learning.route, Icons.AutoMirrored.Filled.MenuBook, "Learn"),
-        BottomNavItem(AppScreen.Friends.route, Icons.Default.People, "Friends"),
-        BottomNavItem(AppScreen.Settings.route, Icons.Default.Settings, "Settings"),
+        BottomNavItem(AppScreen.Home.route, Icons.Default.Home, com.example.fyp.model.ui.UiTextKey.NavHome, "Home"),
+        BottomNavItem(AppScreen.Speech.route, Icons.Default.Mic, com.example.fyp.model.ui.UiTextKey.NavTranslate, "Translate"),
+        BottomNavItem(AppScreen.Learning.route, Icons.AutoMirrored.Filled.MenuBook, com.example.fyp.model.ui.UiTextKey.NavLearn, "Learn"),
+        BottomNavItem(AppScreen.Friends.route, Icons.Default.People, com.example.fyp.model.ui.UiTextKey.NavFriends, "Friends"),
+        BottomNavItem(AppScreen.Settings.route, Icons.Default.Settings, com.example.fyp.model.ui.UiTextKey.NavSettings, "Settings"),
     )
 
     Surface(
@@ -287,10 +288,13 @@ fun AppNavigation() {
                                                     }
                                                 }
                                             ) {
-                                                Icon(item.icon, contentDescription = item.label)
+                                                Icon(item.icon, contentDescription = appLanguageState.uiTexts[item.labelKey] ?: item.defaultLabel)
                                             }
                                         },
-                                        label = { Text(item.label, style = MaterialTheme.typography.labelSmall) },
+                                        label = {
+                                            val label = appLanguageState.uiTexts[item.labelKey] ?: item.defaultLabel
+                                            Text(label, style = MaterialTheme.typography.labelSmall)
+                                        },
                                         selected = isSelected,
                                         enabled = !isDisabled,
                                         onClick = {

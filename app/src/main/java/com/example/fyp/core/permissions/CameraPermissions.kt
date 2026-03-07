@@ -7,6 +7,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.model.ui.BaseUiTexts
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -53,18 +55,22 @@ private fun CameraPermissionRationaleDialog(
     onRequestPermission: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val appLanguageState = LocalAppLanguageState.current
+    val (uiText) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Camera Permission Required") },
-        text = { Text("This feature requires camera access to capture images for text recognition. Please grant camera permission to continue.") },
+        title = { Text(t(UiTextKey.CameraPermissionTitle)) },
+        text = { Text(t(UiTextKey.CameraPermissionMessage)) },
         confirmButton = {
             Button(onClick = onRequestPermission) {
-                Text("Grant Permission")
+                Text(t(UiTextKey.CameraPermissionGrant))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(t(UiTextKey.ActionCancel))
             }
         }
     )

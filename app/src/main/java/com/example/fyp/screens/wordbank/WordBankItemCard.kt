@@ -42,7 +42,7 @@ fun WordBankItemCard(
             title = { Text(t(UiTextKey.ActionDelete)) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Text("Are you sure you want to delete \"${word.originalWord}\"?")
+                    Text(t(UiTextKey.WordBankDeleteConfirm).replace("{word}", word.originalWord))
                 }
             },
             confirmButton = {

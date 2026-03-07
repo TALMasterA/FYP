@@ -188,7 +188,7 @@ class SettingsViewModelTest {
     fun `updatePrimaryLanguage cooldown sets primaryLanguageCooldownDays`() = runTest {
         setPrimaryLanguage.stub {
             onBlocking { invoke(UserId(testUserId), LanguageCode("ja-JP")) } doReturn
-                SetPrimaryLanguageUseCase.Result.CooldownActive(remainingDays = 15)
+                SetPrimaryLanguageUseCase.Result.CooldownActive(remainingDays = 15, remainingHours = 0)
         }
 
         val vm = buildViewModel()
@@ -230,7 +230,7 @@ class SettingsViewModelTest {
     fun `dismissCooldownDialog clears cooldownDays`() = runTest {
         setPrimaryLanguage.stub {
             onBlocking { invoke(UserId(testUserId), LanguageCode("ja-JP")) } doReturn
-                SetPrimaryLanguageUseCase.Result.CooldownActive(remainingDays = 5)
+                SetPrimaryLanguageUseCase.Result.CooldownActive(remainingDays = 5, remainingHours = 0)
         }
 
         val vm = buildViewModel()
@@ -394,5 +394,38 @@ class SettingsViewModelTest {
 
         assertNotNull(vm.uiState.value.errorRaw)
         assertTrue(vm.uiState.value.errorRaw!!.contains("notification"))
+    }
+
+    // ── Cooldown hours ──
+
+    @Test
+    fun `updatePrimaryLanguage cooldown with hours sets primaryLanguageCooldownHours`() = runTest {
+        setPrimaryLanguage.stub {
+            onBlocking { invoke(UserId(testUserId), LanguageCode("ja-JP")) } doReturn
+                SetPrimaryLanguageUseCase.Result.CooldownActive(remainingDays = 0, remainingHours = 12)
+        }
+
+        val vm = buildViewModel()
+        vm.updatePrimaryLanguage("ja-JP")
+
+        assertEquals(0, vm.uiState.value.primaryLanguageCooldownDays)
+        assertEquals(12, vm.uiState.value.primaryLanguageCooldownHours)
+    }
+
+    @Test
+    fun `dismissCooldownDialog clears both cooldownDays and cooldownHours`() = runTest {
+        setPrimaryLanguage.stub {
+            onBlocking { invoke(UserId(testUserId), LanguageCode("ja-JP")) } doReturn
+                SetPrimaryLanguageUseCase.Result.CooldownActive(remainingDays = 0, remainingHours = 18)
+        }
+
+        val vm = buildViewModel()
+        vm.updatePrimaryLanguage("ja-JP")
+        assertNotNull(vm.uiState.value.primaryLanguageCooldownHours)
+
+        vm.dismissCooldownDialog()
+
+        assertNull(vm.uiState.value.primaryLanguageCooldownDays)
+        assertNull(vm.uiState.value.primaryLanguageCooldownHours)
     }
 }

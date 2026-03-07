@@ -19,6 +19,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
         UiTextKey.LangZhHk to "Kanton",
         UiTextKey.LangJaJp to "Jepang",
         UiTextKey.LangZhCn to "Tionghoa Sederhana",
+        UiTextKey.LangFrFr to "Prancis",
         UiTextKey.LangDeDe to "Jerman",
         UiTextKey.LangKoKr to "Korea",
         UiTextKey.LangEsEs to "Spanyol",
@@ -151,6 +152,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
         UiTextKey.LangZhHk to "Cantonais",
         UiTextKey.LangJaJp to "Japonais",
         UiTextKey.LangZhCn to "Chinois simplifié",
+        UiTextKey.LangFrFr to "Français",
         UiTextKey.LangDeDe to "Allemand",
         UiTextKey.LangKoKr to "Coréen",
         UiTextKey.LangEsEs to "Espagnol",
@@ -169,6 +171,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
         UiTextKey.LangZhHk to "Kantonesisch",
         UiTextKey.LangJaJp to "Japanisch",
         UiTextKey.LangZhCn to "Vereinfachtes Chinesisch",
+        UiTextKey.LangFrFr to "Französisch",
         UiTextKey.LangDeDe to "Deutsch",
         UiTextKey.LangKoKr to "Koreanisch",
         UiTextKey.LangEsEs to "Spanisch",
@@ -282,6 +285,7 @@ val LanguageNameTranslations: Map<String, Map<UiTextKey, String>> = mapOf(
         UiTextKey.LangZhHk to "Kantonis",
         UiTextKey.LangJaJp to "Jepun",
         UiTextKey.LangZhCn to "Cina Ringkas",
+        UiTextKey.LangFrFr to "Perancis",
         UiTextKey.LangDeDe to "Jerman",
         UiTextKey.LangKoKr to "Korea",
         UiTextKey.LangEsEs to "Sepanyol",
@@ -432,6 +436,18 @@ fun buildUiTextMap(translatedJoined: String, uiLanguageCode: String?): Map<UiTex
 
     // Language detection
     ensureContains(UiTextKey.LanguageDetectedTemplate, "{language}")
+
+    // Primary language cooldown hours
+    ensureContains(UiTextKey.SettingsPrimaryLanguageCooldownMessageHours, "{hours}")
+
+    // Delete confirmations
+    ensureContains(UiTextKey.FavoritesDeleteConfirm, "{count}")
+    ensureContains(UiTextKey.WordBankDeleteConfirm, "{word}")
+
+    // Shop templates
+    ensureContains(UiTextKey.ShopUnlockConfirmTitle, "{name}")
+    ensureContains(UiTextKey.ShopUnlockCost, "{cost}")
+    ensureContains(UiTextKey.ShopYourCoins, "{coins}")
 
     // Cache
     ensureContains(UiTextKey.CacheStatsTemplate, "{count}")

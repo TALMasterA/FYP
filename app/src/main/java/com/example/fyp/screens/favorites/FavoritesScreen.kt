@@ -122,7 +122,7 @@ fun FavoritesScreen(
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = false },
             title = { Text(t(UiTextKey.ActionDelete)) },
-            text = { Text("Delete $totalSelected selected item(s)? This cannot be undone.") },
+            text = { Text(t(UiTextKey.FavoritesDeleteConfirm).replace("{count}", "$totalSelected")) },
             confirmButton = {
                 TextButton(
                     onClick = {

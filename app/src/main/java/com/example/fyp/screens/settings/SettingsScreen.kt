@@ -96,8 +96,40 @@ fun SettingsScreen(
         }
     }
 
+    // Pending language code for the confirmation dialog (set when user selects a new language)
+    var pendingLanguageCode by remember { mutableStateOf<String?>(null) }
+
+    // ── Primary language change confirmation dialog ──
+    pendingLanguageCode?.let { pendingCode ->
+        AlertDialog(
+            onDismissRequest = {
+                selected = uiState.settings.primaryLanguageCode.ifBlank { "en-US" }
+                pendingLanguageCode = null
+            },
+            title = { Text(t(UiTextKey.SettingsPrimaryLanguageConfirmTitle)) },
+            text = { Text(t(UiTextKey.SettingsPrimaryLanguageConfirmMessage)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.updatePrimaryLanguage(pendingCode)
+                    pendingLanguageCode = null
+                }) {
+                    Text(t(UiTextKey.ActionConfirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    selected = uiState.settings.primaryLanguageCode.ifBlank { "en-US" }
+                    pendingLanguageCode = null
+                }) {
+                    Text(t(UiTextKey.ActionCancel))
+                }
+            }
+        )
+    }
+
     // ── Primary language cooldown alert dialog ──
     uiState.primaryLanguageCooldownDays?.let { days ->
+        val hours = uiState.primaryLanguageCooldownHours ?: 0
         // Reset dropdown to current saved language since the change was rejected
         selected = uiState.settings.primaryLanguageCode.ifBlank { "en-US" }
         AlertDialog(
@@ -105,8 +137,13 @@ fun SettingsScreen(
             title = { Text(t(UiTextKey.SettingsPrimaryLanguageCooldownTitle)) },
             text = {
                 Text(
-                    t(UiTextKey.SettingsPrimaryLanguageCooldownMessage)
-                        .replace("{days}", days.toString())
+                    if (days > 0) {
+                        t(UiTextKey.SettingsPrimaryLanguageCooldownMessage)
+                            .replace("{days}", days.toString())
+                    } else {
+                        t(UiTextKey.SettingsPrimaryLanguageCooldownMessageHours)
+                            .replace("{hours}", hours.toString())
+                    }
                 )
             },
             confirmButton = {
@@ -340,8 +377,10 @@ fun SettingsScreen(
                     options = supportedLanguages,
                     nameFor = { code -> uiLanguageNameFor(code) },
                     onSelected = { code ->
-                        selected = code
-                        viewModel.updatePrimaryLanguage(code)
+                        if (code != uiState.settings.primaryLanguageCode) {
+                            selected = code
+                            pendingLanguageCode = code
+                        }
                     }
                 )
             }

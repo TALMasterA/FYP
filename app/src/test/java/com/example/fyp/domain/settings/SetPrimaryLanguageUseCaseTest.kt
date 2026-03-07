@@ -152,4 +152,36 @@ class SetPrimaryLanguageUseCaseTest {
         assertTrue(result1 is SetPrimaryLanguageUseCase.Result.Success)
         assertTrue(result2 is SetPrimaryLanguageUseCase.Result.CooldownActive)
     }
+
+    @Test
+    fun `cooldown returns correct remaining hours for sub-day duration`() = runTest {
+        // Changed 29 days + 20 hours ago -> ~4 hours remaining
+        val changeMs = System.currentTimeMillis() - (29L * 24 * 60 * 60 * 1000 + 20L * 60 * 60 * 1000)
+        whenever(repo.fetchUserSettings(uid)).thenReturn(
+            UserSettings(primaryLanguageCode = "en-US", lastPrimaryLanguageChangeMs = changeMs)
+        )
+
+        val result = useCase(uid, LanguageCode("ja"))
+
+        assertTrue(result is SetPrimaryLanguageUseCase.Result.CooldownActive)
+        val cooldown = result as SetPrimaryLanguageUseCase.Result.CooldownActive
+        assertEquals(0, cooldown.remainingDays)
+        assertTrue("Expected remainingHours in 3..5, got ${cooldown.remainingHours}", cooldown.remainingHours in 3..5)
+    }
+
+    @Test
+    fun `cooldown returns both days and hours`() = runTest {
+        // Changed 10 days ago -> ~20 days remaining
+        val tenDaysAgo = System.currentTimeMillis() - (10L * 24 * 60 * 60 * 1000)
+        whenever(repo.fetchUserSettings(uid)).thenReturn(
+            UserSettings(primaryLanguageCode = "en-US", lastPrimaryLanguageChangeMs = tenDaysAgo)
+        )
+
+        val result = useCase(uid, LanguageCode("ja"))
+
+        assertTrue(result is SetPrimaryLanguageUseCase.Result.CooldownActive)
+        val cooldown = result as SetPrimaryLanguageUseCase.Result.CooldownActive
+        assertTrue("Expected ~20 remaining days, got ${cooldown.remainingDays}", cooldown.remainingDays in 19..20)
+        assertTrue("Expected remainingHours >= 0, got ${cooldown.remainingHours}", cooldown.remainingHours >= 0)
+    }
 }

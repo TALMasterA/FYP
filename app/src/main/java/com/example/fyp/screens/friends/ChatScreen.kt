@@ -407,7 +407,7 @@ fun ChatScreen(
                 onSendClick = { viewModel.sendMessage() },
                 isSending = uiState.isSending,
                 isDisabled = uiState.isBlockedBy,
-                placeholder = if (uiState.isBlockedBy) "Cannot send messages" else t(UiTextKey.ChatInputPlaceholder),
+                placeholder = if (uiState.isBlockedBy) t(UiTextKey.ChatBlockedCannotSend) else t(UiTextKey.ChatInputPlaceholder),
                 sendButtonText = t(UiTextKey.ChatSendButton)
             )
         }

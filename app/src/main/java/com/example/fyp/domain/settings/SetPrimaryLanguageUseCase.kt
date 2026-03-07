@@ -11,7 +11,7 @@ class SetPrimaryLanguageUseCase @Inject constructor(
 ) {
     sealed class Result {
         data object Success : Result()
-        data class CooldownActive(val remainingDays: Int) : Result()
+        data class CooldownActive(val remainingDays: Int, val remainingHours: Int) : Result()
     }
 
     suspend operator fun invoke(uid: UserId, code: LanguageCode): Result {
@@ -25,8 +25,10 @@ class SetPrimaryLanguageUseCase @Inject constructor(
             val remainingMs = UserSettings.primaryLanguageCooldownRemainingMs(
                 settings.lastPrimaryLanguageChangeMs, now
             )
-            val remainingDays = ((remainingMs / (24 * 60 * 60 * 1000)) + 1).toInt()
-            return Result.CooldownActive(remainingDays = remainingDays)
+            val totalHours = ((remainingMs / (60 * 60 * 1000)) + 1).toInt()
+            val remainingDays = totalHours / 24
+            val remainingHours = totalHours % 24
+            return Result.CooldownActive(remainingDays = remainingDays, remainingHours = remainingHours)
         }
 
         repo.setPrimaryLanguage(uid, code)

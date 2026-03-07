@@ -46,6 +46,7 @@ data class SettingsUiState(
     val unlockingPaletteId: String? = null,
     val unlockError: String? = null,
     val primaryLanguageCooldownDays: Int? = null,
+    val primaryLanguageCooldownHours: Int? = null,
 )
 
 @HiltViewModel
@@ -160,7 +161,8 @@ class SettingsViewModel @Inject constructor(
                     }
                     is SetPrimaryLanguageUseCase.Result.CooldownActive -> {
                         _uiState.value = _uiState.value.copy(
-                            primaryLanguageCooldownDays = result.remainingDays
+                            primaryLanguageCooldownDays = result.remainingDays,
+                            primaryLanguageCooldownHours = result.remainingHours
                         )
                     }
                 }
@@ -174,7 +176,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun dismissCooldownDialog() {
-        _uiState.value = _uiState.value.copy(primaryLanguageCooldownDays = null)
+        _uiState.value = _uiState.value.copy(primaryLanguageCooldownDays = null, primaryLanguageCooldownHours = null)
     }
 
     fun updateFontSizeScale(scale: Float) {

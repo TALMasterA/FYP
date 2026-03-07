@@ -36,17 +36,17 @@ fun ColorPaletteSelector(
         palette?.let {
             AlertDialog(
                 onDismissRequest = { pendingUnlockPalette = null },
-                title = { Text("Unlock ${it.name}?") },
+                title = { Text(t(UiTextKey.ShopUnlockConfirmTitle).replace("{name}", it.name)) },
                 text = {
                     Column(
                         modifier = Modifier.verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("Cost: ${it.cost} coins")
-                        Text("Your coins: $coinBalance")
+                        Text(t(UiTextKey.ShopUnlockCost).replace("{cost}", "${it.cost}"))
+                        Text(t(UiTextKey.ShopYourCoins).replace("{coins}", "$coinBalance"))
                         if (coinBalance < it.cost) {
                             Text(
-                                "❌ Insufficient coins!",
+                                t(UiTextKey.ShopInsufficientCoins),
                                 color = MaterialTheme.colorScheme.error,
                                 fontWeight = FontWeight.Bold
                             )
@@ -61,12 +61,12 @@ fun ColorPaletteSelector(
                         },
                         enabled = coinBalance >= it.cost
                     ) {
-                        Text("Unlock")
+                        Text(t(UiTextKey.ShopUnlockButton))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { pendingUnlockPalette = null }) {
-                        Text("Cancel")
+                        Text(t(UiTextKey.ActionCancel))
                     }
                 }
             )

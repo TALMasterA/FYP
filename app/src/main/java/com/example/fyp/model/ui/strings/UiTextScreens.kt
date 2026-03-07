@@ -1572,6 +1572,56 @@ val ScreenUiTexts: List<String> = listOf(
     "Language Change Unavailable",
     // SettingsPrimaryLanguageCooldownMessage
     "Your primary language can only be changed once every 30 days. Please try again in {days} days.",
+    // SettingsPrimaryLanguageCooldownMessageHours
+    "Your primary language can only be changed once every 30 days. Please try again in {hours} hours.",
+    // SettingsPrimaryLanguageConfirmTitle
+    "Confirm Language Change",
+    // SettingsPrimaryLanguageConfirmMessage
+    "Changing your primary language will start a 30-day cooldown before you can change it again. Continue?",
+
+    // --- Bottom Navigation ---
+    // NavHome
+    "Home",
+    // NavTranslate
+    "Translate",
+    // NavLearn
+    "Learn",
+    // NavFriends
+    "Friends",
+    // NavSettings
+    "Settings",
+
+    // --- Permissions ---
+    // CameraPermissionTitle
+    "Camera Permission Required",
+    // CameraPermissionMessage
+    "This feature requires camera access to capture images for text recognition. Please grant camera permission to continue.",
+    // CameraPermissionGrant
+    "Grant Permission",
+    // MicPermissionMessage
+    "Microphone permission is needed for speech recognition. Please grant the permission.",
+
+    // --- Delete Confirmations ---
+    // FavoritesDeleteConfirm
+    "Delete {count} selected item(s)? This cannot be undone.",
+    // WordBankDeleteConfirm
+    "Are you sure you want to delete \"{word}\"?",
+
+    // --- Friends Extras ---
+    // FriendsAcceptAllButton
+    "Accept All",
+    // ChatBlockedCannotSend
+    "Cannot send messages",
+
+    // --- Shop / Unlock ---
+    // ShopUnlockConfirmTitle
+    "Unlock {name}?",
+    // ShopUnlockCost
+    "Cost: {cost} coins",
+    // ShopYourCoins
+    "Your coins: {coins}",
+    // ShopUnlockButton
+    "Unlock",
 
     // --- Help: Primary Language Info ---
     // HelpPrimaryLanguageTitle

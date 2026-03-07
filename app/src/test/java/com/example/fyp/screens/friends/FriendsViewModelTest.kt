@@ -3,7 +3,9 @@ package com.example.fyp.screens.friends
 import com.example.fyp.data.friends.ChatRepository
 import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.model.user.UserSettings
 import com.example.fyp.domain.friends.*
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.FriendRelation
@@ -57,9 +59,12 @@ class FriendsViewModelTest {
     private val friendsFlow = MutableStateFlow<List<FriendRelation>>(emptyList())
     private val incomingRequestsFlow = MutableStateFlow<List<FriendRequest>>(emptyList())
     private val unseenUnreadFlow = MutableStateFlow<Map<String, Int>>(emptyMap())
+    private val settingsFlow = MutableStateFlow(UserSettings())
+    private val isLoadingFlow = MutableStateFlow(false)
 
     private lateinit var authRepo: FirebaseAuthRepository
     private lateinit var sharedFriendsDataSource: SharedFriendsDataSource
+    private lateinit var sharedSettingsDataSource: SharedSettingsDataSource
     private lateinit var chatRepository: ChatRepository
     private lateinit var friendsRepository: FriendsRepository
     private lateinit var observeOutgoingRequestsUseCase: ObserveOutgoingRequestsUseCase
@@ -85,6 +90,10 @@ class FriendsViewModelTest {
             on { unseenSharedItemsCount } doReturn flowOf(0)
             on { unseenFriendRequestCount } doReturn flowOf(0)
             on { getCachedUsername("user1") } doReturn "myuser"
+        }
+        sharedSettingsDataSource = mock {
+            on { settings } doReturn settingsFlow
+            on { isLoading } doReturn isLoadingFlow
         }
         chatRepository = mock()
         friendsRepository = mock()
@@ -114,6 +123,7 @@ class FriendsViewModelTest {
     private fun buildViewModel() = FriendsViewModel(
         authRepo = authRepo,
         sharedFriendsDataSource = sharedFriendsDataSource,
+        sharedSettingsDataSource = sharedSettingsDataSource,
         chatRepository = chatRepository,
         friendsRepository = friendsRepository,
         observeOutgoingRequestsUseCase = observeOutgoingRequestsUseCase,
