@@ -90,8 +90,8 @@ Write a test that asserts the cleanup path count stays in sync.
 
 **Files:** `model/user/UserSettings.kt`, `HistoryViewModel.kt`, `FirestoreHistoryRepository.kt`
 
-**Invariant:** History is capped at `UserSettings.historyViewLimit` (50–100). Expanding beyond requires explicit coin purchase.  
-`BASE_HISTORY_LIMIT = 50`, `MAX_HISTORY_LIMIT = 100`, expansion increment = 10.
+**Invariant:** History is capped at `UserSettings.historyViewLimit` (30–60). Expanding beyond requires explicit coin purchase.  
+`BASE_HISTORY_LIMIT = 30`, `MAX_HISTORY_LIMIT = 60`, expansion increment = 10.
 
 **Rule:** Never increase `DEFAULT_HISTORY_LIMIT` in `DataConstants` — it controls a Firestore read quota boundary.
 

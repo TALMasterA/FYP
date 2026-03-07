@@ -94,7 +94,7 @@ Firebase login is required.
 - Notification settings screen (push notifications + in-app badge toggles)
 
 **History & Organisation:**
-- Translation history (recent 50–100 records, configurable)
+- Translation history (recent 30–60 records, configurable)
 - Filter by language or keyword; retry button on load error
 - Session management for Live Conversation (rename, delete)
 - Cloud sync via Firestore with offline persistence
@@ -243,7 +243,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (129 test files, 1490+ tests)
+# Run all unit tests (146 test files, 1490+ tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -288,7 +288,7 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **129 test files** covering critical app logic (as of March 2026)
+- **146 test files** covering critical app logic (as of March 2026)
 - **1490+ unit tests** passing
 - Test categories:
   - Domain layer use cases (30+ test files)
@@ -411,6 +411,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** March 6, 2026
+**Last Updated:** March 7, 2026
 
 (Some content is by github copilot agent and may contain error)
