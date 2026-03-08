@@ -49,7 +49,7 @@ class QuizCoinEarningGuardTest {
         assertTrue(CoinEligibility.isEligibleForCoins(
             attemptScore = 5,
             generatedHistoryCount = 30,
-            currentHistoryCount = 30,
+            currentSheetHistoryCount = 30,
             lastAwardedCount = null
         ))
     }
@@ -59,7 +59,7 @@ class QuizCoinEarningGuardTest {
         assertTrue(CoinEligibility.isEligibleForCoins(
             attemptScore = 8,
             generatedHistoryCount = 40,
-            currentHistoryCount = 40,
+            currentSheetHistoryCount = 40,
             lastAwardedCount = 30
         ))
     }
@@ -69,7 +69,7 @@ class QuizCoinEarningGuardTest {
         assertTrue(CoinEligibility.isEligibleForCoins(
             attemptScore = 8,
             generatedHistoryCount = 40,
-            currentHistoryCount = 40,
+            currentSheetHistoryCount = 40,
             lastAwardedCount = 30
         ))
     }
@@ -81,7 +81,7 @@ class QuizCoinEarningGuardTest {
         assertFalse(CoinEligibility.isEligibleForCoins(
             attemptScore = 10,
             generatedHistoryCount = 39,
-            currentHistoryCount = 39,
+            currentSheetHistoryCount = 39,
             lastAwardedCount = 30
         ))
     }
@@ -91,7 +91,7 @@ class QuizCoinEarningGuardTest {
         assertFalse(CoinEligibility.isEligibleForCoins(
             attemptScore = 0,
             generatedHistoryCount = 50,
-            currentHistoryCount = 50,
+            currentSheetHistoryCount = 50,
             lastAwardedCount = null
         ))
     }
@@ -101,7 +101,7 @@ class QuizCoinEarningGuardTest {
         assertFalse(CoinEligibility.isEligibleForCoins(
             attemptScore = 10,
             generatedHistoryCount = 50,
-            currentHistoryCount = 55,
+            currentSheetHistoryCount = 55,
             lastAwardedCount = null
         ))
     }
@@ -111,7 +111,7 @@ class QuizCoinEarningGuardTest {
         assertFalse(CoinEligibility.isEligibleForCoins(
             attemptScore = 10,
             generatedHistoryCount = 50,
-            currentHistoryCount = null,
+            currentSheetHistoryCount = null,
             lastAwardedCount = null
         ))
     }
@@ -121,7 +121,7 @@ class QuizCoinEarningGuardTest {
         assertFalse(CoinEligibility.isEligibleForCoins(
             attemptScore = 10,
             generatedHistoryCount = 0,
-            currentHistoryCount = 0,
+            currentSheetHistoryCount = 0,
             lastAwardedCount = null
         ))
     }

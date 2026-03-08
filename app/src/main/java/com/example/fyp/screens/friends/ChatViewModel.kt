@@ -402,6 +402,10 @@ class ChatViewModel @Inject constructor(
             hasMoreMessages = false,
             clearedAt = now
         )
+
+        // Restart message observation with the new clearedAt filter
+        // so incoming messages after the clear are still displayed.
+        loadMessages(userId)
     }
 
     fun dismissClearSuccess() {

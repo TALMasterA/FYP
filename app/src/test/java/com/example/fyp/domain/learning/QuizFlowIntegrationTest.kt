@@ -112,7 +112,7 @@ class QuizFlowIntegrationTest {
         val eligible = CoinEligibility.isEligibleForCoins(
             attemptScore = 8,
             generatedHistoryCount = 50,
-            currentHistoryCount = 50,
+            currentSheetHistoryCount = 50,
             lastAwardedCount = null // first quiz
         )
 
@@ -128,7 +128,7 @@ class QuizFlowIntegrationTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 8,
                 generatedHistoryCount = 55,
-                currentHistoryCount = 55,
+                currentSheetHistoryCount = 55,
                 lastAwardedCount = 50
             )
         )
@@ -138,7 +138,7 @@ class QuizFlowIntegrationTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 8,
                 generatedHistoryCount = 60,
-                currentHistoryCount = 60,
+                currentSheetHistoryCount = 60,
                 lastAwardedCount = 50
             )
         )
@@ -171,7 +171,7 @@ class QuizFlowIntegrationTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 0,
                 generatedHistoryCount = 50,
-                currentHistoryCount = 50,
+                currentSheetHistoryCount = 50,
                 lastAwardedCount = null
             )
         )
@@ -208,7 +208,7 @@ class QuizFlowIntegrationTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 10,
                 generatedHistoryCount = 50,
-                currentHistoryCount = 60, // Changed since quiz was generated
+                currentSheetHistoryCount = 60, // Changed since quiz was generated
                 lastAwardedCount = null
             )
         )

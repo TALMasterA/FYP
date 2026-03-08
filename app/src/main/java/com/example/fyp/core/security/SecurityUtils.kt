@@ -76,9 +76,9 @@ fun validateUsername(username: String, minLength: Int = 3, maxLength: Int = 30):
  */
 fun sanitizeInput(input: String): String {
     return input
+        .replace("&", "&amp;")   // Ampersand MUST be first to avoid double-encoding
         .replace("<", "&lt;")
         .replace(">", "&gt;")
-        .replace("&", "&amp;")
         .replace("\"", "&quot;")
         .replace("'", "&#x27;")
         .replace("/", "&#x2F;")

@@ -67,7 +67,7 @@ class ProfileViewModelTest {
         viewModel.updateUsername("bad name!")
 
         assertEquals(
-            "Username can only contain letters, numbers, and underscores",
+            "Username can only contain letters, numbers, underscores, and hyphens",
             viewModel.uiState.value.error
         )
     }
@@ -81,7 +81,7 @@ class ProfileViewModelTest {
         viewModel.updateUsername("bad name")
 
         assertEquals(
-            "Username can only contain letters, numbers, and underscores",
+            "Username can only contain letters, numbers, underscores, and hyphens",
             viewModel.uiState.value.error
         )
     }
@@ -96,7 +96,7 @@ class ProfileViewModelTest {
 
         viewModel.updateUsername("ab")
 
-        assertEquals("Username must be 3-20 characters", viewModel.uiState.value.error)
+        assertEquals("Username must be at least 3 characters", viewModel.uiState.value.error)
     }
 
     @Test
@@ -107,7 +107,7 @@ class ProfileViewModelTest {
 
         viewModel.updateUsername("a".repeat(21))
 
-        assertEquals("Username must be 3-20 characters", viewModel.uiState.value.error)
+        assertEquals("Username must not exceed 20 characters", viewModel.uiState.value.error)
     }
 
     // ── updateUsername: already taken ─────────────────────────────────────────

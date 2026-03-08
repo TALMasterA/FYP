@@ -34,7 +34,7 @@ class CoinAndGenerationIntegrationTest {
         assertTrue(CoinEligibility.isEligibleForCoins(
             attemptScore = 8,
             generatedHistoryCount = initialCount,
-            currentHistoryCount = initialCount,
+            currentSheetHistoryCount = initialCount,
             lastAwardedCount = null
         ))
     }
@@ -60,7 +60,7 @@ class CoinAndGenerationIntegrationTest {
         assertTrue(CoinEligibility.isEligibleForCoins(
             attemptScore = 7,
             generatedHistoryCount = secondGenCount,
-            currentHistoryCount = secondGenCount,
+            currentSheetHistoryCount = secondGenCount,
             lastAwardedCount = firstGenCount
         ))
     }
@@ -75,7 +75,7 @@ class CoinAndGenerationIntegrationTest {
         assertTrue(CoinEligibility.isEligibleForCoins(
             attemptScore = 10,
             generatedHistoryCount = genCount,
-            currentHistoryCount = genCount,
+            currentSheetHistoryCount = genCount,
             lastAwardedCount = null
         ))
 
@@ -84,7 +84,7 @@ class CoinAndGenerationIntegrationTest {
         assertFalse(CoinEligibility.isEligibleForCoins(
             attemptScore = 10,
             generatedHistoryCount = genCount,
-            currentHistoryCount = genCount,
+            currentSheetHistoryCount = genCount,
             lastAwardedCount = genCount
         ))
     }
@@ -125,7 +125,7 @@ class CoinAndGenerationIntegrationTest {
         assertFalse(CoinEligibility.isEligibleForCoins(
             attemptScore = 10,
             generatedHistoryCount = 50,
-            currentHistoryCount = 55,
+            currentSheetHistoryCount = 55,
             lastAwardedCount = null
         ))
     }
@@ -153,7 +153,7 @@ class CoinAndGenerationIntegrationTest {
         assertFalse(CoinEligibility.isEligibleForCoins(
             attemptScore = 10,
             generatedHistoryCount = newGenCount,
-            currentHistoryCount = newGenCount,
+            currentSheetHistoryCount = newGenCount,
             lastAwardedCount = firstAwardedAt
         ))
     }
@@ -180,7 +180,7 @@ class CoinAndGenerationIntegrationTest {
         assertFalse(CoinEligibility.isEligibleForCoins(
             attemptScore = 0,
             generatedHistoryCount = 50,
-            currentHistoryCount = 50,
+            currentSheetHistoryCount = 50,
             lastAwardedCount = null
         ))
     }

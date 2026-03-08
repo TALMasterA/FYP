@@ -294,7 +294,10 @@ class FirestoreHistoryRepository @Inject constructor(
 
                 data.forEach { (lang, count) ->
                     if (lang.isNotEmpty() && count is Number) {
-                        counts[lang] = count.toInt()
+                        val value = count.toInt()
+                        if (value > 0) {
+                            counts[lang] = value
+                        }
                     }
                 }
 
@@ -336,9 +339,45 @@ class FirestoreHistoryRepository @Inject constructor(
 
             if (updates.isNotEmpty()) {
                 statsRef.set(updates, com.google.firebase.firestore.SetOptions.merge()).await()
+
+                // Clamp negative counts to zero after decrement to prevent data corruption.
+                // FieldValue.increment can go below zero if the cache is stale.
+                if (!increment) {
+                    clampNegativeCounts(statsRef)
+                }
             }
         } catch (e: Exception) {
             Log.w("FirestoreHistoryRepository", "Failed to update language counts cache for user ${userId.value}", e)
+        }
+    }
+
+    /**
+     * Reads the language counts document and sets any negative values to 0.
+     * This is called after decrement operations to prevent stale cache data
+     * from producing negative counts that would confuse the UI.
+     */
+    private suspend fun clampNegativeCounts(
+        statsRef: com.google.firebase.firestore.DocumentReference
+    ) {
+        try {
+            val doc = statsRef.get().await()
+            if (!doc.exists()) return
+
+            val data = doc.data ?: return
+            val fixes = mutableMapOf<String, Any>()
+
+            data.forEach { (lang, count) ->
+                val value = (count as? Number)?.toLong() ?: 0L
+                if (value < 0) {
+                    fixes[lang] = 0L
+                }
+            }
+
+            if (fixes.isNotEmpty()) {
+                statsRef.update(fixes).await()
+            }
+        } catch (e: Exception) {
+            Log.w("FirestoreHistoryRepository", "Failed to clamp negative counts", e)
         }
     }
 
@@ -468,6 +507,8 @@ class FirestoreHistoryRepository @Inject constructor(
                     }
                     if (updates.isNotEmpty()) {
                         statsRef.set(updates, com.google.firebase.firestore.SetOptions.merge()).await()
+                        // Clamp negative values produced by stale cache
+                        clampNegativeCounts(statsRef)
                     }
                 } catch (e: Exception) {
                     Log.w("FirestoreHistoryRepository", "Incremental count decrement failed, rebuilding cache", e)

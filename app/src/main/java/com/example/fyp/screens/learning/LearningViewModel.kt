@@ -202,11 +202,12 @@ class LearningViewModel @Inject constructor(
 
     private fun refreshClusters() {
         viewModelScope.launch {
-            val s = _uiState.value
+            val primaryCode = _uiState.value.primaryLanguageCode
             // Use TOTAL language counts from all records, not limited display records
             val languageCounts = sharedHistoryDataSource.languageCounts.value
-            val clusters = buildLanguageClustersFromCounts(languageCounts, s.primaryLanguageCode)
-            _uiState.value = s.copy(clusters = clusters)
+            val clusters = buildLanguageClustersFromCounts(languageCounts, primaryCode)
+            // Re-read state at write time to avoid overwriting concurrent updates
+            _uiState.value = _uiState.value.copy(clusters = clusters)
 
             refreshSheetMetaForClusters()
         }

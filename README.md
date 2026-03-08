@@ -1,4 +1,4 @@
-# FYP - Translation & Learning App (Reviewing)
+# FYP - Translation & Learning App (Final)
 
 An Android-based translation and language learning application with AI-powered features.
 
@@ -243,7 +243,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (146 test files, 1490+ tests)
+# Run all unit tests (154 test files, 1842+ tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -288,20 +288,24 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **146 test files** covering critical app logic (as of March 2026)
-- **1490+ unit tests** passing
+- **154 test files** covering critical app logic (as of March 2026)
+- **1842+ unit tests** passing
 - Test categories:
   - Domain layer use cases (30+ test files)
   - ViewModels (10+ test files)
   - Models and serialization (15+ test files)
-  - Repositories and data layer (12+ test files)
+  - Repositories and data layer (19+ test files)
   - Navigation routes and rules (5 test files)
   - UI components (StandardButtons, StandardTextFields, StandardDialogs, ThemeHelper, ColorPalette)
-  - Security utilities (validation, sanitization, rate limiting)
+  - Security utilities (validation, sanitization, rate limiting, encoding correctness)
   - Performance utilities (debouncing, throttling)
   - Anti-cheat and generation eligibility (comprehensive)
   - Caching logic (translation, language detection)
   - Onboarding persistence logic (first-launch and version-based re-show)
+  - Speech controllers (TTS controller, continuous conversation controller)
+  - Data layer algorithms (quiz context selection, data cleanup utilities)
+  - Shared data sources (SharedHistoryDataSource, SharedFriendsDataSource)
+  - Feedback repository (validation, retry logic, error classification)
 
 **Key Test Suites:**
 - `OnboardingLogicTest` - Onboarding first-launch and version-based re-show logic
@@ -309,8 +313,16 @@ gh auth login
 - `CoinEligibilityTest` - Coin award anti-cheat logic
 - `CoinAndGenerationIntegrationTest` - End-to-end eligibility scenarios
 - `UiTextAlignmentTest` - Critical test preventing enum/list misalignment crashes
-- `SecurityUtilsTest` - Input validation and sanitization security guards
+- `SecurityUtilsTest` + `SanitizeInputExtendedTest` - Input validation, sanitization, and encoding correctness
 - `PerformanceUtilsTest` - Debouncing and throttling optimization patterns
+- `QuizGenerationRepositoryImplTest` - Quiz context selection algorithm (weighted sampling, deduplication)
+- `TtsControllerTest` - Text-to-speech state management and error handling
+- `ContinuousConversationControllerTest` - Continuous conversation session lifecycle and guards
+- `DataCleanupUtilsTest` - Data housekeeping cutoff calculations and orphan detection
+- `SharedHistoryDataSourceTest` - Shared history caching, LRU filtering, debounced refresh
+- `SharedFriendsDataSourceTest` - Friends state management, seen/unseen tracking, username cache
+- `FirestoreHistoryRepositoryLogicTest` - Language count aggregation, batch chunking, positive filtering
+- `FirestoreFeedbackRepositoryTest` - Feedback validation, retry logic, error classification
 - Friend system tests - Friend requests, chat operations, shared items, blocking
 - Repository tests - Firestore operations, caching, cleanup
 - Cache tests - Translation cache, language detection cache data models
@@ -411,6 +423,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** March 7, 2026
+**Last Updated:** March 8, 2026
 
 (Some content is by github copilot agent and may contain error)

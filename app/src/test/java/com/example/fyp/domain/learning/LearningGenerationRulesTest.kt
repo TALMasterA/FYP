@@ -214,7 +214,7 @@ class LearningGenerationRulesTest {
         val coinEligible = CoinEligibility.isEligibleForCoins(
             attemptScore = 5,
             generatedHistoryCount = 50,
-            currentHistoryCount = 50,
+            currentSheetHistoryCount = 50,
             lastAwardedCount = null
         )
         assertTrue("First quiz attempt should earn coins", coinEligible)

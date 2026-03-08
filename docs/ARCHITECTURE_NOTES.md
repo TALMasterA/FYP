@@ -329,3 +329,75 @@ scope.launch(Dispatchers.IO) {
 **Guard:** `OnboardingLogicTest` verifies all four cases: first launch, complete with matching version, version mismatch (update), and null version (legacy prefs).
 
 ---
+
+## 17. sanitizeInput() — Encoding Order
+
+**File:** `core/security/SecurityUtils.kt`
+
+**Invariant:** The ampersand (`&`) replacement MUST be the first operation in `sanitizeInput()`. If `<` is replaced with `&lt;` first, and then `&` is replaced with `&amp;`, the already-encoded `&lt;` becomes `&amp;lt;` (double-encoded).
+
+**Rule:** The replacement order must always be:
+1. `&` → `&amp;` (FIRST — before any other entity is introduced)
+2. `<` → `&lt;`
+3. `>` → `&gt;`
+4. `"` → `&quot;`
+5. `'` → `&#x27;`
+6. `/` → `&#x2F;`
+
+**Guard:** `SanitizeInputExtendedTest` verifies that double-encoding does not occur.
+
+---
+
+## 18. Username Validation — Consistent Regex Across Codebase
+
+**Files:** `core/security/SecurityUtils.kt`, `screens/settings/ProfileViewModel.kt`
+
+**Invariant:** Username validation must use the shared `validateUsername()` function from `SecurityUtils.kt` everywhere. The canonical regex is `^[a-zA-Z0-9_-]+$` (letters, numbers, underscores, hyphens).
+
+**Rule:** Never define inline username validation regex in ViewModels or other classes. Always delegate to `validateUsername()` for consistent rules.
+
+---
+
+## 19. NetworkRetry — Standard Exponential Backoff
+
+**File:** `core/connectivity/NetworkRetry.kt`
+
+**Invariant:** The backoff formula must be `currentDelay = currentDelay * factor` (simple multiplicative), NOT `currentDelay * factor^attempt` (double-exponential). The latter grows super-exponentially and reaches the cap much faster than intended.
+
+**Rule:** The delay sequence for default parameters (initial=500ms, factor=2.0) should be: 500ms → 1000ms → 2000ms → 4000ms → 5000ms (capped).
+
+---
+
+## 20. SpeechViewModel — Synchronized Pending Saves
+
+**File:** `screens/speech/SpeechViewModel.kt`
+
+**Invariant:** `pendingContinuousSaves` must be accessed under `synchronized(pendingLock)` because the debounce coroutine and `onCleared()` can race to read and clear the list simultaneously. Without synchronization, the same records could be flushed to Firestore twice (duplicate history entries).
+
+**Rule:** In `onCleared()`, cancel the debounce job FIRST, then call `flushPendingSaves()`. Never flush and then cancel — the debounce coroutine could fire between the flush and the cancel.
+
+---
+
+## 21. Language Count Cache — Non-Negative Invariant
+
+**File:** `data/history/FirestoreHistoryRepository.kt`
+
+**Invariant:** Firestore `FieldValue.increment(-1)` can drive language counts below zero if the cache document is stale or was rebuilt. Negative counts confuse generation eligibility logic and display.
+
+**Rule:** After every decrement operation, call `clampNegativeCounts()` to read back the document and set any negative values to 0. When reading counts in `getLanguageCounts()`, filter out non-positive values.
+
+---
+
+## 22. CoinEligibility — Client Must Match Server
+
+**Files:** `domain/learning/CoinEligibility.kt`, `fyp-backend/functions/src/index.ts` (awardQuizCoins)
+
+**Invariant:** The client-side `isEligibleForCoins()` check must match the server-side `awardQuizCoins` Cloud Function. Both must:
+1. Check score > 0 (1 correct answer = 1 coin)
+2. Verify quiz version (`generatedHistoryCount`) equals the **learning sheet's** `historyCountAtGenerate` — NOT the user's live history count
+3. Require 10+ more records than the last awarded quiz count
+4. Allow first quiz for a language pair without minimum threshold
+
+**Rule:** The third parameter to `isEligibleForCoins()` is named `currentSheetHistoryCount` (the sheet version), not `currentHistoryCount` (the live count). This prevents false rejections when users translate new sentences between quiz generation and completion.
+
+---

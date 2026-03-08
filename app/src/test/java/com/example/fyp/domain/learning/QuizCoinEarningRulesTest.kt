@@ -33,7 +33,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 5,
                 generatedHistoryCount = 50,
-                currentHistoryCount = 50,
+                currentSheetHistoryCount = 50,
                 lastAwardedCount = null
             )
         )
@@ -45,7 +45,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 1,
                 generatedHistoryCount = 50,
-                currentHistoryCount = 50,
+                currentSheetHistoryCount = 50,
                 lastAwardedCount = null
             )
         )
@@ -59,7 +59,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 0,
                 generatedHistoryCount = 50,
-                currentHistoryCount = 50,
+                currentSheetHistoryCount = 50,
                 lastAwardedCount = null
             )
         )
@@ -71,7 +71,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = -1,
                 generatedHistoryCount = 50,
-                currentHistoryCount = 50,
+                currentSheetHistoryCount = 50,
                 lastAwardedCount = null
             )
         )
@@ -85,7 +85,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 5,
                 generatedHistoryCount = 50,
-                currentHistoryCount = 55, // Different from generated
+                currentSheetHistoryCount = 55, // Different from generated
                 lastAwardedCount = null
             )
         )
@@ -97,7 +97,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 5,
                 generatedHistoryCount = 50,
-                currentHistoryCount = null,
+                currentSheetHistoryCount = null,
                 lastAwardedCount = null
             )
         )
@@ -109,7 +109,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 5,
                 generatedHistoryCount = 0,
-                currentHistoryCount = 0,
+                currentSheetHistoryCount = 0,
                 lastAwardedCount = null
             )
         )
@@ -124,7 +124,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 5,
                 generatedHistoryCount = 60,
-                currentHistoryCount = 60,
+                currentSheetHistoryCount = 60,
                 lastAwardedCount = 50
             )
         )
@@ -136,7 +136,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 5,
                 generatedHistoryCount = 59,
-                currentHistoryCount = 59,
+                currentSheetHistoryCount = 59,
                 lastAwardedCount = 50
             )
         )
@@ -148,7 +148,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 5,
                 generatedHistoryCount = 50,
-                currentHistoryCount = 50,
+                currentSheetHistoryCount = 50,
                 lastAwardedCount = 50
             )
         )
@@ -160,7 +160,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 5,
                 generatedHistoryCount = 70,
-                currentHistoryCount = 70,
+                currentSheetHistoryCount = 70,
                 lastAwardedCount = 50
             )
         )
@@ -175,7 +175,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 8,
                 generatedHistoryCount = 50,
-                currentHistoryCount = 50,
+                currentSheetHistoryCount = 50,
                 lastAwardedCount = null
             )
         )
@@ -185,7 +185,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 7,
                 generatedHistoryCount = 60,
-                currentHistoryCount = 60,
+                currentSheetHistoryCount = 60,
                 lastAwardedCount = 50
             )
         )
@@ -195,7 +195,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 9,
                 generatedHistoryCount = 65,
-                currentHistoryCount = 65,
+                currentSheetHistoryCount = 65,
                 lastAwardedCount = 60
             )
         )
@@ -205,7 +205,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 6,
                 generatedHistoryCount = 70,
-                currentHistoryCount = 70,
+                currentSheetHistoryCount = 70,
                 lastAwardedCount = 60
             )
         )
@@ -220,7 +220,7 @@ class QuizCoinEarningRulesTest {
             CoinEligibility.isEligibleForCoins(
                 attemptScore = 10,
                 generatedHistoryCount = 50,
-                currentHistoryCount = 55, // Count changed since quiz was generated
+                currentSheetHistoryCount = 55, // Count changed since quiz was generated
                 lastAwardedCount = null
             )
         )

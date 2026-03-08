@@ -86,6 +86,8 @@ class SpeechViewModel @Inject constructor(
     // Debounce queue for continuous-mode history saves.
     // Segments are accumulated and flushed to Firestore 800 ms after the last segment arrives,
     // reducing the number of individual Firestore round-trips during rapid speech.
+    // Synchronized access to prevent race conditions between the debounce coroutine and onCleared().
+    private val pendingLock = Any()
     private val pendingContinuousSaves = mutableListOf<TranslationRecord>()
     private var continuousFlushJob: Job? = null
 
@@ -130,7 +132,9 @@ class SpeechViewModel @Inject constructor(
         if (mode == "continuous") {
             // Queue continuous records and flush 800 ms after the last segment arrives.
             // This batches multiple rapid segments into fewer Firestore round-trips.
-            pendingContinuousSaves.add(record)
+            synchronized(pendingLock) {
+                pendingContinuousSaves.add(record)
+            }
             continuousFlushJob?.cancel()
             continuousFlushJob = viewModelScope.launch {
                 delay(CONTINUOUS_SAVE_DEBOUNCE_MS)
@@ -143,9 +147,12 @@ class SpeechViewModel @Inject constructor(
 
     /** Flush all queued continuous records to Firestore as a single batch write. */
     private fun flushPendingSaves() {
-        if (pendingContinuousSaves.isEmpty()) return
-        val toSave = pendingContinuousSaves.toList()
-        pendingContinuousSaves.clear()
+        val toSave: List<TranslationRecord>
+        synchronized(pendingLock) {
+            if (pendingContinuousSaves.isEmpty()) return
+            toSave = pendingContinuousSaves.toList()
+            pendingContinuousSaves.clear()
+        }
         viewModelScope.launch {
             historyRepo.saveBatch(toSave)
         }
@@ -391,10 +398,10 @@ class SpeechViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         stopContinuous()
-        // Flush pending records before cancelling the debounce job so no segments are lost.
-        // viewModelScope is still active at this point (it's cancelled after onCleared returns).
-        flushPendingSaves()
+        // Cancel the debounce job FIRST to prevent it from racing with our final flush.
         continuousFlushJob?.cancel()
+        // Then flush remaining records. viewModelScope is still active here.
+        flushPendingSaves()
     }
 
     companion object {

@@ -12,7 +12,7 @@ import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.core.security.AuditLogger
 import com.example.fyp.core.security.ValidationResult
 import com.example.fyp.core.security.sanitizeInput
-import com.example.fyp.core.security.validateTextLength
+import com.example.fyp.core.security.validateUsername
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,18 +94,10 @@ class ProfileViewModel @Inject constructor(
     fun updateUsername(username: String) {
         val userId = currentUserId ?: return
 
-        // Validate username format
-        if (!username.matches(Regex("^[a-zA-Z0-9_]+$"))) {
-            _uiState.value = _uiState.value.copy(
-                error = "Username can only contain letters, numbers, and underscores"
-            )
-            return
-        }
-
-        if (username.length !in 3..20) {
-            _uiState.value = _uiState.value.copy(
-                error = "Username must be 3-20 characters"
-            )
+        // Use shared validation function for consistent username rules
+        val validation = validateUsername(username, minLength = 3, maxLength = 20)
+        if (validation is ValidationResult.Invalid) {
+            _uiState.value = _uiState.value.copy(error = validation.message)
             return
         }
 

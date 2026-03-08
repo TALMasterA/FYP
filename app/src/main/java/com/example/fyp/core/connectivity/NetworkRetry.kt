@@ -19,7 +19,6 @@ package com.example.fyp.core
 
 import kotlinx.coroutines.delay
 import kotlin.math.min
-import kotlin.math.pow
 
 /**
  * Utility for executing network operations with exponential backoff retry logic.
@@ -73,7 +72,7 @@ object NetworkRetry {
 
                 // Calculate next delay with exponential backoff
                 currentDelay = min(
-                    (currentDelay * factor.pow(currentAttempt.toDouble())).toLong(),
+                    (currentDelay * factor).toLong(),
                     maxDelayMs
                 )
             }
