@@ -368,13 +368,10 @@ class FriendsViewModel @Inject constructor(
 
     fun sendFriendRequest(toUserId: String, note: String = "") {
         val fromUserId = currentUserId ?: return
-        // Require a username before sending any request so the recipient sees a real name
-        if (!_uiState.value.currentUserHasUsername) {
-            _uiState.value = _uiState.value.copy(
-                error = "Please set a username in your profile before sending friend requests."
-            )
-            return
-        }
+        // Defence-in-depth: delegate to the single canonical username gate.
+        // The UI already calls requireUsernameForAddFriends() before opening the
+        // search dialog, so this is a safety net only.
+        if (!requireUsernameForAddFriends()) return
         // Client-side rate limit: max MAX_PENDING_REQUESTS pending outgoing requests
         if (_uiState.value.outgoingRequests.size >= MAX_PENDING_REQUESTS) {
             _uiState.value = _uiState.value.copy(

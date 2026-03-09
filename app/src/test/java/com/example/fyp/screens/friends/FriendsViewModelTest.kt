@@ -50,6 +50,9 @@ import org.mockito.kotlin.*
  * 16. Max pending requests limit enforced
  * 17. clearMessages clears error and success
  * 18. acceptAllRequests handles partial failures
+ * 19. requireUsernameForAddFriends returns true with username
+ * 20. sendFriendRequest delegates username check to gate
+ * 21. rejectAllRequests declines all incoming requests
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class FriendsViewModelTest {
@@ -473,6 +476,59 @@ class FriendsViewModelTest {
 
         assertFalse(result)
         assertNotNull(vm.uiState.value.error)
+    }
+
+    @Test
+    fun `requireUsernameForAddFriends returns true when username is set`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        val result = vm.requireUsernameForAddFriends()
+
+        assertTrue(result)
+        assertNull(vm.uiState.value.error)
+    }
+
+    // ── sendFriendRequest delegates to requireUsernameForAddFriends ──
+
+    @Test
+    fun `sendFriendRequest delegates username check to requireUsernameForAddFriends`() = runTest {
+        whenever(sharedFriendsDataSource.getCachedUsername("user1")).thenReturn(null)
+        whenever(friendsRepository.getPublicProfile(UserId("user1")))
+            .thenReturn(PublicUserProfile(uid = "user1", username = ""))
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.sendFriendRequest("target1")
+
+        // Should have set the same error as requireUsernameForAddFriends
+        assertNotNull(vm.uiState.value.error)
+        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        // sendFriendRequestUseCase should NOT have been called
+        verifyNoInteractions(sendFriendRequestUseCase)
+    }
+
+    // ── rejectAllRequests ────────────────────────────────────────────
+
+    @Test
+    fun `rejectAllRequests declines all incoming requests`() = runTest {
+        val requests = listOf(
+            FriendRequest(requestId = "req1", fromUserId = "s1", toUserId = "user1"),
+            FriendRequest(requestId = "req2", fromUserId = "s2", toUserId = "user1")
+        )
+        incomingRequestsFlow.value = requests
+
+        whenever(rejectFriendRequestUseCase.invoke("req1")).thenReturn(Result.success(Unit))
+        whenever(rejectFriendRequestUseCase.invoke("req2")).thenReturn(Result.success(Unit))
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.rejectAllRequests()
+
+        assertNotNull(vm.uiState.value.successMessage)
+        assertTrue(vm.uiState.value.successMessage!!.contains("2"))
     }
 
     // ── exitDeleteMode ──────────────────────────────────────────────
