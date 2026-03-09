@@ -53,6 +53,10 @@ import org.mockito.kotlin.*
  * 19. requireUsernameForAddFriends returns true with username
  * 20. sendFriendRequest delegates username check to gate
  * 21. rejectAllRequests declines all incoming requests
+ * 22. acceptFriendRequest without username shows error (blocks use case)
+ * 23. acceptAllRequests without username shows error (blocks use case)
+ * 24. requireUsernameForFriendActions (unified gate) returns false when no username
+ * 25. requireUsernameForFriendActions returns true when username is set
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class FriendsViewModelTest {
@@ -507,6 +511,82 @@ class FriendsViewModelTest {
         assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
         // sendFriendRequestUseCase should NOT have been called
         verifyNoInteractions(sendFriendRequestUseCase)
+    }
+
+    // ── acceptFriendRequest blocked by username gate ─────────────────
+
+    @Test
+    fun `acceptFriendRequest without username shows error and does not call use case`() = runTest {
+        whenever(sharedFriendsDataSource.getCachedUsername("user1")).thenReturn(null)
+        whenever(friendsRepository.getPublicProfile(UserId("user1")))
+            .thenReturn(PublicUserProfile(uid = "user1", username = ""))
+
+        val request = FriendRequest(requestId = "req1", fromUserId = "sender1", toUserId = "user1")
+        incomingRequestsFlow.value = listOf(request)
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.acceptFriendRequest("req1")
+
+        assertNotNull(vm.uiState.value.error)
+        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        // acceptFriendRequestUseCase should NOT have been called
+        verifyNoInteractions(acceptFriendRequestUseCase)
+    }
+
+    // ── acceptAllRequests blocked by username gate ───────────────────
+
+    @Test
+    fun `acceptAllRequests without username shows error and does not call use case`() = runTest {
+        whenever(sharedFriendsDataSource.getCachedUsername("user1")).thenReturn(null)
+        whenever(friendsRepository.getPublicProfile(UserId("user1")))
+            .thenReturn(PublicUserProfile(uid = "user1", username = ""))
+
+        val requests = listOf(
+            FriendRequest(requestId = "req1", fromUserId = "s1", toUserId = "user1"),
+            FriendRequest(requestId = "req2", fromUserId = "s2", toUserId = "user1")
+        )
+        incomingRequestsFlow.value = requests
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.acceptAllRequests()
+
+        assertNotNull(vm.uiState.value.error)
+        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        // acceptFriendRequestUseCase should NOT have been called
+        verifyNoInteractions(acceptFriendRequestUseCase)
+    }
+
+    // ── requireUsernameForFriendActions (unified gate) ───────────────
+
+    @Test
+    fun `requireUsernameForFriendActions returns false and sets error when no username`() = runTest {
+        whenever(sharedFriendsDataSource.getCachedUsername("user1")).thenReturn(null)
+        whenever(friendsRepository.getPublicProfile(UserId("user1")))
+            .thenReturn(PublicUserProfile(uid = "user1", username = ""))
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        val result = vm.requireUsernameForFriendActions()
+
+        assertFalse(result)
+        assertNotNull(vm.uiState.value.error)
+        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+    }
+
+    @Test
+    fun `requireUsernameForFriendActions returns true when username is set`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        val result = vm.requireUsernameForFriendActions()
+
+        assertTrue(result)
+        assertNull(vm.uiState.value.error)
     }
 
     // ── rejectAllRequests ────────────────────────────────────────────

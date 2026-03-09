@@ -352,13 +352,15 @@ class FriendsViewModel @Inject constructor(
     // ── Friend request actions ────────────────────────────────────────────────
 
     /**
-     * Surfaces a clear error when the user tries to open the Add Friends dialog
-     * without having set a username yet.
+     * Single canonical gate: surfaces a clear error when the user attempts any
+     * friend-related action (send, accept, accept-all) without having set a
+     * username first.  Used by [sendFriendRequest], [acceptFriendRequest],
+     * [acceptAllRequests], and the UI's "Add Friends" button.
      */
-    fun requireUsernameForAddFriends(): Boolean {
+    fun requireUsernameForFriendActions(): Boolean {
         return if (!_uiState.value.currentUserHasUsername) {
             _uiState.value = _uiState.value.copy(
-                error = "Please set a username in your profile before sending friend requests."
+                error = "Please set a username in your profile before managing friend requests."
             )
             false
         } else {
@@ -366,12 +368,18 @@ class FriendsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Legacy convenience alias — delegates to [requireUsernameForFriendActions].
+     * Retained for callers that only guard the "Add Friends" dialog.
+     */
+    fun requireUsernameForAddFriends(): Boolean = requireUsernameForFriendActions()
+
     fun sendFriendRequest(toUserId: String, note: String = "") {
         val fromUserId = currentUserId ?: return
         // Defence-in-depth: delegate to the single canonical username gate.
         // The UI already calls requireUsernameForAddFriends() before opening the
         // search dialog, so this is a safety net only.
-        if (!requireUsernameForAddFriends()) return
+        if (!requireUsernameForFriendActions()) return
         // Client-side rate limit: max MAX_PENDING_REQUESTS pending outgoing requests
         if (_uiState.value.outgoingRequests.size >= MAX_PENDING_REQUESTS) {
             _uiState.value = _uiState.value.copy(
@@ -424,6 +432,10 @@ class FriendsViewModel @Inject constructor(
 
     fun acceptFriendRequest(requestId: String) {
         val userId = currentUserId ?: return
+        // Defence-in-depth: require a username before accepting a friend request.
+        // Without a username the Firestore friend-relation document would store a
+        // blank friendUsername, and the sender's profile enrichment can fail.
+        if (!requireUsernameForFriendActions()) return
         val friendUserId = _uiState.value.incomingRequests
             .firstOrNull { it.requestId == requestId }
             ?.fromUserId
@@ -528,6 +540,8 @@ class FriendsViewModel @Inject constructor(
      */
     fun acceptAllRequests() {
         val userId = currentUserId ?: return
+        // Defence-in-depth: require a username before accepting friend requests.
+        if (!requireUsernameForFriendActions()) return
         val requests = _uiState.value.incomingRequests
         if (requests.isEmpty()) return
 
