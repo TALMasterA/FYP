@@ -55,6 +55,7 @@ private class RecordingSettingsRepository : UserSettingsRepository {
         notifPrefCalls.add(Triple(userId, field, enabled))
     }
     override suspend fun expandHistoryViewLimit(userId: UserId, newLimit: Int) {}
+    override suspend fun setLastUsernameChangeMs(userId: UserId, timestampMs: Long) {}
 }
 
 /**

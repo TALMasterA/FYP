@@ -56,6 +56,7 @@ fun ProfileScreen(
     var username by remember { mutableStateOf("") }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var deletePassword by remember { mutableStateOf("") }
+    var showUsernameConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.profile) {
         username = uiState.profile.username
@@ -80,6 +81,53 @@ fun ProfileScreen(
             kotlinx.coroutines.delay(UiConstants.SUCCESS_MESSAGE_DURATION_MS)
             viewModel.clearSuccessMessage()
         }
+    }
+
+    // ── Username change confirmation dialog ──
+    if (showUsernameConfirm) {
+        AlertDialog(
+            onDismissRequest = { showUsernameConfirm = false },
+            title = { Text(t(UiTextKey.SettingsUsernameConfirmTitle)) },
+            text = { Text(t(UiTextKey.SettingsUsernameConfirmMessage)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showUsernameConfirm = false
+                    viewModel.updateUsername(username)
+                }) {
+                    Text(t(UiTextKey.ActionConfirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUsernameConfirm = false }) {
+                    Text(t(UiTextKey.ActionCancel))
+                }
+            }
+        )
+    }
+
+    // ── Username cooldown rejection dialog ──
+    uiState.usernameCooldownDays?.let { days ->
+        val hours = uiState.usernameCooldownHours ?: 0
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissUsernameCooldownDialog() },
+            title = { Text(t(UiTextKey.SettingsUsernameCooldownTitle)) },
+            text = {
+                Text(
+                    if (days > 0) {
+                        t(UiTextKey.SettingsUsernameCooldownMessage)
+                            .replace("{days}", days.toString())
+                    } else {
+                        t(UiTextKey.SettingsUsernameCooldownMessageHours)
+                            .replace("{hours}", hours.toString())
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.dismissUsernameCooldownDialog() }) {
+                    Text(t(UiTextKey.ActionConfirm))
+                }
+            }
+        )
     }
 
     StandardScreenScaffold(
@@ -140,7 +188,13 @@ fun ProfileScreen(
                     )
 
                     Button(
-                        onClick = { viewModel.updateUsername(username) },
+                        onClick = {
+                            if (username != uiState.profile.username) {
+                                showUsernameConfirm = true
+                            } else {
+                                viewModel.updateUsername(username)
+                            }
+                        },
                         enabled = !uiState.isLoading && username.isNotBlank() && username.length in 3..20,
                         modifier = Modifier.fillMaxWidth()
                     ) {

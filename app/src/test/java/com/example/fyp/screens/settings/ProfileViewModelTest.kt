@@ -1,6 +1,7 @@
 package com.example.fyp.screens.settings
 
 import com.example.fyp.data.friends.FriendsRepository
+import com.example.fyp.data.settings.FirestoreUserSettingsRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.user.FirestoreProfileRepository
 import com.example.fyp.model.UserId
@@ -27,6 +28,7 @@ class ProfileViewModelTest {
     private lateinit var authRepo: FirebaseAuthRepository
     private lateinit var profileRepo: FirestoreProfileRepository
     private lateinit var friendsRepo: FriendsRepository
+    private lateinit var settingsRepo: FirestoreUserSettingsRepository
 
     private val authStateFlow = MutableStateFlow<AuthState>(AuthState.Loading)
     private val loggedInState = AuthState.LoggedIn(User(uid = "user1", email = "test@example.com"))
@@ -41,6 +43,7 @@ class ProfileViewModelTest {
 
         profileRepo = mock()
         friendsRepo = mock()
+        settingsRepo = mock()
     }
 
     @After
@@ -53,7 +56,7 @@ class ProfileViewModelTest {
             whenever(friendsRepo.getPublicProfile(UserId("user1")))
                 .thenReturn(PublicUserProfile(uid = "user1", username = "old_user"))
         }
-        return ProfileViewModel(authRepo, profileRepo, friendsRepo)
+        return ProfileViewModel(authRepo, profileRepo, friendsRepo, settingsRepo)
     }
 
     // ── updateUsername: format validation ─────────────────────────────────────
@@ -127,7 +130,7 @@ class ProfileViewModelTest {
         assertEquals("Username already taken", viewModel.uiState.value.error)
     }
 
-    // ── updateUsername: keeping same username is allowed ──────────────────────
+    // ── updateUsername: keeping same username is a no-op ──────────────────────
 
     @Test
     fun `updateUsername allows keeping current username even if not available`() = runTest {
@@ -135,18 +138,13 @@ class ProfileViewModelTest {
         authStateFlow.value = loggedInState
         testDispatcher.scheduler.advanceUntilIdle()
 
-        whenever(friendsRepo.isUsernameAvailable(Username("old_user")))
-            .thenReturn(false)
-        whenever(friendsRepo.setUsername(UserId("user1"), Username("old_user")))
-            .thenReturn(Result.success(Unit))
-        whenever(friendsRepo.updatePublicProfile(UserId("user1"), mapOf("username" to "old_user")))
-            .thenReturn(Result.success(Unit))
-
+        // Keeping the same username ("old_user") is a no-op — skips API calls entirely
         viewModel.updateUsername("old_user")
         testDispatcher.scheduler.advanceUntilIdle()
 
         assertNull(viewModel.uiState.value.error)
-        assertEquals("Username updated successfully", viewModel.uiState.value.successMessage)
+        // No success message because no change was made
+        assertNull(viewModel.uiState.value.successMessage)
     }
 
     // ── deleteAccount: blank password ────────────────────────────────────────

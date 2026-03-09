@@ -38,6 +38,7 @@ private class FakeUserSettingsRepository : UserSettingsRepository {
     override suspend fun setAutoThemeEnabled(userId: UserId, enabled: Boolean) {}
     override suspend fun setNotificationPref(userId: UserId, field: String, enabled: Boolean) {}
     override suspend fun expandHistoryViewLimit(userId: UserId, newLimit: Int) {}
+    override suspend fun setLastUsernameChangeMs(userId: UserId, timestampMs: Long) {}
 }
 
 /**

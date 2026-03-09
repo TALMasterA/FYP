@@ -38,6 +38,7 @@ class FirestoreUserSettingsRepository @Inject constructor(
         val historyViewLimit = snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT
         val autoThemeEnabled = snap?.getBoolean("autoThemeEnabled") ?: false
         val lastPrimaryLanguageChangeMs = snap?.getLong("lastPrimaryLanguageChangeMs") ?: 0L
+        val lastUsernameChangeMs = snap?.getLong("lastUsernameChangeMs") ?: 0L
         val notifyNewMessages = snap?.getBoolean("notifyNewMessages") ?: false
         val notifyFriendRequests = snap?.getBoolean("notifyFriendRequests") ?: false
         val notifyRequestAccepted = snap?.getBoolean("notifyRequestAccepted") ?: false
@@ -56,6 +57,7 @@ class FirestoreUserSettingsRepository @Inject constructor(
             historyViewLimit = historyViewLimit,
             autoThemeEnabled = autoThemeEnabled,
             lastPrimaryLanguageChangeMs = lastPrimaryLanguageChangeMs,
+            lastUsernameChangeMs = lastUsernameChangeMs,
             notifyNewMessages = notifyNewMessages,
             notifyFriendRequests = notifyFriendRequests,
             notifyRequestAccepted = notifyRequestAccepted,
@@ -129,11 +131,13 @@ class FirestoreUserSettingsRepository @Inject constructor(
     }
 
     override suspend fun setVoiceForLanguage(userId: UserId, languageCode: LanguageCode, voiceName: VoiceName) {
-        // Use dot-notation field path to update only the specific language key
-        // within the voiceSettings map, without reading the entire document first.
-        // This eliminates one Firestore read per voice change.
+        // Use set-merge to safely create the document if it doesn't exist yet,
+        // while only updating the specific language key within the voiceSettings map.
         docRef(userId.value)
-            .update("voiceSettings.${languageCode.value}", voiceName.value)
+            .set(
+                mapOf("voiceSettings" to mapOf(languageCode.value to voiceName.value)),
+                SetOptions.merge()
+            )
             .await()
     }
 
@@ -163,6 +167,12 @@ class FirestoreUserSettingsRepository @Inject constructor(
         val clampedLimit = newLimit.coerceIn(UserSettings.BASE_HISTORY_LIMIT, UserSettings.MAX_HISTORY_LIMIT)
         docRef(userId.value)
             .set(mapOf("historyViewLimit" to clampedLimit), SetOptions.merge())
+            .await()
+    }
+
+    override suspend fun setLastUsernameChangeMs(userId: UserId, timestampMs: Long) {
+        docRef(userId.value)
+            .set(mapOf("lastUsernameChangeMs" to timestampMs), SetOptions.merge())
             .await()
     }
 }

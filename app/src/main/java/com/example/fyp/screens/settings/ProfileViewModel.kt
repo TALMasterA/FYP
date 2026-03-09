@@ -13,6 +13,8 @@ import com.example.fyp.core.security.AuditLogger
 import com.example.fyp.core.security.ValidationResult
 import com.example.fyp.core.security.sanitizeInput
 import com.example.fyp.core.security.validateUsername
+import com.example.fyp.data.settings.FirestoreUserSettingsRepository
+import com.example.fyp.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,14 +31,17 @@ data class ProfileUiState(
     val successMessage: String? = null,
     val isDeletingAccount: Boolean = false,
     val deleteError: String? = null,
-    val accountDeleted: Boolean = false
+    val accountDeleted: Boolean = false,
+    val usernameCooldownDays: Int? = null,
+    val usernameCooldownHours: Int? = null,
 )
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val profileRepo: FirestoreProfileRepository,
-    private val friendsRepo: FriendsRepository
+    private val friendsRepo: FriendsRepository,
+    private val settingsRepo: FirestoreUserSettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -101,12 +106,37 @@ class ProfileViewModel @Inject constructor(
             return
         }
 
+        // Skip cooldown check if the username is unchanged
+        if (username == _uiState.value.profile.username) return
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
                 error = null,
                 successMessage = null
             )
+
+            // Check cooldown before proceeding
+            try {
+                val settings = settingsRepo.fetchUserSettings(UserId(userId))
+                val now = System.currentTimeMillis()
+                if (!UserSettings.canChangeUsername(settings.lastUsernameChangeMs, now)) {
+                    val remainingMs = UserSettings.usernameCooldownRemainingMs(
+                        settings.lastUsernameChangeMs, now
+                    )
+                    val totalHours = ((remainingMs / (60 * 60 * 1000)) + 1).toInt()
+                    val days = totalHours / 24
+                    val hours = totalHours % 24
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        usernameCooldownDays = days,
+                        usernameCooldownHours = hours
+                    )
+                    return@launch
+                }
+            } catch (_: Exception) {
+                // If settings fetch fails, proceed without cooldown check
+            }
 
             // First, check if username is available
             val isAvailable = friendsRepo.isUsernameAvailable(Username(username))
@@ -121,6 +151,10 @@ class ProfileViewModel @Inject constructor(
             // Update username in the registry
             friendsRepo.setUsername(UserId(userId), Username(username))
                 .onSuccess {
+                    // Record the cooldown timestamp
+                    runCatching {
+                        settingsRepo.setLastUsernameChangeMs(UserId(userId), System.currentTimeMillis())
+                    }
                     // Update public profile
                     friendsRepo.updatePublicProfile(
                         UserId(userId),
@@ -154,6 +188,10 @@ class ProfileViewModel @Inject constructor(
                     )
                 }
         }
+    }
+
+    fun dismissUsernameCooldownDialog() {
+        _uiState.value = _uiState.value.copy(usernameCooldownDays = null, usernameCooldownHours = null)
     }
 
     fun deleteAccount(password: String) {

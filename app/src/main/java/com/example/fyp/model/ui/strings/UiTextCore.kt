@@ -781,6 +781,16 @@ enum class UiTextKey {
     // --- Help: Primary Language Info ---
     HelpPrimaryLanguageTitle,
     HelpPrimaryLanguageBody,
+
+    // --- Camera Language Hint ---
+    CameraLanguageHint,
+
+    // --- Username Change Cooldown ---
+    SettingsUsernameCooldownTitle,
+    SettingsUsernameCooldownMessage,
+    SettingsUsernameCooldownMessageHours,
+    SettingsUsernameConfirmTitle,
+    SettingsUsernameConfirmMessage,
 }
 
 // Core Ui Texts list

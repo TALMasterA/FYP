@@ -320,4 +320,82 @@ class UserSettingsTest {
             assertNotNull(settings.voiceSettings[lang])
         }
     }
+
+    // --- Username Cooldown Tests ---
+
+    @Test
+    fun `username cooldown constant is 30 days`() {
+        val thirtyDaysMs = 30L * 24 * 60 * 60 * 1000
+        assertEquals(thirtyDaysMs, UserSettings.USERNAME_CHANGE_COOLDOWN_MS)
+    }
+
+    @Test
+    fun `default lastUsernameChangeMs is zero`() {
+        val settings = UserSettings()
+        assertEquals(0L, settings.lastUsernameChangeMs)
+    }
+
+    @Test
+    fun `first username change is always allowed`() {
+        assertTrue(UserSettings.canChangeUsername(0L, System.currentTimeMillis()))
+    }
+
+    @Test
+    fun `username change blocked within 30 days`() {
+        val now = System.currentTimeMillis()
+        val oneDayAgo = now - (1L * 24 * 60 * 60 * 1000)
+        assertFalse(UserSettings.canChangeUsername(oneDayAgo, now))
+    }
+
+    @Test
+    fun `username change allowed after 30 days`() {
+        val now = System.currentTimeMillis()
+        val thirtyOneDaysAgo = now - (31L * 24 * 60 * 60 * 1000)
+        assertTrue(UserSettings.canChangeUsername(thirtyOneDaysAgo, now))
+    }
+
+    @Test
+    fun `username change allowed exactly at 30 days`() {
+        val now = System.currentTimeMillis()
+        val exactlyThirtyDaysAgo = now - UserSettings.USERNAME_CHANGE_COOLDOWN_MS
+        assertTrue(UserSettings.canChangeUsername(exactlyThirtyDaysAgo, now))
+    }
+
+    @Test
+    fun `username cooldown remaining returns 0 when no previous change`() {
+        assertEquals(0L, UserSettings.usernameCooldownRemainingMs(0L, System.currentTimeMillis()))
+    }
+
+    @Test
+    fun `username cooldown remaining returns 0 after cooldown expires`() {
+        val now = System.currentTimeMillis()
+        val thirtyOneDaysAgo = now - (31L * 24 * 60 * 60 * 1000)
+        assertEquals(0L, UserSettings.usernameCooldownRemainingMs(thirtyOneDaysAgo, now))
+    }
+
+    @Test
+    fun `username cooldown remaining returns positive when still in cooldown`() {
+        val now = System.currentTimeMillis()
+        val oneDayAgo = now - (1L * 24 * 60 * 60 * 1000)
+        val remaining = UserSettings.usernameCooldownRemainingMs(oneDayAgo, now)
+        assertTrue(remaining > 0)
+        // Should be approximately 29 days in ms
+        val twentyNineDaysMs = 29L * 24 * 60 * 60 * 1000
+        assertTrue(remaining in (twentyNineDaysMs - 1000)..(twentyNineDaysMs + 1000))
+    }
+
+    @Test
+    fun `username and primary lang cooldowns are independent`() {
+        val now = System.currentTimeMillis()
+        val oneDayAgo = now - (1L * 24 * 60 * 60 * 1000)
+        val thirtyOneDaysAgo = now - (31L * 24 * 60 * 60 * 1000)
+
+        // Primary language cooldown expired but username not
+        assertTrue(UserSettings.canChangePrimaryLanguage(thirtyOneDaysAgo, now))
+        assertFalse(UserSettings.canChangeUsername(oneDayAgo, now))
+
+        // Username cooldown expired but primary language not
+        assertTrue(UserSettings.canChangeUsername(thirtyOneDaysAgo, now))
+        assertFalse(UserSettings.canChangePrimaryLanguage(oneDayAgo, now))
+    }
 }

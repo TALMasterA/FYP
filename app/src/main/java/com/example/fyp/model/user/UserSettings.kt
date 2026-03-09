@@ -15,6 +15,7 @@ data class UserSettings(
     val historyViewLimit: Int = 30, // Default 30 records displayed, expandable to 60
     val autoThemeEnabled: Boolean = false, // Enable time-based theme switching (6 AM - 6 PM light, 6 PM - 6 AM dark)
     val lastPrimaryLanguageChangeMs: Long = 0L, // Epoch ms of last primary language change (0 = never changed)
+    val lastUsernameChangeMs: Long = 0L, // Epoch ms of last username change (0 = never changed)
     // --- Push notification toggles (all off by default — user opts in) ---
     val notifyNewMessages: Boolean = false,      // Chat message notifications (default off)
     val notifyFriendRequests: Boolean = false,   // Incoming friend request notifications
@@ -32,6 +33,7 @@ data class UserSettings(
         const val HISTORY_EXPANSION_INCREMENT = 10
         const val MAX_FAVORITE_RECORDS = 20
         const val PRIMARY_LANGUAGE_CHANGE_COOLDOWN_MS = 30L * 24 * 60 * 60 * 1000 // 30 days in ms
+        const val USERNAME_CHANGE_COOLDOWN_MS = 30L * 24 * 60 * 60 * 1000 // 30 days in ms
 
         /**
          * Check if the user can change their primary language based on cooldown.
@@ -50,6 +52,25 @@ data class UserSettings(
             if (lastChangeMs == 0L) return 0L
             val elapsed = currentTimeMs - lastChangeMs
             return (PRIMARY_LANGUAGE_CHANGE_COOLDOWN_MS - elapsed).coerceAtLeast(0L)
+        }
+
+        /**
+         * Check if the user can change their username based on cooldown.
+         * First change is always allowed (lastChangeMs == 0).
+         */
+        fun canChangeUsername(lastChangeMs: Long, currentTimeMs: Long): Boolean {
+            if (lastChangeMs == 0L) return true
+            return (currentTimeMs - lastChangeMs) >= USERNAME_CHANGE_COOLDOWN_MS
+        }
+
+        /**
+         * Calculate the remaining username change cooldown time in milliseconds.
+         * Returns 0 if the change is allowed.
+         */
+        fun usernameCooldownRemainingMs(lastChangeMs: Long, currentTimeMs: Long): Long {
+            if (lastChangeMs == 0L) return 0L
+            val elapsed = currentTimeMs - lastChangeMs
+            return (USERNAME_CHANGE_COOLDOWN_MS - elapsed).coerceAtLeast(0L)
         }
     }
 }

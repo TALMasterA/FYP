@@ -812,4 +812,63 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Login
     UiTextKey.AuthUpdatedLoginAgain to "應用程式已更新，請重新登入",
+
+    // Favorites limit/info
+    UiTextKey.FavoritesLimitTitle to "最愛上限已到",
+    UiTextKey.FavoritesLimitMessage to "你最多可以儲存 20 個最愛項目，請先移除部分最愛再新增。",
+    UiTextKey.FavoritesLimitGotIt to "好",
+    UiTextKey.FavoritesInfoTitle to "關於最愛",
+    UiTextKey.FavoritesInfoMessage to "你可以儲存最多 20 個最愛項目（包括紀錄同對話），呢個限制有助減少資料庫讀取，保持應用流暢。要加更多就先移除現有嘅最愛。",
+    UiTextKey.FavoritesInfoGotIt to "明白喇",
+
+    // Primary language cooldown
+    UiTextKey.SettingsPrimaryLanguageCooldownTitle to "無法更改語言",
+    UiTextKey.SettingsPrimaryLanguageCooldownMessage to "主要語言每 30 日只可以更改一次。請喺 {days} 日後再試。",
+    UiTextKey.SettingsPrimaryLanguageCooldownMessageHours to "主要語言每 30 日只可以更改一次。請喺 {hours} 小時後再試。",
+    UiTextKey.SettingsPrimaryLanguageConfirmTitle to "確認更改語言",
+    UiTextKey.SettingsPrimaryLanguageConfirmMessage to "更改主要語言後，需要等 30 日先可以再改。繼續？",
+
+    // Bottom navigation
+    UiTextKey.NavHome to "主頁",
+    UiTextKey.NavTranslate to "翻譯",
+    UiTextKey.NavLearn to "學習",
+    UiTextKey.NavFriends to "朋友",
+    UiTextKey.NavSettings to "設定",
+
+    // Permissions
+    UiTextKey.CameraPermissionTitle to "需要相機權限",
+    UiTextKey.CameraPermissionMessage to "呢個功能需要相機權限嚟影相辨認文字，請授權相機權限先可以繼續。",
+    UiTextKey.CameraPermissionGrant to "授權",
+    UiTextKey.MicPermissionMessage to "需要麥克風權限嚟進行語音辨識，請授權。",
+
+    // Delete confirmations
+    UiTextKey.FavoritesDeleteConfirm to "刪除 {count} 個已選項目？呢個操作無法還原。",
+    UiTextKey.WordBankDeleteConfirm to "確定要刪除「{word}」？",
+
+    // Friends extras
+    UiTextKey.FriendsAcceptAllButton to "全部接受",
+    UiTextKey.ChatBlockedCannotSend to "無法發送訊息",
+
+    // Shop / Unlock
+    UiTextKey.ShopUnlockConfirmTitle to "解鎖 {name}？",
+    UiTextKey.ShopUnlockCost to "費用：{cost} 枚金幣",
+    UiTextKey.ShopYourCoins to "你嘅金幣：{coins}",
+    UiTextKey.ShopUnlockButton to "解鎖",
+
+    // Help: Primary Language Info
+    UiTextKey.HelpPrimaryLanguageTitle to "主要語言",
+    UiTextKey.HelpPrimaryLanguageBody to "• 主要語言用於學習表嘅解釋同建議\n" +
+            "• 每 30 日只可以更改一次以保持學習一致性\n" +
+            "• 你可以喺設定中更改主要語言\n" +
+            "• 主要語言設定係全域性嘅，適用於所有畫面",
+
+    // Camera language hint
+    UiTextKey.CameraLanguageHint to "💡 提示：為咗更準確嘅辨識效果，請將「來源語言」設定為你掃描嘅文字語言。",
+
+    // Username change cooldown
+    UiTextKey.SettingsUsernameCooldownTitle to "無法更改用戶名",
+    UiTextKey.SettingsUsernameCooldownMessage to "用戶名每 30 日只可以更改一次。請喺 {days} 日後再試。",
+    UiTextKey.SettingsUsernameCooldownMessageHours to "用戶名每 30 日只可以更改一次。請喺 {hours} 小時後再試。",
+    UiTextKey.SettingsUsernameConfirmTitle to "確認更改用戶名",
+    UiTextKey.SettingsUsernameConfirmMessage to "更改用戶名後，需要等 30 日先可以再改。繼續？",
 )

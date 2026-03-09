@@ -165,6 +165,7 @@ fun SpeechRecognitionScreen(
                 showImageSourceDialog = false
             },
             accuracyWarning = t(UiTextKey.ImageRecognitionAccuracyWarning),
+            languageHint = t(UiTextKey.CameraLanguageHint),
             title = t(UiTextKey.ImageSourceTitle),
             cameraLabel = t(UiTextKey.ImageSourceCamera),
             galleryLabel = t(UiTextKey.ImageSourceGallery),

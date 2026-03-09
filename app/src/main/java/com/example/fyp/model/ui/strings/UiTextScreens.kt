@@ -1631,4 +1631,20 @@ val ScreenUiTexts: List<String> = listOf(
             "• It can only be changed once every 30 days to maintain learning consistency\n" +
             "• You can change your primary language in Settings\n" +
             "• The primary language setting is global and applies to all screens",
+
+    // --- Camera Language Hint ---
+    // CameraLanguageHint
+    "💡 Tip: For best accuracy, set the \"From\" language to match the text you are scanning.",
+
+    // --- Username Change Cooldown ---
+    // SettingsUsernameCooldownTitle
+    "Username Change Unavailable",
+    // SettingsUsernameCooldownMessage
+    "Your username can only be changed once every 30 days. Please try again in {days} days.",
+    // SettingsUsernameCooldownMessageHours
+    "Your username can only be changed once every 30 days. Please try again in {hours} hours.",
+    // SettingsUsernameConfirmTitle
+    "Confirm Username Change",
+    // SettingsUsernameConfirmMessage
+    "Changing your username will start a 30-day cooldown before you can change it again. Continue?",
 )

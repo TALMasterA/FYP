@@ -53,9 +53,10 @@ The `setUsername()` method only updates the global `usernames/` registry — it 
 
 **Files:** `data/user/FirestoreProfileRepository.kt` (`deleteAccount`)
 
-**Invariant:** `deleteAccount()` must clean up ALL 14 subcollections + top-level docs:
+**Invariant:** `deleteAccount()` must clean up ALL 16 subcollections + top-level docs:
 `history, word_banks, learning_sheets, quiz_attempts, quiz_stats, generated_quizzes, favorites,
 custom_words, sessions, coin_awards, last_awarded_quiz, user_stats, friends, shared_inbox,
+favorite_sessions, blocked_users,
 profile/settings, profile/info, profile/public, usernames/{username}, user_search/{uid}`
 
 **Rule:** If you add a new Firestore collection for a user, add its cleanup to `deleteAccount()`.  

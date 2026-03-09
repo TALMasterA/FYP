@@ -40,4 +40,9 @@ interface UserSettingsRepository {
      * Expand history view limit by increment (costs coins).
      */
     suspend fun expandHistoryViewLimit(userId: UserId, newLimit: Int)
+
+    /**
+     * Record the timestamp when the user's username was last changed.
+     */
+    suspend fun setLastUsernameChangeMs(userId: UserId, timestampMs: Long)
 }

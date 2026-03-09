@@ -102,6 +102,7 @@ class FirestoreFriendsRepository @Inject constructor(
         updates["avatarUrl"]?.let { searchUpdates["avatarUrl"] = it }
         updates["isDiscoverable"]?.let { searchUpdates["isDiscoverable"] = it }
         updates["lastActiveAt"]?.let { searchUpdates["lastActiveAt"] = it }
+        updates["primaryLanguage"]?.let { searchUpdates["primaryLanguage"] = it }
 
         if (searchUpdates.isNotEmpty()) {
             db.collection("user_search")

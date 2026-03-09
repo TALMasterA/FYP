@@ -40,6 +40,7 @@ fun ImageSourceDialog(
     onGallery: () -> Unit,
     onDismiss: () -> Unit,
     accuracyWarning: String,
+    languageHint: String,
     title: String,
     cameraLabel: String,
     galleryLabel: String,
@@ -93,6 +94,14 @@ fun ImageSourceDialog(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp)
+                )
+
+                // Language hint for camera recognition
+                Text(
+                    text = languageHint,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
         },

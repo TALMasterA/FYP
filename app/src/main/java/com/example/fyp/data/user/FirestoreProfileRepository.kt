@@ -61,6 +61,8 @@ class FirestoreProfileRepository @Inject constructor(
         // Friends-related subcollections
         deleteCollection(userId, "friends")
         deleteCollection(userId, "shared_inbox")
+        deleteCollection(userId, "favorite_sessions")
+        deleteCollection(userId, "blocked_users")
 
         // Delete profile subcollection (includes public profile)
         db.collection("users").document(userId)
