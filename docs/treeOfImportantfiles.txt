@@ -22,7 +22,7 @@ FYP/
 ├── docs/
 │   ├── treeOfImportantfiles.txt                    ← This file
 │   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants (26 sections)
-│   ├── TEST_COVERAGE.md                            ← Test coverage report (159 files, 1891+ tests)
+│   ├── TEST_COVERAGE.md                            ← Test coverage report (167 files, 2015+ tests)
 │   └── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
 │
 ├── app/
@@ -390,6 +390,7 @@ FYP/
 │           │   └── security/
 │           │       ├── AuditLoggerTest.kt
 │           │       ├── SanitizeInputExtendedTest.kt      ← Extended sanitization edge-case tests
+│           │       ├── CertificatePinningTest.kt         ← Certificate pinning config tests
 │           │       └── SecurityUtilsTest.kt               ← Validation & sanitization tests
 │           ├── data/
 │           │   ├── azure/
@@ -418,18 +419,28 @@ FYP/
 │           │   │   ├── CoinEligibilityTest.kt
 │           │   │   ├── ContentCleanerTest.kt
 │           │   │   ├── ContentCleanerExtendedTest.kt
+│           │   │   ├── LearningContentPromptTest.kt        ← Prompt construction & takeLast(20) tests
 │           │   │   ├── QuizGenerationRepositoryImplTest.kt ← Quiz generation repository tests
 │           │   │   └── QuizParserTest.kt
 │           │   ├── network/
 │           │   │   └── CacheInterceptorTest.kt
+│           │   ├── ocr/
+│           │   │   └── OcrRecognizerSelectionTest.kt      ← Language-to-recognizer mapping tests
 │           │   ├── repositories/
 │           │   │   ├── AutoDetectRecognitionResultTest.kt
 │           │   │   └── FirebaseTranslationRepositoryTest.kt
+│           │   ├── settings/
+│           │   │   └── SettingsNotificationFieldsTest.kt  ← Notification fields, history clamping, parse defaults
+│           │   ├── ui/
+│           │   │   └── UiLanguageCorrectionTest.kt        ← Language name correction algorithm tests
 │           │   ├── user/
 │           │   │   └── AccountDeletionGuardTest.kt        ← Subcollection cleanup guard test
 │           │   └── wordbank/
-│           │       └── WordBankCacheDataTest.kt            ← Word bank cache data tests
+│           │       ├── WordBankCacheDataTest.kt            ← Word bank cache data tests
+│           │       ├── WordBankRepositoryLogicTest.kt      ← Key normalization, word parsing tests
+│           │       └── WordBankPromptTest.kt               ← Prompt construction tests
 │           ├── domain/
+│           │   ├── CrossLayerIntegrationTest.kt           ← Cross-layer integration tests
 │           │   ├── auth/
 │           │   │   └── LoginUseCaseTest.kt
 │           │   ├── friends/

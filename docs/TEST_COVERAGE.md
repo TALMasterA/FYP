@@ -7,11 +7,11 @@ _Last updated: 2026-03-09_
 | Metric                    | Count   |
 |---------------------------|---------|
 | Source files               | 250     |
-| Test files                 | 156     |
-| Total `@Test` methods      | 1,860   |
+| Test files                 | 167     |
+| Total `@Test` methods      | 2,015   |
 | Key logic files            | ~137    |
-| Key logic files tested     | ~114    |
-| Key logic coverage         | ~83%    |
+| Key logic files tested     | ~125    |
+| Key logic coverage         | ~91%    |
 
 ## Coverage by Layer
 
@@ -20,12 +20,12 @@ _Last updated: 2026-03-09_
 | **screens/ (ViewModels)** | 19        | 19     | 100%     |
 | **domain/ (Use Cases)**   | 40        | 40     | 100%     |
 | **model/ (Data Models)**  | 23        | 20     | 87%      |
-| **core/ (Utilities)**     | 12        | 10     | 83%      |
+| **core/ (Utilities)**     | 12        | 11     | 92%      |
 | **navigation/**           | 2         | 2      | 100%     |
 | **ui/ + utils/**          | 6         | 6      | 100%     |
-| **data/ (Repositories)**  | 34        | 16     | 47%      |
+| **data/ (Repositories)**  | 34        | 26     | 76%      |
 
-## What Is Tested (156 files, 1,860 tests)
+## What Is Tested (167 files, 2,015 tests)
 
 ### All ViewModels & Controllers (19/19)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
@@ -45,6 +45,7 @@ _Last updated: 2026-03-09_
 - OCR: RecognizeTextFromImage (4)
 
 ### Key Integration / Rule Tests
+- CrossLayerIntegration (18): language pipeline, cooldown symmetry, coin economy, notification defaults
 - QuizCoinEarningRules (10), QuizFlowIntegration (13), CoinAndGenerationIntegration (7)
 - LearningGenerationRules (25), FriendSystemRules (29+11+11)
 - LanguageValidation (18), NavigationAccess (18), ErrorHandling (25)
@@ -55,19 +56,25 @@ _Last updated: 2026-03-09_
 - FriendMessage (14), FriendRelation (9), FriendRequest (6), PublicUserProfile (5)
 - SharedItem (15), UserSettings (55), ColorPalette (17)
 
-### Core Utilities
-- SecurityUtils (40+9), ErrorMessages (35), NetworkRetry (21)
+### Core Utilities (11/12)
+- SecurityUtils (40+9), CertificatePinning (7), ErrorMessages (35), NetworkRetry (21)
 - ExtensionFunctions (16), Constants (13), FontSizeUtils (13)
 - PerformanceUtils (10), AuditLogger (9), ViewModelHelpers (9), Pagination (9)
 
-### Data Layer (16/34 key files)
+### Data Layer (26/34 key files)
 - CloudGenAiClient (11), CloudQuizClient (12), AzureVoiceConfig (18)
 - ContentCleaner (17), QuizParser (11), QuizGenerationRepositoryImpl (20)
 - CacheInterceptor (10), FirebaseTranslationRepository (8)
 - FriendsCache (32), SeenItemsStorage (21), SharedFriendsDataSource (31)
 - FirestoreHistoryRepositoryLogic (25), FirestoreFeedbackRepository (23)
 - FirestoreChatRepository (5), LanguageDetectionCache (7), TranslationCache (8)
-- WordBankCacheData (7), DatabaseUtils (2)
+- WordBankCacheData (7), DatabaseUtils (2), DataCleanupUtils (tests via DataCleanupUtilsTest)
+- **NEW:** SettingsNotificationFields (18): notification field allowlist, history limit clamping, parse defaults
+- **NEW:** WordBankRepositoryLogic (16): key normalization, metadata, word parsing, duplicate filtering
+- **NEW:** WordBankPrompt (12): prompt construction, takeLast(30) limit, language embedding
+- **NEW:** LearningContentPrompt (14): prompt construction, takeLast(20) limit, MAX_VOCABULARY_ITEMS
+- **NEW:** OcrRecognizerSelection (24): language-to-recognizer mapping for all 17 languages
+- **NEW:** UiLanguageCorrection (15): language name correction algorithm, LanguageNameTranslations integrity
 
 ### UI Text System
 - UiTextAlignment (4), UiTextCompleteness (8), UiTextHelpers (17)
@@ -75,43 +82,39 @@ _Last updated: 2026-03-09_
 
 ## Known Gaps
 
-### Firestore/Firebase Repository Implementations (14 files)
-These files depend directly on Firebase SDK, making pure unit testing difficult
-without an emulator or integration test setup:
+### Firestore/Firebase Repository Implementations (8 files)
+These files are thin Firestore CRUD wrappers with no extractable pure logic.
+All complex business logic has been extracted to testable classes:
 
 | File | Notes |
 |------|-------|
-| `FirestoreFriendsRepository.kt` | Heavy Firestore usage; pure logic extracted to FriendsCache |
+| `FirestoreFriendsRepository.kt` | Pure logic extracted to FriendsCache (32 tests) |
 | `FirestoreSharingRepository.kt` | Firestore CRUD operations |
 | `FirestoreLearningSheetsRepository.kt` | Document read/write with caching |
-| `FirestoreQuizRepository.kt` | Quiz persistence and stats |
-| `FirestoreUserSettingsRepository.kt` | Settings persistence via set-merge |
+| `FirestoreQuizRepository.kt` | Main logic in CoinEligibility (19 tests) |
 | `FirebaseAuthRepository.kt` | Firebase Auth wrapper |
 | `FirestoreFavoritesRepository.kt` | Favorites CRUD |
-| `FirestoreProfileRepository.kt` | Profile + account deletion |
 | `FirestoreCustomWordsRepository.kt` | Custom words CRUD |
-| `FirestoreWordBankRepository.kt` | Word bank persistence |
-| `WordBankGenerationRepository.kt` | Word bank generation logic |
-| `LearningContentRepositoryImpl.kt` | Learning content assembly |
 | `AzureSpeechRepository.kt` | Android hardware-dependent |
-| `MLKitOcrRepository.kt` | Android ML Kit-dependent |
 
-**Mitigation:** Pure logic is extracted into testable classes (FriendsCache,
-ContentCleaner, QuizParser, CoinEligibility, GenerationEligibility, etc.) and
-thoroughly tested. The untested Firestore layers are mostly thin document
-read/write wrappers.
+**Previously untested logic now covered:**
+- `FirestoreUserSettingsRepository` — notification field allowlist, history limit clamping, parse defaults → `SettingsNotificationFieldsTest` (18 tests)
+- `FirestoreWordBankRepository` — key normalization, word parsing, duplicate filtering → `WordBankRepositoryLogicTest` (16 tests)
+- `WordBankGenerationRepository` — prompt construction → `WordBankPromptTest` (12 tests)
+- `LearningContentRepositoryImpl` — prompt construction → `LearningContentPromptTest` (14 tests)
+- `MLKitOcrRepository` — recognizer selection logic → `OcrRecognizerSelectionTest` (24 tests)
+- `UiLanguageStateController` — language correction logic → `UiLanguageCorrectionTest` (15 tests)
 
-### Cloud/Network Clients (4 files)
+### Cloud/Network Clients (3 files)
 - `CloudSpeechTokenClient.kt` — token management
 - `CloudTranslatorClient.kt` — translation API client
-- `AzureLanguageConfig.kt` — language config mapping
-- `NetworkMonitor.kt` — connectivity observer
+- `NetworkMonitor.kt` — connectivity observer (Android ConnectivityManager)
 
 ### Minor Gaps (low risk)
-- `FeatureFlags.kt` — simple boolean flags
-- `CertificatePinning.kt` — pinning configuration
+- `FeatureFlags.kt` — simple boolean flags from Firebase Remote Config
 - `SecureStorage.kt` — Android Keystore wrapper
-- `AuthState.kt`, `User.kt`, `UserProfile.kt` — simple data classes
+- `User.kt`, `UserProfile.kt` — trivial data classes with no methods
+- `AppLanguageState.kt` — trivial data class
 
 ## Guard Tests
 
@@ -123,4 +126,6 @@ These tests prevent regressions in critical invariants:
 | `TranslationCompletenessTest` | Cantonese + ZhTw maps contain all UiTextKey entries |
 | `AccountDeletionGuardTest` | All 16 subcollections are listed for cleanup |
 | `PrimaryLanguageCooldownTest` | 30-day cooldown arithmetic |
+| `UsernameCooldownTest` | 30-day username cooldown arithmetic |
 | `FavoriteLimitTest` | 20-record favorites cap enforcement |
+| `CrossLayerIntegrationTest` | Cooldown symmetry, coin economy balance, notification defaults |
