@@ -1,4 +1,4 @@
-# FYP - Translation & Learning App (Final)
+# FYP - Translation & Learning App
 
 An Android-based translation and language learning application with AI-powered features.
 
@@ -59,6 +59,7 @@ Firebase login is required.
 
 **Translation Modes:**
 - **Quick Translate (Discrete):** Real-time voice translation for short phrases with auto-detect or manual language selection; shortcut button to switch to Live Conversation mode
+- **Camera / OCR:** Scan text from images via camera or gallery; language hint reminds users to set the correct source language for best accuracy
 - **Live Conversation (Continuous):** Live conversation translation with automatic speaker detection (Person A/B)
 - Multi-language support: English, Cantonese (zh-HK), Traditional Chinese (zh-TW), Simplified Chinese (zh-CN), Japanese, and 10+ more via Azure
 - Language swap button also swaps the recognised/translated text
@@ -83,6 +84,7 @@ Firebase login is required.
 - Red dot (badge) notifications for unread messages and new shared items
 - Friend username automatically synced on app launch and pull-to-refresh
 - Usernames are unique; changing your username releases the old one for others
+- Username changes have a 30-day cooldown (same as primary language changes), with confirmation dialog
 
 **Customization:**
 - UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, and 10+ more via Azure Translator API
@@ -172,7 +174,7 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
     - `core/` - Common composables and utilities (logging via `AppLogger`, audio, permissions, pagination, font scaling)
     - `ui/` - Theme configuration (colors, palettes, dimensions, typography, animated components)
 - `fyp-backend/functions/` - Firebase Cloud Functions (TypeScript): translation, speech token, AI generation, FCM notifications, daily stale-token pruning
-- `docs/` - Architecture notes (`ARCHITECTURE_NOTES.md`)
+- `docs/` - Architecture notes (`ARCHITECTURE_NOTES.md`), test coverage report (`TEST_COVERAGE.md`)
 
 --------------------------------------------------------------
 
@@ -243,7 +245,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (154 test files, 1842+ tests)
+# Run all unit tests (159 test files, 1891+ tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -288,8 +290,9 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **154 test files** covering critical app logic (as of March 2026)
-- **1842+ unit tests** passing
+- **159 test files** covering critical app logic (as of March 2026)
+- **1891+ unit tests** passing
+- See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:
   - Domain layer use cases (30+ test files)
   - ViewModels (10+ test files)
@@ -423,6 +426,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** March 8, 2026
+**Last Updated:** March 9, 2026
 
 (Some content is by github copilot agent and may contain error)

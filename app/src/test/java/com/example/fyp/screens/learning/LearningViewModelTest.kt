@@ -188,8 +188,10 @@ class LearningViewModelTest {
 
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
+        testDispatcher.scheduler.advanceUntilIdle()
 
         vm.generateFor("ja")
+        testDispatcher.scheduler.advanceUntilIdle()
 
         // After generation, generatingLanguageCode should be null
         assertNull(vm.uiState.value.generatingLanguageCode)
@@ -221,8 +223,10 @@ class LearningViewModelTest {
 
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
+        testDispatcher.scheduler.advanceUntilIdle()
 
         vm.generateFor("ja")
+        testDispatcher.scheduler.advanceUntilIdle()
 
         assertNull(vm.uiState.value.generatingLanguageCode)
         assertNotNull(vm.uiState.value.error)

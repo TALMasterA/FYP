@@ -402,3 +402,42 @@ scope.launch(Dispatchers.IO) {
 **Rule:** The third parameter to `isEligibleForCoins()` is named `currentSheetHistoryCount` (the sheet version), not `currentHistoryCount` (the live count). This prevents false rejections when users translate new sentences between quiz generation and completion.
 
 ---
+
+## 23. Username Change — 30-Day Cooldown
+
+**Files:** `model/user/UserSettings.kt`, `data/settings/FirestoreUserSettingsRepository.kt`, `screens/settings/ProfileViewModel.kt`, `screens/settings/ProfileScreen.kt`
+
+**Invariant:** Username changes follow the same 30-day cooldown pattern as primary language changes:
+1. `UserSettings.canChangeUsername(lastChangeMs, now)` checks elapsed time
+2. `ProfileViewModel.updateUsername()` fetches settings and checks cooldown before proceeding
+3. If rejected, a cooldown dialog shows remaining days/hours
+4. If allowed, a confirmation dialog warns about the 30-day cooldown
+5. On success, `setLastUsernameChangeMs()` records the timestamp via set-merge
+
+**Rule:** First-time username changes (when `lastUsernameChangeMs == 0`) are always allowed. The cooldown timestamp is stored in the user's settings document alongside `lastPrimaryLanguageChangeMs`.
+
+---
+
+## 24. Camera OCR — Language Hint
+
+**Files:** `screens/speech/ImageCaptureComponents.kt`, `screens/speech/SpeechRecognitionScreen.kt`
+
+**Invariant:** The `ImageSourceDialog` shows a language hint (`CameraLanguageHint`) below the accuracy warning, reminding users to set the "From" language to match the text they're scanning. This is important because ML Kit OCR uses different recognizers for Latin vs Chinese vs Japanese vs Korean scripts, and accuracy degrades when the wrong recognizer is used.
+
+---
+
+## 25. setVoiceForLanguage — Must Use set-merge
+
+**Files:** `data/settings/FirestoreUserSettingsRepository.kt`
+
+**Invariant:** `setVoiceForLanguage()` must use `set(mapOf("voiceSettings" to mapOf(...)), SetOptions.merge())` instead of `.update("voiceSettings.langCode", value)`. The `.update()` method fails with `NOT_FOUND` if the settings document doesn't exist yet (e.g., a new user). All other settings methods use set-merge for this reason.
+
+---
+
+## 26. updatePublicProfile — Must Propagate All Searchable Fields
+
+**Files:** `data/friends/FirestoreFriendsRepository.kt`
+
+**Invariant:** `updatePublicProfile()` writes to both `profile/public` (via set-merge) AND `user_search/{uid}` (the searchable index). The search update block must propagate ALL fields that appear in `user_search`: `username`, `avatarUrl`, `isDiscoverable`, `lastActiveAt`, **and `primaryLanguage`**. If a new field is added to `user_search` in `createOrUpdatePublicProfile()`, it must also be added to the propagation block in `updatePublicProfile()`.
+
+---
