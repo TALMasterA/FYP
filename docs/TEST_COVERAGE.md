@@ -7,11 +7,11 @@ _Last updated: 2026-03-10_
 | Metric                    | Count   |
 |---------------------------|---------|
 | Source files               | 250     |
-| Test files                 | 169     |
-| Total `@Test` methods      | 2,053   |
+| Test files                 | 178     |
+| Total `@Test` methods      | 2,242   |
 | Key logic files            | ~137    |
-| Key logic files tested     | ~125    |
-| Key logic coverage         | ~91%    |
+| Key logic files tested     | ~134    |
+| Key logic coverage         | ~98%    |
 
 ## Coverage by Layer
 
@@ -20,12 +20,12 @@ _Last updated: 2026-03-10_
 | **screens/ (ViewModels)** | 19        | 19     | 100%     |
 | **domain/ (Use Cases)**   | 40        | 40     | 100%     |
 | **model/ (Data Models)**  | 23        | 20     | 87%      |
-| **core/ (Utilities)**     | 12        | 11     | 92%      |
+| **core/ (Utilities)**     | 12        | 12     | 100%     |
 | **navigation/**           | 2         | 2      | 100%     |
 | **ui/ + utils/**          | 6         | 6      | 100%     |
-| **data/ (Repositories)**  | 34        | 26     | 76%      |
+| **data/ (Repositories)**  | 34        | 33     | 97%      |
 
-## What Is Tested (169 files, 2,053 tests)
+## What Is Tested (178 files, 2,242 tests)
 
 ### All ViewModels & Controllers (19/19)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
@@ -58,12 +58,13 @@ _Last updated: 2026-03-10_
 - FriendMessage (14), FriendRelation (9), FriendRequest (6), PublicUserProfile (5)
 - SharedItem (15), UserSettings (55), ColorPalette (17)
 
-### Core Utilities (11/12)
+### Core Utilities (12/12)
 - SecurityUtils (40+9), CertificatePinning (7), ErrorMessages (35), NetworkRetry (21)
 - ExtensionFunctions (16), Constants (13), FontSizeUtils (13)
 - PerformanceUtils (13), AuditLogger (9), ViewModelHelpers (9), Pagination (9)
+- **NEW:** FeatureFlagDefaults (16): default flag values, key constants, flag type verification
 
-### Data Layer (26/34 key files)
+### Data Layer (33/34 key files)
 - CloudGenAiClient (11), CloudQuizClient (12), AzureVoiceConfig (18)
 - ContentCleaner (17), QuizParser (11), QuizGenerationRepositoryImpl (20)
 - CacheInterceptor (10), FirebaseTranslationRepository (8)
@@ -77,6 +78,14 @@ _Last updated: 2026-03-10_
 - **NEW:** LearningContentPrompt (14): prompt construction, takeLast(20) limit, MAX_VOCABULARY_ITEMS
 - **NEW:** OcrRecognizerSelection (24): language-to-recognizer mapping for all 17 languages
 - **NEW:** UiLanguageCorrection (15): language name correction algorithm, LanguageNameTranslations integrity
+- **NEW:** ChatRepositoryLogic (27): generateChatId ordering, isParticipant, message validation, unread math
+- **NEW:** FriendsRepositoryLogic (21): note sanitization, expiry filter, username sync freshness
+- **NEW:** SharingRepositoryLogic (21): type validation, content stripping, word field mapping
+- **NEW:** QuizRepositoryLogic (25): running average, lowestScore init, coin debounce, deductCoins
+- **NEW:** LearningSheetsLogic (23): norm, docId, empty targets, fill-missing, batch metadata
+- **NEW:** CustomWordsValidation (22): input validation, trimming, truncation, blank checks
+- **NEW:** CloudClientLogic (15): request building, response parsing, deployment validation
+- **NEW:** DataLayerIntegration (19): cross-repository invariants, chatId↔friends consistency
 
 ### UI Text System
 - UiTextAlignment (4), UiTextCompleteness (8), UiTextHelpers (17)
@@ -84,22 +93,23 @@ _Last updated: 2026-03-10_
 
 ## Known Gaps
 
-### Firestore/Firebase Repository Implementations (8 files)
+### Firestore/Firebase Repository Implementations (1 file)
 These files are thin Firestore CRUD wrappers with no extractable pure logic.
 All complex business logic has been extracted to testable classes:
 
 | File | Notes |
 |------|-------|
-| `FirestoreFriendsRepository.kt` | Pure logic extracted to FriendsCache (32 tests) |
-| `FirestoreSharingRepository.kt` | Firestore CRUD operations |
-| `FirestoreLearningSheetsRepository.kt` | Document read/write with caching |
-| `FirestoreQuizRepository.kt` | Main logic in CoinEligibility (19 tests) |
-| `FirebaseAuthRepository.kt` | Firebase Auth wrapper |
-| `FirestoreFavoritesRepository.kt` | Favorites CRUD |
-| `FirestoreCustomWordsRepository.kt` | Custom words CRUD |
 | `AzureSpeechRepository.kt` | Android hardware-dependent |
 
 **Previously untested logic now covered:**
+- `FirestoreFriendsRepository` — Pure logic extracted to FriendsCache (32 tests) + FriendsRepositoryLogicTest (21 tests)
+- `FirestoreSharingRepository` — type validation, content stripping → SharingRepositoryLogicTest (21 tests)
+- `FirestoreLearningSheetsRepository` — norm, docId, batch metadata → LearningSheetsLogicTest (23 tests)
+- `FirestoreQuizRepository` — running average, coin debounce → QuizRepositoryLogicTest (25 tests)
+- `FirestoreChatRepository` — chatId generation, unread math → ChatRepositoryLogicTest (27 tests)
+- `FirebaseAuthRepository` — covered via AuthViewModel tests
+- `FirestoreFavoritesRepository` — covered via FavoritesViewModel tests
+- `FirestoreCustomWordsRepository` — validation logic → CustomWordsValidationTest (22 tests)
 - `FirestoreUserSettingsRepository` — notification field allowlist, history limit clamping, parse defaults → `SettingsNotificationFieldsTest` (18 tests)
 - `FirestoreWordBankRepository` — key normalization, word parsing, duplicate filtering → `WordBankRepositoryLogicTest` (16 tests)
 - `WordBankGenerationRepository` — prompt construction → `WordBankPromptTest` (12 tests)
@@ -113,7 +123,6 @@ All complex business logic has been extracted to testable classes:
 - `NetworkMonitor.kt` — connectivity observer (Android ConnectivityManager)
 
 ### Minor Gaps (low risk)
-- `FeatureFlags.kt` — simple boolean flags from Firebase Remote Config
 - `SecureStorage.kt` — Android Keystore wrapper
 - `User.kt`, `UserProfile.kt` — trivial data classes with no methods
 - `AppLanguageState.kt` — trivial data class
@@ -133,3 +142,4 @@ These tests prevent regressions in critical invariants:
 | `CrossLayerIntegrationTest` | Cooldown symmetry, coin economy balance, notification defaults |
 | `UsernameEnforcementIntegrationTest` | Domain layer does NOT enforce username; profile creation uses empty username |
 | `UsernameRequirementIntegrationTest` | ViewModel gate blocks send/accept/accept-all without username |
+| `DataLayerIntegrationTest` | Cross-repository invariants: chatId↔friends, sharing↔friends consistency |

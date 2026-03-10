@@ -48,8 +48,10 @@ class QuizGenerationRepositoryImpl @Inject constructor(
             .take(frequentCount)
 
         // Get recent unique words (excluding already selected frequent ones)
+        // Sort by timestamp descending so distinctBy keeps the most recent occurrence
         val recent = records
             .takeLast(targetSize * 2) // Look at more recent records
+            .sortedByDescending { it.timestamp }
             .distinctBy { it.sourceText.lowercase().trim() }
             .filterNot { record ->
                 frequent.any { it.sourceText.lowercase().trim() == record.sourceText.lowercase().trim() }

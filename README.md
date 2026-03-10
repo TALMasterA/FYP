@@ -245,7 +245,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (169 test files, 2053 tests)
+# Run all unit tests (178 test files, 2242 tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -290,14 +290,14 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **169 test files** covering critical app logic (as of March 2026)
-- **2053 unit tests** passing
+- **178 test files** covering critical app logic (as of March 2026)
+- **2242 unit tests** passing
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:
   - Domain layer use cases (30+ test files)
   - ViewModels (10+ test files)
   - Models and serialization (15+ test files)
-  - Repositories and data layer (19+ test files)
+  - Repositories and data layer (28+ test files)
   - Navigation routes and rules (5 test files)
   - UI components (StandardButtons, StandardTextFields, StandardDialogs, ThemeHelper, ColorPalette)
   - Security utilities (validation, sanitization, rate limiting, encoding correctness)
@@ -322,6 +322,9 @@ gh auth login
 - `TtsControllerTest` - Text-to-speech state management and error handling
 - `ContinuousConversationControllerTest` - Continuous conversation session lifecycle and guards
 - `DataCleanupUtilsTest` - Data housekeeping cutoff calculations and orphan detection
+- `DataLayerIntegrationTest` - Cross-repository invariants: chatId↔friends, sharing↔friends consistency
+- `ChatRepositoryLogicTest` - Chat ID generation, participant validation, unread count math
+- `QuizRepositoryLogicTest` - Running average formula, coin debounce, score initialization
 - `SharedHistoryDataSourceTest` - Shared history caching, LRU filtering, debounced refresh
 - `SharedFriendsDataSourceTest` - Friends state management, seen/unseen tracking, username cache
 - `FirestoreHistoryRepositoryLogicTest` - Language count aggregation, batch chunking, positive filtering
