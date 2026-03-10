@@ -441,3 +441,22 @@ scope.launch(Dispatchers.IO) {
 **Invariant:** `updatePublicProfile()` writes to both `profile/public` (via set-merge) AND `user_search/{uid}` (the searchable index). The search update block must propagate ALL fields that appear in `user_search`: `username`, `avatarUrl`, `isDiscoverable`, `lastActiveAt`, **and `primaryLanguage`**. If a new field is added to `user_search` in `createOrUpdatePublicProfile()`, it must also be added to the propagation block in `updatePublicProfile()`.
 
 ---
+
+## 27. Username Enforcement Gate — ViewModel Layer
+
+**Files:** `screens/friends/FriendsViewModel.kt`, `screens/friends/FriendsScreen.kt`
+
+**Invariant:** All friend-mutating actions (send request, accept request, accept all) must pass through the single canonical gate `requireUsernameForFriendActions()` before reaching domain use cases. The domain layer intentionally does NOT enforce usernames — this is a ViewModel responsibility.
+
+**Implementation:**
+1. `requireUsernameForFriendActions()` checks `_uiState.value.currentUserHasUsername`
+2. Returns `false` and sets an error message if username is blank
+3. `requireUsernameForAddFriends()` is a legacy alias that delegates to the canonical gate
+4. `sendFriendRequest()`, `acceptFriendRequest()`, and `acceptAllRequests()` all guard via this method
+5. `rejectFriendRequest()` and `rejectAllRequests()` do NOT require a username (rejecting is always allowed)
+
+**Rule:** Never add username enforcement to domain use cases (e.g., `SendFriendRequestUseCase`, `AcceptFriendRequestUseCase`). The gate belongs in the ViewModel to keep domain logic reusable.
+
+**Guard:** `UsernameRequirementIntegrationTest` (11 tests) verifies ViewModel gate behavior. `UsernameEnforcementIntegrationTest` (12 tests) verifies domain layer does not enforce.
+
+---
