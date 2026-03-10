@@ -33,7 +33,7 @@ fun validateEmail(email: String): ValidationResult {
  * Validates password strength.
  * Requires minimum length and character variety.
  */
-fun validatePassword(password: String, minLength: Int = 8): ValidationResult {
+fun validatePassword(password: String, minLength: Int = 6): ValidationResult {
     if (password.length < minLength) {
         return ValidationResult.Invalid("Password must be at least $minLength characters")
     }
@@ -53,7 +53,7 @@ fun validatePassword(password: String, minLength: Int = 8): ValidationResult {
  * Validates username format.
  * Allows alphanumeric characters, underscores, and hyphens.
  */
-fun validateUsername(username: String, minLength: Int = 3, maxLength: Int = 30): ValidationResult {
+fun validateUsername(username: String, minLength: Int = 3, maxLength: Int = 20): ValidationResult {
     if (username.length < minLength) {
         return ValidationResult.Invalid("Username must be at least $minLength characters")
     }

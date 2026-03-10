@@ -87,10 +87,10 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShopTitle to "商店",
     UiTextKey.ShopCoinBalance to "您的硬幣",
     UiTextKey.ShopHistoryExpansionTitle to "擴充歷史紀錄上限",
-    UiTextKey.ShopHistoryExpansionDesc to "將歷史紀錄查看上限增加 50 筆，費用 10 枚硬幣",
+    UiTextKey.ShopHistoryExpansionDesc to "擴充歷史紀錄查看上限，以查看更多近期翻譯紀錄。",
     UiTextKey.ShopCurrentLimit to "目前上限：{limit} 筆",
     UiTextKey.ShopMaxLimit to "最高上限：",
-    UiTextKey.ShopBuyHistoryExpansion to "購買 (+50 筆，10 枚硬幣)",
+    UiTextKey.ShopBuyHistoryExpansion to "購買 (+{increment} 筆，{cost} 枚硬幣)",
     UiTextKey.ShopInsufficientCoins to "硬幣不足",
     UiTextKey.ShopMaxLimitReached to "已達最高上限",
     UiTextKey.ShopHistoryExpandedTitle to "擴充成功！",
@@ -743,7 +743,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.HelpFriendSystemBody to "• 透過用戶名或用戶 ID 搜尋並新增好友\n" +
             "• 發送、接受或拒絕好友請求\n" +
             "• 與好友即時聊天並翻譯對話\n" +
-            "• 與好友分享單字和學習材料\n" +
+            "• 與好友分享單字和學習教材\n" +
             "• 共享收件匣可接收和管理好友傳送的項目\n" +
             "• 好友卡片或收件匣上的紅點 (●) 表示有未讀訊息或新項目\n" +
             "• 向下拉動以重新整理好友名單和請求",
@@ -752,11 +752,11 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
             "• 公開：任何用戶均可搜尋您並發送好友請求\n" +
             "• 私人：您的個人資料不會出現在搜尋結果中\n" +
             "• 即使設為私人，仍可透過分享用戶 ID 新增好友",
-    UiTextKey.HelpColorPalettesTitle to "色彩主題與金幣",
+    UiTextKey.HelpColorPalettesTitle to "色彩主題與硬幣",
     UiTextKey.HelpColorPalettesBody to "• 1 個免費主題：天藍（預設）\n" +
-            "• 10 個可解鎖主題，每個需 10 枚金幣\n" +
-            "• 完成測驗即可獲得金幣\n" +
-            "• 金幣可用於解鎖色彩主題或擴充歷史紀錄上限\n" +
+            "• 10 個可解鎖主題，每個需 10 枚硬幣\n" +
+            "• 完成測驗即可獲得硬幣\n" +
+            "• 硬幣可用於解鎖色彩主題或擴充歷史紀錄上限\n" +
             "• 自動主題：早上 6 點至下午 6 點為淺色模式，下午 6 點至早上 6 點為深色模式",
     UiTextKey.HelpPrivacyTitle to "隱私與資料",
     UiTextKey.HelpPrivacyBody to "• 音訊僅用於語音辨識，不會永久儲存\n" +
@@ -765,7 +765,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
             "• 將個人資料設為私人可防止他人透過搜尋找到您\n" +
             "• 所有資料透過 Firebase 安全同步",
     UiTextKey.HelpAppVersionTitle to "應用程式版本",
-    UiTextKey.HelpAppVersionNotes to "• 歷史紀錄上限為 50–100 筆（可使用金幣擴充）\n" +
+    UiTextKey.HelpAppVersionNotes to "• 歷史紀錄上限為 30–60 筆（可使用硬幣擴充）\n" +
             "• 用戶名必須唯一——更改後舊名稱即釋出\n" +
             "• 應用程式版本更新時將自動登出以確保安全\n" +
             "• 所有翻譯由 Azure AI 服務提供支援",
@@ -814,11 +814,11 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthUpdatedLoginAgain to "應用程式已更新，請重新登入",
 
     // Favorites limit/info
-    UiTextKey.FavoritesLimitTitle to "收藏上限已達",
-    UiTextKey.FavoritesLimitMessage to "您最多可以儲存 20 個收藏項目，請先移除部分收藏再新增。",
+    UiTextKey.FavoritesLimitTitle to "最愛上限已達",
+    UiTextKey.FavoritesLimitMessage to "您最多可以儲存 20 個最愛項目，請先移除部分最愛再新增。",
     UiTextKey.FavoritesLimitGotIt to "好的",
-    UiTextKey.FavoritesInfoTitle to "關於收藏",
-    UiTextKey.FavoritesInfoMessage to "您可以儲存最多 20 個收藏項目（包括紀錄和對話），此限制有助於減少資料庫讀取並維持應用程式的流暢度。如需新增更多，請先移除現有的收藏。",
+    UiTextKey.FavoritesInfoTitle to "關於最愛",
+    UiTextKey.FavoritesInfoMessage to "您可以儲存最多 20 個最愛項目（包括紀錄和對話），此限制有助於減少資料庫讀取並維持應用程式的流暢度。如需新增更多，請先移除現有的最愛。",
     UiTextKey.FavoritesInfoGotIt to "明白了",
 
     // Primary language cooldown
@@ -851,8 +851,8 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Shop / Unlock
     UiTextKey.ShopUnlockConfirmTitle to "解鎖 {name}？",
-    UiTextKey.ShopUnlockCost to "費用：{cost} 枚金幣",
-    UiTextKey.ShopYourCoins to "您的金幣：{coins}",
+    UiTextKey.ShopUnlockCost to "費用：{cost} 枚硬幣",
+    UiTextKey.ShopYourCoins to "您的硬幣：{coins}",
     UiTextKey.ShopUnlockButton to "解鎖",
 
     // Help: Primary Language Info

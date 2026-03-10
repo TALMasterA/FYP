@@ -1494,7 +1494,7 @@ val ScreenUiTexts: List<String> = listOf(
     // HelpAppVersionTitle
     "App Version",
     // HelpAppVersionNotes
-    "• History limited to 50-100 records (expandable with coins)\n" +
+    "• History limited to 30-60 records (expandable with coins)\n" +
             "• Usernames must be unique — changing releases old name\n" +
             "• Auto sign-out occurs on app version updates for security\n" +
             "• All translations powered by Azure AI services",

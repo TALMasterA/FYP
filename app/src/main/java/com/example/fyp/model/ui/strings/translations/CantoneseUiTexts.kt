@@ -87,10 +87,10 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShopTitle to "商店",
     UiTextKey.ShopCoinBalance to "你嘅金幣",
     UiTextKey.ShopHistoryExpansionTitle to "擴充歷史紀錄上限",
-    UiTextKey.ShopHistoryExpansionDesc to "將歷史紀錄查看上限加多 50 條，費用 10 個金幣",
+    UiTextKey.ShopHistoryExpansionDesc to "擴充歷史紀錄查看上限，睇多啲近期翻譯紀錄。",
     UiTextKey.ShopCurrentLimit to "目前上限：{limit} 條",
     UiTextKey.ShopMaxLimit to "最高上限：",
-    UiTextKey.ShopBuyHistoryExpansion to "購買 (+50 條，10 個金幣)",
+    UiTextKey.ShopBuyHistoryExpansion to "購買 (+{increment} 條，{cost} 個金幣)",
     UiTextKey.ShopInsufficientCoins to "金幣唔夠",
     UiTextKey.ShopMaxLimitReached to "已達最高上限",
     UiTextKey.ShopHistoryExpandedTitle to "擴充成功！",
@@ -765,7 +765,7 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
             "• 將個人資料設為私人可以防止其他人透過搜尋搵到你\n" +
             "• 所有資料透過 Firebase 安全同步",
     UiTextKey.HelpAppVersionTitle to "應用程式版本",
-    UiTextKey.HelpAppVersionNotes to "• 歷史紀錄上限係 50–100 筆（可以用金幣擴充）\n" +
+    UiTextKey.HelpAppVersionNotes to "• 歷史紀錄上限係 30–60 條（可以用金幣擴充）\n" +
             "• 用戶名必須唯一——改名後舊名就釋出\n" +
             "• 應用程式版本更新時會自動登出保障安全\n" +
             "• 所有翻譯由 Azure AI 服務提供",
