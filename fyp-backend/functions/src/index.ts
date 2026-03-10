@@ -1,7 +1,7 @@
-import {setGlobalOptions} from "firebase-functions";
+import {setGlobalOptions} from "firebase-functions/v2";
 import {defineSecret} from "firebase-functions/params";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {onDocumentCreated} from "firebase-functions/v2/firestore";
+import {onDocumentCreated, onDocumentUpdated} from "firebase-functions/v2/firestore";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import fetch from "node-fetch";
 import * as admin from "firebase-admin";
@@ -965,6 +965,53 @@ export const sendFriendRequestNotification = onDocumentCreated(
 );
 
 /**
+ * Sends an FCM push notification to the original requester when their friend
+ * request is accepted.
+ *
+ * Trigger: Firestore document update at friend_requests/{requestId}
+ *
+ * Only fires when the status transitions from PENDING to ACCEPTED.
+ * The notification goes to fromUserId (the person who sent the request)
+ * with the accepting user's username (toUsername).
+ */
+export const sendRequestAcceptedNotification = onDocumentUpdated(
+  {
+    document: "friend_requests/{requestId}",
+    region: "us-central1",
+  },
+  async (event) => {
+    const before = event.data?.before?.data();
+    const after = event.data?.after?.data();
+    if (!before || !after) return;
+
+    // Only notify when status transitions from PENDING to ACCEPTED
+    if (before.status !== "PENDING" || after.status !== "ACCEPTED") return;
+
+    const receiverId: string = after.fromUserId ?? "";
+    const friendUsername: string = after.toUsername ?? "Someone";
+
+    if (!receiverId) return;
+
+    try {
+      await sendFcmToUser(
+        receiverId,
+        {
+          type: "request_accepted",
+          friendUsername,
+        },
+        "normal",
+        "sendRequestAcceptedNotification"
+      );
+    } catch (err: any) {
+      console.error("sendRequestAcceptedNotification: error", {
+        message: err?.message,
+        requestId: event.params.requestId,
+      });
+    }
+  }
+);
+
+/**
  * Sends an FCM push notification when a new item is added to a user's shared inbox.
  *
  * Trigger: Firestore document create at users/{userId}/shared_inbox/{itemId}
@@ -1005,7 +1052,7 @@ export const sendSharedInboxNotification = onDocumentCreated(
           type: "shared_item",
           senderUsername,
           itemType,
-          typeLabel,
+          title: typeLabel,
         },
         "normal",
         "sendSharedInboxNotification"

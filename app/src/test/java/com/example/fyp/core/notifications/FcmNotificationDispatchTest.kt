@@ -143,6 +143,27 @@ class FcmNotificationDispatchTest {
         assertEquals("Shared something with you", title)
     }
 
+    @Test
+    fun `request accepted data - extracts friendUsername with fallback`() {
+        val data = mapOf("type" to "request_accepted")
+        val friendUsername = data["friendUsername"] ?: "Someone"
+        assertEquals("Someone", friendUsername)
+    }
+
+    @Test
+    fun `request accepted data - uses provided friendUsername`() {
+        val data = mapOf("type" to "request_accepted", "friendUsername" to "Bob")
+        val friendUsername = data["friendUsername"] ?: "Someone"
+        assertEquals("Bob", friendUsername)
+    }
+
+    @Test
+    fun `shared item data - uses provided title`() {
+        val data = mapOf("type" to "shared_item", "title" to "a learning sheet")
+        val title = data["title"] ?: "Shared something with you"
+        assertEquals("a learning sheet", title)
+    }
+
     // ── Notification ID determinism ──────────────────────────────────────────
 
     @Test

@@ -184,8 +184,8 @@ service cloud.firestore {
       // Update: two cases are allowed:
       // 1. Sender can rename their username on pending requests.
       // 2. Recipient can update status to ACCEPTED or REJECTED (and optionally set
-      //    rejectionReason). This supports the updated accept/reject flow that preserves
-      //    request history instead of deleting the document.
+      //    rejectionReason and updatedAt). This supports the updated accept/reject flow
+      //    that preserves request history instead of deleting the document.
       allow update: if request.auth != null && (
         // Sender updates their displayed username on a pending request
         (resource.data.fromUserId == request.auth.uid &&
@@ -195,7 +195,7 @@ service cloud.firestore {
         (resource.data.toUserId == request.auth.uid &&
          resource.data.status == "PENDING" &&
          (request.resource.data.status == "ACCEPTED" || request.resource.data.status == "REJECTED") &&
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "rejectionReason"]))
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "rejectionReason", "updatedAt"]))
       );
 
       // Allow sender or receiver to delete ANY of their requests (any status).

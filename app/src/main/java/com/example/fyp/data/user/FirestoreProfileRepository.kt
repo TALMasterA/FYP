@@ -63,6 +63,8 @@ class FirestoreProfileRepository @Inject constructor(
         deleteCollection(userId, "shared_inbox")
         deleteCollection(userId, "favorite_sessions")
         deleteCollection(userId, "blocked_users")
+        // Push notification tokens
+        deleteCollection(userId, "fcm_tokens")
 
         // Delete profile subcollection (includes public profile)
         db.collection("users").document(userId)

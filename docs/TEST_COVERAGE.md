@@ -144,7 +144,7 @@ These tests prevent regressions in critical invariants:
 |------|---------------|
 | `UiTextAlignmentTest` | UiTextKey enum count == BaseUiTexts list count |
 | `TranslationCompletenessTest` | Cantonese + ZhTw maps contain all UiTextKey entries |
-| `AccountDeletionGuardTest` | All 16 subcollections are listed for cleanup |
+| `AccountDeletionGuardTest` | All 17 subcollections are listed for cleanup |
 | `PrimaryLanguageCooldownTest` | 30-day cooldown arithmetic |
 | `UsernameCooldownTest` | 30-day username cooldown arithmetic |
 | `FavoriteLimitTest` | 20-record favorites cap enforcement |
