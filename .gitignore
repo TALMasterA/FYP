@@ -55,6 +55,13 @@ fyp-backend/.firebase/
 .mcpjam/
 .serena/
 
+# Build/test output artifacts
+test_output.txt
+test_result.txt
+tsc_out.txt
+tsc_output.txt
+nul
+
 # Temporary Claude Code working files
 tmpclaude-*
 

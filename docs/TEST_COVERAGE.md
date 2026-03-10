@@ -1,14 +1,14 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-10_
+_Last updated: 2026-03-11_
 
 ## Summary
 
 | Metric                    | Count   |
 |---------------------------|---------|
 | Source files               | 250     |
-| Test files                 | 186     |
-| Total `@Test` methods      | 2,575   |
+| Test files                 | 198     |
+| Total `@Test` methods      | 2,615   |
 | Key logic files            | ~137    |
 | Key logic files tested     | ~137    |
 | Key logic coverage         | ~100%   |
@@ -25,7 +25,7 @@ _Last updated: 2026-03-10_
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 34        | 34     | 100%     |
 
-## What Is Tested (186 files, 2,575 tests)
+## What Is Tested (198 files, 2,615 tests)
 
 ### All ViewModels & Controllers (19/19)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
