@@ -1,14 +1,14 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-09_
+_Last updated: 2026-03-10_
 
 ## Summary
 
 | Metric                    | Count   |
 |---------------------------|---------|
 | Source files               | 250     |
-| Test files                 | 167     |
-| Total `@Test` methods      | 2,015   |
+| Test files                 | 169     |
+| Total `@Test` methods      | 2,045   |
 | Key logic files            | ~137    |
 | Key logic files tested     | ~125    |
 | Key logic coverage         | ~91%    |
@@ -25,7 +25,7 @@ _Last updated: 2026-03-09_
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 34        | 26     | 76%      |
 
-## What Is Tested (167 files, 2,015 tests)
+## What Is Tested (169 files, 2,045 tests)
 
 ### All ViewModels & Controllers (19/19)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
@@ -38,6 +38,8 @@ _Last updated: 2026-03-09_
 
 ### All Domain Use Cases (40/40)
 - Friends: 20 use cases — individual + integration tests (51 extra)
+  - **NEW:** UsernameEnforcementIntegrationTest (12): domain-layer username flow, profile creation, username preservation
+  - **NEW:** UsernameRequirementIntegrationTest (11): ViewModel-layer username gate for send/accept/accept-all
 - Learning: CoinEligibility (19), GenerationEligibility (24), GenerateLearningMaterials (3), GenerateQuiz (3), ParseAndStoreQuiz (13)
 - Settings: 9 use cases via SettingsUseCasesTest (20)
 - Speech: 7 use cases tested individually
@@ -129,3 +131,5 @@ These tests prevent regressions in critical invariants:
 | `UsernameCooldownTest` | 30-day username cooldown arithmetic |
 | `FavoriteLimitTest` | 20-record favorites cap enforcement |
 | `CrossLayerIntegrationTest` | Cooldown symmetry, coin economy balance, notification defaults |
+| `UsernameEnforcementIntegrationTest` | Domain layer does NOT enforce username; profile creation uses empty username |
+| `UsernameRequirementIntegrationTest` | ViewModel gate blocks send/accept/accept-all without username |
