@@ -7,11 +7,11 @@ _Last updated: 2026-03-10_
 | Metric                    | Count   |
 |---------------------------|---------|
 | Source files               | 250     |
-| Test files                 | 178     |
-| Total `@Test` methods      | 2,242   |
+| Test files                 | 186     |
+| Total `@Test` methods      | 2,575   |
 | Key logic files            | ~137    |
-| Key logic files tested     | ~134    |
-| Key logic coverage         | ~98%    |
+| Key logic files tested     | ~137    |
+| Key logic coverage         | ~100%   |
 
 ## Coverage by Layer
 
@@ -19,13 +19,13 @@ _Last updated: 2026-03-10_
 |---------------------------|-----------|--------|----------|
 | **screens/ (ViewModels)** | 19        | 19     | 100%     |
 | **domain/ (Use Cases)**   | 40        | 40     | 100%     |
-| **model/ (Data Models)**  | 23        | 20     | 87%      |
+| **model/ (Data Models)**  | 23        | 23     | 100%     |
 | **core/ (Utilities)**     | 12        | 12     | 100%     |
 | **navigation/**           | 2         | 2      | 100%     |
 | **ui/ + utils/**          | 6         | 6      | 100%     |
-| **data/ (Repositories)**  | 34        | 33     | 97%      |
+| **data/ (Repositories)**  | 34        | 34     | 100%     |
 
-## What Is Tested (178 files, 2,242 tests)
+## What Is Tested (186 files, 2,575 tests)
 
 ### All ViewModels & Controllers (19/19)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
@@ -51,12 +51,19 @@ _Last updated: 2026-03-10_
 - QuizCoinEarningRules (10), QuizFlowIntegration (13), CoinAndGenerationIntegration (7)
 - LearningGenerationRules (25), FriendSystemRules (29+11+11)
 - LanguageValidation (18), NavigationAccess (18), ErrorHandling (25)
+- **NEW:** EligibilityEdgeCases (18): boundary values for generation/coin eligibility, constant verification
+- **NEW:** SessionManagementLogic (13): session/user ID validation, delete preconditions, session naming
 
-### Models (20/23)
-- TranslationRecord (18), HistorySession (21), Quiz (18), FavoriteRecord (24)
+### Models (23/23)
+- TranslationRecord (18), HistorySession (21), HistorySessionExtended (9), Quiz (18), FavoriteRecord (24)
+- FavoriteSession (14): FavoriteSession and FavoriteSessionRecord defaults, copy, sorting
 - ValueTypes (21), SpeechResult (6), OcrResult (8), CustomWord (7)
 - FriendMessage (14), FriendRelation (9), FriendRequest (6), PublicUserProfile (5)
 - SharedItem (15), UserSettings (55), ColorPalette (17)
+- **NEW:** UserAndProfile (17): User/UserProfile data class defaults, AuthState sealed interface pattern matching
+- **NEW:** SpeechModels (15): SpeechScreenState defaults, RecognizePhase enum, ChatMessage properties
+- **NEW:** WordBankModels (18): WordBankItem, WordBank, WordBankUiState, SpeakingType enum
+- **NEW:** LearningModels (7): LanguageClusterUi data class, sorting, equality
 
 ### Core Utilities (12/12)
 - SecurityUtils (40+9), CertificatePinning (7), ErrorMessages (35), NetworkRetry (21)
@@ -64,7 +71,7 @@ _Last updated: 2026-03-10_
 - PerformanceUtils (13), AuditLogger (9), ViewModelHelpers (9), Pagination (9)
 - **NEW:** FeatureFlagDefaults (16): default flag values, key constants, flag type verification
 
-### Data Layer (33/34 key files)
+### Data Layer (34/34 key files)
 - CloudGenAiClient (11), CloudQuizClient (12), AzureVoiceConfig (18)
 - ContentCleaner (17), QuizParser (11), QuizGenerationRepositoryImpl (20)
 - CacheInterceptor (10), FirebaseTranslationRepository (8)
@@ -72,6 +79,9 @@ _Last updated: 2026-03-10_
 - FirestoreHistoryRepositoryLogic (25), FirestoreFeedbackRepository (23)
 - FirestoreChatRepository (5), LanguageDetectionCache (7), TranslationCache (8)
 - WordBankCacheData (7), DatabaseUtils (2), DataCleanupUtils (tests via DataCleanupUtilsTest)
+- **NEW:** SharedHistoryDataSourceExtendedLogic (17): updateLimit restart, bidirectional pair counting, language filtering
+- **NEW:** SharedSettingsDataSourceLogic (15): startObserving idempotency, stopObserving reset, updateCache semantics
+- **NEW:** LanguageDisplayNamesExtended (14): full 17-language mapping, Chinese variants, isSupportedLanguage comprehensive
 - **NEW:** SettingsNotificationFields (18): notification field allowlist, history limit clamping, parse defaults
 - **NEW:** WordBankRepositoryLogic (16): key normalization, metadata, word parsing, duplicate filtering
 - **NEW:** WordBankPrompt (12): prompt construction, takeLast(30) limit, language embedding
@@ -124,8 +134,7 @@ All complex business logic has been extracted to testable classes:
 
 ### Minor Gaps (low risk)
 - `SecureStorage.kt` — Android Keystore wrapper
-- `User.kt`, `UserProfile.kt` — trivial data classes with no methods
-- `AppLanguageState.kt` — trivial data class
+- `AppLanguageState.kt` — trivial data class (2 fields, no methods)
 
 ## Guard Tests
 

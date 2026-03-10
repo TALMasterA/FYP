@@ -117,7 +117,7 @@ class SharedHistoryDataSource @Inject constructor(
         val uid = currentUserId ?: return
         val now = System.currentTimeMillis()
         // Skip if refreshed recently (multiple ViewModels may trigger this simultaneously)
-        if (now - lastCountRefreshTime < COUNT_REFRESH_DEBOUNCE_MS) return
+        if (lastCountRefreshTime != 0L && now - lastCountRefreshTime < COUNT_REFRESH_DEBOUNCE_MS) return
         // Update timestamp immediately to prevent retry storms on transient failures
         lastCountRefreshTime = now
         try {

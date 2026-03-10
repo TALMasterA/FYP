@@ -245,7 +245,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (178 test files, 2242 tests)
+# Run all unit tests (186 test files, 2575 tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -290,25 +290,29 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **178 test files** covering critical app logic (as of March 2026)
-- **2242 unit tests** passing
+- **186 test files** covering critical app logic (as of March 2026)
+- **2575 unit tests** passing
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:
   - Domain layer use cases (30+ test files)
   - ViewModels (10+ test files)
-  - Models and serialization (15+ test files)
-  - Repositories and data layer (28+ test files)
+  - Models and serialization (18+ test files)
+  - Repositories and data layer (30+ test files)
   - Navigation routes and rules (5 test files)
   - UI components (StandardButtons, StandardTextFields, StandardDialogs, ThemeHelper, ColorPalette)
   - Security utilities (validation, sanitization, rate limiting, encoding correctness)
   - Performance utilities (debouncing, throttling)
-  - Anti-cheat and generation eligibility (comprehensive)
+  - Anti-cheat and generation eligibility (comprehensive, including edge cases)
   - Caching logic (translation, language detection)
   - Onboarding persistence logic (first-launch and version-based re-show)
   - Speech controllers (TTS controller, continuous conversation controller)
+  - Speech models (SpeechScreenState, RecognizePhase, ChatMessage)
   - Data layer algorithms (quiz context selection, data cleanup utilities)
-  - Shared data sources (SharedHistoryDataSource, SharedFriendsDataSource)
+  - Shared data sources (SharedHistoryDataSource, SharedFriendsDataSource, SharedSettingsDataSource)
   - Feedback repository (validation, retry logic, error classification)
+  - Language display names (full mapping, detection-to-supported, support checking)
+  - Word bank models (WordBankItem, WordBank, WordBankUiState, SpeakingType)
+  - Session management (validation, naming, delete preconditions)
 
 **Key Test Suites:**
 - `OnboardingLogicTest` - Onboarding first-launch and version-based re-show logic
@@ -333,6 +337,12 @@ gh auth login
 - Repository tests - Firestore operations, caching, cleanup
 - Cache tests - Translation cache, language detection cache data models
 - Constant validation tests - UI, AI, data, and generation constants
+- `EligibilityEdgeCasesTest` - Boundary values for generation and coin eligibility
+- `SessionManagementLogicTest` - Session ID/name validation and delete preconditions
+- `SpeechModelsTest` - Speech screen state, recognize phase, and chat message models
+- `WordBankModelsTest` - Word bank data models and UI state
+- `UserAndProfileTest` - User/UserProfile data classes and AuthState sealed interface
+- `LanguageDisplayNamesExtendedTest` - Comprehensive language mapping and detection tests
 
 **Running Tests:**
 ```bash

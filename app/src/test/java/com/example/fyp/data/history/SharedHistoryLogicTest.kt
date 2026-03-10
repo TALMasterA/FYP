@@ -246,7 +246,7 @@ class SharedHistoryLogicTest {
         now: Long,
         debounceMs: Long = 5_000L
     ): Boolean {
-        return now - lastRefreshTime < debounceMs
+        return lastRefreshTime != 0L && now - lastRefreshTime < debounceMs
     }
 
     @Test
