@@ -277,4 +277,41 @@ class ErrorMessageMapperTest {
         val result = ErrorMessageMapper.mapOcrError("Unexpected OCR issue")
         assertEquals("Image recognition failed. Please try again.", result)
     }
+
+    // ══════════════════════════════════════════════════════════════════
+    // Edge cases
+    // ══════════════════════════════════════════════════════════════════
+
+    @Test
+    fun `map IOException subclass (UnknownHostException) returns network message`() {
+        val result = ErrorMessageMapper.map(java.net.UnknownHostException("example.com"))
+        assertTrue(result.contains("Network connection failed"))
+    }
+
+    @Test
+    fun `map nested cause is NOT inspected - wrapping IOException in IllegalStateException`() {
+        val wrapped = IllegalStateException("outer", IOException("inner"))
+        val result = ErrorMessageMapper.map(wrapped)
+        // Should return generic error because mapper checks throwable type, not cause
+        assertEquals("An unexpected error occurred. Please try again.", result)
+    }
+
+    @Test
+    fun `mapTranslationError connection keyword returns network message`() {
+        val result = ErrorMessageMapper.mapTranslationError("Connection refused by server")
+        assertTrue(result.contains("Network connection failed"))
+    }
+
+    @Test
+    fun `mapSpeechRecognitionError combined keywords uses first match (network before timeout)`() {
+        val result = ErrorMessageMapper.mapSpeechRecognitionError("network timeout error")
+        // "network" matches first in the when clause
+        assertTrue(result.contains("Network connection failed"))
+    }
+
+    @Test
+    fun `map RuntimeException returns generic error`() {
+        val result = ErrorMessageMapper.map(RuntimeException("crash"))
+        assertEquals("An unexpected error occurred. Please try again.", result)
+    }
 }

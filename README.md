@@ -245,7 +245,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (169 test files, 2045+ tests)
+# Run all unit tests (169 test files, 2053 tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -291,7 +291,7 @@ gh auth login
 
 **Test Coverage:**
 - **169 test files** covering critical app logic (as of March 2026)
-- **2045+ unit tests** passing
+- **2053 unit tests** passing
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:
   - Domain layer use cases (30+ test files)
