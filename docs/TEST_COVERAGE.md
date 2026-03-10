@@ -8,7 +8,7 @@ _Last updated: 2026-03-10_
 |---------------------------|---------|
 | Source files               | 250     |
 | Test files                 | 169     |
-| Total `@Test` methods      | 2,045   |
+| Total `@Test` methods      | 2,053   |
 | Key logic files            | ~137    |
 | Key logic files tested     | ~125    |
 | Key logic coverage         | ~91%    |
@@ -25,7 +25,7 @@ _Last updated: 2026-03-10_
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 34        | 26     | 76%      |
 
-## What Is Tested (169 files, 2,045 tests)
+## What Is Tested (169 files, 2,053 tests)
 
 ### All ViewModels & Controllers (19/19)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
@@ -61,7 +61,7 @@ _Last updated: 2026-03-10_
 ### Core Utilities (11/12)
 - SecurityUtils (40+9), CertificatePinning (7), ErrorMessages (35), NetworkRetry (21)
 - ExtensionFunctions (16), Constants (13), FontSizeUtils (13)
-- PerformanceUtils (10), AuditLogger (9), ViewModelHelpers (9), Pagination (9)
+- PerformanceUtils (13), AuditLogger (9), ViewModelHelpers (9), Pagination (9)
 
 ### Data Layer (26/34 key files)
 - CloudGenAiClient (11), CloudQuizClient (12), AzureVoiceConfig (18)

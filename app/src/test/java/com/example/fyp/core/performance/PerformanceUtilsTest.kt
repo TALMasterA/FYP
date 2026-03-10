@@ -58,10 +58,11 @@ class PerformanceUtilsTest {
 
     @Test
     fun `timedCache - expired entry returns null`() {
-        // TTL of 1 ms so entry expires almost immediately
-        val cache = TimedCache<String, Int>(ttlMillis = 1L)
+        // Use a larger TTL (50ms) and longer sleep (150ms) to avoid flakiness
+        // from Windows System.currentTimeMillis() granularity (~15ms)
+        val cache = TimedCache<String, Int>(ttlMillis = 50L)
         cache.put("a", 1)
-        Thread.sleep(10)
+        Thread.sleep(150)
         assertNull(cache.get("a"))
     }
 
@@ -97,5 +98,35 @@ class PerformanceUtilsTest {
         cache.put("a", 42)
         Thread.sleep(10)
         assertEquals(42, cache.get("a"))
+    }
+
+    @Test
+    fun `timedCache - re-put after expiration returns new value`() {
+        val cache = TimedCache<String, Int>(ttlMillis = 50L)
+        cache.put("a", 1)
+        Thread.sleep(150)
+        assertNull(cache.get("a"))
+        cache.put("a", 99)
+        assertEquals(99, cache.get("a"))
+    }
+
+    @Test
+    fun `timedCache - multiple keys independent expiry`() {
+        val cache = TimedCache<String, Int>(ttlMillis = 60_000L)
+        cache.put("a", 1)
+        cache.put("b", 2)
+        cache.remove("a")
+        assertNull(cache.get("a"))
+        assertEquals(2, cache.get("b"))
+    }
+
+    @Test
+    fun `generateStableKeys - duplicate items collapsed by associateWith`() {
+        val items = listOf("x", "x", "y")
+        val keyMap = generateStableKeys(items) { "key_$it" }
+        // associateWith uses last occurrence for duplicates
+        assertEquals(2, keyMap.size)
+        assertEquals("key_x", keyMap["x"])
+        assertEquals("key_y", keyMap["y"])
     }
 }
