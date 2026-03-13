@@ -504,6 +504,9 @@ enum class UiTextKey {
     FriendsDeleteMultipleMessage,
     FriendsSearchMinChars3,
     FriendsSearchByUserIdHint,
+    FriendsStatusAlreadyFriends,
+    FriendsStatusRequestSent,
+    FriendsStatusRequestReceived,
 
     // --- Chat ---
     ChatTitle,
@@ -770,6 +773,7 @@ enum class UiTextKey {
 
     // --- Friends Extras ---
     FriendsAcceptAllButton,
+    FriendsRejectAllButton,
     ChatBlockedCannotSend,
 
     // --- Shop / Unlock ---

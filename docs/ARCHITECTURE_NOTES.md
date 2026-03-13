@@ -311,7 +311,32 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 16. Onboarding Screen — Version-Based Re-Show
+## 16. Friend Request Rate Limiting — Persisted Hourly Window
+
+**Files:** `data/friends/FriendRequestRateLimiter.kt`, `screens/friends/FriendsViewModel.kt`
+
+**Invariant:** Friend-request send limits must survive app restarts. The client enforces a rolling one-hour window of 10 sends per user by persisting timestamps in SharedPreferences.
+
+**Implementation:**
+1. `SharedPreferencesFriendRequestRateLimiter` stores per-user send timestamps in `friend_request_rate_limit_prefs`
+2. `canSend()` prunes expired timestamps before deciding whether another send is allowed
+3. `recordSend()` is only called after `SendFriendRequestUseCase` succeeds
+4. `FriendsViewModel.sendFriendRequest()` surfaces retry timing to the UI when the limit is hit
+
+**Rule:**
+- NEVER keep friend-request rate limiting in memory only
+- ALWAYS prune expired timestamps before both reads and writes
+- ONLY record a send after a successful request; failed requests must not consume quota
+- KEEP the limit aligned with the documented 10-per-hour rule in README and tests
+
+**Benefits:**
+- Prevents users from bypassing the limit by restarting the app
+- Reduces accidental request spam during repeated retries
+- Keeps client behaviour aligned with the existing server-side guardrail
+
+---
+
+## 17. Onboarding Screen — Version-Based Re-Show
 
 **File:** `screens/onboarding/OnboardingScreen.kt`
 
@@ -331,7 +356,7 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 17. sanitizeInput() — Encoding Order
+## 18. sanitizeInput() — Encoding Order
 
 **File:** `core/security/SecurityUtils.kt`
 
@@ -349,7 +374,7 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 18. Username Validation — Consistent Regex Across Codebase
+## 19. Username Validation — Consistent Regex Across Codebase
 
 **Files:** `core/security/SecurityUtils.kt`, `screens/settings/ProfileViewModel.kt`
 
@@ -359,7 +384,7 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 19. NetworkRetry — Standard Exponential Backoff
+## 20. NetworkRetry — Standard Exponential Backoff
 
 **File:** `core/connectivity/NetworkRetry.kt`
 
@@ -369,7 +394,7 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 20. SpeechViewModel — Synchronized Pending Saves
+## 21. SpeechViewModel — Synchronized Pending Saves
 
 **File:** `screens/speech/SpeechViewModel.kt`
 
@@ -379,7 +404,7 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 21. Language Count Cache — Non-Negative Invariant
+## 22. Language Count Cache — Non-Negative Invariant
 
 **File:** `data/history/FirestoreHistoryRepository.kt`
 
@@ -389,7 +414,7 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 22. CoinEligibility — Client Must Match Server
+## 23. CoinEligibility — Client Must Match Server
 
 **Files:** `domain/learning/CoinEligibility.kt`, `fyp-backend/functions/src/index.ts` (awardQuizCoins)
 
@@ -403,7 +428,7 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 23. Username Change — 30-Day Cooldown
+## 24. Username Change — 30-Day Cooldown
 
 **Files:** `model/user/UserSettings.kt`, `data/settings/FirestoreUserSettingsRepository.kt`, `screens/settings/ProfileViewModel.kt`, `screens/settings/ProfileScreen.kt`
 
@@ -418,7 +443,7 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 24. Camera OCR — Language Hint
+## 25. Camera OCR — Language Hint
 
 **Files:** `screens/speech/ImageCaptureComponents.kt`, `screens/speech/SpeechRecognitionScreen.kt`
 
@@ -426,7 +451,7 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 25. setVoiceForLanguage — Must Use set-merge
+## 26. setVoiceForLanguage — Must Use set-merge
 
 **Files:** `data/settings/FirestoreUserSettingsRepository.kt`
 
@@ -434,7 +459,7 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 26. updatePublicProfile — Must Propagate All Searchable Fields
+## 27. updatePublicProfile — Must Propagate All Searchable Fields
 
 **Files:** `data/friends/FirestoreFriendsRepository.kt`
 
@@ -442,7 +467,7 @@ scope.launch(Dispatchers.IO) {
 
 ---
 
-## 27. Username Enforcement Gate — ViewModel Layer
+## 28. Username Enforcement Gate — ViewModel Layer
 
 **Files:** `screens/friends/FriendsViewModel.kt`, `screens/friends/FriendsScreen.kt`
 

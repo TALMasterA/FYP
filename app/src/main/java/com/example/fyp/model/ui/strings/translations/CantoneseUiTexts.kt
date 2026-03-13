@@ -529,6 +529,9 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsDeleteMultipleMessage to "移除所選 {count} 位朋友？",
     UiTextKey.FriendsSearchMinChars3 to "請輸入最少 3 個字元以按用戶名搜尋",
     UiTextKey.FriendsSearchByUserIdHint to "或輸入完整用戶 ID 進行精確查詢",
+    UiTextKey.FriendsStatusAlreadyFriends to "已經係朋友",
+    UiTextKey.FriendsStatusRequestSent to "請求已發送 — 等緊回覆",
+    UiTextKey.FriendsStatusRequestReceived to "呢位用戶已經發送咗請求畀你",
 
     // Chat
     UiTextKey.ChatTitle to "同 {username} 傾偈",
@@ -847,6 +850,7 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Friends extras
     UiTextKey.FriendsAcceptAllButton to "全部接受",
+    UiTextKey.FriendsRejectAllButton to "全部拒絕",
     UiTextKey.ChatBlockedCannotSend to "無法發送訊息",
 
     // Shop / Unlock

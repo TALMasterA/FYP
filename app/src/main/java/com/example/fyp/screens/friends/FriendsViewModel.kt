@@ -2,7 +2,13 @@ package com.example.fyp.screens.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.core.ErrorMessages
+import com.example.fyp.core.security.ValidationResult
+import com.example.fyp.core.security.sanitizeInput
+import com.example.fyp.core.security.validateTextLength
 import com.example.fyp.data.friends.ChatRepository
+import com.example.fyp.data.friends.FriendRequestRateLimiter
+import com.example.fyp.data.friends.MAX_FRIEND_REQUESTS_PER_HOUR
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
@@ -12,15 +18,13 @@ import com.example.fyp.model.friends.FriendRelation
 import com.example.fyp.model.friends.FriendRequest
 import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.user.AuthState
-import com.example.fyp.core.ErrorMessages
-import com.example.fyp.core.security.ValidationResult
-import com.example.fyp.core.security.sanitizeInput
-import com.example.fyp.core.security.validateTextLength
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +33,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.math.ceil
 import javax.inject.Inject
 
 /**
@@ -52,7 +57,9 @@ data class FriendsUiState(
     /** IDs the current user has blocked. */
     val blockedUserIds: Set<String> = emptySet(),
     /** Full blocked-user records (with usernames) for the Blocked Users screen. */
-    val blockedUsers: List<com.example.fyp.data.friends.BlockedUser> = emptyList()
+    val blockedUsers: List<com.example.fyp.data.friends.BlockedUser> = emptyList(),
+    /** Batch operation progress: null when not in progress, otherwise "X/Y" format */
+    val batchProgress: String? = null
 )
 
 /** Status of the local user's relationship with a search result. */
@@ -79,6 +86,7 @@ class FriendsViewModel @Inject constructor(
     private val sharedSettingsDataSource: SharedSettingsDataSource,
     private val chatRepository: ChatRepository,
     private val friendsRepository: com.example.fyp.data.friends.FriendsRepository,
+    private val friendRequestRateLimiter: FriendRequestRateLimiter,
     private val observeOutgoingRequestsUseCase: ObserveOutgoingRequestsUseCase,
     private val searchUsersUseCase: SearchUsersUseCase,
     private val sendFriendRequestUseCase: SendFriendRequestUseCase,
@@ -121,6 +129,7 @@ class FriendsViewModel @Inject constructor(
 
     private var outgoingRequestsJob: Job? = null
     private var currentUserId: UserId? = null
+    private var batchJob: Job? = null
     private var previousIncomingCount = 0
 
     // Single document unread observer
@@ -225,7 +234,6 @@ class FriendsViewModel @Inject constructor(
             ) { unseenMap, enabled ->
                 if (enabled) unseenMap else emptyMap()
             }.collect { gatedMap ->
-                android.util.Log.d("FriendsViewModel", "Unseen unread per friend updated: $gatedMap")
                 _uiState.value = _uiState.value.copy(unreadCountPerFriend = gatedMap)
             }
         }
@@ -340,10 +348,8 @@ class FriendsViewModel @Inject constructor(
             toDelete.forEach { friendId ->
                 removeFriendUseCase(userId, UserId(friendId))
             }
-            _uiState.value = _uiState.value.copy(
-                successMessage = "Friend(s) removed.",
-                error = null
-            )
+            _uiState.value = _uiState.value.copy(error = null)
+            showSuccessMessage("Friend(s) removed.")
             // Refresh to sync Firestore state so re-search shows correct status
             refreshFriendsList()
         }
@@ -389,6 +395,18 @@ class FriendsViewModel @Inject constructor(
             return
         }
 
+        // Client-side hourly rate limit persisted across app restarts
+        val rateLimitStatus = friendRequestRateLimiter.canSend(fromUserId.value)
+        if (!rateLimitStatus.allowed) {
+            val retryAfterMinutes = ceil(rateLimitStatus.retryAfterMillis / 60000.0)
+                .toInt()
+                .coerceAtLeast(1)
+            _uiState.value = _uiState.value.copy(
+                error = "Rate limit exceeded. You can send up to $MAX_FRIEND_REQUESTS_PER_HOUR friend requests per hour. Try again in about $retryAfterMinutes minute(s)."
+            )
+            return
+        }
+
         // Validate note length (max 200 chars)
         val noteValidation = validateTextLength(note, minLength = 0, maxLength = 200, fieldName = "Note")
         if (noteValidation is ValidationResult.Invalid) {
@@ -402,13 +420,14 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             sendFriendRequestUseCase(fromUserId, UserId(toUserId), sanitizedNote).fold(
                 onSuccess = {
+                    friendRequestRateLimiter.recordSend(fromUserId.value)
                     _uiState.value = _uiState.value.copy(
-                        successMessage = "Friend request sent! They will be notified.",
                         error = null,
                         // Clear search so the outgoing-requests listener re-evaluates status
                         searchResults = emptyList(),
                         searchQuery = ""
                     )
+                    showSuccessMessage("Friend request sent! They will be notified.")
                 },
                 onFailure = { e ->
                     val message = when {
@@ -443,10 +462,8 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             acceptFriendRequestUseCase(requestId, userId, friendUserId).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        successMessage = "Friend request accepted! You are now friends.",
-                        error = null
-                    )
+                    _uiState.value = _uiState.value.copy(error = null)
+                    showSuccessMessage("Friend request accepted! You are now friends.")
                 },
                 onFailure = { e ->
                     val message = when {
@@ -466,10 +483,8 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             rejectFriendRequestUseCase(requestId).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        successMessage = "Request declined.",
-                        error = null
-                    )
+                    _uiState.value = _uiState.value.copy(error = null)
+                    showSuccessMessage("Request declined.")
                 },
                 onFailure = { e ->
                     val message = when {
@@ -487,10 +502,8 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             cancelFriendRequestUseCase(requestId).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        successMessage = "Friend request cancelled.",
-                        error = null
-                    )
+                    _uiState.value = _uiState.value.copy(error = null)
+                    showSuccessMessage("Friend request cancelled.")
                 },
                 onFailure = { e ->
                     val message = when {
@@ -516,10 +529,8 @@ class FriendsViewModel @Inject constructor(
             )
             removeFriendUseCase(userId, UserId(friendId)).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        successMessage = ErrorMessages.FRIEND_REMOVED,
-                        error = null
-                    )
+                    _uiState.value = _uiState.value.copy(error = null)
+                    showSuccessMessage(ErrorMessages.FRIEND_REMOVED)
                     // Refresh to sync Firestore state so re-search shows correct status
                     refreshFriendsList()
                 },
@@ -543,30 +554,51 @@ class FriendsViewModel @Inject constructor(
         // Defence-in-depth: require a username before accepting friend requests.
         if (!requireUsernameForFriendActions()) return
         val requests = _uiState.value.incomingRequests
-        if (requests.isEmpty()) return
+        if (requests.isEmpty() || batchJob?.isActive == true) return
 
-        viewModelScope.launch {
+        batchJob = viewModelScope.launch {
+            val total = requests.size
             var successCount = 0
             var failCount = 0
+            var processedCount = 0
 
-            requests.forEach { request ->
-                val friendUserId = UserId(request.fromUserId)
-                acceptFriendRequestUseCase(request.requestId, userId, friendUserId).fold(
-                    onSuccess = { successCount++ },
-                    onFailure = { failCount++ }
+            try {
+                requests.forEachIndexed { index, request ->
+                    ensureActive()
+                    _uiState.value = _uiState.value.copy(batchProgress = "${index + 1}/$total")
+                    val friendUserId = UserId(request.fromUserId)
+                    acceptFriendRequestUseCase(request.requestId, userId, friendUserId).fold(
+                        onSuccess = { successCount++ },
+                        onFailure = { failCount++ }
+                    )
+                    processedCount = index + 1
+                }
+
+                val message = when {
+                    failCount == 0 -> "All $successCount friend requests accepted!"
+                    successCount == 0 -> "Failed to accept requests. Please try again."
+                    else -> "$successCount accepted, $failCount failed. Please retry for failed ones."
+                }
+
+                if (successCount == 0 && failCount > 0) {
+                    _uiState.value = _uiState.value.copy(error = message)
+                } else if (successCount > 0) {
+                    _uiState.value = _uiState.value.copy(error = null)
+                    showSuccessMessage(message)
+                }
+            } catch (_: CancellationException) {
+                _uiState.value = _uiState.value.copy(error = null)
+                showSuccessMessage(
+                    if (processedCount > 0) {
+                        "Batch accept cancelled after $processedCount/$total request(s)."
+                    } else {
+                        "Batch accept cancelled."
+                    }
                 )
+            } finally {
+                _uiState.value = _uiState.value.copy(batchProgress = null)
+                batchJob = null
             }
-
-            val message = when {
-                failCount == 0 -> "All $successCount friend requests accepted!"
-                successCount == 0 -> "Failed to accept requests. Please try again."
-                else -> "$successCount accepted, $failCount failed. Please retry for failed ones."
-            }
-
-            _uiState.value = _uiState.value.copy(
-                successMessage = if (successCount > 0) message else null,
-                error = if (successCount == 0 && failCount > 0) message else null
-            )
         }
     }
 
@@ -575,25 +607,57 @@ class FriendsViewModel @Inject constructor(
      */
     fun rejectAllRequests() {
         val requests = _uiState.value.incomingRequests
-        if (requests.isEmpty()) return
+        if (requests.isEmpty() || batchJob?.isActive == true) return
 
-        viewModelScope.launch {
+        batchJob = viewModelScope.launch {
+            val total = requests.size
             var successCount = 0
-            requests.forEach { request ->
-                rejectFriendRequestUseCase(request.requestId).fold(
-                    onSuccess = { successCount++ },
-                    onFailure = { /* count silently */ }
+            var processedCount = 0
+            try {
+                requests.forEachIndexed { index, request ->
+                    ensureActive()
+                    _uiState.value = _uiState.value.copy(batchProgress = "${index + 1}/$total")
+                    rejectFriendRequestUseCase(request.requestId).fold(
+                        onSuccess = { successCount++ },
+                        onFailure = { /* count silently */ }
+                    )
+                    processedCount = index + 1
+                }
+                _uiState.value = _uiState.value.copy(error = null)
+                showSuccessMessage("Declined $successCount request(s).")
+            } catch (_: CancellationException) {
+                _uiState.value = _uiState.value.copy(error = null)
+                showSuccessMessage(
+                    if (processedCount > 0) {
+                        "Batch reject cancelled after $processedCount/$total request(s)."
+                    } else {
+                        "Batch reject cancelled."
+                    }
                 )
+            } finally {
+                _uiState.value = _uiState.value.copy(batchProgress = null)
+                batchJob = null
             }
-            _uiState.value = _uiState.value.copy(
-                successMessage = "Declined $successCount request(s).",
-                error = null
-            )
         }
+    }
+
+    fun cancelBatchOperation() {
+        batchJob?.cancel()
     }
 
     fun clearMessages() {
         _uiState.value = _uiState.value.copy(error = null, successMessage = null)
+    }
+
+    /**
+     * Show a success message that auto-dismisses after 3 seconds.
+     */
+    private fun showSuccessMessage(message: String) {
+        _uiState.value = _uiState.value.copy(successMessage = message)
+        viewModelScope.launch {
+            delay(3000)
+            _uiState.value = _uiState.value.copy(successMessage = null)
+        }
     }
 
     fun clearNewRequestCount() {
@@ -677,9 +741,9 @@ class FriendsViewModel @Inject constructor(
                         blockedUserIds = updatedIds,
                         blockedUsers = updatedList,
                         friends = updatedFriends,
-                        successMessage = "User blocked and removed from friends.",
                         error = null
                     )
+                    showSuccessMessage("User blocked and removed from friends.")
                 },
                 onFailure = {
                     _uiState.value = _uiState.value.copy(error = "Failed to block user. Please try again.")
@@ -696,9 +760,9 @@ class FriendsViewModel @Inject constructor(
                     val updated = _uiState.value.blockedUserIds + targetUserId
                     _uiState.value = _uiState.value.copy(
                         blockedUserIds = updated,
-                        successMessage = "User blocked.",
                         error = null
                     )
+                    showSuccessMessage("User blocked.")
                 },
                 onFailure = {
                     _uiState.value = _uiState.value.copy(error = "Failed to block user. Please try again.")
@@ -717,9 +781,9 @@ class FriendsViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         blockedUserIds = updatedIds,
                         blockedUsers = updatedList,
-                        successMessage = "User unblocked.",
                         error = null
                     )
+                    showSuccessMessage("User unblocked.")
                 },
                 onFailure = {
                     _uiState.value = _uiState.value.copy(error = "Failed to unblock user. Please try again.")

@@ -31,6 +31,8 @@ import com.example.fyp.core.rememberHapticFeedback
 import com.example.fyp.core.UiConstants
 import com.example.fyp.ui.components.TranslationCardSkeleton
 import com.example.fyp.ui.theme.AppSpacing
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +56,16 @@ fun HistoryScreen(
         if (uiState.error != null) {
             kotlinx.coroutines.delay(UiConstants.ERROR_AUTO_DISMISS_MS)
             viewModel.clearError()
+        }
+    }
+
+    // Pull-to-refresh state
+    var isRefreshing by remember { mutableStateOf(false) }
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            viewModel.retryLoad()
+            delay(600)
+            isRefreshing = false
         }
     }
 
@@ -380,7 +392,11 @@ fun HistoryScreen(
                 }
             }
 
-            Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { isRefreshing = true },
+                modifier = Modifier.fillMaxWidth().weight(1f)
+            ) {
                 when {
                     uiState.isLoading -> Box(
                         Modifier.fillMaxSize(),

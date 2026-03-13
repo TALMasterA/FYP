@@ -1,6 +1,8 @@
 package com.example.fyp.screens.friends
 
 import com.example.fyp.data.friends.ChatRepository
+import com.example.fyp.data.friends.FriendRequestRateLimitStatus
+import com.example.fyp.data.friends.FriendRequestRateLimiter
 import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.settings.SharedSettingsDataSource
@@ -74,6 +76,7 @@ class FriendsViewModelTest {
     private lateinit var sharedSettingsDataSource: SharedSettingsDataSource
     private lateinit var chatRepository: ChatRepository
     private lateinit var friendsRepository: FriendsRepository
+    private lateinit var friendRequestRateLimiter: FriendRequestRateLimiter
     private lateinit var observeOutgoingRequestsUseCase: ObserveOutgoingRequestsUseCase
     private lateinit var searchUsersUseCase: SearchUsersUseCase
     private lateinit var sendFriendRequestUseCase: SendFriendRequestUseCase
@@ -104,6 +107,9 @@ class FriendsViewModelTest {
         }
         chatRepository = mock()
         friendsRepository = mock()
+        friendRequestRateLimiter = mock {
+            on { canSend(eq("user1"), any()) } doReturn FriendRequestRateLimitStatus(allowed = true)
+        }
         observeOutgoingRequestsUseCase = mock()
         searchUsersUseCase = mock()
         sendFriendRequestUseCase = mock()
@@ -133,6 +139,7 @@ class FriendsViewModelTest {
         sharedSettingsDataSource = sharedSettingsDataSource,
         chatRepository = chatRepository,
         friendsRepository = friendsRepository,
+        friendRequestRateLimiter = friendRequestRateLimiter,
         observeOutgoingRequestsUseCase = observeOutgoingRequestsUseCase,
         searchUsersUseCase = searchUsersUseCase,
         sendFriendRequestUseCase = sendFriendRequestUseCase,
@@ -214,6 +221,7 @@ class FriendsViewModelTest {
 
         assertNotNull(vm.uiState.value.successMessage)
         assertNull(vm.uiState.value.error)
+        verify(friendRequestRateLimiter).recordSend("user1")
     }
 
     // ── sendFriendRequest duplicate ─────────────────────────────────
@@ -417,6 +425,21 @@ class FriendsViewModelTest {
 
         assertNotNull(vm.uiState.value.error)
         assertTrue(vm.uiState.value.error!!.contains("maximum", ignoreCase = true))
+        verifyNoInteractions(sendFriendRequestUseCase)
+    }
+
+    @Test
+    fun `sendFriendRequest blocked when hourly rate limit exceeded`() = runTest {
+        whenever(friendRequestRateLimiter.canSend(eq("user1"), any()))
+            .thenReturn(FriendRequestRateLimitStatus(allowed = false, retryAfterMillis = 120_000L))
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.sendFriendRequest("newTarget")
+
+        assertNotNull(vm.uiState.value.error)
+        assertTrue(vm.uiState.value.error!!.contains("rate limit", ignoreCase = true))
         verifyNoInteractions(sendFriendRequestUseCase)
     }
 

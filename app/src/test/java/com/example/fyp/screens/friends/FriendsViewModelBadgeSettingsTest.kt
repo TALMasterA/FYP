@@ -1,6 +1,8 @@
 package com.example.fyp.screens.friends
 
 import com.example.fyp.data.friends.ChatRepository
+import com.example.fyp.data.friends.FriendRequestRateLimitStatus
+import com.example.fyp.data.friends.FriendRequestRateLimiter
 import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.settings.SharedSettingsDataSource
@@ -63,6 +65,7 @@ class FriendsViewModelBadgeSettingsTest {
     private lateinit var sharedSettingsDataSource: SharedSettingsDataSource
     private lateinit var chatRepository: ChatRepository
     private lateinit var friendsRepository: FriendsRepository
+    private lateinit var friendRequestRateLimiter: FriendRequestRateLimiter
     private lateinit var observeOutgoingRequestsUseCase: ObserveOutgoingRequestsUseCase
     private lateinit var searchUsersUseCase: SearchUsersUseCase
     private lateinit var sendFriendRequestUseCase: SendFriendRequestUseCase
@@ -93,6 +96,9 @@ class FriendsViewModelBadgeSettingsTest {
         }
         chatRepository = mock()
         friendsRepository = mock()
+        friendRequestRateLimiter = mock {
+            on { canSend(eq("user1"), any()) } doReturn FriendRequestRateLimitStatus(allowed = true)
+        }
         observeOutgoingRequestsUseCase = mock()
         searchUsersUseCase = mock()
         sendFriendRequestUseCase = mock()
@@ -122,6 +128,7 @@ class FriendsViewModelBadgeSettingsTest {
         sharedSettingsDataSource = sharedSettingsDataSource,
         chatRepository = chatRepository,
         friendsRepository = friendsRepository,
+        friendRequestRateLimiter = friendRequestRateLimiter,
         observeOutgoingRequestsUseCase = observeOutgoingRequestsUseCase,
         searchUsersUseCase = searchUsersUseCase,
         sendFriendRequestUseCase = sendFriendRequestUseCase,

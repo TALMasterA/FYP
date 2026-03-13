@@ -529,6 +529,9 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsDeleteMultipleMessage to "移除所選 {count} 位好友？",
     UiTextKey.FriendsSearchMinChars3 to "請輸入至少 3 個字元以按用戶名稱搜尋",
     UiTextKey.FriendsSearchByUserIdHint to "或輸入完整用戶 ID 進行精確查詢",
+    UiTextKey.FriendsStatusAlreadyFriends to "已是好友",
+    UiTextKey.FriendsStatusRequestSent to "請求已發送 — 等待回覆",
+    UiTextKey.FriendsStatusRequestReceived to "此用戶已向你發送請求",
 
     // Chat
     UiTextKey.ChatTitle to "與 {username} 聊天",
@@ -847,6 +850,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Friends extras
     UiTextKey.FriendsAcceptAllButton to "全部接受",
+    UiTextKey.FriendsRejectAllButton to "全部拒絕",
     UiTextKey.ChatBlockedCannotSend to "無法傳送訊息",
 
     // Shop / Unlock

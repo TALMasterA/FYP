@@ -5,6 +5,8 @@ import com.example.fyp.data.cloud.LanguageDetectionCache
 import com.example.fyp.data.cloud.TranslationCache
 import com.example.fyp.data.clients.CloudSpeechTokenClient
 import com.example.fyp.data.clients.CloudTranslatorClient
+import com.example.fyp.data.friends.FriendRequestRateLimiter
+import com.example.fyp.data.friends.SharedPreferencesFriendRequestRateLimiter
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.data.user.FirestoreProfileRepository
@@ -246,6 +248,12 @@ object AppModule {
     @Singleton
     fun provideFriendsRepository(db: FirebaseFirestore): com.example.fyp.data.friends.FriendsRepository =
         com.example.fyp.data.friends.FirestoreFriendsRepository(db)
+
+    @Provides
+    @Singleton
+    fun provideFriendRequestRateLimiter(
+        @ApplicationContext context: Context
+    ): FriendRequestRateLimiter = SharedPreferencesFriendRequestRateLimiter(context)
 
     @Provides
     @Singleton

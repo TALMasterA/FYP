@@ -1,14 +1,14 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-11_
+_Last updated: 2026-03-14_
 
 ## Summary
 
 | Metric                    | Count   |
 |---------------------------|---------|
-| Source files               | 250     |
-| Test files                 | 198     |
-| Total `@Test` methods      | 2,615   |
+| Source files               | 251     |
+| Test files                 | 199     |
+| Total `@Test` methods      | 2,619   |
 | Key logic files            | ~137    |
 | Key logic files tested     | ~137    |
 | Key logic coverage         | ~100%   |
@@ -25,11 +25,11 @@ _Last updated: 2026-03-11_
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 34        | 34     | 100%     |
 
-## What Is Tested (198 files, 2,615 tests)
+## What Is Tested (199 files, 2,619 tests)
 
 ### All ViewModels & Controllers (19/19)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
-- FavoritesViewModel (13), FeedbackViewModel (8), FriendsViewModel (29)
+- FavoritesViewModel (13), FeedbackViewModel (8), FriendsViewModel (30)
 - HistoryViewModel (21), LearningViewModel (14), LearningSheetViewModel (19)
 - MyProfileViewModel (13), ProfileViewModel (11), SettingsViewModel (21)
 - SharedInboxViewModel (11), SharedMaterialDetailViewModel (9), ShopViewModel (13)
@@ -75,7 +75,7 @@ _Last updated: 2026-03-11_
 - CloudGenAiClient (11), CloudQuizClient (12), AzureVoiceConfig (18)
 - ContentCleaner (17), QuizParser (11), QuizGenerationRepositoryImpl (20)
 - CacheInterceptor (10), FirebaseTranslationRepository (8)
-- FriendsCache (32), SeenItemsStorage (21), SharedFriendsDataSource (31)
+- FriendsCache (32), SeenItemsStorage (21), SharedFriendsDataSource (31), FriendRequestRateLimiter (3)
 - FirestoreHistoryRepositoryLogic (25), FirestoreFeedbackRepository (23)
 - FirestoreChatRepository (5), LanguageDetectionCache (7), TranslationCache (8)
 - WordBankCacheData (7), DatabaseUtils (2), DataCleanupUtils (tests via DataCleanupUtilsTest)
@@ -96,6 +96,7 @@ _Last updated: 2026-03-11_
 - **NEW:** CustomWordsValidation (22): input validation, trimming, truncation, blank checks
 - **NEW:** CloudClientLogic (15): request building, response parsing, deployment validation
 - **NEW:** DataLayerIntegration (19): cross-repository invariants, chatId↔friends consistency
+- **NEW:** FriendRequestRateLimiterTest (3): persisted hourly send limit, expiry pruning, restart-safe quota checks
 
 ### UI Text System
 - UiTextAlignment (4), UiTextCompleteness (8), UiTextHelpers (17)

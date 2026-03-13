@@ -18,6 +18,7 @@ import com.example.fyp.domain.friends.ShareWordUseCase
 import com.example.fyp.model.UserId
 import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.core.AiConfig
+import com.example.fyp.core.AppLogger
 import com.example.fyp.core.UiConstants
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
@@ -63,9 +64,6 @@ class WordBankViewModel @Inject constructor(
     private companion object {
         /** Debounce time for word bank generation to prevent duplicate API calls */
         const val GENERATION_DEBOUNCE_MS = 2000L
-
-        /** Maximum length of debug log output for generated content */
-        const val MAX_DEBUG_LOG_LENGTH = 500
     }
 
     // Cached supported languages - loaded once and reused
@@ -507,21 +505,18 @@ class WordBankViewModel @Inject constructor(
 
                 // Generate word bank using AI (use same deployment as learning/quiz)
                 val deployment = AiConfig.DEFAULT_DEPLOYMENT
-                android.util.Log.d("WordBankVM", "Generating word bank for $targetLanguageCode with ${relevantRecords.size} records")
                 val rawContent = wordBankGenRepo.generateWordBank(
                     deployment = deployment,
                     primaryLanguageCode = primaryLanguageCode,
                     targetLanguageCode = targetLanguageCode,
                     records = relevantRecords
                 )
-                android.util.Log.d("WordBankVM", "Raw content received: ${rawContent.take(MAX_DEBUG_LOG_LENGTH)}")
 
                 // Check if cancelled
                 ensureActive()
 
                 // Parse the JSON response
                 val words = parseWordBankResponse(rawContent)
-                android.util.Log.d("WordBankVM", "Parsed ${words.size} words")
 
                 if (words.isEmpty()) {
                     _uiState.value = _uiState.value.copy(
@@ -627,7 +622,7 @@ class WordBankViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                android.util.Log.e("WordBankVM", "Failed to parse word bank: ${e.message}", e)
+                AppLogger.e("WordBankVM", "Failed to parse word bank: ${e.message}", e)
                 throw IllegalStateException("Failed to parse generated content: ${e.message}", e)
             }
         }

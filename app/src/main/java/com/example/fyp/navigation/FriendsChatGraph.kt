@@ -45,6 +45,9 @@ internal fun NavGraphBuilder.friendsChatGraph(
             onOpenNotifSettings = {
                 navController.navigate(AppScreen.NotificationSettings.route) { launchSingleTop = true }
             },
+            onNavigateToProfile = {
+                navController.navigate(AppScreen.Profile.route) { launchSingleTop = true }
+            },
             hasUnseenSharedItems = hasUnseenSharedItems,
             unseenSharedItemsCount = unseenSharedItemsCount,
             hasUnreadMessages = hasUnreadMessages,

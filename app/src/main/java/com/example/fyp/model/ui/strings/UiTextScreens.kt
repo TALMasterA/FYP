@@ -1108,6 +1108,12 @@ val ScreenUiTexts: List<String> = listOf(
     "Enter at least 3 characters to search by username",
     // FriendsSearchByUserIdHint
     "Or enter full User ID for exact lookup",
+    // FriendsStatusAlreadyFriends
+    "Already friends",
+    // FriendsStatusRequestSent
+    "Request sent — awaiting reply",
+    // FriendsStatusRequestReceived
+    "This user sent you a request",
 
     // --- Chat ---
     // ChatTitle
@@ -1610,6 +1616,8 @@ val ScreenUiTexts: List<String> = listOf(
     // --- Friends Extras ---
     // FriendsAcceptAllButton
     "Accept All",
+    // FriendsRejectAllButton
+    "Reject All",
     // ChatBlockedCannotSend
     "Cannot send messages",
 

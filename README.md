@@ -76,10 +76,13 @@ Firebase login is required.
 - **My Profile:** Display and share your User ID and Username for easy friend discovery
 - **Profile Visibility:** Set profile to Public (searchable) or Private (hidden from search)
 - Search and add friends by username or User ID; attach an optional note (≤80 chars) with your request
-- Send/accept/reject/cancel friend requests
+- Send/accept/reject/cancel friend requests; search results show localized relationship status labels
+- Incoming requests support bulk accept/reject actions with live progress and cancellation
+- Client-side friend-request sending is rate-limited to 10 per hour and persists across app restarts
+- Users without a username are guided straight to Profile before opening the add-friends flow or accepting requests
 - Real-time chat with friends; translate entire conversation to your language (shown only when friend has sent at least one message)
 - Share words and learning materials with friends; learning sheets can also be saved to your own shared inbox to archive a snapshot of the current version
-- Shared inbox for received items with accept/dismiss confirmation
+- Shared inbox for received items with accept/dismiss confirmation and pull-to-refresh
 - **Block / Unblock:** Block icon on each friend card; blocked users managed in a dedicated Blocked Users screen; Firestore security rules prevent blocked users from sending new friend requests
 - Red dot (badge) notifications for unread messages and new shared items
 - Friend username automatically synced on app launch and pull-to-refresh
@@ -97,7 +100,7 @@ Firebase login is required.
 
 **History & Organisation:**
 - Translation history (recent 30–60 records, configurable)
-- Filter by language or keyword; retry button on load error
+- Filter by language or keyword; retry button on load error; pull-to-refresh available on History and Favorites
 - Session management for Live Conversation (rename, delete)
 - Cloud sync via Firestore with offline persistence
 - Favorites for quick access (individual records and full sessions with view-only conversation replay)
@@ -117,6 +120,7 @@ Firebase login is required.
 
 **Navigation & UI:**
 - Bottom navigation bar (Home, Quick Translate, Learn, Friends, Settings) with unread badge on Friends tab
+- Persistent offline banner when connectivity is lost
 - Edge-to-edge display; all screens properly padded above system navigation keys
 - Help & Notes screen with ordered sections (Cautions, Features, Tips, Friend System, Privacy) using card layout
 - Centralised error handling: user-facing errors auto-dismiss after 3 s; system errors logged to Crashlytics via `AppLogger.e`
@@ -245,7 +249,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (198 test files, 2615 tests)
+# Run all unit tests (199 test files, 2619 tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class

@@ -33,6 +33,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +42,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
@@ -72,6 +74,7 @@ import com.example.fyp.ui.components.EmptyStateView
 import com.example.fyp.ui.components.TranslationCardSkeleton
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(
     appLanguageState: AppLanguageState,
@@ -82,6 +85,16 @@ fun FavoritesScreen(
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
     val haptic = rememberHapticFeedback()
+
+    // Pull-to-refresh state
+    var isRefreshing by remember { mutableStateOf(false) }
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            viewModel.refresh()
+            delay(600)
+            isRefreshing = false
+        }
+    }
 
     // Tab state
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -236,84 +249,89 @@ fun FavoritesScreen(
                 }
             }
 
-            when {
-                uiState.isLoading -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        repeat(3) {
-                            TranslationCardSkeleton()
-                        }
-                    }
-                }
-
-                selectedTab == 0 -> {
-                    // Records tab
-                    if (uiState.favorites.isEmpty()) {
-                        EmptyStates.NoFavorites(
-                            message = t(UiTextKey.FavoritesEmpty),
-                            modifier = Modifier.weight(1f).fillMaxWidth()
-                        )
-                    } else {
-                        LazyColumn(
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = { isRefreshing = true },
+                modifier = Modifier.weight(1f)
+            ) {
+                when {
+                    uiState.isLoading -> {
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(1f)
+                                .fillMaxSize()
                                 .padding(horizontal = 16.dp),
-                            contentPadding = PaddingValues(vertical = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            items(pagedFavorites, key = { it.id }) { favorite ->
-                                FavoriteCard(
-                                    favorite = favorite,
-                                    languageNameFor = uiLanguageNameFor,
-                                    onSpeakSource = {
-                                        haptic.click()
-                                        viewModel.speak(favorite.sourceText, favorite.sourceLang, favorite.id + "_source")
-                                    },
-                                    onSpeakTarget = {
-                                        haptic.click()
-                                        viewModel.speak(favorite.targetText, favorite.targetLang, favorite.id + "_target")
-                                    },
-                                    isSpeakingSource = uiState.speakingId == (favorite.id + "_source"),
-                                    isSpeakingTarget = uiState.speakingId == (favorite.id + "_target"),
-                                    isDeleteMode = uiState.isDeleteMode,
-                                    isSelected = favorite.id in uiState.selectedRecordIds,
-                                    onToggleSelect = {
-                                        haptic.click()
-                                        viewModel.toggleRecordSelection(favorite.id)
-                                    },
-                                    t = t
-                                )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            repeat(3) {
+                                TranslationCardSkeleton()
                             }
                         }
+                    }
 
-                        if (uiState.hasMore && recordsPage == recordsTotalPages - 1) {
-                            Button(
-                                onClick = {
-                                    viewModel.loadMoreFavorites()
-                                    recordsPage = 0
-                                },
+                    selectedTab == 0 -> {
+                        // Records tab
+                        if (uiState.favorites.isEmpty()) {
+                            EmptyStates.NoFavorites(
+                                message = t(UiTextKey.FavoritesEmpty),
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            LazyColumn(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                                contentPadding = PaddingValues(vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Text(text = "Load More")
+                                items(pagedFavorites, key = { it.id }) { favorite ->
+                                    FavoriteCard(
+                                        favorite = favorite,
+                                        languageNameFor = uiLanguageNameFor,
+                                        onSpeakSource = {
+                                            haptic.click()
+                                            viewModel.speak(favorite.sourceText, favorite.sourceLang, favorite.id + "_source")
+                                        },
+                                        onSpeakTarget = {
+                                            haptic.click()
+                                            viewModel.speak(favorite.targetText, favorite.targetLang, favorite.id + "_target")
+                                        },
+                                        isSpeakingSource = uiState.speakingId == (favorite.id + "_source"),
+                                        isSpeakingTarget = uiState.speakingId == (favorite.id + "_target"),
+                                        isDeleteMode = uiState.isDeleteMode,
+                                        isSelected = favorite.id in uiState.selectedRecordIds,
+                                        onToggleSelect = {
+                                            haptic.click()
+                                            viewModel.toggleRecordSelection(favorite.id)
+                                        },
+                                        t = t
+                                    )
+                                }
                             }
+
+                            if (uiState.hasMore && recordsPage == recordsTotalPages - 1) {
+                                Button(
+                                    onClick = {
+                                        viewModel.loadMoreFavorites()
+                                        recordsPage = 0
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                ) {
+                                    Text(text = "Load More")
+                                }
                         }
                     }
                 }
 
-                else -> {
-                    // Sessions tab (view-only)
-                    if (uiState.sessions.isEmpty()) {
-                        Box(
-                            modifier = Modifier.weight(1f).fillMaxWidth(),
+                    else -> {
+                        // Sessions tab (view-only)
+                        if (uiState.sessions.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
                             EmptyStateView(
@@ -324,30 +342,31 @@ fun FavoritesScreen(
                         }
                     } else {
                         LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                                .padding(horizontal = 16.dp),
-                            contentPadding = PaddingValues(vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(pagedSessions, key = { it.id }) { session ->
-                                FavoriteSessionCard(
-                                    session = session,
-                                    itemsTemplate = t(UiTextKey.FavoritesSessionItemsTemplate),
-                                    openLabel = t(UiTextKey.ActionOpen),
-                                    speakingId = uiState.speakingId,
-                                    isDeleteMode = uiState.isDeleteMode,
-                                    isSelected = session.id in uiState.selectedSessionIds,
-                                    onToggleSelect = {
-                                        haptic.click()
-                                        viewModel.toggleSessionSelection(session.id)
-                                    },
-                                    onSpeak = { text, lang, id ->
-                                        haptic.click()
-                                        viewModel.speak(text, lang, id)
-                                    }
-                                )
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                                contentPadding = PaddingValues(vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(pagedSessions, key = { it.id }) { session ->
+                                    FavoriteSessionCard(
+                                        session = session,
+                                        itemsTemplate = t(UiTextKey.FavoritesSessionItemsTemplate),
+                                        openLabel = t(UiTextKey.ActionOpen),
+                                        speakingId = uiState.speakingId,
+                                        isDeleteMode = uiState.isDeleteMode,
+                                        isSelected = session.id in uiState.selectedSessionIds,
+                                        onToggleSelect = {
+                                            haptic.click()
+                                            viewModel.toggleSessionSelection(session.id)
+                                        },
+                                        onSpeak = { text, lang, id ->
+                                            haptic.click()
+                                            viewModel.speak(text, lang, id)
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

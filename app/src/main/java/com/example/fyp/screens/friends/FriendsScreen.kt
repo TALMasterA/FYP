@@ -15,6 +15,8 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -39,6 +41,7 @@ fun FriendsScreen(
     onOpenSharedInbox: () -> Unit = {},
     onOpenBlockedUsers: () -> Unit = {},
     onOpenNotifSettings: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
     // NOTE: hasUnseenSharedItems / unseenSharedItemsCount / unseenFriendRequestCount are
     // intentionally NOT parameters here. They are read directly from the ViewModel so
     // the screen always reflects live StateFlow values and recomposes correctly.
@@ -237,17 +240,40 @@ fun FriendsScreen(
 
                 // Error/Success messages
                 uiState.error?.let { error ->
+                    val isUsernameError = !uiState.currentUserHasUsername &&
+                        error.contains("username", ignoreCase = true)
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                     ) {
-                        Text(
-                            text = error,
-                            modifier = Modifier.padding(16.dp),
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = error,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            if (isUsernameError) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = {
+                                        viewModel.clearMessages()
+                                        onNavigateToProfile()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    )
+                                ) {
+                                    Icon(
+                                        Icons.Default.Person,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(t(UiTextKey.ProfileTitle))
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -361,7 +387,11 @@ fun FriendsScreen(
                                 message = t(UiTextKey.FriendsEmptyMessage),
                                 modifier = Modifier.align(Alignment.Center),
                                 actionLabel = t(UiTextKey.FriendsAddButton),
-                                onActionClick = { showSearchDialog = true }
+                                onActionClick = {
+                                    if (viewModel.requireUsernameForAddFriends()) {
+                                        showSearchDialog = true
+                                    }
+                                }
                             )
                         }
                         else -> {
@@ -391,15 +421,49 @@ fun FriendsScreen(
                                                 }
                                             }
                                             Spacer(modifier = Modifier.weight(1f))
-                                            // FIX 3.3: Bulk action buttons for friend requests
-                                            if (uiState.incomingRequests.size > 1) {
-                                                TextButton(
-                                                    onClick = { viewModel.acceptAllRequests() },
-                                                    contentPadding = PaddingValues(horizontal = 8.dp)
-                                                ) {
-                                                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(16.dp))
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    Text(t(UiTextKey.FriendsAcceptAllButton), style = MaterialTheme.typography.labelSmall)
+                                            // Show batch progress or action buttons
+                                            if (uiState.batchProgress != null) {
+                                                val batchProgress = uiState.batchProgress ?: ""
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.size(16.dp),
+                                                        strokeWidth = 2.dp
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        text = batchProgress,
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                    TextButton(
+                                                        onClick = { viewModel.cancelBatchOperation() },
+                                                        contentPadding = PaddingValues(horizontal = 8.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = t(UiTextKey.ActionCancel),
+                                                            style = MaterialTheme.typography.labelSmall
+                                                        )
+                                                    }
+                                                }
+                                            } else if (uiState.incomingRequests.size > 1) {
+                                                // FIX 3.3: Bulk action buttons for friend requests
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    TextButton(
+                                                        onClick = { viewModel.acceptAllRequests() },
+                                                        contentPadding = PaddingValues(horizontal = 8.dp)
+                                                    ) {
+                                                        Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        Text(t(UiTextKey.FriendsAcceptAllButton), style = MaterialTheme.typography.labelSmall)
+                                                    }
+                                                    TextButton(
+                                                        onClick = { viewModel.rejectAllRequests() },
+                                                        contentPadding = PaddingValues(horizontal = 8.dp)
+                                                    ) {
+                                                        Icon(Icons.Default.ClearAll, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        Text(t(UiTextKey.FriendsRejectAllButton), style = MaterialTheme.typography.labelSmall)
+                                                    }
                                                 }
                                             }
                                         }
@@ -676,6 +740,7 @@ fun FriendCard(
                         color = MaterialTheme.colorScheme.error,
                         shape = CircleShape
                     )
+                    .semantics { contentDescription = "$unreadCount $unreadMessagesText" }
             )
         }
     }
@@ -739,7 +804,10 @@ fun SearchUsersDialog(
                                     requestStatus = requestStatusFor(user.uid),
                                     addButtonText = t(UiTextKey.FriendsSendRequestButton),
                                     noteLabel = t(UiTextKey.FriendsRequestNoteLabel),
-                                    notePlaceholder = t(UiTextKey.FriendsRequestNotePlaceholder)
+                                    notePlaceholder = t(UiTextKey.FriendsRequestNotePlaceholder),
+                                    statusAlreadyFriends = t(UiTextKey.FriendsStatusAlreadyFriends),
+                                    statusRequestSent = t(UiTextKey.FriendsStatusRequestSent),
+                                    statusRequestReceived = t(UiTextKey.FriendsStatusRequestReceived)
                                 )
                             }
                         }
@@ -762,7 +830,10 @@ fun SearchResultCard(
     requestStatus: RequestStatus,
     addButtonText: String,
     noteLabel: String = "Request Note (optional)",
-    notePlaceholder: String = "Add a short note..."
+    notePlaceholder: String = "Add a short note...",
+    statusAlreadyFriends: String = "Already friends",
+    statusRequestSent: String = "Request sent — awaiting reply",
+    statusRequestReceived: String = "This user sent you a request"
 ) {
     var noteText by remember(user.uid) { mutableStateOf("") }
 
@@ -788,9 +859,9 @@ fun SearchResultCard(
                         fontWeight = FontWeight.Bold
                     )
                     val statusText = when (requestStatus) {
-                        RequestStatus.ALREADY_FRIENDS -> "Already friends"
-                        RequestStatus.REQUEST_SENT    -> "✓ Request sent — awaiting reply"
-                        RequestStatus.REQUEST_RECEIVED -> "This user sent you a request"
+                        RequestStatus.ALREADY_FRIENDS -> statusAlreadyFriends
+                        RequestStatus.REQUEST_SENT    -> "✓ $statusRequestSent"
+                        RequestStatus.REQUEST_RECEIVED -> statusRequestReceived
                         RequestStatus.NONE            -> null
                     }
                     if (statusText != null) {
