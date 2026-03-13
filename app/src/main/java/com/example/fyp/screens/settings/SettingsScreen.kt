@@ -177,6 +177,34 @@ fun SettingsScreen(
                 isLoggedIn = isLoggedIn
             )
 
+            // Primary Language (accounts for monthly cooldown)
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
+                Text(
+                    t(UiTextKey.SettingsPrimaryLanguageTitle),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = t(UiTextKey.SettingsPrimaryLanguageDesc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                LanguageDropdownField(
+                    label = t(UiTextKey.SettingsPrimaryLanguageLabel),
+                    selectedCode = selected,
+                    options = supportedLanguages,
+                    nameFor = { code -> uiLanguageNameFor(code) },
+                    onSelected = { code ->
+                        if (code != uiState.settings.primaryLanguageCode) {
+                            selected = code
+                            pendingLanguageCode = code
+                        }
+                    }
+                )
+            }
+
             // Reset Password Button with larger text
             TextButton(onClick = onOpenResetPassword) {
                 Text(
@@ -355,34 +383,6 @@ fun SettingsScreen(
                         modifier = Modifier.padding(AppSpacing.large)
                     )
                 }
-            }
-
-            // Primary Language
-            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
-                Text(
-                    t(UiTextKey.SettingsPrimaryLanguageTitle),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = t(UiTextKey.SettingsPrimaryLanguageDesc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                LanguageDropdownField(
-                    label = t(UiTextKey.SettingsPrimaryLanguageLabel),
-                    selectedCode = selected,
-                    options = supportedLanguages,
-                    nameFor = { code -> uiLanguageNameFor(code) },
-                    onSelected = { code ->
-                        if (code != uiState.settings.primaryLanguageCode) {
-                            selected = code
-                            pendingLanguageCode = code
-                        }
-                    }
-                )
             }
 
             // Font size

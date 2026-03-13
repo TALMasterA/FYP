@@ -57,6 +57,7 @@ import org.mockito.kotlin.*
  * 15. clearError clears both errorKey and errorRaw
  * 16. clearUnlockError clears unlockError
  * 17. updateNotificationPref success updates correct field
+ * 18. updateNotificationPref caches preference to SharedPreferences for FCM
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
@@ -82,6 +83,8 @@ class SettingsViewModelTest {
     private lateinit var setAutoThemeEnabled: SetAutoThemeEnabledUseCase
     private lateinit var setNotificationPref: SetNotificationPrefUseCase
     private lateinit var quizRepo: QuizRepository
+    private lateinit var mockPrefs: SharedPreferences
+    private lateinit var mockEditor: SharedPreferences.Editor
 
     @Before
     fun setup() {
@@ -89,13 +92,12 @@ class SettingsViewModelTest {
 
         app = mock()
         // Stub SharedPreferences for FcmNotificationService.saveNotifPrefToCache
-        val mockEditor: SharedPreferences.Editor = mock {
-            on { putBoolean(any(), any()) } doReturn mock
-            on { apply() } doAnswer {}
-        }
-        val mockPrefs: SharedPreferences = mock {
-            on { edit() } doReturn mockEditor
-        }
+        mockEditor = mock()
+        whenever(mockEditor.putBoolean(any(), any())).thenReturn(mockEditor)
+        whenever(mockEditor.apply()).thenAnswer { }
+
+        mockPrefs = mock()
+        whenever(mockPrefs.edit()).thenReturn(mockEditor)
         whenever(app.getSharedPreferences(any(), any())).thenReturn(mockPrefs)
 
         authRepo = mock { on { currentUserState } doReturn authStateFlow }
@@ -394,6 +396,20 @@ class SettingsViewModelTest {
 
         assertNotNull(vm.uiState.value.errorRaw)
         assertTrue(vm.uiState.value.errorRaw!!.contains("notification"))
+    }
+
+    @Test
+    fun `updateNotificationPref caches preference locally for FCM`() = runTest {
+        setNotificationPref.stub {
+            onBlocking { invoke(UserId(testUserId), SettingsViewModel.PREF_NOTIFY_SHARED_INBOX, false) } doReturn Unit
+        }
+        val vm = buildViewModel()
+
+        vm.updateNotificationPref(SettingsViewModel.PREF_NOTIFY_SHARED_INBOX, false)
+
+        verify(mockPrefs).edit()
+        verify(mockEditor).putBoolean(SettingsViewModel.PREF_NOTIFY_SHARED_INBOX, false)
+        verify(mockEditor).apply()
     }
 
     // ── Cooldown hours ──

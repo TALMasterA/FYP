@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-14_
+_Last updated: 2026-03-13_
 
 ## Summary
 
@@ -8,7 +8,7 @@ _Last updated: 2026-03-14_
 |---------------------------|---------|
 | Source files               | 251     |
 | Test files                 | 199     |
-| Total `@Test` methods      | 2,619   |
+| Total `@Test` methods      | 2,583   |
 | Key logic files            | ~137    |
 | Key logic files tested     | ~137    |
 | Key logic coverage         | ~100%   |
@@ -25,13 +25,13 @@ _Last updated: 2026-03-14_
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 34        | 34     | 100%     |
 
-## What Is Tested (199 files, 2,619 tests)
+## What Is Tested (199 files, 2,583 tests)
 
 ### All ViewModels & Controllers (19/19)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
 - FavoritesViewModel (13), FeedbackViewModel (8), FriendsViewModel (30)
 - HistoryViewModel (21), LearningViewModel (14), LearningSheetViewModel (19)
-- MyProfileViewModel (13), ProfileViewModel (11), SettingsViewModel (21)
+- MyProfileViewModel (13), ProfileViewModel (11), SettingsViewModel (22)
 - SharedInboxViewModel (11), SharedMaterialDetailViewModel (9), ShopViewModel (13)
 - SpeechViewModel (13), WordBankViewModel (15), CustomWordsViewModel (19)
 - ContinuousConversationController (14), TtsController (12)
@@ -51,6 +51,7 @@ _Last updated: 2026-03-14_
 - QuizCoinEarningRules (10), QuizFlowIntegration (13), CoinAndGenerationIntegration (7)
 - LearningGenerationRules (25), FriendSystemRules (29+11+11)
 - LanguageValidation (18), NavigationAccess (18), ErrorHandling (25)
+- SettingsViewModel notification cache (ensures push/badge toggles persist to SharedPreferences for FCM gating)
 - **NEW:** EligibilityEdgeCases (18): boundary values for generation/coin eligibility, constant verification
 - **NEW:** SessionManagementLogic (13): session/user ID validation, delete preconditions, session naming
 

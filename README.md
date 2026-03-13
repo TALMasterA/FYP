@@ -92,6 +92,7 @@ Firebase login is required.
 **Customization:**
 - UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, and 10+ more via Azure Translator API
 - Language dropdown order: English → Cantonese → Traditional Chinese → other languages (Auto Detect keeps default)
+- Primary language selector (30-day cooldown) sits directly under App UI language in Settings for quick access
 - Theme settings (Light / Dark / System)
 - Font size adjustment (80%–150%)
 - 11 color palettes (1 free default + 10 unlockable at 10 coins each: Ocean, Sunset, Lavender, Rose, Mint, Crimson, Amber, Indigo, Emerald, Coral); palette settings accessible from the in-app Shop
@@ -249,7 +250,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (199 test files, 2619 tests)
+# Run all unit tests (199 test files, 2,583 tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -294,29 +295,30 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **198 test files** covering critical app logic (as of March 2026)
-- **2615 unit tests** passing
+- **199 test files** covering critical app logic (as of March 2026)
+- **2,583 unit tests** passing
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:
   - Domain layer use cases (30+ test files)
   - ViewModels (10+ test files)
   - Models and serialization (18+ test files)
   - Repositories and data layer (30+ test files)
-  - Navigation routes and rules (5 test files)
-  - UI components (StandardButtons, StandardTextFields, StandardDialogs, ThemeHelper, ColorPalette)
-  - Security utilities (validation, sanitization, rate limiting, encoding correctness)
-  - Performance utilities (debouncing, throttling)
-  - Anti-cheat and generation eligibility (comprehensive, including edge cases)
-  - Caching logic (translation, language detection)
-  - Onboarding persistence logic (first-launch and version-based re-show)
-  - Speech controllers (TTS controller, continuous conversation controller)
-  - Speech models (SpeechScreenState, RecognizePhase, ChatMessage)
-  - Data layer algorithms (quiz context selection, data cleanup utilities)
-  - Shared data sources (SharedHistoryDataSource, SharedFriendsDataSource, SharedSettingsDataSource)
-  - Feedback repository (validation, retry logic, error classification)
-  - Language display names (full mapping, detection-to-supported, support checking)
-  - Word bank models (WordBankItem, WordBank, WordBankUiState, SpeakingType)
-  - Session management (validation, naming, delete preconditions)
+- Navigation routes and rules (5 test files)
+- UI components (StandardButtons, StandardTextFields, StandardDialogs, ThemeHelper, ColorPalette)
+- Security utilities (validation, sanitization, rate limiting, encoding correctness)
+- Performance utilities (debouncing, throttling)
+- Anti-cheat and generation eligibility (comprehensive, including edge cases)
+- Caching logic (translation, language detection)
+- Onboarding persistence logic (first-launch and version-based re-show)
+- Speech controllers (TTS controller, continuous conversation controller)
+- Speech models (SpeechScreenState, RecognizePhase, ChatMessage)
+- Data layer algorithms (quiz context selection, data cleanup utilities)
+- Shared data sources (SharedHistoryDataSource, SharedFriendsDataSource, SharedSettingsDataSource)
+- Feedback repository (validation, retry logic, error classification)
+- Language display names (full mapping, detection-to-supported, support checking)
+- Word bank models (WordBankItem, WordBank, WordBankUiState, SpeakingType)
+- Session management (validation, naming, delete preconditions)
+- Notification delivery rules (FCM preference gating + cache sync for toggles)
 
 **Key Test Suites:**
 - `OnboardingLogicTest` - Onboarding first-launch and version-based re-show logic

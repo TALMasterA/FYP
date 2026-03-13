@@ -265,6 +265,8 @@ fun LanguageDropdownField(
             enabled = enabled,
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            singleLine = true, // keep height consistent when dropdowns share a row
+            maxLines = 1,
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth()
