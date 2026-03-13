@@ -26,6 +26,13 @@ import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.screens.settings.SettingsViewModel.Companion.PREF_BADGE_FRIEND_REQUESTS
+import com.example.fyp.screens.settings.SettingsViewModel.Companion.PREF_BADGE_MESSAGES
+import com.example.fyp.screens.settings.SettingsViewModel.Companion.PREF_BADGE_SHARED_INBOX
+import com.example.fyp.screens.settings.SettingsViewModel.Companion.PREF_NOTIFY_FRIEND_REQUESTS
+import com.example.fyp.screens.settings.SettingsViewModel.Companion.PREF_NOTIFY_NEW_MESSAGES
+import com.example.fyp.screens.settings.SettingsViewModel.Companion.PREF_NOTIFY_REQUEST_ACCEPTED
+import com.example.fyp.screens.settings.SettingsViewModel.Companion.PREF_NOTIFY_SHARED_INBOX
 
 @Composable
 fun NotificationSettingsScreen(
@@ -57,32 +64,34 @@ fun NotificationSettingsScreen(
                 color = MaterialTheme.colorScheme.primary
             )
 
+            // Field names mirror SettingsViewModel + FcmNotificationService cache keys
+            // so toggles directly control push/badge delivery.
             NotifToggle(
                 label = t(UiTextKey.FriendsNotifNewMessages),
                 checked = settings.notifyNewMessages,
                 onCheckedChange = {
-                    viewModel.updateNotificationPref("notifyNewMessages", it)
+                    viewModel.updateNotificationPref(PREF_NOTIFY_NEW_MESSAGES, it)
                 }
             )
             NotifToggle(
                 label = t(UiTextKey.FriendsNotifFriendRequests),
                 checked = settings.notifyFriendRequests,
                 onCheckedChange = {
-                    viewModel.updateNotificationPref("notifyFriendRequests", it)
+                    viewModel.updateNotificationPref(PREF_NOTIFY_FRIEND_REQUESTS, it)
                 }
             )
             NotifToggle(
                 label = t(UiTextKey.FriendsNotifRequestAccepted),
                 checked = settings.notifyRequestAccepted,
                 onCheckedChange = {
-                    viewModel.updateNotificationPref("notifyRequestAccepted", it)
+                    viewModel.updateNotificationPref(PREF_NOTIFY_REQUEST_ACCEPTED, it)
                 }
             )
             NotifToggle(
                 label = t(UiTextKey.FriendsNotifSharedInbox),
                 checked = settings.notifySharedInbox,
                 onCheckedChange = {
-                    viewModel.updateNotificationPref("notifySharedInbox", it)
+                    viewModel.updateNotificationPref(PREF_NOTIFY_SHARED_INBOX, it)
                 }
             )
 
@@ -99,21 +108,21 @@ fun NotificationSettingsScreen(
                 label = t(UiTextKey.InAppBadgeMessages),
                 checked = settings.inAppBadgeMessages,
                 onCheckedChange = {
-                    viewModel.updateNotificationPref("inAppBadgeMessages", it)
+                    viewModel.updateNotificationPref(PREF_BADGE_MESSAGES, it)
                 }
             )
             NotifToggle(
                 label = t(UiTextKey.InAppBadgeFriendRequests),
                 checked = settings.inAppBadgeFriendRequests,
                 onCheckedChange = {
-                    viewModel.updateNotificationPref("inAppBadgeFriendRequests", it)
+                    viewModel.updateNotificationPref(PREF_BADGE_FRIEND_REQUESTS, it)
                 }
             )
             NotifToggle(
                 label = t(UiTextKey.InAppBadgeSharedInbox),
                 checked = settings.inAppBadgeSharedInbox,
                 onCheckedChange = {
-                    viewModel.updateNotificationPref("inAppBadgeSharedInbox", it)
+                    viewModel.updateNotificationPref(PREF_BADGE_SHARED_INBOX, it)
                 }
             )
         }
