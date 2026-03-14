@@ -21,8 +21,8 @@ android {
         applicationId = "com.example.fyp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 43
-        versionName = "1.9.9.3"
+        versionCode = 44
+        versionName = "1.9.9.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

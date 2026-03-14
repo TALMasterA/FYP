@@ -211,7 +211,8 @@ class FriendsViewModelTest {
 
     @Test
     fun `sendFriendRequest success shows success message`() = runTest {
-        whenever(sendFriendRequestUseCase.invoke(eq(UserId("user1")), eq(UserId("target1")), any()))
+        // Use raw values to avoid inline value class boxing mismatch with eq() matchers
+        whenever(sendFriendRequestUseCase.invoke(UserId("user1"), UserId("target1"), ""))
             .thenReturn(Result.success(Unit))
 
         val vm = buildViewModel()
@@ -221,7 +222,7 @@ class FriendsViewModelTest {
 
         assertNotNull(vm.uiState.value.successMessage)
         assertNull(vm.uiState.value.error)
-        verify(friendRequestRateLimiter).recordSend("user1")
+        verify(friendRequestRateLimiter).recordSend(eq("user1"), any())
     }
 
     // ── sendFriendRequest duplicate ─────────────────────────────────
