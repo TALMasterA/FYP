@@ -35,7 +35,10 @@ class LoginScreenSmokeTest {
             FYPTheme {
                 LoginScreen(
                     uiLanguages = listOf("en-US" to "English"),
-                    appLanguageState = AppLanguageState(),
+                    appLanguageState = AppLanguageState(
+                        selectedUiLanguage = "en-US",
+                        uiTexts = emptyMap()
+                    ),
                     onUpdateAppLanguage = { _, _ -> },
                     onBack = {}
                 )
