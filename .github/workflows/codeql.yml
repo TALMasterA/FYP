@@ -148,7 +148,7 @@ jobs:
       shell: bash
       run: |
         chmod +x ./gradlew
-        ./gradlew assembleDebug --no-daemon -S
+        ./gradlew clean assembleDebug --no-daemon
 
     # No manual build needed for JavaScript/TypeScript
     # CodeQL 'none' mode analyzes source without compilation
