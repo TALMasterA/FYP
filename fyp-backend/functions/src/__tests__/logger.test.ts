@@ -64,7 +64,7 @@ describe("logger", () => {
   });
 
   it("emits valid JSON", () => {
-    logger.error("json test", {special: 'chars "and" more'});
+    logger.error("json test", {special: "chars \"and\" more"});
     expect(() => {
       JSON.parse(consoleSpy.error.mock.calls[0][0]);
     }).not.toThrow();

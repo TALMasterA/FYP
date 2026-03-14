@@ -18,17 +18,17 @@ function emit(entry: LogEntry): void {
   // Cloud Logging recognises JSON lines with a "severity" field
   const payload = {severity, ...rest};
   switch (severity) {
-    case "ERROR":
-      console.error(JSON.stringify(payload));
-      break;
-    case "WARN":
-      console.warn(JSON.stringify(payload));
-      break;
-    case "DEBUG":
-      console.debug(JSON.stringify(payload));
-      break;
-    default:
-      console.log(JSON.stringify(payload));
+  case "ERROR":
+    console.error(JSON.stringify(payload));
+    break;
+  case "WARN":
+    console.warn(JSON.stringify(payload));
+    break;
+  case "DEBUG":
+    console.debug(JSON.stringify(payload));
+    break;
+  default:
+    console.log(JSON.stringify(payload));
   }
 }
 

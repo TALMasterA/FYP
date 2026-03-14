@@ -14,8 +14,8 @@ const MAX_FRIEND_REQUESTS_PER_HOUR = 3;
 
 // ---- Spam detection constants ----
 const SPAM_RECENT_MESSAGES_WINDOW = 5; // check the last N messages
-const SPAM_DUPLICATE_THRESHOLD = 3;    // N identical messages in a row = spam
-const SPAM_LINK_FLOOD_THRESHOLD = 3;   // N links in a single message = spam
+const SPAM_DUPLICATE_THRESHOLD = 3; // N identical messages in a row = spam
+const SPAM_LINK_FLOOD_THRESHOLD = 3; // N links in a single message = spam
 const LINK_PATTERN = /https?:\/\/[^\s]+/gi;
 
 /**

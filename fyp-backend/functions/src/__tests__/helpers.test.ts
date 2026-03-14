@@ -93,12 +93,12 @@ describe("optionalString", () => {
 
 describe("safeParseJson", () => {
   it("parses valid JSON", () => {
-    const result = safeParseJson('{"key":"value"}', "test");
+    const result = safeParseJson("{\"key\":\"value\"}", "test");
     expect(result).toEqual({key: "value"});
   });
 
   it("parses JSON arrays", () => {
-    const result = safeParseJson('[1,2,3]', "test");
+    const result = safeParseJson("[1,2,3]", "test");
     expect(result).toEqual([1, 2, 3]);
   });
 
