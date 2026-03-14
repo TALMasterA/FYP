@@ -15,6 +15,15 @@ private const val KEY_LAST_VERSION_CODE = "last_version_code"
 private const val KEY_LOGOUT_REASON = "logout_reason"
 private const val LOGOUT_REASON_UPDATED = "updated"
 
+/**
+ * Single-Activity entry point for the FYP language-learning app.
+ *
+ * On each launch the Activity checks whether the app version has changed
+ * since the last run. If an update is detected the current Firebase user
+ * is signed out to force re-authentication (ensuring token freshness and
+ * Firestore rule compatibility). The Compose navigation graph is set as
+ * the content root via [AppNavigation].
+ */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 

@@ -1,3 +1,10 @@
+/**
+ * App-wide Material 3 theme composable.
+ *
+ * Supports dynamic colour (Android 12+), user-selected colour palettes,
+ * and dark/light mode. When a non-default palette is selected, dynamic
+ * colour is disabled in favour of the custom palette colours.
+ */
 package com.example.fyp.ui.theme
 
 import android.app.Activity

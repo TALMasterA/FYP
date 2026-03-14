@@ -60,6 +60,15 @@ data class LearningUiState(
     val quizGenerationCompleted: String? = null,    // languageCode of completed quiz
 )
 
+/**
+ * ViewModel for the Learning screen.
+ *
+ * Groups translation history by target language into clusters, checks
+ * generation eligibility, triggers AI-based learning-sheet and quiz
+ * generation via Cloud Functions, and tracks per-language sheet/quiz
+ * status. Enforces the "unchanged count" rule to prevent redundant
+ * regeneration.
+ */
 @HiltViewModel
 class LearningViewModel @Inject constructor(
     @ApplicationContext private val context: Context,

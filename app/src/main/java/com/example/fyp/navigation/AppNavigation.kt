@@ -1,3 +1,14 @@
+/**
+ * Root composable navigation graph for the FYP app.
+ *
+ * Sets up the [NavHost] with animated transitions, a persistent bottom
+ * navigation bar (Home · Speech · Learning · Friends · Settings), and
+ * delegates to feature-specific sub-graphs defined in separate files
+ * (e.g. [MainFeatureGraph], [FriendsChatGraph], [LearningWordBankGraph]).
+ *
+ * Also handles cross-cutting concerns: notification-permission prompt,
+ * app-wide UI-language state, and theme/font-size observation.
+ */
 package com.example.fyp
 
 import android.Manifest

@@ -36,9 +36,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.ceil
 import javax.inject.Inject
 
-/**
- * UI state for the Friends screen.
- */
+/** UI state for the Friends screen. */
 data class FriendsUiState(
     val isLoading: Boolean = true,
     val friends: List<FriendRelation> = emptyList(),

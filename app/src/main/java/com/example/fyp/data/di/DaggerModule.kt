@@ -1,3 +1,9 @@
+/**
+ * Primary Hilt dependency-injection module (SingletonComponent).
+ *
+ * Provides app-wide singletons: Firebase instances, Azure clients,
+ * repository bindings, use-case factories, and caches.
+ */
 package com.example.fyp.data.di
 
 import android.content.Context

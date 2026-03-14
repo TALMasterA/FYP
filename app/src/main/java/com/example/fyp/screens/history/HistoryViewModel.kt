@@ -52,6 +52,14 @@ data class HistoryUiState(
     val favoriteLimitExceeded: Boolean = false
 )
 
+/**
+ * ViewModel for the History screen.
+ *
+ * Manages paginated translation history, session grouping/renaming,
+ * favouriting records and sessions, TTS playback, and coin-stats
+ * display. Observes [SharedHistoryDataSource] for real-time Firestore
+ * updates and delegates deletion to use-case classes.
+ */
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,

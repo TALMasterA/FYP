@@ -26,6 +26,13 @@ data class AuthUiState(
     val isLoading: Boolean = false
 )
 
+/**
+ * ViewModel for the Login / Registration screens.
+ *
+ * Handles email/password authentication (login, registration,
+ * password reset) with client-side rate limiting and input
+ * validation. Emits [AuthState] changes from [FirebaseAuthRepository].
+ */
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: FirebaseAuthRepository

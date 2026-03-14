@@ -200,6 +200,26 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
    - Replace with actual Firebase configuration for production deployment
 2. Backend environment variables for Cloud Functions (Azure API keys configured via Firebase Functions config)
 
+**Backend Setup:**
+1. Install Node.js 24+ and the Firebase CLI (`npm install -g firebase-tools`)
+2. Navigate to the backend directory: `cd fyp-backend/functions`
+3. Install dependencies: `npm install`
+4. Configure secrets via Firebase:
+   ```bash
+   firebase functions:secrets:set AZURE_SPEECH_KEY
+   firebase functions:secrets:set AZURE_SPEECH_REGION
+   firebase functions:secrets:set AZURE_TRANSLATOR_KEY
+   firebase functions:secrets:set AZURE_TRANSLATOR_REGION
+   firebase functions:secrets:set GENAI_BASE_URL
+   firebase functions:secrets:set GENAI_API_VERSION
+   firebase functions:secrets:set GENAI_API_KEY
+   ```
+5. Build: `npm run build`
+6. Run tests: `npm test`
+7. Deploy: `npm run deploy`
+
+See `docs/SECRETS_ROTATION.md` for the secrets rotation runbook.
+
 **Firebase Services Used:**
 - Firebase Authentication for user login/registration
 - Firestore Database for storing all user data (history, settings, learning materials, quizzes, favorites, word banks)

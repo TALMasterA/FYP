@@ -49,6 +49,14 @@ data class SettingsUiState(
     val primaryLanguageCooldownHours: Int? = null,
 )
 
+/**
+ * ViewModel for the Settings screen.
+ *
+ * Exposes user preferences (theme, font size, primary language, voice,
+ * notifications, colour palette) and coin balance. Delegates writes
+ * to individual use-case classes and observes [SharedSettingsDataSource]
+ * for real-time updates. Handles the 30-day primary-language cooldown.
+ */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     application: Application,

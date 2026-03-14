@@ -32,6 +32,16 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
+/**
+ * ViewModel for the Speech Recognition / Translation screen.
+ *
+ * Coordinates microphone-based speech recognition (single-shot and
+ * continuous conversation modes), text translation, TTS playback,
+ * OCR from camera images, and auto-language-detection. Observed
+ * user settings (primary language, voice preferences) are loaded
+ * from [SharedSettingsDataSource]. Translation history is persisted
+ * via [FirestoreHistoryRepository].
+ */
 @HiltViewModel
 class SpeechViewModel @Inject constructor(
     private val recognizeFromMic: RecognizeFromMicUseCase,

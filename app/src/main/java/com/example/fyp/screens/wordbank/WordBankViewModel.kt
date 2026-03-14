@@ -45,6 +45,14 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.util.UUID
 import javax.inject.Inject
 
+/**
+ * ViewModel for the Word Bank screen.
+ *
+ * Loads word banks per language, supports AI-driven word generation,
+ * custom-word CRUD, TTS playback, and sharing words to friends.
+ * Word banks are cached locally via [WordBankCacheDataStore] and
+ * synced with Firestore.
+ */
 @HiltViewModel
 class WordBankViewModel @Inject constructor(
     @ApplicationContext private val context: Context,

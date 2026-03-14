@@ -30,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.ui.text.input.VisualTransformation
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
 import com.example.fyp.ui.theme.AppSpacing
@@ -157,7 +158,7 @@ fun LoginScreen(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().testTag("emailField")
             )
 
             OutlinedTextField(
@@ -185,7 +186,7 @@ fun LoginScreen(
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().testTag("passwordField")
             )
 
             if (!isLogin) {
@@ -240,7 +241,7 @@ fun LoginScreen(
                     if (isLogin) viewModel.login(email.trim(), password.trim())
                     else viewModel.register(email.trim(), password.trim())
                 },
-                modifier = modifier.fillMaxWidth(),
+                modifier = modifier.fillMaxWidth().testTag("loginButton"),
                 enabled = !uiState.isLoading
             ) {
                 Text(if (isLogin) t(UiTextKey.AuthLoginButton) else t(UiTextKey.AuthRegisterButton))
@@ -250,7 +251,7 @@ fun LoginScreen(
                 isLogin = !isLogin
                 localError = null
                 confirmPassword = ""
-            }) {
+            }, modifier = Modifier.testTag("toggleAuthMode")) {
                 Text(if (isLogin) t(UiTextKey.AuthToggleToRegister) else t(UiTextKey.AuthToggleToLogin))
             }
 

@@ -57,9 +57,17 @@ data class ChatUiState(
     val clearedAt: com.google.firebase.Timestamp? = null
 )
 
+/**
+ * ViewModel for the 1-on-1 Chat screen.
+ *
+ * Manages real-time message observation, sending, pagination of
+ * older messages, batch translation of chat messages, and
+ * read-receipt marking. Uses [SavedStateHandle] for the friendId
+ * route argument.
+ */
 @HiltViewModel
 class ChatViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     @ApplicationContext private val context: android.content.Context,
     private val authRepo: FirebaseAuthRepository,
     private val observeMessagesUseCase: ObserveMessagesUseCase,
@@ -91,8 +99,12 @@ class ChatViewModel @Inject constructor(
         friendId = UserId(checkNotNull(savedStateHandle.get<String>("friendId")))
         friendUsername = checkNotNull(savedStateHandle.get<String>("friendUsername"))
 
+        // Restore draft message from SavedStateHandle (survives process death)
+        val restoredDraft = savedStateHandle.get<String>("draft_message").orEmpty()
+
         _uiState.value = _uiState.value.copy(
-            friendUsername = friendUsername
+            friendUsername = friendUsername,
+            messageText = restoredDraft
         )
 
         viewModelScope.launch {
@@ -244,6 +256,7 @@ class ChatViewModel @Inject constructor(
 
     fun onMessageTextChange(text: String) {
         _uiState.value = _uiState.value.copy(messageText = text)
+        savedStateHandle["draft_message"] = text
     }
 
     fun sendMessage() {
@@ -280,6 +293,7 @@ class ChatViewModel @Inject constructor(
             result.fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(messageText = "", isSending = false)
+                    savedStateHandle["draft_message"] = ""
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
