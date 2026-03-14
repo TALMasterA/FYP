@@ -25,7 +25,7 @@ FYP/
 │
 ├── docs/
 │   ├── treeOfImportantfiles.txt                    ← This file
-│   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants (26 sections)
+│   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants (28 sections)
 │   ├── TEST_COVERAGE.md                            ← Test coverage report (199 files, 2583 tests)
 │   ├── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
 │   ├── CLOUD_FUNCTIONS_API.md                      ← Backend Cloud Functions API reference
@@ -629,4 +629,7 @@ FYP/
             ├── maintenance.ts                      ← Scheduled: pruneStaleTokens, pruneStaleRateLimits
             └── __tests__/
                 ├── helpers.test.ts                 ← 24 unit tests for validation helpers
-                └── logger.test.ts                  ← 6 unit tests for structured logger
+                ├── logger.test.ts                  ← 6 unit tests for structured logger
+                ├── translation.test.ts             ← 22 unit tests for getSpeechToken, translateText(s), detectLanguage
+                ├── coins.test.ts                   ← 14 unit tests for awardQuizCoins and spendCoins
+                └── notifications.test.ts           ← 13 unit tests for FCM triggers and spam detection

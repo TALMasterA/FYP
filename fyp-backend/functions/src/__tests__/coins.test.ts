@@ -133,7 +133,7 @@ describe("awardQuizCoins", () => {
   it("returns version_mismatch when sheet version differs", async () => {
     mockTxGet
       .mockResolvedValueOnce({exists: false}) // coin_awards
-      .mockResolvedValueOnce({exists: true, data: () => ({historyCountAtGenerate: 20})}) // sheet (version 20 != 30)
+      .mockResolvedValueOnce({exists: true, data: () => ({historyCountAtGenerate: 20})}); // sheet (version 20 != 30)
     const result = await awardHandler({auth: {uid: "u1"}, data: validData});
     expect(result).toEqual({awarded: false, reason: "version_mismatch"});
   });

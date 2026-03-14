@@ -30,7 +30,7 @@ The project maintained by GitHub Actions workflows:
 
 | Layer                     | Key Files | Tested | Coverage |
 |---------------------------|-----------|--------|----------|
-| **screens/ (ViewModels)** | 19        | 19     | 100%     |
+| **screens/ (ViewModels)** | 20        | 20     | 100%     |
 | **domain/ (Use Cases)**   | 40        | 40     | 100%     |
 | **model/ (Data Models)**  | 23        | 23     | 100%     |
 | **core/ (Utilities)**     | 12        | 12     | 100%     |
@@ -167,3 +167,17 @@ These tests prevent regressions in critical invariants:
 | `UsernameEnforcementIntegrationTest` | Domain layer does NOT enforce username; profile creation uses empty username |
 | `UsernameRequirementIntegrationTest` | ViewModel gate blocks send/accept/accept-all without username |
 | `DataLayerIntegrationTest` | Cross-repository invariants: chatId↔friends, sharing↔friends consistency |
+
+---
+
+## Backend Tests (Firebase Cloud Functions)
+
+_5 test files, 79 tests_
+
+| File | Tests | What it covers |
+|------|-------|----------------|
+| `helpers.test.ts` | 24 | `requireAuth`, `requireString`, `optionalString`, `safeParseJson`, `toTranslatorCode`, `buildTranslateUrl` |
+| `logger.test.ts` | 6 | Structured JSON logger output format |
+| `translation.test.ts` | 22 | `getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage` — auth guards, error paths, success paths |
+| `coins.test.ts` | 14 | `awardQuizCoins` (anti-cheat rules, version match, increment check), `spendCoins` (history expansion, palette unlock) |
+| `notifications.test.ts` | 13 | FCM triggers: missing data, status guards, spam detection (link flooding), friend request rate limiting |

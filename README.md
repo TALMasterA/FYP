@@ -349,8 +349,8 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **199 test files** covering critical app logic (as of March 2026)
-- **2,583 unit tests** passing
+- **Android — 199 test files, 2,583 unit tests** (as of March 2026)
+- **Backend — 5 test files, 79 tests** covering Cloud Functions logic
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:
   - Domain layer use cases (30+ test files)
@@ -404,6 +404,13 @@ gh auth login
 - `UserAndProfileTest` - User/UserProfile data classes and AuthState sealed interface
 - `LanguageDisplayNamesExtendedTest` - Comprehensive language mapping and detection tests
 
+**Backend Key Test Suites (fyp-backend):**
+- `helpers.test.ts` - Auth guards, input validation, rate limiting, URL building helpers (24 tests)
+- `logger.test.ts` - Structured JSON logger output format (6 tests)
+- `translation.test.ts` - getSpeechToken, translateText, translateTexts, detectLanguage — auth, error and success paths (22 tests)
+- `coins.test.ts` - awardQuizCoins anti-cheat rules (version match, increment gate) and spendCoins shop purchases (14 tests)
+- `notifications.test.ts` - FCM triggers: data guards, status filtering, spam detection (link flooding), friend request rate limiting (13 tests)
+
 **Running Tests:**
 ```bash
 # Run all tests
@@ -414,6 +421,14 @@ gh auth login
 
 # Run specific test class
 ./gradlew testDebugUnitTest --tests "com.example.fyp.domain.learning.*"
+```
+
+**Running Backend Tests:**
+```bash
+cd fyp-backend/functions
+npm test           # Run all Jest tests (79 tests)
+npm run lint       # ESLint check
+npm run build      # TypeScript compile
 ```
 
 **Test Requirements:**
