@@ -23,10 +23,6 @@ jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
-    # java-kotlin analysis is best-effort: CodeQL JVM tracing on GitHub-hosted runners
-    # is unreliable for Android/Gradle projects. Failures here are infrastructure issues,
-    # not code problems. Real findings still appear in the Security tab.
-    continue-on-error: ${{ matrix.language == 'java-kotlin' }}
     permissions:
       # required for all workflows
       security-events: write
@@ -41,14 +37,14 @@ jobs:
       matrix:
         include:
         - language: java-kotlin
-          build-mode: autobuild
+          build-mode: manual
         - language: javascript-typescript
           build-mode: none
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
         # Use 'javascript-typescript' to analyze code written in JavaScript, TypeScript or both
-        # To learn more about changing the languages that are analyzed or customizing the build mode for your analysis,
+        # To learn more about changing the languages that are analyze or customizing the build mode for your analysis,
         # see https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning.customizing-your-advanced-setup-for-code-scanning.
         # If you are analyzing a compiled language, you can modify the 'build-mode' for that language to customize how
         # your codebase is analyzed, see https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/codeql-code-scanning-for-compiled-languages
@@ -64,19 +60,6 @@ jobs:
         java-version: '17'
         cache: gradle
 
-    # Create google-services.json before CodeQL autobuild runs the Gradle compilation.
-    # Falls back to a mock config for fork PRs that cannot access the org secret.
-    - name: Create google-services.json
-      if: matrix.language == 'java-kotlin'
-      env:
-        GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
-      run: |
-        if [ -n "$GOOGLE_SERVICES_JSON" ]; then
-          echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
-        else
-          echo '{"project_info":{"project_number":"000000000000","project_id":"mock-project-id","storage_bucket":"mock-project-id.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.example.fyp"}},"oauth_client":[],"api_key":[{"current_key":"mock-api-key"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' > app/google-services.json
-        fi
-
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
@@ -90,13 +73,35 @@ jobs:
         # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
 
-    # autobuild uses CodeQL's own Gradle wrapper which sets up deeper OS-level
-    # process tracing — more reliable than a manual ./gradlew invocation.
-    - name: Autobuild
-      if: matrix.build-mode == 'autobuild'
-      uses: github/codeql-action/autobuild@v4
+    # Create google-services.json so the debug build can compile.
+    # Uses the same env-var injection pattern as ci.yml.
+    # Falls back to a mock config for fork PRs that cannot access the secret.
+    - name: Create google-services.json
+      if: matrix.language == 'java-kotlin'
+      env:
+        GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      run: |
+        if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+          echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
+        else
+          echo '{"project_info":{"project_number":"000000000000","project_id":"mock-project-id","storage_bucket":"mock-project-id.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.example.fyp"}},"oauth_client":[],"api_key":[{"current_key":"mock-api-key"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' > app/google-services.json
+        fi
+
+    # Build the debug variant only (same as ci.yml).
+    # continue-on-error: if the CodeQL JVM tracer cannot hook into the Kotlin
+    # compiler on this runner, the step is marked as a warning rather than
+    # failing the job — real code findings still appear in the Security tab.
+    - name: Build Android App
+      if: matrix.language == 'java-kotlin'
+      continue-on-error: true
+      run: |
+        chmod +x ./gradlew
+        ./gradlew assembleDebug --no-daemon
 
     - name: Perform CodeQL Analysis
+      # Same rationale: JVM-tracing failures are infrastructure issues, not code
+      # problems. javascript-typescript remains fully blocking.
+      continue-on-error: ${{ matrix.language == 'java-kotlin' }}
       uses: github/codeql-action/analyze@v4
       with:
         category: "/language:${{matrix.language}}"
