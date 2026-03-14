@@ -54,8 +54,8 @@ This project uses **GitHub Actions** for continuous integration and static analy
     *   Performs semantic code analysis on Java/Kotlin and TypeScript files to detect security vulnerabilities and bugs.
 
 ### Status
-*   ![CI](https://github.com/FYP/actions/workflows/ci.yml/badge.svg)
-*   ![CodeQL](https://github.com/FYP/actions/workflows/codeql.yml/badge.svg)
+*   ![CI](https://github.com/TALMasterA/FYP/actions/workflows/ci.yml/badge.svg)
+*   ![CodeQL](https://github.com/TALMasterA/FYP/actions/workflows/codeql.yml/badge.svg)
 
 --------------------------------------------------------------
 
@@ -174,18 +174,27 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
         - `login/` - Login, registration, password reset
         - `help/` - Help, notes & cautions screen
         - `onboarding/` - First-launch 3-step welcome screen
+        - `startup/` - App startup screen
+        - `feedback/` - User feedback screen
     - `model/` - Data models
-        - `ui/` - `UiTextKey` enum, `BaseUiTexts` (English), `ZhTwUiTexts` (zh-TW hardcoded), `CantoneseUiTexts` (zh-HK hardcoded), `UiTextHelpers` (language name translations)
+        - `ui/strings/` - `UiTextKey` enum (`UiTextCore.kt`), `BaseUiTexts` (`UiTextScreens.kt`), `UiTextHelpers`
+        - `ui/strings/translations/` - `ZhTwUiTexts` (zh-TW hardcoded), `CantoneseUiTexts` (zh-HK hardcoded)
         - `user/` - `AuthState`, `UserProfile`, `UserSettings`
-        - `friends/` - `FriendRequest`, `FriendRelation`, `FriendMessage`, `SharedItem`, `PublicUserProfile`, `BlockedUser`
+        - `friends/` - `FriendRequest`, `FriendRelation`, `FriendMessage`, `SharedItem`, `PublicUserProfile`
+        - `OcrResult` - OCR text recognition result
     - `data/` - Repository implementations and data sources
         - `azure/` - Azure Speech & language configuration, `LanguageDisplayNames`
         - `cloud/` - Cloud function clients and caching (translation, language detection)
         - `clients/` - Speech token and translation HTTP clients
+        - `database/` - Data cleanup and database utilities
         - `di/` - Hilt dependency injection modules
+        - `feedback/` - Feedback repository
         - `history/` - History repository and shared data source
+        - `image/` - Image loading module
         - `learning/` - Quiz, learning sheet, and content repositories
         - `friends/` - Friend, chat, and sharing repositories
+        - `network/` - Cache interceptor and network monitor
+        - `ocr/` - ML Kit OCR repository
         - `repositories/` - Speech and translation repositories
         - `settings/` - User settings repository and shared data source
         - `ui/` - UI language cache and state controller (intercepts zh-TW/zh-HK for hardcoded maps)
@@ -193,15 +202,18 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
         - `wordbank/` - Word bank repositories, cache, and generation
     - `domain/` - Use cases for business logic
         - `auth/` - Login use case
+        - `feedback/` - Feedback use cases
         - `history/` - History CRUD operations and repository interface
         - `learning/` - Learning materials, quiz generation, eligibility checks, repository interfaces
         - `friends/` - Friend management, chat, and sharing use cases
+        - `ocr/` - OCR text recognition use case
         - `settings/` - Settings modification use cases
         - `speech/` - Speech recognition, translation, TTS use cases
-    - `core/` - Common composables and utilities (logging via `AppLogger`, audio, permissions, pagination, font scaling)
+    - `core/` - Common composables and utilities (logging via `AppLogger`, audio, permissions, pagination, font scaling, security, connectivity, notifications, performance)
+    - `utils/` - General utility classes (e.g. `ErrorMessageMapper`)
     - `ui/` - Theme configuration (colors, palettes, dimensions, typography, animated components)
 - `fyp-backend/functions/` - Firebase Cloud Functions (TypeScript): translation, speech token, AI generation, FCM notifications, daily stale-token pruning
-- `docs/` - Architecture notes (`ARCHITECTURE_NOTES.md`), test coverage report (`TEST_COVERAGE.md`)
+- `docs/` - Architecture notes (`ARCHITECTURE_NOTES.md`), API reference (`CLOUD_FUNCTIONS_API.md`), test coverage report (`TEST_COVERAGE.md`), secrets rotation (`SECRETS_ROTATION.md`), LeakCanary explanation (`LEAKCANARY_EXPLANATION.md`)
 
 --------------------------------------------------------------
 
@@ -431,7 +443,7 @@ gh auth login
 - `FriendRelation` - Bidirectional friendship record with cached friend username
 - `FriendMessage` - Chat message with sender, text, timestamp, read status
 - `SharedItem` - Shared word/material with sender, type, content
-- `BlockedUser` - Blocked user record with userId, username, and blocked timestamp
+- `BlockedUser` - Blocked user record with userId, username, and blocked timestamp (defined in `data/friends/FriendsRepository.kt`)
 
 **Firestore Collections:**
 - `users/{uid}/history` - Translation records
@@ -487,6 +499,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** March 11, 2026
+**Last Updated:** March 14, 2026
 
-(Some content is by github copilot agent and may contain error)
+(Some content was auto-generated and may contain inaccuracies.)

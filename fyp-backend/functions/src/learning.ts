@@ -32,6 +32,8 @@ export const generateLearningContent = onCall(
       const deployment = requireString(request.data?.deployment, "deployment");
       const prompt = requireString(request.data?.prompt, "prompt");
 
+      // No max-length restriction needed — the prompt is system-generated.
+
       const baseUrl = GENAI_BASE_URL.value();
       const apiVersion = GENAI_API_VERSION.value();
       const apiKey = GENAI_API_KEY.value();
@@ -183,7 +185,7 @@ export const generateLearningContent = onCall(
       });
       throw new HttpsError(
         "internal",
-        `Generation failed: ${e?.message ?? "Unknown error"}. Please try again.`
+        "Generation failed. Please try again."
       );
     }
   }

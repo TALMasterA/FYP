@@ -102,6 +102,9 @@ export const translateText = onCall(
   }
 );
 
+/**
+ * No requireAuth — this function must be callable without authentication (one-time use).
+ */
 export const translateTexts = onCall(
   {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
   async (request) => {

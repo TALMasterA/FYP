@@ -1,6 +1,5 @@
 package com.example.fyp.screens.settings
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel

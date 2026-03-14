@@ -35,7 +35,8 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId
         && subCol != 'coin_awards'
         && subCol != 'last_awarded_quiz'
-        && !(subCol == 'user_stats' && docId == 'coins');
+        && !(subCol == 'user_stats' && docId == 'coins')
+        && !(subCol == 'profile' && docId == 'settings');
     }
 
     // ============================================

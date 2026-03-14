@@ -4,6 +4,7 @@
 import {HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import * as admin from "firebase-admin";
+import {logger} from "./logger.js";
 
 // ============ Firebase Initialisation ============
 
@@ -74,7 +75,7 @@ export function safeParseJson(body: string, context: string): any {
   try {
     return JSON.parse(body);
   } catch (e: any) {
-    console.error(`Failed to parse ${context} response`, {
+    logger.error(`Failed to parse ${context} response`, {
       error: e?.message,
       responsePreview: body.substring(0, 200),
     });
@@ -125,7 +126,7 @@ export async function enforceRateLimit(uid: string): Promise<void> {
   try {
     doc = await rateLimitRef.get();
   } catch (fsError: any) {
-    console.error("enforceRateLimit: Firestore read failed", {uid, error: fsError?.message});
+    logger.error("enforceRateLimit: Firestore read failed", {uid, error: fsError?.message});
     throw new HttpsError("internal", "Rate limit check failed (Firestore read error). Please try again.");
   }
 
@@ -142,7 +143,7 @@ export async function enforceRateLimit(uid: string): Promise<void> {
     try {
       await rateLimitRef.set({timestamps, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
     } catch (fsWriteError: any) {
-      console.warn("enforceRateLimit: Firestore write failed during rate limit enforcement", {uid, error: fsWriteError?.message});
+      logger.warn("enforceRateLimit: Firestore write failed during rate limit enforcement", {uid, error: fsWriteError?.message});
     }
     throw new HttpsError(
       "resource-exhausted",
@@ -154,7 +155,7 @@ export async function enforceRateLimit(uid: string): Promise<void> {
   try {
     await rateLimitRef.set({timestamps, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
   } catch (fsWriteError: any) {
-    console.error("enforceRateLimit: Firestore write failed", {uid, error: fsWriteError?.message});
+    logger.error("enforceRateLimit: Firestore write failed", {uid, error: fsWriteError?.message});
     throw new HttpsError("internal", "Rate limit update failed (Firestore write error). Please try again.");
   }
 }

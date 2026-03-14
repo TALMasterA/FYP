@@ -124,7 +124,6 @@ dependencies {
 
     // Hilt DI
     implementation(libs.hilt.android)
-    implementation(libs.espresso.core)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
