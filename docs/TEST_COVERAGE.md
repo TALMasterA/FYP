@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-13_
+_Last updated: 2026-03-14_
 
 ## Summary
 
@@ -12,6 +12,19 @@ _Last updated: 2026-03-13_
 | Key logic files            | ~137    |
 | Key logic files tested     | ~137    |
 | Key logic coverage         | ~100%   |
+
+## CI/CD Pipeline & Quality Checks
+
+The project maintained by GitHub Actions workflows:
+
+1.  **CI (`ci.yml`)**:
+    *   Triggers on `push` and `pull_request` to `main`.
+    *   **Android**: Sets up JDK 17, caches Gradle, injects `google-services.json` from secrets, runs unit tests (`testDebugUnitTest`), bubbles up artifacts, and builds the Debug APK (`assembleDebug`).
+    *   **Backend**: Sets up Node.js 24, installs dependencies, runs linting (ESLint), compiles TypeScript (`build`), and runs Jest tests (`npm test`).
+
+2.  **CodeQL (`codeql.yml`)**:
+    *   Runs detailed semantic code analysis for Java/Kotlin (Android) and JavaScript/TypeScript (Backend) on a weekly schedule and on push/PRs.
+    *   Uses a dummy Firebase config for compilation during analysis to ensure build stability without exposing secrets.
 
 ## Coverage by Layer
 

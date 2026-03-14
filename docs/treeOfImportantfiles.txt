@@ -6,7 +6,8 @@ FYP/
 ├── .gitignore
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                                  ← GitHub Actions CI (Android build + backend lint/build/test)
+│       ├── ci.yml                                  ← GitHub Actions CI (Android build + backend lint/build/test)
+│       └── codeql.yml                              ← CodeQL security analysis (Java/Kotlin + JS/TS)
 ├── settings.gradle.kts
 ├── build.gradle.kts
 ├── gradle.properties

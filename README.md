@@ -40,7 +40,29 @@ Please use your gmail to register.
 
 --------------------------------------------------------------
 
+## 🛠️ CI/CD & Quality Checks
+
+This project uses **GitHub Actions** for continuous integration and static analysis.
+
+### Workflows
+1.  **CI (`ci.yml`)**:
+    *   **Android**: Builds the debug APK and runs unit tests (`./gradlew testDebugUnitTest`).
+    *   **Backend**: Lints, builds, and tests Cloud Functions.
+    *   **Artifacts**: A fresh Debug APK is uploaded as an artifact on every successful build.
+
+2.  **CodeQL Analysis (`codeql.yml`)**:
+    *   Performs semantic code analysis on Java/Kotlin and TypeScript files to detect security vulnerabilities and bugs.
+
+### Status
+*   ![CI](https://github.com/FYP/actions/workflows/ci.yml/badge.svg)
+*   ![CodeQL](https://github.com/FYP/actions/workflows/codeql.yml/badge.svg)
+
+--------------------------------------------------------------
+
 ## ⚠️ Development Cautions
+
+**Secrets in CI:**
+The CI pipeline requires a `GOOGLE_SERVICES_JSON` secret in the GitHub repository to build the Android app. This secret should contain the valid contents of `app/google-services.json`.
 
 **USB Debugging:**
 When testing the app, connect the phone and the Computer with the USB.
