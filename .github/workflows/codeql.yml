@@ -44,7 +44,7 @@ jobs:
       matrix:
         include:
         - language: java-kotlin
-          build-mode: none
+          build-mode: manual
         - language: javascript-typescript
           build-mode: none
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
@@ -59,6 +59,14 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Set up JDK 17
+      if: matrix.language == 'java-kotlin'
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+        cache: gradle
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
@@ -71,6 +79,26 @@ jobs:
 
         # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
+
+    # Create google-services.json for Android compilation (falls back to mock for fork PRs)
+    - name: Create google-services.json
+      if: matrix.language == 'java-kotlin'
+      env:
+        GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+      run: |
+        if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+          echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
+        else
+          echo '{"project_info":{"project_number":"000000000000","project_id":"mock-project-id","storage_bucket":"mock-project-id.appspot.com"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.example.fyp"}},"oauth_client":[],"api_key":[{"current_key":"mock-api-key"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' > app/google-services.json
+        fi
+
+    # Compile Kotlin in-process so CodeQL's JVM tracer can capture it.
+    # The default 'daemon' strategy spawns a separate compiler process that CodeQL cannot trace.
+    - name: Build Android App
+      if: matrix.language == 'java-kotlin'
+      run: |
+        chmod +x ./gradlew
+        ./gradlew compileDebugKotlin --no-daemon -Pkotlin.compiler.execution.strategy=in-process
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
