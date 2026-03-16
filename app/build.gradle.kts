@@ -24,7 +24,7 @@ android {
         versionCode = 44
         versionName = "1.9.9.5"
 
-        testInstrumentationRunner = "dagger.hilt.android.testing.HiltTestRunner"
+        testInstrumentationRunner = "com.example.fyp.HiltTestRunner"
     }
 
     buildTypes {
