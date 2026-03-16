@@ -14,6 +14,7 @@ import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.ui.theme.FYPTheme
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +37,11 @@ class LoginScreenSmokeTest {
 
     @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<HiltTestActivity>()
+
+    @Before
+    fun injectHilt() {
+        hiltRule.inject()
+    }
 
     private fun setContent() {
         composeTestRule.setContent {
