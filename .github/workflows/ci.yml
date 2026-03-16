@@ -26,8 +26,8 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-
+          key: gradle-v2-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.versions.toml') }}
+          restore-keys: gradle-v2-
 
       - name: Create google-services.json from secret
         env:
@@ -64,8 +64,8 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-
+          key: gradle-v2-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.versions.toml') }}
+          restore-keys: gradle-v2-
 
       - name: Create google-services.json from secret
         env:
@@ -114,8 +114,8 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-
+          key: gradle-v2-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.versions.toml') }}
+          restore-keys: gradle-v2-
 
       - name: Create google-services.json from secret
         env:
@@ -137,7 +137,7 @@ jobs:
           arch: x86_64
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           disable-animations: true
-          script: ./gradlew :app:connectedDebugAndroidTest
+          script: ./gradlew :app:connectedDebugAndroidTest --no-build-cache
 
       - name: Upload instrumented test reports
         if: always()
