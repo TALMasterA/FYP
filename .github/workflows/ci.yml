@@ -47,7 +47,7 @@ jobs:
 
   build-debug-apk:
     name: Build Debug APK
-    needs: [unit-tests, android-instrumented]
+    needs: [unit-tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -102,6 +102,12 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
@@ -128,6 +134,9 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
+          arch: x86_64
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
           script: ./gradlew connectedCheck
 
   backend:

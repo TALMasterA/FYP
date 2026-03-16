@@ -1,14 +1,14 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-14_
+_Last updated: 2026-03-16_
 
 ## Summary
 
 | Metric                    | Count   |
 |---------------------------|---------|
 | Source files               | 252     |
-| Test files                 | 199     |
-| Total `@Test` methods      | 2,583   |
+| Test files                 | 202     |
+| Total `@Test` methods      | 2,593   |
 | Key logic files            | ~137    |
 | Key logic files tested     | ~137    |
 | Key logic coverage         | ~100%   |
@@ -19,7 +19,9 @@ The project maintained by GitHub Actions workflows:
 
 1.  **CI (`ci.yml`)**:
     *   Triggers on `push` and `pull_request` to `main`.
-    *   **Android**: Sets up JDK 17, caches Gradle, injects `google-services.json` from secrets, runs unit tests (`testDebugUnitTest`), bubbles up artifacts, and builds the Debug APK (`assembleDebug`).
+    *   **Android Unit Tests**: Sets up JDK 17, caches Gradle, injects `google-services.json` from secrets, runs unit tests (`testDebugUnitTest`).
+    *   **Android Instrumented Tests**: Runs on a KVM-enabled emulator (API 29, x86_64) using `reactivecircus/android-emulator-runner@v2` with `swiftshader_indirect` GPU and animations disabled (`connectedCheck`). Runs independently from the APK build.
+    *   **Debug APK Build**: After unit tests pass, builds and uploads the debug APK as a CI artifact (`assembleDebug`). Does not block on instrumented tests so flaky emulator runs never prevent the APK build.
     *   **Backend**: Sets up Node.js 24, installs dependencies, runs linting (ESLint), compiles TypeScript (`build`), and runs Jest tests (`npm test`).
 
 2.  **CodeQL (`codeql.yml`)**:
@@ -38,7 +40,7 @@ The project maintained by GitHub Actions workflows:
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 34        | 34     | 100%     |
 
-## What Is Tested (199 files, 2,583 tests)
+## What Is Tested (202 files, 2,593 tests)
 
 ### All ViewModels & Controllers (20/20)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
@@ -56,7 +58,10 @@ The project maintained by GitHub Actions workflows:
 - Learning: CoinEligibility (19), GenerationEligibility (24), GenerateLearningMaterials (3), GenerateQuiz (3), ParseAndStoreQuiz (13)
 - Settings: 9 use cases via SettingsUseCasesTest (20)
 - Speech: 7 use cases tested individually
-- History: all use cases
+- History: all use cases via HistoryUseCasesTest + dedicated files:
+  - **NEW:** DeleteSessionUseCaseTest (4): delegation, different IDs, blank ID guards
+  - **NEW:** ObserveUserHistoryUseCaseTest (3): flow delegation, empty list, per-user isolation
+  - **NEW:** RenameSessionUseCaseTest (3): delegation, empty name, long name
 - OCR: RecognizeTextFromImage (4)
 
 ### Key Integration / Rule Tests
