@@ -323,12 +323,12 @@ scope.launch(Dispatchers.IO) {
 
 ## 17. Translation Performance Fast Paths — Preserve Latency Guards
 
-**Files:** `data/clients/CloudTranslatorClient.kt`, `data/repositories/FirebaseTranslationRepository.kt`, `data/cloud/TranslationCache.kt`, `core/ui/CommonUi.kt`
+**Files:** `data/clients/CloudTranslatorClient.kt`, `data/clients/CloudSpeechTokenClient.kt`, `data/repositories/FirebaseTranslationRepository.kt`, `data/cloud/TranslationCache.kt`, `core/ui/CommonUi.kt`
 
 **Invariant:** Translation and auto-detect performance depend on several coordinated fast paths. Removing any of them can increase UI wait time and cloud-call volume.
 
 **Required guards:**
-1. Reuse Firebase callable instances in `CloudTranslatorClient` (do not recreate callables per request).
+1. Reuse Firebase callable instances in `CloudTranslatorClient` and `CloudSpeechTokenClient` (do not recreate callables per request).
 2. Keep retry logic enabled for detect-language cloud calls, aligned with translation retry behavior.
 3. Preserve repository short-circuits:
     - blank source text returns immediately;

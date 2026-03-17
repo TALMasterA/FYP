@@ -222,7 +222,7 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
 
 **Prerequisites:**
 1. Android Studio (latest stable version)
-2. JDK 11 or higher
+2. JDK 17 or higher
 3. Android SDK
 4. Firebase project with Authentication, Firestore, Cloud Functions, Crashlytics enabled
 5. Azure Speech/Translation API keys

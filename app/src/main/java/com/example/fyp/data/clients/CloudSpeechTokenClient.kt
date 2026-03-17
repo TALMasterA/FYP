@@ -19,6 +19,11 @@ class CloudSpeechTokenClient(
         const val TIMEOUT_SECONDS = 30L
     }
 
+    // Lazy callable reuse avoids repeated lookup overhead (consistent with CloudTranslatorClient)
+    private val speechTokenCallable by lazy {
+        functions.getHttpsCallable("getSpeechToken")
+    }
+
     suspend fun getSpeechToken(): SpeechTokenResponse {
         Log.i("CloudSpeechToken", "getSpeechToken() called")
 
@@ -27,8 +32,7 @@ class CloudSpeechTokenClient(
                 maxAttempts = 3,
                 shouldRetry = NetworkRetry::isRetryableFirebaseException
             ) {
-                val result = functions
-                    .getHttpsCallable("getSpeechToken")
+                val result = speechTokenCallable
                     .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                     .call()
                     .await()
