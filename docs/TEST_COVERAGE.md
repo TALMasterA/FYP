@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-16_
+_Last updated: 2026-03-18_
 
 ## Summary
 
@@ -8,7 +8,7 @@ _Last updated: 2026-03-16_
 |---------------------------|---------|
 | Source files               | 252     |
 | Test files                 | 202     |
-| Total `@Test` methods      | 2,593   |
+| Total `@Test` methods      | 2,595   |
 | Key logic files            | ~137    |
 | Key logic files tested     | ~137    |
 | Key logic coverage         | ~100%   |
@@ -18,10 +18,9 @@ _Last updated: 2026-03-16_
 The project maintained by GitHub Actions workflows:
 
 1.  **CI (`ci.yml`)**:
-    *   Triggers on `push` and `pull_request` to `main`.
+    *   Triggers on `push` and `pull_request` to `main`, and manual `workflow_dispatch`.
     *   **Android Unit Tests**: Sets up JDK 17, caches Gradle, injects `google-services.json` from secrets, runs unit tests (`testDebugUnitTest`).
-    *   **Android Instrumented Tests**: Runs on a KVM-enabled emulator (API 29, x86_64) using `reactivecircus/android-emulator-runner@v2` with `swiftshader_indirect` GPU and animations disabled (`connectedCheck`). Runs independently from the APK build.
-    *   **Debug APK Build**: After unit tests pass, builds and uploads the debug APK as a CI artifact (`assembleDebug`). Does not block on instrumented tests so flaky emulator runs never prevent the APK build.
+    *   **Debug APK Build**: After unit tests pass, builds and uploads the debug APK as a CI artifact (`assembleDebug`).
     *   **Backend**: Sets up Node.js 24, installs dependencies, runs linting (ESLint), compiles TypeScript (`build`), and runs Jest tests (`npm test`).
 
 2.  **CodeQL (`codeql.yml`)**:
@@ -40,7 +39,7 @@ The project maintained by GitHub Actions workflows:
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 34        | 34     | 100%     |
 
-## What Is Tested (202 files, 2,593 tests)
+## What Is Tested (202 files, 2,595 tests)
 
 ### All ViewModels & Controllers (20/20)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
@@ -147,10 +146,12 @@ All complex business logic has been extracted to testable classes:
 - `MLKitOcrRepository` — recognizer selection logic → `OcrRecognizerSelectionTest` (24 tests)
 - `UiLanguageStateController` — language correction logic → `UiLanguageCorrectionTest` (15 tests)
 
-### Cloud/Network Clients (3 files)
-- `CloudSpeechTokenClient.kt` — token management
-- `CloudTranslatorClient.kt` — translation API client
+### Cloud/Network Clients (1 file)
 - `NetworkMonitor.kt` — connectivity observer (Android ConnectivityManager)
+
+**Previously untested clients now covered:**
+- `CloudTranslatorClient.kt` — request building, response parsing → `CloudClientLogicTest` (15 tests) + `CloudTranslatorLogicTest`
+- `CloudSpeechTokenClient.kt` — client logic partially covered by `CloudClientLogicTest`
 
 ### Minor Gaps (low risk)
 - `SecureStorage.kt` — Android Keystore wrapper

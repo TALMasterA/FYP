@@ -47,8 +47,7 @@ This project uses **GitHub Actions** for continuous integration and static analy
 ### Workflows
 1.  **CI (`ci.yml`)**:
     *   **Android Unit Tests**: Builds the debug APK and runs unit tests (`./gradlew testDebugUnitTest`).
-    *   **Android Instrumented Tests**: Runs `connectedCheck` on a KVM-accelerated API 29 x86_64 emulator with `swiftshader_indirect` GPU and animations disabled. Runs as a separate, independent job.
-    *   **Debug APK Build**: Triggered after unit tests pass; not blocked by instrumented tests.
+    *   **Debug APK Build**: Triggered after unit tests pass.
     *   **Backend**: Lints, builds, and tests Cloud Functions.
     *   **Artifacts**: A fresh Debug APK is uploaded as an artifact on every successful Android unit test + build run.
 
@@ -306,7 +305,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (202 test files, 2,593 tests)
+# Run all unit tests (202 test files, 2,595 tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -351,7 +350,7 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **Android — 202 test files, 2,593 unit tests** (as of March 2026)
+- **Android — 202 test files, 2,595 unit tests** (as of March 2026)
 - **Backend — 5 test files, 79 tests** covering Cloud Functions logic
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:
