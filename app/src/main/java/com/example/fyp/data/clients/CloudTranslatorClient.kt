@@ -35,6 +35,11 @@ class CloudTranslatorClient(
         const val TIMEOUT_SECONDS = 30L
     }
 
+    // Reuse callable instances to avoid repeated lookup/allocation on hot paths.
+    private val translateTextCallable by lazy { functions.getHttpsCallable("translateText") }
+    private val translateTextsCallable by lazy { functions.getHttpsCallable("translateTexts") }
+    private val detectLanguageCallable by lazy { functions.getHttpsCallable("detectLanguage") }
+
     suspend fun translateText(
         text: String,
         from: String?,
@@ -50,8 +55,7 @@ class CloudTranslatorClient(
             )
             if (!from.isNullOrBlank()) data["from"] = from
 
-            val result = functions
-                .getHttpsCallable("translateText")
+            val result = translateTextCallable
                 .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .call(data)
                 .await()
@@ -88,8 +92,7 @@ class CloudTranslatorClient(
             )
             if (!from.isNullOrBlank()) data["from"] = from
 
-            val result = functions
-                .getHttpsCallable("translateTexts")
+            val result = translateTextsCallable
                 .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .call(data)
                 .await()
@@ -110,31 +113,35 @@ class CloudTranslatorClient(
      * Returns detected language code and confidence score.
      */
     suspend fun detectLanguage(text: String): DetectedLanguage {
-        val data = hashMapOf("text" to text)
+        return NetworkRetry.withRetry(
+            maxAttempts = 3,
+            shouldRetry = NetworkRetry::isRetryableFirebaseException
+        ) {
+            val data = hashMapOf("text" to text)
 
-        val result = functions
-            .getHttpsCallable("detectLanguage")
-            .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .call(data)
-            .await()
+            val result = detectLanguageCallable
+                .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .call(data)
+                .await()
 
-        @Suppress("UNCHECKED_CAST")
-        val map = result.data as? Map<String, Any?>
-            ?: throw IllegalStateException("Unexpected result type: ${result.data}")
+            @Suppress("UNCHECKED_CAST")
+            val map = result.data as? Map<String, Any?>
+                ?: throw IllegalStateException("Unexpected result type: ${result.data}")
 
-        val alternatives = (map["alternatives"] as? List<*>)?.mapNotNull { alt ->
-            val altMap = alt as? Map<*, *> ?: return@mapNotNull null
-            LanguageAlternative(
-                language = altMap["language"] as? String ?: "",
-                score = (altMap["score"] as? Number)?.toDouble() ?: 0.0
+            val alternatives = (map["alternatives"] as? List<*>)?.mapNotNull { alt ->
+                val altMap = alt as? Map<*, *> ?: return@mapNotNull null
+                LanguageAlternative(
+                    language = altMap["language"] as? String ?: "",
+                    score = (altMap["score"] as? Number)?.toDouble() ?: 0.0
+                )
+            } ?: emptyList()
+
+            DetectedLanguage(
+                language = map["language"] as? String ?: "",
+                score = (map["score"] as? Number)?.toDouble() ?: 0.0,
+                isTranslationSupported = map["isTranslationSupported"] as? Boolean ?: false,
+                alternatives = alternatives
             )
-        } ?: emptyList()
-
-        return DetectedLanguage(
-            language = map["language"] as? String ?: "",
-            score = (map["score"] as? Number)?.toDouble() ?: 0.0,
-            isTranslationSupported = map["isTranslationSupported"] as? Boolean ?: false,
-            alternatives = alternatives
-        )
+        }
     }
 }

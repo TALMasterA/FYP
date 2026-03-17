@@ -188,17 +188,39 @@ class TranslationCache @Inject constructor(
         sourceLang: String,
         targetLang: String
     ): BatchCacheResult {
-        val cacheData = loadCache()
         val now = System.currentTimeMillis()
         val found = mutableMapOf<String, String>()
         val notFound = mutableListOf<String>()
+        val pendingDiskLookup = mutableListOf<String>()
 
-        for (text in texts) {
+        // Fast path: in-memory LRU first.
+        synchronized(inMemoryCache) {
+            for (text in texts) {
+                val key = cacheKey(text, sourceLang, targetLang)
+                val memEntry = inMemoryCache[key]
+                if (memEntry != null && (now - memEntry.timestamp <= CACHE_TTL_MS)) {
+                    found[text] = memEntry.translatedText
+                } else {
+                    pendingDiskLookup.add(text)
+                }
+            }
+        }
+
+        if (pendingDiskLookup.isEmpty()) {
+            return BatchCacheResult(found, notFound)
+        }
+
+        val cacheData = loadCache()
+
+        for (text in pendingDiskLookup) {
             val key = cacheKey(text, sourceLang, targetLang)
             val entry = cacheData.entries[key]
 
             if (entry != null && (now - entry.timestamp <= CACHE_TTL_MS)) {
                 found[text] = entry.translatedText
+                synchronized(inMemoryCache) {
+                    inMemoryCache[key] = entry.copy(lastAccessedAt = now)
+                }
             } else {
                 notFound.add(text)
             }
@@ -224,13 +246,17 @@ class TranslationCache @Inject constructor(
 
         for ((sourceText, translatedText) in translations) {
             val key = cacheKey(sourceText, sourceLang, targetLang)
-            newEntries[key] = CachedTranslation(
+            val entry = CachedTranslation(
                 sourceText = sourceText.trim(),
                 translatedText = translatedText,
                 sourceLang = sourceLang,
                 targetLang = targetLang,
                 timestamp = now
             )
+            newEntries[key] = entry
+            synchronized(inMemoryCache) {
+                inMemoryCache[key] = entry
+            }
         }
 
         // Evict least-recently-used entries if cache is full

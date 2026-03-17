@@ -318,6 +318,37 @@ scope.launch(Dispatchers.IO) {
 **Invariant:** Friend-request send limits must survive app restarts. The client enforces a rolling one-hour window of 10 sends per user by persisting timestamps in SharedPreferences.
 
 **Implementation:**
+
+---
+
+## 17. Translation Performance Fast Paths — Preserve Latency Guards
+
+**Files:** `data/clients/CloudTranslatorClient.kt`, `data/repositories/FirebaseTranslationRepository.kt`, `data/cloud/TranslationCache.kt`, `core/ui/CommonUi.kt`
+
+**Invariant:** Translation and auto-detect performance depend on several coordinated fast paths. Removing any of them can increase UI wait time and cloud-call volume.
+
+**Required guards:**
+1. Reuse Firebase callable instances in `CloudTranslatorClient` (do not recreate callables per request).
+2. Keep retry logic enabled for detect-language cloud calls, aligned with translation retry behavior.
+3. Preserve repository short-circuits:
+    - blank source text returns immediately;
+    - same-language translation returns source text without network calls.
+4. Keep `TranslationCache.getBatchCached()` memory-first lookup flow to avoid unnecessary DataStore reads.
+5. Keep batch-cache writes updating both persistent cache and in-memory LRU cache.
+6. In app UI language selection, skip work when selected language is unchanged.
+
+**Rule:** Any translation refactor must keep these guards or replace them with equivalent behavior and re-verify with:
+
+```bash
+./gradlew :app:testDebugUnitTest
+./gradlew :app:assembleDebug
+```
+
+**Benefits:**
+- Lower translation round-trip latency
+- Fewer cloud function invocations
+- Reduced DataStore read overhead on repeated batch translations
+- Faster app UI language switching responsiveness
 1. `SharedPreferencesFriendRequestRateLimiter` stores per-user send timestamps in `friend_request_rate_limit_prefs`
 2. `canSend()` prunes expired timestamps before deciding whether another send is allowed
 3. `recordSend()` is only called after `SendFriendRequestUseCase` succeeds

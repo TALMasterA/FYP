@@ -27,6 +27,13 @@ class FirebaseTranslationRepository @Inject constructor(
     private val languageDetectionCache: LanguageDetectionCache
 ) : TranslationRepository {
 
+    private fun normalizedLanguageCode(code: String): String {
+        val trimmed = code.trim()
+        if (trimmed.isEmpty()) return ""
+        val dash = trimmed.indexOf('-')
+        return if (dash > 0) trimmed.substring(0, dash).lowercase() else trimmed.lowercase()
+    }
+
     /**
      * Translates text from one language to another.
      * Checks cache first to avoid unnecessary API calls.
@@ -41,22 +48,33 @@ class FirebaseTranslationRepository @Inject constructor(
         fromLanguage: String,
         toLanguage: String
     ): SpeechResult {
+        val sourceText = text.trim()
+        if (sourceText.isEmpty()) {
+            return SpeechResult.Success("")
+        }
+
+        val normalizedFrom = normalizedLanguageCode(fromLanguage)
+        val normalizedTo = normalizedLanguageCode(toLanguage)
+        if (normalizedFrom.isNotEmpty() && normalizedFrom == normalizedTo) {
+            return SpeechResult.Success(sourceText)
+        }
+
         return try {
             // Check cache first
-            val cached = translationCache.getCached(text, fromLanguage, toLanguage)
+            val cached = translationCache.getCached(sourceText, fromLanguage, toLanguage)
             if (cached != null) {
                 return SpeechResult.Success(cached)
             }
 
             // Call API if not cached
             val result = cloudTranslatorClient.translateText(
-                text = text,
+                text = sourceText,
                 from = fromLanguage,
                 to = toLanguage
             )
 
             // Cache the result (fire-and-forget to avoid blocking the caller)
-            translationCache.cache(text, result.translatedText, fromLanguage, toLanguage)
+            translationCache.cache(sourceText, result.translatedText, fromLanguage, toLanguage)
 
             SpeechResult.Success(
                 text = result.translatedText,
@@ -87,8 +105,19 @@ class FirebaseTranslationRepository @Inject constructor(
                 return Result.success(emptyMap())
             }
 
+            val normalizedFrom = normalizedLanguageCode(fromLanguage)
+            val normalizedTo = normalizedLanguageCode(toLanguage)
+            val cleanedTexts = texts.map { it.trim() }
+            if (cleanedTexts.isEmpty()) {
+                return Result.success(emptyMap())
+            }
+
+            if (normalizedFrom.isNotEmpty() && normalizedFrom == normalizedTo) {
+                return Result.success(cleanedTexts.associateWith { it })
+            }
+
             // Check cache for already translated texts
-            val cacheResult = translationCache.getBatchCached(texts, fromLanguage, toLanguage)
+            val cacheResult = translationCache.getBatchCached(cleanedTexts, fromLanguage, toLanguage)
             val result = cacheResult.found.toMutableMap()
 
             // If all texts are cached, return immediately
@@ -132,20 +161,23 @@ class FirebaseTranslationRepository @Inject constructor(
      * @return DetectedLanguage with language code and confidence score, or null on error
      */
     override suspend fun detectLanguage(text: String): DetectedLanguage? {
+        val sourceText = text.trim()
+        if (sourceText.isBlank()) return null
+
         return try {
             // Check cache first
-            val cached = languageDetectionCache.getCached(text)
+            val cached = languageDetectionCache.getCached(sourceText)
             if (cached != null) {
                 AppLogger.d("DetectLanguage", "Cache hit: ${cached.language}, score: ${cached.score}")
                 return cached
             }
 
             // Call API if not cached
-            val result = cloudTranslatorClient.detectLanguage(text)
+            val result = cloudTranslatorClient.detectLanguage(sourceText)
             AppLogger.d("DetectLanguage", "API call - Detected: ${result.language}, score: ${result.score}")
 
             // Cache the result
-            languageDetectionCache.cache(text, result)
+            languageDetectionCache.cache(sourceText, result)
 
             result
         } catch (e: Exception) {

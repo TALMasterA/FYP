@@ -133,6 +133,7 @@ fun AppLanguageDropdown(
     val (_, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val context = LocalContext.current
     val cache = remember { UiLanguageCacheStore(context) }
+    val cloud = remember { CloudTranslatorClient() }
 
     // State for showing guest limit dialog
     var showGuestLimitDialog by remember { mutableStateOf(false) }
@@ -160,6 +161,7 @@ fun AppLanguageDropdown(
         enabled = enabled,
         onSelected = { code ->
             if (!enabled) return@LanguageDropdownField
+            if (code == appLanguageState.selectedUiLanguage) return@LanguageDropdownField
 
             scope.launch {
                 try {
@@ -213,7 +215,6 @@ fun AppLanguageDropdown(
                     }
 
                     // Call API for translation
-                    val cloud = CloudTranslatorClient()
                     val translatedList = cloud.translateTexts(
                         texts = BaseUiTexts,
                         from = "en",
