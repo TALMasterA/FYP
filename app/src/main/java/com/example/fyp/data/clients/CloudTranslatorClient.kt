@@ -17,6 +17,17 @@ data class LanguageAlternative(
     val score: Double
 )
 
+/**
+ * Result of a single translation call.
+ * When the source language was omitted (auto-detect), [detectedLanguage] and
+ * [detectedScore] contain the language Azure detected and its confidence.
+ */
+data class TranslationResult(
+    val translatedText: String,
+    val detectedLanguage: String? = null,
+    val detectedScore: Double? = null
+)
+
 class CloudTranslatorClient(
     private val functions: FirebaseFunctions = FirebaseFunctions.getInstance()
 ) {
@@ -28,25 +39,38 @@ class CloudTranslatorClient(
         text: String,
         from: String?,
         to: String
-    ): String {
-        val data = hashMapOf(
-            "text" to text,
-            "to" to to
-        )
-        if (!from.isNullOrBlank()) data["from"] = from
+    ): TranslationResult {
+        return NetworkRetry.withRetry(
+            maxAttempts = 3,
+            shouldRetry = NetworkRetry::isRetryableFirebaseException
+        ) {
+            val data = hashMapOf(
+                "text" to text,
+                "to" to to
+            )
+            if (!from.isNullOrBlank()) data["from"] = from
 
-        val result = functions
-            .getHttpsCallable("translateText")
-            .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .call(data)
-            .await()
+            val result = functions
+                .getHttpsCallable("translateText")
+                .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .call(data)
+                .await()
 
-        @Suppress("UNCHECKED_CAST")
-        val map = result.data as? Map<String, Any?>
-            ?: throw IllegalStateException("Unexpected result type: ${result.data}")
+            @Suppress("UNCHECKED_CAST")
+            val map = result.data as? Map<String, Any?>
+                ?: throw IllegalStateException("Unexpected result type: ${result.data}")
 
-        return map["translatedText"] as? String
-            ?: throw IllegalStateException("Missing translatedText in result")
+            val translatedText = map["translatedText"] as? String
+                ?: throw IllegalStateException("Missing translatedText in result")
+
+            @Suppress("UNCHECKED_CAST")
+            val detected = map["detectedLanguage"] as? Map<String, Any?>
+            TranslationResult(
+                translatedText = translatedText,
+                detectedLanguage = detected?.get("language") as? String,
+                detectedScore = (detected?.get("score") as? Number)?.toDouble()
+            )
+        }
     }
 
     suspend fun translateTexts(

@@ -35,6 +35,17 @@ Translates a single text string.
 { "translatedText": "string" }
 ```
 
+When `from` is omitted (auto-detect mode), the response also includes:
+```json
+{
+  "translatedText": "string",
+  "detectedLanguage": {
+    "language": "en",
+    "score": 0.98
+  }
+}
+```
+
 ---
 
 ### `translateTexts`

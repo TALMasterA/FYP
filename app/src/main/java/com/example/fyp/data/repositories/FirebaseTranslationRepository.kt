@@ -49,16 +49,20 @@ class FirebaseTranslationRepository @Inject constructor(
             }
 
             // Call API if not cached
-            val translated = cloudTranslatorClient.translateText(
+            val result = cloudTranslatorClient.translateText(
                 text = text,
                 from = fromLanguage,
                 to = toLanguage
             )
 
-            // Cache the result
-            translationCache.cache(text, translated, fromLanguage, toLanguage)
+            // Cache the result (fire-and-forget to avoid blocking the caller)
+            translationCache.cache(text, result.translatedText, fromLanguage, toLanguage)
 
-            SpeechResult.Success(translated)
+            SpeechResult.Success(
+                text = result.translatedText,
+                detectedLanguage = result.detectedLanguage,
+                detectedScore = result.detectedScore
+            )
         } catch (e: Exception) {
             SpeechResult.Error(ErrorMessageMapper.mapTranslationError(e.message ?: "Translation failed"))
         }

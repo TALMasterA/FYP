@@ -254,33 +254,32 @@ class SpeechViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            var actualFromLanguage = fromLanguage
-
-            // If source is auto-detect, detect the source language
-            if (fromLanguage == "auto") {
-                speechState = speechState.copy(statusMessage = "Detecting source language...")
-                val detected = detectLanguageUseCase(recognizedText)
-                if (detected != null && detected.language.isNotBlank()) {
-                    // Azure returns short codes like "ja", "en", "zh-Hans"
-                    // Map to supported full codes so they count in learning records
-                    val mappedCode = LanguageDisplayNames.mapDetectedToSupportedCode(detected.language)
-                    actualFromLanguage = mappedCode
-                    onDetectedSourceLanguage?.invoke(mappedCode)
-
-                    // Show display name if it's a supported language
-                    val displayName = LanguageDisplayNames.displayName(mappedCode)
-                    val displayText = if (displayName != mappedCode) displayName else detected.language
-                    speechState = speechState.copy(statusMessage = "Detected: $displayText (${(detected.score * 100).toInt()}% confidence)")
-                } else {
-                    speechState = speechState.copy(statusMessage = "Could not detect source language. Please select manually.")
-                    return@launch
-                }
-            }
+            val isAutoDetect = fromLanguage == "auto"
+            // Pass empty string for auto-detect so Azure detects during translation
+            val requestFromLanguage = if (isAutoDetect) "" else fromLanguage
 
             speechState = speechState.copy(statusMessage = "Translating...")
 
-            when (val tr = translateTextUseCase(recognizedText, actualFromLanguage, toLanguage)) {
+            when (val tr = translateTextUseCase(recognizedText, requestFromLanguage, toLanguage)) {
                 is SpeechResult.Success -> {
+                    var actualFromLanguage = fromLanguage
+
+                    // If auto-detect, extract detected language from the translation result
+                    if (isAutoDetect && !tr.detectedLanguage.isNullOrBlank()) {
+                        val mappedCode = LanguageDisplayNames.mapDetectedToSupportedCode(tr.detectedLanguage)
+                        actualFromLanguage = mappedCode
+                        onDetectedSourceLanguage?.invoke(mappedCode)
+
+                        val displayName = LanguageDisplayNames.displayName(mappedCode)
+                        val displayText = if (displayName != mappedCode) displayName else tr.detectedLanguage
+                        val confidence = tr.detectedScore?.let { (it * 100).toInt() }
+                        val statusSuffix = if (confidence != null) " ($confidence% confidence)" else ""
+                        speechState = speechState.copy(statusMessage = "Detected: $displayText$statusSuffix")
+                    } else if (isAutoDetect) {
+                        speechState = speechState.copy(statusMessage = "Could not detect source language. Please select manually.")
+                        return@launch
+                    }
+
                     speechState = speechState.copy(
                         translatedText = tr.text,
                         statusMessage = "",

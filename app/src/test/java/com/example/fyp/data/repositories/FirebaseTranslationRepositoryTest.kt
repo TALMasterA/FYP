@@ -1,6 +1,7 @@
 package com.example.fyp.data.repositories
 
 import com.example.fyp.data.clients.CloudTranslatorClient
+import com.example.fyp.data.clients.TranslationResult
 import com.example.fyp.data.cloud.BatchCacheResult
 import com.example.fyp.data.cloud.LanguageDetectionCache
 import com.example.fyp.data.cloud.TranslationCache
@@ -73,7 +74,7 @@ class FirebaseTranslationRepositoryTest {
         }
 
         cloudClient.stub {
-            onBlocking { translateText(text, from, to) } doReturn apiTranslation
+            onBlocking { translateText(text, from, to) } doReturn TranslationResult(apiTranslation)
         }
 
         val result = repository.translate(text, from, to)
@@ -83,6 +84,34 @@ class FirebaseTranslationRepositoryTest {
         verify(translationCache).getCached(text, from, to)
         verify(cloudClient).translateText(text, from, to)
         verify(translationCache).cache(text, apiTranslation, from, to)
+    }
+
+    @Test
+    fun `translate returns detected language from API when auto-detect`() = runTest {
+        val text = "Hello"
+        val from = "" // empty = auto-detect
+        val to = "es"
+        val apiResult = TranslationResult(
+            translatedText = "Hola",
+            detectedLanguage = "en",
+            detectedScore = 0.98
+        )
+
+        translationCache.stub {
+            onBlocking { getCached(text, from, to) } doReturn null
+        }
+
+        cloudClient.stub {
+            onBlocking { translateText(text, from, to) } doReturn apiResult
+        }
+
+        val result = repository.translate(text, from, to)
+
+        assertTrue(result is SpeechResult.Success)
+        val success = result as SpeechResult.Success
+        assertEquals("Hola", success.text)
+        assertEquals("en", success.detectedLanguage)
+        assertEquals(0.98, success.detectedScore)
     }
 
     @Test

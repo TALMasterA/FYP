@@ -98,7 +98,18 @@ export const translateText = onCall(
 
     const json = safeParseJson(bodyText, "translation");
     const translated = json?.[0]?.translations?.[0]?.text ?? "";
-    return {translatedText: translated};
+
+    // When "from" was omitted, Azure auto-detects and returns the source language.
+    // Forward it so the client can skip a separate detectLanguage call.
+    const detectedLang = json?.[0]?.detectedLanguage;
+    const result: Record<string, unknown> = {translatedText: translated};
+    if (detectedLang) {
+      result.detectedLanguage = {
+        language: detectedLang.language ?? "",
+        score: detectedLang.score ?? 0,
+      };
+    }
+    return result;
   }
 );
 

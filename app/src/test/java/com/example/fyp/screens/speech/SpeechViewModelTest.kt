@@ -193,11 +193,14 @@ class SpeechViewModelTest {
     // ── translate with auto-detect ──────────────────────────────────
 
     @Test
-    fun `translate with auto-detect detects language then translates`() = runTest {
-        whenever(detectLanguageUseCase.invoke(any()))
-            .thenReturn(DetectedLanguage(language = "en", score = 0.95, isTranslationSupported = true))
+    fun `translate with auto-detect uses detected language from translation result`() = runTest {
+        // The translation API now returns detected language inline (single call)
         whenever(translateTextUseCase.invoke(any(), any(), any()))
-            .thenReturn(SpeechResult.Success("Translated"))
+            .thenReturn(SpeechResult.Success(
+                text = "Translated",
+                detectedLanguage = "en",
+                detectedScore = 0.95
+            ))
 
         var detectedLang: String? = null
         val vm = buildViewModel()
@@ -207,6 +210,25 @@ class SpeechViewModelTest {
 
         assertNotNull(detectedLang)
         assertEquals("Translated", vm.translatedText)
+        // Should pass empty string for auto-detect (not "auto")
+        verify(translateTextUseCase).invoke("Hello world", "", "ja")
+        // detectLanguageUseCase should NOT be called (single-call auto-detect)
+        verifyNoInteractions(detectLanguageUseCase)
+    }
+
+    @Test
+    fun `translate with auto-detect fails when no language detected`() = runTest {
+        // Translation succeeds but without detected language info
+        whenever(translateTextUseCase.invoke(any(), any(), any()))
+            .thenReturn(SpeechResult.Success(text = "Translated"))
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+        vm.updateSourceText("Hello world")
+        vm.translate("auto", "ja")
+
+        // Should show "could not detect" message and NOT set translatedText
+        assertTrue(vm.statusMessage.contains("Could not detect", ignoreCase = true))
     }
 
     // ── OCR success ─────────────────────────────────────────────────
