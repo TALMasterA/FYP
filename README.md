@@ -305,7 +305,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (202 test files, 2,595 tests)
+# Run all unit tests (204 test files, 2,639 tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -350,7 +350,7 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **Android — 202 test files, 2,595 unit tests** (as of March 2026)
+- **Android — 204 test files, 2,639 unit tests** (from `app/build/test-results/testDebugUnitTest`)
 - **Backend — 5 test files, 79 tests** covering Cloud Functions logic
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:
@@ -408,9 +408,9 @@ gh auth login
 **Backend Key Test Suites (fyp-backend):**
 - `helpers.test.ts` - Auth guards, input validation, rate limiting, URL building helpers (24 tests)
 - `logger.test.ts` - Structured JSON logger output format (6 tests)
-- `translation.test.ts` - getSpeechToken, translateText, translateTexts, detectLanguage — auth, error and success paths (22 tests)
-- `coins.test.ts` - awardQuizCoins anti-cheat rules (version match, increment gate) and spendCoins shop purchases (14 tests)
-- `notifications.test.ts` - FCM triggers: data guards, status filtering, spam detection (link flooding), friend request rate limiting (13 tests)
+- `translation.test.ts` - getSpeechToken, translateText, translateTexts, detectLanguage — auth, error and success paths (15 tests)
+- `coins.test.ts` - awardQuizCoins anti-cheat rules (version match, increment gate) and spendCoins shop purchases (22 tests)
+- `notifications.test.ts` - FCM triggers: data guards, status filtering, spam detection (link flooding), friend request rate limiting (12 tests)
 
 **Running Tests:**
 ```bash
@@ -515,6 +515,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** March 18, 2026
+**Last Updated:** March 19, 2026
 
 (Some content was auto-generated and may contain inaccuracies.)
