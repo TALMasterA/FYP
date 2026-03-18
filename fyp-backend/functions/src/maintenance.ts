@@ -110,3 +110,129 @@ export const pruneStaleRateLimits = onSchedule(
     }
   }
 );
+
+/**
+ * Repair legacy friend-system data drift:
+ * 1) Deletes obsolete friend_requests docs with status=CANCELLED.
+ * 2) Repairs malformed user_search docs (blank/missing username_lowercase,
+ *    or stale discoverability when username is blank).
+ *
+ * Runs weekly on Sundays at 5 AM UTC.
+ */
+export const repairFriendsData = onSchedule(
+  {
+    schedule: "0 5 * * 0",
+    timeZone: "UTC",
+    region: "us-central1",
+  },
+  async () => {
+    const firestore = getFirestore();
+    const PAGE_SIZE = 300;
+
+    // ---- 1) Remove obsolete CANCELLED friend request docs ----
+    let cancelledDeleted = 0;
+    while (true) {
+      const cancelledSnap = await firestore
+        .collection("friend_requests")
+        .where("status", "==", "CANCELLED")
+        .limit(PAGE_SIZE)
+        .get();
+
+      if (cancelledSnap.empty) break;
+
+      const batch = firestore.batch();
+      cancelledSnap.docs.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+      cancelledDeleted += cancelledSnap.size;
+
+      if (cancelledSnap.size < PAGE_SIZE) break;
+    }
+
+    // ---- 2) Repair malformed user_search docs ----
+    let repairedUserSearchDocs = 0;
+    let forcedPrivateProfiles = 0;
+    let lastDoc: admin.firestore.QueryDocumentSnapshot | null = null;
+
+    while (true) {
+      let query = firestore.collection("user_search").limit(PAGE_SIZE);
+      if (lastDoc) query = query.startAfter(lastDoc);
+
+      const snap = await query.get();
+      if (snap.empty) break;
+      lastDoc = snap.docs[snap.docs.length - 1];
+
+      const batch = firestore.batch();
+
+      for (const doc of snap.docs) {
+        const data = doc.data() || {};
+        const username = typeof data.username === "string" ? data.username.trim() : "";
+        const usernameLower = typeof data.username_lowercase === "string" ? data.username_lowercase : "";
+        const isDiscoverable = typeof data.isDiscoverable === "boolean" ? data.isDiscoverable : false;
+
+        const patch: Record<string, unknown> = {};
+        let needsPatch = false;
+
+        if (username) {
+          const normalizedLower = username.toLowerCase();
+          if (usernameLower !== normalizedLower) {
+            patch.username_lowercase = normalizedLower;
+            needsPatch = true;
+          }
+        } else {
+          // No username => must not be discoverable in search.
+          if (isDiscoverable) {
+            patch.isDiscoverable = false;
+            needsPatch = true;
+          }
+          if (usernameLower) {
+            patch.username_lowercase = admin.firestore.FieldValue.delete();
+            needsPatch = true;
+          }
+
+          // Also normalize legacy public profile discoverability flags.
+          const publicRef = firestore
+            .collection("users").doc(doc.id)
+            .collection("profile").doc("public");
+          const publicSnap = await publicRef.get();
+          if (publicSnap.exists) {
+            const publicData = publicSnap.data() || {};
+            const profileUsername = typeof publicData.username === "string" ? publicData.username.trim() : "";
+            const hasLegacyDiscoverable = Object.prototype.hasOwnProperty.call(publicData, "discoverable");
+            const profilePatch: Record<string, unknown> = {};
+            let patchProfile = false;
+
+            if (!profileUsername) {
+              if (publicData.isDiscoverable !== false) {
+                profilePatch.isDiscoverable = false;
+                patchProfile = true;
+              }
+            }
+
+            if (hasLegacyDiscoverable) {
+              profilePatch.discoverable = admin.firestore.FieldValue.delete();
+              patchProfile = true;
+            }
+
+            if (patchProfile) {
+              batch.set(publicRef, profilePatch, {merge: true});
+              forcedPrivateProfiles++;
+            }
+          }
+        }
+
+        if (needsPatch) {
+          batch.set(doc.ref, patch, {merge: true});
+          repairedUserSearchDocs++;
+        }
+      }
+
+      await batch.commit();
+      if (snap.size < PAGE_SIZE) break;
+    }
+
+    logger.info(
+      "repairFriendsData completed",
+      {cancelledDeleted, repairedUserSearchDocs, forcedPrivateProfiles}
+    );
+  }
+);

@@ -1,7 +1,7 @@
 # Cloud Functions API Reference
 
-All functions are Firebase Cloud Functions v2 (`onCall`) deployed to `asia-east1` (default).
-Notification triggers and scheduled jobs run in `us-central1`.
+Callable functions are Firebase Cloud Functions v2 (`onCall`) and currently use the platform default region (`us-central1`) because no explicit callable region is configured in code.
+Notification triggers and scheduled jobs are explicitly configured to run in `us-central1`.
 
 ---
 
@@ -187,6 +187,7 @@ These are not callable functions — they fire automatically on Firestore docume
 |------------------------|-----------------------|------------------------------------------|
 | `pruneStaleTokens`     | Daily at 03:00 UTC    | Removes FCM tokens older than 60 days    |
 | `pruneStaleRateLimits` | Sundays at 04:00 UTC  | Removes rate-limit docs inactive >30 days |
+| `repairFriendsData`    | Sundays at 05:00 UTC  | Deletes legacy `CANCELLED` friend requests and repairs malformed `user_search` / legacy profile discoverability fields |
 
 ---
 

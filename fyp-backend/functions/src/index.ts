@@ -35,4 +35,4 @@ export {
 } from "./notifications.js";
 
 // ── Scheduled Maintenance ────────────────────────────────────────────
-export {pruneStaleTokens, pruneStaleRateLimits} from "./maintenance.js";
+export {pruneStaleTokens, pruneStaleRateLimits, repairFriendsData} from "./maintenance.js";

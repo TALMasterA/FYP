@@ -127,7 +127,38 @@ service cloud.firestore {
     // ============================================
     match /users/{userId}/profile/public {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && isValidPublicProfile();
+
+      // Public profile consistency guard:
+      // - isDiscoverable must be boolean if present
+      // - If discoverable=true, username must be 3-20 chars [a-zA-Z0-9_]
+      function isValidPublicProfile() {
+        let usernamePresent = "username" in request.resource.data;
+        let usernameValid = usernamePresent
+          ? (request.resource.data.username is string
+             && request.resource.data.username.size() >= 3
+             && request.resource.data.username.size() <= 20
+             && request.resource.data.username.matches("^[A-Za-z0-9_]+$"))
+          : true;
+
+        let discoverablePresent = "isDiscoverable" in request.resource.data;
+        let discoverableValid = discoverablePresent
+          ? request.resource.data.isDiscoverable is bool
+          : true;
+
+        let discoverableRequiresUsername =
+          discoverablePresent && request.resource.data.isDiscoverable == true
+            ? (usernamePresent
+               && request.resource.data.username is string
+               && request.resource.data.username.size() >= 3
+               && request.resource.data.username.size() <= 20
+               && request.resource.data.username.matches("^[A-Za-z0-9_]+$"))
+            : true;
+
+        return usernameValid && discoverableValid && discoverableRequiresUsername;
+      }
     }
 
     // ============================================
@@ -181,7 +212,32 @@ service cloud.firestore {
     // ============================================
     match /user_search/{userId} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && isValidUserSearchDoc();
+
+      // Search index consistency guard:
+      // - isDiscoverable is required and must be boolean
+      // - discoverable=true requires non-empty canonical username and lowercase key
+      // - discoverable=false may omit username_lowercase (cleanup-safe)
+      function isValidUserSearchDoc() {
+        let hasDiscoverable = "isDiscoverable" in request.resource.data;
+        let discoverableIsBool = hasDiscoverable && request.resource.data.isDiscoverable is bool;
+
+        let usernameValid = !request.resource.data.isDiscoverable
+          || ("username" in request.resource.data
+              && request.resource.data.username is string
+              && request.resource.data.username.size() >= 3
+              && request.resource.data.username.size() <= 20
+              && request.resource.data.username.matches("^[A-Za-z0-9_]+$"));
+
+        let lowercaseValid = !request.resource.data.isDiscoverable
+          || ("username_lowercase" in request.resource.data
+              && request.resource.data.username_lowercase is string
+              && request.resource.data.username_lowercase == request.resource.data.username.lower());
+
+        return hasDiscoverable && discoverableIsBool && usernameValid && lowercaseValid;
+      }
     }
 
     // ============================================

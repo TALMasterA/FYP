@@ -19,6 +19,11 @@ class FirestoreUserSettingsRepository @Inject constructor(
     private val db: FirebaseFirestore
 ) : UserSettingsRepository {
 
+    private companion object {
+        const val MIN_FONT_SIZE_SCALE = 0.5f
+        const val MAX_FONT_SIZE_SCALE = 2.0f
+    }
+
     private fun docRef(uid: String) =
         db.collection("users").document(uid)
             .collection("profile").document("settings")
@@ -30,12 +35,14 @@ class FirestoreUserSettingsRepository @Inject constructor(
     @Suppress("UNCHECKED_CAST")
     private fun parseSettings(snap: com.google.firebase.firestore.DocumentSnapshot?): UserSettings {
         val code = snap?.getString("primaryLanguageCode").orEmpty()
-        val scale = snap?.getDouble("fontSizeScale")?.toFloat() ?: 1.0f
+        val scale = (snap?.getDouble("fontSizeScale")?.toFloat() ?: 1.0f)
+            .coerceIn(MIN_FONT_SIZE_SCALE, MAX_FONT_SIZE_SCALE)
         val themeMode = snap?.getString("themeMode") ?: "system"
         val colorPaletteId = snap?.getString("colorPaletteId") ?: "default"
         val unlockedPalettes = snap?.get("unlockedPalettes") as? List<String> ?: listOf("default")
         val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
-        val historyViewLimit = snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT
+        val historyViewLimit = (snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT)
+            .coerceIn(UserSettings.BASE_HISTORY_LIMIT, UserSettings.MAX_HISTORY_LIMIT)
         val autoThemeEnabled = snap?.getBoolean("autoThemeEnabled") ?: false
         val lastPrimaryLanguageChangeMs = snap?.getLong("lastPrimaryLanguageChangeMs") ?: 0L
         val lastUsernameChangeMs = snap?.getLong("lastUsernameChangeMs") ?: 0L
@@ -105,8 +112,9 @@ class FirestoreUserSettingsRepository @Inject constructor(
     }
 
     override suspend fun setFontSizeScale(userId: UserId, scale: Float) {
+        val clampedScale = scale.coerceIn(MIN_FONT_SIZE_SCALE, MAX_FONT_SIZE_SCALE)
         docRef(userId.value)
-            .set(mapOf("fontSizeScale" to scale), SetOptions.merge())
+            .set(mapOf("fontSizeScale" to clampedScale), SetOptions.merge())
             .await()
     }
 

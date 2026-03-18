@@ -39,7 +39,7 @@ async function isSpamMessage(
     const recentSnap = await getFirestore()
       .collection("chats").doc(chatId).collection("messages")
       .where("senderId", "==", senderId)
-      .orderBy("timestamp", "desc")
+      .orderBy("createdAt", "desc")
       .limit(SPAM_RECENT_MESSAGES_WINDOW)
       .get();
 

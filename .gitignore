@@ -38,6 +38,21 @@ captures/
 firebase-sa.json
 **/firebase-sa.json
 
+# Environment files (may contain secrets)
+*.env
+*.env.*
+.env.local
+.env.*.local
+
+# Android signing keys (sensitive)
+*.keystore
+*.jks
+release.keystore
+
+# Coverage reports
+coverage/
+**/coverage/
+
 # Firebase backend
 fyp-backend/functions/node_modules/
 fyp-backend/functions/lib/

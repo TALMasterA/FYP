@@ -258,15 +258,30 @@ if (!loginLimiter.isAllowed(userId)) {
 ```kotlin
 NavigationBar(
     windowInsets = WindowInsets.navigationBars  // REQUIRED
-) {
+ ) {
     // navigation items
-}
+ }
 ```
 
 **Benefits:**
 - Bottom navigation items remain fully accessible on all devices
 - Proper spacing above system gesture bar on gesture navigation devices
 - No overlapping with physical navigation buttons on older devices
+
+---
+
+## 14.1 Friends Search Discoverability Guard
+
+**Files:** `data/friends/FirestoreFriendsRepository.kt`, `domain/friends/EnsurePublicProfileExistsUseCase.kt`, `fyp-backend/firestore.rules`
+
+**Invariant:** A profile with blank username must never be discoverable. Search-index docs in `user_search/{uid}` must only contain `username_lowercase` when username is non-blank and valid.
+
+**Rule:**
+1. New users start with `isDiscoverable = false` until they set a valid username.
+2. Any update that blanks username must force `isDiscoverable = false` and remove `username_lowercase`.
+3. Firestore rules enforce that discoverable profiles/search docs have username format `[A-Za-z0-9_]` and length 3–20.
+
+This prevents malformed index rows and empty-name search results.
 
 ---
 

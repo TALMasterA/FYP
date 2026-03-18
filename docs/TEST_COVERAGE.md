@@ -184,6 +184,6 @@ _5 test files, 79 tests_
 |------|-------|----------------|
 | `helpers.test.ts` | 24 | `requireAuth`, `requireString`, `optionalString`, `safeParseJson`, `toTranslatorCode`, `buildTranslateUrl` |
 | `logger.test.ts` | 6 | Structured JSON logger output format |
-| `translation.test.ts` | 22 | `getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage` — auth guards, error paths, success paths |
-| `coins.test.ts` | 14 | `awardQuizCoins` (anti-cheat rules, version match, increment check), `spendCoins` (history expansion, palette unlock) |
-| `notifications.test.ts` | 13 | FCM triggers: missing data, status guards, spam detection (link flooding), friend request rate limiting |
+| `translation.test.ts` | 15 | `getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage` — auth guards, error paths, success paths |
+| `coins.test.ts` | 22 | `awardQuizCoins` (anti-cheat rules, version match, increment check), `spendCoins` (history expansion, palette unlock) |
+| `notifications.test.ts` | 12 | FCM triggers: missing data, status guards, spam detection (link flooding), friend request rate limiting |

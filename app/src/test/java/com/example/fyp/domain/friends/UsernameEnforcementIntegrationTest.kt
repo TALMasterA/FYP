@@ -26,7 +26,7 @@ import org.mockito.kotlin.*
  *  2. EnsurePublicProfileExistsUseCase preserves existing username on update
  *  3. SendFriendRequestUseCase does NOT enforce username (it's a ViewModel concern)
  *  4. AcceptFriendRequestUseCase does NOT enforce username (it's a ViewModel concern)
- *  5. New user profile has discoverable=true but empty username
+ *  5. New user profile is private when username is empty
  *  6. Profile creation → send request flow: no username at domain layer
  *  7. Profile creation → accept request flow: no username at domain layer
  *  8. Profile with username set → send request succeeds
@@ -143,10 +143,10 @@ class UsernameEnforcementIntegrationTest {
         verify(friendsRepo).acceptFriendRequest("req1", uid, friendId)
     }
 
-    // ── Test 5: New profile is discoverable with empty username ──
+    // ── Test 5: New profile is private with empty username ──
 
     @Test
-    fun `new profile is discoverable but has empty username`() = runTest {
+    fun `new profile is private when username is empty`() = runTest {
         whenever(settingsRepo.fetchUserSettings(uid))
             .thenReturn(UserSettings(primaryLanguageCode = "zh-HK"))
         whenever(friendsRepo.getPublicProfile(uid)).thenReturn(null)
@@ -154,7 +154,7 @@ class UsernameEnforcementIntegrationTest {
         ensureProfile(userId)
 
         val profile = captureCreatedProfile()
-        assertTrue("New profiles should be discoverable", profile.isDiscoverable)
+        assertFalse("New profiles should default to private until username is set", profile.isDiscoverable)
         assertEquals("", profile.username)
         assertEquals("zh-HK", profile.primaryLanguage)
     }

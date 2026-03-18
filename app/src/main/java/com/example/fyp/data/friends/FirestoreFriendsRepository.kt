@@ -11,6 +11,7 @@ import com.example.fyp.model.friends.FriendRequest
 import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.friends.RequestStatus
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.async
@@ -35,24 +36,34 @@ class FirestoreFriendsRepository @Inject constructor(
         userId: UserId,
         profile: PublicUserProfile
     ): Result<Unit> = try {
+        val normalizedUsername = profile.username.trim()
+        val canBeDiscoverable = normalizedUsername.isNotBlank() && profile.isDiscoverable
+
         // Update public profile
         db.collection("users")
             .document(userId.value)
             .collection("profile")
             .document("public")
-            .set(profile)
+            .set(
+                profile.copy(
+                    username = normalizedUsername,
+                    isDiscoverable = canBeDiscoverable
+                )
+            )
             .await()
 
         // Update search index — store full profile fields to avoid N reads in searchByUsername
-        val searchData = mapOf(
-            "username_lowercase" to profile.username.lowercase(),
-            "username" to profile.username,
+        val searchData = mutableMapOf<String, Any>(
+            "username" to normalizedUsername,
             "avatarUrl" to profile.avatarUrl,
-            "isDiscoverable" to profile.isDiscoverable,
+            "isDiscoverable" to canBeDiscoverable,
             "primaryLanguage" to profile.primaryLanguage,
-            "learningLanguages" to profile.learningLanguages,
+            "learningLanguages" to (profile.learningLanguages ?: emptyList<String>()),
             "lastActiveAt" to profile.lastActiveAt
         )
+        if (normalizedUsername.isNotBlank()) {
+            searchData["username_lowercase"] = normalizedUsername.lowercase()
+        }
         db.collection("user_search")
             .document(userId.value)
             .set(searchData)
@@ -84,23 +95,52 @@ class FirestoreFriendsRepository @Inject constructor(
         userId: UserId,
         updates: Map<String, Any>
     ): Result<Unit> = try {
+        val profileUpdates = updates.toMutableMap()
+
+        val requestedUsername = (updates["username"] as? String)?.trim()
+        val requestedDiscoverable = updates["isDiscoverable"] as? Boolean
+
+        if (requestedUsername != null) {
+            profileUpdates["username"] = requestedUsername
+            if (requestedUsername.isBlank()) {
+                // A blank username is never searchable/discoverable.
+                profileUpdates["isDiscoverable"] = false
+            }
+        }
+
+        if (requestedDiscoverable == true && requestedUsername != null && requestedUsername.isBlank()) {
+            profileUpdates["isDiscoverable"] = false
+        }
+
         // Use set with merge so it works even if the document doesn't exist yet
         db.collection("users")
             .document(userId.value)
             .collection("profile")
             .document("public")
-            .set(updates, com.google.firebase.firestore.SetOptions.merge())
+            .set(profileUpdates, com.google.firebase.firestore.SetOptions.merge())
             .await()
 
         // Update search index if username or discoverability changed
         val searchUpdates = mutableMapOf<String, Any>()
-        updates["username"]?.let {
-            searchUpdates["username_lowercase"] = (it as String).lowercase()
+        requestedUsername?.let {
             searchUpdates["username"] = it
+            if (it.isBlank()) {
+                searchUpdates["isDiscoverable"] = false
+                searchUpdates["username_lowercase"] = FieldValue.delete()
+            } else {
+                searchUpdates["username_lowercase"] = it.lowercase()
+                // Keep explicit discoverability if caller provided it; otherwise preserve current state.
+                requestedDiscoverable?.let { discoverable -> searchUpdates["isDiscoverable"] = discoverable }
+            }
         }
         updates["displayName"]?.let { /* displayName field removed — username is the sole identity field */ }
         updates["avatarUrl"]?.let { searchUpdates["avatarUrl"] = it }
-        updates["isDiscoverable"]?.let { searchUpdates["isDiscoverable"] = it }
+        updates["isDiscoverable"]?.let {
+            // Never allow discoverable=true to be indexed with a blank username.
+            if (requestedUsername == null || requestedUsername.isNotBlank() || it == false) {
+                searchUpdates["isDiscoverable"] = it
+            }
+        }
         updates["lastActiveAt"]?.let { searchUpdates["lastActiveAt"] = it }
         updates["primaryLanguage"]?.let { searchUpdates["primaryLanguage"] = it }
 

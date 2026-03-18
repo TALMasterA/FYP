@@ -61,7 +61,7 @@ class EnsurePublicProfileExistsUseCaseTest {
         assertEquals("user1", created.uid)
         assertEquals("ja-JP", created.primaryLanguage)
         assertEquals("", created.username)
-        assertTrue(created.isDiscoverable)
+        assertFalse(created.isDiscoverable)
     }
     @Test
     fun `does not write when profile exists with same language`() = runTest {

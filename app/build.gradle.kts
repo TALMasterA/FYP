@@ -21,8 +21,8 @@ android {
         applicationId = "com.example.fyp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 45
-        versionName = "1.9.9.6"
+        versionCode = 46
+        versionName = "1.9.9.7"
 
         testInstrumentationRunner = "com.example.fyp.HiltTestRunner"
     }

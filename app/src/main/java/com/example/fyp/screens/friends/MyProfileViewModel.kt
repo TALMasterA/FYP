@@ -103,6 +103,13 @@ class MyProfileViewModel @Inject constructor(
 
     fun updateVisibility(isPublic: Boolean) {
         val userId = currentUserId ?: return
+        val currentUsername = _uiState.value.profile?.username?.trim().orEmpty()
+        if (isPublic && currentUsername.isBlank()) {
+            _uiState.update {
+                it.copy(error = "Set a username before making your profile public.")
+            }
+            return
+        }
         viewModelScope.launch {
             _uiState.update { it.copy(isUpdatingVisibility = true) }
             friendsRepository.updatePublicProfile(

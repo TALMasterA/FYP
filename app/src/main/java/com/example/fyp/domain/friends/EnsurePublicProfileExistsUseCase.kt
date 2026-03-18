@@ -42,7 +42,8 @@ class EnsurePublicProfileExistsUseCase @Inject constructor(
                 avatarUrl = "",
                 primaryLanguage = currentPrimaryLanguage,
                 learningLanguages = emptyList(),
-                isDiscoverable = true,
+                // Username must be set before profile can be discoverable in search.
+                isDiscoverable = false,
                 createdAt = Timestamp.now(),
                 lastActiveAt = Timestamp.now()
             )

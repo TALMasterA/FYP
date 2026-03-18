@@ -515,6 +515,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** March 16, 2026
+**Last Updated:** March 18, 2026
 
 (Some content was auto-generated and may contain inaccuracies.)
