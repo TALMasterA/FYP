@@ -78,6 +78,8 @@ class LearningViewModelTest {
             on { isLoading } doReturn MutableStateFlow(false)
             on { error } doReturn MutableStateFlow(null)
             on { historyCount } doReturn MutableStateFlow(0)
+            onBlocking { forceRefreshLanguageCounts(any()) } doAnswer {}
+            onBlocking { refreshLanguageCounts(any()) } doAnswer {}
         }
         sharedSettings = mock { on { settings } doReturn settingsFlow }
         generateLearningMaterials = mock()

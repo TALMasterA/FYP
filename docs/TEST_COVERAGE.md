@@ -1,14 +1,14 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-18_
+_Last updated: 2026-03-19_
 
 ## Summary
 
 | Metric                    | Count   |
 |---------------------------|---------|
 | Source files               | 252     |
-| Test files                 | 202     |
-| Total `@Test` methods      | 2,636   |
+| Test files                 | 204     |
+| Total `@Test` methods      | 2,674   |
 | Key logic files            | ~137    |
 | Key logic files tested     | ~137    |
 | Key logic coverage         | ~100%   |
@@ -39,7 +39,7 @@ The project maintained by GitHub Actions workflows:
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 34        | 34     | 100%     |
 
-## What Is Tested (202 files, 2,636 tests)
+## What Is Tested (204 files, 2,674 tests)
 
 ### All ViewModels & Controllers (20/20)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
@@ -49,6 +49,7 @@ The project maintained by GitHub Actions workflows:
 - SharedInboxViewModel (11), SharedMaterialDetailViewModel (9), ShopViewModel (13)
 - SpeechViewModel (13), WordBankViewModel (15), CustomWordsViewModel (19)
 - ContinuousConversationController (14), TtsController (12)
+- **NEW:** LearningScreenLogicTest (18): cluster filtering, generation button state, quiz regeneration eligibility
 
 ### All Domain Use Cases (40/40)
 - Friends: 20 use cases — individual + integration tests (51 extra)
@@ -82,6 +83,7 @@ The project maintained by GitHub Actions workflows:
 - **NEW:** SpeechModels (15): SpeechScreenState defaults, RecognizePhase enum, ChatMessage properties
 - **NEW:** WordBankModels (18): WordBankItem, WordBank, WordBankUiState, SpeakingType enum
 - **NEW:** LearningModels (7): LanguageClusterUi data class, sorting, equality
+- **NEW:** QuizAttemptTest (20): QuizQuestion, QuizAnswer, QuizAttempt scoring, QuizStats, UserCoinStats
 
 ### Core Utilities (12/12)
 - SecurityUtils (40+9), CertificatePinning (7), ErrorMessages (35), NetworkRetry (21)
