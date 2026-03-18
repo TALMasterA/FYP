@@ -10,7 +10,7 @@ val ScreenUiTexts: List<String> = listOf(
 
     // HomeInstructions
     "You can change the app UI language by the dropdown on top. \n" +
-            "Please look at the ! information before using the app.",
+            "Please review Notes & Cautions before using the app.",
 
     // ContinuousInstructions
     "Set Speaker A and B languages below. \n" +
@@ -120,7 +120,7 @@ val ScreenUiTexts: List<String> = listOf(
             
             "Updates & Feedback:\n" +
             "  • App version displayed in Settings → About\n" +
-            "  • Report bugs or suggest features via GitHub repository\n",
+                        "  • Report bugs or suggest features via /Feedback / the GitHub repository\n",
 
     // --- Feedback ---
     // FeedbackTitle
@@ -318,7 +318,7 @@ val ScreenUiTexts: List<String> = listOf(
 
     // ResetPwText
     "Enter your account email and a reset link will be sent. \n" +
-            "Make sure the email is real & register for the app or no email will be sent. \n",
+            "Make sure the email is real and registered for the app, or no email will be sent. \n",
 
     // ResetSendingText
     "Sending...",

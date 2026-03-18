@@ -88,7 +88,7 @@ fun MyProfileScreen(
                         IconButton(onClick = { viewModel.clearError() }) {
                             Icon(
                                 Icons.Default.Close,
-                                contentDescription = "Dismiss",
+                                contentDescription = t(UiTextKey.AccessibilityDismiss),
                                 tint = MaterialTheme.colorScheme.onErrorContainer
                             )
                         }

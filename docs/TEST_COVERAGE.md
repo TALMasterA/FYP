@@ -8,7 +8,7 @@ _Last updated: 2026-03-18_
 |---------------------------|---------|
 | Source files               | 252     |
 | Test files                 | 202     |
-| Total `@Test` methods      | 2,595   |
+| Total `@Test` methods      | 2,636   |
 | Key logic files            | ~137    |
 | Key logic files tested     | ~137    |
 | Key logic coverage         | ~100%   |
@@ -39,13 +39,13 @@ The project maintained by GitHub Actions workflows:
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 34        | 34     | 100%     |
 
-## What Is Tested (202 files, 2,595 tests)
+## What Is Tested (202 files, 2,636 tests)
 
 ### All ViewModels & Controllers (20/20)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
 - FavoritesViewModel (13), FeedbackViewModel (8), FriendsViewModel (30)
 - HistoryViewModel (21), LearningViewModel (14), LearningSheetViewModel (19)
-- MyProfileViewModel (13), ProfileViewModel (11), SettingsViewModel (22)
+- MyProfileViewModel (14), ProfileViewModel (11), SettingsViewModel (22)
 - SharedInboxViewModel (11), SharedMaterialDetailViewModel (9), ShopViewModel (13)
 - SpeechViewModel (13), WordBankViewModel (15), CustomWordsViewModel (19)
 - ContinuousConversationController (14), TtsController (12)
@@ -100,7 +100,7 @@ The project maintained by GitHub Actions workflows:
 - **NEW:** SharedHistoryDataSourceExtendedLogic (17): updateLimit restart, bidirectional pair counting, language filtering
 - **NEW:** SharedSettingsDataSourceLogic (15): startObserving idempotency, stopObserving reset, updateCache semantics
 - **NEW:** LanguageDisplayNamesExtended (14): full 17-language mapping, Chinese variants, isSupportedLanguage comprehensive
-- **NEW:** SettingsNotificationFields (18): notification field allowlist, history limit clamping, parse defaults
+- **NEW:** SettingsNotificationFields (21): notification field allowlist, history limit clamping, font-size clamping, parse defaults
 - **NEW:** WordBankRepositoryLogic (16): key normalization, metadata, word parsing, duplicate filtering
 - **NEW:** WordBankPrompt (12): prompt construction, takeLast(30) limit, language embedding
 - **NEW:** LearningContentPrompt (14): prompt construction, takeLast(20) limit, MAX_VOCABULARY_ITEMS
@@ -139,7 +139,7 @@ All complex business logic has been extracted to testable classes:
 - `FirebaseAuthRepository` — covered via AuthViewModel tests
 - `FirestoreFavoritesRepository` — covered via FavoritesViewModel tests
 - `FirestoreCustomWordsRepository` — validation logic → CustomWordsValidationTest (22 tests)
-- `FirestoreUserSettingsRepository` — notification field allowlist, history limit clamping, parse defaults → `SettingsNotificationFieldsTest` (18 tests)
+- `FirestoreUserSettingsRepository` — notification field allowlist, history limit clamping, font-size clamping, parse defaults → `SettingsNotificationFieldsTest` (21 tests)
 - `FirestoreWordBankRepository` — key normalization, word parsing, duplicate filtering → `WordBankRepositoryLogicTest` (16 tests)
 - `WordBankGenerationRepository` — prompt construction → `WordBankPromptTest` (12 tests)
 - `LearningContentRepositoryImpl` — prompt construction → `LearningContentPromptTest` (14 tests)

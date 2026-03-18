@@ -15,6 +15,11 @@ import org.junit.Assert.*
  */
 class SettingsNotificationFieldsTest {
 
+    private companion object {
+        const val MIN_FONT_SIZE_SCALE = 0.5f
+        const val MAX_FONT_SIZE_SCALE = 2.0f
+    }
+
     // --- Notification preference field allowlist ---
 
     @Test
@@ -93,6 +98,24 @@ class SettingsNotificationFieldsTest {
     fun `history limit at exact boundaries is valid`() {
         assertEquals(30, 30.coerceIn(UserSettings.BASE_HISTORY_LIMIT, UserSettings.MAX_HISTORY_LIMIT))
         assertEquals(60, 60.coerceIn(UserSettings.BASE_HISTORY_LIMIT, UserSettings.MAX_HISTORY_LIMIT))
+    }
+
+    @Test
+    fun `font size scale is clamped at minimum`() {
+        val clamped = 0.2f.coerceIn(MIN_FONT_SIZE_SCALE, MAX_FONT_SIZE_SCALE)
+        assertEquals(MIN_FONT_SIZE_SCALE, clamped, 0.001f)
+    }
+
+    @Test
+    fun `font size scale is clamped at maximum`() {
+        val clamped = 3.0f.coerceIn(MIN_FONT_SIZE_SCALE, MAX_FONT_SIZE_SCALE)
+        assertEquals(MAX_FONT_SIZE_SCALE, clamped, 0.001f)
+    }
+
+    @Test
+    fun `font size scale within range is unchanged`() {
+        val clamped = 1.25f.coerceIn(MIN_FONT_SIZE_SCALE, MAX_FONT_SIZE_SCALE)
+        assertEquals(1.25f, clamped, 0.001f)
     }
 
     // --- Parse defaults match UserSettings defaults ---

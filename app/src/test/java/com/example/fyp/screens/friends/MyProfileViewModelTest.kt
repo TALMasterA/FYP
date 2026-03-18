@@ -38,6 +38,7 @@ import org.mockito.kotlin.*
  * 10. clearError clears error state
  * 11. refreshProfile reloads via current user ID
  * 12. showSuccessMessage sets and auto-clears message
+ * 13. updateVisibility blocks public mode when username is blank
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MyProfileViewModelTest {
@@ -233,6 +234,20 @@ class MyProfileViewModelTest {
 
         vm.updateVisibility(true)
 
+        verifyNoInteractions(friendsRepo)
+    }
+
+    @Test
+    fun `updateVisibility blocks public mode when username is blank`() = runTest {
+        val blankUsernameProfile = testProfile.copy(username = "")
+        whenever(getCurrentUserProfile.invoke(UserId(testUserId))).thenReturn(blankUsernameProfile)
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.updateVisibility(true)
+
+        assertEquals("Set a username before making your profile public.", vm.uiState.value.error)
         verifyNoInteractions(friendsRepo)
     }
 
