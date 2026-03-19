@@ -875,4 +875,15 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameCooldownMessageHours to "用戶名每 30 日只可以更改一次。請喺 {hours} 小時後再試。",
     UiTextKey.SettingsUsernameConfirmTitle to "確認更改用戶名",
     UiTextKey.SettingsUsernameConfirmMessage to "更改用戶名後，需要等 30 日先可以再改。繼續？",
+
+    // OCR Settings
+    UiTextKey.OcrSettingsTitle to "OCR 設定",
+    UiTextKey.OcrSettingsDesc to "呢個應用程式包含內置嘅 OCR 模型，用於從圖片中辨識文字。所有模型都可以離線使用，運作可靠。",
+    UiTextKey.OcrSettingsQuickLink to "OCR 模型",
+    UiTextKey.OcrSettingsRefreshing to "正在檢查模型狀態...",
+    UiTextKey.OcrSettingsInfo to "所有 OCR 模型都已經包含喺應用程式入面。ABI 分割會為你嘅裝置架構減少下載大小。",
+    UiTextKey.OcrModelDownloaded to "已內置",
+    UiTextKey.OcrModelDownloading to "載入中...",
+    UiTextKey.OcrModelNotDownloaded to "未提供 (~{size}MB)",
+    UiTextKey.OcrModelDownloadButton to "下載",
 )

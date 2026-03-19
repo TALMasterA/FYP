@@ -6,11 +6,11 @@ _Last updated: 2026-03-19_
 
 | Metric                    | Count   |
 |---------------------------|---------|
-| Source files               | 252     |
-| Test files                 | 204     |
-| Total `@Test` methods      | 2,639   |
-| Key logic files            | ~137    |
-| Key logic files tested     | ~137    |
+| Source files               | 255     |
+| Test files                 | 206     |
+| Total `@Test` methods      | 2,668   |
+| Key logic files            | ~140    |
+| Key logic files tested     | ~140    |
 | Key logic coverage         | ~100%   |
 
 ## CI/CD Pipeline & Quality Checks
@@ -31,17 +31,17 @@ The project maintained by GitHub Actions workflows:
 
 | Layer                     | Key Files | Tested | Coverage |
 |---------------------------|-----------|--------|----------|
-| **screens/ (ViewModels)** | 20        | 20     | 100%     |
+| **screens/ (ViewModels)** | 21        | 21     | 100%     |
 | **domain/ (Use Cases)**   | 40        | 40     | 100%     |
-| **model/ (Data Models)**  | 23        | 23     | 100%     |
+| **model/ (Data Models)**  | 24        | 24     | 100%     |
 | **core/ (Utilities)**     | 12        | 12     | 100%     |
 | **navigation/**           | 2         | 2      | 100%     |
 | **ui/ + utils/**          | 6         | 6      | 100%     |
-| **data/ (Repositories)**  | 34        | 34     | 100%     |
+| **data/ (Repositories)**  | 35        | 35     | 100%     |
 
-## What Is Tested (204 files, 2,639 tests)
+## What Is Tested (206 files, 2,668 tests)
 
-### All ViewModels & Controllers (20/20)
+### All ViewModels & Controllers (21/21)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
 - FavoritesViewModel (13), FeedbackViewModel (8), FriendsViewModel (30)
 - HistoryViewModel (21), LearningViewModel (14), LearningSheetViewModel (19)
@@ -50,6 +50,7 @@ The project maintained by GitHub Actions workflows:
 - SpeechViewModel (13), WordBankViewModel (15), CustomWordsViewModel (19)
 - ContinuousConversationController (14), TtsController (12)
 - **NEW:** LearningScreenLogicTest (18): cluster filtering, generation button state, quiz regeneration eligibility
+- **NEW:** OcrSettingsViewModelTest (4): model list initialization, total size calculation
 
 ### All Domain Use Cases (40/40)
 - Friends: 20 use cases — individual + integration tests (51 extra)
@@ -73,7 +74,7 @@ The project maintained by GitHub Actions workflows:
 - **NEW:** EligibilityEdgeCases (18): boundary values for generation/coin eligibility, constant verification
 - **NEW:** SessionManagementLogic (13): session/user ID validation, delete preconditions, session naming
 
-### Models (23/23)
+### Models (24/24)
 - TranslationRecord (18), HistorySession (21), HistorySessionExtended (9), Quiz (18), FavoriteRecord (24)
 - FavoriteSession (14): FavoriteSession and FavoriteSessionRecord defaults, copy, sorting
 - ValueTypes (21), SpeechResult (6), OcrResult (8), CustomWord (7)
@@ -84,6 +85,7 @@ The project maintained by GitHub Actions workflows:
 - **NEW:** WordBankModels (18): WordBankItem, WordBank, WordBankUiState, SpeakingType enum
 - **NEW:** LearningModels (7): LanguageClusterUi data class, sorting, equality
 - **NEW:** QuizAttemptTest (20): QuizQuestion, QuizAnswer, QuizAttempt scoring, QuizStats, UserCoinStats
+- **NEW:** OcrScriptTest (17): language-to-script mapping, script properties, size estimates
 
 ### Core Utilities (12/12)
 - SecurityUtils (40+9), CertificatePinning (7), ErrorMessages (35), NetworkRetry (21)
@@ -91,7 +93,7 @@ The project maintained by GitHub Actions workflows:
 - PerformanceUtils (13), AuditLogger (9), ViewModelHelpers (9), Pagination (9)
 - **NEW:** FeatureFlagDefaults (16): default flag values, key constants, flag type verification
 
-### Data Layer (34/34 key files)
+### Data Layer (35/35 key files)
 - CloudGenAiClient (11), CloudQuizClient (12), AzureVoiceConfig (18)
 - ContentCleaner (17), QuizParser (11), QuizGenerationRepositoryImpl (20)
 - CacheInterceptor (10), FirebaseTranslationRepository (8)

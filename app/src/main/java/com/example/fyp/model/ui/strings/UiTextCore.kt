@@ -795,6 +795,17 @@ enum class UiTextKey {
     SettingsUsernameCooldownMessageHours,
     SettingsUsernameConfirmTitle,
     SettingsUsernameConfirmMessage,
+
+    // --- OCR Settings ---
+    OcrSettingsTitle,
+    OcrSettingsDesc,
+    OcrSettingsQuickLink,
+    OcrSettingsRefreshing,
+    OcrSettingsInfo,
+    OcrModelDownloaded,
+    OcrModelDownloading,
+    OcrModelNotDownloaded,
+    OcrModelDownloadButton,
 }
 
 // Core Ui Texts list

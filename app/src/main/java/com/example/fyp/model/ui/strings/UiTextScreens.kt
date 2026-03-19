@@ -1655,4 +1655,24 @@ val ScreenUiTexts: List<String> = listOf(
     "Confirm Username Change",
     // SettingsUsernameConfirmMessage
     "Changing your username will start a 30-day cooldown before you can change it again. Continue?",
+
+    // --- OCR Settings ---
+    // OcrSettingsTitle
+    "OCR Settings",
+    // OcrSettingsDesc
+    "The app includes bundled OCR models for text recognition from images. All models work offline for reliable performance.",
+    // OcrSettingsQuickLink
+    "OCR Models",
+    // OcrSettingsRefreshing
+    "Checking model status...",
+    // OcrSettingsInfo
+    "All OCR models are bundled with the app. ABI splits reduce download size for your device architecture.",
+    // OcrModelDownloaded
+    "Bundled",
+    // OcrModelDownloading
+    "Loading...",
+    // OcrModelNotDownloaded
+    "Not available (~{size}MB)",
+    // OcrModelDownloadButton
+    "Download",
 )

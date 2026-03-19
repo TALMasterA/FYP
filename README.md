@@ -121,6 +121,7 @@ Firebase login is required.
 - 11 color palettes (1 free default + 10 unlockable at 10 coins each: Ocean, Sunset, Lavender, Rose, Mint, Crimson, Amber, Indigo, Emerald, Coral); palette settings accessible from the in-app Shop
 - Voice settings per language
 - Notification settings screen (push notifications + in-app badge toggles)
+- OCR settings screen showing bundled on-device OCR model status and estimated footprint
 
 **History & Organisation:**
 - Translation history (recent 30–60 records, configurable)
@@ -171,7 +172,7 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
         - `wordbank/` - Generated & custom word banks with progress bars
         - `favorites/` - Bookmarked translations and saved sessions (Records/Sessions tabs)
         - `friends/` - Friend management, chat, shared inbox, blocked users
-        - `settings/` - Settings, profile, shop, voice settings, notification settings
+        - `settings/` - Settings, profile, shop, voice settings, notification settings, OCR settings
         - `login/` - Login, registration, password reset
         - `help/` - Help, notes & cautions screen
         - `onboarding/` - First-launch 3-step welcome screen
@@ -305,7 +306,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (204 test files, 2,639 tests)
+# Run all unit tests (206 test files, 2,668 tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -350,7 +351,7 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **Android — 204 test files, 2,639 unit tests** (from `app/build/test-results/testDebugUnitTest`)
+- **Android — 206 test files, 2,668 unit tests** (from `app/build/test-results/testDebugUnitTest`)
 - **Backend — 5 test files, 79 tests** covering Cloud Functions logic
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:

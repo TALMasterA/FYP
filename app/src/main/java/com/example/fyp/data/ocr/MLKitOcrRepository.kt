@@ -3,6 +3,7 @@ package com.example.fyp.data.ocr
 import android.content.Context
 import android.net.Uri
 import com.example.fyp.model.OcrResult
+import com.example.fyp.model.OcrScript
 import com.example.fyp.model.TextBlock
 import com.example.fyp.utils.ErrorMessageMapper
 import com.google.mlkit.vision.common.InputImage
@@ -21,7 +22,7 @@ import kotlin.coroutines.resume
 
 /**
  * Repository for ML Kit text recognition (OCR).
- * Uses on-device processing for privacy and speed.
+ * Uses on-device bundled models for privacy and speed.
  *
  * Supports multiple scripts:
  * - Latin (English, European languages)
@@ -30,6 +31,7 @@ import kotlin.coroutines.resume
  * - Korean (Hangul)
  *
  * The appropriate recognizer is automatically selected based on the language code.
+ * All models are bundled with the app for reliable offline operation.
  */
 @Singleton
 class MLKitOcrRepository @Inject constructor(
@@ -57,6 +59,18 @@ class MLKitOcrRepository @Inject constructor(
     }
 
     /**
+     * Get the script required for a language code.
+     */
+    fun getScriptForLanguage(languageCode: String?): OcrScript {
+        return OcrScript.fromLanguageCode(languageCode)
+    }
+
+    /**
+     * Get list of all supported OCR scripts with their info.
+     */
+    fun getSupportedScripts(): List<OcrScript> = OcrScript.entries
+
+    /**
      * Recognize text from an image URI.
      * Automatically selects the appropriate text recognizer based on language code.
      *
@@ -67,7 +81,7 @@ class MLKitOcrRepository @Inject constructor(
     suspend fun recognizeText(uri: Uri, languageCode: String? = null): OcrResult = withContext(Dispatchers.Default) {
         try {
             val image = InputImage.fromFilePath(context, uri)
-            
+
             val recognizer = when (languageCode?.lowercase()?.take(LANGUAGE_PREFIX_LENGTH)) {
                 "zh" -> chineseRecognizer
                 "ja" -> japaneseRecognizer
@@ -85,7 +99,7 @@ class MLKitOcrRepository @Inject constructor(
                                 language = block.recognizedLanguage
                             )
                         }
-                        
+
                         val result = if (visionText.text.isNotBlank()) {
                             OcrResult.Success(
                                 text = visionText.text.trim(),
@@ -94,14 +108,14 @@ class MLKitOcrRepository @Inject constructor(
                         } else {
                             OcrResult.Error("No text detected in image")
                         }
-                        
+
                         continuation.resume(result)
                     }
                     .addOnFailureListener { exception ->
                         val errorMessage = ErrorMessageMapper.mapOcrError(exception.message ?: "OCR processing failed")
                         continuation.resume(OcrResult.Error(errorMessage))
                     }
-                
+
                 continuation.invokeOnCancellation {
                     // Cleanup if needed
                 }
@@ -117,15 +131,9 @@ class MLKitOcrRepository @Inject constructor(
      * Closes all text recognizer instances to free memory.
      */
     fun close() {
-        if (latinRecognizer != null) latinRecognizer.close()
-        // Lazy-initialized instances need checking if they were initialized,
-        // but Kotlin lazy properties don't expose 'isInitialized' easily without reflection
-        // or keeping a separate flag. For simplicity in Singleton we can just close them if we track them.
-        // However, standard ML Kit clients auto-close or are lightweight enough if app is killed.
-        // But for correctness:
-        try { latinRecognizer.close() } catch(e: Exception) {}
-        try { chineseRecognizer.close() } catch(e: Exception) {}
-        try { japaneseRecognizer.close() } catch(e: Exception) {}
-        try { koreanRecognizer.close() } catch(e: Exception) {}
+        try { latinRecognizer.close() } catch (_: Exception) {}
+        try { chineseRecognizer.close() } catch (_: Exception) {}
+        try { japaneseRecognizer.close() } catch (_: Exception) {}
+        try { koreanRecognizer.close() } catch (_: Exception) {}
     }
 }

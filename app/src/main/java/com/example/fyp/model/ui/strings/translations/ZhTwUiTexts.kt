@@ -875,4 +875,15 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameCooldownMessageHours to "用戶名每 30 天只能變更一次。請在 {hours} 小時後再試。",
     UiTextKey.SettingsUsernameConfirmTitle to "確認變更用戶名",
     UiTextKey.SettingsUsernameConfirmMessage to "變更用戶名後，需等待 30 天才能再次變更。是否繼續？",
+
+    // OCR Settings
+    UiTextKey.OcrSettingsTitle to "OCR 設定",
+    UiTextKey.OcrSettingsDesc to "此應用程式包含內建的 OCR 模型，用於從圖片中辨識文字。所有模型皆可離線運作，效能可靠。",
+    UiTextKey.OcrSettingsQuickLink to "OCR 模型",
+    UiTextKey.OcrSettingsRefreshing to "正在檢查模型狀態...",
+    UiTextKey.OcrSettingsInfo to "所有 OCR 模型皆已內建於應用程式中。ABI 分割會依據您的裝置架構減少下載大小。",
+    UiTextKey.OcrModelDownloaded to "已內建",
+    UiTextKey.OcrModelDownloading to "載入中...",
+    UiTextKey.OcrModelNotDownloaded to "未提供 (~{size}MB)",
+    UiTextKey.OcrModelDownloadButton to "下載",
 )
