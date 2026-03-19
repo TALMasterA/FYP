@@ -11,7 +11,9 @@ import com.example.fyp.model.friends.MessageType
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -200,18 +202,22 @@ class FirestoreChatRepository @Inject constructor(
                         "unreadCount.${toUserId.value}" to FieldValue.increment(1)
                     )
                 ).await()
-            } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
-                // NOT_FOUND: Document doesn't exist yet (first message) — create it
-                android.util.Log.d("ChatRepository", "Chat metadata not found, creating: chatId=$chatId (${e.code})")
-                metaRef.set(
-                    mapOf(
-                        "chatId" to chatId,
-                        "participants" to listOf(fromUserId.value, toUserId.value),
-                        "lastMessageContent" to lastMessageContent,
-                        "lastMessageAt" to now,
-                        "unreadCount" to mapOf(toUserId.value to 1)
-                    )
-                ).await()
+            } catch (e: FirebaseFirestoreException) {
+                if (e.code == FirebaseFirestoreException.Code.NOT_FOUND) {
+                    // NOT_FOUND: Document doesn't exist yet (first message) — create it
+                    AppLogger.d("ChatRepository", "Chat metadata not found, creating: chatId=$chatId")
+                    metaRef.set(
+                        mapOf(
+                            "chatId" to chatId,
+                            "participants" to listOf(fromUserId.value, toUserId.value),
+                            "lastMessageContent" to lastMessageContent,
+                            "lastMessageAt" to now,
+                            "unreadCount" to mapOf(toUserId.value to 1)
+                        )
+                    ).await()
+                } else {
+                    throw e
+                }
             }
 
             // ── 2. User-level unread counters (notification badge) ──
@@ -224,21 +230,25 @@ class FirestoreChatRepository @Inject constructor(
                         "unreadPerFriend.${fromUserId.value}" to FieldValue.increment(1)
                     )
                 ).await()
-            } catch (e: com.google.firebase.firestore.FirebaseFirestoreException) {
-                // NOT_FOUND: User document doesn't exist — create with initial counters
-                android.util.Log.d("ChatRepository", "User doc not found, creating for receiver=${toUserId.value} (${e.code})")
-                receiverDocRef.set(
-                    mapOf(
-                        "totalUnreadMessages" to 1,
-                        "unreadPerFriend" to mapOf(fromUserId.value to 1)
-                    ),
-                    com.google.firebase.firestore.SetOptions.merge()
-                ).await()
+            } catch (e: FirebaseFirestoreException) {
+                if (e.code == FirebaseFirestoreException.Code.NOT_FOUND) {
+                    // NOT_FOUND: User document doesn't exist — create with initial counters
+                    AppLogger.d("ChatRepository", "User doc not found, creating for receiver=${toUserId.value}")
+                    receiverDocRef.set(
+                        mapOf(
+                            "totalUnreadMessages" to 1,
+                            "unreadPerFriend" to mapOf(fromUserId.value to 1)
+                        ),
+                        SetOptions.merge()
+                    ).await()
+                } else {
+                    throw e
+                }
             }
 
-            android.util.Log.d("ChatRepository", "Updated chat metadata: chatId=$chatId, receiver=${toUserId.value}, sender=${fromUserId.value}")
+            AppLogger.d("ChatRepository", "Updated chat metadata: chatId=$chatId, receiver=${toUserId.value}, sender=${fromUserId.value}")
         } catch (e: Exception) {
-            android.util.Log.e("ChatRepository", "Failed to update chat metadata", e)
+            AppLogger.e("ChatRepository", "Failed to update chat metadata", e)
             // Non-fatal: message is still saved; counter will re-sync on next markRead
         }
     }
@@ -278,7 +288,7 @@ class FirestoreChatRepository @Inject constructor(
         val unreadMap = metaDoc.get("unreadCount") as? Map<String, Any>
         val chatUnread = (unreadMap?.get(userId.value) as? Number)?.toInt() ?: 0
 
-        android.util.Log.d("ChatRepository", "Marking messages as read: chatId=$chatId, userId=${userId.value}, unreadCount=$chatUnread")
+        AppLogger.d("ChatRepository", "Marking messages as read: chatId=$chatId, userId=${userId.value}, unreadCount=$chatUnread")
 
         if (chatUnread > 0) {
             // Read user document to get current totalUnreadMessages
@@ -292,7 +302,7 @@ class FirestoreChatRepository @Inject constructor(
             val participants = metaDoc.get("participants") as? List<*>
             val friendId = participants?.firstOrNull { it != userId.value }?.toString()
 
-            android.util.Log.d("ChatRepository", "Marking read: chatUnread=$chatUnread, currentTotal=$currentTotal, newTotal=$newTotal, friendId=$friendId, docExists=${userDoc.exists()}")
+            AppLogger.d("ChatRepository", "Marking read: chatUnread=$chatUnread, currentTotal=$currentTotal, newTotal=$newTotal, friendId=$friendId, docExists=${userDoc.exists()}")
 
             val batch = db.batch()
             // Reset per-chat counter using DOT-NOTATION to preserve other user's count
@@ -305,7 +315,7 @@ class FirestoreChatRepository @Inject constructor(
             if (friendId != null) {
                 // DOT-NOTATION: delete this friend's entry to trigger listener update, preserves others
                 userUpdates["unreadPerFriend.$friendId"] = FieldValue.delete()
-                android.util.Log.d("ChatRepository", "Clearing unread for friend: $friendId")
+                AppLogger.d("ChatRepository", "Clearing unread for friend: $friendId")
             }
 
             // Use set with merge if document doesn't exist, otherwise update
@@ -313,16 +323,16 @@ class FirestoreChatRepository @Inject constructor(
                 batch.update(userDocRef, userUpdates)
             } else {
                 // Document doesn't exist yet - create it with set/merge
-                batch.set(userDocRef, userUpdates, com.google.firebase.firestore.SetOptions.merge())
+                batch.set(userDocRef, userUpdates, SetOptions.merge())
             }
 
             batch.commit().await()
-            android.util.Log.d("ChatRepository", "Messages marked as read successfully")
+            AppLogger.d("ChatRepository", "Messages marked as read successfully")
         }
 
         Result.success(Unit)
     } catch (e: Exception) {
-        android.util.Log.e("ChatRepository", "Failed to mark messages as read", e)
+        AppLogger.e("ChatRepository", "Failed to mark messages as read", e)
         Result.failure(e)
     }
 
@@ -420,22 +430,22 @@ class FirestoreChatRepository @Inject constructor(
      * Fires only when totalUnreadMessages changes — minimal bandwidth.
      */
     override fun observeTotalUnreadCount(userId: UserId): Flow<Int> = callbackFlow {
-        android.util.Log.d("ChatRepository", "Setting up totalUnreadCount listener for user: ${userId.value}")
+        AppLogger.d("ChatRepository", "Setting up totalUnreadCount listener for user: ${userId.value}")
         val listener = db.collection("users")
             .document(userId.value)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    android.util.Log.e("ChatRepository", "Error in totalUnreadCount listener", error)
+                    AppLogger.e("ChatRepository", "Error in totalUnreadCount listener", error)
                     trySend(0)
                     return@addSnapshotListener
                 }
                 val exists = snapshot?.exists() ?: false
                 val count = (snapshot?.getLong("totalUnreadMessages") ?: 0L).toInt().coerceAtLeast(0)
-                android.util.Log.d("ChatRepository", "totalUnreadCount listener fired: exists=$exists, count=$count, userId=${userId.value}")
+                AppLogger.d("ChatRepository", "totalUnreadCount listener fired: exists=$exists, count=$count, userId=${userId.value}")
                 trySend(count)
             }
         awaitClose {
-            android.util.Log.d("ChatRepository", "Closing totalUnreadCount listener for user: ${userId.value}")
+            AppLogger.d("ChatRepository", "Closing totalUnreadCount listener for user: ${userId.value}")
             listener.remove()
         }
     }
@@ -447,12 +457,12 @@ class FirestoreChatRepository @Inject constructor(
      */
     @Suppress("UNCHECKED_CAST")
     override fun observeUnreadPerFriend(userId: UserId): Flow<Map<String, Int>> = callbackFlow {
-        android.util.Log.d("ChatRepository", "Setting up unreadPerFriend listener for user: ${userId.value}")
+        AppLogger.d("ChatRepository", "Setting up unreadPerFriend listener for user: ${userId.value}")
         val listener = db.collection("users")
             .document(userId.value)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    android.util.Log.e("ChatRepository", "Error in unreadPerFriend listener", error)
+                    AppLogger.e("ChatRepository", "Error in unreadPerFriend listener", error)
                     trySend(emptyMap())
                     return@addSnapshotListener
                 }
@@ -460,11 +470,11 @@ class FirestoreChatRepository @Inject constructor(
                 val raw = snapshot?.get("unreadPerFriend") as? Map<String, Any> ?: emptyMap()
                 val mapped = raw.mapValues { (_, v) -> (v as? Number)?.toInt()?.coerceAtLeast(0) ?: 0 }
                     .filter { it.value > 0 }
-                android.util.Log.d("ChatRepository", "unreadPerFriend listener fired: exists=$exists, mapped=$mapped, userId=${userId.value}")
+                AppLogger.d("ChatRepository", "unreadPerFriend listener fired: exists=$exists, mapped=$mapped, userId=${userId.value}")
                 trySend(mapped)
             }
         awaitClose {
-            android.util.Log.d("ChatRepository", "Closing unreadPerFriend listener for user: ${userId.value}")
+            AppLogger.d("ChatRepository", "Closing unreadPerFriend listener for user: ${userId.value}")
             listener.remove()
         }
     }

@@ -21,6 +21,7 @@ import {
   safeParseJson,
   toTranslatorCode,
   buildTranslateUrl,
+  validateGenAiConfig,
 } from "../helpers.js";
 
 // ── requireAuth ──────────────────────────────────────────────────────
@@ -156,5 +157,57 @@ describe("buildTranslateUrl", () => {
     const url = buildTranslateUrl({to: "zh-HK", from: "zh-CN"});
     expect(url).toContain("to=yue");
     expect(url).toContain("from=zh-Hans");
+  });
+});
+
+// ── validateGenAiConfig ─────────────────────────────────────────────
+
+describe("validateGenAiConfig", () => {
+  const validConfig = {
+    baseUrl: "https://example.openai.azure.com",
+    apiVersion: "2024-02-15-preview",
+    apiKey: "test-key-12345",
+  };
+
+  it("returns trimmed config for valid values", () => {
+    const result = validateGenAiConfig({
+      baseUrl: `  ${validConfig.baseUrl}  `,
+      apiVersion: `  ${validConfig.apiVersion}  `,
+      apiKey: `  ${validConfig.apiKey}  `,
+    });
+
+    expect(result).toEqual(validConfig);
+  });
+
+  it("throws failed-precondition when any config value is missing", () => {
+    expect(() =>
+      validateGenAiConfig({...validConfig, baseUrl: ""})
+    ).toThrow("AI service is not configured");
+
+    expect(() =>
+      validateGenAiConfig({...validConfig, apiVersion: ""})
+    ).toThrow("AI service is not configured");
+
+    expect(() =>
+      validateGenAiConfig({...validConfig, apiKey: ""})
+    ).toThrow("AI service is not configured");
+  });
+
+  it("throws failed-precondition for invalid base URL", () => {
+    expect(() =>
+      validateGenAiConfig({...validConfig, baseUrl: "not-a-url"})
+    ).toThrow("AI service URL is misconfigured");
+  });
+
+  it("throws failed-precondition for non-https URL", () => {
+    expect(() =>
+      validateGenAiConfig({...validConfig, baseUrl: "http://example.com"})
+    ).toThrow("AI service URL must use HTTPS");
+  });
+
+  it("throws failed-precondition for invalid API version", () => {
+    expect(() =>
+      validateGenAiConfig({...validConfig, apiVersion: "v1"})
+    ).toThrow("AI service API version is misconfigured");
   });
 });

@@ -10,6 +10,7 @@ import {
   requireAuth,
   requireString,
   enforceRateLimit,
+  validateGenAiConfig,
   GENAI_BASE_URL,
   GENAI_API_VERSION,
   GENAI_API_KEY,
@@ -34,22 +35,27 @@ export const generateLearningContent = onCall(
 
       // No max-length restriction needed — the prompt is system-generated.
 
-      const baseUrl = GENAI_BASE_URL.value();
-      const apiVersion = GENAI_API_VERSION.value();
-      const apiKey = GENAI_API_KEY.value();
-
-      // IMPORTANT: Validate secrets are configured before using them.
-      if (!baseUrl || !apiVersion || !apiKey) {
-        logger.error("GenAI secrets not configured", {
-          hasBaseUrl: !!baseUrl,
-          hasApiVersion: !!apiVersion,
-          hasApiKey: !!apiKey,
-          uid,
+      let baseUrl: string;
+      let apiVersion: string;
+      let apiKey: string;
+      try {
+        const config = validateGenAiConfig({
+          baseUrl: GENAI_BASE_URL.value(),
+          apiVersion: GENAI_API_VERSION.value(),
+          apiKey: GENAI_API_KEY.value(),
         });
-        throw new HttpsError(
-          "failed-precondition",
-          "AI service is not configured. Please contact support."
-        );
+        baseUrl = config.baseUrl;
+        apiVersion = config.apiVersion;
+        apiKey = config.apiKey;
+      } catch (configError: any) {
+        logger.error("GenAI configuration validation failed", {
+          uid,
+          hasBaseUrl: !!GENAI_BASE_URL.value(),
+          hasApiVersion: !!GENAI_API_VERSION.value(),
+          hasApiKey: !!GENAI_API_KEY.value(),
+          message: configError?.message,
+        });
+        throw configError;
       }
 
       let url: URL;

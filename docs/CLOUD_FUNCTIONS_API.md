@@ -1,6 +1,7 @@
 # Cloud Functions API Reference
 
 Callable functions are Firebase Cloud Functions v2 (`onCall`) and currently use the platform default region (`us-central1`) because no explicit callable region is configured in code.
+The backend also exposes an HTTP readiness endpoint (`onRequest`) for deployment checks.
 Notification triggers and scheduled jobs are explicitly configured to run in `us-central1`.
 
 ---
@@ -112,6 +113,52 @@ Generates AI-powered learning content via Azure OpenAI.
 - `not-found` — Deployment not found
 - `unavailable` — Service temporarily unavailable
 
+**Operational Notes:**
+- GenAI config is validated before request execution (required values, HTTPS base URL, and API version format).
+- Rate-limit checks are fail-closed for Firestore read errors and malformed stored rate-limit payloads.
+
+---
+
+## Health & Readiness
+
+### `healthcheck` (HTTP)
+Readiness endpoint for backend configuration validation.
+
+**Type:** HTTP function (`onRequest`)
+**Method:** `GET`
+**Auth:** Not required
+
+**Success Response (200):**
+```json
+{
+  "status": "ok",
+  "timestamp": "2026-03-20T12:34:56.000Z",
+  "checks": {
+    "genAiConfig": "ok"
+  }
+}
+```
+
+**Failure Response (500):**
+```json
+{
+  "status": "error",
+  "timestamp": "2026-03-20T12:34:56.000Z",
+  "checks": {
+    "genAiConfig": "error"
+  },
+  "message": "Service is misconfigured"
+}
+```
+
+**Invalid Method (405):**
+```json
+{
+  "status": "error",
+  "message": "Method not allowed"
+}
+```
+
 ---
 
 ## Coins & Shop
@@ -124,7 +171,7 @@ Awards coins for a quiz attempt with server-side anti-cheat verification.
 | Field                            | Type   | Required | Description                     |
 |----------------------------------|--------|----------|---------------------------------|
 | `attemptId`                      | string | yes      | Unique attempt identifier       |
-| `primaryLanguageCode`            | string | yes      | Source language (e.g. "en")     |
+| `primaryLanguageCode`            | string | yes      | Source language (`xx` or `xx-XX`, e.g. `en`, `en-US`) |
 | `targetLanguageCode`             | string | yes      | Target language (e.g. "zh-HK") |
 | `generatedHistoryCountAtGenerate`| number | yes      | History count at quiz generation |
 | `totalScore`                     | number | yes      | Score (max 50)                  |

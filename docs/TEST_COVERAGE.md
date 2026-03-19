@@ -21,7 +21,8 @@ The project maintained by GitHub Actions workflows:
     *   Triggers on `push` and `pull_request` to `main`, and manual `workflow_dispatch`.
     *   **Android Unit Tests**: Sets up JDK 17, caches Gradle, injects `google-services.json` from secrets, runs unit tests (`testDebugUnitTest`).
     *   **Debug APK Build**: After unit tests pass, builds and uploads the debug APK as a CI artifact (`assembleDebug`).
-    *   **Backend**: Sets up Node.js 24, installs dependencies, runs linting (ESLint), compiles TypeScript (`build`), and runs Jest tests (`npm test`).
+    *   **Backend**: Sets up Node.js 24, installs dependencies, runs linting (ESLint), compiles TypeScript (`build`), and runs Jest coverage (`npm run test:coverage`).
+    *   **Backend Coverage Artifact**: Uploads `fyp-backend/functions/coverage` for each successful backend CI run.
 
 2.  **CodeQL (`codeql.yml`)**:
     *   Runs detailed semantic code analysis for Java/Kotlin (Android) and JavaScript/TypeScript (Backend) on a weekly schedule and on push/PRs.
@@ -181,12 +182,30 @@ These tests prevent regressions in critical invariants:
 
 ## Backend Tests (Firebase Cloud Functions)
 
-_5 test files, 79 tests_
+_7 test files, 96 tests_
 
 | File | Tests | What it covers |
 |------|-------|----------------|
-| `helpers.test.ts` | 24 | `requireAuth`, `requireString`, `optionalString`, `safeParseJson`, `toTranslatorCode`, `buildTranslateUrl` |
+| `helpers.test.ts` | 29 | `requireAuth`, `requireString`, `optionalString`, `safeParseJson`, `toTranslatorCode`, `buildTranslateUrl`, `validateGenAiConfig` |
 | `logger.test.ts` | 6 | Structured JSON logger output format |
 | `translation.test.ts` | 15 | `getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage` — auth guards, error paths, success paths |
-| `coins.test.ts` | 22 | `awardQuizCoins` (anti-cheat rules, version match, increment check), `spendCoins` (history expansion, palette unlock) |
+| `coins.test.ts` | 26 | `awardQuizCoins` (anti-cheat rules, strict language-code validation, version match, increment check), `spendCoins` (history expansion, palette unlock) |
 | `notifications.test.ts` | 12 | FCM triggers: missing data, status guards, spam detection (link flooding), friend request rate limiting |
+| `health.test.ts` | 3 | `healthcheck` readiness endpoint (200 valid config, 500 invalid config, 405 method guard) |
+| `rate-limit.test.ts` | 5 | `enforceRateLimit` fail-closed behavior for read/write failures and malformed stored payload |
+
+### Backend Coverage Gate (CI-enforced)
+
+- Command: `npm run test:coverage`
+- Enforced in `fyp-backend/functions/jest.config.js` via `coverageThreshold.global`:
+  - statements: 50
+  - branches: 45
+  - functions: 50
+  - lines: 50
+
+### Latest Backend Coverage Baseline
+
+- Statements: 53.55%
+- Branches: 48.92%
+- Functions: 54.09%
+- Lines: 55.23%

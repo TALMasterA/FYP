@@ -36,3 +36,6 @@ export {
 
 // ── Scheduled Maintenance ────────────────────────────────────────────
 export {pruneStaleTokens, pruneStaleRateLimits, repairFriendsData} from "./maintenance.js";
+
+// ── Health Checks ─────────────────────────────────────────────────────
+export {healthcheck} from "./health.js";

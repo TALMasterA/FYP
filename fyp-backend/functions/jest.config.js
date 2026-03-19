@@ -12,4 +12,12 @@ module.exports = {
       diagnostics: {ignoreCodes: [151002]},
     }],
   },
+  coverageThreshold: {
+    global: {
+      statements: 50,
+      branches: 45,
+      functions: 50,
+      lines: 50,
+    },
+  },
 };

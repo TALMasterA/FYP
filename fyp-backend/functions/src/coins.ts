@@ -64,12 +64,12 @@ export const awardQuizCoins = onCall(
       );
     }
 
-    // Validate language code format: only letters, digits, and hyphens (e.g. "en-US", "zh-HK").
-    const LANG_CODE_RE = /^[a-zA-Z0-9-]{1,20}$/;
+    // Validate language code format to match app model constraints: xx or xx-XX.
+    const LANG_CODE_RE = /^[a-z]{2}(-[A-Z]{2})?$/;
     if (!LANG_CODE_RE.test(primaryCode) || !LANG_CODE_RE.test(targetCode)) {
       throw new HttpsError(
         "invalid-argument",
-        "Language codes must be 1–20 characters long and contain only letters, digits, and hyphens"
+        "Language codes must be in format xx or xx-XX (for example en or en-US)"
       );
     }
 

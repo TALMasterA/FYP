@@ -106,6 +106,52 @@ export function buildTranslateUrl(params: { to: string; from?: string }): string
   return url.toString();
 }
 
+/**
+ * Validate Azure OpenAI (GenAI) configuration loaded from secrets.
+ */
+export function validateGenAiConfig(config: {
+  baseUrl: string;
+  apiVersion: string;
+  apiKey: string;
+}): { baseUrl: string; apiVersion: string; apiKey: string } {
+  const baseUrl = config.baseUrl.trim();
+  const apiVersion = config.apiVersion.trim();
+  const apiKey = config.apiKey.trim();
+
+  if (!baseUrl || !apiVersion || !apiKey) {
+    throw new HttpsError(
+      "failed-precondition",
+      "AI service is not configured. Please contact support."
+    );
+  }
+
+  let parsedBaseUrl: URL;
+  try {
+    parsedBaseUrl = new URL(baseUrl);
+  } catch {
+    throw new HttpsError(
+      "failed-precondition",
+      "AI service URL is misconfigured. Please contact support."
+    );
+  }
+
+  if (parsedBaseUrl.protocol !== "https:") {
+    throw new HttpsError(
+      "failed-precondition",
+      "AI service URL must use HTTPS. Please contact support."
+    );
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}(-preview)?$/.test(apiVersion)) {
+    throw new HttpsError(
+      "failed-precondition",
+      "AI service API version is misconfigured. Please contact support."
+    );
+  }
+
+  return {baseUrl, apiVersion, apiKey};
+}
+
 // ============ Rate Limiting ============
 
 export const RATE_LIMIT_MAX_REQUESTS = 10;
@@ -134,7 +180,15 @@ export async function enforceRateLimit(uid: string): Promise<void> {
 
   if (doc.exists) {
     const data = doc.data();
-    timestamps = (data?.timestamps ?? []) as number[];
+    const rawTimestamps = data?.timestamps;
+    if (rawTimestamps == null) {
+      timestamps = [];
+    } else if (!Array.isArray(rawTimestamps) || rawTimestamps.some((ts) => typeof ts !== "number" || !Number.isFinite(ts))) {
+      logger.error("enforceRateLimit: malformed timestamps payload", {uid});
+      throw new HttpsError("internal", "Rate limit data is invalid. Please try again.");
+    } else {
+      timestamps = rawTimestamps;
+    }
   }
 
   timestamps = timestamps.filter((ts: number) => ts > windowStart);

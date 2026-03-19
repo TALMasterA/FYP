@@ -108,6 +108,61 @@ describe("awardQuizCoins", () => {
     ).rejects.toThrow("Language codes must be");
   });
 
+  it("accepts valid two-letter language codes", async () => {
+    mockTxGet
+      .mockResolvedValueOnce({exists: false})
+      .mockResolvedValueOnce({exists: true, data: () => ({historyCountAtGenerate: 30})})
+      .mockResolvedValueOnce({exists: false})
+      .mockResolvedValueOnce({exists: true, data: () => ({coinTotal: 10, coinByLang: {}})});
+
+    const result = await awardHandler({
+      auth: {uid: "u1"},
+      data: {...validData, primaryLanguageCode: "ja", targetLanguageCode: "en"},
+    });
+
+    expect(result).toEqual({awarded: true, coinsAwarded: 8, newTotal: 18});
+  });
+
+  it("accepts valid region language codes", async () => {
+    mockTxGet
+      .mockResolvedValueOnce({exists: false})
+      .mockResolvedValueOnce({exists: true, data: () => ({historyCountAtGenerate: 30})})
+      .mockResolvedValueOnce({exists: false})
+      .mockResolvedValueOnce({exists: true, data: () => ({coinTotal: 10, coinByLang: {}})});
+
+    const result = await awardHandler({
+      auth: {uid: "u1"},
+      data: {...validData, primaryLanguageCode: "en-US", targetLanguageCode: "zh-HK"},
+    });
+
+    expect(result).toEqual({awarded: true, coinsAwarded: 8, newTotal: 18});
+  });
+
+  it("rejects lowercase region segment", async () => {
+    await expect(
+      awardHandler({
+        auth: {uid: "u1"},
+        data: {...validData, primaryLanguageCode: "en-us"},
+      })
+    ).rejects.toThrow("Language codes must be in format xx or xx-XX");
+  });
+
+  it("rejects invalid length and digit-containing language codes", async () => {
+    await expect(
+      awardHandler({
+        auth: {uid: "u1"},
+        data: {...validData, primaryLanguageCode: "e"},
+      })
+    ).rejects.toThrow("Language codes must be in format xx or xx-XX");
+
+    await expect(
+      awardHandler({
+        auth: {uid: "u1"},
+        data: {...validData, primaryLanguageCode: "e1"},
+      })
+    ).rejects.toThrow("Language codes must be in format xx or xx-XX");
+  });
+
   it("returns zero_score when totalScore is 0", async () => {
     const result = await awardHandler({
       auth: {uid: "u1"},

@@ -48,8 +48,8 @@ This project uses **GitHub Actions** for continuous integration and static analy
 1.  **CI (`ci.yml`)**:
     *   **Android Unit Tests**: Builds the debug APK and runs unit tests (`./gradlew testDebugUnitTest`).
     *   **Debug APK Build**: Triggered after unit tests pass.
-    *   **Backend**: Lints, builds, and tests Cloud Functions.
-    *   **Artifacts**: A fresh Debug APK is uploaded as an artifact on every successful Android unit test + build run.
+    *   **Backend**: Lints, builds, and runs Jest coverage for Cloud Functions (`npm run test:coverage`) with enforced minimum thresholds.
+    *   **Artifacts**: A fresh Debug APK and backend coverage output are uploaded as CI artifacts.
 
 2.  **CodeQL Analysis (`codeql.yml`)**:
     *   Performs semantic code analysis on Java/Kotlin and TypeScript files to detect security vulnerabilities and bugs.
@@ -252,7 +252,9 @@ Following the MVVM (Model–View–ViewModel) structure with Clean Architecture 
    ```
 5. Build: `npm run build`
 6. Run tests: `npm test`
-7. Deploy: `npm run deploy`
+7. Run tests with coverage (same command as CI): `npm run test:coverage`
+8. Optional readiness check after deploy: call `healthcheck` HTTP function with a GET request
+9. Deploy: `npm run deploy`
 
 See `docs/SECRETS_ROTATION.md` for the secrets rotation runbook.
 

@@ -32,7 +32,8 @@ db.document(path).update("unreadPerFriend.$friendId", count)
 // WRONG — overwrites entire unreadPerFriend map
 db.document(path).set(mapOf("unreadPerFriend" to mapOf(friendId to count)), SetOptions.merge())
 ```
-For document creation fallback: catch `FirebaseFirestoreException` (NOT_FOUND) and call `set()` with the full map.
+For document creation fallback: catch `FirebaseFirestoreException`, only fallback when `code == NOT_FOUND`, and call `set()` with the full map.
+For all other Firestore error codes, rethrow so permission/config/network problems are not silently masked.
 
 ---
 
