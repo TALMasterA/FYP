@@ -66,7 +66,6 @@ fun SettingsScreen(
     onOpenVoiceSettings: () -> Unit = {},
     onOpenFeedback: () -> Unit = {},
     onOpenNotificationSettings: () -> Unit = {},
-    onOpenOcrSettings: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -318,18 +317,6 @@ fun SettingsScreen(
                         ) {
                             Text(
                                 text = t(UiTextKey.NotifSettingsQuickLink),
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
-                        }
-
-                        // OCR Settings button (available to all users)
-                        TextButton(
-                            onClick = onOpenOcrSettings,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = t(UiTextKey.OcrSettingsQuickLink),
                                 style = MaterialTheme.typography.bodyLarge,
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )

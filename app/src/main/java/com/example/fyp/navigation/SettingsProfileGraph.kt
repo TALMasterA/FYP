@@ -9,7 +9,6 @@ import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.screens.favorites.FavoritesScreen
 import com.example.fyp.screens.feedback.FeedbackScreen
 import com.example.fyp.screens.settings.NotificationSettingsScreen
-import com.example.fyp.screens.settings.OcrSettingsScreen
 import com.example.fyp.screens.settings.ProfileScreen
 import com.example.fyp.screens.settings.SettingsScreen
 import com.example.fyp.screens.settings.SettingsViewModel
@@ -42,7 +41,6 @@ internal fun NavGraphBuilder.settingsProfileGraph(
             onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) { launchSingleTop = true } },
             onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) { launchSingleTop = true } },
             onOpenNotificationSettings = { navController.navigate(AppScreen.NotificationSettings.route) { launchSingleTop = true } },
-            onOpenOcrSettings = { navController.navigate(AppScreen.OcrSettings.route) { launchSingleTop = true } },
             viewModel = settingsViewModel
         )
     }
@@ -109,13 +107,6 @@ internal fun NavGraphBuilder.settingsProfileGraph(
             appLanguageState = appLanguageState,
             onBack = { navController.popBackStack() },
             viewModel = settingsViewModel
-        )
-    }
-
-    composable(AppScreen.OcrSettings.route) {
-        OcrSettingsScreen(
-            appLanguageState = appLanguageState,
-            onBack = { navController.popBackStack() }
         )
     }
 }

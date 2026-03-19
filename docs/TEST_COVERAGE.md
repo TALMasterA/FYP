@@ -1,14 +1,14 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-19_
+_Last updated: 2026-03-20_
 
 ## Summary
 
 | Metric                    | Count   |
 |---------------------------|---------|
-| Source files               | 255     |
-| Test files                 | 206     |
-| Total `@Test` methods      | 2,668   |
+| Source files               | 252     |
+| Test files                 | 205     |
+| Total `@Test` methods      | 2,664   |
 | Key logic files            | ~140    |
 | Key logic files tested     | ~140    |
 | Key logic coverage         | ~100%   |
@@ -31,7 +31,7 @@ The project maintained by GitHub Actions workflows:
 
 | Layer                     | Key Files | Tested | Coverage |
 |---------------------------|-----------|--------|----------|
-| **screens/ (ViewModels)** | 21        | 21     | 100%     |
+| **screens/ (ViewModels)** | 20        | 20     | 100%     |
 | **domain/ (Use Cases)**   | 40        | 40     | 100%     |
 | **model/ (Data Models)**  | 24        | 24     | 100%     |
 | **core/ (Utilities)**     | 12        | 12     | 100%     |
@@ -39,7 +39,7 @@ The project maintained by GitHub Actions workflows:
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 35        | 35     | 100%     |
 
-## What Is Tested (206 files, 2,668 tests)
+## What Is Tested (205 files, 2,664 tests)
 
 ### All ViewModels & Controllers (21/21)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
@@ -50,7 +50,6 @@ The project maintained by GitHub Actions workflows:
 - SpeechViewModel (13), WordBankViewModel (15), CustomWordsViewModel (19)
 - ContinuousConversationController (14), TtsController (12)
 - **NEW:** LearningScreenLogicTest (18): cluster filtering, generation button state, quiz regeneration eligibility
-- **NEW:** OcrSettingsViewModelTest (4): model list initialization, total size calculation
 
 ### All Domain Use Cases (40/40)
 - Friends: 20 use cases — individual + integration tests (51 extra)

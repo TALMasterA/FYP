@@ -329,8 +329,6 @@ FYP/
 │       │       │   ├── settings/
 │       │       │   │   ├── ColorPaletteSelector.kt
 │       │       │   │   ├── NotificationSettingsScreen.kt
-│       │       │   │   ├── OcrSettingsScreen.kt
-│       │       │   │   ├── OcrSettingsViewModel.kt
 │       │       │   │   ├── ProfileScreen.kt
 │       │       │   │   ├── ProfileViewModel.kt
 │       │       │   │   ├── SettingsScreen.kt
@@ -608,7 +606,6 @@ FYP/
 │       │   │   │   └── OnboardingLogicTest.kt             ← First-launch + version re-show tests
 │       │   │   ├── settings/
 │       │   │   │   ├── HistoryLimitExpansionTest.kt
-│       │   │   │   ├── OcrSettingsViewModelTest.kt
 │       │   │   │   ├── ProfileViewModelTest.kt
 │       │   │   │   ├── SettingsLogicTest.kt
 │       │   │   │   ├── SettingsViewModelTest.kt
