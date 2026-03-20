@@ -61,6 +61,10 @@ Once verified, go back to Azure Portal and regenerate Key 1 (which was the old a
 3. Deploy: `npm run deploy`.
 4. Check logs for any unauthorized usage during the exposure window.
 
+## Rotation Log
+
+- 2026-03-20 — Rotated: `AZURE_SPEECH_KEY`, `AZURE_TRANSLATOR_KEY`, `GENAI_API_KEY` (rotated by operator)
+
 ## Notes
 
 - Region secrets (`AZURE_SPEECH_REGION`, `AZURE_TRANSLATOR_REGION`) rarely need rotation — only update if migrating to a different Azure region.
