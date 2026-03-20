@@ -15,7 +15,7 @@ import com.example.fyp.model.user.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -47,7 +47,7 @@ import org.mockito.kotlin.*
 @OptIn(ExperimentalCoroutinesApi::class)
 class LearningViewModelTest {
 
-    private val testDispatcher = UnconfinedTestDispatcher()
+    private val testDispatcher = StandardTestDispatcher()
     private val authStateFlow = MutableStateFlow<AuthState>(AuthState.Loading)
     private val settingsFlow = MutableStateFlow(UserSettings())
     private val historyRecordsFlow = MutableStateFlow<List<TranslationRecord>>(emptyList())
@@ -90,6 +90,7 @@ class LearningViewModelTest {
 
     @After
     fun tearDown() {
+        testDispatcher.scheduler.advanceUntilIdle()
         Dispatchers.resetMain()
     }
 
@@ -108,9 +109,10 @@ class LearningViewModelTest {
     // ── Logout sets error ───────────────────────────────────────────
 
     @Test
-    fun `logout sets error not logged in`() = runTest {
+    fun `logout sets error not logged in`() = runTest(testDispatcher.scheduler) {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedOut
+        testDispatcher.scheduler.advanceUntilIdle()
 
         val state = vm.uiState.value
         assertFalse(state.isLoading)
@@ -120,9 +122,10 @@ class LearningViewModelTest {
     // ── Login starts observing ──────────────────────────────────────
 
     @Test
-    fun `login starts observing history`() = runTest {
+    fun `login starts observing history`() = runTest(testDispatcher.scheduler) {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
+        testDispatcher.scheduler.advanceUntilIdle()
 
         verify(sharedHistoryDataSource).startObserving("u1")
     }
@@ -130,7 +133,7 @@ class LearningViewModelTest {
     // ── generateFor rejected when count is 0 ────────────────────────
 
     @Test
-    fun `generateFor does nothing when countNow is 0`() = runTest {
+    fun `generateFor does nothing when countNow is 0`() = runTest(testDispatcher.scheduler) {
         languageCountsFlow.value = mapOf("ja" to 0)
 
         val vm = buildViewModel()
@@ -146,7 +149,7 @@ class LearningViewModelTest {
     // ── generateFor rejected when unchanged ─────────────────────────
 
     @Test
-    fun `generateFor rejected when lastCount equals countNow`() = runTest {
+    fun `generateFor rejected when lastCount equals countNow`() = runTest(testDispatcher.scheduler) {
         languageCountsFlow.value = mapOf("ja" to 10)
 
         // Mock batch metadata to return sheetCountByLanguage = 10 for "ja"
@@ -168,7 +171,7 @@ class LearningViewModelTest {
     // ── generateFor success ─────────────────────────────────────────
 
     @Test
-    fun `generateFor success updates state`() = runTest {
+    fun `generateFor success updates state`() = runTest(testDispatcher.scheduler) {
         languageCountsFlow.value = mapOf("ja" to 25)
         historyRecordsFlow.value = listOf(
             TranslationRecord(
@@ -203,7 +206,7 @@ class LearningViewModelTest {
     // ── generateFor failure ─────────────────────────────────────────
 
     @Test
-    fun `generateFor failure sets error`() = runTest {
+    fun `generateFor failure sets error`() = runTest(testDispatcher.scheduler) {
         languageCountsFlow.value = mapOf("ja" to 25)
         historyRecordsFlow.value = listOf(
             TranslationRecord(
@@ -237,7 +240,7 @@ class LearningViewModelTest {
     // ── generateQuizFor rejected when canRegenerateQuiz false ────────
 
     @Test
-    fun `generateQuizFor rejected when quiz count matches sheet count`() = runTest {
+    fun `generateQuizFor rejected when quiz count matches sheet count`() = runTest(testDispatcher.scheduler) {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
 
@@ -256,7 +259,7 @@ class LearningViewModelTest {
     // ── cancelGenerate resets state ─────────────────────────────────
 
     @Test
-    fun `cancelGenerate resets generatingLanguageCode`() = runTest {
+    fun `cancelGenerate resets generatingLanguageCode`() = runTest(testDispatcher.scheduler) {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
 
@@ -268,7 +271,7 @@ class LearningViewModelTest {
     // ── cancelQuizGenerate resets state ──────────────────────────────
 
     @Test
-    fun `cancelQuizGenerate resets generatingQuizLanguageCode`() = runTest {
+    fun `cancelQuizGenerate resets generatingQuizLanguageCode`() = runTest(testDispatcher.scheduler) {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
 
@@ -280,7 +283,7 @@ class LearningViewModelTest {
     // ── consumeSheetGenerationCompleted ──────────────────────────────
 
     @Test
-    fun `consumeSheetGenerationCompleted clears event`() = runTest {
+    fun `consumeSheetGenerationCompleted clears event`() = runTest(testDispatcher.scheduler) {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
 
@@ -292,7 +295,7 @@ class LearningViewModelTest {
     // ── consumeQuizGenerationCompleted ───────────────────────────────
 
     @Test
-    fun `consumeQuizGenerationCompleted clears event`() = runTest {
+    fun `consumeQuizGenerationCompleted clears event`() = runTest(testDispatcher.scheduler) {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
 
@@ -304,12 +307,14 @@ class LearningViewModelTest {
     // ── clearError ──────────────────────────────────────────────────
 
     @Test
-    fun `clearError clears error`() = runTest {
+    fun `clearError clears error`() = runTest(testDispatcher.scheduler) {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedOut
+        testDispatcher.scheduler.advanceUntilIdle()
         assertEquals("Not logged in", vm.uiState.value.error)
 
         authStateFlow.value = AuthState.LoggedIn(testUser)
+        testDispatcher.scheduler.advanceUntilIdle()
         vm.clearError()
 
         assertNull(vm.uiState.value.error)
@@ -318,7 +323,7 @@ class LearningViewModelTest {
     // ── Loading state during auth loading ───────────────────────────
 
     @Test
-    fun `loading state shows during auth loading`() = runTest {
+    fun `loading state shows during auth loading`() = runTest(testDispatcher.scheduler) {
         authStateFlow.value = AuthState.Loading
         val vm = buildViewModel()
 
@@ -328,15 +333,18 @@ class LearningViewModelTest {
     // ── Primary language change resets generation state ──────────────
 
     @Test
-    fun `primary language change resets sheet and quiz metadata`() = runTest {
+    fun `primary language change resets sheet and quiz metadata`() = runTest(testDispatcher.scheduler) {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
+        testDispatcher.scheduler.advanceUntilIdle()
 
         // Initial settings with en-US primary
         settingsFlow.value = UserSettings(primaryLanguageCode = "en-US")
+        testDispatcher.scheduler.advanceUntilIdle()
 
         // Change primary language
         settingsFlow.value = UserSettings(primaryLanguageCode = "ja")
+        testDispatcher.scheduler.advanceUntilIdle()
 
         val state = vm.uiState.value
         assertEquals("ja", state.primaryLanguageCode)
