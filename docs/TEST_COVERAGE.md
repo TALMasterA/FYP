@@ -182,7 +182,7 @@ These tests prevent regressions in critical invariants:
 
 ## Backend Tests (Firebase Cloud Functions)
 
-_7 test files, 96 tests_
+_9 test files, 122 tests_
 
 | File | Tests | What it covers |
 |------|-------|----------------|
@@ -193,6 +193,8 @@ _7 test files, 96 tests_
 | `notifications.test.ts` | 12 | FCM triggers: missing data, status guards, spam detection (link flooding), friend request rate limiting |
 | `health.test.ts` | 3 | `healthcheck` readiness endpoint (200 valid config, 500 invalid config, 405 method guard) |
 | `rate-limit.test.ts` | 5 | `enforceRateLimit` fail-closed behavior for read/write failures and malformed stored payload |
+| `learning.test.ts` | 17 | `generateLearningContent` callable: auth/input validation, rate-limit gate ordering, Azure OpenAI error mapping, response parsing |
+| `maintenance.test.ts` | 9 | Scheduled maintenance handlers: stale token/rate-limit pruning and friend data repair batch behavior |
 
 ### Backend Coverage Gate (CI-enforced)
 
@@ -205,7 +207,7 @@ _7 test files, 96 tests_
 
 ### Latest Backend Coverage Baseline
 
-- Statements: 53.55%
-- Branches: 48.92%
-- Functions: 54.09%
-- Lines: 55.23%
+- Statements: 72.03%
+- Branches: 59.68%
+- Functions: 63.93%
+- Lines: 73.47%
