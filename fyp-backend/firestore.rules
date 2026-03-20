@@ -104,8 +104,10 @@ service cloud.firestore {
     match /users/{userId}/shared_inbox/{itemId} {
       // Any authenticated user can send (create) a shared item to another user's inbox.
       // fromUserId in the document must match the authenticated sender.
+      // toUserId must match the inbox owner path to prevent recipient mismatch.
       allow create: if request.auth != null
-        && request.resource.data.fromUserId == request.auth.uid;
+        && request.resource.data.fromUserId == request.auth.uid
+        && request.resource.data.toUserId == userId;
 
       // Allow creating the content subcollection (e.g. for learning sheets).
       // The parent shared_inbox doc and content doc are written together in a batch,
@@ -341,7 +343,10 @@ service cloud.firestore {
          request.auth.uid in request.resource.data.participants) ||
         // Or infer from chatId pattern (for updates that don't include participants field)
         isParticipantFromChatId()
-      );
+      )
+      // Keep unreadCount map-typed when present.
+      && (!('unreadCount' in request.resource.data)
+          || request.resource.data.unreadCount is map);
     }
 
     // ============================================

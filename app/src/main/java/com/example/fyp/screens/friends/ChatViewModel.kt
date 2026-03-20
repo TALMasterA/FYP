@@ -28,6 +28,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -94,6 +95,10 @@ class ChatViewModel @Inject constructor(
     private val friendId: UserId
     private val friendUsername: String
 
+    private inline fun updateUiState(transform: (ChatUiState) -> ChatUiState) {
+        _uiState.update(transform)
+    }
+
     init {
         // Get navigation arguments
         friendId = UserId(checkNotNull(savedStateHandle.get<String>("friendId")))
@@ -102,10 +107,12 @@ class ChatViewModel @Inject constructor(
         // Restore draft message from SavedStateHandle (survives process death)
         val restoredDraft = savedStateHandle.get<String>("draft_message").orEmpty()
 
-        _uiState.value = _uiState.value.copy(
+        updateUiState {
+            it.copy(
             friendUsername = friendUsername,
             messageText = restoredDraft
-        )
+            )
+        }
 
         viewModelScope.launch {
             authRepo.currentUserState.collect { auth ->
@@ -113,7 +120,7 @@ class ChatViewModel @Inject constructor(
                     is AuthState.LoggedIn -> {
                         val isFirstLogin = currentUserId == null
                         currentUserId = UserId(auth.user.uid)
-                        _uiState.value = _uiState.value.copy(currentUserId = auth.user.uid)
+                        updateUiState { it.copy(currentUserId = auth.user.uid) }
                         // Load cleared timestamp first, then start message observation
                         loadClearedAt(UserId(auth.user.uid))
                         markMessagesAsRead(UserId(auth.user.uid))
@@ -135,7 +142,7 @@ class ChatViewModel @Inject constructor(
                         )
                     }
                     AuthState.Loading -> {
-                        _uiState.value = _uiState.value.copy(isLoading = true)
+                        updateUiState { it.copy(isLoading = true) }
                     }
                 }
             }
@@ -148,7 +155,7 @@ class ChatViewModel @Inject constructor(
             try {
                 val chatId = chatRepository.generateChatId(userId, friendId)
                 val clearedAt = chatRepository.getClearedAt(chatId, userId)
-                _uiState.value = _uiState.value.copy(clearedAt = clearedAt)
+                updateUiState { it.copy(clearedAt = clearedAt) }
             } catch (_: Exception) { /* non-fatal: proceed without filter */ }
             loadMessages(userId)
         }
@@ -159,10 +166,7 @@ class ChatViewModel @Inject constructor(
         messagesJob = viewModelScope.launch {
             try {
                 observeMessagesUseCase(userId, friendId, _uiState.value.clearedAt).collect { messages ->
-                    _uiState.value = _uiState.value.copy(
-                        messages = messages,
-                        isLoading = false
-                    )
+                    updateUiState { it.copy(messages = messages, isLoading = false) }
                     // Debounce mark-as-read so rapid message updates don't trigger
                     // redundant Firestore writes
                     markReadJob?.cancel()
@@ -175,10 +179,12 @@ class ChatViewModel @Inject constructor(
                 // Normal cancellation — e.g. user navigated away or loadMessages called again
             } catch (e: Exception) {
                 AppLogger.e("ChatViewModel", "loadMessages failed", e)
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = "Failed to load messages. Please try again."
-                )
+                updateUiState {
+                    it.copy(
+                        isLoading = false,
+                        error = "Failed to load messages. Please try again."
+                    )
+                }
             }
         }
     }
@@ -205,7 +211,7 @@ class ChatViewModel @Inject constructor(
         profileLoadJob = viewModelScope.launch {
             try {
                 val profile = friendsRepository.getPublicProfile(friendId)
-                _uiState.value = _uiState.value.copy(friendProfile = profile)
+                updateUiState { it.copy(friendProfile = profile) }
             } catch (_: kotlinx.coroutines.CancellationException) {
                 // Normal cancellation — do NOT log or re-throw
             } catch (e: Exception) {
@@ -221,7 +227,7 @@ class ChatViewModel @Inject constructor(
             try {
                 val blocked = friendsRepository.isBlocked(userId, friendId)
                 val blockedBy = friendsRepository.isBlockedBy(userId, friendId)
-                _uiState.value = _uiState.value.copy(isBlocked = blocked, isBlockedBy = blockedBy)
+                updateUiState { it.copy(isBlocked = blocked, isBlockedBy = blockedBy) }
             } catch (_: Exception) { /* non-fatal */ }
         }
     }
@@ -231,10 +237,10 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             friendsRepository.blockUser(userId, friendId).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(isBlocked = true, error = null)
+                    updateUiState { it.copy(isBlocked = true, error = null) }
                 },
                 onFailure = {
-                    _uiState.value = _uiState.value.copy(error = "Failed to block user.")
+                    updateUiState { it.copy(error = "Failed to block user.") }
                 }
             )
         }
@@ -245,17 +251,17 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             friendsRepository.unblockUser(userId, friendId).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(isBlocked = false, error = null)
+                    updateUiState { it.copy(isBlocked = false, error = null) }
                 },
                 onFailure = {
-                    _uiState.value = _uiState.value.copy(error = "Failed to unblock user.")
+                    updateUiState { it.copy(error = "Failed to unblock user.") }
                 }
             )
         }
     }
 
     fun onMessageTextChange(text: String) {
-        _uiState.value = _uiState.value.copy(messageText = text)
+        updateUiState { it.copy(messageText = text) }
         savedStateHandle["draft_message"] = text
     }
 
@@ -267,19 +273,19 @@ class ChatViewModel @Inject constructor(
         // Validate message length (max 2000 chars)
         val lengthValidation = validateTextLength(messageText, minLength = 1, maxLength = 2000, fieldName = "Message")
         if (lengthValidation is ValidationResult.Invalid) {
-            _uiState.value = _uiState.value.copy(error = lengthValidation.message)
+            updateUiState { it.copy(error = lengthValidation.message) }
             return
         }
 
         // Check rate limiter
         if (!messageRateLimiter.isAllowed(userId.value)) {
-            _uiState.value = _uiState.value.copy(error = "You are sending messages too quickly. Please wait a moment.")
+            updateUiState { it.copy(error = "You are sending messages too quickly. Please wait a moment.") }
             return
         }
 
         // Prevent sending if blocked by the friend
         if (_uiState.value.isBlockedBy) {
-            _uiState.value = _uiState.value.copy(error = "You cannot send messages to this user.")
+            updateUiState { it.copy(error = "You cannot send messages to this user.") }
             return
         }
 
@@ -287,26 +293,28 @@ class ChatViewModel @Inject constructor(
         val sanitizedMessage = sanitizeInput(messageText)
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isSending = true, error = null)
+            updateUiState { it.copy(isSending = true, error = null) }
             val chatId = chatRepository.generateChatId(userId, friendId)
             val result = sendMessageUseCase(chatId, userId, friendId, sanitizedMessage)
             result.fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(messageText = "", isSending = false)
+                    updateUiState { it.copy(messageText = "", isSending = false) }
                     savedStateHandle["draft_message"] = ""
                 },
                 onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        error = error.message ?: "Failed to send message",
-                        isSending = false
-                    )
+                    updateUiState {
+                        it.copy(
+                            error = error.message ?: "Failed to send message",
+                            isSending = false
+                        )
+                    }
                 }
             )
         }
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(error = null)
+        updateUiState { it.copy(error = null) }
     }
 
     /**
@@ -320,20 +328,24 @@ class ChatViewModel @Inject constructor(
         val chatId = chatRepository.generateChatId(currentUserId ?: return, friendId)
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoadingOlder = true)
+            updateUiState { it.copy(isLoadingOlder = true) }
             try {
                 val olderMessages = chatRepository.loadOlderMessages(
                     chatId = chatId,
                     beforeTimestamp = oldest.createdAt,
                     limit = 25
                 )
-                _uiState.value = _uiState.value.copy(
-                    messages = olderMessages + _uiState.value.messages,
-                    isLoadingOlder = false,
-                    hasMoreMessages = olderMessages.size >= 25
-                )
+                updateUiState { state ->
+                    val merged = (olderMessages + state.messages)
+                        .distinctBy { it.messageId }
+                    state.copy(
+                        messages = merged,
+                        isLoadingOlder = false,
+                        hasMoreMessages = olderMessages.size >= 25
+                    )
+                }
             } catch (_: Exception) {
-                _uiState.value = _uiState.value.copy(isLoadingOlder = false)
+                updateUiState { it.copy(isLoadingOlder = false) }
             }
         }
     }
@@ -344,7 +356,7 @@ class ChatViewModel @Inject constructor(
         if (messages.isEmpty() || _uiState.value.isTranslating) return
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isTranslating = true, translationError = null)
+            updateUiState { it.copy(isTranslating = true, translationError = null) }
             try {
                 val settings = userSettingsRepository.fetchUserSettings(userId)
                 val targetLanguage = settings.primaryLanguageCode.substringBefore("-")
@@ -357,7 +369,7 @@ class ChatViewModel @Inject constructor(
 
                 if (uncachedMessages.isEmpty()) {
                     // All already cached — just show translations
-                    _uiState.value = _uiState.value.copy(showTranslation = true, isTranslating = false)
+                    updateUiState { it.copy(showTranslation = true, isTranslating = false) }
                     return@launch
                 }
 
@@ -366,26 +378,32 @@ class ChatViewModel @Inject constructor(
                 result.fold(
                     onSuccess = { newTranslations ->
                         // Merge new translations into existing cache
-                        _uiState.value = _uiState.value.copy(
-                            translatedMessages = existingCache + newTranslations,
-                            showTranslation = true,
-                            isTranslating = false
-                        )
+                        updateUiState { state ->
+                            state.copy(
+                                translatedMessages = state.translatedMessages + newTranslations,
+                                showTranslation = true,
+                                isTranslating = false
+                            )
+                        }
                     },
                     onFailure = { error ->
                         AppLogger.e("ChatViewModel", "translateAllMessages failed", error)
-                        _uiState.value = _uiState.value.copy(
-                            translationError = "Translation failed. Please try again.",
-                            isTranslating = false
-                        )
+                        updateUiState {
+                            it.copy(
+                                translationError = "Translation failed. Please try again.",
+                                isTranslating = false
+                            )
+                        }
                     }
                 )
             } catch (e: Exception) {
                 AppLogger.e("ChatViewModel", "translateAllMessages catch failed", e)
-                _uiState.value = _uiState.value.copy(
-                    translationError = "Translation failed. Please try again.",
-                    isTranslating = false
-                )
+                updateUiState {
+                    it.copy(
+                        translationError = "Translation failed. Please try again.",
+                        isTranslating = false
+                    )
+                }
             }
         }
     }
@@ -408,14 +426,16 @@ class ChatViewModel @Inject constructor(
 
         // Stop observing and clear local state
         messagesJob?.cancel()
-        _uiState.value = _uiState.value.copy(
-            messages = emptyList(),
-            translatedMessages = emptyMap(),
-            showTranslation = false,
-            clearSuccess = true,
-            hasMoreMessages = false,
-            clearedAt = now
-        )
+        updateUiState {
+            it.copy(
+                messages = emptyList(),
+                translatedMessages = emptyMap(),
+                showTranslation = false,
+                clearSuccess = true,
+                hasMoreMessages = false,
+                clearedAt = now
+            )
+        }
 
         // Restart message observation with the new clearedAt filter
         // so incoming messages after the clear are still displayed.
@@ -423,19 +443,21 @@ class ChatViewModel @Inject constructor(
     }
 
     fun dismissClearSuccess() {
-        _uiState.value = _uiState.value.copy(clearSuccess = false)
+        updateUiState { it.copy(clearSuccess = false) }
     }
 
     fun toggleTranslation() {
-        _uiState.value = _uiState.value.copy(showTranslation = !_uiState.value.showTranslation)
+        updateUiState { it.copy(showTranslation = !it.showTranslation) }
     }
 
     fun clearTranslation() {
-        _uiState.value = _uiState.value.copy(
-            translatedMessages = emptyMap(),
-            showTranslation = false,
-            translationError = null
-        )
+        updateUiState {
+            it.copy(
+                translatedMessages = emptyMap(),
+                showTranslation = false,
+                translationError = null
+            )
+        }
     }
 
     override fun onCleared() {
