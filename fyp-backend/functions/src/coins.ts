@@ -15,7 +15,7 @@ import {
 // ============ Quiz Coin Award (Server-Side Anti-Cheat) ============
 
 const MIN_INCREMENT_FOR_COINS = 10;
-const MAX_QUIZ_SCORE = 50; // Safety cap — quiz is fixed at 10 questions (1 coin each), so normal max is 10
+const MAX_QUIZ_SCORE = 50; // Safety cap: normal quiz max is 10 (10 questions × 1 coin each), but allows up to 50 as buffer against client tampering while limiting unauthorized coin generation
 
 interface QuizAttemptData {
   attemptId: string;

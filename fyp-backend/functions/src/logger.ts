@@ -15,7 +15,7 @@ interface LogEntry {
 
 function emit(entry: LogEntry): void {
   const {severity, ...rest} = entry;
-  // Cloud Logging recognises JSON lines with a "severity" field
+  // Cloud Logging recognizes JSON lines with a "severity" field
   const payload = {severity, ...rest};
   switch (severity) {
   case "ERROR":

@@ -9,6 +9,9 @@ import * as admin from "firebase-admin";
 import {getFirestore} from "./helpers.js";
 import {logger} from "./logger.js";
 
+// Time conversion constants for readability
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 /**
  * Prune FCM tokens older than 60 days to prevent unbounded growth.
  * Runs daily at 3 AM UTC.
@@ -22,7 +25,7 @@ export const pruneStaleTokens = onSchedule(
     region: "us-central1",
   },
   async () => {
-    const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
+    const SIXTY_DAYS_MS = 60 * MS_PER_DAY;
     const cutoff = admin.firestore.Timestamp.fromDate(
       new Date(Date.now() - SIXTY_DAYS_MS)
     );
@@ -75,7 +78,7 @@ export const pruneStaleRateLimits = onSchedule(
     region: "us-central1",
   },
   async () => {
-    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const THIRTY_DAYS_MS = 30 * MS_PER_DAY;
     const cutoff = admin.firestore.Timestamp.fromDate(
       new Date(Date.now() - THIRTY_DAYS_MS)
     );

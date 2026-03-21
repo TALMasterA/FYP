@@ -6,7 +6,7 @@ import {defineSecret} from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import {logger} from "./logger.js";
 
-// ============ Firebase Initialisation ============
+// ============ Firebase Initialization ============
 
 // Ensure initializeApp is called exactly once (index.ts handles this).
 let _firestoreDb: admin.firestore.Firestore | null = null;
