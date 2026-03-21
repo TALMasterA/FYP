@@ -48,7 +48,7 @@ The project maintained by GitHub Actions workflows:
 - HistoryViewModel (21), LearningViewModel (14), LearningSheetViewModel (19)
 - MyProfileViewModel (14), ProfileViewModel (11), SettingsViewModel (22)
 - SharedInboxViewModel (11), SharedMaterialDetailViewModel (9), ShopViewModel (13)
-- SpeechViewModel (13), WordBankViewModel (15), CustomWordsViewModel (19)
+- SpeechViewModel (17), WordBankViewModel (15), CustomWordsViewModel (19)
 - ContinuousConversationController (14), TtsController (12)
 - **NEW:** LearningScreenLogicTest (18): cluster filtering, generation button state, quiz regeneration eligibility
 
@@ -177,6 +177,13 @@ These tests prevent regressions in critical invariants:
 | `UsernameEnforcementIntegrationTest` | Domain layer does NOT enforce username; profile creation uses empty username |
 | `UsernameRequirementIntegrationTest` | ViewModel gate blocks send/accept/accept-all without username |
 | `DataLayerIntegrationTest` | Cross-repository invariants: chatId↔friends, sharing↔friends consistency |
+
+### Recent Speech Guards
+
+- `SpeechViewModelTest`
+  - Auto-detect translation falls back to `DetectLanguageUseCase` when translation metadata has no detected language.
+  - Auto-mode original TTS resolves and maps detected language before invoking `SpeakTextUseCase`.
+  - Detected-language status auto-clears after a short delay, and refresh reset clears stale quick-translate state.
 
 ---
 

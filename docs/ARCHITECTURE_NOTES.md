@@ -30,6 +30,23 @@ Never reorder existing enum entries.
 
 ---
 
+## 1.2 Quick Translate Auto-Detect Fallback
+
+**Files:** `screens/speech/SpeechViewModel.kt`, `screens/speech/SpeechRecognitionScreen.kt`
+
+**Invariant:** In Quick Translate, source `auto` mode must still work when translation responses omit inline detected language metadata.
+
+**Rule:**
+- First use translation inline detection when available.
+- If missing, fallback to `DetectLanguageUseCase` using the current source text.
+- Reuse the resolved language for history sourceLang and original-text TTS (never pass `"auto"` into TTS).
+- Keep `Detected: ...` status transient (auto-clear after a short delay) so stale detection labels do not linger.
+- Provide a user-triggered refresh/reset path in Quick Translate to clear stale detected-language UI state before retry.
+
+This prevents regressions where typed input in auto mode translates but cannot be spoken, or fails with a false "could not detect" error when fallback detection would succeed.
+
+---
+
 ## 2. Firestore Nested Map Writes — Set-Merge vs Update
 
 **Files:** `data/friends/FirestoreChatRepository.kt` (`updateChatMetadata`, `markAllMessagesAsRead`)
@@ -187,6 +204,16 @@ Write a test that asserts the cleanup path count stays in sync.
 - Easier to update global styles (change once, applies everywhere)
 - Better accessibility (consistent content descriptions and semantic roles)
 - Reduced code duplication
+
+---
+
+## 11.1 Screen Help UX — Top-Right Info Dialog Pattern
+
+**Files:** `screens/speech/SpeechRecognitionScreen.kt`, `screens/speech/ContinuousConversationScreen.kt`, `screens/settings/*`
+
+**Invariant:** Long instructional text should be shown through a top-right info action dialog instead of inline body text when the screen already has action-heavy controls.
+
+**Rule:** Keep inline copy short and task-focused; move explainers to the `Info` dialog to reduce visual clutter and keep control rows visible.
 
 ---
 

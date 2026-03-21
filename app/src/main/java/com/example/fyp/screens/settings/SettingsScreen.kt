@@ -15,11 +15,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -98,6 +100,13 @@ fun SettingsScreen(
 
     // Pending language code for the confirmation dialog (set when user selects a new language)
     var pendingLanguageCode by remember { mutableStateOf<String?>(null) }
+    var showInfoDialog by remember { mutableStateOf(false) }
+
+    val settingsInfoMessage = if (isLoggedIn) {
+        t(UiTextKey.SettingsSyncInfo)
+    } else {
+        "${t(UiTextKey.SettingsNotLoggedInWarning)}\n\n${t(UiTextKey.SettingsSyncInfo)}"
+    }
 
     // ── Primary language change confirmation dialog ──
     pendingLanguageCode?.let { pendingCode ->
@@ -154,10 +163,36 @@ fun SettingsScreen(
         )
     }
 
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text(t(UiTextKey.SettingsTitle)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(settingsInfoMessage)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text(t(UiTextKey.ActionConfirm))
+                }
+            }
+        )
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.SettingsTitle),
         onBack = onBack,
         backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            IconButton(onClick = { showInfoDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = t(UiTextKey.SettingsTitle),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        },
         hasBottomNav = true
     ) { padding ->
         Column(
@@ -613,11 +648,6 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodyMedium
                 )
 
-                Text(
-                    text = t(UiTextKey.SettingsSyncInfo),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }

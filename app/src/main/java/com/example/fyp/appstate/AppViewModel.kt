@@ -14,6 +14,7 @@ import com.example.fyp.domain.friends.EnsurePublicProfileExistsUseCase
 import com.example.fyp.model.UserId
 import com.example.fyp.model.user.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -149,6 +150,9 @@ class AppViewModel @Inject constructor(
                 chatRepository.observeUnreadPerFriend(UserId(userId)).collect { rawMap ->
                     sharedFriendsDataSource.updateRawUnreadPerFriend(rawMap)
                 }
+            } catch (e: CancellationException) {
+                // Expected when user switches account/logs out or ViewModel is cleared.
+                throw e
             } catch (e: Exception) {
                 android.util.Log.e("AppViewModel", "Error observing unreadPerFriend", e)
             }
@@ -166,6 +170,9 @@ class AppViewModel @Inject constructor(
                     _hasUnreadMessages.value = showBadge
                     _unreadMessageCount.value = count
                 }
+            } catch (e: CancellationException) {
+                // Expected when user switches account/logs out or ViewModel is cleared.
+                throw e
             } catch (e: Exception) {
                 android.util.Log.e("AppViewModel", "Error observing unseen unread messages", e)
             }

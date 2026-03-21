@@ -21,6 +21,7 @@ import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.OcrResult
+import com.example.fyp.data.clients.DetectedLanguage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -100,6 +101,7 @@ class SpeechViewModel @Inject constructor(
     private val pendingLock = Any()
     private val pendingContinuousSaves = mutableListOf<TranslationRecord>()
     private var continuousFlushJob: Job? = null
+    private var detectedStatusClearJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -223,6 +225,7 @@ class SpeechViewModel @Inject constructor(
                         recognizePhase = RecognizePhase.Idle,
                         statusMessage = "Detected: ${result.detectedLanguage}",
                     )
+                    scheduleDetectedStatusAutoClear()
                     onDetectedLanguage(result.detectedLanguage)
                 }
                 .onFailure { error ->
@@ -263,26 +266,28 @@ class SpeechViewModel @Inject constructor(
             when (val tr = translateTextUseCase(recognizedText, requestFromLanguage, toLanguage)) {
                 is SpeechResult.Success -> {
                     var actualFromLanguage = fromLanguage
+                    var resolvedDetection: DetectedLanguage? = null
 
-                    // If auto-detect, extract detected language from the translation result
-                    if (isAutoDetect && !tr.detectedLanguage.isNullOrBlank()) {
-                        val mappedCode = LanguageDisplayNames.mapDetectedToSupportedCode(tr.detectedLanguage)
-                        actualFromLanguage = mappedCode
-                        onDetectedSourceLanguage?.invoke(mappedCode)
+                    if (isAutoDetect) {
+                        resolvedDetection = resolveDetectedLanguage(
+                            inlineDetectedLanguage = tr.detectedLanguage,
+                            inlineDetectedScore = tr.detectedScore
+                        )
 
-                        val displayName = LanguageDisplayNames.displayName(mappedCode)
-                        val displayText = if (displayName != mappedCode) displayName else tr.detectedLanguage
-                        val confidence = tr.detectedScore?.let { (it * 100).toInt() }
-                        val statusSuffix = if (confidence != null) " ($confidence% confidence)" else ""
-                        speechState = speechState.copy(statusMessage = "Detected: $displayText$statusSuffix")
-                    } else if (isAutoDetect) {
-                        speechState = speechState.copy(statusMessage = "Could not detect source language. Please select manually.")
-                        return@launch
+                        if (resolvedDetection == null) {
+                            speechState = speechState.copy(statusMessage = "Could not detect source language. Please select manually.")
+                            return@launch
+                        }
+
+                        actualFromLanguage = LanguageDisplayNames.mapDetectedToSupportedCode(resolvedDetection.language)
+                        onDetectedSourceLanguage?.invoke(actualFromLanguage)
+                        updateDetectedLanguageStatus(actualFromLanguage, resolvedDetection.language, resolvedDetection.score)
                     }
 
                     speechState = speechState.copy(
                         translatedText = tr.text,
-                        statusMessage = "",
+                        // Keep auto-detect status visible briefly, then clear it.
+                        statusMessage = if (isAutoDetect) speechState.statusMessage else "",
                     )
                     // Save history with ACTUAL detected language for source
                     saveHistory(
@@ -346,9 +351,29 @@ class SpeechViewModel @Inject constructor(
 
     // ---- TTS ----
 
-    fun speakOriginal(languageCode: String) {
-        val voiceName = sharedSettings.settings.value.voiceSettings[languageCode]
-        ttsController.speak(text = recognizedText, languageCode = languageCode, isTranslation = false, voiceName = voiceName)
+    fun speakOriginal(languageCode: String, onDetectedSourceLanguage: ((String) -> Unit)? = null) {
+        if (recognizedText.isBlank()) {
+            speechState = speechState.copy(statusMessage = "Please enter or speak text first.")
+            return
+        }
+
+        if (languageCode != "auto") {
+            speakOriginalWithResolvedLanguage(languageCode)
+            return
+        }
+
+        viewModelScope.launch {
+            val detected = resolveDetectedLanguage()
+            if (detected == null) {
+                speechState = speechState.copy(statusMessage = "Could not detect source language for speech. Please select a source language.")
+                return@launch
+            }
+
+            val mappedCode = LanguageDisplayNames.mapDetectedToSupportedCode(detected.language)
+            onDetectedSourceLanguage?.invoke(mappedCode)
+            updateDetectedLanguageStatus(mappedCode, detected.language, detected.score)
+            speakOriginalWithResolvedLanguage(mappedCode)
+        }
     }
 
     fun speakTranslation(languageCode: String) {
@@ -404,11 +429,61 @@ class SpeechViewModel @Inject constructor(
         )
     }
 
+    fun refreshQuickTranslateState() {
+        detectedStatusClearJob?.cancel()
+        speechState = speechState.copy(
+            translatedText = "",
+            statusMessage = "Refreshed. Auto-detect will run again on your next translate or speak action."
+        )
+    }
+
+    private suspend fun resolveDetectedLanguage(
+        inlineDetectedLanguage: String? = null,
+        inlineDetectedScore: Double? = null,
+    ): DetectedLanguage? {
+        if (!inlineDetectedLanguage.isNullOrBlank()) {
+            return DetectedLanguage(
+                language = inlineDetectedLanguage,
+                score = inlineDetectedScore ?: 0.0,
+                isTranslationSupported = true
+            )
+        }
+        return detectLanguageUseCase(recognizedText)
+    }
+
+    private fun updateDetectedLanguageStatus(mappedCode: String, rawDetectedCode: String, score: Double?) {
+        val displayName = LanguageDisplayNames.displayName(mappedCode)
+        val displayText = if (displayName != mappedCode) displayName else rawDetectedCode
+        val confidence = score?.takeIf { it > 0.0 }?.let { (it * 100).toInt() }
+        val statusSuffix = if (confidence != null) " ($confidence% confidence)" else ""
+        speechState = speechState.copy(statusMessage = "Detected: $displayText$statusSuffix")
+        scheduleDetectedStatusAutoClear()
+    }
+
+    private fun scheduleDetectedStatusAutoClear() {
+        val snapshot = speechState.statusMessage
+        if (!snapshot.startsWith("Detected:")) return
+
+        detectedStatusClearJob?.cancel()
+        detectedStatusClearJob = viewModelScope.launch {
+            delay(DETECTED_STATUS_AUTO_CLEAR_MS)
+            if (speechState.statusMessage == snapshot) {
+                speechState = speechState.copy(statusMessage = "")
+            }
+        }
+    }
+
+    private fun speakOriginalWithResolvedLanguage(languageCode: String) {
+        val voiceName = sharedSettings.settings.value.voiceSettings[languageCode]
+        ttsController.speak(text = recognizedText, languageCode = languageCode, isTranslation = false, voiceName = voiceName)
+    }
+
     override fun onCleared() {
         super.onCleared()
         stopContinuous()
         // Cancel the debounce job FIRST to prevent it from racing with our final flush.
         continuousFlushJob?.cancel()
+        detectedStatusClearJob?.cancel()
         // Then flush remaining records. viewModelScope is still active here.
         flushPendingSaves()
     }
@@ -416,5 +491,6 @@ class SpeechViewModel @Inject constructor(
     companion object {
         /** Milliseconds to wait after the last continuous segment before flushing saves to Firestore. */
         private const val CONTINUOUS_SAVE_DEBOUNCE_MS = 800L
+        private const val DETECTED_STATUS_AUTO_CLEAR_MS = 3000L
     }
 }

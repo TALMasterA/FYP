@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -101,6 +102,13 @@ fun LearningScreen(
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
+            }
+            IconButton(onClick = { viewModel.refreshLanguageCounts() }) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = t(UiTextKey.ErrorRetryButton),
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
             IconButton(onClick = { showScreenInfo = true }) {
                 Icon(

@@ -6,7 +6,8 @@ val ScreenUiTexts: List<String> = listOf(
     // SpeechInstructions
         "Choose source and target languages below. Quick Translate is best for short phrases and single-turn translations.\n" +
             "Supported languages: English, Cantonese, Japanese, Mandarin and more.\n" +
-            "Use the ⇄ button to swap the selected languages.",
+            "Use the ⇄ button to swap the selected languages.\n" +
+            "If auto-detect looks stale after you change text/language, tap the refresh icon and try again.",
 
     // HomeInstructions
         "You can change the app UI language using the dropdown at the top. \n" +
@@ -382,13 +383,13 @@ val ScreenUiTexts: List<String> = listOf(
     "Talk & Learn Translator v",
 
     // SettingsSyncInfo
-    "Your preferences are automatically saved and synced to your account.",
+    "When signed in, your settings are automatically saved and synced to your account.",
 
     // SettingsThemeTitle
     "Theme",
 
     // SettingsThemeDesc
-    "Follow system / Light / Dark (Locked when not logged in)",
+    "Choose how the app appearance is applied: Follow system, Light, Dark, or Scheduled.",
 
     // SettingsThemeSystem
     "Follow system",
@@ -409,7 +410,7 @@ val ScreenUiTexts: List<String> = listOf(
     "Detailed Settings",
 
     // SettingsNotLoggedInWarning
-    "Not logged in. Changes below will not be saved.",
+    "Sign in to access account settings. You can still change the app language.",
 
     // SettingsVoiceTitle
     "Voice Settings",

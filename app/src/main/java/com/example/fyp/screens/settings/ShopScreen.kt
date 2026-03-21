@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,9 +33,29 @@ fun ShopScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showPurchaseConfirmDialog by remember { mutableStateOf(false) }
+    var showInfoDialog by remember { mutableStateOf(false) }
 
     val (uiText, _) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text(t(UiTextKey.ShopTitle)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(
+                        "${t(UiTextKey.ShopHistoryExpansionDesc)}\n\n${t(UiTextKey.ShopColorPaletteDesc)}"
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text(t(UiTextKey.ActionConfirm))
+                }
+            }
+        )
+    }
 
     // Purchase confirmation dialog - shown before purchase
     if (showPurchaseConfirmDialog) {
@@ -94,7 +115,16 @@ fun ShopScreen(
     StandardScreenScaffold(
         title = t(UiTextKey.ShopTitle),
         onBack = onBack,
-        backContentDescription = t(UiTextKey.NavBack)
+        backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            IconButton(onClick = { showInfoDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = t(UiTextKey.ShopTitle),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -151,11 +181,6 @@ fun ShopScreen(
                         .padding(AppSpacing.large),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
-                    Text(
-                        text = t(UiTextKey.ShopHistoryExpansionDesc),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -245,10 +270,6 @@ fun ShopScreen(
                         .padding(AppSpacing.large),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
-                    Text(
-                        text = t(UiTextKey.ShopColorPaletteDesc),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
 
                     ColorPaletteSelector(
                         currentPaletteId = uiState.currentPaletteId,

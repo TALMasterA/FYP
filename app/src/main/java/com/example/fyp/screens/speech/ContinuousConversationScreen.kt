@@ -19,11 +19,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -68,6 +76,7 @@ fun ContinuousConversationScreen(
     var fromLanguage by remember { mutableStateOf(supportedLanguages.firstOrNull() ?: "en-US") }
     var toLanguage by remember { mutableStateOf(supportedLanguages.getOrNull(1) ?: "zh-HK") }
     var isPersonATalking by remember { mutableStateOf(true) }
+    var showInfoDialog by remember { mutableStateOf(false) }
 
 
     val isRunning = viewModel.isContinuousRunning
@@ -107,9 +116,38 @@ fun ContinuousConversationScreen(
         onDispose { viewModel.endContinuousSession() }
     }
 
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text(t(UiTextKey.ContinuousTitle)) },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 300.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(t(UiTextKey.ContinuousInstructions))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text(t(UiTextKey.ActionConfirm))
+                }
+            }
+        )
+    }
+
     StandardScreenScaffold(
         title = t(UiTextKey.ContinuousTitle),
         onBack = onBack,
+        actions = {
+            IconButton(onClick = { showInfoDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = t(UiTextKey.ContinuousTitle)
+                )
+            }
+        }
     ) { outerPadding ->
         RecordAudioPermissionRequest {
             BoxWithConstraints(
@@ -198,10 +236,6 @@ fun ContinuousConversationScreen(
                                 .onGloballyPositioned { coords -> controlsHeightPx = coords.size.height },
                             verticalArrangement = Arrangement.spacedBy(AppSpacing.medium),
                         ) {
-                            Text(
-                                text = t(UiTextKey.ContinuousInstructions),
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),

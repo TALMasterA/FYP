@@ -104,7 +104,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.VoiceSettingsDesc to "為每種語言選擇文字轉語音的語音。",
 
     // Instructions
-    UiTextKey.SpeechInstructions to "點擊麥克風按鈕開始語音辨識，完成後點擊翻譯。",
+    UiTextKey.SpeechInstructions to "點擊麥克風按鈕開始語音辨識，完成後點擊翻譯。若切換文字或語言後自動偵測看起來未更新，請點右上角重新整理再試一次。",
     UiTextKey.HomeInstructions to "選擇功能開始使用。",
     UiTextKey.ContinuousInstructions to "選擇兩種語言並開始對話模式。",
 
@@ -248,16 +248,16 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsPreviewLabel to "標籤：小文字預覽",
     UiTextKey.SettingsAboutTitle to "關於",
     UiTextKey.SettingsAppVersion to "Talk & Learn Translator v",
-    UiTextKey.SettingsSyncInfo to "您的偏好設定已自動儲存並同步至您的帳號。",
+    UiTextKey.SettingsSyncInfo to "登入後，您的設定會自動儲存並同步至帳號。",
     UiTextKey.SettingsThemeTitle to "主題",
-    UiTextKey.SettingsThemeDesc to "跟隨系統 / 淺色 / 深色（未登入時鎖定）",
+    UiTextKey.SettingsThemeDesc to "選擇外觀套用方式：跟隨系統、淺色、深色或排程。",
     UiTextKey.SettingsThemeSystem to "跟隨系統",
     UiTextKey.SettingsThemeLight to "淺色",
     UiTextKey.SettingsThemeDark to "深色",
     UiTextKey.SettingsThemeScheduled to "排程",
     UiTextKey.SettingsResetPW to "在此重設密碼",
     UiTextKey.SettingsQuickLinks to "詳細設定",
-    UiTextKey.SettingsNotLoggedInWarning to "未登入，以下設定更改將不會儲存。",
+    UiTextKey.SettingsNotLoggedInWarning to "請先登入以使用帳號設定。您仍可更改應用程式語言。",
     UiTextKey.SettingsVoiceTitle to "語音設定",
     UiTextKey.SettingsVoiceDesc to "為每種語言選擇文字轉語音的語音。",
     UiTextKey.SettingsVoiceLanguageLabel to "語言",

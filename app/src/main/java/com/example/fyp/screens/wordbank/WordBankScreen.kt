@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -95,6 +96,13 @@ fun WordBankScreen(
         },
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
+            IconButton(onClick = { viewModel.refreshLanguageCounts() }) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = t(UiTextKey.ErrorRetryButton),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
             IconButton(onClick = { showInfoDialog = true }) {
                 Icon(
                     imageVector = Icons.Default.Info,

@@ -217,18 +217,43 @@ class SpeechViewModelTest {
     }
 
     @Test
-    fun `translate with auto-detect fails when no language detected`() = runTest {
+    fun `translate with auto-detect falls back to detectLanguage when translation response omits detected language`() = runTest {
         // Translation succeeds but without detected language info
         whenever(translateTextUseCase.invoke(any(), any(), any()))
             .thenReturn(SpeechResult.Success(text = "Translated"))
+        whenever(detectLanguageUseCase.invoke(any())).thenReturn(
+            DetectedLanguage(language = "en", score = 0.91, isTranslationSupported = true)
+        )
 
+        var detectedLang: String? = null
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
         vm.updateSourceText("Hello world")
-        vm.translate("auto", "ja")
+        vm.translate("auto", "ja") { detectedLang = it }
 
-        // Should show "could not detect" message and NOT set translatedText
-        assertTrue(vm.statusMessage.contains("Could not detect", ignoreCase = true))
+        assertEquals("Translated", vm.translatedText)
+        assertEquals("en-US", detectedLang)
+        verify(detectLanguageUseCase).invoke("Hello world")
+        verify(historyRepo).save(any())
+    }
+
+    @Test
+    fun `speakOriginal in auto mode detects language and speaks using mapped code`() = runTest {
+        whenever(detectLanguageUseCase.invoke(any())).thenReturn(
+            DetectedLanguage(language = "es", score = 0.87, isTranslationSupported = true)
+        )
+        whenever(speakTextUseCase.invoke(any(), any(), anyOrNull()))
+            .thenReturn(SpeechResult.Success("ok"))
+
+        var callbackLang: String? = null
+        val vm = buildViewModel()
+        vm.updateSourceText("Hola")
+        vm.speakOriginal("auto") { callbackLang = it }
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("es-ES", callbackLang)
+        verify(detectLanguageUseCase).invoke("Hola")
+        verify(speakTextUseCase).invoke(eq("Hola"), eq("es-ES"), isNull())
     }
 
     // ── OCR success ─────────────────────────────────────────────────
@@ -308,6 +333,24 @@ class SpeechViewModelTest {
         assertEquals("Detected speech", vm.recognizedText)
         assertEquals(RecognizePhase.Idle, vm.recognizePhase)
         assertEquals("en-US", callbackLang)
+        assertTrue("Detected status should auto-clear", vm.statusMessage.isEmpty())
+    }
+
+    @Test
+    fun `refreshQuickTranslateState clears translated text for retry`() = runTest {
+        whenever(translateTextUseCase.invoke(any(), any(), any()))
+            .thenReturn(SpeechResult.Success("Translated"))
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+        vm.updateSourceText("Hello")
+        vm.translate("en", "ja")
+        assertEquals("Translated", vm.translatedText)
+
+        vm.refreshQuickTranslateState()
+
+        assertTrue(vm.translatedText.isEmpty())
+        assertTrue(vm.statusMessage.contains("Auto-detect", ignoreCase = true))
     }
 
     // ── recognizeWithAutoDetect error ───────────────────────────────

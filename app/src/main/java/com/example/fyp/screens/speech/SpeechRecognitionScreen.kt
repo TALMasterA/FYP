@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -249,6 +250,16 @@ fun SpeechRecognitionScreen(
                     style = MaterialTheme.typography.titleLarge
                 )
             }
+
+            IconButton(onClick = {
+                detectedSourceLanguage = null
+                viewModel.refreshQuickTranslateState()
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = "Refresh auto-detect"
+                )
+            }
             
             IconButton(onClick = { showInfoDialog = true }) {
                 Icon(
@@ -359,7 +370,12 @@ fun SpeechRecognitionScreen(
 
                     SourceTextEditor(
                         value = recognizedText,
-                        onValueChange = viewModel::updateSourceText,
+                        onValueChange = { newText ->
+                            if (selectedLanguage == "auto") {
+                                detectedSourceLanguage = null
+                            }
+                            viewModel.updateSourceText(newText)
+                        },
                         placeholder = uiText(UiTextKey.SpeechInputPlaceholder, BaseUiTexts[UiTextKey.SpeechInputPlaceholder.ordinal]),
                         copyLabel = t(UiTextKey.CopyButton),
                         speakLabel = t(UiTextKey.SpeakScriptButton),
@@ -368,13 +384,10 @@ fun SpeechRecognitionScreen(
                         enableSpeak = recognizedText.isNotBlank() && !isTtsRunning,
                         onCopy = { clipboardManager.setText(AnnotatedString(recognizedText)) },
                         onSpeak = {
-                            // Use detected language for speaking if auto was selected
-                            val speakLang = if (selectedLanguage == "auto" && detectedSourceLanguage != null) {
-                                detectedSourceLanguage!!
-                            } else {
-                                selectedLanguage
+                            val speakLang = detectedSourceLanguage ?: selectedLanguage
+                            viewModel.speakOriginal(speakLang) { detected ->
+                                detectedSourceLanguage = detected
                             }
-                            viewModel.speakOriginal(speakLang)
                         },
                     )
 
