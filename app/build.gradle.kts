@@ -21,8 +21,8 @@ android {
         applicationId = "com.example.fyp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 47
-        versionName = "1.9.9.8"
+        versionCode = 48
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "com.example.fyp.HiltTestRunner"
     }
@@ -30,6 +30,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true // Remove unused resources to reduce APK size
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -104,7 +105,6 @@ dependencies {
 
     // Image caching with Coil
     implementation(libs.coil.compose)
-    implementation(libs.coil.gif)
 
     // Azure/Speech
     implementation(libs.azure.speech.sdk)
@@ -154,8 +154,6 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.androidx.compose.material.icons.extended)
-
-    implementation(libs.androidx.preference)
 
     implementation(libs.kotlinx.serialization.json)
 

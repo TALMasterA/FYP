@@ -314,7 +314,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (206 test files, 2,668 tests)
+# Run all unit tests (205 test files, 2,655 tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -359,8 +359,8 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **Android — 206 test files, 2,668 unit tests** (from `app/build/test-results/testDebugUnitTest`)
-- **Backend — 5 test files, 79 tests** covering Cloud Functions logic
+- **Android — 205 test files, 2,655 unit tests** (from `app/build/test-results/testDebugUnitTest`)
+- **Backend — 9 test files, 122 tests** covering Cloud Functions logic
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:
   - Domain layer use cases (30+ test files)
@@ -436,7 +436,7 @@ gh auth login
 **Running Backend Tests:**
 ```bash
 cd fyp-backend/functions
-npm test           # Run all Jest tests (79 tests)
+npm test           # Run all Jest tests (122 tests)
 npm run lint       # ESLint check
 npm run build      # TypeScript compile
 ```
@@ -519,11 +519,12 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 **Release Build:**
 - ProGuard enabled for code obfuscation and optimization
+- Resource shrinking enabled to remove unused resources
 - Debug logging stripped in release builds
 - Compose debug source info removed
 
 --------------------------------------------------------------
 
-**Last Updated:** March 19, 2026
+**Last Updated:** March 21, 2026
 
 (Some content was auto-generated and may contain inaccuracies.)

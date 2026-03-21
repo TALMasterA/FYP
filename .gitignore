@@ -86,3 +86,12 @@ nul
 #Test case file
 test-cases.yaml
 **/test-cases.yaml
+
+# Memory profiling heap dumps
+*.hprof
+
+# Android App Bundles
+*.aab
+
+# CMake native build directory
+.cxx/

@@ -34,22 +34,3 @@ val TertiaryVariantDark = Color(0xFFBA68C8)
 val BackgroundDark = Color(0xFF121212) // Material Dark
 val SurfaceDark = Color(0xFF1E1E1E)
 val SurfaceVariantDark = Color(0xFF2C2C2C)
-
-// Special Feature Colors
-val LearningAccent = Color(0xFFFF6F00) // Deep Orange - Learning features
-val WordBankAccent = Color(0xFF6A1B9A) // Deep Purple - Word bank
-val SpeechAccent = Color(0xFF00897B) // Teal - Speech features
-val QuizAccent = Color(0xFFD32F2F) // Deep Red - Quiz mode
-
-// Gradient Colors
-val GradientStart = Color(0xFF2196F3)
-val GradientEnd = Color(0xFF21CBF3)
-
-// Legacy colors (for compatibility during transition)
-val Purple80 = PrimaryDark
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Primary
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)

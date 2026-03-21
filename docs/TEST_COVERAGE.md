@@ -1,14 +1,14 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-20_
+_Last updated: 2026-03-21_
 
 ## Summary
 
 | Metric                    | Count   |
 |---------------------------|---------|
-| Source files               | 252     |
+| Source files               | 251     |
 | Test files                 | 205     |
-| Total `@Test` methods      | 2,664   |
+| Total `@Test` methods      | 2,655   |
 | Key logic files            | ~140    |
 | Key logic files tested     | ~140    |
 | Key logic coverage         | ~100%   |
@@ -40,7 +40,7 @@ The project maintained by GitHub Actions workflows:
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 35        | 35     | 100%     |
 
-## What Is Tested (205 files, 2,664 tests)
+## What Is Tested (205 files, 2,655 tests)
 
 ### All ViewModels & Controllers (21/21)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
