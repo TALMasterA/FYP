@@ -18,6 +18,18 @@ Never reorder existing enum entries.
 
 ---
 
+## 1.1 Mode Copy Consistency — Discrete vs Continuous
+
+**Files:** `model/ui/UiTextScreens.kt`, `model/ui/strings/translations/*`
+
+**Invariant:** Mode labels and help text must keep the same intent across locales:
+- Quick Translate = discrete / short-phrase / single-turn translation
+- Live Conversation = continuous / multi-turn dialogue
+
+**Rule:** When updating mode wording in one locale, update equivalent strings in other maintained locale maps in the same change set to avoid mixed-mode guidance.
+
+---
+
 ## 2. Firestore Nested Map Writes — Set-Merge vs Update
 
 **Files:** `data/friends/FirestoreChatRepository.kt` (`updateChatMetadata`, `markAllMessagesAsRead`)
@@ -34,6 +46,28 @@ db.document(path).set(mapOf("unreadPerFriend" to mapOf(friendId to count)), SetO
 ```
 For document creation fallback: catch `FirebaseFirestoreException`, only fallback when `code == NOT_FOUND`, and call `set()` with the full map.
 For all other Firestore error codes, rethrow so permission/config/network problems are not silently masked.
+
+---
+
+## 2.1 Error Visibility — Auto-Scroll To Error Banner
+
+**File:** `screens/learning/LearningScreen.kt`
+
+**Invariant:** When `uiState.error` becomes non-null on list-based screens, the visible viewport should move to the error banner so users immediately see actionable feedback.
+
+**Rule:** For `LazyColumn` screens, use `rememberLazyListState()` + `LaunchedEffect(error)` + `animateScrollToItem()` before any timed auto-dismiss.
+
+For non-list screens, surface transient errors via a visible status/snackbar area and auto-clear with `UiConstants.ERROR_AUTO_DISMISS_MS`.
+
+---
+
+## 2.2 Word Bank Error Lifecycle
+
+**Files:** `screens/wordbank/WordBankScreen.kt`, `screens/wordbank/WordBankViewModel.kt`
+
+**Invariant:** Word Bank errors should be short-lived and user-visible without requiring manual dismissal.
+
+**Rule:** When `uiState.error` is set, auto-dismiss in the screen via `LaunchedEffect(error)` and clear through `WordBankViewModel.clearError()`.
 
 ---
 

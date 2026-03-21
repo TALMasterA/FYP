@@ -295,7 +295,14 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             updateUiState { it.copy(isSending = true, error = null) }
             val chatId = chatRepository.generateChatId(userId, friendId)
-            val result = sendMessageUseCase(chatId, userId, friendId, sanitizedMessage)
+            val senderUsername = sharedFriendsDataSource.getCachedUsername(userId.value).orEmpty()
+            val result = sendMessageUseCase(
+                chatId = chatId,
+                fromUserId = userId,
+                toUserId = friendId,
+                content = sanitizedMessage,
+                senderUsername = senderUsername
+            )
             result.fold(
                 onSuccess = {
                     updateUiState { it.copy(messageText = "", isSending = false) }

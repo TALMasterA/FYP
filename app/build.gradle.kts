@@ -81,7 +81,8 @@ android {
             isEnable = true
             reset()
             include("armeabi-v7a", "arm64-v8a")
-            isUniversalApk = true
+            // Generate ABI-specific APKs only; avoids shipping duplicate native libs in one universal APK.
+            isUniversalApk = false
         }
     }
 }

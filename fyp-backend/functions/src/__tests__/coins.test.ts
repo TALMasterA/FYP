@@ -110,8 +110,8 @@ describe("awardQuizCoins", () => {
 
   it("accepts valid two-letter language codes", async () => {
     mockTxGet
+      .mockResolvedValueOnce({exists: true, data: () => ({historyCount: 30})})
       .mockResolvedValueOnce({exists: false})
-      .mockResolvedValueOnce({exists: true, data: () => ({historyCountAtGenerate: 30})})
       .mockResolvedValueOnce({exists: false})
       .mockResolvedValueOnce({exists: true, data: () => ({coinTotal: 10, coinByLang: {}})});
 
@@ -125,8 +125,8 @@ describe("awardQuizCoins", () => {
 
   it("accepts valid region language codes", async () => {
     mockTxGet
+      .mockResolvedValueOnce({exists: true, data: () => ({historyCount: 30})})
       .mockResolvedValueOnce({exists: false})
-      .mockResolvedValueOnce({exists: true, data: () => ({historyCountAtGenerate: 30})})
       .mockResolvedValueOnce({exists: false})
       .mockResolvedValueOnce({exists: true, data: () => ({coinTotal: 10, coinByLang: {}})});
 
@@ -172,31 +172,31 @@ describe("awardQuizCoins", () => {
   });
 
   it("returns already_awarded when coin_awards doc exists", async () => {
-    mockTxGet.mockResolvedValueOnce({exists: true}); // coin_awards doc exists
+    mockTxGet
+      .mockResolvedValueOnce({exists: true, data: () => ({historyCount: 30})}) // quiz_versions
+      .mockResolvedValueOnce({exists: true}); // coin_awards doc exists
     const result = await awardHandler({auth: {uid: "u1"}, data: validData});
     expect(result).toEqual({awarded: false, reason: "already_awarded"});
   });
 
-  it("returns no_sheet when learning sheet does not exist", async () => {
+  it("returns no_quiz_version when server quiz version does not exist", async () => {
     mockTxGet
-      .mockResolvedValueOnce({exists: false}) // coin_awards - not exists
-      .mockResolvedValueOnce({exists: false}); // sheet - not exists
+      .mockResolvedValueOnce({exists: false}); // quiz version - not exists
     const result = await awardHandler({auth: {uid: "u1"}, data: validData});
-    expect(result).toEqual({awarded: false, reason: "no_sheet"});
+    expect(result).toEqual({awarded: false, reason: "no_quiz_version"});
   });
 
   it("returns version_mismatch when sheet version differs", async () => {
     mockTxGet
-      .mockResolvedValueOnce({exists: false}) // coin_awards
-      .mockResolvedValueOnce({exists: true, data: () => ({historyCountAtGenerate: 20})}); // sheet (version 20 != 30)
+      .mockResolvedValueOnce({exists: true, data: () => ({historyCount: 20})}); // quiz version (20 != 30)
     const result = await awardHandler({auth: {uid: "u1"}, data: validData});
     expect(result).toEqual({awarded: false, reason: "version_mismatch"});
   });
 
   it("returns insufficient_records when not enough new records since last award", async () => {
     mockTxGet
+      .mockResolvedValueOnce({exists: true, data: () => ({historyCount: 30})}) // quiz version
       .mockResolvedValueOnce({exists: false}) // coin_awards
-      .mockResolvedValueOnce({exists: true, data: () => ({historyCountAtGenerate: 30})}) // sheet
       .mockResolvedValueOnce({exists: true, data: () => ({count: 25})}); // last_awarded (25 + 10 = 35 > 30)
     const result = await awardHandler({auth: {uid: "u1"}, data: validData});
     expect(result).toEqual({awarded: false, reason: "insufficient_records", needed: 5});
@@ -204,8 +204,8 @@ describe("awardQuizCoins", () => {
 
   it("awards coins when all checks pass (first quiz)", async () => {
     mockTxGet
+      .mockResolvedValueOnce({exists: true, data: () => ({historyCount: 30})}) // quiz version
       .mockResolvedValueOnce({exists: false}) // coin_awards
-      .mockResolvedValueOnce({exists: true, data: () => ({historyCountAtGenerate: 30})}) // sheet
       .mockResolvedValueOnce({exists: false}) // last_awarded (first quiz)
       .mockResolvedValueOnce({exists: true, data: () => ({coinTotal: 10, coinByLang: {}})}); // coin stats
     const result = await awardHandler({auth: {uid: "u1"}, data: validData});
@@ -215,8 +215,8 @@ describe("awardQuizCoins", () => {
 
   it("awards coins with existing last_awarded when increment is sufficient", async () => {
     mockTxGet
+      .mockResolvedValueOnce({exists: true, data: () => ({historyCount: 30})}) // quiz version
       .mockResolvedValueOnce({exists: false}) // coin_awards
-      .mockResolvedValueOnce({exists: true, data: () => ({historyCountAtGenerate: 30})}) // sheet
       .mockResolvedValueOnce({exists: true, data: () => ({count: 20})}) // last_awarded (20 + 10 = 30 <= 30, OK)
       .mockResolvedValueOnce({exists: false}); // coin stats (new user)
     const result = await awardHandler({auth: {uid: "u1"}, data: validData});

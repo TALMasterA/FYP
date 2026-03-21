@@ -144,6 +144,7 @@ export const sendChatNotification = onDocumentCreated(
     const senderId: string = data.senderId ?? "";
     const receiverId: string = data.receiverId ?? "";
     const content: string = data.content ?? "";
+    const senderUsernameFromMessage: string = data.senderUsername ?? "";
     const type: string = data.type ?? "TEXT";
 
     if (!senderId || !receiverId) return;
@@ -155,11 +156,15 @@ export const sendChatNotification = onDocumentCreated(
     if (await isSpamMessage(event.params.chatId, senderId, content)) return;
 
     try {
-      const senderProfileSnap = await getFirestore()
-        .collection("users").doc(senderId)
-        .collection("profile").doc("public")
-        .get();
-      const senderUsername: string = senderProfileSnap.data()?.username ?? "Friend";
+      let senderUsername = senderUsernameFromMessage;
+      if (!senderUsername) {
+        // Backward compatibility for existing clients until all message writes include senderUsername.
+        const senderProfileSnap = await getFirestore()
+          .collection("users").doc(senderId)
+          .collection("profile").doc("public")
+          .get();
+        senderUsername = senderProfileSnap.data()?.username ?? "Friend";
+      }
 
       const messagePreview = content.length > MAX_MESSAGE_PREVIEW_LENGTH
         ? content.substring(0, MAX_MESSAGE_PREVIEW_LENGTH) + "\u2026"
@@ -219,6 +224,8 @@ export const sendFriendRequestNotification = onDocumentCreated(
         .where("createdAt", ">", admin.firestore.Timestamp.fromDate(oneHourAgo))
         .get();
 
+      // This query includes the just-created request that triggered this function.
+      // Using "> MAX" therefore allows exactly MAX requests/hour and blocks the next one.
       if (recentRequests.size > MAX_FRIEND_REQUESTS_PER_HOUR) {
         logger.warn("Friend request rate limit exceeded, deleting request", {
           senderId,

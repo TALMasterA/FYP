@@ -4,16 +4,16 @@ package com.example.fyp.model.ui
 val ScreenUiTexts: List<String> = listOf(
     // --- Speech/Home Instructions ---
     // SpeechInstructions
-    "Select From and To languages below. Only suitable for short phrases.\n" +
+        "Choose source and target languages below. Quick Translate is best for short phrases and single-turn translations.\n" +
             "Supported languages: English, Cantonese, Japanese, Mandarin and more.\n" +
             "Use the ⇄ button to swap the selected languages.",
 
     // HomeInstructions
-    "You can change the app UI language by the dropdown on top. \n" +
+        "You can change the app UI language using the dropdown at the top. \n" +
             "Please review Notes & Cautions before using the app.",
 
     // ContinuousInstructions
-    "Set Speaker A and B languages below. \n" +
+    "Set Speaker A and Speaker B languages below. Live Conversation is for continuous, multi-turn dialogue. \n" +
             "Use the toggle to switch who is speaking.",
 
     // --- Home/Help Screens ---
@@ -173,7 +173,7 @@ val ScreenUiTexts: List<String> = listOf(
     "B speaking",
 
     // ContinuousCurrentStringLabel
-    "Current string: ",
+        "Current speech:",
 
     // ContinuousSpeakerAName
     "Person A",
@@ -201,10 +201,10 @@ val ScreenUiTexts: List<String> = listOf(
     "Live Conversation",
 
     // HistoryNoContinuousSessions
-    "No session(s) yet.",
+        "No sessions yet.",
 
     // HistoryNoDiscreteRecords
-    "No record(s) yet.",
+        "No records yet.",
 
     // DialogDeleteRecordTitle
     "Delete record?",
@@ -292,10 +292,10 @@ val ScreenUiTexts: List<String> = listOf(
     "Register",
 
     // AuthToggleToRegister
-    "Don't have account? Register (Disabled)",
+        "Don't have an account? Register (Disabled)",
 
     // AuthToggleToLogin
-    "Have account? Login",
+        "Already have an account? Login",
 
     // AuthErrorPasswordsMismatch
     "Passwords do not match.",

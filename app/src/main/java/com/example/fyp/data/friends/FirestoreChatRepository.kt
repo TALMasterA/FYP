@@ -38,8 +38,9 @@ class FirestoreChatRepository @Inject constructor(
         chatId: String,
         fromUserId: UserId,
         toUserId: UserId,
-        content: String
-    ): Result<Unit> = sendTextMessage(fromUserId, toUserId, content).map { }
+        content: String,
+        senderUsername: String
+    ): Result<Unit> = sendTextMessage(fromUserId, toUserId, content, senderUsername).map { }
 
     /**
      * SECURITY FIX (1.2): Restored areFriends() check before sending messages.
@@ -50,7 +51,8 @@ class FirestoreChatRepository @Inject constructor(
     override suspend fun sendTextMessage(
         fromUserId: UserId,
         toUserId: UserId,
-        content: String
+        content: String,
+        senderUsername: String
     ): Result<FriendMessage> {
         return try {
             require(content.isNotBlank()) { "Message content cannot be blank" }
@@ -79,6 +81,7 @@ class FirestoreChatRepository @Inject constructor(
                 messageId = messageRef.id,
                 chatId = chatId,
                 senderId = fromUserId.value,
+                senderUsername = senderUsername.trim(),
                 receiverId = toUserId.value,
                 content = content,
                 type = MessageType.TEXT,
@@ -142,6 +145,7 @@ class FirestoreChatRepository @Inject constructor(
                 messageId = messageRef.id,
                 chatId = chatId,
                 senderId = fromUserId.value,
+                senderUsername = "",
                 receiverId = toUserId.value,
                 content = content,
                 type = type,

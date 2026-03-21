@@ -33,6 +33,15 @@ captures/
 # Other
 *.log
 /app/google-services.json
+**/google-services.json
+
+# Android Studio / Kotlin local caches
+.kotlin/
+
+# Android build artifacts
+*.apk
+*.ap_
+*.aab
 
 # Firebase service account credentials (sensitive - never commit)
 firebase-sa.json
@@ -91,7 +100,5 @@ test-cases.yaml
 *.hprof
 
 # Android App Bundles
-*.aab
-
 # CMake native build directory
 .cxx/

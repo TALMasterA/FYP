@@ -133,6 +133,7 @@ fun SpeechRecognitionScreen(
     var showImageSourceDialog by remember { mutableStateOf(false) }
     var showCamera by remember { mutableStateOf(false) }
     var requestCameraPermission by remember { mutableStateOf(false) }
+    var cameraErrorMessage by remember { mutableStateOf<String?>(null) }
     
     // Image picker launcher
     val launchImagePicker = rememberImagePickerLauncher { uri ->
@@ -182,7 +183,7 @@ fun SpeechRecognitionScreen(
             },
             onError = { error ->
                 showCamera = false
-                // Error handling could be improved with a toast/snackbar
+                cameraErrorMessage = error.message ?: "Image recognition failed. Please try again."
             },
             onCancel = {
                 showCamera = false
@@ -191,6 +192,13 @@ fun SpeechRecognitionScreen(
             cancelLabel = t(UiTextKey.ImageSourceCancel)
         )
         return // Don't show the regular UI when camera is active
+    }
+
+    LaunchedEffect(cameraErrorMessage) {
+        if (cameraErrorMessage != null) {
+            delay(UiConstants.ERROR_AUTO_DISMISS_MS)
+            cameraErrorMessage = null
+        }
     }
 
     // Info dialog state
@@ -423,7 +431,9 @@ fun SpeechRecognitionScreen(
                 }
 
                 BottomStatusText(
-                    statusMessage = statusMessage,
+                    statusMessage = listOfNotNull(cameraErrorMessage, statusMessage)
+                        .filter { it.isNotBlank() }
+                        .joinToString(separator = "\n"),
                     ttsStatus = ttsStatus,
                 )
             }

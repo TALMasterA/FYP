@@ -21,7 +21,7 @@ export {
 } from "./translation.js";
 
 // ── AI Learning Content ──────────────────────────────────────────────
-export {generateLearningContent} from "./learning.js";
+export {generateLearningContent, syncQuizVersionFromLearningSheet} from "./learning.js";
 
 // ── Coins & Shop ─────────────────────────────────────────────────────
 export {awardQuizCoins, spendCoins} from "./coins.js";

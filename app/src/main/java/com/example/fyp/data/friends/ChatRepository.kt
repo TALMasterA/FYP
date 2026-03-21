@@ -23,7 +23,8 @@ interface ChatRepository {
     suspend fun sendTextMessage(
         fromUserId: UserId,
         toUserId: UserId,
-        content: String
+        content: String,
+        senderUsername: String = ""
     ): Result<FriendMessage>
 
     /**
@@ -33,7 +34,8 @@ interface ChatRepository {
         chatId: String,
         fromUserId: UserId,
         toUserId: UserId,
-        content: String
+        content: String,
+        senderUsername: String = ""
     ): Result<Unit>
 
     /**

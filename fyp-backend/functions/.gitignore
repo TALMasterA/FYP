@@ -1,6 +1,12 @@
 # Compiled JavaScript files
 lib/**/*.js
 lib/**/*.js.map
+lib/**/*.d.ts
+*.tsbuildinfo
+coverage/
+.nyc_output/
+.eslintcache
+firebase-debug.log*
 
 # TypeScript v1 declaration files
 typings/

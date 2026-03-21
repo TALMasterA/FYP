@@ -13,7 +13,10 @@
         ".git",
         "firebase-debug.log",
         "firebase-debug.*.log",
-        "*.local"
+        "*.local",
+        "coverage",
+        ".nyc_output",
+        "src/__tests__"
       ],
       "predeploy": [
         "npm --prefix ./functions run build"

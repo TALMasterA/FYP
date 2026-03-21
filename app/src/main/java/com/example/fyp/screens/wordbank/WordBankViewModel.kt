@@ -18,6 +18,7 @@ import com.example.fyp.domain.friends.ShareWordUseCase
 import com.example.fyp.model.UserId
 import com.example.fyp.domain.learning.GenerationEligibility
 import com.example.fyp.core.AiConfig
+import com.example.fyp.core.ErrorMessages
 import com.example.fyp.core.AppLogger
 import com.example.fyp.core.UiConstants
 import com.example.fyp.model.user.AuthState
@@ -208,9 +209,13 @@ class WordBankViewModel @Inject constructor(
                     currentWordBank = currentWordBank.copy(words = updatedWords)
                 )
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = "Failed to delete word")
+                _uiState.value = _uiState.value.copy(error = ErrorMessages.fromException(e, ErrorMessages.GENERIC_RETRY))
             }
         }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 
     fun setPrimaryLanguageCode(code: String) {

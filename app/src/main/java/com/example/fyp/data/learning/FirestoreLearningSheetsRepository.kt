@@ -7,6 +7,7 @@ import com.example.fyp.model.UserId
 import com.example.fyp.model.LanguageCode
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -22,6 +23,14 @@ data class LearningSheetDoc(
     val updatedAt: Timestamp? = null
 )
 
+data class QuizVersionDoc(
+    val primaryLanguageCode: String = "",
+    val targetLanguageCode: String = "",
+    val historyCount: Int = 0,
+    val sourceSheetId: String = "",
+    val updatedAt: Timestamp? = null
+)
+
 class FirestoreLearningSheetsRepository @Inject constructor(
     private val db: FirebaseFirestore
 ) : LearningSheetsRepository {
@@ -34,16 +43,46 @@ class FirestoreLearningSheetsRepository @Inject constructor(
             .collection("learning_sheets")
             .document(docId(primary, target))
 
+    private fun quizVersionRef(uid: String, primary: String, target: String) =
+        db.collection("users")
+            .document(uid)
+            .collection("quiz_versions")
+            .document(docId(primary, target))
+
     override suspend fun getSheet(uid: UserId, primary: LanguageCode, target: LanguageCode): LearningSheetDoc? {
-        val ref = docRef(uid.value, norm(primary.value), norm(target.value))
-        // Try cache first for instant display, fall back to server
-        val snap = try {
-            val cached = ref.get(Source.CACHE).await()
-            if (cached.exists()) cached else ref.get(Source.SERVER).await()
-        } catch (_: Exception) {
-            ref.get().await()
+        val p = norm(primary.value)
+        val t = norm(target.value)
+        val ref = docRef(uid.value, p, t)
+
+        // Read sheet and server-owned version in parallel.
+        val (sheetSnap, versionSnap) = coroutineScope {
+            val sheetDeferred = async {
+                try {
+                    val cached = ref.get(Source.CACHE).await()
+                    if (cached.exists()) cached else ref.get(Source.SERVER).await()
+                } catch (_: Exception) {
+                    ref.get().await()
+                }
+            }
+            val versionDeferred = async {
+                try {
+                    quizVersionRef(uid.value, p, t).get(Source.SERVER).await()
+                } catch (_: Exception) {
+                    quizVersionRef(uid.value, p, t).get().await()
+                }
+            }
+            Pair(sheetDeferred.await(), versionDeferred.await())
         }
-        return if (snap.exists()) snap.toObject(LearningSheetDoc::class.java) else null
+
+        val sheet = if (sheetSnap.exists()) sheetSnap.toObject(LearningSheetDoc::class.java) else null
+        if (sheet == null) return null
+
+        val serverVersion = versionSnap.getLong("historyCount")?.toInt()
+        return if (serverVersion != null && serverVersion > 0) {
+            sheet.copy(historyCountAtGenerate = serverVersion)
+        } else {
+            sheet
+        }
     }
 
     /**
@@ -70,49 +109,57 @@ class FirestoreLearningSheetsRepository @Inject constructor(
         // No, that might be too broad.
 
         // Actually, we can just use `getAll` by constructing DocumentReferences
-        val refs = docIds.map {
-            db.collection("users").document(uid.value).collection("learning_sheets").document(it)
-        }
-
-        val snapshots = db.runBatch { batch ->
-            // getAll is not available in batch in client SDK in the same way, but we can use Tasks.whenAll
-        }
-        // Wait, the Android SDK `getAll` is on `FirebaseFirestore` to fetch multiple docs.
-        // It's `db.getAll(*refs.toTypedArray())`? No, that's server SDK.
-
-        // For client SDK, we can just run parallel gets.
-        // Or query where 'primaryLanguageCode' == p AND 'targetLanguageCode' IN targets
-        // Creating a compound query. Limtit 10 for IN.
-
         val result = mutableMapOf<String, SheetMetadata>()
-        
-        // Let's use the query approach if possible, or parallel gets.
-        // Given complexity, let's just do parallel gets for now, or use the existing logic if it was working.
-        // The previous code seemed to be incomplete implemented or I missed it.
-        // Let's implement it using 'in' query (chunks of 10)
 
         val chunks = normalizedTargets.chunked(10)
         // Fetch all chunks in parallel to reduce latency
         val chunkResults = coroutineScope {
             chunks.map { chunk ->
                 async {
+                    val chunkDocIds = chunk.map { docId(p, it) }
                     val q = db.collection("users").document(uid.value).collection("learning_sheets")
                         .whereEqualTo("primaryLanguageCode", p)
                         .whereIn("targetLanguageCode", chunk)
-                    q.get().await()
+                    val versionQuery = db.collection("users").document(uid.value).collection("quiz_versions")
+                        .whereIn(FieldPath.documentId(), chunkDocIds)
+
+                    val sheetSnap = q.get().await()
+                    val versionSnap = versionQuery.get().await()
+                    Pair(sheetSnap, versionSnap)
                 }
             }.awaitAll()
         }
 
-        for (snaps in chunkResults) {
+        for ((sheetSnaps, versionSnaps) in chunkResults) {
+            val serverVersionByDocId = versionSnaps.documents.associate { doc ->
+                doc.id to ((doc.getLong("historyCount") ?: 0L).toInt())
+            }
+
             // Mark found ones
-            snaps.documents.forEach { doc ->
+            sheetSnaps.documents.forEach { doc ->
                 val data = doc.toObject(LearningSheetDoc::class.java)
                 if (data != null) {
+                    val currentDocId = doc.id
+                    val resolvedCount = serverVersionByDocId[currentDocId]
+                        ?.takeIf { it > 0 }
+                        ?: data.historyCountAtGenerate
                     result[data.targetLanguageCode] = SheetMetadata(
                         exists = true,
-                        historyCountAtGenerate = data.historyCountAtGenerate
+                        historyCountAtGenerate = resolvedCount
                     )
+                }
+            }
+
+            // If a server-owned version exists but sheet query missed due stale local state,
+            // still expose metadata using the target parsed from document ID.
+            serverVersionByDocId.forEach { (id, count) ->
+                if (count <= 0) return@forEach
+                val split = id.split("__", limit = 2)
+                if (split.size == 2) {
+                    val target = split[1]
+                    if (!result.containsKey(target)) {
+                        result[target] = SheetMetadata(exists = true, historyCountAtGenerate = count)
+                    }
                 }
             }
         }

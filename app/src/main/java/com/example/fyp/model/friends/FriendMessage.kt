@@ -14,6 +14,7 @@ data class FriendMessage(
     val messageId: String = "",
     val chatId: String = "",                     // Composite ID: smaller_uid + "_" + larger_uid
     val senderId: String = "",
+    val senderUsername: String = "",
     val receiverId: String = "",
     val content: String = "",
     val type: MessageType = MessageType.TEXT,

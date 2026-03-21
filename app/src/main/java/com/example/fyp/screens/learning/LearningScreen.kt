@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -74,10 +75,13 @@ fun LearningScreen(
     var pendingGenerateLang by remember { mutableStateOf<String?>(null) }
     var showRegenInfo by remember { mutableStateOf(false) }
     var showScreenInfo by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
 
     // Auto-dismiss error after delay
     LaunchedEffect(uiState.error) {
         if (uiState.error != null) {
+            // Ensure the error card is visible even when the user has scrolled down.
+            listState.animateScrollToItem(0)
             delay(UiConstants.ERROR_AUTO_DISMISS_MS)
             viewModel.clearError()
         }
@@ -187,6 +191,7 @@ fun LearningScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .padding(16.dp),
+                state = listState,
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
 

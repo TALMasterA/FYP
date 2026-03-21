@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.fyp.core.UiConstants
 import com.example.fyp.core.StandardScreenScaffold
 import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.domain.learning.GenerationEligibility
@@ -20,6 +21,7 @@ import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.ui.components.FriendSelectorDialog
 import com.example.fyp.ui.components.WordBankItemSkeleton
+import kotlinx.coroutines.delay
 
 // Word Bank Screen - Main entry point for word bank feature
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +53,13 @@ fun WordBankScreen(
         viewModel.setPrimaryLanguageCode(primaryLanguageCode)
         customWordsViewModel.setPrimaryLanguageCode(primaryLanguageCode)
         currentPrimaryCode = primaryLanguageCode
+    }
+
+    LaunchedEffect(uiState.error) {
+        if (!uiState.error.isNullOrBlank()) {
+            delay(UiConstants.ERROR_AUTO_DISMISS_MS)
+            viewModel.clearError()
+        }
     }
 
     val selectedLanguage = uiState.selectedLanguageCode

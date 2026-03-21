@@ -189,6 +189,8 @@ export const repairFriendsData = onSchedule(
             needsPatch = true;
           }
 
+          // We only read the public profile for blank-username rows because those
+          // are the legacy drift cases where discoverability flags can be inconsistent.
           // Also normalize legacy public profile discoverability flags.
           const publicRef = firestore
             .collection("users").doc(doc.id)

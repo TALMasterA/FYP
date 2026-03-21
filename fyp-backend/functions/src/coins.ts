@@ -30,7 +30,7 @@ interface QuizAttemptData {
  *
  * Anti-Cheat Rules (all verified server-side):
  * 1. 1 coin per correct answer on first attempt only
- * 2. Quiz version must match current learning sheet version (read from Firestore)
+ * 2. Quiz version must match current server-owned quiz version (read from Firestore)
  * 3. Quiz count must be at least 10 HIGHER than previous awarded quiz count
  * 4. First quiz for a language pair is always eligible
  * 5. Each quiz version can only be awarded once
@@ -78,43 +78,42 @@ export const awardQuizCoins = onCall(
       return {awarded: false, reason: "zero_score"};
     }
 
-    const versionKey = `${primaryCode}__${targetCode}__${generatedCount}`;
-
     // Document references
-    const coinAwardRef = getFirestore()
-      .collection("users").doc(uid)
-      .collection("coin_awards").doc(versionKey);
     const lastAwardedRef = getFirestore()
       .collection("users").doc(uid)
       .collection("last_awarded_quiz").doc(`${primaryCode}__${targetCode}`);
     const coinStatsRef = getFirestore()
       .collection("users").doc(uid)
       .collection("user_stats").doc("coins");
-    const sheetRef = getFirestore()
+    const quizVersionRef = getFirestore()
       .collection("users").doc(uid)
-      .collection("learning_sheets").doc(`${primaryCode}__${targetCode}`);
+      .collection("quiz_versions").doc(`${primaryCode}__${targetCode}`);
 
     // Run transaction for atomicity
     const result = await getFirestore().runTransaction(async (tx) => {
-      // Check 1: Already awarded for this exact version?
+      // Check 1: Get CURRENT server-owned quiz version (anti-cheat)
+      const quizVersionDoc = await tx.get(quizVersionRef);
+      if (!quizVersionDoc.exists) {
+        return {awarded: false, reason: "no_quiz_version"};
+      }
+      const currentQuizVersion = quizVersionDoc.data()?.historyCount;
+      if (typeof currentQuizVersion !== "number") {
+        return {awarded: false, reason: "invalid_quiz_version"};
+      }
+
+      // Quiz attempt version must equal the current server-owned version.
+      if (generatedCount !== currentQuizVersion) {
+        return {awarded: false, reason: "version_mismatch"};
+      }
+
+      // Check 2: Already awarded for this exact validated version?
+      const versionKey = `${primaryCode}__${targetCode}__${currentQuizVersion}`;
+      const coinAwardRef = getFirestore()
+        .collection("users").doc(uid)
+        .collection("coin_awards").doc(versionKey);
       const awardDoc = await tx.get(coinAwardRef);
       if (awardDoc.exists) {
         return {awarded: false, reason: "already_awarded"};
-      }
-
-      // Check 2: Get CURRENT learning sheet version from server (anti-cheat)
-      const sheetDoc = await tx.get(sheetRef);
-      if (!sheetDoc.exists) {
-        return {awarded: false, reason: "no_sheet"};
-      }
-      const currentSheetVersion = sheetDoc.data()?.historyCountAtGenerate;
-      if (typeof currentSheetVersion !== "number") {
-        return {awarded: false, reason: "invalid_sheet"};
-      }
-
-      // Quiz version must EQUAL current sheet version
-      if (generatedCount !== currentSheetVersion) {
-        return {awarded: false, reason: "version_mismatch"};
       }
 
       // Check 3: Anti-cheat - need 10+ more records than last awarded quiz
@@ -126,11 +125,11 @@ export const awardQuizCoins = onCall(
 
       if (lastAwardedCount !== null) {
         const minRequired = lastAwardedCount + MIN_INCREMENT_FOR_COINS;
-        if (generatedCount < minRequired) {
+        if (currentQuizVersion < minRequired) {
           return {
             awarded: false,
             reason: "insufficient_records",
-            needed: minRequired - generatedCount,
+            needed: minRequired - currentQuizVersion,
           };
         }
       }
@@ -156,13 +155,15 @@ export const awardQuizCoins = onCall(
       tx.set(coinAwardRef, {
         awarded: true,
         attemptId,
+        requestGeneratedHistoryCountAtGenerate: generatedCount,
+        validatedHistoryCount: currentQuizVersion,
         coinsAwarded: score,
         awardedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
       // Update last awarded count for anti-cheat
       tx.set(lastAwardedRef, {
-        count: generatedCount,
+        count: currentQuizVersion,
         lastAwardedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 

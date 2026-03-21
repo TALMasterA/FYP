@@ -23,6 +23,72 @@ service cloud.firestore {
     }
 
     // ============================================
+    // Translation History: /users/{userId}/history/{historyId}
+    // Owner-only with core schema/type validation.
+    // ============================================
+    match /users/{userId}/history/{historyId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && isValidHistoryRecord(userId);
+      allow delete: if request.auth != null && request.auth.uid == userId;
+
+      function isValidLang(code) {
+        return code is string && code.matches('^[a-z]{2}(-[A-Z]{2})?$');
+      }
+
+      function isValidHistoryRecord(uid) {
+        return request.resource.data.userId == uid
+          && request.resource.data.sourceText is string
+          && request.resource.data.sourceText.size() > 0
+          && request.resource.data.sourceText.size() <= 5000
+          && request.resource.data.targetText is string
+          && request.resource.data.targetText.size() > 0
+          && request.resource.data.targetText.size() <= 5000
+          && isValidLang(request.resource.data.sourceLang)
+          && isValidLang(request.resource.data.targetLang)
+          && request.resource.data.timestamp is timestamp;
+      }
+    }
+
+    // ============================================
+    // Learning Sheets: /users/{userId}/learning_sheets/{sheetId}
+    // Owner-only with language/docId/count validation.
+    // ============================================
+    match /users/{userId}/learning_sheets/{sheetId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && isValidLearningSheet(sheetId);
+      allow delete: if request.auth != null && request.auth.uid == userId;
+
+      function isValidLang(code) {
+        return code is string && code.matches('^[a-z]{2}(-[A-Z]{2})?$');
+      }
+
+      function isValidLearningSheet(id) {
+        return isValidLang(request.resource.data.primaryLanguageCode)
+          && isValidLang(request.resource.data.targetLanguageCode)
+          && id == request.resource.data.primaryLanguageCode + '__' + request.resource.data.targetLanguageCode
+          && request.resource.data.content is string
+          && request.resource.data.content.size() > 0
+          && request.resource.data.historyCountAtGenerate is int
+          && request.resource.data.historyCountAtGenerate >= 1
+          && request.resource.data.historyCountAtGenerate <= 1000000
+          && request.resource.data.updatedAt is timestamp;
+      }
+    }
+
+    // ============================================
+    // Server-owned quiz versions: /users/{userId}/quiz_versions/{docId}
+    // Readable by owner, writable only by admin SDK / Cloud Functions.
+    // ============================================
+    match /users/{userId}/quiz_versions/{docId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    // ============================================
     // User Data Subcollections
     // Users can only access their own subcollections.
     // Coin-related subcollections (user_stats/coins, coin_awards, last_awarded_quiz)
@@ -35,6 +101,9 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId
         && subCol != 'coin_awards'
         && subCol != 'last_awarded_quiz'
+        && subCol != 'history'
+        && subCol != 'learning_sheets'
+        && subCol != 'quiz_versions'
         && !(subCol == 'user_stats' && docId == 'coins')
         && !(subCol == 'profile' && docId == 'settings');
     }
@@ -306,7 +375,10 @@ service cloud.firestore {
         && isParticipantFromChatId()
         && request.resource.data.senderId == request.auth.uid
         && request.resource.data.content.size() > 0
-        && request.resource.data.content.size() <= 2000;
+        && request.resource.data.content.size() <= 2000
+        && (!('senderUsername' in request.resource.data)
+            || (request.resource.data.senderUsername is string
+                && request.resource.data.senderUsername.size() <= 20));
 
       // Update only allowed for marking as read
       allow update: if request.auth != null 

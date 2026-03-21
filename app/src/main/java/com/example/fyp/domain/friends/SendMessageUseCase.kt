@@ -14,11 +14,12 @@ class SendMessageUseCase @Inject constructor(
         chatId: String,
         fromUserId: UserId,
         toUserId: UserId,
-        content: String
+        content: String,
+        senderUsername: String = ""
     ): Result<Unit> {
         if (content.isBlank()) {
             return Result.failure(IllegalArgumentException("Message text cannot be empty"))
         }
-        return chatRepository.sendMessage(chatId, fromUserId, toUserId, content)
+        return chatRepository.sendMessage(chatId, fromUserId, toUserId, content, senderUsername)
     }
 }

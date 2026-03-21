@@ -181,7 +181,7 @@ class ChatViewModelTest {
 
     @Test
     fun `sendMessage success clears message text`() = runTest {
-        whenever(sendMessageUseCase.invoke(eq("chat_friend1_user1"), eq(UserId("user1")), eq(UserId(friendId)), any()))
+        whenever(sendMessageUseCase.invoke(eq("chat_friend1_user1"), eq(UserId("user1")), eq(UserId(friendId)), any(), any()))
             .thenReturn(Result.success(Unit))
 
         val vm = buildViewModel()
@@ -199,7 +199,7 @@ class ChatViewModelTest {
     @Test
     fun `sendMessage failure surfaces error`() = runTest {
         // Use raw values (no matchers) to avoid inline value class boxing mismatch
-        whenever(sendMessageUseCase.invoke("chat_friend1_user1", UserId("user1"), UserId(friendId), "Hello!"))
+        whenever(sendMessageUseCase.invoke("chat_friend1_user1", UserId("user1"), UserId(friendId), "Hello!", ""))
             .thenReturn(Result.failure(RuntimeException("Network error")))
 
         val vm = buildViewModel()
@@ -216,7 +216,7 @@ class ChatViewModelTest {
 
     @Test
     fun `rate limiter blocks after 10 rapid message sends`() = runTest {
-        whenever(sendMessageUseCase.invoke(eq("chat_friend1_user1"), eq(UserId("user1")), eq(UserId(friendId)), any()))
+        whenever(sendMessageUseCase.invoke(eq("chat_friend1_user1"), eq(UserId("user1")), eq(UserId(friendId)), any(), any()))
             .thenReturn(Result.success(Unit))
 
         val vm = buildViewModel()
@@ -298,7 +298,7 @@ class ChatViewModelTest {
     @Test
     fun `clearError clears error field`() = runTest {
         // Use raw values (no matchers) to avoid inline value class boxing mismatch
-        whenever(sendMessageUseCase.invoke("chat_friend1_user1", UserId("user1"), UserId(friendId), "test"))
+        whenever(sendMessageUseCase.invoke("chat_friend1_user1", UserId("user1"), UserId(friendId), "test", ""))
             .thenReturn(Result.failure(RuntimeException("fail")))
 
         val vm = buildViewModel()

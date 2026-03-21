@@ -143,7 +143,7 @@ class FriendsViewModel @Inject constructor(
                         sharedFriendsDataSource.startObserving(auth.user.uid)
                         subscribeToSharedData()
                         startOutgoingRequestsObserver(UserId(auth.user.uid))
-                        startUnreadPerFriendObserver(UserId(auth.user.uid))
+                        startUnreadPerFriendObserver()
                         // Load own profile to determine if username is set
                         loadOwnUsername(auth.user.uid)
                         // Load blocked users list
@@ -223,7 +223,7 @@ class FriendsViewModel @Inject constructor(
      * AppViewModel feeds the raw Firestore data into SharedFriendsDataSource via
      * updateRawUnreadPerFriend(); new messages for a "seen" friend un-mark them seen.
      */
-    private fun startUnreadPerFriendObserver(@Suppress("UNUSED_PARAMETER") userId: UserId) {
+    private fun startUnreadPerFriendObserver() {
         unreadPerFriendJob?.cancel()
         unreadPerFriendJob = viewModelScope.launch {
             combine(

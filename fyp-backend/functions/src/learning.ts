@@ -5,17 +5,119 @@
  * with per-user rate limiting via Firestore.
  */
 import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import fetch from "node-fetch";
+import * as admin from "firebase-admin";
 import {
   requireAuth,
   requireString,
   enforceRateLimit,
   validateGenAiConfig,
+  getFirestore,
   GENAI_BASE_URL,
   GENAI_API_VERSION,
   GENAI_API_KEY,
 } from "./helpers.js";
 import {logger} from "./logger.js";
+
+const LANG_CODE_RE = /^[a-z]{2}(-[A-Z]{2})?$/;
+
+async function getLanguageHistoryCount(uid: string, languageCode: string): Promise<number> {
+  const historyRef = getFirestore()
+    .collection("users")
+    .doc(uid)
+    .collection("history");
+
+  const [sourceSnap, targetSnap, sameSnap] = await Promise.all([
+    historyRef.where("sourceLang", "==", languageCode).count().get(),
+    historyRef.where("targetLang", "==", languageCode).count().get(),
+    historyRef
+      .where("sourceLang", "==", languageCode)
+      .where("targetLang", "==", languageCode)
+      .count()
+      .get(),
+  ]);
+
+  const sourceCount = Number(sourceSnap.data().count ?? 0);
+  const targetCount = Number(targetSnap.data().count ?? 0);
+  const sameCount = Number(sameSnap.data().count ?? 0);
+  return Math.max(0, sourceCount + targetCount - sameCount);
+}
+
+/**
+ * Maintains server-owned quiz version metadata for each learning-sheet language pair.
+ *
+ * The version is computed from Firestore history on the server and stored under:
+ * users/{uid}/quiz_versions/{primary}__{target}
+ */
+export const syncQuizVersionFromLearningSheet = onDocumentWritten(
+  {
+    document: "users/{userId}/learning_sheets/{sheetId}",
+    region: "us-central1",
+  },
+  async (event) => {
+    const uid = event.params.userId;
+    const sheetId = event.params.sheetId;
+    const versionRef = getFirestore()
+      .collection("users")
+      .doc(uid)
+      .collection("quiz_versions")
+      .doc(sheetId);
+
+    const after = event.data?.after;
+    if (!after || !after.exists) {
+      try {
+        await versionRef.delete();
+      } catch {
+        // Best-effort cleanup if sheet is removed.
+      }
+      return;
+    }
+
+    const data = after.data() ?? {};
+    let primaryCode = String(data.primaryLanguageCode ?? "").trim();
+    let targetCode = String(data.targetLanguageCode ?? "").trim();
+
+    if ((!primaryCode || !targetCode) && sheetId.includes("__")) {
+      const parts = sheetId.split("__", 2);
+      if (parts.length === 2) {
+        if (!primaryCode) primaryCode = parts[0];
+        if (!targetCode) targetCode = parts[1];
+      }
+    }
+
+    if (!LANG_CODE_RE.test(primaryCode) || !LANG_CODE_RE.test(targetCode)) {
+      logger.warn("syncQuizVersionFromLearningSheet: invalid language codes", {
+        uid,
+        sheetId,
+        primaryCode,
+        targetCode,
+      });
+      return;
+    }
+
+    let historyCount: number;
+    try {
+      historyCount = await getLanguageHistoryCount(uid, targetCode);
+    } catch (err: any) {
+      logger.error("syncQuizVersionFromLearningSheet: failed to count history", {
+        uid,
+        sheetId,
+        targetCode,
+        error: err?.message,
+      });
+      return;
+    }
+
+    await versionRef.set({
+      primaryLanguageCode: primaryCode,
+      targetLanguageCode: targetCode,
+      historyCount,
+      sourceSheetId: sheetId,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, {merge: true});
+  }
+);
 
 export const generateLearningContent = onCall(
   {

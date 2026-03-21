@@ -87,9 +87,9 @@ Firebase login is required.
 ## 🎯 Core Features
 
 **Translation Modes:**
-- **Quick Translate (Discrete):** Real-time voice translation for short phrases with auto-detect or manual language selection; shortcut button to switch to Live Conversation mode
+- **Quick Translate (Discrete):** Real-time voice translation for short phrases and single-turn translations with auto-detect or manual language selection; shortcut button to switch to Live Conversation mode
 - **Camera / OCR:** Scan text from images via camera or gallery; language hint reminds users to set the correct source language for best accuracy
-- **Live Conversation (Continuous):** Live conversation translation with automatic speaker detection (Person A/B)
+- **Live Conversation (Continuous):** Continuous, multi-turn conversation translation with automatic speaker detection (Person A/B)
 - Multi-language support: English, Cantonese (zh-HK), Traditional Chinese (zh-TW), Simplified Chinese (zh-CN), Japanese, and 10+ more via Azure
 - Language swap button also swaps the recognised/translated text
 
@@ -154,7 +154,11 @@ Firebase login is required.
 - Persistent offline banner when connectivity is lost
 - Edge-to-edge display; all screens properly padded above system navigation keys
 - Help & Notes screen with ordered sections (Cautions, Features, Tips, Friend System, Privacy) using card layout
-- Centralised error handling: user-facing errors auto-dismiss after 3 s; system errors logged to Crashlytics via `AppLogger.e`
+- Centralised error handling: user-facing errors auto-dismiss after 3 s; key list-based screens auto-scroll to error banners when errors appear; system errors logged to Crashlytics via `AppLogger.e`
+- OCR/camera capture errors are surfaced in-screen and auto-cleared to keep feedback visible without blocking interaction
+
+**Build Output & APK Size:**
+- ABI splits are enabled for `armeabi-v7a` and `arm64-v8a`, and universal APK output is disabled to avoid bundling duplicate native libraries in a single artifact.
 
 --------------------------------------------------------------
 

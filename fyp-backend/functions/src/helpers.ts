@@ -168,48 +168,50 @@ export async function enforceRateLimit(uid: string): Promise<void> {
   const now = Date.now();
   const windowStart = now - RATE_LIMIT_WINDOW_MS;
 
-  let doc: admin.firestore.DocumentSnapshot;
   try {
-    doc = await rateLimitRef.get();
-  } catch (fsError: any) {
-    logger.error("enforceRateLimit: Firestore read failed", {uid, error: fsError?.message});
-    throw new HttpsError("internal", "Rate limit check failed (Firestore read error). Please try again.");
-  }
+    await getFirestore().runTransaction(async (tx) => {
+      const doc = await tx.get(rateLimitRef);
 
-  let timestamps: number[] = [];
+      let timestamps: number[] = [];
+      if (doc.exists) {
+        const data = doc.data();
+        const rawTimestamps = data?.timestamps;
+        if (rawTimestamps == null) {
+          timestamps = [];
+        } else if (!Array.isArray(rawTimestamps) || rawTimestamps.some((ts) => typeof ts !== "number" || !Number.isFinite(ts))) {
+          logger.error("enforceRateLimit: malformed timestamps payload", {uid});
+          throw new HttpsError("internal", "Rate limit data is invalid. Please try again.");
+        } else {
+          timestamps = rawTimestamps;
+        }
+      }
 
-  if (doc.exists) {
-    const data = doc.data();
-    const rawTimestamps = data?.timestamps;
-    if (rawTimestamps == null) {
-      timestamps = [];
-    } else if (!Array.isArray(rawTimestamps) || rawTimestamps.some((ts) => typeof ts !== "number" || !Number.isFinite(ts))) {
-      logger.error("enforceRateLimit: malformed timestamps payload", {uid});
-      throw new HttpsError("internal", "Rate limit data is invalid. Please try again.");
-    } else {
-      timestamps = rawTimestamps;
+      // Keep only the active window to cap document growth and enforce rolling limits.
+      const activeWindow = timestamps.filter((ts: number) => ts > windowStart);
+
+      if (activeWindow.length >= RATE_LIMIT_MAX_REQUESTS) {
+        // Persist trimmed timestamps even when blocked so stale data ages out naturally.
+        tx.set(rateLimitRef, {
+          timestamps: activeWindow,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        throw new HttpsError(
+          "resource-exhausted",
+          `Rate limit exceeded. Maximum ${RATE_LIMIT_MAX_REQUESTS} AI generation requests per hour.`
+        );
+      }
+
+      // Transaction keeps read+write atomic under concurrent requests from the same user.
+      tx.set(rateLimitRef, {
+        timestamps: [...activeWindow, now],
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+  } catch (error: any) {
+    if (error instanceof HttpsError) {
+      throw error;
     }
-  }
-
-  timestamps = timestamps.filter((ts: number) => ts > windowStart);
-
-  if (timestamps.length >= RATE_LIMIT_MAX_REQUESTS) {
-    try {
-      await rateLimitRef.set({timestamps, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
-    } catch (fsWriteError: any) {
-      logger.warn("enforceRateLimit: Firestore write failed during rate limit enforcement", {uid, error: fsWriteError?.message});
-    }
-    throw new HttpsError(
-      "resource-exhausted",
-      `Rate limit exceeded. Maximum ${RATE_LIMIT_MAX_REQUESTS} AI generation requests per hour.`
-    );
-  }
-
-  timestamps.push(now);
-  try {
-    await rateLimitRef.set({timestamps, updatedAt: admin.firestore.FieldValue.serverTimestamp()});
-  } catch (fsWriteError: any) {
-    logger.error("enforceRateLimit: Firestore write failed", {uid, error: fsWriteError?.message});
-    throw new HttpsError("internal", "Rate limit update failed (Firestore write error). Please try again.");
+    logger.error("enforceRateLimit: Firestore transaction failed", {uid, error: error?.message});
+    throw new HttpsError("internal", "Rate limit check failed. Please try again.");
   }
 }
