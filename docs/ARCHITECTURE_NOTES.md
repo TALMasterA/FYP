@@ -593,3 +593,38 @@ scope.launch(Dispatchers.IO) {
 **Guard:** `UsernameRequirementIntegrationTest` (11 tests) verifies ViewModel gate behavior. `UsernameEnforcementIntegrationTest` (12 tests) verifies domain layer does not enforce.
 
 ---
+
+## 29. Centralized Validation Constants — Frontend-Backend Alignment
+
+**Files:** `fyp-backend/functions/src/constants.ts`, `app/src/main/java/com/example/fyp/model/ValueTypes.kt`, `app/src/main/java/com/example/fyp/domain/learning/CoinEligibility.kt`, `app/src/main/java/com/example/fyp/model/UserSettings.kt`
+
+**Invariant:** Critical validation constants (language code format, coin anti-cheat limits, shop pricing, spam detection) are centralized in `constants.ts` on the backend. The Android app frontend must maintain equivalent values in sync.
+
+**Backend single source of truth (`constants.ts`):**
+- `LANG_CODE_RE` — Language code validation regex (`/^[a-z]{2}(-[A-Z]{2})?$/`)
+- `MIN_INCREMENT_FOR_COINS` — Anti-cheat: 10 new records required between quiz coin awards
+- `MAX_QUIZ_SCORE` — Anti-cheat: cap at 50 coins per quiz (normal max is 10)
+- `MAX_FRIEND_REQUESTS_PER_HOUR` — Rate limiting: 3 friend requests per hour
+- `SPAM_RECENT_MESSAGES_WINDOW`, `SPAM_DUPLICATE_THRESHOLD`, `SPAM_LINK_FLOOD_THRESHOLD` — Spam detection thresholds
+- `HISTORY_EXPANSION_COST`, `PALETTE_UNLOCK_COST`, `BASE_HISTORY_LIMIT`, `MAX_HISTORY_LIMIT` — Shop system pricing and limits
+- `VALID_PALETTE_IDS` — List of unlockable color palettes
+
+**Frontend counterparts:**
+- `LanguageCode.kt` — Same regex pattern in `init` block validation
+- `CoinEligibility.kt` — `MIN_INCREMENT_FOR_COINS` constant
+- `UserSettings.kt` — `ColorPalette` enum, history limits, shop costs
+
+**Rule:** When updating validation logic on the backend:
+1. Update the constant in `constants.ts`
+2. Update the equivalent constant/validation in the Android app
+3. Document the change in this section
+4. Verify backend tests pass (`cd fyp-backend/functions && npm test`)
+5. Verify frontend tests pass (`./gradlew :app:testDebugUnitTest`)
+
+**Benefits:**
+- Eliminates scattered magic numbers across backend Cloud Functions
+- Provides single source of truth with JSDoc documentation
+- Makes frontend-backend alignment explicit and reviewable
+- Reduces risk of validation mismatches between client and server
+
+---

@@ -8,15 +8,14 @@ import {onDocumentCreated, onDocumentUpdated} from "firebase-functions/v2/firest
 import * as admin from "firebase-admin";
 import {getFirestore} from "./helpers.js";
 import {logger} from "./logger.js";
-
-const MAX_MESSAGE_PREVIEW_LENGTH = 100;
-const MAX_FRIEND_REQUESTS_PER_HOUR = 3;
-
-// ---- Spam detection constants ----
-const SPAM_RECENT_MESSAGES_WINDOW = 5; // Check last N messages for spam patterns (balances detection accuracy with Firestore reads)
-const SPAM_DUPLICATE_THRESHOLD = 3; // N identical messages in a row = spam
-const SPAM_LINK_FLOOD_THRESHOLD = 3; // N links in a single message = spam
-const LINK_PATTERN = /https?:\/\/[^\s]+/gi;
+import {
+  MAX_MESSAGE_PREVIEW_LENGTH,
+  MAX_FRIEND_REQUESTS_PER_HOUR,
+  SPAM_RECENT_MESSAGES_WINDOW,
+  SPAM_DUPLICATE_THRESHOLD,
+  SPAM_LINK_FLOOD_THRESHOLD,
+  LINK_PATTERN,
+} from "./constants.js";
 
 /**
  * Lightweight server-side spam pattern check.

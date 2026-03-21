@@ -11,11 +11,19 @@ import {
   requireString,
   getFirestore,
 } from "./helpers.js";
+import {
+  MIN_INCREMENT_FOR_COINS,
+  MAX_QUIZ_SCORE,
+  LANG_CODE_RE,
+  HISTORY_EXPANSION_COST,
+  HISTORY_EXPANSION_INCREMENT,
+  BASE_HISTORY_LIMIT,
+  MAX_HISTORY_LIMIT,
+  PALETTE_UNLOCK_COST,
+  VALID_PALETTE_IDS,
+} from "./constants.js";
 
 // ============ Quiz Coin Award (Server-Side Anti-Cheat) ============
-
-const MIN_INCREMENT_FOR_COINS = 10;
-const MAX_QUIZ_SCORE = 50; // Safety cap: normal quiz max is 10 (10 questions × 1 coin each), but allows up to 50 as buffer against client tampering while limiting unauthorized coin generation
 
 interface QuizAttemptData {
   attemptId: string;
@@ -65,7 +73,6 @@ export const awardQuizCoins = onCall(
     }
 
     // Validate language code format to match app model constraints: xx or xx-XX.
-    const LANG_CODE_RE = /^[a-z]{2}(-[A-Z]{2})?$/;
     if (!LANG_CODE_RE.test(primaryCode) || !LANG_CODE_RE.test(targetCode)) {
       throw new HttpsError(
         "invalid-argument",
@@ -175,17 +182,6 @@ export const awardQuizCoins = onCall(
 );
 
 // ============ Server-Side Shop Purchases (Anti-Cheat) ============
-
-// Shop constants — single source of truth (must match Android UserSettings / ColorPalette).
-const HISTORY_EXPANSION_COST = 1000;
-const HISTORY_EXPANSION_INCREMENT = 10;
-const BASE_HISTORY_LIMIT = 30;
-const MAX_HISTORY_LIMIT = 60;
-const PALETTE_UNLOCK_COST = 10;
-const VALID_PALETTE_IDS = [
-  "ocean", "sunset", "lavender", "rose", "mint",
-  "crimson", "amber", "indigo", "emerald", "coral",
-];
 
 /**
  * Server-side coin spending for shop purchases.

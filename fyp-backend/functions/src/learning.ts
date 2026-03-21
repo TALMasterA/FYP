@@ -19,8 +19,7 @@ import {
   GENAI_API_KEY,
 } from "./helpers.js";
 import {logger} from "./logger.js";
-
-const LANG_CODE_RE = /^[a-z]{2}(-[A-Z]{2})?$/;
+import {LANG_CODE_RE} from "./constants.js";
 
 async function getLanguageHistoryCount(uid: string, languageCode: string): Promise<number> {
   const historyRef = getFirestore()
