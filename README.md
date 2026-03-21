@@ -363,7 +363,7 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **Android — 205 test files, 2,655 unit tests** (from `app/build/test-results/testDebugUnitTest`)
+- **Android — 206 test files, 2,657 unit tests** (from `app/build/test-results/testDebugUnitTest`)
 - **Backend — 9 test files, 122 tests** covering Cloud Functions logic
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:

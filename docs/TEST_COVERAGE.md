@@ -6,9 +6,9 @@ _Last updated: 2026-03-21_
 
 | Metric                    | Count   |
 |---------------------------|---------|
-| Source files               | 251     |
-| Test files                 | 205     |
-| Total `@Test` methods      | 2,655   |
+| Source files               | 252     |
+| Test files                 | 206     |
+| Total `@Test` methods      | 2,657   |
 | Key logic files            | ~140    |
 | Key logic files tested     | ~140    |
 | Key logic coverage         | ~100%   |

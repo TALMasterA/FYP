@@ -96,6 +96,7 @@ class AppViewModel @Inject constructor(
     // ── Init ─────────────────────────────────────────────────────────────────
 
     init {
+        // Listen to auth state changes and start/stop shared data sources accordingly
         viewModelScope.launch {
             authRepository.currentUserState.collect { authState ->
                 when (authState) {
@@ -142,6 +143,16 @@ class AppViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Starts observing unread message counts for the logged-in user.
+     *
+     * Uses a two-job pattern to efficiently manage badge state:
+     * - Job 1: Streams raw unread counts from Firestore to SharedFriendsDataSource
+     * - Job 2: Applies seen-filtering and user preferences to derive final badge counts
+     *
+     * This split allows the SharedFriendsDataSource to cache raw data while the UI
+     * layer can independently toggle badges based on user settings without re-querying Firestore.
+     */
     private fun startObservingUnread(userId: String) {
         unreadJob?.cancel()
         // Job 1: Feed raw per-friend unread counts into SharedFriendsDataSource for seen-filtering

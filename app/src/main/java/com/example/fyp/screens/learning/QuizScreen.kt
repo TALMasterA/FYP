@@ -61,7 +61,9 @@ fun QuizScreen(
     val canEarnCoinsOnRegen = lastAwardedQuizCount == null ||
         (sheetHistoryCount != null && sheetHistoryCount >= lastAwardedQuizCount + 10)
 
-    // Anti-cheat: Disable generate button based on multiple conditions
+    // Anti-cheat: Disable generate button based on multiple conditions to prevent gaming the coin system
+    // Conditions: (1) No ongoing generation, (2) Sheet has been created, (3) New materials added since last quiz,
+    // (4) Sheet version hasn't been tampered with, (5) Sheet has content
     val sheetLowerThanQuiz = currentQuizCount != null && sheetHistoryCount != null && sheetHistoryCount < currentQuizCount
     val quizGenEnabled = !isAnyGenerationOngoing &&
             sheetHistoryCount != null &&
