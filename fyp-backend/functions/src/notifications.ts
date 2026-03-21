@@ -15,6 +15,7 @@ import {
   SPAM_DUPLICATE_THRESHOLD,
   SPAM_LINK_FLOOD_THRESHOLD,
   LINK_PATTERN,
+  MS_PER_HOUR,
 } from "./constants.js";
 
 /**
@@ -215,7 +216,7 @@ export const sendFriendRequestNotification = onDocumentCreated(
 
     // Server-side rate limiting: count PENDING requests from this sender in the last hour
     try {
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const oneHourAgo = new Date(Date.now() - MS_PER_HOUR);
       const recentRequests = await getFirestore()
         .collection("friend_requests")
         .where("fromUserId", "==", senderId)

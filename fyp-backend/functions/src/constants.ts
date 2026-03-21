@@ -113,3 +113,35 @@ export const VALID_PALETTE_IDS: string[] = [
   "ocean", "sunset", "lavender", "rose", "mint",
   "crimson", "amber", "indigo", "emerald", "coral",
 ];
+
+// ============ Time Duration Constants ============
+
+/**
+ * Base time unit conversions for readability.
+ * Use these to build larger time windows and avoid magic numbers.
+ */
+export const MS_PER_SECOND = 1000;
+export const MS_PER_MINUTE = 60 * MS_PER_SECOND;
+export const MS_PER_HOUR = 60 * MS_PER_MINUTE;
+export const MS_PER_DAY = 24 * MS_PER_HOUR;
+
+/**
+ * Rate limiting window for AI generation requests.
+ * Used in helpers.ts enforceRateLimit() to prevent API abuse.
+ */
+export const RATE_LIMIT_WINDOW_MS = MS_PER_HOUR; // 1 hour
+
+/**
+ * Data retention periods for maintenance cleanup tasks.
+ * These control how long data is kept before automated deletion.
+ */
+export const THIRTY_DAYS_MS = 30 * MS_PER_DAY; // Rate limit doc cleanup
+export const SIXTY_DAYS_MS = 60 * MS_PER_DAY; // FCM token cleanup
+
+/**
+ * Firestore batch operation page size limits.
+ * Firestore batch commits are limited to 500 operations per batch.
+ */
+export const FIRESTORE_BATCH_PAGE_SIZE = 500;
+export const FIRESTORE_BATCH_PAGE_SIZE_SMALL = 300; // For complex operations with additional reads
+

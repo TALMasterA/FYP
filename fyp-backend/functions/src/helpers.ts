@@ -5,6 +5,7 @@ import {HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import * as admin from "firebase-admin";
 import {logger} from "./logger.js";
+import {RATE_LIMIT_WINDOW_MS} from "./constants.js";
 
 // ============ Firebase Initialization ============
 
@@ -155,7 +156,6 @@ export function validateGenAiConfig(config: {
 // ============ Rate Limiting ============
 
 export const RATE_LIMIT_MAX_REQUESTS = 10;
-export const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 /**
  * Check and enforce per-user rate limiting for AI generation.

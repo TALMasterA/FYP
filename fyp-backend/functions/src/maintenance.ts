@@ -8,9 +8,12 @@ import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import {getFirestore} from "./helpers.js";
 import {logger} from "./logger.js";
-
-// Time conversion constants for readability
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
+import {
+  SIXTY_DAYS_MS,
+  THIRTY_DAYS_MS,
+  FIRESTORE_BATCH_PAGE_SIZE,
+  FIRESTORE_BATCH_PAGE_SIZE_SMALL,
+} from "./constants.js";
 
 /**
  * Prune FCM tokens older than 60 days to prevent unbounded growth.
@@ -25,18 +28,16 @@ export const pruneStaleTokens = onSchedule(
     region: "us-central1",
   },
   async () => {
-    const SIXTY_DAYS_MS = 60 * MS_PER_DAY;
     const cutoff = admin.firestore.Timestamp.fromDate(
       new Date(Date.now() - SIXTY_DAYS_MS)
     );
     const firestore = getFirestore();
-    const PAGE_SIZE = 500;
     let pruned = 0;
     let lastDoc: admin.firestore.QueryDocumentSnapshot | null = null;
 
     // Paginate through users to avoid loading all at once
     while (true) {
-      let query = firestore.collection("users").select().limit(PAGE_SIZE);
+      let query = firestore.collection("users").select().limit(FIRESTORE_BATCH_PAGE_SIZE);
       if (lastDoc) query = query.startAfter(lastDoc);
 
       const usersSnap = await query.get();
@@ -58,7 +59,7 @@ export const pruneStaleTokens = onSchedule(
         }
       }
 
-      if (usersSnap.size < PAGE_SIZE) break;
+      if (usersSnap.size < FIRESTORE_BATCH_PAGE_SIZE) break;
     }
 
     logger.info(`pruneStaleTokens: removed ${pruned} stale tokens`);
@@ -78,12 +79,10 @@ export const pruneStaleRateLimits = onSchedule(
     region: "us-central1",
   },
   async () => {
-    const THIRTY_DAYS_MS = 30 * MS_PER_DAY;
     const cutoff = admin.firestore.Timestamp.fromDate(
       new Date(Date.now() - THIRTY_DAYS_MS)
     );
     const firestore = getFirestore();
-    const PAGE_SIZE = 500;
     let pruned = 0;
     let lastDoc: admin.firestore.QueryDocumentSnapshot | null = null;
 
@@ -91,7 +90,7 @@ export const pruneStaleRateLimits = onSchedule(
       let query = firestore
         .collection("rate_limits")
         .where("updatedAt", "<", cutoff)
-        .limit(PAGE_SIZE);
+        .limit(FIRESTORE_BATCH_PAGE_SIZE);
       if (lastDoc) query = query.startAfter(lastDoc);
 
       const snap = await query.get();
@@ -103,7 +102,7 @@ export const pruneStaleRateLimits = onSchedule(
       await batch.commit();
       pruned += snap.size;
 
-      if (snap.size < PAGE_SIZE) break;
+      if (snap.size < FIRESTORE_BATCH_PAGE_SIZE) break;
     }
 
     if (pruned === 0) {
@@ -130,7 +129,6 @@ export const repairFriendsData = onSchedule(
   },
   async () => {
     const firestore = getFirestore();
-    const PAGE_SIZE = 300;
 
     // ---- 1) Remove obsolete CANCELLED friend request docs ----
     let cancelledDeleted = 0;
@@ -138,7 +136,7 @@ export const repairFriendsData = onSchedule(
       const cancelledSnap = await firestore
         .collection("friend_requests")
         .where("status", "==", "CANCELLED")
-        .limit(PAGE_SIZE)
+        .limit(FIRESTORE_BATCH_PAGE_SIZE_SMALL)
         .get();
 
       if (cancelledSnap.empty) break;
@@ -148,7 +146,7 @@ export const repairFriendsData = onSchedule(
       await batch.commit();
       cancelledDeleted += cancelledSnap.size;
 
-      if (cancelledSnap.size < PAGE_SIZE) break;
+      if (cancelledSnap.size < FIRESTORE_BATCH_PAGE_SIZE_SMALL) break;
     }
 
     // ---- 2) Repair malformed user_search docs ----
@@ -157,7 +155,7 @@ export const repairFriendsData = onSchedule(
     let lastDoc: admin.firestore.QueryDocumentSnapshot | null = null;
 
     while (true) {
-      let query = firestore.collection("user_search").limit(PAGE_SIZE);
+      let query = firestore.collection("user_search").limit(FIRESTORE_BATCH_PAGE_SIZE_SMALL);
       if (lastDoc) query = query.startAfter(lastDoc);
 
       const snap = await query.get();
@@ -232,7 +230,7 @@ export const repairFriendsData = onSchedule(
       }
 
       await batch.commit();
-      if (snap.size < PAGE_SIZE) break;
+      if (snap.size < FIRESTORE_BATCH_PAGE_SIZE_SMALL) break;
     }
 
     logger.info(

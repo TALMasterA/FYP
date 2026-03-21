@@ -608,6 +608,10 @@ scope.launch(Dispatchers.IO) {
 - `SPAM_RECENT_MESSAGES_WINDOW`, `SPAM_DUPLICATE_THRESHOLD`, `SPAM_LINK_FLOOD_THRESHOLD` — Spam detection thresholds
 - `HISTORY_EXPANSION_COST`, `PALETTE_UNLOCK_COST`, `BASE_HISTORY_LIMIT`, `MAX_HISTORY_LIMIT` — Shop system pricing and limits
 - `VALID_PALETTE_IDS` — List of unlockable color palettes
+- `MS_PER_SECOND`, `MS_PER_MINUTE`, `MS_PER_HOUR`, `MS_PER_DAY` — Time unit conversions
+- `RATE_LIMIT_WINDOW_MS` — 1 hour window for AI generation rate limiting
+- `THIRTY_DAYS_MS`, `SIXTY_DAYS_MS` — Data retention periods for maintenance cleanup
+- `FIRESTORE_BATCH_PAGE_SIZE`, `FIRESTORE_BATCH_PAGE_SIZE_SMALL` — Pagination limits for batch operations (500 and 300)
 
 **Frontend counterparts:**
 - `LanguageCode.kt` — Same regex pattern in `init` block validation
