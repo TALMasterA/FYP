@@ -29,18 +29,22 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true // Remove unused resources to reduce APK size
+            // Demo-safe release: avoid R8/obfuscation issues during final presentation builds.
+            isMinifyEnabled = false
+            isShrinkResources = false
+            isDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
         debug {
+            // Keep debug APK predictable for live demos and on-device troubleshooting.
             isMinifyEnabled = false
-            isShrinkResources = false // Skip stripping native libs
+            isShrinkResources = false
+            isDebuggable = true
             versionNameSuffix = "-dev"
-        } //build faster but APK bigger
+        }
     }
 
     compileOptions {
@@ -80,9 +84,9 @@ android {
         abi {
             isEnable = true
             reset()
-            include("armeabi-v7a", "arm64-v8a")
-            // Generate ABI-specific APKs only; avoids shipping duplicate native libs in one universal APK.
-            isUniversalApk = false
+            include("armeabi-v7a", "arm64-v8a", "x86_64")
+            // Keep universal APK for easy sideloading in demos across mixed device labs.
+            isUniversalApk = true
         }
     }
 }

@@ -74,6 +74,7 @@ The project maintained by GitHub Actions workflows:
 - **NEW:** EligibilityEdgeCases (18): boundary values for generation/coin eligibility, constant verification
 - **NEW:** SessionManagementLogic (13): session/user ID validation, delete preconditions, session naming
 - **NEW:** FriendsViewModel rollback/block guards (2): failed remove restores friend list; block-and-remove aborts when remove step fails
+- **NEW:** RemoveFriendUseCase self-removal guard (1): rejects `userId == friendId` early and skips all data mutations
 - **NEW:** SharedInboxViewModel badge guard (1): `markItemSeen` updates red-dot IDs and count together
 - **NEW:** SettingsViewModel notification-cache sync guard (1): settings flow writes all push notification toggles to local FCM cache
 
@@ -163,6 +164,7 @@ All complex business logic has been extracted to testable classes:
 ### Minor Gaps (low risk)
 - `SecureStorage.kt` — Android Keystore wrapper
 - `AppLanguageState.kt` — trivial data class (2 fields, no methods)
+- `UiLanguageTranslationCoordinator` timed auto-dismiss path — behavior verified in app/manual flow; no dedicated unit test yet
 
 ## Guard Tests
 

@@ -26,6 +26,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,9 +45,32 @@ private data class UiLanguageTranslationStatus(
 private class UiLanguageTranslationAbort(message: String) : CancellationException(message)
 
 private object UiLanguageTranslationCoordinator {
+    private const val STATUS_AUTO_DISMISS_MS = 4000L
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val _status = MutableStateFlow(UiLanguageTranslationStatus())
     val status: StateFlow<UiLanguageTranslationStatus> = _status.asStateFlow()
+    private var clearStatusJob: Job? = null
+
+    private fun publishStatus(status: UiLanguageTranslationStatus, autoDismiss: Boolean = false) {
+        clearStatusJob?.cancel()
+        _status.value = status
+
+        if (!autoDismiss || status.message == null) return
+
+        clearStatusJob = scope.launch {
+            delay(STATUS_AUTO_DISMISS_MS)
+
+            val current = _status.value
+            // Clear only if no new translation/status replaced this one.
+            if (!current.isRunning &&
+                current.message == status.message &&
+                current.targetLanguageCode == status.targetLanguageCode
+            ) {
+                _status.value = UiLanguageTranslationStatus()
+            }
+        }
+    }
 
     fun launch(
         targetLanguageCode: String,
@@ -53,32 +78,32 @@ private object UiLanguageTranslationCoordinator {
         block: suspend () -> Unit
     ): Boolean {
         if (_status.value.isRunning) return false
-        _status.value = UiLanguageTranslationStatus(
+        publishStatus(UiLanguageTranslationStatus(
             isRunning = true,
             targetLanguageCode = targetLanguageCode,
             message = "Translating app UI to ${LanguageDisplayNames.displayName(targetLanguageCode)}..."
-        )
+        ))
         scope.launch {
             try {
                 block()
-                _status.value = UiLanguageTranslationStatus(
+                publishStatus(UiLanguageTranslationStatus(
                     isRunning = false,
                     targetLanguageCode = targetLanguageCode,
                     message = "UI language updated to ${LanguageDisplayNames.displayName(targetLanguageCode)}."
-                )
+                ), autoDismiss = true)
             } catch (abort: UiLanguageTranslationAbort) {
-                _status.value = UiLanguageTranslationStatus(
+                publishStatus(UiLanguageTranslationStatus(
                     isRunning = false,
                     targetLanguageCode = targetLanguageCode,
                     message = abort.message
-                )
+                ), autoDismiss = true)
             } catch (t: Throwable) {
                 onError(t)
-                _status.value = UiLanguageTranslationStatus(
+                publishStatus(UiLanguageTranslationStatus(
                     isRunning = false,
                     targetLanguageCode = targetLanguageCode,
                     message = "Translation failed. Reverted to English."
-                )
+                ), autoDismiss = true)
             }
         }
         return true

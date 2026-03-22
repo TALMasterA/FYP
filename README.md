@@ -70,9 +70,9 @@ This project uses **GitHub Actions** for continuous integration and static analy
 
 ### Recent Stability Amendments (2026-03-22)
 *   Smoother color-theme switching with animated Material color transitions (reduced visual flicker when changing theme/palette).
-*   UI-language switching now surfaces clear in-progress/completion status and keeps long-running translation work alive across page navigation.
+*   UI-language switching now surfaces clear in-progress/completion status, auto-hides status text after a few seconds, and keeps long-running translation work alive across page navigation.
 *   Notification preference cache now auto-syncs from persisted settings, ensuring FCM notification gating reflects current toggles.
-*   Friend removal flow now rolls back UI state on failure, preventing stale/incorrect friend-card state.
+*   Friend removal flow now rolls back UI state on failure, guards self-removal, and supports reliable two-sided unfriend deletion via aligned Firestore rules.
 *   Add-friends search now excludes existing friends and blocked users more strictly while still allowing re-discovery of removed (unfriended) public users.
 *   Shared inbox red-dot count now decrements immediately when an item is viewed.
 
@@ -132,7 +132,7 @@ Firebase login is required.
 
 **Customization:**
 - UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, and 10+ more via Azure Translator API
-- UI language dropdown now shows translation progress/status text; long-running translation continues even if the user navigates to other pages
+- UI language dropdown now shows translation progress/status text; completion/failure messages auto-hide after a few seconds, and long-running translation continues even if the user navigates to other pages
 - Language dropdown order: English → Cantonese → Traditional Chinese → other languages (Auto Detect keeps default)
 - Primary language selector (30-day cooldown) sits directly under App UI language in Settings for quick access
 - Theme settings (Light / Dark / System)

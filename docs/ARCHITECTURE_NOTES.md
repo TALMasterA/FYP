@@ -180,6 +180,11 @@ Write a test that asserts the cleanup path count stays in sync.
 - `friend_requests/{id}` — PENDING status checked before allowing new requests
 - `user_search/{userId}` — must include `isDiscoverable` for search filter to work
 
+**Friend mirror-delete invariant:**
+- Unfriend uses a client-side batch that deletes both mirror docs (`users/A/friends/B` and `users/B/friends/A`) in one commit.
+- Rules must allow the list owner (`userId`) to write their own doc and allow the friend counterpart (`friendId`) to `delete` that mirror entry.
+- Do **not** broaden counterpart access to update arbitrary fields; counterpart access should stay create/delete only.
+
 **Rule:** If you rename a Firestore field in code, update the security rules too. Run `firebase deploy --only firestore:rules` after any rule change.
 
 ---
@@ -453,10 +458,11 @@ scope.launch(Dispatchers.IO) {
 **Rule:**
 1. Run non-trivial UI-language translation via the shared `UiLanguageTranslationCoordinator` scope, not a screen-scoped coroutine.
 2. Surface explicit status text (`in progress`, `completed`, `failed`) in `AppLanguageDropdown` so users always see current state.
-3. Keep guest translation limits enforced before network translation starts.
-4. Keep English / hardcoded zh-TW / zh-HK fast paths local and immediate.
+3. Auto-dismiss non-running status messages after a short delay, and only clear if the status has not been replaced by a newer translation run.
+4. Keep guest translation limits enforced before network translation starts.
+5. Keep English / hardcoded zh-TW / zh-HK fast paths local and immediate.
 
-This prevents translation jobs from being cancelled on route changes and gives clear user feedback while work is in flight.
+This prevents translation jobs from being cancelled on route changes, gives clear user feedback while work is in flight, and avoids stale completion banners lingering indefinitely.
 
 ---
 
@@ -477,15 +483,17 @@ This keeps push notification behavior aligned with the latest saved settings wit
 
 ## 20. Friend Removal and Search Consistency Guards
 
-**Files:** `screens/friends/FriendsViewModel.kt`, `data/friends/FirestoreFriendsRepository.kt`
+**Files:** `screens/friends/FriendsViewModel.kt`, `domain/friends/RemoveFriendUseCase.kt`, `data/friends/FirestoreFriendsRepository.kt`, `fyp-backend/firestore.rules`
 
 **Invariant:** Removing or blocking friends must not leave stale UI cards or inconsistent add-friends search results.
 
 **Rule:**
 1. Optimistic remove must rollback the friend list if `RemoveFriendUseCase` fails.
 2. `blockAndRemoveFriend(...)` must stop before blocking when the remove step fails.
-3. Add-friends search must exclude: self, existing friends, and blocked users.
-4. Unfriended public users remain searchable again (unless blocked).
+3. `RemoveFriendUseCase` must reject `userId == friendId` before any chat/friend mutation.
+4. Firestore rules for `users/{userId}/friends/{friendId}` must allow reciprocal delete by `friendId` so two-sided unfriend batch deletes can succeed.
+5. Add-friends search must exclude: self, existing friends, and blocked users.
+6. Unfriended public users remain searchable again (unless blocked).
 
 These guards prevent stale friend cards, broken block flow, and incorrect search visibility.
 

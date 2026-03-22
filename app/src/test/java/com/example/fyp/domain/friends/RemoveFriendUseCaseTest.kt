@@ -7,11 +7,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.*
-import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.mockito.kotlin.verifyNoInteractions
 
 class RemoveFriendUseCaseTest {
 
@@ -67,16 +67,13 @@ class RemoveFriendUseCaseTest {
     @Test
     fun `remove self as friend returns error`() = runTest {
         val userId = UserId("user1")
-        whenever(chatRepository.generateChatId(userId, userId))
-            .thenReturn("user1_user1")
-        whenever(chatRepository.deleteChatConversation("user1_user1"))
-            .thenReturn(Result.success(Unit))
-        whenever(friendsRepository.removeFriend(userId, userId))
-            .thenReturn(Result.failure(Exception("Cannot remove yourself")))
 
         val result = useCase(userId, userId)
 
         assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        verifyNoInteractions(chatRepository)
+        verifyNoInteractions(friendsRepository)
     }
 
     @Test

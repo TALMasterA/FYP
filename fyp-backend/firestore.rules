@@ -245,10 +245,16 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId;
 
       // Special case: Allow CREATING in friend's list when accepting friend request.
-      // Only create is permitted (not update or delete) to prevent any authenticated user
-      // from unilaterally modifying or removing entries in another user's friends list.
-      // Unfriending and username updates are always done by the list owner via the rule above.
+      // Friend counterpart can create and delete (for reciprocal unfriend cleanup),
+      // but cannot update arbitrary fields in the other user's document.
       allow create: if request.auth != null && request.auth.uid == friendId;
+
+      // Allow reciprocal DELETE by the friend counterpart so client batch-unfriend
+      // can atomically remove both mirror docs:
+      // - users/{current}/friends/{friend}
+      // - users/{friend}/friends/{current}
+      // Update remains owner-only via the write rule above.
+      allow delete: if request.auth != null && request.auth.uid == friendId;
     }
 
     // ============================================

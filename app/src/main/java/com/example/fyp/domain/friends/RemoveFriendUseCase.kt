@@ -20,6 +20,10 @@ class RemoveFriendUseCase @Inject constructor(
     private val chatRepository: ChatRepository
 ) {
     suspend operator fun invoke(userId: UserId, friendId: UserId): Result<Unit> {
+        if (userId == friendId) {
+            return Result.failure(IllegalArgumentException("Cannot remove yourself as a friend."))
+        }
+
         // Step 1: Delete chat conversation FIRST (fail-fast for privacy)
         val chatId = chatRepository.generateChatId(userId, friendId)
         var chatDeleteAttempts = 0

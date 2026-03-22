@@ -238,6 +238,19 @@ These are not callable functions — they fire automatically on Firestore docume
 
 ---
 
+## Friend System Backend Contract
+
+Friend operations (send/accept/reject/cancel/remove) are currently **Firestore-driven** from the Android app, not callable Cloud Functions.
+
+- Unfriend deletes two mirror documents in one client batch:
+  - `users/{currentUserId}/friends/{friendId}`
+  - `users/{friendId}/friends/{currentUserId}`
+- Firestore rules explicitly allow counterpart `create` (accept flow) and counterpart `delete` (reciprocal unfriend cleanup), while keeping arbitrary field updates owner-only.
+
+This is the current production contract until/unless a dedicated callable friend-management API is introduced.
+
+---
+
 ## Language Code Mapping
 
 The backend normalises app language codes to Azure Translator API codes:
