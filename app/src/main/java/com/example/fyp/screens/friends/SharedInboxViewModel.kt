@@ -113,7 +113,14 @@ class SharedInboxViewModel @Inject constructor(
 
     /** Call when the user opens a specific shared item detail to clear its red dot. */
     fun markItemSeen(itemId: String) {
-        _uiState.update { it.copy(newItemIds = it.newItemIds - itemId) }
+        seenItemIds = seenItemIds + itemId
+        _uiState.update {
+            val updatedIds = it.newItemIds - itemId
+            it.copy(
+                newItemIds = updatedIds,
+                newItemCount = updatedIds.size
+            )
+        }
     }
 
     fun acceptItem(itemId: String) {

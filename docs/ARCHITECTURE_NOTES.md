@@ -395,6 +395,21 @@ scope.launch(Dispatchers.IO) {
 **Invariant:** Friend-request send limits must survive app restarts. The client enforces a rolling one-hour window of 10 sends per user by persisting timestamps in SharedPreferences.
 
 **Implementation:**
+1. `SharedPreferencesFriendRequestRateLimiter` stores per-user send timestamps in `friend_request_rate_limit_prefs`.
+2. `canSend()` prunes expired timestamps before deciding whether another send is allowed.
+3. `recordSend()` is only called after `SendFriendRequestUseCase` succeeds.
+4. `FriendsViewModel.sendFriendRequest()` surfaces retry timing to the UI when the limit is hit.
+
+**Rule:**
+- NEVER keep friend-request rate limiting in memory only.
+- ALWAYS prune expired timestamps before both reads and writes.
+- ONLY record a send after a successful request; failed requests must not consume quota.
+- KEEP the limit aligned with the documented 10-per-hour rule in README and tests.
+
+**Benefits:**
+- Prevents users from bypassing the limit by restarting the app.
+- Reduces accidental request spam during repeated retries.
+- Keeps client behavior aligned with the existing server-side guardrail.
 
 ---
 
@@ -426,25 +441,57 @@ scope.launch(Dispatchers.IO) {
 - Fewer cloud function invocations
 - Reduced DataStore read overhead on repeated batch translations
 - Faster app UI language switching responsiveness
-1. `SharedPreferencesFriendRequestRateLimiter` stores per-user send timestamps in `friend_request_rate_limit_prefs`
-2. `canSend()` prunes expired timestamps before deciding whether another send is allowed
-3. `recordSend()` is only called after `SendFriendRequestUseCase` succeeds
-4. `FriendsViewModel.sendFriendRequest()` surfaces retry timing to the UI when the limit is hit
-
-**Rule:**
-- NEVER keep friend-request rate limiting in memory only
-- ALWAYS prune expired timestamps before both reads and writes
-- ONLY record a send after a successful request; failed requests must not consume quota
-- KEEP the limit aligned with the documented 10-per-hour rule in README and tests
-
-**Benefits:**
-- Prevents users from bypassing the limit by restarting the app
-- Reduces accidental request spam during repeated retries
-- Keeps client behaviour aligned with the existing server-side guardrail
 
 ---
 
-## 17. Onboarding Screen — Version-Based Re-Show
+## 18. UI Language Switching Continuity — Background Job Coordinator
+
+**Files:** `core/ui/CommonUi.kt`, `data/ui/UiLanguageStateController.kt`
+
+**Invariant:** Long-running UI-language translation jobs must continue even when users navigate away from the current screen.
+
+**Rule:**
+1. Run non-trivial UI-language translation via the shared `UiLanguageTranslationCoordinator` scope, not a screen-scoped coroutine.
+2. Surface explicit status text (`in progress`, `completed`, `failed`) in `AppLanguageDropdown` so users always see current state.
+3. Keep guest translation limits enforced before network translation starts.
+4. Keep English / hardcoded zh-TW / zh-HK fast paths local and immediate.
+
+This prevents translation jobs from being cancelled on route changes and gives clear user feedback while work is in flight.
+
+---
+
+## 19. Notification Toggle Consistency — Firestore to Local Cache Sync
+
+**Files:** `screens/settings/SettingsViewModel.kt`, `core/FcmNotificationService.kt`
+
+**Invariant:** FCM notification dispatch uses local SharedPreferences (`notif_prefs`), so those values must mirror server-backed settings continuously.
+
+**Rule:**
+1. Continue writing a changed toggle immediately in `updateNotificationPref(...)`.
+2. Also sync all push notification fields whenever `SharedSettingsDataSource.settings` emits.
+3. Never assume local cache contains valid values on app start/login.
+
+This keeps push notification behavior aligned with the latest saved settings without waiting for manual toggle interaction.
+
+---
+
+## 20. Friend Removal and Search Consistency Guards
+
+**Files:** `screens/friends/FriendsViewModel.kt`, `data/friends/FirestoreFriendsRepository.kt`
+
+**Invariant:** Removing or blocking friends must not leave stale UI cards or inconsistent add-friends search results.
+
+**Rule:**
+1. Optimistic remove must rollback the friend list if `RemoveFriendUseCase` fails.
+2. `blockAndRemoveFriend(...)` must stop before blocking when the remove step fails.
+3. Add-friends search must exclude: self, existing friends, and blocked users.
+4. Unfriended public users remain searchable again (unless blocked).
+
+These guards prevent stale friend cards, broken block flow, and incorrect search visibility.
+
+---
+
+## 21. Onboarding Screen — Version-Based Re-Show
 
 **File:** `screens/onboarding/OnboardingScreen.kt`
 

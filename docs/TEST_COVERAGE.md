@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-21_
+_Last updated: 2026-03-22_
 
 ## Summary
 
@@ -8,7 +8,7 @@ _Last updated: 2026-03-21_
 |---------------------------|---------|
 | Source files               | 251     |
 | Test files                 | 205     |
-| Total `@Test` methods      | 2,655   |
+| Total `@Test` methods      | 2,661   |
 | Key logic files            | ~140    |
 | Key logic files tested     | ~140    |
 | Key logic coverage         | ~100%   |
@@ -40,14 +40,14 @@ The project maintained by GitHub Actions workflows:
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 35        | 35     | 100%     |
 
-## What Is Tested (205 files, 2,655 tests)
+## What Is Tested (205 files, 2,661 tests)
 
 ### All ViewModels & Controllers (21/21)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)
-- FavoritesViewModel (13), FeedbackViewModel (8), FriendsViewModel (30)
+- FavoritesViewModel (13), FeedbackViewModel (8), FriendsViewModel (32)
 - HistoryViewModel (21), LearningViewModel (14), LearningSheetViewModel (19)
-- MyProfileViewModel (14), ProfileViewModel (11), SettingsViewModel (22)
-- SharedInboxViewModel (11), SharedMaterialDetailViewModel (9), ShopViewModel (13)
+- MyProfileViewModel (14), ProfileViewModel (11), SettingsViewModel (23)
+- SharedInboxViewModel (12), SharedMaterialDetailViewModel (9), ShopViewModel (13)
 - SpeechViewModel (17), WordBankViewModel (15), CustomWordsViewModel (19)
 - ContinuousConversationController (14), TtsController (12)
 - **NEW:** LearningScreenLogicTest (18): cluster filtering, generation button state, quiz regeneration eligibility
@@ -73,6 +73,9 @@ The project maintained by GitHub Actions workflows:
 - SettingsViewModel notification cache (ensures push/badge toggles persist to SharedPreferences for FCM gating)
 - **NEW:** EligibilityEdgeCases (18): boundary values for generation/coin eligibility, constant verification
 - **NEW:** SessionManagementLogic (13): session/user ID validation, delete preconditions, session naming
+- **NEW:** FriendsViewModel rollback/block guards (2): failed remove restores friend list; block-and-remove aborts when remove step fails
+- **NEW:** SharedInboxViewModel badge guard (1): `markItemSeen` updates red-dot IDs and count together
+- **NEW:** SettingsViewModel notification-cache sync guard (1): settings flow writes all push notification toggles to local FCM cache
 
 ### Models (24/24)
 - TranslationRecord (18), HistorySession (21), HistorySessionExtended (9), Quiz (18), FavoriteRecord (24)

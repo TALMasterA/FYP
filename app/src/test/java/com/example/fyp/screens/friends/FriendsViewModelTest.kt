@@ -313,6 +313,25 @@ class FriendsViewModelTest {
         assertTrue(friends.none { it.friendId == "f1" })
     }
 
+    @Test
+    fun `removeFriend failure restores friend in ui list`() = runTest {
+        friendsFlow.value = listOf(
+            FriendRelation(friendId = "f1", friendUsername = "Friend1"),
+            FriendRelation(friendId = "f2", friendUsername = "Friend2")
+        )
+        whenever(removeFriendUseCase.invoke(UserId("user1"), UserId("f1")))
+            .thenReturn(Result.failure(RuntimeException("network fail")))
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.removeFriend("f1")
+
+        val friends = vm.uiState.value.friends
+        assertTrue("f1 should be restored after failure", friends.any { it.friendId == "f1" })
+        assertNotNull(vm.uiState.value.error)
+    }
+
     // ── toggleDeleteMode ────────────────────────────────────────────
 
     @Test
@@ -387,6 +406,22 @@ class FriendsViewModelTest {
 
         assertTrue(vm.uiState.value.blockedUserIds.contains("f1"))
         assertTrue(vm.uiState.value.friends.none { it.friendId == "f1" })
+    }
+
+    @Test
+    fun `blockAndRemoveFriend does not block when remove fails`() = runTest {
+        friendsFlow.value = listOf(FriendRelation(friendId = "f1", friendUsername = "Friend1"))
+        whenever(removeFriendUseCase.invoke(UserId("user1"), UserId("f1")))
+            .thenReturn(Result.failure(RuntimeException("remove failed")))
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.blockAndRemoveFriend("f1", "Friend1")
+
+        verify(friendsRepository, never()).blockUser(eq(UserId("user1")), eq(UserId("f1")), any())
+        assertFalse(vm.uiState.value.blockedUserIds.contains("f1"))
+        assertNotNull(vm.uiState.value.error)
     }
 
     // ── unblockUser ─────────────────────────────────────────────────

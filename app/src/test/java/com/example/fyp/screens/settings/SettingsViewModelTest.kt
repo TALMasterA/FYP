@@ -407,9 +407,26 @@ class SettingsViewModelTest {
 
         vm.updateNotificationPref(SettingsViewModel.PREF_NOTIFY_SHARED_INBOX, false)
 
-        verify(mockPrefs).edit()
-        verify(mockEditor).putBoolean(SettingsViewModel.PREF_NOTIFY_SHARED_INBOX, false)
-        verify(mockEditor).apply()
+        verify(mockPrefs, atLeastOnce()).edit()
+        verify(mockEditor, atLeastOnce()).putBoolean(SettingsViewModel.PREF_NOTIFY_SHARED_INBOX, false)
+        verify(mockEditor, atLeastOnce()).apply()
+    }
+
+    @Test
+    fun `logged in settings sync writes all push notification prefs to cache`() = runTest {
+        settingsFlow.value = UserSettings(
+            notifyNewMessages = false,
+            notifyFriendRequests = true,
+            notifyRequestAccepted = false,
+            notifySharedInbox = true
+        )
+
+        buildViewModel()
+
+        verify(mockEditor).putBoolean(SettingsViewModel.PREF_NOTIFY_NEW_MESSAGES, false)
+        verify(mockEditor).putBoolean(SettingsViewModel.PREF_NOTIFY_FRIEND_REQUESTS, true)
+        verify(mockEditor).putBoolean(SettingsViewModel.PREF_NOTIFY_REQUEST_ACCEPTED, false)
+        verify(mockEditor).putBoolean(SettingsViewModel.PREF_NOTIFY_SHARED_INBOX, true)
     }
 
     // ── Cooldown hours ──

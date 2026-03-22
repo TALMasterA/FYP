@@ -155,6 +155,20 @@ class SharedInboxViewModelTest {
         assertEquals(0, viewModel.uiState.value.newItemCount)
     }
 
+    @Test
+    fun `markItemSeen removes item from new badges and decrements count`() = runTest {
+        val viewModel = createViewModel()
+
+        authStateFlow.value = loggedInState
+        pendingItemsFlow.value = listOf(makeItem("item1"), makeItem("item2"))
+
+        viewModel.markItemSeen("item1")
+
+        val state = viewModel.uiState.value
+        assertFalse("item1 should be removed from new item ids", "item1" in state.newItemIds)
+        assertEquals(1, state.newItemCount)
+    }
+
     // ── Accept word item ──────────────────────────────────────────────────────
 
     @Test

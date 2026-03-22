@@ -130,6 +130,7 @@ class SettingsViewModel @Inject constructor(
                     errorKey = null,
                     errorRaw = null
                 )
+                syncNotificationPrefsToCache(s)
             }
         }
 
@@ -429,5 +430,13 @@ class SettingsViewModel @Inject constructor(
                     )
                 }
         }
+    }
+
+    private fun syncNotificationPrefsToCache(settings: UserSettings) {
+        val app = getApplication<Application>()
+        FcmNotificationService.saveNotifPrefToCache(app, PREF_NOTIFY_NEW_MESSAGES, settings.notifyNewMessages)
+        FcmNotificationService.saveNotifPrefToCache(app, PREF_NOTIFY_FRIEND_REQUESTS, settings.notifyFriendRequests)
+        FcmNotificationService.saveNotifPrefToCache(app, PREF_NOTIFY_REQUEST_ACCEPTED, settings.notifyRequestAccepted)
+        FcmNotificationService.saveNotifPrefToCache(app, PREF_NOTIFY_SHARED_INBOX, settings.notifySharedInbox)
     }
 }

@@ -9,8 +9,11 @@ package com.example.fyp.ui.theme
 
 import android.app.Activity
 import android.os.Build
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -119,7 +122,7 @@ fun FYPTheme(
         outlineVariant = Color(0xFFC2C7CE)
     )
 
-    val colorScheme = when {
+    val targetColorScheme = when {
         useDynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -127,6 +130,8 @@ fun FYPTheme(
         darkTheme -> customDarkColorScheme
         else -> customLightColorScheme
     }
+
+    val colorScheme = rememberAnimatedScheme(targetColorScheme)
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -142,5 +147,35 @@ fun FYPTheme(
         colorScheme = colorScheme,
         typography = typography,
         content = content
+    )
+}
+
+@Composable
+private fun rememberAnimatedScheme(target: ColorScheme): ColorScheme {
+    val spec = tween<Color>(durationMillis = 450)
+    val primary = animateColorAsState(target.primary, spec, label = "themePrimary")
+    val secondary = animateColorAsState(target.secondary, spec, label = "themeSecondary")
+    val tertiary = animateColorAsState(target.tertiary, spec, label = "themeTertiary")
+    val primaryContainer = animateColorAsState(target.primaryContainer, spec, label = "themePrimaryContainer")
+    val secondaryContainer = animateColorAsState(target.secondaryContainer, spec, label = "themeSecondaryContainer")
+    val tertiaryContainer = animateColorAsState(target.tertiaryContainer, spec, label = "themeTertiaryContainer")
+    val background = animateColorAsState(target.background, spec, label = "themeBackground")
+    val surface = animateColorAsState(target.surface, spec, label = "themeSurface")
+    val surfaceVariant = animateColorAsState(target.surfaceVariant, spec, label = "themeSurfaceVariant")
+    val error = animateColorAsState(target.error, spec, label = "themeError")
+    val outline = animateColorAsState(target.outline, spec, label = "themeOutline")
+
+    return target.copy(
+        primary = primary.value,
+        secondary = secondary.value,
+        tertiary = tertiary.value,
+        primaryContainer = primaryContainer.value,
+        secondaryContainer = secondaryContainer.value,
+        tertiaryContainer = tertiaryContainer.value,
+        background = background.value,
+        surface = surface.value,
+        surfaceVariant = surfaceVariant.value,
+        error = error.value,
+        outline = outline.value
     )
 }

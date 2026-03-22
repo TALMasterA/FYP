@@ -64,6 +64,18 @@ This project uses **GitHub Actions** for continuous integration and static analy
 *   Backend coverage tests: `npm run test:coverage -- --runInBand` -> passed
 *   Backend TypeScript build: `npm run build` -> passed
 
+### Local Verification Snapshot (2026-03-22)
+*   Android unit tests: `./gradlew :app:testDebugUnitTest` -> passed (2,661 tests, 0 failures)
+*   Android debug build: `./gradlew :app:assembleDebug` -> passed
+
+### Recent Stability Amendments (2026-03-22)
+*   Smoother color-theme switching with animated Material color transitions (reduced visual flicker when changing theme/palette).
+*   UI-language switching now surfaces clear in-progress/completion status and keeps long-running translation work alive across page navigation.
+*   Notification preference cache now auto-syncs from persisted settings, ensuring FCM notification gating reflects current toggles.
+*   Friend removal flow now rolls back UI state on failure, preventing stale/incorrect friend-card state.
+*   Add-friends search now excludes existing friends and blocked users more strictly while still allowing re-discovery of removed (unfriended) public users.
+*   Shared inbox red-dot count now decrements immediately when an item is viewed.
+
 --------------------------------------------------------------
 
 ## ⚠️ Development Cautions
@@ -120,9 +132,11 @@ Firebase login is required.
 
 **Customization:**
 - UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, and 10+ more via Azure Translator API
+- UI language dropdown now shows translation progress/status text; long-running translation continues even if the user navigates to other pages
 - Language dropdown order: English → Cantonese → Traditional Chinese → other languages (Auto Detect keeps default)
 - Primary language selector (30-day cooldown) sits directly under App UI language in Settings for quick access
 - Theme settings (Light / Dark / System)
+- Theme/palette switching uses smooth animated color transitions
 - Font size adjustment (80%–150%)
 - 11 color palettes (1 free default + 10 unlockable at 10 coins each: Ocean, Sunset, Lavender, Rose, Mint, Crimson, Amber, Indigo, Emerald, Coral); palette settings accessible from the in-app Shop
 - Voice settings per language

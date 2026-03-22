@@ -22,10 +22,68 @@ import com.example.fyp.model.ui.buildUiTextMap
 import com.example.fyp.model.ui.LanguageNameTranslations
 import com.example.fyp.model.ui.LanguageNameKeys
 import com.example.fyp.model.ui.CantoneseUiTexts
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @Immutable
 data class UiLanguageList(val items: List<Pair<String, String>>)
+
+private data class UiLanguageTranslationStatus(
+    val isRunning: Boolean = false,
+    val targetLanguageCode: String? = null,
+    val message: String? = null
+)
+
+private class UiLanguageTranslationAbort(message: String) : CancellationException(message)
+
+private object UiLanguageTranslationCoordinator {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val _status = MutableStateFlow(UiLanguageTranslationStatus())
+    val status: StateFlow<UiLanguageTranslationStatus> = _status.asStateFlow()
+
+    fun launch(
+        targetLanguageCode: String,
+        onError: (Throwable) -> Unit,
+        block: suspend () -> Unit
+    ): Boolean {
+        if (_status.value.isRunning) return false
+        _status.value = UiLanguageTranslationStatus(
+            isRunning = true,
+            targetLanguageCode = targetLanguageCode,
+            message = "Translating app UI to ${LanguageDisplayNames.displayName(targetLanguageCode)}..."
+        )
+        scope.launch {
+            try {
+                block()
+                _status.value = UiLanguageTranslationStatus(
+                    isRunning = false,
+                    targetLanguageCode = targetLanguageCode,
+                    message = "UI language updated to ${LanguageDisplayNames.displayName(targetLanguageCode)}."
+                )
+            } catch (abort: UiLanguageTranslationAbort) {
+                _status.value = UiLanguageTranslationStatus(
+                    isRunning = false,
+                    targetLanguageCode = targetLanguageCode,
+                    message = abort.message
+                )
+            } catch (t: Throwable) {
+                onError(t)
+                _status.value = UiLanguageTranslationStatus(
+                    isRunning = false,
+                    targetLanguageCode = targetLanguageCode,
+                    message = "Translation failed. Reverted to English."
+                )
+            }
+        }
+        return true
+    }
+}
 
 /**
  * Apply predefined language name corrections to a UI text map.
@@ -129,14 +187,17 @@ fun AppLanguageDropdown(
     enabled: Boolean = true,
     isLoggedIn: Boolean = false
 ) {
-    val scope = rememberCoroutineScope()
+    val uiScope = rememberCoroutineScope()
     val (_, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val context = LocalContext.current
-    val cache = remember { UiLanguageCacheStore(context) }
+    val appContext = remember(context) { context.applicationContext }
+    val cache = remember { UiLanguageCacheStore(appContext) }
     val cloud = remember { CloudTranslatorClient() }
+    val translationStatus by UiLanguageTranslationCoordinator.status.collectAsState()
 
     // State for showing guest limit dialog
     var showGuestLimitDialog by remember { mutableStateOf(false) }
+    var showTranslationBusyDialog by remember { mutableStateOf(false) }
 
     // Show guest limit alert dialog
     if (showGuestLimitDialog) {
@@ -153,6 +214,24 @@ fun AppLanguageDropdown(
         )
     }
 
+    if (showTranslationBusyDialog) {
+        AlertDialog(
+            onDismissRequest = { showTranslationBusyDialog = false },
+            title = { Text("Please wait") },
+            text = {
+                Text(
+                    translationStatus.message
+                        ?: "Another UI language translation is still running."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showTranslationBusyDialog = false }) {
+                    Text(uiText(UiTextKey.ActionConfirm, "OK"))
+                }
+            }
+        )
+    }
+
     LanguageDropdownField(
         label = uiText(UiTextKey.AppUiLanguageLabel, "App UI language"),
         selectedCode = appLanguageState.selectedUiLanguage,
@@ -162,84 +241,95 @@ fun AppLanguageDropdown(
         onSelected = { code ->
             if (!enabled) return@LanguageDropdownField
             if (code == appLanguageState.selectedUiLanguage) return@LanguageDropdownField
-
-            scope.launch {
-                try {
-                    // English: no translated map, always fallback to BaseUiTexts (no API call needed)
-                    if (code.startsWith("en")) {
-                        onUpdateAppLanguage(code, emptyMap())
-                        cache.setSelectedLanguage(code)
-                        cache.setBaseHash(code, baseUiTextsHash())
-                        return@launch
-                    }
-
-                    // Traditional Chinese (zh-TW): use hardcoded map, no API call needed
-                    if (code == "zh-TW") {
-                        onUpdateAppLanguage(code, com.example.fyp.model.ui.ZhTwUiTexts)
-                        cache.setSelectedLanguage(code)
-                        cache.setBaseHash(code, baseUiTextsHash())
-                        return@launch
-                    }
-
-                    // Cantonese (zh-HK): use hardcoded map, no API call needed
-                    if (code == "zh-HK") {
-                        onUpdateAppLanguage(code, CantoneseUiTexts)
-                        cache.setSelectedLanguage(code)
-                        cache.setBaseHash(code, baseUiTextsHash())
-                        return@launch
-                    }
-
-                    val currentHash = baseUiTextsHash()
-                    val cachedHash = cache.getBaseHash(code)
-
-                    // Same base version + cached map => no API call (works for both logged-in and guests)
-                    if (cachedHash == currentHash) {
-                        val cachedMap = cache.loadUiTexts(code)
-                        if (!cachedMap.isNullOrEmpty()) {
-                            // Apply language name corrections to cached map
-                            val correctedMap = applyLanguageNameCorrections(cachedMap, code)
-                            onUpdateAppLanguage(code, correctedMap)
-                            cache.setSelectedLanguage(code)
-                            return@launch
-                        }
-                    }
-
-                    // API call needed - check guest limit if not logged in
-                    if (!isLoggedIn) {
-                        val guestAlreadyUsed = cache.hasGuestUsedTranslation()
-                        if (guestAlreadyUsed) {
-                            // Show dialog and don't proceed
-                            showGuestLimitDialog = true
-                            return@launch
-                        }
-                    }
-
-                    // Call API for translation
-                    val translatedList = cloud.translateTexts(
-                        texts = BaseUiTexts,
-                        from = "en",
-                        to = code
-                    )
-
-                    val joined = translatedList.joinToString("\u0001")
-                    val map = buildUiTextMap(joined, code)
-
-                    onUpdateAppLanguage(code, map)
+            // English and hardcoded packs complete immediately and do not need async jobs.
+            if (code.startsWith("en")) {
+                uiScope.launch {
+                    onUpdateAppLanguage(code, emptyMap())
                     cache.setSelectedLanguage(code)
-                    cache.saveUiTexts(code, map)
-                    cache.setBaseHash(code, currentHash)
+                    cache.setBaseHash(code, baseUiTextsHash())
+                }
+                return@LanguageDropdownField
+            }
 
-                    // Mark guest as having used their one-time translation (only if not logged in)
-                    if (!isLoggedIn) {
-                        cache.setGuestTranslationUsed()
-                    }
-                } catch (e: Exception) {
+            if (code == "zh-TW") {
+                uiScope.launch {
+                    onUpdateAppLanguage(code, com.example.fyp.model.ui.ZhTwUiTexts)
+                    cache.setSelectedLanguage(code)
+                    cache.setBaseHash(code, baseUiTextsHash())
+                }
+                return@LanguageDropdownField
+            }
+
+            if (code == "zh-HK") {
+                uiScope.launch {
+                    onUpdateAppLanguage(code, CantoneseUiTexts)
+                    cache.setSelectedLanguage(code)
+                    cache.setBaseHash(code, baseUiTextsHash())
+                }
+                return@LanguageDropdownField
+            }
+
+            val launched = UiLanguageTranslationCoordinator.launch(
+                targetLanguageCode = code,
+                onError = { e ->
                     Log.e("UITranslation", "Error: ${e.message}", e)
                     onUpdateAppLanguage("en-US", emptyMap())
                 }
+            ) {
+                val currentHash = baseUiTextsHash()
+                val cachedHash = cache.getBaseHash(code)
+                if (cachedHash == currentHash) {
+                    val cachedMap = cache.loadUiTexts(code)
+                    if (!cachedMap.isNullOrEmpty()) {
+                        val correctedMap = applyLanguageNameCorrections(cachedMap, code)
+                        onUpdateAppLanguage(code, correctedMap)
+                        cache.setSelectedLanguage(code)
+                        throw UiLanguageTranslationAbort("Loaded cached UI language: ${LanguageDisplayNames.displayName(code)}")
+                    }
+                }
+
+                if (!isLoggedIn && cache.hasGuestUsedTranslation()) {
+                    showGuestLimitDialog = true
+                    throw UiLanguageTranslationAbort("Login required for another UI-language translation.")
+                }
+
+                val translatedList = cloud.translateTexts(
+                    texts = BaseUiTexts,
+                    from = "en",
+                    to = code
+                )
+
+                val joined = translatedList.joinToString("\u0001")
+                val map = buildUiTextMap(joined, code)
+                onUpdateAppLanguage(code, map)
+                cache.setSelectedLanguage(code)
+                cache.saveUiTexts(code, map)
+                cache.setBaseHash(code, currentHash)
+
+                if (!isLoggedIn) {
+                    cache.setGuestTranslationUsed()
+                }
+            }
+
+            if (!launched) {
+                showTranslationBusyDialog = true
             }
         }
     )
+
+    val statusMessage = translationStatus.message
+    if (statusMessage != null) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = statusMessage,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (translationStatus.isRunning) {
+            Spacer(modifier = Modifier.height(6.dp))
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

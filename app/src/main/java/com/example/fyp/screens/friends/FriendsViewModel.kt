@@ -289,12 +289,21 @@ class FriendsViewModel @Inject constructor(
             Pair(usernameSearchDeferred.await(), idSearchDeferred?.await())
         }
 
-        // Combine results, prioritizing ID match at the top if found
-        // Also filter out the current user from search results
+        // Combine results, prioritizing ID match at the top if found.
+        // Only show users that are public and currently actionable:
+        // - never self
+        // - never already-friends
+        // - never blocked by current user
         val currentUid = currentUserId?.value
+        val currentFriendIds = _uiState.value.friends.map { it.friendId }.toSet()
+        val blockedIds = _uiState.value.blockedUserIds
         val distinctResults = (listOfNotNull(idResult) + usernameResults)
             .distinctBy { it.uid }
-            .filter { it.uid != currentUid }
+            .filter { profile ->
+                profile.uid != currentUid &&
+                    profile.uid !in currentFriendIds &&
+                    profile.uid !in blockedIds
+            }
 
         _uiState.value = _uiState.value.copy(
             searchResults = distinctResults,
@@ -333,6 +342,7 @@ class FriendsViewModel @Inject constructor(
         val toDelete = _uiState.value.selectedFriendIds.toList()
         if (toDelete.isEmpty()) return
         viewModelScope.launch {
+            val previousFriends = _uiState.value.friends
             // Optimistically update the in-memory friends list immediately so
             // canSendRequestTo() reflects the removal before the Firestore listener fires.
             val updatedFriends = _uiState.value.friends.filter { it.friendId !in toDelete }
@@ -343,11 +353,24 @@ class FriendsViewModel @Inject constructor(
                 searchQuery = "",
                 searchResults = emptyList()
             )
+            val failedRemovals = mutableSetOf<String>()
             toDelete.forEach { friendId ->
-                removeFriendUseCase(userId, UserId(friendId))
+                removeFriendUseCase(userId, UserId(friendId)).onFailure {
+                    failedRemovals += friendId
+                }
             }
-            _uiState.value = _uiState.value.copy(error = null)
-            showSuccessMessage("Friend(s) removed.")
+
+            if (failedRemovals.isNotEmpty()) {
+                val restoredFriends = previousFriends.filter { it.friendId in failedRemovals }
+                _uiState.value = _uiState.value.copy(
+                    friends = _uiState.value.friends + restoredFriends,
+                    error = ErrorMessages.FRIEND_REMOVE_FAILED
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(error = null)
+                showSuccessMessage("Friend(s) removed.")
+            }
+
             // Refresh to sync Firestore state so re-search shows correct status
             refreshFriendsList()
         }
@@ -518,8 +541,9 @@ class FriendsViewModel @Inject constructor(
     fun removeFriend(friendId: String) {
         val userId = currentUserId ?: return
         viewModelScope.launch {
+            val previousFriends = _uiState.value.friends
             // Optimistically remove from in-memory list immediately
-            val updatedFriends = _uiState.value.friends.filter { it.friendId != friendId }
+            val updatedFriends = previousFriends.filter { it.friendId != friendId }
             _uiState.value = _uiState.value.copy(
                 friends = updatedFriends,
                 searchQuery = "",
@@ -534,6 +558,7 @@ class FriendsViewModel @Inject constructor(
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
+                        friends = previousFriends,
                         error = ErrorMessages.fromException(e, ErrorMessages.FRIEND_REMOVE_FAILED)
                     )
                 }
@@ -722,7 +747,11 @@ class FriendsViewModel @Inject constructor(
         val userId = currentUserId ?: return
         viewModelScope.launch {
             // Step 1: remove friend relationship AND delete chat (mirrors RemoveFriendUseCase)
-            removeFriendUseCase(userId, UserId(targetUserId))
+            val removeResult = removeFriendUseCase(userId, UserId(targetUserId))
+            if (removeResult.isFailure) {
+                _uiState.value = _uiState.value.copy(error = ErrorMessages.FRIEND_REMOVE_FAILED)
+                return@launch
+            }
 
             // Step 2: block the user
             friendsRepository.blockUser(userId, UserId(targetUserId), targetUsername).fold(
@@ -739,6 +768,8 @@ class FriendsViewModel @Inject constructor(
                         blockedUserIds = updatedIds,
                         blockedUsers = updatedList,
                         friends = updatedFriends,
+                        searchQuery = "",
+                        searchResults = emptyList(),
                         error = null
                     )
                     showSuccessMessage("User blocked and removed from friends.")

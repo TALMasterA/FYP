@@ -248,8 +248,10 @@ class FirestoreFriendsRepository @Inject constructor(
             } else {
                 // Filter out users who have blocked the caller OR who the caller has blocked
                 val blockedByCallerIds = getBlockedUserIds(callerUserId).toSet()
+                val currentFriendIds = getFriendIds(callerUserId).toSet()
                 rawResults.filter { profile ->
                     profile.uid !in blockedByCallerIds &&
+                        profile.uid !in currentFriendIds &&
                         !isBlockedBy(callerUserId, UserId(profile.uid))
                 }
             }
@@ -780,11 +782,13 @@ class FirestoreFriendsRepository @Inject constructor(
     override suspend fun blockUser(userId: UserId, blockedUserId: UserId, blockedUsername: String): Result<Unit> = try {
         // FIX 1.4: Auto-remove friendship when blocking to prevent inconsistent state
         // where a user is both a friend AND blocked simultaneously.
-        try {
-            removeFriend(userId, blockedUserId)
-        } catch (e: Exception) {
-            // Non-fatal: user might not be friends - that's OK
-            AppLogger.d("FriendsRepository", "blockUser: removeFriend skipped (may not be friends): ${e.message}")
+        val removeResult = removeFriend(userId, blockedUserId)
+        if (removeResult.isFailure) {
+            // Non-fatal: user might not be friends, but keep diagnostics for actual failures.
+            AppLogger.w(
+                "FriendsRepository",
+                "blockUser: removeFriend failed before block write: ${removeResult.exceptionOrNull()?.message}"
+            )
         }
 
         db.collection("users")
@@ -893,6 +897,19 @@ class FirestoreFriendsRepository @Inject constructor(
                     blockedAt = doc.getTimestamp("blockedAt")?.seconds ?: 0L
                 )
             }
+    } catch (e: Exception) {
+        emptyList()
+    }
+
+    private suspend fun getFriendIds(userId: UserId): List<String> = try {
+        db.collection("users")
+            .document(userId.value)
+            .collection("friends")
+            .limit(500)
+            .get()
+            .await()
+            .documents
+            .map { it.id }
     } catch (e: Exception) {
         emptyList()
     }
