@@ -159,6 +159,7 @@ describe("repairFriendsData", () => {
 
     expect(logger.info).toHaveBeenCalledWith("repairFriendsData completed", {
       cancelledDeleted: 0,
+      expiredDeleted: 0,
       repairedUserSearchDocs: 0,
       forcedPrivateProfiles: 0,
     });
@@ -189,6 +190,8 @@ describe("repairFriendsData", () => {
       ]))
       // No more cancelled
       .mockResolvedValueOnce(createMockSnapshot([]))
+      // No expired PENDING requests
+      .mockResolvedValueOnce(createMockSnapshot([]))
       // No user_search docs
       .mockResolvedValueOnce(createMockSnapshot([]));
 
@@ -197,6 +200,7 @@ describe("repairFriendsData", () => {
     expect(mockBatchDelete).toHaveBeenCalledTimes(2);
     expect(logger.info).toHaveBeenCalledWith("repairFriendsData completed", {
       cancelledDeleted: 2,
+      expiredDeleted: 0,
       repairedUserSearchDocs: 0,
       forcedPrivateProfiles: 0,
     });

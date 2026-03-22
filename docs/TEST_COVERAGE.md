@@ -7,7 +7,7 @@ _Last updated: 2026-03-21_
 | Metric                    | Count   |
 |---------------------------|---------|
 | Source files               | 252     |
-| Test files                 | 206     |
+| Test files                 | 205     |
 | Total `@Test` methods      | 2,657   |
 | Key logic files            | ~140    |
 | Key logic files tested     | ~140    |
@@ -40,7 +40,7 @@ The project maintained by GitHub Actions workflows:
 | **ui/ + utils/**          | 6         | 6      | 100%     |
 | **data/ (Repositories)**  | 35        | 35     | 100%     |
 
-## What Is Tested (205 files, 2,655 tests)
+## What Is Tested (205 files, 2,657 tests)
 
 ### All ViewModels & Controllers (21/21)
 - AppViewModel (16), AuthViewModel (15), ChatViewModel (17)

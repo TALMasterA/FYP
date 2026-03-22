@@ -8,6 +8,7 @@ import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.settings.SharedSettingsDataSource
+import com.example.fyp.data.ui.UiLanguageCacheStore
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.core.FcmNotificationService
 import com.example.fyp.domain.friends.EnsurePublicProfileExistsUseCase
@@ -119,6 +120,9 @@ class AppViewModel @Inject constructor(
                             // defaults to true (fail-open) but the Firestore model defaults to false.
                             // Wait for the first settings emission and write Firestore values to cache.
                             syncFcmPrefsFromFirestore()
+                            // Reset guest UI translation flag so logged-in users aren't locked out
+                            // of UI language translation after logout.
+                            resetGuestUiTranslationFlag()
                         }
                     }
                     is AuthState.LoggedOut -> {
@@ -235,6 +239,22 @@ class AppViewModel @Inject constructor(
                 FcmNotificationService.saveNotifPrefToCache(ctx, "notifySharedInbox", settings.notifySharedInbox)
             } catch (e: Exception) {
                 android.util.Log.e("AppViewModel", "Failed to sync FCM prefs from Firestore", e)
+            }
+        }
+    }
+
+    /**
+     * Reset the guest UI translation flag so users who previously used their one-time
+     * guest translation can now use cached translations freely as logged-in users.
+     * Also resets the flag for future logout scenarios.
+     */
+    private fun resetGuestUiTranslationFlag() {
+        viewModelScope.launch {
+            try {
+                val cache = UiLanguageCacheStore(getApplication())
+                cache.resetGuestTranslationUsed()
+            } catch (e: Exception) {
+                android.util.Log.e("AppViewModel", "Failed to reset guest UI translation flag", e)
             }
         }
     }

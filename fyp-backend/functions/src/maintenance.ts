@@ -116,7 +116,8 @@ export const pruneStaleRateLimits = onSchedule(
 /**
  * Repair legacy friend-system data drift:
  * 1) Deletes obsolete friend_requests docs with status=CANCELLED.
- * 2) Repairs malformed user_search docs (blank/missing username_lowercase,
+ * 2) Deletes expired PENDING friend requests (expiresAt < now).
+ * 3) Repairs malformed user_search docs (blank/missing username_lowercase,
  *    or stale discoverability when username is blank).
  *
  * Runs weekly on Sundays at 5 AM UTC.
@@ -129,6 +130,7 @@ export const repairFriendsData = onSchedule(
   },
   async () => {
     const firestore = getFirestore();
+    const now = admin.firestore.Timestamp.fromDate(new Date());
 
     // ---- 1) Remove obsolete CANCELLED friend request docs ----
     let cancelledDeleted = 0;
@@ -149,7 +151,34 @@ export const repairFriendsData = onSchedule(
       if (cancelledSnap.size < FIRESTORE_BATCH_PAGE_SIZE_SMALL) break;
     }
 
-    // ---- 2) Repair malformed user_search docs ----
+    // ---- 2) Delete expired PENDING friend requests (expiresAt < now) ----
+    // FIX: Client filters expired requests but server should also clean them up
+    // to prevent storage waste and ensure expired requests are not accidentally
+    // processed by other functions.
+    let expiredDeleted = 0;
+    let lastExpiredDoc: admin.firestore.QueryDocumentSnapshot | null = null;
+
+    while (true) {
+      let query = firestore
+        .collection("friend_requests")
+        .where("status", "==", "PENDING")
+        .where("expiresAt", "<", now)
+        .limit(FIRESTORE_BATCH_PAGE_SIZE_SMALL);
+      if (lastExpiredDoc) query = query.startAfter(lastExpiredDoc);
+
+      const expiredSnap = await query.get();
+      if (expiredSnap.empty) break;
+      lastExpiredDoc = expiredSnap.docs[expiredSnap.docs.length - 1];
+
+      const batch = firestore.batch();
+      expiredSnap.docs.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+      expiredDeleted += expiredSnap.size;
+
+      if (expiredSnap.size < FIRESTORE_BATCH_PAGE_SIZE_SMALL) break;
+    }
+
+    // ---- 3) Repair malformed user_search docs ----
     let repairedUserSearchDocs = 0;
     let forcedPrivateProfiles = 0;
     let lastDoc: admin.firestore.QueryDocumentSnapshot | null = null;
@@ -235,7 +264,7 @@ export const repairFriendsData = onSchedule(
 
     logger.info(
       "repairFriendsData completed",
-      {cancelledDeleted, repairedUserSearchDocs, forcedPrivateProfiles}
+      {cancelledDeleted, expiredDeleted, repairedUserSearchDocs, forcedPrivateProfiles}
     );
   }
 );

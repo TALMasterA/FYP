@@ -107,7 +107,7 @@ Firebase login is required.
 - Search and add friends by username or User ID; attach an optional note (≤80 chars) with your request
 - Send/accept/reject/cancel friend requests; search results show localized relationship status labels
 - Incoming requests support bulk accept/reject actions with live progress and cancellation
-- Client-side friend-request sending is rate-limited to 10 per hour and persists across app restarts
+- Client-side friend-request sending is rate-limited to 10 per hour (server enforces stricter 3/hour limit) and persists across app restarts
 - Users without a username are guided straight to Profile before opening the add-friends flow or accepting requests
 - Real-time chat with friends; translate entire conversation to your language (shown only when friend has sent at least one message)
 - Share words and learning materials with friends; learning sheets can also be saved to your own shared inbox to archive a snapshot of the current version
@@ -318,7 +318,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (205 test files, 2,655 tests)
+# Run all unit tests (205 test files, 2,657 tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -363,7 +363,7 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **Android — 206 test files, 2,657 unit tests** (from `app/build/test-results/testDebugUnitTest`)
+- **Android — 205 test files, 2,657 unit tests** (from `app/build/test-results/testDebugUnitTest`)
 - **Backend — 9 test files, 122 tests** covering Cloud Functions logic
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:
@@ -419,10 +419,10 @@ gh auth login
 - `LanguageDisplayNamesExtendedTest` - Comprehensive language mapping and detection tests
 
 **Backend Key Test Suites (fyp-backend):**
-- `helpers.test.ts` - Auth guards, input validation, rate limiting, URL building helpers (24 tests)
+- `helpers.test.ts` - Auth guards, input validation, rate limiting, URL building helpers (29 tests)
 - `logger.test.ts` - Structured JSON logger output format (6 tests)
 - `translation.test.ts` - getSpeechToken, translateText, translateTexts, detectLanguage — auth, error and success paths (15 tests)
-- `coins.test.ts` - awardQuizCoins anti-cheat rules (version match, increment gate) and spendCoins shop purchases (22 tests)
+- `coins.test.ts` - awardQuizCoins anti-cheat rules (version match, increment gate) and spendCoins shop purchases (26 tests)
 - `notifications.test.ts` - FCM triggers: data guards, status filtering, spam detection (link flooding), friend request rate limiting (12 tests)
 
 **Running Tests:**

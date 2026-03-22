@@ -26,7 +26,7 @@ FYP/
 ├── docs/
 │   ├── treeOfImportantfiles.txt                    ← This file
 │   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants
-│   ├── TEST_COVERAGE.md                            ← Test coverage report (205 files, 2657 tests)
+│   ├── TEST_COVERAGE.md                            ← Test coverage report (205 files, 2,657 tests)
 │   ├── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
 │   ├── CLOUD_FUNCTIONS_API.md                      ← Backend Cloud Functions API reference
 │   └── SECRETS_ROTATION.md                         ← API key rotation runbook

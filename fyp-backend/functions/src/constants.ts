@@ -67,8 +67,11 @@ export const LINK_PATTERN = /https?:\/\/[^\s]+/gi;
 /**
  * Maximum number of friend requests a user can send per hour.
  * Prevents spam and abuse of the friend request system.
+ *
+ * IMPORTANT: This value must match the client-side constant in
+ * app/src/main/java/com/example/fyp/data/friends/FriendRequestRateLimiter.kt
  */
-export const MAX_FRIEND_REQUESTS_PER_HOUR = 3;
+export const MAX_FRIEND_REQUESTS_PER_HOUR = 10;
 
 /**
  * Maximum length for message preview in notifications.

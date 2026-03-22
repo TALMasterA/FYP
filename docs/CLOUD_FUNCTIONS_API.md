@@ -222,9 +222,24 @@ These are not callable functions — they fire automatically on Firestore docume
 | Function                           | Trigger                                          | Description                        |
 |------------------------------------|--------------------------------------------------|------------------------------------|
 | `sendChatNotification`             | `chats/{chatId}/messages/{messageId}` created    | Notifies recipient of new message  |
-| `sendFriendRequestNotification`    | `friend_requests/{requestId}` created            | Notifies recipient of new request; enforces 3/hour rate limit |
+| `sendFriendRequestNotification`    | `friend_requests/{requestId}` created            | Notifies recipient of new request; enforces 10/hour rate limit |
 | `sendRequestAcceptedNotification`  | `friend_requests/{requestId}` updated            | Notifies sender when request accepted |
 | `sendSharedInboxNotification`      | `users/{userId}/shared_inbox/{itemId}` created   | Notifies recipient of new shared item |
+
+---
+
+## Firestore Document Triggers
+
+These are background triggers that fire automatically on Firestore document events.
+
+### `syncQuizVersionFromLearningSheet`
+Syncs quiz version when learning sheets are created or updated.
+
+**Type:** Firestore trigger (`onDocumentWritten`)
+**Document:** `users/{userId}/learning_sheets/{sheetId}`
+**Region:** `us-central1`
+
+This trigger automatically updates the `last_awarded_quiz/{primary}_{target}` document with the current history count when a learning sheet is created or updated, ensuring quiz coin eligibility stays in sync with learning content regeneration.
 
 ---
 
@@ -234,7 +249,7 @@ These are not callable functions — they fire automatically on Firestore docume
 |------------------------|-----------------------|------------------------------------------|
 | `pruneStaleTokens`     | Daily at 03:00 UTC    | Removes FCM tokens older than 60 days    |
 | `pruneStaleRateLimits` | Sundays at 04:00 UTC  | Removes rate-limit docs inactive >30 days |
-| `repairFriendsData`    | Sundays at 05:00 UTC  | Deletes legacy `CANCELLED` friend requests and repairs malformed `user_search` / legacy profile discoverability fields |
+| `repairFriendsData`    | Sundays at 05:00 UTC  | Deletes legacy `CANCELLED` friend requests, expired `PENDING` requests (expiresAt < now), and repairs malformed `user_search` / legacy profile discoverability fields |
 
 ---
 

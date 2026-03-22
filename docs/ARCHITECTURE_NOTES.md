@@ -39,11 +39,29 @@ Never reorder existing enum entries.
 **Rule:**
 - First use translation inline detection when available.
 - If missing, fallback to `DetectLanguageUseCase` using the current source text.
-- Reuse the resolved language for history sourceLang and original-text TTS (never pass `"auto"` into TTS).
+- If both detection methods fail but translation succeeds, still show the translation result with a warning; save to history with `sourceLang = "auto"` marker.
+- When detection succeeds, reuse the resolved language for history sourceLang and original-text TTS (never pass `"auto"` into TTS).
 - Keep `Detected: ...` status transient (auto-clear after a short delay) so stale detection labels do not linger.
 - Provide a user-triggered refresh/reset path in Quick Translate to clear stale detected-language UI state before retry.
 
-This prevents regressions where typed input in auto mode translates but cannot be spoken, or fails with a false "could not detect" error when fallback detection would succeed.
+This prevents regressions where typed input in auto mode translates but cannot be spoken, or fails with a false "could not detect" error when fallback detection would succeed. It also ensures translations are never discarded just because language detection failed.
+
+---
+
+## 1.3 Guest UI Translation Flag Reset
+
+**Files:** `data/ui/UiLanguageCacheStore.kt`, `appstate/AppViewModel.kt`
+
+**Invariant:** When a user logs in, the guest UI translation usage flag must be reset so the user isn't locked out of future guest translations after logout.
+
+**Rule:**
+- `UiLanguageCacheStore.resetGuestTranslationUsed()` must be called when `AuthState.LoggedIn` fires in `AppViewModel.init`.
+- The guest translation check (`hasGuestUsedTranslation()`) only applies to non-logged-in users.
+- Logged-in users have unlimited UI language translations (no guest limit applies).
+
+This ensures that:
+1. A user who uses their guest translation, logs in, then logs out can use another guest translation.
+2. The guest limit only ever restricts truly guest sessions.
 
 ---
 
@@ -297,7 +315,7 @@ if (!loginLimiter.isAllowed(userId)) {
 
 **Rule:** Apply rate limiting to:
 - Login attempts (5 per minute)
-- Friend requests (10 per hour)
+- Friend requests (10 per hour client-side; 3 per hour server-side)
 - API calls (100 per minute)
 - Password reset (3 per hour)
 
@@ -435,7 +453,7 @@ scope.launch(Dispatchers.IO) {
 - NEVER keep friend-request rate limiting in memory only
 - ALWAYS prune expired timestamps before both reads and writes
 - ONLY record a send after a successful request; failed requests must not consume quota
-- KEEP the limit aligned with the documented 10-per-hour rule in README and tests
+- KEEP the limit aligned at 10/hour on BOTH client and server (constants must match)
 
 **Benefits:**
 - Prevents users from bypassing the limit by restarting the app

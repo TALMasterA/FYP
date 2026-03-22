@@ -275,7 +275,21 @@ class SpeechViewModel @Inject constructor(
                         )
 
                         if (resolvedDetection == null) {
-                            speechState = speechState.copy(statusMessage = "Could not detect source language. Please select manually.")
+                            // Detection failed but translation succeeded - show result with warning.
+                            // Use "auto" as source language marker since we couldn't detect it.
+                            speechState = speechState.copy(
+                                translatedText = tr.text,
+                                statusMessage = "⚠ Translated, but could not detect source language. Select manually for TTS/history accuracy."
+                            )
+                            // Still save history with "auto" marker so user doesn't lose the translation
+                            saveHistory(
+                                mode = "discrete",
+                                sourceText = recognizedText,
+                                targetText = tr.text,
+                                sourceLang = "auto",
+                                targetLang = toLanguage,
+                                sessionId = "",
+                            )
                             return@launch
                         }
 
