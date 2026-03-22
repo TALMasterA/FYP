@@ -278,6 +278,8 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LearningSheetNoContent to "未有學習表內容。",
     UiTextKey.LearningSheetRegenerate to "重新生成",
     UiTextKey.LearningSheetGenerating to "生成緊...",
+    UiTextKey.LearningSheetWhatIsThisTitle to "📚 呢個係乜？",
+    UiTextKey.LearningSheetWhatIsThisDesc to "呢份係根據你翻譯紀錄度身生成嘅學習表，包含詞彙、意思、例句同文法重點，幫你溫習。想測試自己，可以撳「測驗」按鈕。",
     UiTextKey.LearningRegenBlockedTitle to "目前無法重新生成",
     UiTextKey.LearningRegenBlockedMessage to "重新生成需要比上次生成多最少 5 條紀錄，你仲需要 {needed} 條。",
     UiTextKey.LearningRegenNeedMoreRecords to "⚠️ 仲需 {needed} 條紀錄先可以重新生成（最少 5 條）",

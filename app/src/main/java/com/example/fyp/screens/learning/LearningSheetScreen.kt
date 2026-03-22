@@ -104,7 +104,7 @@ fun LearningSheetScreen(
             IconButton(onClick = { showRegenInfo = true }) {
                 Icon(
                     imageVector = Icons.Default.Info,
-                    contentDescription = "Regeneration Rules",
+                    contentDescription = t(UiTextKey.LearningRegenInfoTitle),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -150,30 +150,6 @@ fun LearningSheetScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-            // Informational banner explaining what this learning sheet is
-            androidx.compose.material3.Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = androidx.compose.material3.CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = t(UiTextKey.LearningSheetWhatIsThisTitle),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    Text(
-                        text = t(UiTextKey.LearningSheetWhatIsThisDesc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-
             Text(
                 text = t(UiTextKey.LearningSheetPrimaryTemplate).replace("{speclanguage}", primaryName),
                 style = MaterialTheme.typography.bodyMedium
@@ -241,9 +217,17 @@ fun LearningSheetScreen(
                 if (showRegenInfo) {
                     AlertDialog(
                         onDismissRequest = { showRegenInfo = false },
-                        title = { Text(t(UiTextKey.LearningRegenInfoTitle)) },
+                        title = { Text(t(UiTextKey.LearningSheetWhatIsThisTitle)) },
                         text = {
-                            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                            Column(
+                                modifier = Modifier.verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                            ) {
+                                Text(t(UiTextKey.LearningSheetWhatIsThisDesc))
+                                Text(
+                                    text = t(UiTextKey.LearningRegenInfoTitle),
+                                    style = MaterialTheme.typography.titleSmall
+                                )
                                 Text(t(UiTextKey.LearningRegenInfoMessage))
                             }
                         },
@@ -271,7 +255,7 @@ fun LearningSheetScreen(
                         Text(
                             when {
                                 isGeneratingThis -> t(UiTextKey.LearningSheetGenerating)
-                                isAnyGenerationOngoing -> "⏳ Wait..."
+                                isAnyGenerationOngoing -> t(UiTextKey.QuizWait)
                                 else -> t(UiTextKey.LearningSheetRegenerate)
                             }
                         )

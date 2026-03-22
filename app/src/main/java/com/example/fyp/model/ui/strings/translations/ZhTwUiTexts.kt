@@ -278,6 +278,8 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LearningSheetNoContent to "尚無學習表內容。",
     UiTextKey.LearningSheetRegenerate to "重新生成",
     UiTextKey.LearningSheetGenerating to "生成中...",
+    UiTextKey.LearningSheetWhatIsThisTitle to "📚 這是什麼？",
+    UiTextKey.LearningSheetWhatIsThisDesc to "這份是依據您的翻譯紀錄量身生成的學習表，包含詞彙、意思、例句與文法重點，協助您複習。想測試自己，可點選「測驗」按鈕。",
     UiTextKey.LearningRegenBlockedTitle to "目前無法重新生成",
     UiTextKey.LearningRegenBlockedMessage to "重新生成需要比上次生成多至少 5 筆紀錄，您目前還需要 {needed} 筆。",
     UiTextKey.LearningRegenNeedMoreRecords to "⚠️ 需要再 {needed} 筆紀錄才能重新生成（最少 5 筆）",
