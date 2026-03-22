@@ -499,6 +499,35 @@ These guards prevent stale friend cards, broken block flow, and incorrect search
 
 ---
 
+## 21. Friend Removal UI — Visual Delete Mode Feedback
+
+**Files:** `screens/friends/FriendsScreen.kt` (FriendCard composable)
+
+**Invariant:** When in delete mode (`isDeleteMode = true`), selected friends must be visually highlighted with a **red border (3dp)** to give users clear confirmation before the delete confirmation dialog.
+
+**Implementation:**
+```kotlin
+// In FriendCard, when isSelected && isDeleteMode:
+.border(
+    width = 3.dp,
+    color = MaterialTheme.colorScheme.error,  // Material red
+    shape = RoundedCornerShape(12.dp)
+)
+```
+
+**Rule:**
+- The red border should ONLY appear when BOTH `isSelected == true` AND `isDeleteMode == true`.
+- The border radius must match the card's corner radius (RoundedCornerShape 12.dp).
+- The border color must be `MaterialTheme.colorScheme.error` to follow Material Design guidelines.
+- Do NOT change the checkbox appearance; let the border provide the primary visual feedback.
+
+**Benefits:**
+- Users see at-a-glance which friends are selected for deletion.
+- Prevents accidental multi-friend deletion by making selections obvious.
+- Maintains consistency with Material Design error states.
+
+---
+
 ## 21. Onboarding Screen — Version-Based Re-Show
 
 **File:** `screens/onboarding/OnboardingScreen.kt`

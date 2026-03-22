@@ -76,6 +76,14 @@ This project uses **GitHub Actions** for continuous integration and static analy
 *   Add-friends search now excludes existing friends and blocked users more strictly while still allowing re-discovery of removed (unfriended) public users.
 *   Shared inbox red-dot count now decrements immediately when an item is viewed.
 
+### Recent Stability Amendments (2026-03-23)
+*   **Friend Removal UI Enhanced:** Selected friends now display a red border (3dp) when in delete mode, providing clear visual feedback before confirmation.
+*   **Learning Sheet Explanations:** Added informational banner on Learning Sheet screen explaining what the sheet contains (vocabulary, meanings, examples, grammar) and how to use it (study first, then take quiz).
+*   **Error Handling & Status:** Verified all screens show clear status messages with auto-dismiss after 3 seconds; loading states properly displayed during async operations.
+*   **Account Deletion Completeness:** Verified deletion of 17+ subcollections (history, word_banks, learning_sheets, quiz_attempts, user_stats, friends, blocked_users, etc.) + profile docs + username registry + auth account.
+*   **Language & Username Cooldown:** Confirmed 30-day cooldown properly enforced with remaining days/hours shown in dialogs.
+*   **Navigation Smoothness:** Verified smooth transitions with 200ms animations and single-top navigation preventing stack duplication.
+
 --------------------------------------------------------------
 
 ## ⚠️ Development Cautions

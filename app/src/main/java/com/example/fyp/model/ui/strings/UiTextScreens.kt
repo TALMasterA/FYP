@@ -467,6 +467,12 @@ val ScreenUiTexts: List<String> = listOf(
     // LearningSheetGenerating
     "Generating...",
 
+    // LearningSheetWhatIsThisTitle
+    "📚 What Is This?",
+
+    // LearningSheetWhatIsThisDesc
+    "Your personalized learning sheet based on your translation history. Contains vocabulary, meanings, examples, and grammar notes to help you study. Tap the Quiz button below to test your knowledge!",
+
     // LearningRegenBlockedTitle
     "Cannot Regenerate Yet",
 

@@ -248,6 +248,8 @@ enum class UiTextKey {
     LearningSheetNoContent,
     LearningSheetRegenerate,
     LearningSheetGenerating,
+    LearningSheetWhatIsThisTitle,
+    LearningSheetWhatIsThisDesc,
     LearningRegenBlockedTitle,
     LearningRegenBlockedMessage,
     LearningRegenNeedMoreRecords,
