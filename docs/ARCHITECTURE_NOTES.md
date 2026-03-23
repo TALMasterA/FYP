@@ -1,679 +1,352 @@
 # Architecture & Complex Logic Notes
 
-> **Purpose:** This document protects complex, non-obvious business logic from accidental modification.
-> Read this before making changes to the listed areas.
+> **Purpose:** Document complex, non-obvious business logic to prevent accidental regression.
 
 ---
 
 ## 1. UiText System — Enum / List Alignment
 
-**Files:** `model/ui/UiTextCore.kt`, `model/ui/UiTextScreens.kt`
+**Invariant:** `UiTextKey` enum ordinals must 1-to-1 map to `BaseUiTexts` list entries.
 
-**Invariant:** The `UiTextKey` enum ordinals map 1-to-1 to entries in `BaseUiTexts = CoreUiTexts + ScreenUiTexts`.
-An off-by-one causes `ArrayIndexOutOfBoundsException` at runtime.
-
-**Guard:** `UiTextAlignmentTest` will fail if the counts diverge.  
-**Rule:** Always add new `UiTextKey` entries AND the corresponding string in the same commit.  
-Never reorder existing enum entries.
+**Rule:** Add new `UiTextKey` entries and corresponding strings in same commit. Never reorder existing entries.  
+**Guard:** `UiTextAlignmentTest` enforces count equality.
 
 ---
 
-## 1.1 Mode Copy Consistency — Discrete vs Continuous
+## 1.1 Mode Copy Consistency
 
-**Files:** `model/ui/UiTextScreens.kt`, `model/ui/strings/translations/*`
+**Invariant:** Quick Translate (discrete) vs Live Conversation (continuous) intent must be consistent across locales.
 
-**Invariant:** Mode labels and help text must keep the same intent across locales:
-- Quick Translate = discrete / short-phrase / single-turn translation
-- Live Conversation = continuous / multi-turn dialogue
-
-**Rule:** When updating mode wording in one locale, update equivalent strings in other maintained locale maps in the same change set to avoid mixed-mode guidance.
+**Rule:** Update equivalent strings in all maintained locales simultaneously.
 
 ---
 
 ## 1.2 Quick Translate Auto-Detect Fallback
 
-**Files:** `screens/speech/SpeechViewModel.kt`, `screens/speech/SpeechRecognitionScreen.kt`
+**Invariant:** Auto mode must work even if translation omits detected language metadata.
 
-**Invariant:** In Quick Translate, source `auto` mode must still work when translation responses omit inline detected language metadata.
-
-**Rule:**
-- First use translation inline detection when available.
-- If missing, fallback to `DetectLanguageUseCase` using the current source text.
-- Reuse the resolved language for history sourceLang and original-text TTS (never pass `"auto"` into TTS).
-- Keep `Detected: ...` status transient (auto-clear after a short delay) so stale detection labels do not linger.
-- Provide a user-triggered refresh/reset path in Quick Translate to clear stale detected-language UI state before retry.
-
-This prevents regressions where typed input in auto mode translates but cannot be spoken, or fails with a false "could not detect" error when fallback detection would succeed.
+**Rule:** (1) Use inline detection if available; (2) Fallback to `DetectLanguageUseCase`; (3) Never pass `"auto"` to TTS; (4) Auto-clear detected-language status after short delay; (5) Provide user-triggered refresh to clear stale state.
 
 ---
 
 ## 2. Firestore Nested Map Writes — Set-Merge vs Update
 
-**Files:** `data/friends/FirestoreChatRepository.kt` (`updateChatMetadata`, `markAllMessagesAsRead`)
+**Invariant:** `set(..., SetOptions.merge())` with nested `Map` **overwrites the entire map**, losing sibling keys.
 
-**Invariant:** Firestore `set(..., SetOptions.merge())` with a nested `Map` **overwrites the entire nested map**, losing sibling keys.
-
-**Rule:** Always use `update()` with dot-notation for nested fields:
+**Rule:** Use `update()` with dot-notation for nested fields:
 ```kotlin
-// CORRECT — only updates one key
+// CORRECT
 db.document(path).update("unreadPerFriend.$friendId", count)
 
 // WRONG — overwrites entire unreadPerFriend map
-db.document(path).set(mapOf("unreadPerFriend" to mapOf(friendId to count)), SetOptions.merge())
+db.document(path).set(mapOf("unreadPerFriend" to mapOf(...)), SetOptions.merge())
 ```
-For document creation fallback: catch `FirebaseFirestoreException`, only fallback when `code == NOT_FOUND`, and call `set()` with the full map.
-For all other Firestore error codes, rethrow so permission/config/network problems are not silently masked.
+
+For document creation fallback: catch `FirebaseFirestoreException`, only fallback on `NOT_FOUND`, call `set()` with full map.
 
 ---
 
 ## 2.1 Error Visibility — Auto-Scroll To Error Banner
 
-**File:** `screens/learning/LearningScreen.kt`
+**Invariant:** When `uiState.error` is set on list screens, viewport should scroll to error banner immediately.
 
-**Invariant:** When `uiState.error` becomes non-null on list-based screens, the visible viewport should move to the error banner so users immediately see actionable feedback.
-
-**Rule:** For `LazyColumn` screens, use `rememberLazyListState()` + `LaunchedEffect(error)` + `animateScrollToItem()` before any timed auto-dismiss.
-
-For non-list screens, surface transient errors via a visible status/snackbar area and auto-clear with `UiConstants.ERROR_AUTO_DISMISS_MS`.
+**Rule:** Use `rememberLazyListState()` + `LaunchedEffect(error)` + `animateScrollToItem()` before auto-dismiss.
 
 ---
 
 ## 2.2 Word Bank Error Lifecycle
 
-**Files:** `screens/wordbank/WordBankScreen.kt`, `screens/wordbank/WordBankViewModel.kt`
+**Invariant:** Errors should be short-lived and user-visible without manual dismissal.
 
-**Invariant:** Word Bank errors should be short-lived and user-visible without requiring manual dismissal.
-
-**Rule:** When `uiState.error` is set, auto-dismiss in the screen via `LaunchedEffect(error)` and clear through `WordBankViewModel.clearError()`.
+**Rule:** Auto-dismiss via `LaunchedEffect(error)` and clear through `ViewModel.clearError()`.
 
 ---
 
 ## 3. Username Propagation — Cache Consistency
 
-**Files:** `data/friends/FirestoreFriendsRepository.kt` (`propagateUsernameChange`, `syncFriendUsernames`)
+**Invariant:** `FriendRelation.friendUsername` is cached and must stay in sync via `propagateUsernameChange()` (when user renames) and `syncFriendUsernames()` (on refresh).
 
-**Invariant:** `FriendRelation.friendUsername` is a **cached copy** of the friend's display name. It must be kept in sync via:
-1. `propagateUsernameChange()` — called by `ProfileViewModel.updateUsername()` when a user renames themselves
-2. `syncFriendUsernames()` — called on pull-to-refresh to heal any stale caches
-
-**Rule:** Never update a username without calling `propagateUsernameChange()`.  
-The `setUsername()` method only updates the global `usernames/` registry — it does NOT update friend caches.
+**Rule:** Never update username without calling `propagateUsernameChange()`. The `setUsername()` method only updates the global registry, not friend caches.
 
 ---
 
 ## 4. Account Deletion — Complete Cleanup Required
 
-**Files:** `data/user/FirestoreProfileRepository.kt` (`deleteAccount`)
+**Invariant:** `deleteAccount()` must clean up ALL 17 subcollections.
 
-**Invariant:** `deleteAccount()` must clean up ALL 17 subcollections + top-level docs:
-`history, word_banks, learning_sheets, quiz_attempts, quiz_stats, generated_quizzes, favorites,
-custom_words, sessions, coin_awards, last_awarded_quiz, user_stats, friends, shared_inbox,
-favorite_sessions, blocked_users, fcm_tokens,
-profile/settings, profile/info, profile/public, usernames/{username}, user_search/{uid}`
-
-**Rule:** If you add a new Firestore collection for a user, add its cleanup to `deleteAccount()`.  
-Write a test that asserts the cleanup path count stays in sync.
+**Rule:** If adding a new collection, add its cleanup to `deleteAccount()`. Write a test asserting cleanup count stays in sync.
 
 ---
 
 ## 5. Coin System — Anti-Cheat Logic
 
-**Files:** `domain/learning/GenerationEligibility.kt`, `LearningViewModel.kt`
+**Invariant:** Coins only awarded when: (1) quiz from ≥`MIN_RECORDS_FOR_LEARNING_SHEET` records, (2) history count increased since last award, (3) score meets minimum.
 
-**Invariant:** Coins are only awarded when:
-1. The quiz was generated from at least `MIN_RECORDS_FOR_LEARNING_SHEET` records
-2. The history count has increased since the last coin award
-3. The score meets the minimum threshold
-
-**Rule:** Do NOT add coin award calls outside `awardCoinsForQuiz()`. The `lastAwardedQuizCountByLanguage` map is the anti-cheat guard; never reset it without cause.
+**Rule:** Only call coins via `awardCoinsForQuiz()`. Never reset `lastAwardedQuizCountByLanguage` without cause.
 
 ---
 
 ## 6. SharedFriendsDataSource — Single Listener Pattern
 
-**Files:** `data/friends/SharedFriendsDataSource.kt`
+**Invariant:** Holds exactly **one** Firestore listener per collection. Multiple ViewModels share flows instead of creating listeners.
 
-**Invariant:** This `@Singleton` holds exactly **one** Firestore listener per collection (friends, incoming requests, shared inbox). Multiple ViewModels share these flows instead of creating their own listeners.
-
-**Rule:** Do NOT add additional `observeFriends()` / `observeIncomingRequests()` calls in ViewModels — use `sharedFriendsDataSource.friends` / `.incomingRequests` instead. Creating extra listeners multiplies Firestore read costs.
+**Rule:** Do NOT add additional `observeFriends()` calls in ViewModels — use `sharedFriendsDataSource.friends` instead. Extra listeners multiply read costs.
 
 ---
 
 ## 7. History Limit — Firestore Cost Boundary
 
-**Files:** `model/user/UserSettings.kt`, `HistoryViewModel.kt`, `FirestoreHistoryRepository.kt`
+**Invariant:** Capped at `UserSettings.historyViewLimit` (30–60). Expansion requires coin purchase.
 
-**Invariant:** History is capped at `UserSettings.historyViewLimit` (30–60). Expanding beyond requires explicit coin purchase.  
-`BASE_HISTORY_LIMIT = 30`, `MAX_HISTORY_LIMIT = 60`, expansion increment = 10.
-
-**Rule:** Never increase `DEFAULT_HISTORY_LIMIT` in `DataConstants` — it controls a Firestore read quota boundary.
+**Rule:** Never increase `DEFAULT_HISTORY_LIMIT` — it controls a Firestore read quota boundary.
 
 ---
 
 ## 8. FCM Token Management
 
-**Files:** `core/FcmNotificationService.kt`, `fyp-backend/functions/src/index.ts`
+**Invariant:** Tokens stored at `users/{uid}/fcm_tokens/{tokenId}` with `updatedAt`. Pruned by Cloud Function after 60 days.
 
-**Invariant:** Each device token is stored at `users/{uid}/fcm_tokens/{tokenId}` with an `updatedAt` timestamp. The `pruneStaleTokens` Cloud Function deletes tokens older than 60 days.
-
-**Rule:** Always use `FcmNotificationService.storeToken()` to register new tokens (not direct Firestore writes). Never delete tokens on the client side — let the Cloud Function handle cleanup.
+**Rule:** Always use `FcmNotificationService.storeToken()`. Never delete tokens on client — let Cloud Function handle cleanup.
 
 ---
 
 ## 9. Value Type Validation — Compile-Time Type Safety
 
-**File:** `model/ValueTypes.kt`
+**Invariant:** Domain identifiers (UserId, LanguageCode, etc.) are inline value classes with `init` validation.
 
-**Invariant:** All domain identifiers (UserId, LanguageCode, Username, etc.) are inline value classes with validation in `init`. Passing a raw `String` where a `UserId` is expected will fail at compile time.
-
-**Rule:** Never bypass value classes by adding `@JvmInline value class Foo(val value: String)` without an `init { require(...) }` block. Keep validation centralized here, not scattered across repositories.
+**Rule:** All value classes must have `init { require(...) }`. Keep validation centralized in `ValueTypes.kt`.
 
 ---
 
 ## 10. Firestore Security Rules — Key Path Dependencies
 
-**File:** `fyp-backend/firestore.rules`
-
-**Critical paths that must stay consistent with code:**
+**Critical paths:**
 - `users/{userId}/friends/{friendId}` — read by FriendsViewModel, written by acceptFriendRequest
-- `users/{userId}.unreadPerFriend` — counter updated by FirestoreChatRepository with dot-notation
-- `friend_requests/{id}` — PENDING status checked before allowing new requests
-- `user_search/{userId}` — must include `isDiscoverable` for search filter to work
+- `users/{userId}.unreadPerFriend` — counter updated with dot-notation
+- `friend_requests/{id}` — PENDING status checked before new requests
+- `user_search/{userId}` — must include `isDiscoverable` for search filter
 
-**Friend mirror-delete invariant:**
-- Unfriend uses a client-side batch that deletes both mirror docs (`users/A/friends/B` and `users/B/friends/A`) in one commit.
-- Rules must allow the list owner (`userId`) to write their own doc and allow the friend counterpart (`friendId`) to `delete` that mirror entry.
-- Do **not** broaden counterpart access to update arbitrary fields; counterpart access should stay create/delete only.
+**Friend mirror-delete invariant:** Client-side batch deletes both `users/A/friends/B` and `users/B/friends/A` atomically. Rules allow counterpart `delete` only; counterpart `update` is forbidden.
 
-**Rule:** If you rename a Firestore field in code, update the security rules too. Run `firebase deploy --only firestore:rules` after any rule change.
+**Rule:** Update rules after field renames. Run `firebase deploy --only firestore:rules` after changes.
 
 ---
 
 ## 11. Standard UI Components — Consistency Across Screens
 
-**Files:** `ui/components/StandardButtons.kt`, `StandardTextFields.kt`, `StandardDialogs.kt`, `StandardComponents.kt`
+**Rule:** Always use `StandardPrimaryButton`, `StandardTextField`, `StandardDialog` instead of raw Compose components. Use `AppSpacing` and `AppCorners` constants. Use `MaterialTheme.colorScheme` for colors.
 
-**Invariant:** All interactive UI elements (buttons, text fields, dialogs) should use standardized components to ensure consistent styling, spacing, and behavior across the entire app.
-
-**Rule:** When adding new UI elements:
-1. Use `StandardPrimaryButton`, `StandardSecondaryButton`, or `StandardTextButton` instead of raw `Button`, `OutlinedButton`, or `TextButton`
-2. Use `StandardTextField`, `StandardPasswordField`, or `StandardSearchField` instead of raw `OutlinedTextField`
-3. Use `StandardAlertDialog`, `StandardConfirmDialog`, or `StandardInfoDialog` instead of raw `AlertDialog`
-4. Use `StandardEmptyState`, `StandardErrorCard`, or `StandardInfoCard` for empty/error states
-5. Always use `AppSpacing` constants instead of hardcoded dp values
-6. Always use `AppCorners` for shape definitions
-7. Always use `MaterialTheme.colorScheme` instead of hardcoded colors
-
-**Benefits:**
-- Consistent button heights (48dp), text field styling, and dialog layouts
-- Easier to update global styles (change once, applies everywhere)
-- Better accessibility (consistent content descriptions and semantic roles)
-- Reduced code duplication
+**Benefits:** Consistent styling, easier global updates, better accessibility.
 
 ---
 
 ## 11.1 Screen Help UX — Top-Right Info Dialog Pattern
 
-**Files:** `screens/speech/SpeechRecognitionScreen.kt`, `screens/speech/ContinuousConversationScreen.kt`, `screens/settings/*`
+**Invariant:** Long instructional text should be in top-right info dialog, not inline body text.
 
-**Invariant:** Long instructional text should be shown through a top-right info action dialog instead of inline body text when the screen already has action-heavy controls.
-
-**Rule:** Keep inline copy short and task-focused; move explainers to the `Info` dialog to reduce visual clutter and keep control rows visible.
+**Rule:** Keep inline copy short; move explainers to Info dialog to reduce visual clutter.
 
 ---
 
 ## 12. Performance Optimization — Debouncing and Throttling
 
-**File:** `core/performance/PerformanceUtils.kt`
-
-**Invariant:** Expensive operations triggered by user input or rapid events should be debounced or throttled to prevent redundant API calls and improve responsiveness.
-
-**Patterns:**
-
-**Debouncing (delay emission until input stops):**
+**Debouncing (delay until input stops):**
 ```kotlin
-val searchQuery by remember { mutableStateOf("") }
 val debouncedQuery = rememberDebouncedValue(searchQuery, delayMillis = 300L)
-
-LaunchedEffect(debouncedQuery) {
-    // Only triggers 300ms after user stops typing
-    searchUsers(debouncedQuery)
-}
+LaunchedEffect(debouncedQuery) { searchUsers(debouncedQuery) }
 ```
 
-**Throttling (enforce minimum interval between executions):**
+**Throttling (enforce minimum interval):**
 ```kotlin
-ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) {
-    // Only executes once per second even if refreshTrigger changes rapidly
-    refreshData()
-}
+ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshData() }
 ```
 
-**Rule:** Apply debouncing to:
-- Search fields (300ms delay)
-- Text input that triggers translations or API calls (300-500ms delay)
-- Auto-save operations (1-2s delay)
-
-Apply throttling to:
-- Scroll-triggered data loading (500ms-1s interval)
-- Refresh operations (1s interval)
-- Analytics events (5s interval)
-
-**Benefits:**
-- Reduces API calls by 80-90% during typing
-- Improves UI responsiveness
-- Saves Firestore read quota and costs
+**Rule:** Debounce search (300ms), text input (300-500ms), auto-save (1-2s). Throttle scroll-loading (500ms-1s), refresh (1s), analytics (5s).
 
 ---
 
 ## 13. Input Validation and Sanitization — Security Guards
 
-**File:** `core/security/SecurityUtils.kt`
+**Rule:** Validate all user input at entry points using `validateEmail()`, `validatePassword()`, `validateUsername()`, `validateTextLength()`. Sanitize with `sanitizeInput()`. Apply rate limiting (login: 5/min, friend requests: 10/hr, API: 100/min, password reset: 3/hr).
 
-**Invariant:** All user input must be validated and sanitized before processing, storage, or display to prevent injection attacks and ensure data integrity.
-
-**Rule:** Always validate user input at entry points:
-1. **Email fields** - Use `validateEmail()` before authentication
-2. **Password fields** - Use `validatePassword()` to enforce strength requirements
-3. **Username fields** - Use `validateUsername()` for format and length
-4. **Text fields** - Use `validateTextLength()` to enforce bounds
-5. **Display user content** - Use `sanitizeInput()` to escape HTML entities
-6. **URLs** - Use `validateUrl()` to ensure safe protocols
-
-**Pattern:**
-```kotlin
-when (val result = validateUsername(username)) {
-    is ValidationResult.Valid -> proceedWithUsername(username)
-    is ValidationResult.Invalid -> showError(result.message)
-}
-
-val safeText = sanitizeInput(userInput) // Escape HTML entities
-```
-
-**Rate Limiting:**
-```kotlin
-val loginLimiter = RateLimiter(maxAttempts = 5, windowMillis = 60_000L)
-
-if (!loginLimiter.isAllowed(userId)) {
-    showError("Too many attempts. Try again later.")
-    return
-}
-```
-
-**Rule:** Apply rate limiting to:
-- Login attempts (5 per minute)
-- Friend requests (10 per hour)
-- API calls (100 per minute)
-- Password reset (3 per hour)
-
-**Benefits:**
-- Prevents XSS attacks (cross-site scripting)
-- Prevents SQL injection
-- Prevents brute force attacks
-- Enforces data integrity
+**Encoding order in `sanitizeInput()`:** `&` → `&amp;` (FIRST), then `<`, `>`, `"`, `'`, `/`.
 
 ---
-## 14. Bottom Navigation Bar — System Bar Insets Protection
 
-**File:** `navigation/AppNavigation.kt`
+## 14. Bottom Navigation Bar — System Bar Insets
 
-**Invariant:** The bottom NavigationBar must include `windowInsets = WindowInsets.navigationBars` to ensure it adds proper padding above device system navigation keys (home, back, recent apps buttons).
+**Invariant:** NavigationBar must include `windowInsets = WindowInsets.navigationBars` to avoid being drawn behind system navigation.
 
-**Rule:** Without this parameter, the NavigationBar will be drawn behind the system navigation bar, making bottom icons difficult to tap on devices with gesture navigation or hardware buttons.
-
-**Pattern:**
-```kotlin
-NavigationBar(
-    windowInsets = WindowInsets.navigationBars  // REQUIRED
- ) {
-    // navigation items
- }
-```
-
-**Benefits:**
-- Bottom navigation items remain fully accessible on all devices
-- Proper spacing above system gesture bar on gesture navigation devices
-- No overlapping with physical navigation buttons on older devices
+**Rule:** Never omit this parameter.
 
 ---
 
 ## 14.1 Friends Search Discoverability Guard
 
-**Files:** `data/friends/FirestoreFriendsRepository.kt`, `domain/friends/EnsurePublicProfileExistsUseCase.kt`, `fyp-backend/firestore.rules`
+**Invariant:** Profiles with blank username must never be discoverable. `user_search/{uid}` must only contain `username_lowercase` when username is non-blank and valid.
 
-**Invariant:** A profile with blank username must never be discoverable. Search-index docs in `user_search/{uid}` must only contain `username_lowercase` when username is non-blank and valid.
-
-**Rule:**
-1. New users start with `isDiscoverable = false` until they set a valid username.
-2. Any update that blanks username must force `isDiscoverable = false` and remove `username_lowercase`.
-3. Firestore rules enforce that discoverable profiles/search docs have username format `[A-Za-z0-9_]` and length 3–20.
-
-This prevents malformed index rows and empty-name search results.
+**Rule:** New users start with `isDiscoverable = false`. Blanking username forces `isDiscoverable = false` and removes `username_lowercase`. Rules enforce format `[A-Za-z0-9_]`, length 3–20.
 
 ---
 
 ## 15. Red Dot Notification Persistence — Seen Items Storage
 
-**Files:** `data/friends/SeenItemsStorage.kt`, `data/friends/SharedFriendsDataSource.kt`, `screens/friends/SharedInboxViewModel.kt`
+**Invariant:** When viewing shared inbox, seen item IDs must persist to SharedPreferences so red dots don't reappear on app restart.
 
-**Invariant:** When a user views shared inbox items, those item IDs must be persisted to SharedPreferences so the red dot notification badge does NOT reappear on app restart for already-seen items.
+**Rule:** (1) Load persisted IDs in `startObserving()`; (2) Call `SeenItemsStorage.saveSeenItemIds()` after marking seen; (3) Clear persisted IDs in `stopObserving()` on logout.
 
-**Implementation:**
-1. `SeenItemsStorage` stores/loads seen item IDs per user in SharedPreferences
-2. `SharedFriendsDataSource.startObserving()` loads persisted seen IDs on app start
-3. `SharedFriendsDataSource.markSharedItemsSeen()` saves seen IDs to persistent storage
-4. `SharedFriendsDataSource.stopObserving()` clears persisted IDs on logout
-
-**Rule:**
-- NEVER store seen item IDs only in memory (MutableStateFlow/private var)
-- ALWAYS call `SeenItemsStorage.saveSeenItemIds()` after marking items as seen
-- ALWAYS load persisted IDs in `startObserving()` to restore state across app restarts
-- ALWAYS clear persisted IDs in `stopObserving()` to prevent leaking data between user accounts
-
-**Pattern:**
-```kotlin
-// In startObserving()
-scope.launch(Dispatchers.IO) {
-    val persistedSeenIds = SeenItemsStorage.loadSeenItemIds(context, userId)
-    _seenSharedItemIds.value = persistedSeenIds
-}
-
-// In markSharedItemsSeen()
-_seenSharedItemIds.value = _seenSharedItemIds.value + currentIds
-scope.launch(Dispatchers.IO) {
-    SeenItemsStorage.saveSeenItemIds(context, userId, _seenSharedItemIds.value)
-}
-```
-
-**Benefits:**
-- Consistent badge behavior: red dots only appear for truly new items
-- Better UX: users don't see stale notifications on app restart
-- Multi-account safe: each user has separate seen items storage
-- Simple implementation: uses existing SharedPreferences pattern
+**Benefits:** Consistent badge behavior, no stale notifications on restart, multi-account safe.
 
 ---
 
 ## 16. Friend Request Rate Limiting — Persisted Hourly Window
 
-**Files:** `data/friends/FriendRequestRateLimiter.kt`, `screens/friends/FriendsViewModel.kt`
+**Invariant:** 10 sends per hour, persisted in SharedPreferences to survive app restarts.
 
-**Invariant:** Friend-request send limits must survive app restarts. The client enforces a rolling one-hour window of 10 sends per user by persisting timestamps in SharedPreferences.
+**Rule:** (1) Prune expired timestamps before reads/writes; (2) Only record send after successful request; (3) Keep aligned with documented 10-per-hour rule.
 
-**Implementation:**
-1. `SharedPreferencesFriendRequestRateLimiter` stores per-user send timestamps in `friend_request_rate_limit_prefs`.
-2. `canSend()` prunes expired timestamps before deciding whether another send is allowed.
-3. `recordSend()` is only called after `SendFriendRequestUseCase` succeeds.
-4. `FriendsViewModel.sendFriendRequest()` surfaces retry timing to the UI when the limit is hit.
-
-**Rule:**
-- NEVER keep friend-request rate limiting in memory only.
-- ALWAYS prune expired timestamps before both reads and writes.
-- ONLY record a send after a successful request; failed requests must not consume quota.
-- KEEP the limit aligned with the documented 10-per-hour rule in README and tests.
-
-**Benefits:**
-- Prevents users from bypassing the limit by restarting the app.
-- Reduces accidental request spam during repeated retries.
-- Keeps client behavior aligned with the existing server-side guardrail.
+**Guard:** `FriendRequestRateLimiterTest` verifies persistence and restart safety.
 
 ---
 
 ## 17. Translation Performance Fast Paths — Preserve Latency Guards
 
-**Files:** `data/clients/CloudTranslatorClient.kt`, `data/clients/CloudSpeechTokenClient.kt`, `data/repositories/FirebaseTranslationRepository.kt`, `data/cloud/TranslationCache.kt`, `core/ui/CommonUi.kt`
-
-**Invariant:** Translation and auto-detect performance depend on several coordinated fast paths. Removing any of them can increase UI wait time and cloud-call volume.
-
 **Required guards:**
-1. Reuse Firebase callable instances in `CloudTranslatorClient` and `CloudSpeechTokenClient` (do not recreate callables per request).
-2. Keep retry logic enabled for detect-language cloud calls, aligned with translation retry behavior.
-3. Preserve repository short-circuits:
-    - blank source text returns immediately;
-    - same-language translation returns source text without network calls.
-4. Keep `TranslationCache.getBatchCached()` memory-first lookup flow to avoid unnecessary DataStore reads.
-5. Keep batch-cache writes updating both persistent cache and in-memory LRU cache.
-6. In app UI language selection, skip work when selected language is unchanged.
+1. Reuse Firebase callable instances (don't recreate per request)
+2. Keep retry logic enabled for detect-language calls
+3. Preserve repository short-circuits: blank source returns immediately; same-language skips network
+4. Keep `TranslationCache.getBatchCached()` memory-first lookup
+5. Batch-cache writes update both persistent cache and in-memory LRU
+6. Skip work in UI language selection when unchanged
 
-**Rule:** Any translation refactor must keep these guards or replace them with equivalent behavior and re-verify with:
-
-```bash
-./gradlew :app:testDebugUnitTest
-./gradlew :app:assembleDebug
-```
-
-**Benefits:**
-- Lower translation round-trip latency
-- Fewer cloud function invocations
-- Reduced DataStore read overhead on repeated batch translations
-- Faster app UI language switching responsiveness
+**Rule:** Refactors must preserve or replace with equivalent behavior. Verify with `testDebugUnitTest` and `assembleDebug`.
 
 ---
 
 ## 18. UI Language Switching Continuity — Background Job Coordinator
 
-**Files:** `core/ui/CommonUi.kt`, `data/ui/UiLanguageStateController.kt`
+**Invariant:** Long-running UI-language translation jobs must continue even when users navigate away.
 
-**Invariant:** Long-running UI-language translation jobs must continue even when users navigate away from the current screen.
+**Rule:** (1) Run via shared `UiLanguageTranslationCoordinator` scope, not screen scope; (2) Surface explicit status (`in progress`, `completed`, `failed`) in dropdown; (3) Auto-dismiss status after delay; (4) Enforce guest translation limits before network call.
 
-**Rule:**
-1. Run non-trivial UI-language translation via the shared `UiLanguageTranslationCoordinator` scope, not a screen-scoped coroutine.
-2. Surface explicit status text (`in progress`, `completed`, `failed`) in `AppLanguageDropdown` so users always see current state.
-3. Auto-dismiss non-running status messages after a short delay, and only clear if the status has not been replaced by a newer translation run.
-4. Keep guest translation limits enforced before network translation starts.
-5. Keep English / hardcoded zh-TW / zh-HK fast paths local and immediate.
-
-This prevents translation jobs from being cancelled on route changes, gives clear user feedback while work is in flight, and avoids stale completion banners lingering indefinitely.
+This prevents job cancellation on route changes and avoids stale completion banners.
 
 ---
 
 ## 19. Notification Toggle Consistency — Firestore to Local Cache Sync
 
-**Files:** `screens/settings/SettingsViewModel.kt`, `core/FcmNotificationService.kt`
+**Invariant:** FCM dispatch uses local SharedPreferences, so those values must mirror server-backed settings continuously.
 
-**Invariant:** FCM notification dispatch uses local SharedPreferences (`notif_prefs`), so those values must mirror server-backed settings continuously.
-
-**Rule:**
-1. Continue writing a changed toggle immediately in `updateNotificationPref(...)`.
-2. Also sync all push notification fields whenever `SharedSettingsDataSource.settings` emits.
-3. Never assume local cache contains valid values on app start/login.
-
-This keeps push notification behavior aligned with the latest saved settings without waiting for manual toggle interaction.
+**Rule:** (1) Write changed toggle immediately; (2) Sync all push notification fields when `SharedSettingsDataSource.settings` emits; (3) Never assume local cache is valid on startup.
 
 ---
 
 ## 20. Friend Removal and Search Consistency Guards
 
-**Files:** `screens/friends/FriendsViewModel.kt`, `domain/friends/RemoveFriendUseCase.kt`, `data/friends/FirestoreFriendsRepository.kt`, `fyp-backend/firestore.rules`
-
-**Invariant:** Removing or blocking friends must not leave stale UI cards or inconsistent add-friends search results.
-
-**Rule:**
-1. Optimistic remove must rollback the friend list if `RemoveFriendUseCase` fails.
-2. `blockAndRemoveFriend(...)` must stop before blocking when the remove step fails.
-3. `RemoveFriendUseCase` must reject `userId == friendId` before any chat/friend mutation.
-4. Firestore rules for `users/{userId}/friends/{friendId}` must allow reciprocal delete by `friendId` so two-sided unfriend batch deletes can succeed.
-5. Add-friends search must exclude: self, existing friends, and blocked users.
-6. Unfriended public users remain searchable again (unless blocked).
-
-These guards prevent stale friend cards, broken block flow, and incorrect search visibility.
+**Rule:** (1) Optimistic remove must rollback if `RemoveFriendUseCase` fails; (2) `blockAndRemoveFriend()` must abort before blocking if remove fails; (3) Reject `userId == friendId`; (4) Rules allow counterpart delete for reciprocal unfriend batches; (5) Search excludes: self, existing friends, blocked users; (6) Unfriended users remain searchable unless blocked.
 
 ---
 
 ## 21. Friend Removal UI — Visual Delete Mode Feedback
 
-**Files:** `screens/friends/FriendsScreen.kt` (FriendCard composable)
+**Invariant:** Selected friends in delete mode must have red border (3dp) for clear confirmation before dialog.
 
-**Invariant:** When in delete mode (`isDeleteMode = true`), selected friends must be visually highlighted with a **red border (3dp)** to give users clear confirmation before the delete confirmation dialog.
-
-**Implementation:**
-```kotlin
-// In FriendCard, when isSelected && isDeleteMode:
-.border(
-    width = 3.dp,
-    color = MaterialTheme.colorScheme.error,  // Material red
-    shape = RoundedCornerShape(12.dp)
-)
-```
-
-**Rule:**
-- The red border should ONLY appear when BOTH `isSelected == true` AND `isDeleteMode == true`.
-- The border radius must match the card's corner radius (RoundedCornerShape 12.dp).
-- The border color must be `MaterialTheme.colorScheme.error` to follow Material Design guidelines.
-- Do NOT change the checkbox appearance; let the border provide the primary visual feedback.
-
-**Benefits:**
-- Users see at-a-glance which friends are selected for deletion.
-- Prevents accidental multi-friend deletion by making selections obvious.
-- Maintains consistency with Material Design error states.
+**Rule:** Red border appears only when BOTH `isSelected == true` AND `isDeleteMode == true`. Use `MaterialTheme.colorScheme.error` and match card corner radius.
 
 ---
 
-## 21. Onboarding Screen — Version-Based Re-Show
+## 22. Onboarding Screen — Version-Based Re-Show
 
-**File:** `screens/onboarding/OnboardingScreen.kt`
+**Invariant:** Show onboarding on: (1) first launch, (2) after app update (version differs from stored).
 
-**Invariant:** The onboarding screen must be shown on both:
-1. First launch on a device (no prefs stored)
-2. After an app update (stored version differs from current `BuildConfig.VERSION_NAME`)
+**Rule:** Store `"onboarding_complete"` (boolean) and `"onboarding_version"` (string). Both must match current `BuildConfig.VERSION_NAME`.
 
-**Implementation:**
-- `SharedPreferences` key `"onboarding_complete"` (boolean) tracks whether onboarding has been completed
-- `SharedPreferences` key `"onboarding_version"` (string) stores the app version at which onboarding was completed
-- `isOnboardingComplete()` returns `true` only when both the flag is `true` AND the stored version matches the current `BuildConfig.VERSION_NAME`
-- `markOnboardingComplete()` writes both the boolean flag and the current version name
-
-**Rule:** Never remove the version check. Users must see updated onboarding content after an app update. The version comparison uses `BuildConfig.VERSION_NAME` (not `VERSION_CODE`) so it triggers on name changes only.
-
-**Guard:** `OnboardingLogicTest` verifies all four cases: first launch, complete with matching version, version mismatch (update), and null version (legacy prefs).
+**Guard:** `OnboardingLogicTest` verifies all four cases.
 
 ---
 
-## 18. sanitizeInput() — Encoding Order
+## 23. sanitizeInput() — Encoding Order
 
-**File:** `core/security/SecurityUtils.kt`
+**Invariant:** Ampersand (`&`) replacement MUST be first. If `<` → `&lt;` happens first, then `&` → `&amp;` double-encodes to `&amp;lt;`.
 
-**Invariant:** The ampersand (`&`) replacement MUST be the first operation in `sanitizeInput()`. If `<` is replaced with `&lt;` first, and then `&` is replaced with `&amp;`, the already-encoded `&lt;` becomes `&amp;lt;` (double-encoded).
+**Order:** (1) `&` → `&amp;`, (2) `<` → `&lt;`, (3) `>` → `&gt;`, (4) `"` → `&quot;`, (5) `'` → `&#x27;`, (6) `/` → `&#x2F;`.
 
-**Rule:** The replacement order must always be:
-1. `&` → `&amp;` (FIRST — before any other entity is introduced)
-2. `<` → `&lt;`
-3. `>` → `&gt;`
-4. `"` → `&quot;`
-5. `'` → `&#x27;`
-6. `/` → `&#x2F;`
-
-**Guard:** `SanitizeInputExtendedTest` verifies that double-encoding does not occur.
+**Guard:** `SanitizeInputExtendedTest` verifies no double-encoding.
 
 ---
 
-## 19. Username Validation — Consistent Regex Across Codebase
+## 24. Username Validation — Consistent Regex
 
-**Files:** `core/security/SecurityUtils.kt`, `screens/settings/ProfileViewModel.kt`
-
-**Invariant:** Username validation must use the shared `validateUsername()` function from `SecurityUtils.kt` everywhere. The canonical regex is `^[a-zA-Z0-9_-]+$` (letters, numbers, underscores, hyphens).
-
-**Rule:** Never define inline username validation regex in ViewModels or other classes. Always delegate to `validateUsername()` for consistent rules.
+**Rule:** Always use `validateUsername()` from `SecurityUtils.kt`. Canonical regex: `^[a-zA-Z0-9_-]+$`.
 
 ---
 
-## 20. NetworkRetry — Standard Exponential Backoff
+## 25. NetworkRetry — Standard Exponential Backoff
 
-**File:** `core/connectivity/NetworkRetry.kt`
+**Invariant:** Formula: `currentDelay = currentDelay * factor` (simple multiplicative), NOT `currentDelay * factor^attempt`.
 
-**Invariant:** The backoff formula must be `currentDelay = currentDelay * factor` (simple multiplicative), NOT `currentDelay * factor^attempt` (double-exponential). The latter grows super-exponentially and reaches the cap much faster than intended.
-
-**Rule:** The delay sequence for default parameters (initial=500ms, factor=2.0) should be: 500ms → 1000ms → 2000ms → 4000ms → 5000ms (capped).
+**Default sequence (initial=500ms, factor=2.0):** 500ms → 1000ms → 2000ms → 4000ms → 5000ms (capped).
 
 ---
 
-## 21. SpeechViewModel — Synchronized Pending Saves
+## 26. SpeechViewModel — Synchronized Pending Saves
 
-**File:** `screens/speech/SpeechViewModel.kt`
+**Invariant:** `pendingContinuousSaves` must be accessed under `synchronized(pendingLock)` because debounce coroutine and `onCleared()` can race.
 
-**Invariant:** `pendingContinuousSaves` must be accessed under `synchronized(pendingLock)` because the debounce coroutine and `onCleared()` can race to read and clear the list simultaneously. Without synchronization, the same records could be flushed to Firestore twice (duplicate history entries).
-
-**Rule:** In `onCleared()`, cancel the debounce job FIRST, then call `flushPendingSaves()`. Never flush and then cancel — the debounce coroutine could fire between the flush and the cancel.
+**Rule:** In `onCleared()`, cancel debounce job FIRST, then flush. Never flush then cancel — debounce could fire between them.
 
 ---
 
-## 22. Language Count Cache — Non-Negative Invariant
+## 27. Language Count Cache — Non-Negative Invariant
 
-**File:** `data/history/FirestoreHistoryRepository.kt`
+**Invariant:** `FieldValue.increment(-1)` can drive counts below zero if cache is stale.
 
-**Invariant:** Firestore `FieldValue.increment(-1)` can drive language counts below zero if the cache document is stale or was rebuilt. Negative counts confuse generation eligibility logic and display.
-
-**Rule:** After every decrement operation, call `clampNegativeCounts()` to read back the document and set any negative values to 0. When reading counts in `getLanguageCounts()`, filter out non-positive values.
+**Rule:** After every decrement, call `clampNegativeCounts()` to set any negative values to 0.
 
 ---
 
-## 23. CoinEligibility — Client Must Match Server
+## 28. CoinEligibility — Client Must Match Server
 
-**Files:** `domain/learning/CoinEligibility.kt`, `fyp-backend/functions/src/index.ts` (awardQuizCoins)
+**Invariant:** Client-side `isEligibleForCoins()` must match server `awardQuizCoins` Cloud Function.
 
-**Invariant:** The client-side `isEligibleForCoins()` check must match the server-side `awardQuizCoins` Cloud Function. Both must:
-1. Check score > 0 (1 correct answer = 1 coin)
-2. Verify quiz version (`generatedHistoryCount`) equals the **learning sheet's** `historyCountAtGenerate` — NOT the user's live history count
-3. Require 10+ more records than the last awarded quiz count
-4. Allow first quiz for a language pair without minimum threshold
+**Rule:** Both must: (1) Check score > 0; (2) Verify quiz version equals sheet's `historyCountAtGenerate`; (3) Require 10+ more records than last award; (4) Allow first quiz for language pair without threshold.
 
-**Rule:** The third parameter to `isEligibleForCoins()` is named `currentSheetHistoryCount` (the sheet version), not `currentHistoryCount` (the live count). This prevents false rejections when users translate new sentences between quiz generation and completion.
+The third parameter is named `currentSheetHistoryCount` (sheet version), not `currentHistoryCount` (live count). This prevents false rejections when users translate between generation and completion.
 
 ---
 
-## 24. Username Change — 30-Day Cooldown
+## 29. Username Change — 30-Day Cooldown
 
-**Files:** `model/user/UserSettings.kt`, `data/settings/FirestoreUserSettingsRepository.kt`, `screens/settings/ProfileViewModel.kt`, `screens/settings/ProfileScreen.kt`
-
-**Invariant:** Username changes follow the same 30-day cooldown pattern as primary language changes:
-1. `UserSettings.canChangeUsername(lastChangeMs, now)` checks elapsed time
-2. `ProfileViewModel.updateUsername()` fetches settings and checks cooldown before proceeding
-3. If rejected, a cooldown dialog shows remaining days/hours
-4. If allowed, a confirmation dialog warns about the 30-day cooldown
-5. On success, `setLastUsernameChangeMs()` records the timestamp via set-merge
-
-**Rule:** First-time username changes (when `lastUsernameChangeMs == 0`) are always allowed. The cooldown timestamp is stored in the user's settings document alongside `lastPrimaryLanguageChangeMs`.
+**Rule:** (1) `canChangeUsername()` checks elapsed time; (2) ViewModel fetches settings and checks cooldown; (3) Cooldown dialog on rejection; (4) Confirmation dialog warns of 30-day cooldown; (5) Record timestamp via set-merge. First-time changes are always allowed.
 
 ---
 
-## 25. Camera OCR — Language Hint
+## 30. Camera OCR — Language Hint
 
-**Files:** `screens/speech/ImageCaptureComponents.kt`, `screens/speech/SpeechRecognitionScreen.kt`
-
-**Invariant:** The `ImageSourceDialog` shows a language hint (`CameraLanguageHint`) below the accuracy warning, reminding users to set the "From" language to match the text they're scanning. This is important because ML Kit OCR uses different recognizers for Latin vs Chinese vs Japanese vs Korean scripts, and accuracy degrades when the wrong recognizer is used.
+**Invariant:** `ImageSourceDialog` shows language hint reminding users to set "From" language to match scanned text, because different script recognizers have different accuracy.
 
 ---
 
-## 26. setVoiceForLanguage — Must Use set-merge
+## 31. setVoiceForLanguage — Must Use set-merge
 
-**Files:** `data/settings/FirestoreUserSettingsRepository.kt`
-
-**Invariant:** `setVoiceForLanguage()` must use `set(mapOf("voiceSettings" to mapOf(...)), SetOptions.merge())` instead of `.update("voiceSettings.langCode", value)`. The `.update()` method fails with `NOT_FOUND` if the settings document doesn't exist yet (e.g., a new user). All other settings methods use set-merge for this reason.
+**Invariant:** Must use `set(..., SetOptions.merge())` instead of `.update()` because `.update()` fails with `NOT_FOUND` if settings doc doesn't exist yet.
 
 ---
 
-## 27. updatePublicProfile — Must Propagate All Searchable Fields
+## 32. updatePublicProfile — Must Propagate All Searchable Fields
 
-**Files:** `data/friends/FirestoreFriendsRepository.kt`
+**Invariant:** Must update both `profile/public` AND `user_search/{uid}`. Search update must include ALL fields: `username`, `avatarUrl`, `isDiscoverable`, `lastActiveAt`, `primaryLanguage`.
 
-**Invariant:** `updatePublicProfile()` writes to both `profile/public` (via set-merge) AND `user_search/{uid}` (the searchable index). The search update block must propagate ALL fields that appear in `user_search`: `username`, `avatarUrl`, `isDiscoverable`, `lastActiveAt`, **and `primaryLanguage`**. If a new field is added to `user_search` in `createOrUpdatePublicProfile()`, it must also be added to the propagation block in `updatePublicProfile()`.
+**Rule:** If adding new field to `user_search`, add to propagation block too.
 
 ---
 
-## 28. Username Enforcement Gate — ViewModel Layer
+## 33. Username Enforcement Gate — ViewModel Layer
 
-**Files:** `screens/friends/FriendsViewModel.kt`, `screens/friends/FriendsScreen.kt`
+**Invariant:** All friend mutations (send, accept, accept-all) must pass through `requireUsernameForFriendActions()` before domain use cases. Domain layer intentionally does NOT enforce.
 
-**Invariant:** All friend-mutating actions (send request, accept request, accept all) must pass through the single canonical gate `requireUsernameForFriendActions()` before reaching domain use cases. The domain layer intentionally does NOT enforce usernames — this is a ViewModel responsibility.
+**Rule:** Gate belongs in ViewModel for reusability. `rejectFriendRequest()` and `rejectAllRequests()` don't require username (rejecting always allowed).
 
-**Implementation:**
-1. `requireUsernameForFriendActions()` checks `_uiState.value.currentUserHasUsername`
-2. Returns `false` and sets an error message if username is blank
-3. `requireUsernameForAddFriends()` is a legacy alias that delegates to the canonical gate
-4. `sendFriendRequest()`, `acceptFriendRequest()`, and `acceptAllRequests()` all guard via this method
-5. `rejectFriendRequest()` and `rejectAllRequests()` do NOT require a username (rejecting is always allowed)
-
-**Rule:** Never add username enforcement to domain use cases (e.g., `SendFriendRequestUseCase`, `AcceptFriendRequestUseCase`). The gate belongs in the ViewModel to keep domain logic reusable.
-
-**Guard:** `UsernameRequirementIntegrationTest` (11 tests) verifies ViewModel gate behavior. `UsernameEnforcementIntegrationTest` (12 tests) verifies domain layer does not enforce.
+**Guard:** `UsernameRequirementIntegrationTest` (11 tests) and `UsernameEnforcementIntegrationTest` (12 tests) verify this split.
 
 ---
