@@ -103,6 +103,24 @@ describe("translateText", () => {
     expect(result).toEqual({translatedText: "hola"});
   });
 
+  it("returns auto-detected source language when provided by API", async () => {
+    const apiResponse = JSON.stringify([{
+      translations: [{text: "bonjour"}],
+      detectedLanguage: {language: "en", score: 0.95},
+    }]);
+    mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
+
+    const result = await (translateText as any)({
+      auth: {uid: "u1"},
+      data: {text: "hello", to: "fr"},
+    });
+
+    expect(result).toEqual({
+      translatedText: "bonjour",
+      detectedLanguage: {language: "en", score: 0.95},
+    });
+  });
+
   it("throws on API error", async () => {
     mockFetch.mockResolvedValueOnce(mockResponse("error", false, 500));
     await expect(
@@ -142,6 +160,13 @@ describe("translateTexts", () => {
       data: {texts: [], to: "en"},
     });
     expect(result).toEqual({translatedTexts: []});
+  });
+
+  it("throws on batch translation API error", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse("batch error", false, 500));
+    await expect(
+      (translateTexts as any)({auth: {uid: "u1"}, data: {texts: ["a"], to: "en"}})
+    ).rejects.toThrow("Translation service unavailable");
   });
 });
 
@@ -187,5 +212,12 @@ describe("detectLanguage", () => {
       isTranslationSupported: false,
       alternatives: [],
     });
+  });
+
+  it("throws on language detection API error", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse("detect error", false, 503));
+    await expect(
+      (detectLanguage as any)({auth: {uid: "u1"}, data: {text: "hello"}})
+    ).rejects.toThrow("Language detection service unavailable");
   });
 });

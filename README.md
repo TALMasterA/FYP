@@ -58,11 +58,6 @@ This project uses **GitHub Actions** for continuous integration and static analy
 *   ![CI](https://github.com/TALMasterA/FYP/actions/workflows/ci.yml/badge.svg)
 *   ![CodeQL](https://github.com/TALMasterA/FYP/actions/workflows/codeql.yml/badge.svg)
 
-### Local Verification (2026-03-23)
-*   Android unit tests: `./gradlew :app:testDebugUnitTest` -> passed (2,661 tests)
-*   Android debug build: `./gradlew :app:assembleDebug` -> passed
-*   Backend tests: `npm run test:coverage` -> passed (127 tests, 70%+ coverage)
-
 --------------------------------------------------------------
 
 ## ⚠️ Development Cautions

@@ -114,4 +114,18 @@ describe("enforceRateLimit", () => {
     expect(setPayload.timestamps).toHaveLength(2);
     expect(setPayload.updatedAt).toBe("mock-timestamp");
   });
+
+  it("treats null timestamps payload as empty history", async () => {
+    mockGet.mockResolvedValueOnce({
+      exists: true,
+      data: () => ({timestamps: null}),
+    });
+
+    await expect(enforceRateLimit(uid)).resolves.toBeUndefined();
+    expect(mockSet).toHaveBeenCalledTimes(1);
+
+    const setPayload = mockSet.mock.calls[0][1];
+    expect(Array.isArray(setPayload.timestamps)).toBe(true);
+    expect(setPayload.timestamps).toHaveLength(1);
+  });
 });

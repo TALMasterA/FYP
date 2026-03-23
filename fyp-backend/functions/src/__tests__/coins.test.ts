@@ -186,6 +186,13 @@ describe("awardQuizCoins", () => {
     expect(result).toEqual({awarded: false, reason: "no_quiz_version"});
   });
 
+  it("returns invalid_quiz_version when historyCount is not numeric", async () => {
+    mockTxGet
+      .mockResolvedValueOnce({exists: true, data: () => ({historyCount: "bad"})});
+    const result = await awardHandler({auth: {uid: "u1"}, data: validData});
+    expect(result).toEqual({awarded: false, reason: "invalid_quiz_version"});
+  });
+
   it("returns version_mismatch when sheet version differs", async () => {
     mockTxGet
       .mockResolvedValueOnce({exists: true, data: () => ({historyCount: 20})}); // quiz version (20 != 30)

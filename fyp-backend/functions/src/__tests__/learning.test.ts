@@ -198,6 +198,39 @@ describe("generateLearningContent", () => {
     ).rejects.toThrow("AI service is temporarily unavailable");
   });
 
+  it("handles malformed base URL when building Azure endpoint", async () => {
+    mockValidateGenAiConfig.mockReturnValue({
+      baseUrl: "http://[::1",
+      apiVersion: "2023-05-15",
+      apiKey: "test-api-key",
+    });
+
+    await expect(
+      (generateLearningContent as any)({auth: {uid: "u1"}, data: validData})
+    ).rejects.toThrow("AI service URL is misconfigured");
+  });
+
+  it("handles non-mapped API status codes with generic failure", async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 418,
+      statusText: "I'm a teapot",
+      text: jest.fn().mockResolvedValue("teapot"),
+    });
+
+    await expect(
+      (generateLearningContent as any)({auth: {uid: "u1"}, data: validData})
+    ).rejects.toThrow("AI content generation failed");
+  });
+
+  it("wraps unexpected non-HttpsError failures", async () => {
+    mockEnforceRateLimit.mockRejectedValue(new Error("transaction exploded"));
+
+    await expect(
+      (generateLearningContent as any)({auth: {uid: "u1"}, data: validData})
+    ).rejects.toThrow("Generation failed");
+  });
+
   it("handles invalid JSON response", async () => {
     mockFetch.mockResolvedValue({
       ok: true,

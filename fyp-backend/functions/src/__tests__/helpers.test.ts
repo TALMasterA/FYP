@@ -15,6 +15,7 @@ jest.mock("firebase-functions/params", () => ({
 }));
 
 import {
+  getFirestore,
   requireAuth,
   requireString,
   optionalString,
@@ -23,6 +24,20 @@ import {
   buildTranslateUrl,
   validateGenAiConfig,
 } from "../helpers.js";
+
+// ── getFirestore ─────────────────────────────────────────────────────
+
+describe("getFirestore", () => {
+  it("initializes firestore lazily once and reuses the cached instance", () => {
+    const admin = jest.requireMock("firebase-admin");
+
+    const first = getFirestore();
+    const second = getFirestore();
+
+    expect(first).toBe(second);
+    expect(admin.firestore).toHaveBeenCalledTimes(1);
+  });
+});
 
 // ── requireAuth ──────────────────────────────────────────────────────
 
