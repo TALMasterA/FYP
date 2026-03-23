@@ -58,31 +58,10 @@ This project uses **GitHub Actions** for continuous integration and static analy
 *   ![CI](https://github.com/TALMasterA/FYP/actions/workflows/ci.yml/badge.svg)
 *   ![CodeQL](https://github.com/TALMasterA/FYP/actions/workflows/codeql.yml/badge.svg)
 
-### Local Verification Snapshot (2026-03-20)
-*   Android unit tests: `./gradlew testDebugUnitTest` -> passed
-*   Android debug build: `./gradlew assembleDebug` -> passed
-*   Backend coverage tests: `npm run test:coverage -- --runInBand` -> passed
-*   Backend TypeScript build: `npm run build` -> passed
-
-### Local Verification Snapshot (2026-03-22)
-*   Android unit tests: `./gradlew :app:testDebugUnitTest` -> passed (2,661 tests, 0 failures)
+### Local Verification (2026-03-23)
+*   Android unit tests: `./gradlew :app:testDebugUnitTest` -> passed (2,661 tests)
 *   Android debug build: `./gradlew :app:assembleDebug` -> passed
-
-### Recent Stability Amendments (2026-03-22)
-*   Smoother color-theme switching with animated Material color transitions (reduced visual flicker when changing theme/palette).
-*   UI-language switching now surfaces clear in-progress/completion status, auto-hides status text after a few seconds, and keeps long-running translation work alive across page navigation.
-*   Notification preference cache now auto-syncs from persisted settings, ensuring FCM notification gating reflects current toggles.
-*   Friend removal flow now rolls back UI state on failure, guards self-removal, and supports reliable two-sided unfriend deletion via aligned Firestore rules.
-*   Add-friends search now excludes existing friends and blocked users more strictly while still allowing re-discovery of removed (unfriended) public users.
-*   Shared inbox red-dot count now decrements immediately when an item is viewed.
-
-### Recent Stability Amendments (2026-03-23)
-*   **Friend Removal UI Enhanced:** Selected friends now display a red border (3dp) when in delete mode, providing clear visual feedback before confirmation.
-*   **Learning Sheet Explanations:** Added informational banner on Learning Sheet screen explaining what the sheet contains (vocabulary, meanings, examples, grammar) and how to use it (study first, then take quiz).
-*   **Error Handling & Status:** Verified all screens show clear status messages with auto-dismiss after 3 seconds; loading states properly displayed during async operations.
-*   **Account Deletion Completeness:** Verified deletion of 17+ subcollections (history, word_banks, learning_sheets, quiz_attempts, user_stats, friends, blocked_users, etc.) + profile docs + username registry + auth account.
-*   **Language & Username Cooldown:** Confirmed 30-day cooldown properly enforced with remaining days/hours shown in dialogs.
-*   **Navigation Smoothness:** Verified smooth transitions with 200ms animations and single-top navigation preventing stack duplication.
+*   Backend tests: `npm run test:coverage` -> passed (127 tests, 70%+ coverage)
 
 --------------------------------------------------------------
 
@@ -340,7 +319,7 @@ For now, to add new UI text to the UI language translation scope, you need to:
 # Compile Kotlin code
 ./gradlew compileDebugKotlin
 
-# Run all unit tests (205 test files, 2,655 tests)
+# Run all unit tests (205 test files, 2,661 tests)
 ./gradlew testDebugUnitTest
 
 # Run specific test class
@@ -385,8 +364,8 @@ gh auth login
 ## 🧪 Testing
 
 **Test Coverage:**
-- **Android — 205 test files, 2,655 unit tests** (from `app/build/test-results/testDebugUnitTest`)
-- **Backend — 9 test files, 122 tests** covering Cloud Functions logic
+- **Android — 205 test files, 2,661 unit tests**
+- **Backend — 9 test files, 127 tests** covering Cloud Functions logic
 - See `docs/TEST_COVERAGE.md` for a detailed breakdown by layer and package
 - Test categories:
   - Domain layer use cases (30+ test files)
@@ -462,7 +441,7 @@ gh auth login
 **Running Backend Tests:**
 ```bash
 cd fyp-backend/functions
-npm test           # Run all Jest tests (122 tests)
+npm test           # Run all Jest tests (127 tests)
 npm run lint       # ESLint check
 npm run build      # TypeScript compile
 ```
@@ -551,6 +530,6 @@ Using Firebase Cloud Functions to protect API keys (backend).
 
 --------------------------------------------------------------
 
-**Last Updated:** March 21, 2026
+**Last Updated:** March 23, 2026
 
 (Some content was auto-generated and may contain inaccuracies.)

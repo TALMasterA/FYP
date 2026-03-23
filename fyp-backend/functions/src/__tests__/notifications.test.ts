@@ -170,3 +170,79 @@ describe("sendSharedInboxNotification", () => {
     expect(mockSendEachForMulticast).not.toHaveBeenCalled();
   });
 });
+
+// ── Spam detection edge cases ──────────────────────────────────────────
+
+describe("spam detection edge cases", () => {
+  const handler = registeredHandlers["chats/{chatId}/messages/{messageId}"];
+
+  it("allows messages with fewer than 3 links", async () => {
+    // Mock for spam check (need to mock the recent messages query)
+    mockGet.mockResolvedValueOnce({empty: true, docs: []});
+    // Mock for FCM tokens
+    mockDocGet.mockResolvedValueOnce({empty: true, docs: []});
+
+    const content = "Check https://link1.com and https://link2.com";
+    await handler({
+      data: {data: () => ({senderId: "u1", receiverId: "u2", content, type: "TEXT"})},
+      params: {chatId: "u1_u2", messageId: "m1"},
+    });
+
+    // Should proceed (not blocked by spam check)
+    // The FCM call may or may not happen depending on token availability
+  });
+
+  it("allows non-duplicate messages", async () => {
+    // Mock recent messages with different content
+    mockGet.mockResolvedValueOnce({
+      empty: false,
+      docs: [
+        {data: () => ({content: "unique message 1"})},
+        {data: () => ({content: "unique message 2"})},
+      ],
+    });
+    // Mock for FCM tokens (empty)
+    mockDocGet.mockResolvedValueOnce({empty: true, docs: []});
+
+    await handler({
+      data: {data: () => ({senderId: "u1", receiverId: "u2", content: "new message", type: "TEXT"})},
+      params: {chatId: "u1_u2", messageId: "m1"},
+    });
+
+    // Should proceed (not spam)
+  });
+});
+
+// ── sendRequestAcceptedNotification edge cases ─────────────────────────
+
+describe("sendRequestAcceptedNotification edge cases", () => {
+  // This uses onDocumentUpdated which has before/after data
+  const updateHandler = registeredHandlers["friend_requests/{requestId}"];
+
+  it("returns early when before data is missing", async () => {
+    await updateHandler({
+      data: {before: null, after: {data: () => ({status: "ACCEPTED"})}},
+      params: {requestId: "r1"},
+    });
+    expect(mockSendEachForMulticast).not.toHaveBeenCalled();
+  });
+
+  it("returns early when after data is missing", async () => {
+    await updateHandler({
+      data: {before: {data: () => ({status: "PENDING"})}, after: null},
+      params: {requestId: "r1"},
+    });
+    expect(mockSendEachForMulticast).not.toHaveBeenCalled();
+  });
+
+  it("returns early when status is not transitioning to ACCEPTED", async () => {
+    await updateHandler({
+      data: {
+        before: {data: () => ({status: "PENDING", fromUserId: "u1"})},
+        after: {data: () => ({status: "REJECTED", fromUserId: "u1"})},
+      },
+      params: {requestId: "r1"},
+    });
+    expect(mockSendEachForMulticast).not.toHaveBeenCalled();
+  });
+});

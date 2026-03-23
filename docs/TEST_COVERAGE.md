@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-22_
+_Last updated: 2026-03-23_
 
 ## Summary
 
@@ -194,7 +194,7 @@ These tests prevent regressions in critical invariants:
 
 ## Backend Tests (Firebase Cloud Functions)
 
-_9 test files, 122 tests_
+_9 test files, 127 tests_
 
 | File | Tests | What it covers |
 |------|-------|----------------|
@@ -219,7 +219,7 @@ _9 test files, 122 tests_
 
 ### Latest Backend Coverage Baseline
 
-- Statements: 72.03%
-- Branches: 59.68%
-- Functions: 63.93%
-- Lines: 73.47%
+- Statements: 70.44%
+- Branches: 57.62%
+- Functions: 63.07%
+- Lines: 71.88%
