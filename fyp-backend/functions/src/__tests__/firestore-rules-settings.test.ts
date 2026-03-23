@@ -17,7 +17,7 @@ describe("firestore.rules settings validation", () => {
     ];
 
     requiredBooleanFields.forEach((field) => {
-      expect(rules).toContain(`!(\"${field}\" in request.resource.data)`);
+      expect(rules).toContain(`!("${field}" in request.resource.data)`);
       expect(rules).toContain(`request.resource.data.${field} is bool`);
     });
   });

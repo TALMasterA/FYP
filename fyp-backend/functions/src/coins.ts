@@ -15,7 +15,7 @@ import {
 // ============ Quiz Coin Award (Server-Side Anti-Cheat) ============
 
 const MIN_INCREMENT_FOR_COINS = 10;
-const MAX_QUIZ_SCORE = 50; // Safety cap — quiz is fixed at 10 questions (1 coin each), so normal max is 10
+const MAX_QUIZ_SCORE = 50; // Safety cap - quiz is fixed at 10 questions (1 coin each), so normal max is 10
 
 interface QuizAttemptData {
   attemptId: string;
@@ -176,7 +176,7 @@ export const awardQuizCoins = onCall(
 
 // ============ Server-Side Shop Purchases (Anti-Cheat) ============
 
-// Shop constants — single source of truth (must match Android ColorPalette in ColorPalette.kt).
+// Shop constants - single source of truth (must match Android ColorPalette in ColorPalette.kt).
 // When palettes are added/removed in Android, this list must be synchronized manually.
 const HISTORY_EXPANSION_COST = 1000;
 const HISTORY_EXPANSION_INCREMENT = 10;
@@ -184,7 +184,7 @@ const BASE_HISTORY_LIMIT = 30;
 const MAX_HISTORY_LIMIT = 60;
 const PALETTE_UNLOCK_COST = 10;
 const VALID_PALETTE_IDS = [
-  "default",  // Free default palette
+  "default", // Free default palette
   "ocean", "sunset", "lavender", "rose", "mint",
   "crimson", "amber", "indigo", "emerald", "coral",
 ];
