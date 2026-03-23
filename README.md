@@ -70,7 +70,7 @@ Please use your gmail to register.
 - Block/unblock users; Firestore rules prevent blocked users from sending requests
 - Client-side friend-request rate limiting: 10 per hour, persisted across app restarts
 - Username changes have 30-day cooldown (same as primary language changes)
-- Red dot badges for unread messages and new shared items (persisted across restarts)
+- Red dot badges for unread messages and new shared items (persisted per user/device across restarts and same-user relogin)
 
 **Customization:**
 - UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, 10+ others via Azure
@@ -220,8 +220,8 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 205 test files, 2,661 unit tests (100% on key logic)
-- **Backend:** 9 test files, 127 tests (70%+ coverage)
+- **Android:** 207 test files, 2,670 unit tests (100% on key logic)
+- **Backend:** 14 test files, 160 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.
 

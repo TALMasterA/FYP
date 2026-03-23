@@ -42,7 +42,7 @@ import org.mockito.kotlin.*
  *  4. LoggedIn fetches username from FriendsRepository
  *  5. LoggedOut stops all shared data sources
  *  6. LoggedOut cancels unread/username jobs and resets counts
- *  7. LoggedOut clears seen state for previous user
+ *  7. LoggedOut preserves seen state for previous user
  *  8. pendingFriendRequestCount gated by inAppBadgeFriendRequests setting
  *  9. hasUnseenSharedItems gated by inAppBadgeSharedInbox setting
  * 10. unseenSharedItemsCount gated by inAppBadgeSharedInbox setting
@@ -221,15 +221,27 @@ class AppViewModelTest {
         assertNull(vm.currentUsername.value)
     }
 
-    // ── Test 7: LoggedOut clears seen state ──
+    // ── Test 7: LoggedOut preserves seen state ──
 
     @Test
-    fun `logout clears seen state for previous user`() = runTest {
+    fun `logout does not clear seen state for previous user`() = runTest {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
         authStateFlow.value = AuthState.LoggedOut
 
-        verify(sharedFriends).clearAllSeenStateForUser(testUserId)
+        verify(sharedFriends, never()).clearAllSeenStateForUser(any())
+    }
+
+    @Test
+    fun `logout and relogin same user preserves seen-state by avoiding clear call`() = runTest {
+        val vm = buildViewModel()
+
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+        authStateFlow.value = AuthState.LoggedOut
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        verify(sharedFriends, never()).clearAllSeenStateForUser(any())
+        verify(sharedFriends, times(2)).startObserving(testUserId)
     }
 
     // ── Test 8: pendingFriendRequestCount gated by setting ──

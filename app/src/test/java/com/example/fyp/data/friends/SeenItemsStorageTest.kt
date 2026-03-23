@@ -275,6 +275,15 @@ class SeenItemsStorageTest {
     }
 
     @Test
+    fun `clearAllSeenState only clears targeted user keys`() {
+        SeenItemsStorage.clearAllSeenState(mockContext, "user123")
+
+        verify(mockEditor, never()).remove("seen_shared_items_user456")
+        verify(mockEditor, never()).remove("seen_friend_requests_user456")
+        verify(mockEditor, never()).remove("seen_message_friends_user456")
+    }
+
+    @Test
     fun `notification persistence prevents badge reappearance on app restart`() {
         // Integration test verifying the key requirement:
         // "restart the app should not restore them even the item is not handled"

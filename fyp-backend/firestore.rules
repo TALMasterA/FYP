@@ -5,7 +5,7 @@ service cloud.firestore {
 
     // ============================================
     // User Settings: /users/{userId}/profile/settings
-    // Owner-only with type validation on critical numeric/string fields.
+    // Owner-only with type validation on critical numeric/string/boolean fields.
     // historyViewLimit must be an integer in [30, 60].
     // fontSizeScale must be a float/int in [0.5, 2.0].
     // ============================================
@@ -19,7 +19,21 @@ service cloud.firestore {
         && (!("fontSizeScale" in request.resource.data)
             || (request.resource.data.fontSizeScale is number
                 && request.resource.data.fontSizeScale >= 0.5
-                && request.resource.data.fontSizeScale <= 2.0));
+                && request.resource.data.fontSizeScale <= 2.0))
+        && (!("notifyNewMessages" in request.resource.data)
+            || request.resource.data.notifyNewMessages is bool)
+        && (!("notifyFriendRequests" in request.resource.data)
+            || request.resource.data.notifyFriendRequests is bool)
+        && (!("notifyRequestAccepted" in request.resource.data)
+            || request.resource.data.notifyRequestAccepted is bool)
+        && (!("notifySharedInbox" in request.resource.data)
+            || request.resource.data.notifySharedInbox is bool)
+        && (!("inAppBadgeMessages" in request.resource.data)
+            || request.resource.data.inAppBadgeMessages is bool)
+        && (!("inAppBadgeFriendRequests" in request.resource.data)
+            || request.resource.data.inAppBadgeFriendRequests is bool)
+        && (!("inAppBadgeSharedInbox" in request.resource.data)
+            || request.resource.data.inAppBadgeSharedInbox is bool);
     }
 
     // ============================================

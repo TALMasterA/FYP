@@ -7,8 +7,8 @@ _Last updated: 2026-03-23_
 | Metric                    | Count   |
 |---------------------------|---------|
 | Source files               | 251     |
-| Test files                 | 205     |
-| Total `@Test` methods      | 2,661   |
+| Test files                 | 207     |
+| Total `@Test` methods      | 2,670   |
 | Key logic coverage         | ~100%   |
 
 ## CI/CD Pipeline & Quality Checks
@@ -108,7 +108,7 @@ All complex business logic has been extracted to testable classes (see "Logic ex
 
 ## Backend Tests (Firebase Cloud Functions)
 
-_9 test files, 127 tests_
+_14 test files, 160 tests_
 
 | File | Tests | Coverage |
 |------|-------|----------|
@@ -121,9 +121,10 @@ _9 test files, 127 tests_
 | `maintenance.test.ts` | 9 | Scheduled cleanup: stale tokens, rate-limits, friends repair |
 | `health.test.ts` | 3 | Readiness endpoint validation |
 | `rate-limit.test.ts` | 5 | Rate-limit enforcement, fail-closed behavior |
+| `firestore-rules-settings.test.ts` | 2 | Guard tests for boolean validation in `firestore.rules` settings path |
 
 **Coverage Gate (CI-enforced):** `npm run test:coverage` with `coverageThreshold.global`: statements 50%, branches 45%, functions 50%, lines 50%.
-**Current baseline:** Statements 70.44%, Branches 57.62%, Functions 63.07%, Lines 71.88%.
+**Current baseline:** Statements 99.1%, Branches 82.88%, Functions 100%, Lines 100%.
 
 ---
 
@@ -139,5 +140,9 @@ _9 test files, 127 tests_
 - `QuizRepositoryLogic`: Running average, coin debounce, score init (25 tests)
 - `CustomWordsValidation`: Input validation, trimming, blank checks (22 tests)
 - `OcrRecognizerSelection`: Language-to-recognizer mapping (24 tests)
+- `AppViewModelTest`: Logout/login no longer clears seen-state; same-user relogin regression guard
+- `SeenItemsStorageTest`: user-scoped clear guard for seen-state keys
+- `FriendsViewModelBadgeSettingsTest`: badge gating remains disabled across logout/relogin
+- `firestore-rules-settings.test.ts`: protects bool checks for notification/badge settings fields
 
 ---

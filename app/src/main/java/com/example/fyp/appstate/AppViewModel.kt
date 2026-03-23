@@ -121,11 +121,6 @@ class AppViewModel @Inject constructor(
                         }
                     }
                     is AuthState.LoggedOut -> {
-                        lastInitializedUserId?.let { uid ->
-                            // On explicit logout, clear persisted notification-seen state so the
-                            // next user (or same user after re-login) starts with a clean slate.
-                            sharedFriendsDataSource.clearAllSeenStateForUser(uid)
-                        }
                         lastInitializedUserId = null
                         sharedFriendsDataSource.stopObserving()
                         sharedSettingsDataSource.stopObserving()

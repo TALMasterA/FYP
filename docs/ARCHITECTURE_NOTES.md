@@ -191,11 +191,23 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ## 15. Red Dot Notification Persistence — Seen Items Storage
 
-**Invariant:** When viewing shared inbox, seen item IDs must persist to SharedPreferences so red dots don't reappear on app restart.
+**Invariant:** Seen item/request/message IDs persist per user/device in SharedPreferences so red dots do not reappear after app restart or same-user logout/login.
 
-**Rule:** (1) Load persisted IDs in `startObserving()`; (2) Call `SeenItemsStorage.saveSeenItemIds()` after marking seen; (3) Clear persisted IDs in `stopObserving()` on logout.
+**Rule:** (1) Load persisted IDs in `startObserving()`; (2) Save IDs after mark-seen actions; (3) `stopObserving()` clears only in-memory state and must not clear persisted seen IDs.
+
+**Reset policy:** Clear persisted seen-state only in explicit reset flows, not routine logout.
 
 **Benefits:** Consistent badge behavior, no stale notifications on restart, multi-account safe.
+
+---
+
+## 15.1 Settings Rules Type Safety — Notification Fields
+
+**Invariant:** Notification preference and in-app badge fields in `users/{uid}/profile/settings` must be booleans when present.
+
+**Rule:** Firestore rules enforce `bool` type checks for: `notifyNewMessages`, `notifyFriendRequests`, `notifyRequestAccepted`, `notifySharedInbox`, `inAppBadgeMessages`, `inAppBadgeFriendRequests`, `inAppBadgeSharedInbox`.
+
+**Guard:** Backend Jest test `firestore-rules-settings.test.ts` ensures these rule guards remain in place.
 
 ---
 

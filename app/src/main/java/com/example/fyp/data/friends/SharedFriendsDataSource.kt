@@ -95,9 +95,8 @@ class SharedFriendsDataSource @Inject constructor(
 
     /**
      * Whether there are unseen shared inbox items.
-     * Starts empty every session — ALL pending items are unseen until the user opens
-     * the inbox (markSharedItemsSeen) or taps DoneAll (dismissSharedInboxDot).
-     * Badge and red dot show reliably on app start whenever items are waiting.
+     * Uses persisted seen IDs, so items already viewed by the same user/device remain
+     * hidden after app restart or logout/login.
      */
     val hasUnseenSharedItems: kotlinx.coroutines.flow.Flow<Boolean> =
         kotlinx.coroutines.flow.combine(_pendingSharedItems, _seenSharedItemIds) { items, seen ->
@@ -191,7 +190,7 @@ class SharedFriendsDataSource @Inject constructor(
 
     /**
      * Explicitly clear all persisted notification-seen state for [userId].
-     * Call ONLY on explicit user logout so the next login starts fresh.
+     * Reserved for explicit reset flows (for example account reset/cleanup).
      */
     fun clearAllSeenStateForUser(userId: String) {
         scope.launch(Dispatchers.IO) {
@@ -294,7 +293,7 @@ class SharedFriendsDataSource @Inject constructor(
      *
      * IMPORTANT: Persisted seen-item IDs are intentionally NOT cleared here.
      * They must survive app restarts so badges don't reappear for already-viewed items.
-     * Use [clearAllSeenStateForUser] only on explicit user logout.
+     * Use [clearAllSeenStateForUser] only on explicit reset flows.
      */
     fun stopObserving() {
         friendsJob?.cancel()

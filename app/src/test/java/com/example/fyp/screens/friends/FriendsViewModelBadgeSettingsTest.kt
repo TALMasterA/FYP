@@ -253,4 +253,33 @@ class FriendsViewModelBadgeSettingsTest {
 
         assertEquals(mapOf("friend1" to 3, "friend2" to 1), vm.uiState.value.unreadCountPerFriend)
     }
+
+    @Test
+    fun `badge-gated counts remain disabled across logout and relogin`() = runTest {
+        settingsFlow.value = UserSettings(
+            inAppBadgeSharedInbox = false,
+            inAppBadgeFriendRequests = false,
+            inAppBadgeMessages = false
+        )
+        hasUnseenSharedItemsFlow.value = true
+        unseenSharedItemsCountFlow.value = 2
+        unseenFriendRequestCountFlow.value = 3
+        unseenUnreadPerFriendFlow.value = mapOf("friend1" to 4)
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        assertFalse(vm.hasUnseenSharedItems.value)
+        assertEquals(0, vm.unseenSharedItemsCount.value)
+        assertEquals(0, vm.unseenFriendRequestCount.value)
+        assertEquals(emptyMap<String, Int>(), vm.uiState.value.unreadCountPerFriend)
+
+        authStateFlow.value = AuthState.LoggedOut
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        assertFalse(vm.hasUnseenSharedItems.value)
+        assertEquals(0, vm.unseenSharedItemsCount.value)
+        assertEquals(0, vm.unseenFriendRequestCount.value)
+        assertEquals(emptyMap<String, Int>(), vm.uiState.value.unreadCountPerFriend)
+    }
 }
