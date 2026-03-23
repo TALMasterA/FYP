@@ -70,20 +70,20 @@ describe("getSpeechToken", () => {
 describe("translateText", () => {
   it("rejects unauthenticated requests", async () => {
     await expect(
-      (translateText as any)({auth: null, data: {text: "hi", to: "en"}})
+      (translateText as any)({auth: null, data: {text: "hi", to: "en-US"}})
     ).rejects.toThrow("Login required.");
   });
 
   it("rejects text exceeding max length", async () => {
     const longText = "a".repeat(5001);
     await expect(
-      (translateText as any)({auth: {uid: "u1"}, data: {text: longText, to: "en"}})
+      (translateText as any)({auth: {uid: "u1"}, data: {text: longText, to: "en-US"}})
     ).rejects.toThrow("exceeds maximum length");
   });
 
   it("rejects missing text", async () => {
     await expect(
-      (translateText as any)({auth: {uid: "u1"}, data: {text: "", to: "en"}})
+      (translateText as any)({auth: {uid: "u1"}, data: {text: "", to: "en-US"}})
     ).rejects.toThrow("text is required");
   });
 
@@ -93,12 +93,24 @@ describe("translateText", () => {
     ).rejects.toThrow("to is required");
   });
 
+  it("rejects invalid target language code", async () => {
+    await expect(
+      (translateText as any)({auth: {uid: "u1"}, data: {text: "hello", to: "invalid-lang"}})
+    ).rejects.toThrow("must be one of:");
+  });
+
+  it("rejects invalid source language code", async () => {
+    await expect(
+      (translateText as any)({auth: {uid: "u1"}, data: {text: "hello", to: "en-US", from: "xyz"}})
+    ).rejects.toThrow("must be one of:");
+  });
+
   it("returns translated text on success", async () => {
     const apiResponse = JSON.stringify([{translations: [{text: "hola"}]}]);
     mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
     const result = await (translateText as any)({
       auth: {uid: "u1"},
-      data: {text: "hello", to: "es"},
+      data: {text: "hello", to: "es-ES"},
     });
     expect(result).toEqual({translatedText: "hola"});
   });
@@ -112,7 +124,7 @@ describe("translateText", () => {
 
     const result = await (translateText as any)({
       auth: {uid: "u1"},
-      data: {text: "hello", to: "fr"},
+      data: {text: "hello", to: "fr-FR"},
     });
 
     expect(result).toEqual({
@@ -124,7 +136,7 @@ describe("translateText", () => {
   it("throws on API error", async () => {
     mockFetch.mockResolvedValueOnce(mockResponse("error", false, 500));
     await expect(
-      (translateText as any)({auth: {uid: "u1"}, data: {text: "hi", to: "en"}})
+      (translateText as any)({auth: {uid: "u1"}, data: {text: "hi", to: "en-US"}})
     ).rejects.toThrow("Translation service unavailable");
   });
 });
@@ -135,8 +147,22 @@ describe("translateTexts", () => {
   it("rejects batch exceeding max count", async () => {
     const texts = Array(801).fill("hi");
     await expect(
-      (translateTexts as any)({auth: {uid: "u1"}, data: {texts, to: "en"}})
+      (translateTexts as any)({auth: {uid: "u1"}, data: {texts, to: "en-US"}})
     ).rejects.toThrow("Too many texts");
+  });
+
+  it("rejects invalid target language code in batch", async () => {
+    const texts = ["hello", "world"];
+    await expect(
+      (translateTexts as any)({auth: {uid: "u1"}, data: {texts, to: "invalid-code"}})
+    ).rejects.toThrow("must be one of:");
+  });
+
+  it("rejects invalid source language code in batch", async () => {
+    const texts = ["hello", "world"];
+    await expect(
+      (translateTexts as any)({auth: {uid: "u1"}, data: {texts, to: "en-US", from: "bad-lang"}})
+    ).rejects.toThrow("must be one of:");
   });
 
   it("returns translated texts on success", async () => {
@@ -147,7 +173,7 @@ describe("translateTexts", () => {
     mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
     const result = await (translateTexts as any)({
       auth: {uid: "u1"},
-      data: {texts: ["hello", "world"], to: "es"},
+      data: {texts: ["hello", "world"], to: "es-ES"},
     });
     expect(result).toEqual({translatedTexts: ["hola", "mundo"]});
   });
@@ -157,7 +183,7 @@ describe("translateTexts", () => {
     mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
     const result = await (translateTexts as any)({
       auth: {uid: "u1"},
-      data: {texts: [], to: "en"},
+      data: {texts: [], to: "en-US"},
     });
     expect(result).toEqual({translatedTexts: []});
   });
@@ -165,7 +191,7 @@ describe("translateTexts", () => {
   it("throws on batch translation API error", async () => {
     mockFetch.mockResolvedValueOnce(mockResponse("batch error", false, 500));
     await expect(
-      (translateTexts as any)({auth: {uid: "u1"}, data: {texts: ["a"], to: "en"}})
+      (translateTexts as any)({auth: {uid: "u1"}, data: {texts: ["a"], to: "en-US"}})
     ).rejects.toThrow("Translation service unavailable");
   });
 });

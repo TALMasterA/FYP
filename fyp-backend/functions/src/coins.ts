@@ -176,13 +176,15 @@ export const awardQuizCoins = onCall(
 
 // ============ Server-Side Shop Purchases (Anti-Cheat) ============
 
-// Shop constants — single source of truth (must match Android UserSettings / ColorPalette).
+// Shop constants — single source of truth (must match Android ColorPalette in ColorPalette.kt).
+// When palettes are added/removed in Android, this list must be synchronized manually.
 const HISTORY_EXPANSION_COST = 1000;
 const HISTORY_EXPANSION_INCREMENT = 10;
 const BASE_HISTORY_LIMIT = 30;
 const MAX_HISTORY_LIMIT = 60;
 const PALETTE_UNLOCK_COST = 10;
 const VALID_PALETTE_IDS = [
+  "default",  // Free default palette
   "ocean", "sunset", "lavender", "rose", "mint",
   "crimson", "amber", "indigo", "emerald", "coral",
 ];

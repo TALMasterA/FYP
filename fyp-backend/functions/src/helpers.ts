@@ -87,6 +87,30 @@ export function safeParseJson(body: string, context: string): any {
 }
 
 /**
+ * Supported language codes for translation.
+ * Do not modify without syncing with app/src/main/assets/azure_languages.json.
+ */
+export const SUPPORTED_LANGUAGES = [
+  "en-US",
+  "zh-HK",
+  "zh-TW",
+  "zh-CN",
+  "ja-JP",
+  "fr-FR",
+  "de-DE",
+  "ko-KR",
+  "es-ES",
+  "id-ID",
+  "vi-VN",
+  "th-TH",
+  "fil-PH",
+  "ms-MY",
+  "pt-BR",
+  "it-IT",
+  "ru-RU",
+];
+
+/**
  * Normalize app language codes to Azure Translator API codes.
  */
 export function toTranslatorCode(code: string): string {
@@ -96,6 +120,26 @@ export function toTranslatorCode(code: string): string {
     "zh-CN": "zh-Hans",
   };
   return mapping[code] ?? code;
+}
+
+/**
+ * Validates that a language code is supported.
+ * @param code The language code to validate
+ * @param paramName The parameter name for error messages
+ * @returns The code if valid
+ */
+export function validateLanguageCode(code: string, paramName: string): string {
+  const trimmed = String(code ?? "").trim();
+  if (!trimmed) {
+    throw new HttpsError("invalid-argument", `${paramName} is required`);
+  }
+  if (!SUPPORTED_LANGUAGES.includes(trimmed)) {
+    throw new HttpsError(
+      "invalid-argument",
+      `${paramName} must be one of: ${SUPPORTED_LANGUAGES.join(", ")}`
+    );
+  }
+  return trimmed;
 }
 
 export function buildTranslateUrl(params: { to: string; from?: string }): string {

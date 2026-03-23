@@ -190,7 +190,11 @@ service cloud.firestore {
       // toUserId must match the inbox owner path to prevent recipient mismatch.
       allow create: if request.auth != null
         && request.resource.data.fromUserId == request.auth.uid
-        && request.resource.data.toUserId == userId;
+        && request.resource.data.toUserId == userId
+        && request.resource.data.fromUserId is string
+        && request.resource.data.toUserId is string
+        && (!('createdAt' in request.resource.data)
+            || request.resource.data.createdAt is timestamp);
 
       // Allow creating the content subcollection (e.g. for learning sheets).
       // The parent shared_inbox doc and content doc are written together in a batch,
@@ -202,7 +206,12 @@ service cloud.firestore {
         // Owner (recipient) can read the full content of shared items in their inbox.
         allow read: if request.auth != null && request.auth.uid == userId;
         allow create: if request.auth != null
-          && request.resource.data.fromUserId == request.auth.uid;
+          && request.resource.data.fromUserId == request.auth.uid
+          && request.resource.data.fromUserId is string
+          && (!('contentType' in request.resource.data)
+              || request.resource.data.contentType is string)
+          && (!('createdAt' in request.resource.data)
+              || request.resource.data.createdAt is timestamp);
       }
     }
 
@@ -394,11 +403,16 @@ service cloud.firestore {
       allow create: if request.auth != null 
         && isParticipantFromChatId()
         && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.content is string
         && request.resource.data.content.size() > 0
         && request.resource.data.content.size() <= 2000
         && (!('senderUsername' in request.resource.data)
             || (request.resource.data.senderUsername is string
-                && request.resource.data.senderUsername.size() <= 20));
+                && request.resource.data.senderUsername.size() <= 20))
+        && (!('isRead' in request.resource.data)
+            || request.resource.data.isRead is bool)
+        && (!('createdAt' in request.resource.data)
+            || request.resource.data.createdAt is timestamp);
 
       // Update only allowed for marking as read
       allow update: if request.auth != null 

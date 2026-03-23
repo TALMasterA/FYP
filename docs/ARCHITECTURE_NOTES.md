@@ -327,25 +327,37 @@ The third parameter is named `currentSheetHistoryCount` (sheet version), not `cu
 
 ---
 
-## 29. Username Change — 30-Day Cooldown
+## 29. Translation Language Code Validation — Cloud Function Guard
+
+**Invariant:** Language codes in `translateText()`, `translateTexts()`, and `detectLanguage()` Cloud Functions must match supported language list.
+
+**Supported codes:** `en-US`, `zh-HK`, `zh-TW`, `zh-CN`, `ja-JP`, `fr-FR`, `de-DE`, `ko-KR`, `es-ES`, `id-ID`, `vi-VN`, `th-TH`, `fil-PH`, `ms-MY`, `pt-BR`, `it-IT`, `ru-RU` (must match `app/src/main/assets/azure_languages.json`).
+
+**Rule:** (1) Always call `validateLanguageCode(code, paramName)` before using language codes in API calls; (2) Validation list (SUPPORTED_LANGUAGES) must be kept in sync with Android asset file; (3) Azure API normalizes codes via `toTranslatorCode()` mapping (e.g., `zh-HK` → `yue`); (4) Update both helper.ts and android asset file in same commit when adding languages.
+
+**Guard:** Backend `translation.test.ts` validates error messages for invalid codes.
+
+---
+
+## 31. Username Change — 30-Day Cooldown
 
 **Rule:** (1) `canChangeUsername()` checks elapsed time; (2) ViewModel fetches settings and checks cooldown; (3) Cooldown dialog on rejection; (4) Confirmation dialog warns of 30-day cooldown; (5) Record timestamp via set-merge. First-time changes are always allowed.
 
 ---
 
-## 30. Camera OCR — Language Hint
+## 32. Camera OCR — Language Hint
 
 **Invariant:** `ImageSourceDialog` shows language hint reminding users to set "From" language to match scanned text, because different script recognizers have different accuracy.
 
 ---
 
-## 31. setVoiceForLanguage — Must Use set-merge
+## 33. setVoiceForLanguage — Must Use set-merge
 
 **Invariant:** Must use `set(..., SetOptions.merge())` instead of `.update()` because `.update()` fails with `NOT_FOUND` if settings doc doesn't exist yet.
 
 ---
 
-## 32. updatePublicProfile — Must Propagate All Searchable Fields
+## 34. updatePublicProfile — Must Propagate All Searchable Fields
 
 **Invariant:** Must update both `profile/public` AND `user_search/{uid}`. Search update must include ALL fields: `username`, `avatarUrl`, `isDiscoverable`, `lastActiveAt`, `primaryLanguage`.
 

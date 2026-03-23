@@ -9,8 +9,8 @@ import fetch from "node-fetch";
 import {
   requireAuth,
   requireString,
-  optionalString,
   safeParseJson,
+  validateLanguageCode,
   buildTranslateUrl,
   AZURE_TRANSLATOR_KEY,
   AZURE_TRANSLATOR_REGION,
@@ -67,8 +67,8 @@ export const translateText = onCall(
         `Text exceeds maximum length of ${MAX_TRANSLATE_TEXT_LENGTH} characters`
       );
     }
-    const to = requireString(request.data?.to, "to");
-    const from = optionalString(request.data?.from);
+    const to = validateLanguageCode(request.data?.to, "to");
+    const from = request.data?.from ? validateLanguageCode(request.data.from, "from") : "";
 
     const key = AZURE_TRANSLATOR_KEY.value();
     const region = AZURE_TRANSLATOR_REGION.value();
@@ -121,8 +121,8 @@ export const translateTexts = onCall(
   async (request) => {
     const MAX_BATCH_TEXTS = 800;
 
-    const to = requireString(request.data?.to, "to");
-    const from = optionalString(request.data?.from);
+    const to = validateLanguageCode(request.data?.to, "to");
+    const from = request.data?.from ? validateLanguageCode(request.data.from, "from") : "";
     const texts: string[] = Array.isArray(request.data?.texts)
       ? request.data.texts.map((t: unknown) => String(t ?? ""))
       : [];
