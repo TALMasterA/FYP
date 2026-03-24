@@ -144,7 +144,7 @@ _14 test files, 168 tests_
 - `QuizRepositoryLogic`: Running average, coin debounce, score init (25 tests)
 - `CustomWordsValidation`: Input validation, trimming, blank checks (22 tests)
 - `OcrRecognizerSelection`: Language-to-recognizer mapping (24 tests)
-- `AppViewModelTest`: Logout/login no longer clears seen-state; same-user relogin regression guard
+- `AppViewModelTest`: logout/login seen-state persistence guard, unread badge collector lifecycle guard (post-logout emissions remain reset), and user-switch collector de-duplication
 - `SeenItemsStorageTest`: user-scoped clear guard for seen-state keys
 - `FriendsViewModelBadgeSettingsTest`: badge gating remains disabled across logout/relogin
 - `firestore-rules-settings.test.ts`: protects bool checks for notification/badge settings fields
