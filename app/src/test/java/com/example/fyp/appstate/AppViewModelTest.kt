@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -345,5 +346,52 @@ class AppViewModelTest {
         verify(sharedSettings, never()).startObserving(testUserId)
         verify(sharedHistory, never()).startObserving(testUserId)
         verifyNoInteractions(ensureProfile)
+    }
+
+    @Test
+    fun `logout keeps unread badges reset when unseen map emits afterward`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        unseenUnreadPerFriendFlow.value = mapOf("friendA" to 2)
+        settingsFlow.value = UserSettings(inAppBadgeMessages = true)
+        yield()
+        assertEquals(2, vm.unreadMessageCount.value)
+        assertTrue(vm.hasUnreadMessages.value)
+
+        authStateFlow.value = AuthState.LoggedOut
+        assertEquals(0, vm.unreadMessageCount.value)
+        assertFalse(vm.hasUnreadMessages.value)
+
+        // Regression guard: old behavior could revive badges after logout because
+        // the second unread collector wasn't tracked/cancelled.
+        unseenUnreadPerFriendFlow.value = mapOf("friendA" to 5)
+        yield()
+        assertEquals(0, vm.unreadMessageCount.value)
+        assertFalse(vm.hasUnreadMessages.value)
+    }
+
+    @Test
+    fun `switching user does not duplicate unread badge collectors`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+        unseenUnreadPerFriendFlow.value = mapOf("friendA" to 3)
+        settingsFlow.value = UserSettings(inAppBadgeMessages = true)
+        yield()
+        assertEquals(3, vm.unreadMessageCount.value)
+
+        val otherUser = User(uid = "other456", email = "other@test.com")
+        whenever(chatRepo.observeUnreadPerFriend(UserId("other456")))
+            .thenReturn(flowOf(emptyMap()))
+
+        authStateFlow.value = AuthState.LoggedIn(otherUser)
+        yield()
+        assertEquals(3, vm.unreadMessageCount.value)
+
+        // With duplicated collectors, disabling badge could race/flip unexpectedly.
+        settingsFlow.value = UserSettings(inAppBadgeMessages = false)
+        yield()
+        assertEquals(0, vm.unreadMessageCount.value)
+        assertFalse(vm.hasUnreadMessages.value)
     }
 }

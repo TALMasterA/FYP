@@ -91,6 +91,7 @@ class AppViewModel @Inject constructor(
     val currentUsername: StateFlow<String?> = _currentUsername.asStateFlow()
 
     private var unreadJob: Job? = null
+    private var unreadBadgeJob: Job? = null
     private var usernameJob: Job? = null
 
     // ── Init ─────────────────────────────────────────────────────────────────
@@ -126,6 +127,7 @@ class AppViewModel @Inject constructor(
                         sharedSettingsDataSource.stopObserving()
                         sharedHistoryDataSource.stopObserving()
                         unreadJob?.cancel()
+                        unreadBadgeJob?.cancel()
                         usernameJob?.cancel()
                         _hasUnreadMessages.value = false
                         _unreadMessageCount.value = 0
@@ -139,6 +141,7 @@ class AppViewModel @Inject constructor(
 
     private fun startObservingUnread(userId: String) {
         unreadJob?.cancel()
+        unreadBadgeJob?.cancel()
         // Job 1: Feed raw per-friend unread counts into SharedFriendsDataSource for seen-filtering
         unreadJob = viewModelScope.launch {
             try {
@@ -153,7 +156,7 @@ class AppViewModel @Inject constructor(
             }
         }
         // Job 2: Derive badge signals from the seen-filtered flow
-        viewModelScope.launch {
+        unreadBadgeJob = viewModelScope.launch {
             try {
                 combine(
                     sharedFriendsDataSource.unseenUnreadPerFriend,
