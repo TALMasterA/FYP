@@ -7,6 +7,7 @@ import com.example.fyp.model.VoiceName
 import com.example.fyp.model.user.UserSettings
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.channels.awaitClose
@@ -22,6 +23,7 @@ class FirestoreUserSettingsRepository @Inject constructor(
     private companion object {
         const val MIN_FONT_SIZE_SCALE = 0.5f
         const val MAX_FONT_SIZE_SCALE = 2.0f
+        const val VOICE_SETTINGS_FIELD_PREFIX = "voiceSettings."
     }
 
     private fun docRef(uid: String) =
@@ -140,14 +142,20 @@ class FirestoreUserSettingsRepository @Inject constructor(
     }
 
     override suspend fun setVoiceForLanguage(userId: UserId, languageCode: LanguageCode, voiceName: VoiceName) {
-        // Use set-merge to safely create the document if it doesn't exist yet,
-        // while only updating the specific language key within the voiceSettings map.
-        docRef(userId.value)
-            .set(
-                mapOf("voiceSettings" to mapOf(languageCode.value to voiceName.value)),
-                SetOptions.merge()
-            )
-            .await()
+        val fieldPath = "$VOICE_SETTINGS_FIELD_PREFIX${languageCode.value}"
+        try {
+            docRef(userId.value)
+                .update(fieldPath, voiceName.value)
+                .await()
+        } catch (e: FirebaseFirestoreException) {
+            if (e.code != FirebaseFirestoreException.Code.NOT_FOUND) throw e
+            docRef(userId.value)
+                .set(
+                    mapOf("voiceSettings" to mapOf(languageCode.value to voiceName.value)),
+                    SetOptions.merge()
+                )
+                .await()
+        }
     }
 
     override suspend fun setAutoThemeEnabled(userId: UserId, enabled: Boolean) {
