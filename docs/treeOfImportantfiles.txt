@@ -463,6 +463,7 @@ FYP/
 │       │   │   │   ├── AutoDetectRecognitionResultTest.kt
 │       │   │   │   └── FirebaseTranslationRepositoryTest.kt
 │       │   │   ├── settings/
+│       │   │   │   ├── FirestoreUserSettingsRepositoryVoiceFieldPathTest.kt ← Guards nested voiceSettings update + NOT_FOUND fallback
 │       │   │   │   ├── SettingsNotificationFieldsTest.kt  ← Notification fields, history clamping, parse defaults
 │       │   │   │   ├── SharedSettingsDataSourceLogicTest.kt ← Settings data source logic tests
 │       │   │   │   └── SharedSettingsLogicTest.kt          ← Shared settings logic tests

@@ -407,9 +407,11 @@ The third parameter is named `currentSheetHistoryCount` (sheet version), not `cu
 
 ---
 
-## 33. setVoiceForLanguage — Must Use set-merge
+## 33. setVoiceForLanguage — Nested Field Update + NOT_FOUND Fallback
 
-**Invariant:** Must use `set(..., SetOptions.merge())` instead of `.update()` because `.update()` fails with `NOT_FOUND` if settings doc doesn't exist yet.
+**Invariant:** `voiceSettings` is a nested map and must preserve existing per-language keys.
+
+**Rule:** Use `update("voiceSettings.<languageCode>", voiceName)` for the common path so only the targeted language entry changes. If update fails with `NOT_FOUND` (settings doc missing), fallback to `set(..., SetOptions.merge())` to create the document.
 
 ---
 
