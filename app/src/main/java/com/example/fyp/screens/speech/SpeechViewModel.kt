@@ -102,6 +102,7 @@ class SpeechViewModel @Inject constructor(
     private val pendingContinuousSaves = mutableListOf<TranslationRecord>()
     private var continuousFlushJob: Job? = null
     private var detectedStatusClearJob: Job? = null
+    private var ocrStatusClearJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -328,16 +329,13 @@ class SpeechViewModel @Inject constructor(
 
             when (val result = recognizeTextFromImageUseCase(imageUri, lang)) {
                 is OcrResult.Success -> {
+                    val successMessage = "Text extracted successfully"
                     speechState = speechState.copy(
                         recognizedText = result.text,
                         recognizePhase = RecognizePhase.Idle,
-                        statusMessage = "Text extracted successfully"
+                        statusMessage = successMessage
                     )
-                    // Auto-clear status after 2 seconds
-                    delay(2000)
-                    if (speechState.statusMessage == "Text extracted successfully") {
-                        speechState = speechState.copy(statusMessage = "")
-                    }
+                    scheduleStatusAutoClear(successMessage, OCR_STATUS_CLEAR_MS)
                 }
                 is OcrResult.Error -> {
                     speechState = speechState.copy(
@@ -463,12 +461,36 @@ class SpeechViewModel @Inject constructor(
     private fun scheduleDetectedStatusAutoClear() {
         val snapshot = speechState.statusMessage
         if (!snapshot.startsWith("Detected:")) return
+        scheduleStatusAutoClear(snapshot, DETECTED_STATUS_AUTO_CLEAR_MS)
+    }
 
-        detectedStatusClearJob?.cancel()
-        detectedStatusClearJob = viewModelScope.launch {
-            delay(DETECTED_STATUS_AUTO_CLEAR_MS)
-            if (speechState.statusMessage == snapshot) {
-                speechState = speechState.copy(statusMessage = "")
+    /**
+     * Schedules a coroutine to clear [speechState.statusMessage] after [delayMs] if the message
+     * has not changed in the meantime. Uses [ocrStatusClearJob] for OCR clears and cancels any
+     * previous pending clear for the same slot before scheduling a new one.
+     *
+     * For detected-language clears use [scheduleDetectedStatusAutoClear] which targets
+     * [detectedStatusClearJob]. This helper is the shared implementation used by both paths.
+     */
+    private fun scheduleStatusAutoClear(matchMessage: String, delayMs: Long) {
+        // Choose the right job slot based on which type of status is being cleared
+        // so the two auto-clear paths don't cancel each other.
+        val isDetected = matchMessage.startsWith("Detected:")
+        if (isDetected) {
+            detectedStatusClearJob?.cancel()
+            detectedStatusClearJob = viewModelScope.launch {
+                delay(delayMs)
+                if (speechState.statusMessage == matchMessage) {
+                    speechState = speechState.copy(statusMessage = "")
+                }
+            }
+        } else {
+            ocrStatusClearJob?.cancel()
+            ocrStatusClearJob = viewModelScope.launch {
+                delay(delayMs)
+                if (speechState.statusMessage == matchMessage) {
+                    speechState = speechState.copy(statusMessage = "")
+                }
             }
         }
     }
@@ -484,6 +506,7 @@ class SpeechViewModel @Inject constructor(
         // Cancel the debounce job FIRST to prevent it from racing with our final flush.
         continuousFlushJob?.cancel()
         detectedStatusClearJob?.cancel()
+        ocrStatusClearJob?.cancel()
         // Then flush remaining records. viewModelScope is still active here.
         flushPendingSaves()
     }
@@ -491,6 +514,9 @@ class SpeechViewModel @Inject constructor(
     companion object {
         /** Milliseconds to wait after the last continuous segment before flushing saves to Firestore. */
         private const val CONTINUOUS_SAVE_DEBOUNCE_MS = 800L
+        /** Milliseconds before a "Detected:" status label is auto-cleared. */
         private const val DETECTED_STATUS_AUTO_CLEAR_MS = 3000L
+        /** Milliseconds before an OCR success status label is auto-cleared. */
+        private const val OCR_STATUS_CLEAR_MS = 2000L
     }
 }
