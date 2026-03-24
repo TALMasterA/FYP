@@ -239,6 +239,16 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ---
 
+## 15.2 AppViewModel Unread Collector Lifecycle
+
+**Invariant:** App-level unread badge observation must have exactly one active collector pair (raw unread feed + badge-derivation combine) per logged-in user session.
+
+**Rule:** Track and cancel both unread jobs (`unreadJob` and badge combine job) on logout and before re-subscribing during user switches/re-login. Failing to cancel the badge collector can resurrect unread badges after logout or create duplicate collectors.
+
+**Guard:** `AppViewModelTest` includes regressions for post-logout unseen-map emissions and user-switch collector duplication.
+
+---
+
 ## 16. Friend Request Rate Limiting — Persisted Hourly Window
 
 **Invariant:** 10 sends per hour, persisted in SharedPreferences to survive app restarts.
