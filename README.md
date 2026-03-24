@@ -68,6 +68,7 @@ Please use your gmail to register.
 - Chat mark-read uses aggregated unread counters (no per-message read loop)
 - Share words and learning materials with friends
 - Shared inbox for received items with accept/dismiss actions
+- Accepting shared words keeps the original term language and auto-translates the translation text to receiver primary language when sender/receiver primaries differ
 - Block/unblock users; Firestore rules prevent blocked users from sending requests
 - Client-side friend-request rate limiting: 10 per hour, persisted across app restarts
 - Username changes have 30-day cooldown (same as primary language changes)
@@ -103,6 +104,7 @@ Please use your gmail to register.
 - Password reset via email
 - Auto sign-out on app version update
 - First-launch and post-update onboarding (re-shown after each update)
+- Except App UI language, all settings and data are tied to user accounts and synced via Firestore
 
 **Navigation & UI:**
 - Bottom navigation bar (Home, Quick Translate, Learn, Friends, Settings) with unread badge

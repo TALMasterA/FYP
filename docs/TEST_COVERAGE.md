@@ -8,7 +8,7 @@ _Last updated: 2026-03-24_
 |---------------------------|---------|
 | Source files               | 251     |
 | Test files                 | 207     |
-| Total `@Test` methods      | 2,697   |
+| Total `@Test` methods      | 2,706   |
 | Key logic coverage         | ~100%   |
 
 ## CI/CD Pipeline & Quality Checks
@@ -138,6 +138,7 @@ _14 test files, 168 tests_
 - `SessionManagementLogicTest`: Session ID/name validation, delete preconditions (13 tests)
 - `ChatRepositoryLogicTest`: Chat ID generation, participant validation, unread math (27 tests)
 - `FriendsRepositoryLogicTest`: Note sanitization, expiry filter, username sync (21 tests)
+- `SharingRepositoryLogicTest`: shared-word accept translation uses receiver primary language when sender/receiver primaries differ (3 regression tests)
 - `SharedHistoryDataSourceExtendedLogic`: Language filtering, bidirectional counting (17 tests)
 - `WordBankRepositoryLogic`: Key normalization, word parsing, duplicates (16 tests)
 - `QuizRepositoryLogic`: Running average, coin debounce, score init (25 tests)

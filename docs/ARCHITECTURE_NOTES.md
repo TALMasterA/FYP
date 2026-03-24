@@ -321,6 +321,19 @@ This prevents job cancellation on route changes and avoids stale completion bann
 
 ---
 
+## 24.1 Shared Word Accept Flow — Receiver Primary Language Normalization
+
+**Invariant:** Accepting a shared word keeps the original term language (`sourceLang`) but normalizes the displayed translation (`translatedWord`) to the receiver's primary language when sender/receiver primary languages differ.
+
+**Rule:** In `FirestoreSharingRepository.acceptSharedItem()` for `SharedItemType.WORD`:
+1. Read sender/receiver primary language from `users/{uid}/profile/settings.primaryLanguageCode`
+2. If primary languages differ and shared `targetLang` is not already receiver primary, translate shared `targetText` into receiver primary before writing to `custom_words`
+3. If translation fails, keep original shared translation as fallback (accept flow must remain non-fatal)
+
+**Guard:** `SharingRepositoryLogicTest` includes regression tests for: cross-primary translation success path, same-primary no-translate path, and translation-failure fallback path.
+
+---
+
 ## 25. NetworkRetry — Standard Exponential Backoff
 
 **Invariant:** Formula: `currentDelay = currentDelay * factor` (simple multiplicative), NOT `currentDelay * factor^attempt`.

@@ -1,8 +1,11 @@
 package com.example.fyp.data.friends
 
+import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.friends.SharedItemType
 import org.junit.Assert.*
 import org.junit.Test
+import kotlinx.coroutines.test.runTest
+import org.mockito.kotlin.mock
 
 /**
  * Tests for pure logic extracted from FirestoreSharingRepository.
@@ -202,5 +205,86 @@ class SharingRepositoryLogicTest {
         val itemToUserId = "user-A"
         val currentUserId = "user-B"
         assertFalse(itemToUserId == currentUserId)
+    }
+
+    // ── Receiver-primary translation on accept ───────────────────────
+
+    @Test
+    fun `different primary languages translate shared word before insert`() = runTest {
+        val repository = FirestoreSharingRepository(mock(), mock())
+        var translateCalled = false
+
+        val payload = repository.prepareSharedWordForRecipient(
+            wordData = mapOf(
+                "sourceText" to "日本語",
+                "targetText" to "Japanese",
+                "sourceLang" to "ja-JP",
+                "targetLang" to "en-US",
+                "notes" to "common term"
+            ),
+            senderPrimaryLanguage = "en-US",
+            receiverPrimaryLanguage = "yue-HK",
+            translateText = { text, fromLang, toLang ->
+                translateCalled = true
+                assertEquals("Japanese", text)
+                assertEquals("en-US", fromLang)
+                assertEquals("yue-HK", toLang)
+                SpeechResult.Success("日文")
+            }
+        )
+
+        assertNotNull(payload)
+        assertTrue(translateCalled)
+        assertEquals("日本語", payload!!.originalWord)
+        assertEquals("日文", payload.translatedWord)
+        assertEquals("ja-JP", payload.sourceLang)
+        assertEquals("yue-HK", payload.targetLang)
+    }
+
+    @Test
+    fun `same primary languages keep original translated text`() = runTest {
+        val repository = FirestoreSharingRepository(mock(), mock())
+        var translateCalled = false
+
+        val payload = repository.prepareSharedWordForRecipient(
+            wordData = mapOf(
+                "sourceText" to "日本語",
+                "targetText" to "Japanese",
+                "sourceLang" to "ja-JP",
+                "targetLang" to "en-US"
+            ),
+            senderPrimaryLanguage = "en-US",
+            receiverPrimaryLanguage = "en-US",
+            translateText = { _, _, _ ->
+                translateCalled = true
+                SpeechResult.Success("should-not-be-used")
+            }
+        )
+
+        assertNotNull(payload)
+        assertFalse(translateCalled)
+        assertEquals("Japanese", payload!!.translatedWord)
+        assertEquals("en-US", payload.targetLang)
+    }
+
+    @Test
+    fun `translation failure falls back to original shared translation`() = runTest {
+        val repository = FirestoreSharingRepository(mock(), mock())
+
+        val payload = repository.prepareSharedWordForRecipient(
+            wordData = mapOf(
+                "sourceText" to "日本語",
+                "targetText" to "Japanese",
+                "sourceLang" to "ja-JP",
+                "targetLang" to "en-US"
+            ),
+            senderPrimaryLanguage = "en-US",
+            receiverPrimaryLanguage = "yue-HK",
+            translateText = { _, _, _ -> SpeechResult.Error("quota") }
+        )
+
+        assertNotNull(payload)
+        assertEquals("Japanese", payload!!.translatedWord)
+        assertEquals("en-US", payload.targetLang)
     }
 }
