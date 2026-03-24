@@ -368,5 +368,190 @@ class FavoritesViewModelTest {
         assertEquals("Table for two", session.records[0].sourceText)
         assertEquals("B", session.records[2].speaker)
     }
+
+    // ── Delete mode tests ──
+
+    @Test
+    fun `toggleDeleteMode enables delete mode`() = runTest {
+        val userId = "user123"
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn emptyList()
+        }
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+
+        assertFalse(viewModel.uiState.value.isDeleteMode)
+        assertEquals(emptySet<String>(), viewModel.uiState.value.selectedRecordIds)
+
+        viewModel.toggleDeleteMode()
+
+        assertTrue(viewModel.uiState.value.isDeleteMode)
+        assertEquals(emptySet<String>(), viewModel.uiState.value.selectedRecordIds)
+    }
+
+    @Test
+    fun `toggleDeleteMode exits delete mode and clears selection`() = runTest {
+        val userId = "user123"
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn emptyList()
+        }
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+
+        // Enter delete mode and select some items
+        viewModel.toggleDeleteMode()
+        viewModel.toggleRecordSelection("rec1")
+        viewModel.toggleSessionSelection("sess1")
+        assertTrue(viewModel.uiState.value.isDeleteMode)
+        assertTrue(viewModel.uiState.value.selectedRecordIds.contains("rec1"))
+        assertTrue(viewModel.uiState.value.selectedSessionIds.contains("sess1"))
+
+        // Exit delete mode
+        viewModel.toggleDeleteMode()
+
+        assertFalse(viewModel.uiState.value.isDeleteMode)
+        assertTrue(viewModel.uiState.value.selectedRecordIds.isEmpty())
+        assertTrue(viewModel.uiState.value.selectedSessionIds.isEmpty())
+    }
+
+    @Test
+    fun `exitDeleteMode clears selections`() = runTest {
+        val userId = "user123"
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn emptyList()
+        }
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+
+        viewModel.toggleDeleteMode()
+        viewModel.toggleRecordSelection("rec1")
+        viewModel.toggleRecordSelection("rec2")
+        viewModel.toggleSessionSelection("sess1")
+
+        viewModel.exitDeleteMode()
+
+        assertFalse(viewModel.uiState.value.isDeleteMode)
+        assertTrue(viewModel.uiState.value.selectedRecordIds.isEmpty())
+        assertTrue(viewModel.uiState.value.selectedSessionIds.isEmpty())
+    }
+
+    @Test
+    fun `toggleRecordSelection toggles record selection state`() = runTest {
+        val userId = "user123"
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn emptyList()
+        }
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+
+        viewModel.toggleDeleteMode()
+
+        // Select a record
+        viewModel.toggleRecordSelection("rec1")
+        assertTrue(viewModel.uiState.value.selectedRecordIds.contains("rec1"))
+
+        // Select another record
+        viewModel.toggleRecordSelection("rec2")
+        assertTrue(viewModel.uiState.value.selectedRecordIds.contains("rec1"))
+        assertTrue(viewModel.uiState.value.selectedRecordIds.contains("rec2"))
+
+        // Deselect first record
+        viewModel.toggleRecordSelection("rec1")
+        assertFalse(viewModel.uiState.value.selectedRecordIds.contains("rec1"))
+        assertTrue(viewModel.uiState.value.selectedRecordIds.contains("rec2"))
+    }
+
+    @Test
+    fun `toggleSessionSelection toggles session selection state`() = runTest {
+        val userId = "user123"
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn emptyList()
+        }
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+
+        viewModel.toggleDeleteMode()
+
+        // Select a session
+        viewModel.toggleSessionSelection("sess1")
+        assertTrue(viewModel.uiState.value.selectedSessionIds.contains("sess1"))
+
+        // Deselect the session
+        viewModel.toggleSessionSelection("sess1")
+        assertFalse(viewModel.uiState.value.selectedSessionIds.contains("sess1"))
+    }
+
+    @Test
+    fun `deleteSelected removes selected records and sessions`() = runTest {
+        val userId = "user123"
+        val testFavorites = listOf(
+            FavoriteRecord(id = "fav1", userId = userId, sourceText = "Keep", targetText = "Keep"),
+            FavoriteRecord(id = "fav2", userId = userId, sourceText = "Delete", targetText = "Delete")
+        )
+        val testSessions = listOf(
+            FavoriteSession(id = "sess1", sessionId = "s1", sessionName = "Keep"),
+            FavoriteSession(id = "sess2", sessionId = "s2", sessionName = "Delete")
+        )
+
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn testFavorites
+            onBlocking { getAllFavoriteSessionsOnce(userId) } doReturn testSessions
+            onBlocking { removeFavorite(userId, "fav2") } doReturn Result.success(Unit)
+            onBlocking { removeFavoriteSession(userId, "sess2") } doReturn Result.success(Unit)
+        }
+
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+
+        // Enter delete mode and select items to delete
+        viewModel.toggleDeleteMode()
+        viewModel.toggleRecordSelection("fav2")
+        viewModel.toggleSessionSelection("sess2")
+
+        viewModel.deleteSelected()
+
+        // Verify deletion calls
+        verify(favoritesRepo).removeFavorite(userId, "fav2")
+        verify(favoritesRepo).removeFavoriteSession(userId, "sess2")
+
+        // Verify state updates
+        assertFalse(viewModel.uiState.value.isDeleteMode)
+        assertEquals(1, viewModel.uiState.value.favorites.size)
+        assertEquals("fav1", viewModel.uiState.value.favorites[0].id)
+        assertEquals(1, viewModel.uiState.value.sessions.size)
+        assertEquals("sess1", viewModel.uiState.value.sessions[0].id)
+    }
+
+    @Test
+    fun `deleteSelected with nothing selected is no-op`() = runTest {
+        val userId = "user123"
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn emptyList()
+        }
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+
+        viewModel.toggleDeleteMode()
+        viewModel.deleteSelected()
+
+        verify(favoritesRepo, never()).removeFavorite(any(), any())
+        verify(favoritesRepo, never()).removeFavoriteSession(any(), any())
+    }
+
+    @Test
+    fun `deleteSelected handles delete failure`() = runTest {
+        val userId = "user123"
+        val testFavorites = listOf(
+            FavoriteRecord(id = "fav1", userId = userId, sourceText = "Test", targetText = "Test")
+        )
+
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(userId) } doReturn testFavorites
+            onBlocking { getAllFavoriteSessionsOnce(userId) } doReturn emptyList()
+            onBlocking { removeFavorite(userId, "fav1") } doThrow RuntimeException("Network error")
+        }
+
+        authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
+
+        viewModel.toggleDeleteMode()
+        viewModel.toggleRecordSelection("fav1")
+        viewModel.deleteSelected()
+
+        assertEquals("Failed to delete selected items", viewModel.uiState.value.error)
+        assertFalse(viewModel.uiState.value.isDeleting)
+    }
 }
 

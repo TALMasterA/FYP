@@ -273,8 +273,8 @@ class FirestoreChatRepository @Inject constructor(
 
     /**
      * OPTIMIZED: No longer reads individual messages to mark them read.
-     * Instead, reads the per-chat unread counter (1 read), resets it to 0 (1 write),
-     * and decrements the user-level total counter by the same amount (1 write).
+     * Reads per-chat unread counter once, then resets the per-chat value and
+     * decrements user-level counters in a single batch commit.
      * Previous cost: N+2 operations. New cost: 3 operations.
      *
      * Uses update() with DOT-NOTATION field paths for nested maps to avoid
@@ -295,26 +295,14 @@ class FirestoreChatRepository @Inject constructor(
         AppLogger.d("ChatRepository", "Marking messages as read: chatId=$chatId, userId=${userId.value}, unreadCount=$chatUnread")
 
         if (chatUnread > 0) {
-            // Read user document to get current totalUnreadMessages
             val userDocRef = db.collection("users").document(userId.value)
-            val userDoc = userDocRef.get().await()
-            val currentTotal = (userDoc.getLong("totalUnreadMessages") ?: 0L).toInt()
-
-            // Calculate new total, ensuring it never goes negative
-            val newTotal = (currentTotal - chatUnread).coerceAtLeast(0)
-
             val participants = metaDoc.get("participants") as? List<*>
             val friendId = participants?.firstOrNull { it != userId.value }?.toString()
 
-            AppLogger.d("ChatRepository", "Marking read: chatUnread=$chatUnread, currentTotal=$currentTotal, newTotal=$newTotal, friendId=$friendId, docExists=${userDoc.exists()}")
+            AppLogger.d("ChatRepository", "Marking read: chatUnread=$chatUnread, friendId=$friendId")
 
-            val batch = db.batch()
-            // Reset per-chat counter using DOT-NOTATION to preserve other user's count
-            batch.update(metaRef, "unreadCount.${userId.value}", 0)
-
-            // Update user-level counter and clear per-friend unread entry
             val userUpdates = mutableMapOf<String, Any>(
-                "totalUnreadMessages" to newTotal
+                "totalUnreadMessages" to FieldValue.increment(-chatUnread.toLong())
             )
             if (friendId != null) {
                 // DOT-NOTATION: delete this friend's entry to trigger listener update, preserves others
@@ -322,15 +310,29 @@ class FirestoreChatRepository @Inject constructor(
                 AppLogger.d("ChatRepository", "Clearing unread for friend: $friendId")
             }
 
-            // Use set with merge if document doesn't exist, otherwise update
-            if (userDoc.exists()) {
+            val batch = db.batch()
+            // Reset per-chat counter using DOT-NOTATION to preserve other user's count.
+            batch.update(metaRef, "unreadCount.${userId.value}", 0)
+            try {
                 batch.update(userDocRef, userUpdates)
-            } else {
-                // Document doesn't exist yet - create it with set/merge
-                batch.set(userDocRef, userUpdates, SetOptions.merge())
-            }
+                batch.commit().await()
+            } catch (e: FirebaseFirestoreException) {
+                if (e.code != FirebaseFirestoreException.Code.NOT_FOUND) throw e
 
-            batch.commit().await()
+                // Rare recovery path: user doc was removed. Recreate counters safely.
+                val recoveryBatch = db.batch()
+                recoveryBatch.update(metaRef, "unreadCount.${userId.value}", 0)
+
+                val recoveryUpdates = mutableMapOf<String, Any>(
+                    "totalUnreadMessages" to 0
+                )
+                if (friendId != null) {
+                    recoveryUpdates["unreadPerFriend.$friendId"] = FieldValue.delete()
+                }
+
+                recoveryBatch.set(userDocRef, recoveryUpdates, SetOptions.merge())
+                recoveryBatch.commit().await()
+            }
             AppLogger.d("ChatRepository", "Messages marked as read successfully")
         }
 

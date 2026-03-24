@@ -461,4 +461,102 @@ class SettingsViewModelTest {
         assertNull(vm.uiState.value.primaryLanguageCooldownDays)
         assertNull(vm.uiState.value.primaryLanguageCooldownHours)
     }
+
+    // ── updateVoiceForLanguage ──
+
+    @Test
+    fun `updateVoiceForLanguage success updates voiceSettings`() = runTest {
+        setVoiceForLanguage.stub {
+            onBlocking { invoke(any(), any(), any()) } doReturn Unit
+        }
+
+        val vm = buildViewModel()
+        vm.updateVoiceForLanguage("en-US", "en-US-AriaNeural")
+
+        assertEquals("en-US-AriaNeural", vm.uiState.value.settings.voiceSettings["en-US"])
+        assertNull(vm.uiState.value.errorKey)
+        assertNull(vm.uiState.value.errorRaw)
+    }
+
+    @Test
+    fun `updateVoiceForLanguage when not logged in sets error`() = runTest {
+        authStateFlow.value = AuthState.LoggedOut
+        val vm = SettingsViewModel(
+            app, authRepo, sharedSettings, friendsRepo, setPrimaryLanguage,
+            setFontSizeScale, setThemeMode, setColorPalette, unlockColorPaletteWithCoins,
+            setVoiceForLanguage, setAutoThemeEnabled, setNotificationPref, quizRepo
+        )
+
+        vm.updateVoiceForLanguage("en-US", "en-US-AriaNeural")
+
+        assertEquals(UiTextKey.SettingsNotLoggedInWarning, vm.uiState.value.errorKey)
+    }
+
+    @Test
+    fun `updateVoiceForLanguage failure sets errorRaw`() = runTest {
+        setVoiceForLanguage.stub {
+            onBlocking { invoke(any(), any(), any()) } doThrow RuntimeException("Network error")
+        }
+
+        val vm = buildViewModel()
+        vm.updateVoiceForLanguage("en-US", "en-US-AriaNeural")
+
+        assertNotNull(vm.uiState.value.errorRaw)
+        assertTrue(vm.uiState.value.errorRaw!!.contains("voice"))
+    }
+
+    // ── updateAutoThemeEnabled ──
+
+    @Test
+    fun `updateAutoThemeEnabled success enables auto theme`() = runTest {
+        setAutoThemeEnabled.stub {
+            onBlocking { invoke(UserId(testUserId), true) } doReturn Unit
+        }
+
+        val vm = buildViewModel()
+        vm.updateAutoThemeEnabled(true)
+
+        assertTrue(vm.uiState.value.settings.isAutoThemeEnabled)
+        assertNull(vm.uiState.value.errorRaw)
+    }
+
+    @Test
+    fun `updateAutoThemeEnabled success disables auto theme`() = runTest {
+        settingsFlow.value = UserSettings(isAutoThemeEnabled = true)
+        setAutoThemeEnabled.stub {
+            onBlocking { invoke(UserId(testUserId), false) } doReturn Unit
+        }
+
+        val vm = buildViewModel()
+        vm.updateAutoThemeEnabled(false)
+
+        assertFalse(vm.uiState.value.settings.isAutoThemeEnabled)
+    }
+
+    @Test
+    fun `updateAutoThemeEnabled when not logged in sets error`() = runTest {
+        authStateFlow.value = AuthState.LoggedOut
+        val vm = SettingsViewModel(
+            app, authRepo, sharedSettings, friendsRepo, setPrimaryLanguage,
+            setFontSizeScale, setThemeMode, setColorPalette, unlockColorPaletteWithCoins,
+            setVoiceForLanguage, setAutoThemeEnabled, setNotificationPref, quizRepo
+        )
+
+        vm.updateAutoThemeEnabled(true)
+
+        assertEquals(UiTextKey.SettingsNotLoggedInWarning, vm.uiState.value.errorKey)
+    }
+
+    @Test
+    fun `updateAutoThemeEnabled failure sets errorRaw`() = runTest {
+        setAutoThemeEnabled.stub {
+            onBlocking { invoke(UserId(testUserId), true) } doThrow RuntimeException("fail")
+        }
+
+        val vm = buildViewModel()
+        vm.updateAutoThemeEnabled(true)
+
+        assertNotNull(vm.uiState.value.errorRaw)
+        assertTrue(vm.uiState.value.errorRaw!!.contains("auto theme"))
+    }
 }

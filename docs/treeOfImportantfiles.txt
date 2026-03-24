@@ -5,6 +5,7 @@ FYP/
 ├── README.md
 ├── .gitignore
 ├── .github/
+│   ├── copilot-instructions.md                    ← Mandatory agent completion checklist (tree/docs/build/test)
 │   └── workflows/
 │       ├── ci.yml                                  ← GitHub Actions CI (Android build + backend lint/build/test)
 │       └── codeql.yml                              ← CodeQL security analysis (Java/Kotlin + JS/TS)
@@ -26,8 +27,9 @@ FYP/
 ├── docs/
 │   ├── treeOfImportantfiles.txt                    ← This file
 │   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants
-│   ├── TEST_COVERAGE.md                            ← Test coverage report (205 files, 2657 tests)
+│   ├── TEST_COVERAGE.md                            ← Test coverage report (207 files, 2670 tests)
 │   ├── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
+│   ├── MCP_SKILLS_PLAYBOOK.md                      ← Team playbook for MCP skills usage
 │   ├── CLOUD_FUNCTIONS_API.md                      ← Backend Cloud Functions API reference
 │   └── SECRETS_ROTATION.md                         ← API key rotation runbook
 │

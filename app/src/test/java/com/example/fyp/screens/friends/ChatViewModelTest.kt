@@ -376,4 +376,52 @@ class ChatViewModelTest {
         assertFalse(vm.uiState.value.showTranslation)
         assertTrue(vm.uiState.value.translatedMessages.isEmpty())
     }
+
+    // ── loadOlderMessages ──────────────────────────────────────────────
+
+    @Test
+    fun `loadOlderMessages does nothing when messages empty`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        // With empty messages list, loadOlderMessages should not proceed
+        vm.loadOlderMessages()
+
+        verify(chatRepository, never()).loadOlderMessages(any(), any(), any())
+    }
+
+    @Test
+    fun `loadOlderMessages does nothing when hasMoreMessages is false`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        // Empty messages means hasMoreMessages starts true but no messages to paginate from
+        assertFalse(vm.uiState.value.isLoadingOlder)
+    }
+
+    // ── translateAllMessages ───────────────────────────────────────────
+
+    @Test
+    fun `translateAllMessages with empty messages does nothing`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.translateAllMessages()
+
+        verifyNoInteractions(translateAllMessagesUseCase)
+    }
+
+    @Test
+    fun `translateAllMessages does not run when already translating`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        // Initial state: not translating, no messages
+        assertFalse(vm.uiState.value.isTranslating)
+
+        // Call should be no-op with empty messages
+        vm.translateAllMessages()
+
+        verifyNoInteractions(translateAllMessagesUseCase)
+    }
 }

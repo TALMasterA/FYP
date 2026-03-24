@@ -130,6 +130,9 @@ _14 test files, 160 tests_
 
 ## Recent Test Additions
 
+- `FavoritesViewModelTest`: Delete mode functions (toggleDeleteMode, exitDeleteMode, toggleSelection, deleteSelected) - 11 new tests
+- `HistoryViewModelTest`: Pagination and TTS (loadMoreHistory, speakText, refreshCoinStats, checkIfFavorited) - 14 new tests
+- `ChatViewModelTest`: Batch translation and pagination (translateAllMessages, loadOlderMessages) - 8 new tests
 - `UsernameEnforcementIntegrationTest`: Domain-layer username enforcement split (12 tests)
 - `UsernameRequirementIntegrationTest`: ViewModel-layer username gate (11 tests)
 - `SessionManagementLogicTest`: Session ID/name validation, delete preconditions (13 tests)

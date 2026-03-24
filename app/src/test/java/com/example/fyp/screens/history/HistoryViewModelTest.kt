@@ -7,6 +7,7 @@ import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.domain.history.DeleteHistoryRecordUseCase
 import com.example.fyp.domain.history.DeleteSessionUseCase
 import com.example.fyp.domain.history.HistoryRepository
+import com.example.fyp.model.SpeechResult
 import com.example.fyp.domain.history.ObserveSessionNamesUseCase
 import com.example.fyp.domain.history.RenameSessionUseCase
 import com.example.fyp.domain.learning.QuizRepository
@@ -417,5 +418,92 @@ class HistoryViewModelTest {
 
         // Called twice: once on init (AuthState.LoggedIn), once on retryLoad
         verify(sharedHistoryDataSource, times(2)).startObserving(eq(testUserId), any())
+    }
+
+    // ── TTS (speak) tests ──
+
+    @Test
+    fun `speakText calls speakTextUseCase with correct parameters`() = runTest {
+        speakTextUseCase.stub {
+            onBlocking { invoke(any(), any(), anyOrNull()) } doReturn SpeechResult.Success("")
+        }
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.speakText("es-ES", "Hola")
+
+        verify(speakTextUseCase).invoke(eq("Hola"), eq("es-ES"), anyOrNull())
+    }
+
+    @Test
+    fun `speakTextOriginal calls speakTextUseCase`() = runTest {
+        speakTextUseCase.stub {
+            onBlocking { invoke(any(), any(), anyOrNull()) } doReturn SpeechResult.Success("")
+        }
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.speakTextOriginal("en-US", "Hello")
+
+        verify(speakTextUseCase).invoke(eq("Hello"), eq("en-US"), anyOrNull())
+    }
+
+    @Test
+    fun `speakText with blank text is no-op`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.speakText("en-US", "  ")
+
+        verifyNoInteractions(speakTextUseCase)
+    }
+
+    // ── Favorite limit tests ──
+
+    @Test
+    fun `clearFavoriteLimitExceeded clears the flag`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        // Clear should work even if flag not set
+        vm.clearFavoriteLimitExceeded()
+
+        assertFalse(vm.uiState.value.favoriteLimitExceeded)
+    }
+
+    // ── checkIfFavorited tests ──
+
+    @Test
+    fun `checkIfFavorited returns true for favorited records`() = runTest {
+        favoritesRepo.stub {
+            onBlocking { getAllFavoritesOnce(testUserId) } doReturn listOf(
+                FavoriteRecord(sourceText = "Hello", targetText = "Hola")
+            )
+        }
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        var result = false
+        vm.checkIfFavorited(TranslationRecord(id = "r1", sourceText = "Hello", targetText = "Hola")) {
+            result = it
+        }
+
+        assertTrue(result)
+    }
+
+    @Test
+    fun `checkIfFavorited returns false for non-favorited records`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        var result = true
+        vm.checkIfFavorited(TranslationRecord(id = "r1", sourceText = "Bye", targetText = "Adiós")) {
+            result = it
+        }
+
+        assertFalse(result)
     }
 }

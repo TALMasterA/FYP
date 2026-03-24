@@ -29,6 +29,19 @@
 
 ---
 
+## 1.3 Repository Task Completion Policy (Agents)
+
+**Invariant:** For any prompt that changes repository files, completion requires tree maintenance, docs audit/update, and Android verification.
+
+**Rule:** Follow `.github/copilot-instructions.md` before finalizing:
+1. Update `docs/treeOfImportantfiles.txt` when files/structure/important entries change
+2. Update impacted files in `docs/` and `README.md`
+3. Run `.\\gradlew.bat :app:testDebugUnitTest`
+4. Run `.\\gradlew.bat :app:assembleDebug`
+5. Report outcomes in summary
+
+---
+
 ## 2. Firestore Nested Map Writes — Set-Merge vs Update
 
 **Invariant:** `set(..., SetOptions.merge())` with nested `Map` **overwrites the entire map**, losing sibling keys.
@@ -99,6 +112,21 @@ For document creation fallback: catch `FirebaseFirestoreException`, only fallbac
 **Invariant:** Capped at `UserSettings.historyViewLimit` (30–60). Expansion requires coin purchase.
 
 **Rule:** Never increase `DEFAULT_HISTORY_LIMIT` — it controls a Firestore read quota boundary.
+
+---
+
+## 7.1 Chat Mark-Read Cost Guard
+
+**Invariant:** `markAllMessagesAsRead()` must not read individual messages and should avoid pre-reading the user document.
+
+**Rule:** Read `chats/{chatId}/metadata/info` once to get per-chat unread count, then batch:
+1. Reset `unreadCount.{uid}` to `0`
+2. Decrement `users/{uid}.totalUnreadMessages` with `FieldValue.increment(-chatUnread)`
+3. Delete `users/{uid}.unreadPerFriend.{friendId}` when applicable
+
+**Fallback:** If user doc update returns `NOT_FOUND`, recreate user counters with `set(..., merge=true)` and `totalUnreadMessages=0` to avoid negative bootstrap values.
+
+This keeps common-path mark-read at 1 read + 2 writes, independent of message volume.
 
 ---
 
@@ -372,5 +400,50 @@ The third parameter is named `currentSheetHistoryCount` (sheet version), not `cu
 **Rule:** Gate belongs in ViewModel for reusability. `rejectFriendRequest()` and `rejectAllRequests()` don't require username (rejecting always allowed).
 
 **Guard:** `UsernameRequirementIntegrationTest` (11 tests) and `UsernameEnforcementIntegrationTest` (12 tests) verify this split.
+
+---
+
+## 35. Untestable Components — Android/Framework Dependencies
+
+The following components cannot be unit tested due to Android framework dependencies. When modifying these, manual testing is required.
+
+| Component | Reason | Verification |
+|-----------|--------|--------------|
+| `SecureStorage.kt` | Android Keystore + EncryptedSharedPreferences | Manual test on device |
+| `AzureSpeechRepository.kt` | Azure Speech SDK hardware-dependendent | Integration test on device |
+| `AzureSpeechProvider.kt` | Speech SDK native bindings | Integration test on device |
+| `NetworkMonitor.kt` | ConnectivityManager system service | Verify offline banner shows |
+| `UiLanguageStateController.kt` | `@Composable` + SharedPreferences | Visual test on device |
+| `ConnectivityObserver.kt` | Android ConnectivityManager callbacks | Visual test on device |
+| `LocalAppLanguage.kt` | Compose `CompositionLocal` | Visual test on device |
+| `AudioRecorder.kt` | MediaRecorder hardware access | Manual recording test |
+| `HapticFeedback.kt` | Vibrator system service | Manual haptic test |
+| `FcmNotificationService.kt` dispatch | Firebase Messaging service | Push notification test |
+| Navigation graphs (e.g., `FriendsChatGraph.kt`) | Compose Navigation DSL | UI navigation test |
+| `FYPApplication.kt` / `MainActivity.kt` | Android lifecycle classes | App startup test |
+| Permission handlers (`CameraPermissions.kt`) | Runtime permissions | Manual permission flow |
+| DI modules | Hilt/Dagger wiring | Build verifies DI graph |
+
+**Rule:** When changing these components:
+1. Document expected behavior in code comments
+2. Run `./gradlew assembleDebug` to verify compilation
+3. Test affected flow on physical device or emulator
+4. Update this table if new untestable components are added
+
+---
+
+## 36. Test Coverage Gaps — Behavior to Watch
+
+The following ViewModel methods have limited or no test coverage. Exercise caution when modifying:
+
+| ViewModel | Method | Risk | Notes |
+|-----------|--------|------|-------|
+| `SettingsViewModel` | `updateVoiceForLanguage()` | Medium | Voice settings persistence |
+| `SettingsViewModel` | `updateAutoThemeEnabled()` | Low | Simple toggle |
+| `WordBankViewModel` | `speakExample()` | Medium | TTS integration |
+| `ProfileViewModel` | `dismiss*()` methods | Low | State clearing |
+| `LearningViewModel` | `invalidateSheetCache()` | Low | Cache invalidation |
+
+**Rule:** When adding functionality to these methods, add corresponding unit tests following the existing patterns in their test files.
 
 ---

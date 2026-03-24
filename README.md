@@ -65,6 +65,7 @@ Please use your gmail to register.
 **Friend System:**
 - Search & add friends by username or User ID with optional note (≤80 chars)
 - Real-time chat with automatic message translation to your language
+- Chat mark-read uses aggregated unread counters (no per-message read loop)
 - Share words and learning materials with friends
 - Shared inbox for received items with accept/dismiss actions
 - Block/unblock users; Firestore rules prevent blocked users from sending requests
@@ -190,6 +191,13 @@ See `docs/SECRETS_ROTATION.md` for rotation runbook.
 - `SharedHistoryDataSource` provides single Firestore listener shared by History, Learning, WordBank ViewModels
 - Includes language count caching with debounced refresh (5s) to reduce reads
 
+**Agent Completion Policy (mandatory for repository-changing prompts):**
+- Refresh `docs/treeOfImportantfiles.txt` when files/structure or key entries change
+- Audit and update affected docs in `docs/` plus `README.md` when behavior/workflow/metrics change
+- Run Android verification before finalizing: `.\\gradlew.bat :app:testDebugUnitTest` and `.\\gradlew.bat :app:assembleDebug`
+- Include verification outcomes in task summary
+- Policy source: `.github/copilot-instructions.md`
+
 --------------------------------------------------------------
 
 ## 🚀 Commands
@@ -286,4 +294,4 @@ cd fyp-backend/functions && npm test
 
 --------------------------------------------------------------
 
-**Last Updated:** March 23, 2026
+**Last Updated:** March 24, 2026
