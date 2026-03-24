@@ -137,7 +137,7 @@ describe("translateText", () => {
     mockFetch.mockResolvedValueOnce(mockResponse("error", false, 500));
     await expect(
       (translateText as any)({auth: {uid: "u1"}, data: {text: "hi", to: "en-US"}})
-    ).rejects.toThrow("Translation service unavailable");
+    ).rejects.toThrow("temporarily unavailable");
   });
 });
 
@@ -178,6 +178,18 @@ describe("translateTexts", () => {
     expect(result).toEqual({translatedTexts: ["hola", "mundo"]});
   });
 
+  it("accepts legacy short source language code for backward compatibility", async () => {
+    const apiResponse = JSON.stringify([{translations: [{text: "你好"}]}]);
+    mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
+
+    const result = await (translateTexts as any)({
+      auth: {uid: "u1"},
+      data: {texts: ["hello"], to: "zh-HK", from: "en"},
+    });
+
+    expect(result).toEqual({translatedTexts: ["你好"]});
+  });
+
   it("handles empty texts array", async () => {
     const apiResponse = JSON.stringify([]);
     mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
@@ -192,7 +204,15 @@ describe("translateTexts", () => {
     mockFetch.mockResolvedValueOnce(mockResponse("batch error", false, 500));
     await expect(
       (translateTexts as any)({auth: {uid: "u1"}, data: {texts: ["a"], to: "en-US"}})
-    ).rejects.toThrow("Translation service unavailable");
+    ).rejects.toThrow("temporarily unavailable");
+  });
+
+  it("maps batch translation 429 responses to rate-limit error", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse("rate limit", false, 429));
+
+    await expect(
+      (translateTexts as any)({auth: {uid: "u1"}, data: {texts: ["a"], to: "en-US"}})
+    ).rejects.toThrow("rate limit exceeded");
   });
 });
 
@@ -244,6 +264,6 @@ describe("detectLanguage", () => {
     mockFetch.mockResolvedValueOnce(mockResponse("detect error", false, 503));
     await expect(
       (detectLanguage as any)({auth: {uid: "u1"}, data: {text: "hello"}})
-    ).rejects.toThrow("Language detection service unavailable");
+    ).rejects.toThrow("Language detection service is temporarily unavailable");
   });
 });

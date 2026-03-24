@@ -361,9 +361,11 @@ The third parameter is named `currentSheetHistoryCount` (sheet version), not `cu
 
 **Supported codes:** `en-US`, `zh-HK`, `zh-TW`, `zh-CN`, `ja-JP`, `fr-FR`, `de-DE`, `ko-KR`, `es-ES`, `id-ID`, `vi-VN`, `th-TH`, `fil-PH`, `ms-MY`, `pt-BR`, `it-IT`, `ru-RU` (must match `app/src/main/assets/azure_languages.json`).
 
-**Rule:** (1) Always call `validateLanguageCode(code, paramName)` before using language codes in API calls; (2) Validation list (SUPPORTED_LANGUAGES) must be kept in sync with Android asset file; (3) Azure API normalizes codes via `toTranslatorCode()` mapping (e.g., `zh-HK` → `yue`); (4) Update both helper.ts and android asset file in same commit when adding languages.
+**Rule:** (1) Always call `validateLanguageCode(code, paramName)` before using language codes in API calls; (2) Validation list (SUPPORTED_LANGUAGES) must be kept in sync with Android asset file; (3) Azure API normalizes codes via `toTranslatorCode()` mapping (e.g., `zh-HK` → `yue`); (4) Update both helper.ts and android asset file in same commit when adding languages; (5) Keep legacy alias normalization (currently `en` → `en-US`) until clients that send short codes are fully retired.
 
 **Guard:** Backend `translation.test.ts` validates error messages for invalid codes.
+
+**Error Mapping:** Translation callable functions must map Azure HTTP `429` to Firebase `resource-exhausted` and map `5xx`/network failures to `unavailable` so clients can show appropriate retry messaging.
 
 ---
 

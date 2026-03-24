@@ -76,6 +76,7 @@ Please use your gmail to register.
 **Customization:**
 - UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, 10+ others via Azure
 - UI language dropdown shows translation progress/status; completion auto-hides
+- UI language translation uses canonical source code `en-US`; backend keeps legacy `en` compatibility and returns explicit rate-limit/unavailable errors for better recovery messaging
 - Primary language selector (30-day cooldown) in Settings
 - Theme: Light / Dark / System (smooth animated transitions)
 - Font size: 80%–150%

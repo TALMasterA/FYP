@@ -320,7 +320,7 @@ fun AppLanguageDropdown(
 
                 val translatedList = cloud.translateTexts(
                     texts = BaseUiTexts,
-                    from = "en",
+                    from = "en-US",
                     to = code
                 )
 

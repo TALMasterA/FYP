@@ -22,6 +22,51 @@ import {
 } from "./helpers.js";
 import {logger} from "./logger.js";
 
+function throwTranslationApiError(
+  operation: "Single" | "Batch" | "Detection",
+  status: number,
+  bodyText: string
+): never {
+  const serviceName = operation === "Detection" ? "Language detection service" : "Translation service";
+  logger.error(`${operation} translation API error`, {
+    status,
+    errorPreview: bodyText.substring(0, 200),
+  });
+
+  if (status === 400) {
+    throw new HttpsError(
+      "invalid-argument",
+      `${serviceName} request is invalid. Please check language selection and try again.`
+    );
+  }
+
+  if (status === 401 || status === 403) {
+    throw new HttpsError(
+      "failed-precondition",
+      `${serviceName} authentication failed. Please contact support.`
+    );
+  }
+
+  if (status === 429) {
+    throw new HttpsError(
+      "resource-exhausted",
+      `${serviceName} rate limit exceeded. Please try again in a few minutes.`
+    );
+  }
+
+  if (status >= 500) {
+    throw new HttpsError(
+      "unavailable",
+      `${serviceName} is temporarily unavailable. Please try again later.`
+    );
+  }
+
+  throw new HttpsError(
+    "internal",
+    `${serviceName} unavailable. Please try again.`
+  );
+}
+
 export const getSpeechToken = onCall(
   {secrets: [AZURE_SPEECH_KEY, AZURE_SPEECH_REGION]},
   async (request) => {
@@ -75,26 +120,29 @@ export const translateText = onCall(
 
     const url = buildTranslateUrl({to, from: from || undefined});
 
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Ocp-Apim-Subscription-Key": key,
-        "Ocp-Apim-Subscription-Region": region,
-      },
-      body: JSON.stringify([{Text: text}]),
-    });
-
-    const bodyText = await resp.text();
-    if (!resp.ok) {
-      logger.error("Single translation API error", {
-        status: resp.status,
-        errorPreview: bodyText.substring(0, 200),
+    let resp;
+    try {
+      resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Ocp-Apim-Subscription-Key": key,
+          "Ocp-Apim-Subscription-Region": region,
+        },
+        body: JSON.stringify([{Text: text}]),
+      });
+    } catch (fetchError: any) {
+      logger.error("Single translation network error", {
+        error: fetchError?.message,
       });
       throw new HttpsError(
-        "internal", "Translation service unavailable. Please try again."
+        "unavailable",
+        "Unable to reach translation service. Please check your internet connection and try again."
       );
     }
+
+    const bodyText = await resp.text();
+    if (!resp.ok) throwTranslationApiError("Single", resp.status, bodyText);
 
     const json = safeParseJson(bodyText, "translation");
     const translated = json?.[0]?.translations?.[0]?.text ?? "";
@@ -140,26 +188,29 @@ export const translateTexts = onCall(
     const url = buildTranslateUrl({to, from: from || undefined});
     const reqBody = texts.map((t: string) => ({Text: t}));
 
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Ocp-Apim-Subscription-Key": key,
-        "Ocp-Apim-Subscription-Region": region,
-      },
-      body: JSON.stringify(reqBody),
-    });
-
-    const bodyText = await resp.text();
-    if (!resp.ok) {
-      logger.error("Batch translation API error", {
-        status: resp.status,
-        errorPreview: bodyText.substring(0, 200),
+    let resp;
+    try {
+      resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Ocp-Apim-Subscription-Key": key,
+          "Ocp-Apim-Subscription-Region": region,
+        },
+        body: JSON.stringify(reqBody),
+      });
+    } catch (fetchError: any) {
+      logger.error("Batch translation network error", {
+        error: fetchError?.message,
       });
       throw new HttpsError(
-        "internal", "Translation service unavailable. Please try again."
+        "unavailable",
+        "Unable to reach translation service. Please check your internet connection and try again."
       );
     }
+
+    const bodyText = await resp.text();
+    if (!resp.ok) throwTranslationApiError("Batch", resp.status, bodyText);
 
     const json = safeParseJson(bodyText, "batch translation");
     const translatedTexts: string[] = Array.isArray(json) ?
@@ -183,26 +234,29 @@ export const detectLanguage = onCall(
     const url = new URL(`${ENDPOINT}/detect`);
     url.searchParams.set("api-version", API_VERSION);
 
-    const resp = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Ocp-Apim-Subscription-Key": key,
-        "Ocp-Apim-Subscription-Region": region,
-      },
-      body: JSON.stringify([{Text: text}]),
-    });
-
-    const bodyText = await resp.text();
-    if (!resp.ok) {
-      logger.error("Language detection API error", {
-        status: resp.status,
-        errorPreview: bodyText.substring(0, 200),
+    let resp;
+    try {
+      resp = await fetch(url.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Ocp-Apim-Subscription-Key": key,
+          "Ocp-Apim-Subscription-Region": region,
+        },
+        body: JSON.stringify([{Text: text}]),
+      });
+    } catch (fetchError: any) {
+      logger.error("Language detection network error", {
+        error: fetchError?.message,
       });
       throw new HttpsError(
-        "internal", "Language detection service unavailable. Please try again."
+        "unavailable",
+        "Unable to reach language detection service. Please check your internet connection and try again."
       );
     }
+
+    const bodyText = await resp.text();
+    if (!resp.ok) throwTranslationApiError("Detection", resp.status, bodyText);
 
     const json = safeParseJson(bodyText, "language detection");
     const detected = json?.[0];

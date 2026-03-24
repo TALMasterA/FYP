@@ -22,6 +22,7 @@ import {
   safeParseJson,
   toTranslatorCode,
   buildTranslateUrl,
+  validateLanguageCode,
   validateGenAiConfig,
 } from "../helpers.js";
 
@@ -172,6 +173,18 @@ describe("buildTranslateUrl", () => {
     const url = buildTranslateUrl({to: "zh-HK", from: "zh-CN"});
     expect(url).toContain("to=yue");
     expect(url).toContain("from=zh-Hans");
+  });
+});
+
+// ── validateLanguageCode ────────────────────────────────────────────
+
+describe("validateLanguageCode", () => {
+  it("normalizes legacy short code alias en to en-US", () => {
+    expect(validateLanguageCode("en", "from")).toBe("en-US");
+  });
+
+  it("accepts case-insensitive BCP-47 values and returns canonical casing", () => {
+    expect(validateLanguageCode("EN-us", "to")).toBe("en-US");
   });
 });
 

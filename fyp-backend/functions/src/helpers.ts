@@ -111,6 +111,13 @@ export const SUPPORTED_LANGUAGES = [
 ];
 
 /**
+ * Backward-compatible aliases for legacy/non-canonical inputs.
+ */
+const LANGUAGE_CODE_ALIASES: Record<string, string> = {
+  "en": "en-US",
+};
+
+/**
  * Normalize app language codes to Azure Translator API codes.
  */
 export function toTranslatorCode(code: string): string {
@@ -133,13 +140,17 @@ export function validateLanguageCode(code: string, paramName: string): string {
   if (!trimmed) {
     throw new HttpsError("invalid-argument", `${paramName} is required`);
   }
-  if (!SUPPORTED_LANGUAGES.includes(trimmed)) {
+
+  const aliased = LANGUAGE_CODE_ALIASES[trimmed] ?? LANGUAGE_CODE_ALIASES[trimmed.toLowerCase()] ?? trimmed;
+  const canonical = SUPPORTED_LANGUAGES.find((lang) => lang.toLowerCase() === aliased.toLowerCase()) ?? aliased;
+
+  if (!SUPPORTED_LANGUAGES.includes(canonical)) {
     throw new HttpsError(
       "invalid-argument",
       `${paramName} must be one of: ${SUPPORTED_LANGUAGES.join(", ")}`
     );
   }
-  return trimmed;
+  return canonical;
 }
 
 export function buildTranslateUrl(params: { to: string; from?: string }): string {

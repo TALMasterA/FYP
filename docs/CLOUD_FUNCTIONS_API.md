@@ -31,6 +31,9 @@ Translates a single text string.
 | `to`   | string | yes      | Target language code       |
 | `from` | string | no       | Source language code (auto-detect if omitted) |
 
+`from`/`to` must use supported app language codes (BCP-47 style, e.g. `en-US`).
+Backward compatibility currently accepts legacy `en` and normalizes it to `en-US`.
+
 **Response:**
 ```json
 { "translatedText": "string" }
@@ -47,6 +50,12 @@ When `from` is omitted (auto-detect mode), the response also includes:
 }
 ```
 
+**Error Codes:**
+- `invalid-argument` — Invalid/missing language parameters or invalid upstream request
+- `resource-exhausted` — Azure Translator rate limit exceeded (HTTP 429)
+- `unavailable` — Upstream service/network temporarily unavailable
+- `failed-precondition` — Translator service authentication/configuration issue
+
 ---
 
 ### `translateTexts`
@@ -60,10 +69,18 @@ Batch-translates multiple texts in a single API call.
 | `to`    | string   | yes      | Target language code         |
 | `from`  | string   | no       | Source language code         |
 
+`from`/`to` use the same validation and backward-compatibility normalization as `translateText`.
+
 **Response:**
 ```json
 { "translatedTexts": ["string", "string", ...] }
 ```
+
+**Error Codes:**
+- `invalid-argument` — Invalid/missing language parameters or payload too large
+- `resource-exhausted` — Azure Translator rate limit exceeded (HTTP 429)
+- `unavailable` — Upstream service/network temporarily unavailable
+- `failed-precondition` — Translator service authentication/configuration issue
 
 ---
 
@@ -85,6 +102,11 @@ Detects the language of a given text.
   "alternatives": [{ "language": "string", "score": 0.5 }]
 }
 ```
+
+**Error Codes:**
+- `unavailable` — Upstream service/network temporarily unavailable
+- `failed-precondition` — Translator service authentication/configuration issue
+- `invalid-argument` — Invalid upstream request
 
 ---
 

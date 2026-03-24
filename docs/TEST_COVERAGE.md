@@ -108,13 +108,13 @@ All complex business logic has been extracted to testable classes (see "Logic ex
 
 ## Backend Tests (Firebase Cloud Functions)
 
-_14 test files, 160 tests_
+_14 test files, 168 tests_
 
 | File | Tests | Coverage |
 |------|-------|----------|
-| `helpers.test.ts` | 29 | Validation, auth guards, rate limiting, URL building |
+| `helpers.test.ts` | 31 | Validation, auth guards, rate limiting, URL building |
 | `logger.test.ts` | 6 | Structured JSON logger output format |
-| `translation.test.ts` | 15 | getSpeechToken, translateText(s), detectLanguage |
+| `translation.test.ts` | 24 | getSpeechToken, translateText(s), detectLanguage, legacy-code compatibility, 429 mapping |
 | `coins.test.ts` | 26 | awardQuizCoins anti-cheat, spendCoins purchases |
 | `notifications.test.ts` | 12 | FCM triggers, spam detection, rate limiting |
 | `learning.test.ts` | 17 | generateLearningContent: auth, validation, rate-limit ordering |
