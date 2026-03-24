@@ -431,19 +431,3 @@ The following components cannot be unit tested due to Android framework dependen
 4. Update this table if new untestable components are added
 
 ---
-
-## 36. Test Coverage Gaps — Behavior to Watch
-
-The following ViewModel methods have limited or no test coverage. Exercise caution when modifying:
-
-| ViewModel | Method | Risk | Notes |
-|-----------|--------|------|-------|
-| `SettingsViewModel` | `updateVoiceForLanguage()` | Medium | Voice settings persistence |
-| `SettingsViewModel` | `updateAutoThemeEnabled()` | Low | Simple toggle |
-| `WordBankViewModel` | `speakExample()` | Medium | TTS integration |
-| `ProfileViewModel` | `dismiss*()` methods | Low | State clearing |
-| `LearningViewModel` | `invalidateSheetCache()` | Low | Cache invalidation |
-
-**Rule:** When adding functionality to these methods, add corresponding unit tests following the existing patterns in their test files.
-
----

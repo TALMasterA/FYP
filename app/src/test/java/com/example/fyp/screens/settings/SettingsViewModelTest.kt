@@ -413,6 +413,37 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `updateNotificationPref when logged out does not call use case`() = runTest {
+        authStateFlow.value = AuthState.LoggedOut
+        val vm = SettingsViewModel(
+            app, authRepo, sharedSettings, friendsRepo, setPrimaryLanguage,
+            setFontSizeScale, setThemeMode, setColorPalette, unlockColorPaletteWithCoins,
+            setVoiceForLanguage, setAutoThemeEnabled, setNotificationPref, quizRepo
+        )
+
+        vm.updateNotificationPref(SettingsViewModel.PREF_NOTIFY_NEW_MESSAGES, true)
+
+        verifyNoInteractions(setNotificationPref)
+    }
+
+    @Test
+    fun `updateNotificationPref with invalid field keeps settings unchanged but still persists cache key`() = runTest {
+        val invalidField = "invalidNotificationKey"
+        setNotificationPref.stub {
+            onBlocking { invoke(UserId(testUserId), invalidField, true) } doReturn Unit
+        }
+        val vm = buildViewModel()
+        val before = vm.uiState.value.settings
+
+        vm.updateNotificationPref(invalidField, true)
+
+        val after = vm.uiState.value.settings
+        assertEquals(before, after)
+        verify(setNotificationPref).invoke(UserId(testUserId), invalidField, true)
+        verify(mockEditor, atLeastOnce()).putBoolean(invalidField, true)
+    }
+
+    @Test
     fun `logged in settings sync writes all push notification prefs to cache`() = runTest {
         settingsFlow.value = UserSettings(
             notifyNewMessages = false,
@@ -467,7 +498,9 @@ class SettingsViewModelTest {
     @Test
     fun `updateVoiceForLanguage success updates voiceSettings`() = runTest {
         setVoiceForLanguage.stub {
-            onBlocking { invoke(any(), any(), any()) } doReturn Unit
+            onBlocking {
+                invoke(UserId(testUserId), LanguageCode("en-US"), com.example.fyp.model.VoiceName("en-US-AriaNeural"))
+            } doReturn Unit
         }
 
         val vm = buildViewModel()
@@ -495,7 +528,9 @@ class SettingsViewModelTest {
     @Test
     fun `updateVoiceForLanguage failure sets errorRaw`() = runTest {
         setVoiceForLanguage.stub {
-            onBlocking { invoke(any(), any(), any()) } doThrow RuntimeException("Network error")
+            onBlocking {
+                invoke(UserId(testUserId), LanguageCode("en-US"), com.example.fyp.model.VoiceName("en-US-AriaNeural"))
+            } doThrow RuntimeException("Network error")
         }
 
         val vm = buildViewModel()
@@ -516,13 +551,14 @@ class SettingsViewModelTest {
         val vm = buildViewModel()
         vm.updateAutoThemeEnabled(true)
 
-        assertTrue(vm.uiState.value.settings.isAutoThemeEnabled)
+        verify(setAutoThemeEnabled).invoke(UserId(testUserId), true)
+        assertTrue(vm.uiState.value.settings.autoThemeEnabled)
         assertNull(vm.uiState.value.errorRaw)
     }
 
     @Test
     fun `updateAutoThemeEnabled success disables auto theme`() = runTest {
-        settingsFlow.value = UserSettings(isAutoThemeEnabled = true)
+        settingsFlow.value = UserSettings(autoThemeEnabled = true)
         setAutoThemeEnabled.stub {
             onBlocking { invoke(UserId(testUserId), false) } doReturn Unit
         }
@@ -530,7 +566,8 @@ class SettingsViewModelTest {
         val vm = buildViewModel()
         vm.updateAutoThemeEnabled(false)
 
-        assertFalse(vm.uiState.value.settings.isAutoThemeEnabled)
+        verify(setAutoThemeEnabled).invoke(UserId(testUserId), false)
+        assertFalse(vm.uiState.value.settings.autoThemeEnabled)
     }
 
     @Test

@@ -8,7 +8,7 @@ _Last updated: 2026-03-24_
 |---------------------------|---------|
 | Source files               | 251     |
 | Test files                 | 207     |
-| Total `@Test` methods      | 2,670   |
+| Total `@Test` methods      | 2,697   |
 | Key logic coverage         | ~100%   |
 
 ## CI/CD Pipeline & Quality Checks
@@ -147,5 +147,7 @@ _14 test files, 160 tests_
 - `SeenItemsStorageTest`: user-scoped clear guard for seen-state keys
 - `FriendsViewModelBadgeSettingsTest`: badge gating remains disabled across logout/relogin
 - `firestore-rules-settings.test.ts`: protects bool checks for notification/badge settings fields
+- `SettingsViewModelTest`: fixed `autoThemeEnabled` contract mismatch and added logged-out notification preference guard test
+- `SettingsViewModelTest`: added invalid notification field edge-case regression test (settings unchanged + cache write path asserted)
 
 ---
