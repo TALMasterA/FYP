@@ -121,6 +121,8 @@ class WordBankViewModel @Inject constructor(
                         settingsJob = launch {
                             sharedSettings.settings.collect { settings ->
                                 userSettings = settings
+                                val settingsPrimary = settings.primaryLanguageCode.ifBlank { "en-US" }
+                                setPrimaryLanguageCode(settingsPrimary)
                             }
                         }
                         // Subscribe friends list for share feature (uses shared listeners)

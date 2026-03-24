@@ -1,11 +1,13 @@
 package com.example.fyp.screens.wordbank
 
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
 import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.User
+import com.example.fyp.model.user.UserSettings
 import com.example.fyp.model.CustomWord
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -50,6 +52,7 @@ class CustomWordsViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private val authStateFlow = MutableStateFlow<AuthState>(AuthState.Loading)
+    private val settingsFlow = MutableStateFlow(UserSettings())
 
     private val testUserId = "user123"
     private val testUser = User(uid = testUserId, email = "test@test.com")
@@ -57,6 +60,7 @@ class CustomWordsViewModelTest {
     private lateinit var authRepo: FirebaseAuthRepository
     private lateinit var customWordsRepo: FirestoreCustomWordsRepository
     private lateinit var translateTextUseCase: TranslateTextUseCase
+    private lateinit var sharedSettings: SharedSettingsDataSource
 
     @Before
     fun setup() {
@@ -65,6 +69,7 @@ class CustomWordsViewModelTest {
         authRepo = mock { on { currentUserState } doReturn authStateFlow }
         customWordsRepo = mock()
         translateTextUseCase = mock()
+        sharedSettings = mock { on { settings } doReturn settingsFlow }
     }
 
     private fun buildViewModel(): CustomWordsViewModel {
@@ -72,7 +77,8 @@ class CustomWordsViewModelTest {
         return CustomWordsViewModel(
             authRepo = authRepo,
             customWordsRepo = customWordsRepo,
-            translateTextUseCase = translateTextUseCase
+            translateTextUseCase = translateTextUseCase,
+            sharedSettings = sharedSettings
         )
     }
 
@@ -228,7 +234,7 @@ class CustomWordsViewModelTest {
     @Test
     fun `addCustomWord when not logged in does nothing`() = runTest {
         authStateFlow.value = AuthState.LoggedOut
-        val vm = CustomWordsViewModel(authRepo, customWordsRepo, translateTextUseCase)
+        val vm = CustomWordsViewModel(authRepo, customWordsRepo, translateTextUseCase, sharedSettings)
 
         vm.addCustomWord("hello", "world", sourceLang = "en-US", targetLang = "ja-JP")
 
@@ -254,7 +260,7 @@ class CustomWordsViewModelTest {
     @Test
     fun `deleteCustomWord when not logged in does nothing`() = runTest {
         authStateFlow.value = AuthState.LoggedOut
-        val vm = CustomWordsViewModel(authRepo, customWordsRepo, translateTextUseCase)
+        val vm = CustomWordsViewModel(authRepo, customWordsRepo, translateTextUseCase, sharedSettings)
 
         vm.deleteCustomWord("w1")
 
@@ -275,6 +281,19 @@ class CustomWordsViewModelTest {
 
         assertEquals("こんにちは", callbackResult)
         assertFalse(vm.uiState.value.isTranslatingCustomWord)
+    }
+
+    @Test
+    fun `translateCustomWord uses account primary language from settings`() = runTest {
+        settingsFlow.value = UserSettings(primaryLanguageCode = "zh-HK")
+        translateTextUseCase.stub {
+            onBlocking { invoke("hello", "zh-HK", "ja-JP") } doReturn SpeechResult.Success("こんにちは")
+        }
+
+        val vm = buildViewModel()
+        vm.translateCustomWord("hello", "ja-JP") { }
+
+        verify(translateTextUseCase).invoke("hello", "zh-HK", "ja-JP")
     }
 
     @Test

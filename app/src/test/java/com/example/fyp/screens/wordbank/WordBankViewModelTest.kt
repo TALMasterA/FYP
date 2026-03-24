@@ -285,6 +285,20 @@ class WordBankViewModelTest {
         assertNull(vm.uiState.value.currentWordBank)
     }
 
+    @Test
+    fun `settings primary language change updates word bank primary automatically`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        settingsFlow.value = UserSettings(primaryLanguageCode = "en-US")
+        assertEquals("en-US", vm.getPrimaryLanguageCode())
+
+        settingsFlow.value = UserSettings(primaryLanguageCode = "zh-HK")
+        assertEquals("zh-HK", vm.getPrimaryLanguageCode())
+
+        verify(sharedSettings, atLeastOnce()).startObserving("u1")
+    }
+
     // ── shareWord success ───────────────────────────────────────────
 
     @Test

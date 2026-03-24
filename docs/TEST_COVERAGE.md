@@ -8,7 +8,7 @@ _Last updated: 2026-03-24_
 |---------------------------|---------|
 | Source files               | 251     |
 | Test files                 | 207     |
-| Total `@Test` methods      | 2,706   |
+| Total `@Test` methods      | 2,708   |
 | Key logic coverage         | ~100%   |
 
 ## CI/CD Pipeline & Quality Checks
@@ -150,5 +150,7 @@ _14 test files, 168 tests_
 - `firestore-rules-settings.test.ts`: protects bool checks for notification/badge settings fields
 - `SettingsViewModelTest`: fixed `autoThemeEnabled` contract mismatch and added logged-out notification preference guard test
 - `SettingsViewModelTest`: added invalid notification field edge-case regression test (settings unchanged + cache write path asserted)
+- `WordBankViewModelTest`: settings primary change auto-updates word-bank primary language source-of-truth
+- `CustomWordsViewModelTest`: translateCustomWord source language follows account primary from settings
 
 ---

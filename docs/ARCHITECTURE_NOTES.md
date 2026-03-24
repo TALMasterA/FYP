@@ -334,6 +334,19 @@ This prevents job cancellation on route changes and avoids stale completion bann
 
 ---
 
+## 24.2 Learning/WordBank/Quiz Primary Language Source Of Truth
+
+**Invariant:** Learning sheets, generated word banks, and quizzes are keyed by account `primaryLanguageCode` only (from user settings), never by app UI language.
+
+**Rule:**
+1. `LearningViewModel` and `WordBankViewModel` must derive primary language from `SharedSettingsDataSource.settings.primaryLanguageCode`
+2. `CustomWordsViewModel.translateCustomWord()` must also use settings primary language for source language
+3. Navigation-passed values can be used as initial hints only; runtime state must follow settings stream
+
+**Guard:** `WordBankViewModelTest` verifies settings primary changes update word-bank primary automatically, and `CustomWordsViewModelTest` verifies translation source language follows settings primary.
+
+---
+
 ## 25. NetworkRetry — Standard Exponential Backoff
 
 **Invariant:** Formula: `currentDelay = currentDelay * factor` (simple multiplicative), NOT `currentDelay * factor^attempt`.

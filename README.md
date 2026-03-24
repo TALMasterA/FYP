@@ -59,6 +59,7 @@ Please use your gmail to register.
 - AI-generated learning sheets from translation history (≥20 records per language pair)
 - Quiz system with coin rewards (anti-cheat verification: first-attempt only)
 - Auto-generated word bank with progress bar toward next regen
+- Learning sheet, word bank, and quiz language pairs are controlled by account primary language (not App UI language)
 - Custom word bank for user-defined vocabulary
 - Favorites for bookmarking translations and saving full conversation sessions
 

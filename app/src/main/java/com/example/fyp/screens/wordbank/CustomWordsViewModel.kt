@@ -2,6 +2,7 @@ package com.example.fyp.screens.wordbank
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.wordbank.FirestoreCustomWordsRepository
 import com.example.fyp.domain.speech.TranslateTextUseCase
@@ -14,6 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,7 +41,8 @@ data class CustomWordsUiState(
 class CustomWordsViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val customWordsRepo: FirestoreCustomWordsRepository,
-    private val translateTextUseCase: TranslateTextUseCase
+    private val translateTextUseCase: TranslateTextUseCase,
+    private val sharedSettings: SharedSettingsDataSource
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CustomWordsUiState())
@@ -47,6 +50,7 @@ class CustomWordsViewModel @Inject constructor(
 
     private var currentUserId: String? = null
     private var primaryLanguageCode: String = "en-US"
+    private var settingsJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -54,9 +58,19 @@ class CustomWordsViewModel @Inject constructor(
                 when (auth) {
                     is AuthState.LoggedIn -> {
                         currentUserId = auth.user.uid
+                        sharedSettings.startObserving(auth.user.uid)
+                        settingsJob?.cancel()
+                        settingsJob = launch {
+                            sharedSettings.settings.collect { settings ->
+                                primaryLanguageCode = settings.primaryLanguageCode.ifBlank { "en-US" }
+                            }
+                        }
                     }
                     AuthState.LoggedOut -> {
                         currentUserId = null
+                        settingsJob?.cancel()
+                        settingsJob = null
+                        primaryLanguageCode = "en-US"
                         _uiState.value = CustomWordsUiState()
                     }
                     AuthState.Loading -> Unit
