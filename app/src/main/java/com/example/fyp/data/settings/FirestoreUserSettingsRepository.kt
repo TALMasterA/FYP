@@ -89,11 +89,12 @@ class FirestoreUserSettingsRepository @Inject constructor(
 
     override suspend fun fetchUserSettings(userId: UserId): UserSettings {
         val ref = docRef(userId.value)
-        // Cache-first: show saved settings instantly, server sync via real-time listener
+        // Prefer server for cross-device sync; fall back to default on network error.
+        // The real-time listener (observeUserSettings) handles updates after initial load.
         val snap = try {
-            val cached = ref.get(Source.CACHE).await()
-            if (cached.exists()) cached else ref.get(Source.SERVER).await()
+            ref.get(Source.SERVER).await()
         } catch (_: Exception) {
+            // Offline or server error: fall back to cache-then-server default
             ref.get().await()
         }
         return parseSettings(snap)

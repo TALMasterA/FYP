@@ -55,12 +55,16 @@ class FirestoreLearningSheetsRepository @Inject constructor(
         val ref = docRef(uid.value, p, t)
 
         // Read sheet and server-owned version in parallel.
+        // IMPORTANT: Use SERVER source for the sheet to ensure cross-device sync works correctly.
+        // Cache-first approach can show stale "not found" on a new device before sync completes.
         val (sheetSnap, versionSnap) = coroutineScope {
             val sheetDeferred = async {
                 try {
-                    val cached = ref.get(Source.CACHE).await()
-                    if (cached.exists()) cached else ref.get(Source.SERVER).await()
+                    // Prefer server to ensure latest data is fetched (critical for cross-device sync).
+                    // Fall back to default behavior only if server fetch fails (offline mode).
+                    ref.get(Source.SERVER).await()
                 } catch (_: Exception) {
+                    // Offline or server error: fall back to cache-then-server default
                     ref.get().await()
                 }
             }
@@ -113,6 +117,7 @@ class FirestoreLearningSheetsRepository @Inject constructor(
 
         val chunks = normalizedTargets.chunked(10)
         // Fetch all chunks in parallel to reduce latency
+        // Use SERVER source to ensure cross-device sync works correctly
         val chunkResults = coroutineScope {
             chunks.map { chunk ->
                 async {
@@ -123,8 +128,17 @@ class FirestoreLearningSheetsRepository @Inject constructor(
                     val versionQuery = db.collection("users").document(uid.value).collection("quiz_versions")
                         .whereIn(FieldPath.documentId(), chunkDocIds)
 
-                    val sheetSnap = q.get().await()
-                    val versionSnap = versionQuery.get().await()
+                    // Prefer server source for cross-device sync; fall back to default on network error
+                    val sheetSnap = try {
+                        q.get(Source.SERVER).await()
+                    } catch (_: Exception) {
+                        q.get().await()
+                    }
+                    val versionSnap = try {
+                        versionQuery.get(Source.SERVER).await()
+                    } catch (_: Exception) {
+                        versionQuery.get().await()
+                    }
                     Pair(sheetSnap, versionSnap)
                 }
             }.awaitAll()

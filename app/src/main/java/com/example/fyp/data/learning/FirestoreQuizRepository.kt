@@ -275,22 +275,41 @@ class FirestoreQuizRepository @Inject constructor(
         // Process in chunks of 10 (Firestore whereIn limit)
         targets.chunked(10).zip(quizDocIds.chunked(10)).forEach { (chunkTargets, chunkQuizIds) ->
             // Fetch quiz docs and awarded counts in parallel
+            // Use SERVER source for cross-device sync
             val chunkResults = coroutineScope {
                 val quizDeferred = async {
-                    db.collection("users")
-                        .document(uid.value)
-                        .collection("generated_quizzes")
-                        .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
-                        .get()
-                        .await()
+                    try {
+                        db.collection("users")
+                            .document(uid.value)
+                            .collection("generated_quizzes")
+                            .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
+                            .get(com.google.firebase.firestore.Source.SERVER)
+                            .await()
+                    } catch (_: Exception) {
+                        db.collection("users")
+                            .document(uid.value)
+                            .collection("generated_quizzes")
+                            .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
+                            .get()
+                            .await()
+                    }
                 }
                 val awardedDeferred = async {
-                    db.collection("users")
-                        .document(uid.value)
-                        .collection("last_awarded_quiz")
-                        .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
-                        .get()
-                        .await()
+                    try {
+                        db.collection("users")
+                            .document(uid.value)
+                            .collection("last_awarded_quiz")
+                            .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
+                            .get(com.google.firebase.firestore.Source.SERVER)
+                            .await()
+                    } catch (_: Exception) {
+                        db.collection("users")
+                            .document(uid.value)
+                            .collection("last_awarded_quiz")
+                            .whereIn(com.google.firebase.firestore.FieldPath.documentId(), chunkQuizIds)
+                            .get()
+                            .await()
+                    }
                 }
                 listOf(quizDeferred, awardedDeferred).awaitAll()
             }

@@ -275,8 +275,19 @@ class SharedFriendsDataSource @Inject constructor(
         inboxJob = scope.launch {
             try {
                 sharingRepository.observeSharedInbox(uid).collect { list ->
-                    _pendingSharedItems.value = list
-                    val currentIds = list.map { it.itemId }.toSet()
+                    // Resolve missing usernames from the in-memory cache (populated from friends list).
+                    // This ensures items shared by friends display the correct sender name,
+                    // even if the item document didn't store fromUsername (older format).
+                    val resolvedList = list.map { item ->
+                        if (item.fromUsername.isBlank() && item.fromUserId.isNotBlank()) {
+                            val cachedName = usernameCache[item.fromUserId]
+                            if (cachedName != null) item.copy(fromUsername = cachedName) else item
+                        } else {
+                            item
+                        }
+                    }
+                    _pendingSharedItems.value = resolvedList
+                    val currentIds = resolvedList.map { it.itemId }.toSet()
                     // Remove IDs from seenSet that are no longer pending (accepted/dismissed)
                     _seenSharedItemIds.value = _seenSharedItemIds.value.intersect(currentIds)
                 }
