@@ -1662,4 +1662,66 @@ val ScreenUiTexts: List<String> = listOf(
     "Confirm Username Change",
     // SettingsUsernameConfirmMessage
     "Changing your username will start a 30-day cooldown before you can change it again. Continue?",
+
+    // --- Extended Error Messages (localized) ---
+    // ErrorNoInternet
+    "No internet connection. Please check your network and try again.",
+    // ErrorPermissionDenied
+    "You don't have permission to perform this action.",
+    // ErrorSessionExpired
+    "Your session has expired. Please sign in again.",
+    // ErrorItemNotFound
+    "The requested item was not found. It may have been deleted.",
+    // ErrorAccessDenied
+    "Access denied.",
+    // ErrorAlreadyFriends
+    "You're already friends with this user.",
+    // ErrorUserBlocked
+    "Unable to complete this action. The user may be blocked.",
+    // ErrorRequestNotFound
+    "This friend request no longer exists.",
+    // ErrorRequestAlreadyHandled
+    "This request has already been handled by someone else.",
+    // ErrorNotAuthorized
+    "You're not authorized to perform this action.",
+    // ErrorRateLimited
+    "Too many requests. Please wait a moment and try again.",
+    // ErrorInvalidInput
+    "Invalid input. Please check and try again.",
+    // ErrorOperationNotAllowed
+    "Operation cannot be completed right now.",
+    // ErrorTimeout
+    "The operation timed out. Please try again.",
+    // ErrorSendMessageFailed
+    "Failed to send message. Please try again.",
+    // ErrorFriendRequestSent
+    "Friend request sent!",
+    // ErrorFriendRequestFailed
+    "Failed to send friend request. Please try again.",
+    // ErrorFriendRemoved
+    "Friend removed successfully.",
+    // ErrorFriendRemoveFailed
+    "Unable to remove friend. Please check your connection and try again.",
+    // ErrorBlockSuccess
+    "User blocked successfully.",
+    // ErrorBlockFailed
+    "Failed to block user. Please try again.",
+    // ErrorUnblockSuccess
+    "User unblocked.",
+    // ErrorUnblockFailed
+    "Failed to unblock user. Please try again.",
+    // ErrorAcceptRequestSuccess
+    "Friend request accepted!",
+    // ErrorAcceptRequestFailed
+    "Failed to accept friend request. Please try again.",
+    // ErrorRejectRequestSuccess
+    "Friend request declined.",
+    // ErrorRejectRequestFailed
+    "Failed to decline friend request. Please try again.",
+    // ErrorOfflineMessage
+    "You're offline. Some features may not work.",
+    // ErrorChatDeletionFailed
+    "Unable to delete chat. Please try again.",
+    // ErrorGenericRetry
+    "Something went wrong. Please try again.",
 )
