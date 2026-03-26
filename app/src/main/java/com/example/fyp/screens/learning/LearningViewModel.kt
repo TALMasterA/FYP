@@ -158,8 +158,13 @@ class LearningViewModel @Inject constructor(
     }
 
     private fun start(uid: String) {
-        this.uid = uid
         stopJobs()
+        val switchedUser = this.uid != uid
+        this.uid = uid
+        if (switchedUser) {
+            sheetMetaCache.clear()
+            lastPrimaryForCache = null
+        }
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
         settingsJob = viewModelScope.launch {
