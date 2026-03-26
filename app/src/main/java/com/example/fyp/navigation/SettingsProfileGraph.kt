@@ -40,7 +40,6 @@ internal fun NavGraphBuilder.settingsProfileGraph(
             onOpenShop = { navController.navigate(AppScreen.Shop.route) { launchSingleTop = true } },
             onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) { launchSingleTop = true } },
             onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) { launchSingleTop = true } },
-            onOpenNotificationSettings = { navController.navigate(AppScreen.NotificationSettings.route) { launchSingleTop = true } },
             viewModel = settingsViewModel
         )
     }

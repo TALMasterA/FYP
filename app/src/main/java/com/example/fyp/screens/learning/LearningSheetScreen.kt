@@ -41,6 +41,11 @@ import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.ui.components.FriendSelectorDialog
 import com.example.fyp.ui.theme.AppSpacing
 
+internal fun resolveDisplayedSavedCount(
+    latestSheetCount: Int?,
+    loadedSheetCount: Int?
+): Int? = latestSheetCount ?: loadedSheetCount
+
 @Suppress("UNUSED_PARAMETER", "SENSELESS_COMPARISON")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,13 +81,15 @@ fun LearningSheetScreen(
     // Get count from learning view model clusters (same source as LearningScreen) instead of separate listener
     val countNowFromCluster = learningUiState.clusters.firstOrNull { it.languageCode == targetCode }?.count ?: 0
 
-    // Previous sheet count (null = first time)
-    val previousSheetCount = uiState.historyCountAtGenerate
+    // Prefer latest in-memory metadata so the count updates immediately after generation.
+    val latestSheetCount = learningUiState.sheetCountByLanguage[targetCode]
+    val previousSheetCount = resolveDisplayedSavedCount(latestSheetCount, uiState.historyCountAtGenerate)
+    val previousCount = previousSheetCount ?: 0
 
     // Check if regeneration is allowed using domain logic
     val isFirstTime = previousSheetCount == null
-    val hasEnoughNewRecords = isFirstTime || GenerationEligibility.canRegenerateLearningSheet(countNowFromCluster, previousSheetCount ?: 0)
-    val countHigherThanPrevious = isFirstTime || countNowFromCluster > (previousSheetCount ?: 0)
+    val hasEnoughNewRecords = isFirstTime || GenerationEligibility.canRegenerateLearningSheet(countNowFromCluster, previousCount)
+    val countHigherThanPrevious = isFirstTime || countNowFromCluster > previousCount
 
     val unchanged = previousSheetCount != null && previousSheetCount == countNowFromCluster
     val regenEnabled = !uiState.isLoading && !isAnyGenerationOngoing && countNowFromCluster > 0 && !unchanged && countHigherThanPrevious && hasEnoughNewRecords
@@ -91,7 +98,7 @@ fun LearningSheetScreen(
     // Reload the sheet whenever: the language pair changes, OR generation just completed
     // (lastSavedCount advances). A single LaunchedEffect is enough — no need for two separate
     // effects that would both fire on initial composition and cause a double read.
-    val lastSavedCount = learningUiState.sheetCountByLanguage[targetCode]
+    val lastSavedCount = latestSheetCount
     LaunchedEffect(primaryCode, targetCode, lastSavedCount) {
         viewModel.loadSheet()
     }
@@ -158,7 +165,7 @@ fun LearningSheetScreen(
             Text(
                 text = t(UiTextKey.LearningSheetHistoryCountTemplate)
                     .replace("{nowCount}", countNowFromCluster.toString())
-                    .replace("{savedCount}", (uiState.historyCountAtGenerate?.toString() ?: "-")),
+                    .replace("{savedCount}", (previousSheetCount?.toString() ?: "-")),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

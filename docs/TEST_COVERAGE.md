@@ -7,8 +7,8 @@ _Last updated: 2026-03-26_
 | Metric                    | Count   |
 |---------------------------|---------|
 | Source files               | 251     |
-| Test files                 | 208     |
-| Total `@Test` methods      | 2,732   |
+| Test files                 | 210     |
+| Total `@Test` methods      | 2,785   |
 | Key logic coverage         | ~100%   |
 
 ## CI/CD Pipeline & Quality Checks
@@ -153,5 +153,7 @@ _14 test files, 168 tests_
 - `WordBankViewModelTest`: settings primary change auto-updates word-bank primary language source-of-truth
 - `CustomWordsViewModelTest`: translateCustomWord source language follows account primary from settings
 - `FirestoreUserSettingsRepositoryVoiceFieldPathTest`: guards voiceSettings nested-field updates (preserve existing languages), NOT_FOUND create fallback, and non-NOT_FOUND error propagation
+- `LearningSheetScreenLogicTest`: regression guard that prefers fresh `sheetCountByLanguage` metadata so generated-count updates immediately after sheet generation
+- `UiLanguageSwitchErrorMessageTest`: regression guard for UI-language switch error messaging (rate-limit explanation + generic fallback)
 
 ---

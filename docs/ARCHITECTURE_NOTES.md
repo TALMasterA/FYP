@@ -42,6 +42,22 @@
 
 ---
 
+## 1.4 UI Language Switching Failure Contract
+
+**Invariant:** Failed UI-language translations must not force-reset the app to English.
+
+**Rule:** Keep the current selected UI language on failure, and surface a user-facing message derived from the backend error. For rate-limit (`RESOURCE_EXHAUSTED`/429), show an explicit retry-later explanation.
+
+---
+
+## 1.5 Learning Sheet Generated-Count Freshness
+
+**Invariant:** Learning sheet detail should show the latest generated-count immediately after generation, without requiring page re-entry.
+
+**Rule:** Prefer `LearningViewModel.sheetCountByLanguage[target]` as the displayed saved-count source, and only fall back to the sheet document value when in-memory metadata is unavailable.
+
+---
+
 ## 2. Firestore Nested Map Writes — Set-Merge vs Update
 
 **Invariant:** `set(..., SetOptions.merge())` with nested `Map` **overwrites the entire map**, losing sibling keys.

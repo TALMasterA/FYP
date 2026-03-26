@@ -121,7 +121,7 @@ val ScreenUiTexts: List<String> = listOf(
             
             "Updates & Feedback:\n" +
             "  • App version displayed in Settings → About\n" +
-                        "  • Report bugs or suggest features via /Feedback / the GitHub repository\n",
+            "  • Send feedback via Settings → Feedback, or report issues on GitHub\n",
 
     // --- Feedback ---
     // FeedbackTitle

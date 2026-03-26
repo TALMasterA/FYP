@@ -2,6 +2,7 @@ package com.example.fyp.data.clients
 
 import com.example.fyp.core.NetworkRetry
 import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.FirebaseFunctionsException
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 
@@ -39,6 +40,24 @@ class CloudTranslatorClient(
     private val translateTextCallable by lazy { functions.getHttpsCallable("translateText") }
     private val translateTextsCallable by lazy { functions.getHttpsCallable("translateTexts") }
     private val detectLanguageCallable by lazy { functions.getHttpsCallable("detectLanguage") }
+
+    private fun mapFunctionsError(e: FirebaseFunctionsException): Exception {
+        val serverMessage = e.message?.takeIf { it.isNotBlank() }
+        val message = when (e.code) {
+            FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED ->
+                serverMessage ?: "Rate limit reached while changing UI language. Please wait and try again."
+            FirebaseFunctionsException.Code.DEADLINE_EXCEEDED ->
+                serverMessage ?: "Language translation timed out. Please try again."
+            FirebaseFunctionsException.Code.UNAVAILABLE ->
+                serverMessage ?: "Translation service is temporarily unavailable. Please try again later."
+            FirebaseFunctionsException.Code.UNAUTHENTICATED ->
+                serverMessage ?: "Authentication required. Please log in again."
+            FirebaseFunctionsException.Code.PERMISSION_DENIED ->
+                serverMessage ?: "Permission denied while calling translation service."
+            else -> serverMessage ?: "Translation request failed. Please try again."
+        }
+        return Exception(message, e)
+    }
 
     suspend fun translateText(
         text: String,
@@ -82,29 +101,33 @@ class CloudTranslatorClient(
         from: String?,
         to: String
     ): List<String> {
-        return NetworkRetry.withRetry(
-            maxAttempts = 3,
-            shouldRetry = NetworkRetry::isRetryableFirebaseException
-        ) {
-            val data = hashMapOf(
-                "texts" to texts,
-                "to" to to
-            )
-            if (!from.isNullOrBlank()) data["from"] = from
+        return try {
+            NetworkRetry.withRetry(
+                maxAttempts = 3,
+                shouldRetry = NetworkRetry::isRetryableFirebaseException
+            ) {
+                val data = hashMapOf(
+                    "texts" to texts,
+                    "to" to to
+                )
+                if (!from.isNullOrBlank()) data["from"] = from
 
-            val result = translateTextsCallable
-                .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .call(data)
-                .await()
+                val result = translateTextsCallable
+                    .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .call(data)
+                    .await()
 
-            @Suppress("UNCHECKED_CAST")
-            val map = result.data as? Map<String, Any?>
-                ?: throw IllegalStateException("Unexpected result type: ${result.data}")
+                @Suppress("UNCHECKED_CAST")
+                val map = result.data as? Map<String, Any?>
+                    ?: throw IllegalStateException("Unexpected result type: ${result.data}")
 
-            val list = map["translatedTexts"] as? List<*>
-                ?: throw IllegalStateException("Missing translatedTexts in result")
+                val list = map["translatedTexts"] as? List<*>
+                    ?: throw IllegalStateException("Missing translatedTexts in result")
 
-            list.map { it as? String ?: "" }
+                list.map { it as? String ?: "" }
+            }
+        } catch (e: FirebaseFunctionsException) {
+            throw mapFunctionsError(e)
         }
     }
 
