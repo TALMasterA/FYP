@@ -158,8 +158,8 @@ class LearningViewModel @Inject constructor(
     }
 
     private fun start(uid: String) {
+        val switchedUser = this.uid != null && this.uid != uid
         stopJobs()
-        val switchedUser = this.uid != uid
         this.uid = uid
         if (switchedUser) {
             sheetMetaCache.clear()
