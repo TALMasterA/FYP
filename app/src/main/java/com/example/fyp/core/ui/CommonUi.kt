@@ -22,6 +22,7 @@ import com.example.fyp.model.ui.buildUiTextMap
 import com.example.fyp.model.ui.LanguageNameTranslations
 import com.example.fyp.model.ui.LanguageNameKeys
 import com.example.fyp.model.ui.CantoneseUiTexts
+import com.google.firebase.functions.FirebaseFunctionsException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -43,6 +44,27 @@ private data class UiLanguageTranslationStatus(
 )
 
 private class UiLanguageTranslationAbort(message: String) : CancellationException(message)
+
+internal fun toUiLanguageSwitchErrorMessage(throwable: Throwable): String {
+    if (throwable is FirebaseFunctionsException) {
+        val serverMessage = throwable.message?.takeIf { it.isNotBlank() }
+        return when (throwable.code) {
+            FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED ->
+                serverMessage ?: "UI language change is rate-limited right now. Please wait and try again."
+            FirebaseFunctionsException.Code.DEADLINE_EXCEEDED ->
+                serverMessage ?: "UI language change timed out. Please try again."
+            FirebaseFunctionsException.Code.UNAVAILABLE ->
+                serverMessage ?: "UI language service is temporarily unavailable. Please try again later."
+            else -> serverMessage ?: "UI language change failed. Please try again."
+        }
+    }
+
+    val message = throwable.message?.trim().orEmpty()
+    if (message.contains("resource-exhausted", ignoreCase = true) || message.contains("429")) {
+        return "UI language change is rate-limited right now. Please wait and try again."
+    }
+    return message.ifBlank { "UI language change failed. Please try again." }
+}
 
 private object UiLanguageTranslationCoordinator {
     private const val STATUS_AUTO_DISMISS_MS = 4000L
@@ -74,7 +96,6 @@ private object UiLanguageTranslationCoordinator {
 
     fun launch(
         targetLanguageCode: String,
-        onError: (Throwable) -> Unit,
         block: suspend () -> Unit
     ): Boolean {
         if (_status.value.isRunning) return false
@@ -98,11 +119,10 @@ private object UiLanguageTranslationCoordinator {
                     message = abort.message
                 ), autoDismiss = true)
             } catch (t: Throwable) {
-                onError(t)
                 publishStatus(UiLanguageTranslationStatus(
                     isRunning = false,
                     targetLanguageCode = targetLanguageCode,
-                    message = "Translation failed. Reverted to English."
+                    message = toUiLanguageSwitchErrorMessage(t)
                 ), autoDismiss = true)
             }
         }
@@ -295,11 +315,7 @@ fun AppLanguageDropdown(
             }
 
             val launched = UiLanguageTranslationCoordinator.launch(
-                targetLanguageCode = code,
-                onError = { e ->
-                    Log.e("UITranslation", "Error: ${e.message}", e)
-                    onUpdateAppLanguage("en-US", emptyMap())
-                }
+                targetLanguageCode = code
             ) {
                 val currentHash = baseUiTextsHash()
                 val cachedHash = cache.getBaseHash(code)
@@ -334,6 +350,8 @@ fun AppLanguageDropdown(
                 if (!isLoggedIn) {
                     cache.setGuestTranslationUsed()
                 }
+
+                Log.d("UITranslation", "Completed language switch for $code")
             }
 
             if (!launched) {

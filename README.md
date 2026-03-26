@@ -78,13 +78,14 @@ Please use your gmail to register.
 **Customization:**
 - UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, 10+ others via Azure
 - UI language dropdown shows translation progress/status; completion auto-hides
-- UI language translation uses canonical source code `en-US`; backend keeps legacy `en` compatibility and returns explicit rate-limit/unavailable errors for better recovery messaging
+- UI language switching keeps current language on failures and surfaces explicit rate-limit/service timeout messages
 - Primary language selector (30-day cooldown) in Settings
 - Theme: Light / Dark / System (smooth animated transitions)
 - Font size: 80%–150%
 - 11 color palettes (1 free + 10 unlockable at 10 coins each)
 - Voice settings per language
-- Notification settings (push + badge toggles)
+- Notification settings (push + badge toggles) accessible from the Friends bell icon flow
+- Feedback submission is available in `Settings -> Feedback`
 - OCR settings (on-device model status and footprint)
 
 **History & Organization:**
@@ -232,7 +233,7 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 208 test files, 2,711 unit tests (100% on key logic)
+- **Android:** 210 test files, 2,785 unit tests (100% on key logic)
 - **Backend:** 14 test files, 160 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.

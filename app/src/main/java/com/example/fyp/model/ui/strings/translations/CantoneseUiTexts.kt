@@ -147,7 +147,7 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
             "  • 廣東話版本係手動翻譯，準確度更高\n" +
             "更新同回饋：\n" +
             "  • 應用程式版本顯示喺設定 → 關於\n" +
-            "  • 請透過 GitHub 回報錯誤或建議功能\n",
+            "  • 請喺設定 → 回饋提交意見，或者喺 GitHub 回報問題\n",
 
     // Feedback
     UiTextKey.FeedbackTitle to "回饋",

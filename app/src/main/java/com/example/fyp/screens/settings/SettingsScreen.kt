@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -67,7 +66,6 @@ fun SettingsScreen(
     onOpenShop: () -> Unit = {},
     onOpenVoiceSettings: () -> Unit = {},
     onOpenFeedback: () -> Unit = {},
-    onOpenNotificationSettings: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -343,18 +341,6 @@ fun SettingsScreen(
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                             }
-                        }
-
-                        // Notification Settings button
-                        TextButton(
-                            onClick = onOpenNotificationSettings,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = t(UiTextKey.NotifSettingsQuickLink),
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                            )
                         }
 
                         // Feedback buttons - Two separate options
