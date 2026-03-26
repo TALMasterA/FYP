@@ -366,7 +366,7 @@ class ChatViewModel @Inject constructor(
             updateUiState { it.copy(isTranslating = true, translationError = null) }
             try {
                 val settings = userSettingsRepository.fetchUserSettings(userId)
-                val targetLanguage = settings.primaryLanguageCode.substringBefore("-")
+                val targetLanguage = settings.primaryLanguageCode.ifBlank { "en-US" }
 
                 // Only translate friend's messages not already in the cache
                 val existingCache = _uiState.value.translatedMessages

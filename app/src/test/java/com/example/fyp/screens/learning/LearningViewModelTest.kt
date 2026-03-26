@@ -352,4 +352,33 @@ class LearningViewModelTest {
         assertTrue(state.sheetCountByLanguage.isEmpty())
         assertTrue(state.quizCountByLanguage.isEmpty())
     }
+
+    @Test
+    fun `user switch clears cached sheet metadata before loading next account`() = runTest(testDispatcher.scheduler) {
+        // Account A has a saved sheet for ja at count 10
+        whenever(sheetsRepo.getBatchSheetMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(mapOf("ja" to SheetMetadata(exists = true, historyCountAtGenerate = 10)))
+        whenever(quizRepo.getBatchQuizMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(emptyMap())
+
+        val vm = buildViewModel()
+        languageCountsFlow.value = mapOf("ja" to 10)
+        authStateFlow.value = AuthState.LoggedIn(User(uid = "u1", email = "a@test.com"))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(vm.uiState.value.sheetExistsByLanguage["ja"] == true)
+        assertEquals(10, vm.uiState.value.sheetCountByLanguage["ja"])
+
+        // Account B has no sheet for ja; VM must not reuse Account A cache
+        whenever(sheetsRepo.getBatchSheetMetadata(UserId("u2"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(mapOf("ja" to SheetMetadata(exists = false, historyCountAtGenerate = 0)))
+        whenever(quizRepo.getBatchQuizMetadata(UserId("u2"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(emptyMap())
+
+        authStateFlow.value = AuthState.LoggedIn(User(uid = "u2", email = "b@test.com"))
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(false, vm.uiState.value.sheetExistsByLanguage["ja"])
+        assertEquals(0, vm.uiState.value.sheetCountByLanguage["ja"])
+    }
 }

@@ -31,4 +31,11 @@ describe("firestore.rules settings validation", () => {
     expect(rules).toContain("request.resource.data.fontSizeScale >= 0.5");
     expect(rules).toContain("request.resource.data.fontSizeScale <= 2.0");
   });
+
+  it("keeps private settings owner-only and public profile readable for authenticated users", () => {
+    expect(rules).toContain("match /users/{userId}/profile/settings {");
+    expect(rules).toContain("allow read: if request.auth != null && request.auth.uid == userId;");
+    expect(rules).toContain("match /users/{userId}/profile/public {");
+    expect(rules).toContain("allow read: if request.auth != null;");
+  });
 });

@@ -352,7 +352,7 @@ This prevents job cancellation on route changes and avoids stale completion bann
 **Invariant:** Accepting a shared word keeps the original term language (`sourceLang`) but normalizes the displayed translation (`translatedWord`) to the receiver's primary language when sender/receiver primary languages differ.
 
 **Rule:** In `FirestoreSharingRepository.acceptSharedItem()` for `SharedItemType.WORD`:
-1. Read sender/receiver primary language from `users/{uid}/profile/settings.primaryLanguageCode`
+1. Read receiver primary language from `users/{uid}/profile/settings.primaryLanguageCode`, and sender primary language from `users/{uid}/profile/public.primaryLanguage` (cross-user private settings reads are denied by rules)
 2. If primary languages differ and shared `targetLang` is not already receiver primary, translate shared `targetText` into receiver primary before writing to `custom_words`
 3. If translation fails, keep original shared translation as fallback (accept flow must remain non-fatal)
 
@@ -370,6 +370,18 @@ This prevents job cancellation on route changes and avoids stale completion bann
 3. Navigation-passed values can be used as initial hints only; runtime state must follow settings stream
 
 **Guard:** `WordBankViewModelTest` verifies settings primary changes update word-bank primary automatically, and `CustomWordsViewModelTest` verifies translation source language follows settings primary.
+
+---
+
+## 24.3 Learning Sheet Metadata Cache Must Be User-Scoped
+
+**Invariant:** Learning screen sheet/quiz metadata cache cannot be reused across different authenticated users.
+
+**Rule:** On auth user switch in `LearningViewModel.start(uid)`, clear `sheetMetaCache` and reset cache primary tracking before loading new user metadata.
+
+**Why:** Reusing prior user cache can make existing sheets appear missing/stale until app restart and can incorrectly affect regeneration gating decisions.
+
+**Guard:** `LearningViewModelTest` includes a user-switch regression ensuring Account B does not inherit Account A sheet metadata.
 
 ---
 

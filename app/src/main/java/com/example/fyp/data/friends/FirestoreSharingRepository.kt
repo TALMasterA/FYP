@@ -260,7 +260,7 @@ class FirestoreSharingRepository @Inject constructor(
         wordData: Map<String, Any>
     ) {
         try {
-            val senderPrimaryLanguage = fetchPrimaryLanguageCode(senderUserId)
+            val senderPrimaryLanguage = fetchSenderPrimaryLanguageCode(senderUserId)
             val receiverPrimaryLanguage = fetchPrimaryLanguageCode(userId.value)
             val preparedWord = prepareSharedWordForRecipient(
                 wordData = wordData,
@@ -315,6 +315,28 @@ class FirestoreSharingRepository @Inject constructor(
                 .ifBlank { "en-US" }
         } catch (e: Exception) {
             android.util.Log.w("SharingRepo", "fetchPrimaryLanguageCode failed for $uid", e)
+            "en-US"
+        }
+    }
+
+    /**
+     * Sender primary language must be read from public profile.
+     * Reading another user's private settings path is denied by Firestore rules.
+     */
+    private suspend fun fetchSenderPrimaryLanguageCode(uid: String): String {
+        if (uid.isBlank()) return "en-US"
+        return try {
+            db.collection("users")
+                .document(uid)
+                .collection("profile")
+                .document("public")
+                .get()
+                .await()
+                .getString("primaryLanguage")
+                .orEmpty()
+                .ifBlank { "en-US" }
+        } catch (e: Exception) {
+            android.util.Log.w("SharingRepo", "fetchSenderPrimaryLanguageCode failed for $uid", e)
             "en-US"
         }
     }

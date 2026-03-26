@@ -121,7 +121,7 @@ _14 test files, 168 tests_
 | `maintenance.test.ts` | 9 | Scheduled cleanup: stale tokens, rate-limits, friends repair |
 | `health.test.ts` | 3 | Readiness endpoint validation |
 | `rate-limit.test.ts` | 5 | Rate-limit enforcement, fail-closed behavior |
-| `firestore-rules-settings.test.ts` | 2 | Guard tests for boolean validation in `firestore.rules` settings path |
+| `firestore-rules-settings.test.ts` | 3 | Guard tests for settings boolean validation plus profile read-access invariants in `firestore.rules` |
 
 **Coverage Gate (CI-enforced):** `npm run test:coverage` with `coverageThreshold.global`: statements 50%, branches 45%, functions 50%, lines 50%.
 **Current baseline:** Statements 99.1%, Branches 82.88%, Functions 100%, Lines 100%.
