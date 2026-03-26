@@ -11,9 +11,12 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
@@ -85,11 +88,13 @@ fun rememberConnectivityState(): State<Boolean> {
 
 /**
  * A compact offline banner that appears when the device has no internet connection.
+ * Includes status bar padding to avoid being obscured by the system status bar.
  */
 @Composable
 fun OfflineBanner(isConnected: Boolean) {
     val appLanguageState = LocalAppLanguageState.current
     val t = rememberTranslator(appLanguageState)
+    val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
 
     AnimatedVisibility(
         visible = !isConnected,
@@ -100,6 +105,7 @@ fun OfflineBanner(isConnected: Boolean) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.errorContainer)
+                .padding(top = statusBarPadding.calculateTopPadding())
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

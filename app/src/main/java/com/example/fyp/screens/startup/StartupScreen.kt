@@ -6,12 +6,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,15 +54,18 @@ fun StartupScreen(onFinished: () -> Unit) {
         onFinished()
     }
 
+    val statusBarPadding = WindowInsets.statusBars.asPaddingValues()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(BgColor)
     ) {
-        // ── Top navy accent bar ────────────────────────────────────────────
+        // ── Top navy accent bar (below status bar) ─────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(top = statusBarPadding.calculateTopPadding())
                 .height(8.dp)
                 .background(NavyBlue)
                 .align(Alignment.TopStart)
@@ -68,7 +74,7 @@ fun StartupScreen(onFinished: () -> Unit) {
         // ── Subtle top-left decoration circle ─────────────────────────────
         Box(
             modifier = Modifier
-                .padding(start = 40.dp, top = 100.dp)
+                .padding(start = 40.dp, top = 100.dp + statusBarPadding.calculateTopPadding())
                 .size(20.dp)
                 .clip(CircleShape)
                 .background(SkyBlue.copy(alpha = 0.2f))
@@ -78,7 +84,7 @@ fun StartupScreen(onFinished: () -> Unit) {
         // ── Gold sparkle diamond near the logo ────────────────────────────
         Box(
             modifier = Modifier
-                .padding(end = 104.dp, top = 192.dp)
+                .padding(end = 104.dp, top = 192.dp + statusBarPadding.calculateTopPadding())
                 .size(10.dp)
                 .rotate(45f)
                 .background(Gold)

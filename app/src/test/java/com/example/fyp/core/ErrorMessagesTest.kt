@@ -1,5 +1,6 @@
 package com.example.fyp.core
 
+import com.example.fyp.model.ui.UiTextKey
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.IOException
@@ -242,5 +243,163 @@ class ErrorMessagesTest {
         assertTrue(ErrorMessages.OFFLINE_MESSAGE.isNotBlank())
         assertTrue(ErrorMessages.CHAT_DELETION_FAILED.isNotBlank())
         assertTrue(ErrorMessages.GENERIC_RETRY.isNotBlank())
+    }
+
+    // ── keyFromException: null and fallback ─────────────────────────────
+
+    @Test
+    fun `keyFromException - null exception returns default fallback`() {
+        val key = ErrorMessages.keyFromException(null)
+        assertEquals(UiTextKey.ErrorGenericRetry, key)
+    }
+
+    @Test
+    fun `keyFromException - null exception returns custom fallback`() {
+        val key = ErrorMessages.keyFromException(null, UiTextKey.ErrorTimeout)
+        assertEquals(UiTextKey.ErrorTimeout, key)
+    }
+
+    @Test
+    fun `keyFromException - unknown exception returns default fallback`() {
+        val key = ErrorMessages.keyFromException(RuntimeException("some random error"))
+        assertEquals(UiTextKey.ErrorGenericRetry, key)
+    }
+
+    // ── keyFromException: network errors ───────────────────────────────
+
+    @Test
+    fun `keyFromException - UnknownHostException returns network key`() {
+        val key = ErrorMessages.keyFromException(UnknownHostException("host not found"))
+        assertEquals(UiTextKey.ErrorNoInternet, key)
+    }
+
+    @Test
+    fun `keyFromException - SocketTimeoutException returns network key`() {
+        val key = ErrorMessages.keyFromException(SocketTimeoutException("timed out"))
+        assertEquals(UiTextKey.ErrorNoInternet, key)
+    }
+
+    @Test
+    fun `keyFromException - ConnectException returns network key`() {
+        val key = ErrorMessages.keyFromException(ConnectException("connection refused"))
+        assertEquals(UiTextKey.ErrorNoInternet, key)
+    }
+
+    // ── keyFromException: Firebase auth errors ─────────────────────────
+
+    @Test
+    fun `keyFromException - PERMISSION_DENIED returns permission key`() {
+        val key = ErrorMessages.keyFromException(Exception("PERMISSION_DENIED: insufficient permissions"))
+        assertEquals(UiTextKey.ErrorPermissionDenied, key)
+    }
+
+    @Test
+    fun `keyFromException - UNAUTHENTICATED returns session expired key`() {
+        val key = ErrorMessages.keyFromException(Exception("UNAUTHENTICATED"))
+        assertEquals(UiTextKey.ErrorSessionExpired, key)
+    }
+
+    @Test
+    fun `keyFromException - NOT_FOUND returns not found key`() {
+        val key = ErrorMessages.keyFromException(Exception("NOT_FOUND: document missing"))
+        assertEquals(UiTextKey.ErrorItemNotFound, key)
+    }
+
+    // ── keyFromException: SecurityException ────────────────────────────
+
+    @Test
+    fun `keyFromException - SecurityException returns access denied key`() {
+        val key = ErrorMessages.keyFromException(SecurityException("Custom security error"))
+        assertEquals(UiTextKey.ErrorAccessDenied, key)
+    }
+
+    // ── keyFromException: friend-specific errors ───────────────────────
+
+    @Test
+    fun `keyFromException - Already friends returns already friends key`() {
+        val key = ErrorMessages.keyFromException(Exception("Already friends with user"))
+        assertEquals(UiTextKey.ErrorAlreadyFriends, key)
+    }
+
+    @Test
+    fun `keyFromException - blocked returns user blocked key`() {
+        val key = ErrorMessages.keyFromException(Exception("User is blocked"))
+        assertEquals(UiTextKey.ErrorUserBlocked, key)
+    }
+
+    @Test
+    fun `keyFromException - Request not found returns request not found key`() {
+        val key = ErrorMessages.keyFromException(Exception("Request not found in database"))
+        assertEquals(UiTextKey.ErrorRequestNotFound, key)
+    }
+
+    @Test
+    fun `keyFromException - already been handled returns already handled key`() {
+        val key = ErrorMessages.keyFromException(Exception("Request has already been handled"))
+        assertEquals(UiTextKey.ErrorRequestAlreadyHandled, key)
+    }
+
+    @Test
+    fun `keyFromException - Not authorized returns not authorized key`() {
+        val key = ErrorMessages.keyFromException(Exception("Not authorized to do this"))
+        assertEquals(UiTextKey.ErrorNotAuthorized, key)
+    }
+
+    // ── keyFromException: rate limiting ────────────────────────────────
+
+    @Test
+    fun `keyFromException - RESOURCE_EXHAUSTED returns rate limited key`() {
+        val key = ErrorMessages.keyFromException(Exception("RESOURCE_EXHAUSTED"))
+        assertEquals(UiTextKey.ErrorRateLimited, key)
+    }
+
+    @Test
+    fun `keyFromException - rate limit returns rate limited key`() {
+        val key = ErrorMessages.keyFromException(Exception("rate limit exceeded"))
+        assertEquals(UiTextKey.ErrorRateLimited, key)
+    }
+
+    // ── keyFromException: validation errors ────────────────────────────
+
+    @Test
+    fun `keyFromException - IllegalArgumentException returns invalid input key`() {
+        val key = ErrorMessages.keyFromException(IllegalArgumentException("Bad input"))
+        assertEquals(UiTextKey.ErrorInvalidInput, key)
+    }
+
+    @Test
+    fun `keyFromException - IllegalStateException returns operation not allowed key`() {
+        val key = ErrorMessages.keyFromException(IllegalStateException("Not ready"))
+        assertEquals(UiTextKey.ErrorOperationNotAllowed, key)
+    }
+
+    // ── keyFromException: deadline ─────────────────────────────────────
+
+    @Test
+    fun `keyFromException - DEADLINE_EXCEEDED returns timeout key`() {
+        val key = ErrorMessages.keyFromException(Exception("DEADLINE_EXCEEDED"))
+        assertEquals(UiTextKey.ErrorTimeout, key)
+    }
+
+    // ── Pre-built UiTextKey constants are valid ────────────────────────
+
+    @Test
+    fun `pre-built UiTextKey constants are correctly mapped`() {
+        assertEquals(UiTextKey.ErrorSendMessageFailed, ErrorMessages.KEY_SEND_MESSAGE_FAILED)
+        assertEquals(UiTextKey.ErrorFriendRequestSent, ErrorMessages.KEY_FRIEND_REQUEST_SENT)
+        assertEquals(UiTextKey.ErrorFriendRequestFailed, ErrorMessages.KEY_FRIEND_REQUEST_FAILED)
+        assertEquals(UiTextKey.ErrorFriendRemoved, ErrorMessages.KEY_FRIEND_REMOVED)
+        assertEquals(UiTextKey.ErrorFriendRemoveFailed, ErrorMessages.KEY_FRIEND_REMOVE_FAILED)
+        assertEquals(UiTextKey.ErrorBlockSuccess, ErrorMessages.KEY_BLOCK_SUCCESS)
+        assertEquals(UiTextKey.ErrorBlockFailed, ErrorMessages.KEY_BLOCK_FAILED)
+        assertEquals(UiTextKey.ErrorUnblockSuccess, ErrorMessages.KEY_UNBLOCK_SUCCESS)
+        assertEquals(UiTextKey.ErrorUnblockFailed, ErrorMessages.KEY_UNBLOCK_FAILED)
+        assertEquals(UiTextKey.ErrorAcceptRequestSuccess, ErrorMessages.KEY_ACCEPT_REQUEST_SUCCESS)
+        assertEquals(UiTextKey.ErrorAcceptRequestFailed, ErrorMessages.KEY_ACCEPT_REQUEST_FAILED)
+        assertEquals(UiTextKey.ErrorRejectRequestSuccess, ErrorMessages.KEY_REJECT_REQUEST_SUCCESS)
+        assertEquals(UiTextKey.ErrorRejectRequestFailed, ErrorMessages.KEY_REJECT_REQUEST_FAILED)
+        assertEquals(UiTextKey.ErrorOfflineMessage, ErrorMessages.KEY_OFFLINE_MESSAGE)
+        assertEquals(UiTextKey.ErrorChatDeletionFailed, ErrorMessages.KEY_CHAT_DELETION_FAILED)
+        assertEquals(UiTextKey.ErrorGenericRetry, ErrorMessages.KEY_GENERIC_RETRY)
     }
 }

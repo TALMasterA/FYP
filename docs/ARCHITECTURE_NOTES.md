@@ -471,3 +471,28 @@ The following components cannot be unit tested due to Android framework dependen
 4. Update this table if new untestable components are added
 
 ---
+
+## 36. Background Generation — User Must Stay In App
+
+**Invariant:** During AI content generation (learning sheets, word banks, quizzes), user must keep the app open but can navigate away from the triggering screen.
+
+**Behavior:**
+- **Learning Sheet generation** (`generateLearningContent`): 30-300 second timeout, uses Cloud Function
+- **Word Bank generation** (`generateWordBank`): Similar long-running operation
+- **Quiz generation** (`generateQuiz`): Similar long-running operation
+- **UI Language translation** (`UiLanguageTranslationCoordinator`): Runs in shared scope, survives navigation
+
+**Rule:**
+1. User MUST keep the app in foreground during generation (Android process lifecycle)
+2. User CAN navigate to other screens — generation continues via shared scope
+3. Completion banners shown via `snackbarHostState` regardless of current screen
+4. Generation progress visible in relevant dropdowns/buttons (e.g., "Generating..." status)
+
+**User Attention Required:**
+- If app is backgrounded during generation, job may be killed by OS
+- On slow networks, timeout may occur before completion
+- Cloud Function rate limits apply (10 calls/hour for `generateLearningContent`)
+
+**Note:** This constraint exists because long-running Cloud Functions rely on the client maintaining an active HTTP connection. Future improvement could use FCM push notifications to deliver results even when app is backgrounded.
+
+---
