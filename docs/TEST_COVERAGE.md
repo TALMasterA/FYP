@@ -108,13 +108,13 @@ All complex business logic has been extracted to testable classes (see "Logic ex
 
 ## Backend Tests (Firebase Cloud Functions)
 
-_14 test files, 172 tests_
+_14 test files, 182 tests_
 
 | File | Tests | Coverage |
 |------|-------|----------|
 | `helpers.test.ts` | 31 | Validation, auth guards, rate limiting, URL building |
 | `logger.test.ts` | 6 | Structured JSON logger output format |
-| `translation.test.ts` | 24 | getSpeechToken, translateText(s), detectLanguage, legacy-code compatibility, 429 mapping |
+| `translation.test.ts` | 34 | getSpeechToken, translateText(s), detectLanguage, network failures, API error mapping, legacy-code compatibility |
 | `coins.test.ts` | 26 | awardQuizCoins anti-cheat, spendCoins purchases |
 | `notifications.test.ts` | 12 | FCM triggers, spam detection, rate limiting |
 | `learning.test.ts` | 17 | generateLearningContent: auth, validation, rate-limit ordering |
@@ -124,7 +124,7 @@ _14 test files, 172 tests_
 | `firestore-rules-settings.test.ts` | 6 | Guard tests for settings booleans, profile read-access, shared inbox write gating, and chat write authorization invariants in `firestore.rules` |
 
 **Coverage Gate (CI-enforced):** `npm run test:coverage` with `coverageThreshold.global`: statements 50%, branches 45%, functions 50%, lines 50%.
-**Current baseline:** Statements 99.1%, Branches 82.88%, Functions 100%, Lines 100%.
+**Current baseline:** Statements 99.14%, Branches 84.29%, Functions 100%, Lines 100%.
 
 ---
 
@@ -157,5 +157,6 @@ _14 test files, 172 tests_
 - `UiLanguageSwitchErrorMessageTest`: regression guard for UI-language switch error messaging (rate-limit explanation + generic fallback)
 - `SharedFriendsDataSourceTest`: startup generation invalidation + pending startup-job cancellation guard for stop/start race safety
 - `firestore-rules-settings.test.ts`: chat message + metadata write guards require mutual friendship/no-block parity with app-side checks
+- `translation.test.ts`: added regression coverage for API status mapping (400/401/internal fallback), network failure handling, and malformed payload defaults
 
 ---
