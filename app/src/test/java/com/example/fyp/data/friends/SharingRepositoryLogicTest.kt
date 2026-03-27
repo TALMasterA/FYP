@@ -1,11 +1,13 @@
 package com.example.fyp.data.friends
 
 import com.example.fyp.model.SpeechResult
+import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.SharedItemType
 import org.junit.Assert.*
 import org.junit.Test
 import kotlinx.coroutines.test.runTest
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 /**
  * Tests for pure logic extracted from FirestoreSharingRepository.
@@ -211,7 +213,7 @@ class SharingRepositoryLogicTest {
 
     @Test
     fun `different primary languages translate shared word before insert`() = runTest {
-        val repository = FirestoreSharingRepository(mock(), mock())
+        val repository = FirestoreSharingRepository(mock(), mock(), mock())
         var translateCalled = false
 
         val payload = repository.prepareSharedWordForRecipient(
@@ -243,7 +245,7 @@ class SharingRepositoryLogicTest {
 
     @Test
     fun `same primary languages keep original translated text`() = runTest {
-        val repository = FirestoreSharingRepository(mock(), mock())
+        val repository = FirestoreSharingRepository(mock(), mock(), mock())
         var translateCalled = false
 
         val payload = repository.prepareSharedWordForRecipient(
@@ -269,7 +271,7 @@ class SharingRepositoryLogicTest {
 
     @Test
     fun `translation failure falls back to original shared translation`() = runTest {
-        val repository = FirestoreSharingRepository(mock(), mock())
+        val repository = FirestoreSharingRepository(mock(), mock(), mock())
 
         val payload = repository.prepareSharedWordForRecipient(
             wordData = mapOf(
@@ -286,5 +288,31 @@ class SharingRepositoryLogicTest {
         assertNotNull(payload)
         assertEquals("Japanese", payload!!.translatedWord)
         assertEquals("en-US", payload.targetLang)
+    }
+
+    @Test
+    fun `canShareToUser returns true for friends with no blocks`() = runTest {
+        val friendsRepository = mock<FriendsRepository>()
+        whenever(friendsRepository.areFriends(UserId("a"), UserId("b"))).thenReturn(true)
+        whenever(friendsRepository.isBlocked(UserId("a"), UserId("b"))).thenReturn(false)
+        whenever(friendsRepository.isBlocked(UserId("b"), UserId("a"))).thenReturn(false)
+        val repository = FirestoreSharingRepository(mock(), mock(), friendsRepository)
+
+        val allowed = repository.canShareToUser(UserId("a"), UserId("b"))
+
+        assertTrue(allowed)
+    }
+
+    @Test
+    fun `canShareToUser returns false when blocked`() = runTest {
+        val friendsRepository = mock<FriendsRepository>()
+        whenever(friendsRepository.areFriends(UserId("a"), UserId("b"))).thenReturn(true)
+        whenever(friendsRepository.isBlocked(UserId("a"), UserId("b"))).thenReturn(true)
+        whenever(friendsRepository.isBlocked(UserId("b"), UserId("a"))).thenReturn(false)
+        val repository = FirestoreSharingRepository(mock(), mock(), friendsRepository)
+
+        val allowed = repository.canShareToUser(UserId("a"), UserId("b"))
+
+        assertFalse(allowed)
     }
 }

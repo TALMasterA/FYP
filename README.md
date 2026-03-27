@@ -44,6 +44,8 @@ Please use your gmail to register.
 
 **Firebase Setup:** Requires own Firebase project + `google-services.json` in `app/` folder. Firebase login required.
 
+**Backup/Security Posture:** App manifest sets `android:allowBackup="false"` to avoid unintended cloud/device backup of app data by default.
+
 --------------------------------------------------------------
 
 ## 🎯 Core Features

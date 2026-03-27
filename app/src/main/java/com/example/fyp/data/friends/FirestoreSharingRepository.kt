@@ -21,7 +21,8 @@ import javax.inject.Singleton
 @Singleton
 class FirestoreSharingRepository @Inject constructor(
     private val db: FirebaseFirestore,
-    private val translationRepository: TranslationRepository
+    private val translationRepository: TranslationRepository,
+    private val friendsRepository: FriendsRepository
 ) : SharingRepository {
 
     internal data class SharedWordInsertPayload(
@@ -46,6 +47,9 @@ class FirestoreSharingRepository @Inject constructor(
         wordData: Map<String, Any>
     ): Result<SharedItem> {
         return try {
+            if (!canShareToUser(fromUserId, toUserId)) {
+                return Result.failure(SecurityException("Cannot share with this user"))
+            }
             val itemRef = db.collection("users")
                 .document(toUserId.value)
                 .collection("shared_inbox")
@@ -89,6 +93,9 @@ class FirestoreSharingRepository @Inject constructor(
             require(type == SharedItemType.LEARNING_SHEET || type == SharedItemType.QUIZ) {
                 "Invalid material type"
             }
+            if (!canShareToUser(fromUserId, toUserId)) {
+                return Result.failure(SecurityException("Cannot share with this user"))
+            }
 
             val itemRef = db.collection("users")
                 .document(toUserId.value)
@@ -126,6 +133,16 @@ class FirestoreSharingRepository @Inject constructor(
             Result.success(sharedItem)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    override suspend fun canShareToUser(fromUserId: UserId, toUserId: UserId): Boolean {
+        return try {
+            friendsRepository.areFriends(fromUserId, toUserId) &&
+                !friendsRepository.isBlocked(fromUserId, toUserId) &&
+                !friendsRepository.isBlocked(toUserId, fromUserId)
+        } catch (_: Exception) {
+            false
         }
     }
 

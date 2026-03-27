@@ -7,6 +7,7 @@ import com.example.fyp.model.UserId
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.*
@@ -108,5 +109,24 @@ class FirestoreChatRepositoryTest {
             100,
             messages.size
         )
+    }
+
+    @Test
+    fun `verifyFriendshipForSend fails closed when repository throws`() = runTest {
+        `when`(mockFriendsRepository.areFriends(UserId("a"), UserId("b")))
+            .thenThrow(RuntimeException("network"))
+
+        val allowed = repository.verifyFriendshipForSend(UserId("a"), UserId("b"))
+
+        assertEquals(false, allowed)
+    }
+
+    @Test
+    fun `verifyFriendshipForSend returns true when users are friends`() = runTest {
+        `when`(mockFriendsRepository.areFriends(UserId("a"), UserId("b"))).thenReturn(true)
+
+        val allowed = repository.verifyFriendshipForSend(UserId("a"), UserId("b"))
+
+        assertEquals(true, allowed)
     }
 }

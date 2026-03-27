@@ -59,12 +59,7 @@ class FirestoreChatRepository @Inject constructor(
             require(content.length <= 2000) { "Message content too long" }
 
             // Security: verify friendship before allowing message send
-            val areFriends = try {
-                friendsRepository.areFriends(fromUserId, toUserId)
-            } catch (e: Exception) {
-                AppLogger.w("FirestoreChatRepository", "Friendship check failed, allowing send", e)
-                true // Allow send if check fails to avoid blocking legitimate users
-            }
+            val areFriends = verifyFriendshipForSend(fromUserId, toUserId)
             if (!areFriends) {
                 return Result.failure(
                     SecurityException("Cannot send messages to non-friends")
@@ -117,12 +112,7 @@ class FirestoreChatRepository @Inject constructor(
     ): Result<FriendMessage> {
         return try {
             // Security: verify friendship before allowing shared item send
-            val areFriends = try {
-                friendsRepository.areFriends(fromUserId, toUserId)
-            } catch (e: Exception) {
-                AppLogger.w("FirestoreChatRepository", "Friendship check failed, allowing send", e)
-                true
-            }
+            val areFriends = verifyFriendshipForSend(fromUserId, toUserId)
             if (!areFriends) {
                 return Result.failure(
                     SecurityException("Cannot share items with non-friends")
@@ -163,6 +153,15 @@ class FirestoreChatRepository @Inject constructor(
             Result.success(message)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    internal suspend fun verifyFriendshipForSend(fromUserId: UserId, toUserId: UserId): Boolean {
+        return try {
+            friendsRepository.areFriends(fromUserId, toUserId)
+        } catch (e: Exception) {
+            AppLogger.w("FirestoreChatRepository", "Friendship check failed, blocking send", e)
+            false
         }
     }
 

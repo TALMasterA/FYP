@@ -23,6 +23,12 @@ interface SharingRepository {
         toUserId: UserId,
         wordData: Map<String, Any>
     ): Result<SharedItem>
+
+    /**
+     * Whether sender is currently allowed to share with receiver.
+     * Enforces friend relationship and block constraints.
+     */
+    suspend fun canShareToUser(fromUserId: UserId, toUserId: UserId): Boolean
     
     /**
      * Share a learning material (sheet or quiz) with a friend.
