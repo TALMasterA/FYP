@@ -384,10 +384,12 @@ class LearningViewModelTest {
 
     @Test
     fun `metadata batch failure does not cache false negatives and retries on next refresh`() = runTest(testDispatcher.scheduler) {
-        // First read fails
+        var shouldFailBatchFetch = true
         whenever(sheetsRepo.getBatchSheetMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
-            .thenThrow(RuntimeException("temporary error"))
-            .thenReturn(mapOf("ja" to SheetMetadata(exists = true, historyCountAtGenerate = 7)))
+            .thenAnswer {
+                if (shouldFailBatchFetch) throw RuntimeException("temporary error")
+                mapOf("ja" to SheetMetadata(exists = true, historyCountAtGenerate = 7))
+            }
         whenever(quizRepo.getBatchQuizMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
             .thenReturn(emptyMap())
 
@@ -400,6 +402,7 @@ class LearningViewModelTest {
         assertEquals(null, vm.uiState.value.sheetExistsByLanguage["ja"])
 
         // Trigger another refresh to ensure retry occurs and metadata is eventually loaded
+        shouldFailBatchFetch = false
         historyRecordsFlow.value = listOf(
             TranslationRecord(
                 id = "retry-1", userId = "u1",
