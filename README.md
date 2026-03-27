@@ -40,8 +40,6 @@ Please use your gmail to register.
 
 **Secrets in CI:** GitHub secret `GOOGLE_SERVICES_JSON` required for builds (valid `app/google-services.json` content).
 
-**Local Build Note:** If `app/google-services.json` is absent, the app module now skips applying the Google Services plugin for local unit-test/debug build resilience; Firebase features that require runtime config still need a real file.
-
 **USB Debugging:** Enable in Developer Options when testing; disable after (security risk for online banking). Alternatively, use Android Studio emulator.
 
 **Firebase Setup:** Requires own Firebase project + `google-services.json` in `app/` folder. Firebase login required.
@@ -120,6 +118,7 @@ Please use your gmail to register.
 - Bottom navigation bar (Home, Quick Translate, Learn, Friends, Settings) with unread badge
 - Offline banner when connectivity lost
 - Help & Notes screen (Cautions, Features, Tips, Friend System, Privacy)
+- App-wide troubleshooting guidance: if an action stays unavailable after required steps, restart the app and try again
 - Centralized error handling: auto-dismiss (3s), list screens auto-scroll to errors, Crashlytics logging
 - Edge-to-edge display with proper system insets handling
 

@@ -135,7 +135,9 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
             "  • 重要翻譯請用專業服務核實\n\n" +
             "帳號同資料：\n" +
             "  • 歷史紀錄、學習同金幣功能需要登入\n" +
-            "  • 用戶資料安全儲存喺 Firebase Firestore\n",
+            "  • 用戶資料安全儲存喺 Firebase Firestore\n\n" +
+            "排解問題：\n" +
+            "  • 如果做咗所有需要步驟之後某個功能仲係用唔到，請重新開 App 再試一次\n",
     UiTextKey.HelpNotesTitle to "備註",
     UiTextKey.HelpNotes to "💡 使用技巧同排解問題：\n\n" +
             "攞到最佳翻譯效果：\n" +

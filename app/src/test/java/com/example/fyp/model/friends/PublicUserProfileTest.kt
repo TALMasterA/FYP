@@ -16,7 +16,7 @@ class PublicUserProfileTest {
         assertEquals("", profile.avatarUrl)
         assertEquals("", profile.avatarUrl)
         assertEquals("", profile.primaryLanguage)
-        assertTrue(profile.isDiscoverable)
+        assertFalse("Default profile should be private (isDiscoverable=false)", profile.isDiscoverable)
     }
 
     @Test
