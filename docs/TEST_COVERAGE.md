@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-26_
+_Last updated: 2026-03-27_
 
 ## Summary
 
@@ -8,7 +8,7 @@ _Last updated: 2026-03-26_
 |---------------------------|---------|
 | Source files               | 251     |
 | Test files                 | 210     |
-| Total `@Test` methods      | 2,785   |
+| Total `@Test` methods      | 2,788   |
 | Key logic coverage         | ~100%   |
 
 ## CI/CD Pipeline & Quality Checks
@@ -108,7 +108,7 @@ All complex business logic has been extracted to testable classes (see "Logic ex
 
 ## Backend Tests (Firebase Cloud Functions)
 
-_14 test files, 168 tests_
+_14 test files, 172 tests_
 
 | File | Tests | Coverage |
 |------|-------|----------|
@@ -121,7 +121,7 @@ _14 test files, 168 tests_
 | `maintenance.test.ts` | 9 | Scheduled cleanup: stale tokens, rate-limits, friends repair |
 | `health.test.ts` | 3 | Readiness endpoint validation |
 | `rate-limit.test.ts` | 5 | Rate-limit enforcement, fail-closed behavior |
-| `firestore-rules-settings.test.ts` | 3 | Guard tests for settings boolean validation plus profile read-access invariants in `firestore.rules` |
+| `firestore-rules-settings.test.ts` | 6 | Guard tests for settings booleans, profile read-access, shared inbox write gating, and chat write authorization invariants in `firestore.rules` |
 
 **Coverage Gate (CI-enforced):** `npm run test:coverage` with `coverageThreshold.global`: statements 50%, branches 45%, functions 50%, lines 50%.
 **Current baseline:** Statements 99.1%, Branches 82.88%, Functions 100%, Lines 100%.
@@ -155,5 +155,7 @@ _14 test files, 168 tests_
 - `FirestoreUserSettingsRepositoryVoiceFieldPathTest`: guards voiceSettings nested-field updates (preserve existing languages), NOT_FOUND create fallback, and non-NOT_FOUND error propagation
 - `LearningSheetScreenLogicTest`: regression guard that prefers fresh `sheetCountByLanguage` metadata so generated-count updates immediately after sheet generation
 - `UiLanguageSwitchErrorMessageTest`: regression guard for UI-language switch error messaging (rate-limit explanation + generic fallback)
+- `SharedFriendsDataSourceTest`: startup generation invalidation + pending startup-job cancellation guard for stop/start race safety
+- `firestore-rules-settings.test.ts`: chat message + metadata write guards require mutual friendship/no-block parity with app-side checks
 
 ---

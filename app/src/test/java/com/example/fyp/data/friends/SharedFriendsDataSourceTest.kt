@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.example.fyp.model.friends.FriendRelation
 import com.example.fyp.model.friends.FriendRequest
 import com.example.fyp.model.friends.SharedItem
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -82,6 +83,30 @@ class SharedFriendsDataSourceTest {
         field.set(ds, userId)
     }
 
+    private fun getObserveGeneration(): Long {
+        val field = SharedFriendsDataSource::class.java.getDeclaredField("observeGeneration")
+        field.isAccessible = true
+        return field.get(ds) as Long
+    }
+
+    private fun setObserveGeneration(value: Long) {
+        val field = SharedFriendsDataSource::class.java.getDeclaredField("observeGeneration")
+        field.isAccessible = true
+        field.set(ds, value)
+    }
+
+    private fun getStartupJob(): Job? {
+        val field = SharedFriendsDataSource::class.java.getDeclaredField("startupJob")
+        field.isAccessible = true
+        return field.get(ds) as Job?
+    }
+
+    private fun setStartupJob(value: Job?) {
+        val field = SharedFriendsDataSource::class.java.getDeclaredField("startupJob")
+        field.isAccessible = true
+        field.set(ds, value)
+    }
+
     // ── stopObserving ───────────────────────────────────────────────────────
 
     @Test
@@ -148,6 +173,19 @@ class SharedFriendsDataSourceTest {
         ds.stopObserving()
 
         assertTrue(getPrivateStateFlow<Map<String, Int>>("_rawUnreadPerFriend").value.isEmpty())
+    }
+
+    @Test
+    fun `stopObserving cancels startup restore job and invalidates generation`() {
+        val startup = Job()
+        setObserveGeneration(10)
+        setStartupJob(startup)
+
+        ds.stopObserving()
+
+        assertTrue(startup.isCancelled)
+        assertEquals(11, getObserveGeneration())
+        assertNull(getStartupJob())
     }
 
     // ── cacheOwnUsername / getCachedUsername ─────────────────────────────────

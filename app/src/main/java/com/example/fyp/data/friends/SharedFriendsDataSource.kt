@@ -50,6 +50,8 @@ class SharedFriendsDataSource @Inject constructor(
     private var friendsJob: Job? = null
     private var requestsJob: Job? = null
     private var inboxJob: Job? = null
+    private var startupJob: Job? = null
+    private var observeGeneration: Long = 0
 
     // ── Shared state ─────────────────────────────────────────────────────────
 
@@ -251,10 +253,12 @@ class SharedFriendsDataSource @Inject constructor(
         ) return
 
         stopObserving()
+        observeGeneration += 1
+        val generation = observeGeneration
         currentUserId = userId
         val uid = UserId(userId)
 
-        scope.launch {
+        startupJob = scope.launch {
             // Restore all persisted seen-state from SharedPreferences on IO before listeners start.
             try {
                 val restored = withContext(Dispatchers.IO) {
@@ -269,6 +273,9 @@ class SharedFriendsDataSource @Inject constructor(
                 _seenMessageFriendIds.value = restored.third
             } catch (e: Exception) {
                 Log.e("SharedFriendsDS", "Failed to restore seen-state for user=$userId", e)
+            }
+            if (currentUserId != userId || observeGeneration != generation) {
+                return@launch
             }
             startListeners(userId, uid)
         }
@@ -342,9 +349,12 @@ class SharedFriendsDataSource @Inject constructor(
      * Use [clearAllSeenStateForUser] only on explicit reset flows.
      */
     fun stopObserving() {
+        observeGeneration += 1
+        startupJob?.cancel()
         friendsJob?.cancel()
         requestsJob?.cancel()
         inboxJob?.cancel()
+        startupJob = null
         friendsJob = null
         requestsJob = null
         inboxJob = null

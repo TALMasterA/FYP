@@ -47,4 +47,20 @@ describe("firestore.rules settings validation", () => {
     expect(rules).toContain("!exists(/databases/$(database)/documents/users/$(recipientId)/blocked_users/$(senderId))");
     expect(rules).toContain("&& canShareToInboxRecipient(request.auth.uid, userId)");
   });
+
+  it("requires mutual friendship and no blocks for chat message creates", () => {
+    expect(rules).toContain("function canWriteChatContent()");
+    expect(rules).toContain("exists(/databases/$(database)/documents/users/$(request.auth.uid)/friends/$(otherId))");
+    expect(rules).toContain("exists(/databases/$(database)/documents/users/$(otherId)/friends/$(request.auth.uid))");
+    expect(rules).toContain("!exists(/databases/$(database)/documents/users/$(request.auth.uid)/blocked_users/$(otherId))");
+    expect(rules).toContain("!exists(/databases/$(database)/documents/users/$(otherId)/blocked_users/$(request.auth.uid))");
+    expect(rules).toContain("&& canWriteChatContent()");
+  });
+
+  it("keeps chat metadata writes aligned with chat message authorization", () => {
+    expect(rules).toContain("function canWriteChatMetadata()");
+    expect(rules).toContain("canWriteChatMetadata()");
+    expect(rules).toContain("let userIds = chatId.split('_');");
+    expect(rules).toContain("userIds.size() == 2");
+  });
 });
