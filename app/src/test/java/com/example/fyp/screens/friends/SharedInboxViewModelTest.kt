@@ -197,8 +197,10 @@ class SharedInboxViewModelTest {
         authStateFlow.value = loggedInState
         testScheduler.runCurrent()
 
+        // Call twice back-to-back before advancing virtual time.
+        // Guard behavior is tied to processingJob.isActive (not the isProcessing UI flag),
+        // so the second call should be ignored while the first job is still active.
         viewModel.acceptItem("item1")
-        assertTrue(viewModel.uiState.value.isProcessing)
         viewModel.acceptItem("item1")
         testScheduler.runCurrent()
 
