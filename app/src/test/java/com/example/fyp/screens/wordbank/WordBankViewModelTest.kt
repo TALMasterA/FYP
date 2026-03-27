@@ -368,6 +368,29 @@ class WordBankViewModelTest {
         assertFalse(vm.uiState.value.isSharing)
     }
 
+    @Test
+    fun `shareWord with malformed custom category does not call use case`() = runTest {
+        val customWord = WordBankItem(
+            id = "custom_w1",
+            originalWord = "hello",
+            translatedWord = "hola",
+            pronunciation = "",
+            example = "",
+            category = "bad-category-format",
+            difficulty = ""
+        )
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+        vm.setCustomWordBankSelected(true)
+
+        vm.shareWord(customWord, UserId("friend1"))
+
+        verifyNoInteractions(shareWordUseCase)
+        assertEquals("Word data is incomplete. Refresh and try again.", vm.uiState.value.shareError)
+        assertFalse(vm.uiState.value.isSharing)
+    }
+
     // ── clearShareMessages ──────────────────────────────────────────
 
     @Test

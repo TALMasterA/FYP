@@ -87,6 +87,7 @@ class LearningSheetViewModel @Inject constructor(
 
     private var uid: String? = null
     private var historyJob: Job? = null
+    private var friendsJob: Job? = null
     private var pendingInitQuiz: Boolean = false
 
     init {
@@ -121,7 +122,9 @@ class LearningSheetViewModel @Inject constructor(
 
     private fun stopJobs() {
         historyJob?.cancel()
+        friendsJob?.cancel()
         historyJob = null
+        friendsJob = null
     }
 
     private fun start(uid: String) {
@@ -132,7 +135,8 @@ class LearningSheetViewModel @Inject constructor(
         loadSheet()
 
         // Mirror friends from the shared in-memory source (no new Firestore listener).
-        viewModelScope.launch {
+        friendsJob?.cancel()
+        friendsJob = viewModelScope.launch {
             sharedFriendsDataSource.friends.collect { friends ->
                 _uiState.value = _uiState.value.copy(friends = friends)
             }

@@ -308,6 +308,24 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 **Rule:** `ChatScreen` must signal visibility via lifecycle (`ON_RESUME` => visible, `ON_PAUSE/ON_STOP` => hidden) so unread dots clear only when the user is actually in the chat screen.
 
+## 15.9 Shared Inbox Re-entrant Action Guard
+
+**Invariant:** Shared inbox item actions (accept/delete/dismiss) must execute one at a time to prevent duplicate backend mutations from rapid multi-taps.
+
+**Rule:** `SharedInboxViewModel` must short-circuit action handlers when `isProcessing == true`.
+
+## 15.10 Learning Sheet Friend Collector Lifecycle
+
+**Invariant:** Learning sheet friend-list mirroring must keep only one active collector per session/user to avoid duplicate emissions and stale updates after auth transitions.
+
+**Rule:** `LearningSheetViewModel.start()` cancels and replaces the friends collector job, and `stopJobs()` must cancel both history and friends jobs.
+
+## 15.11 Word Share Payload Validation
+
+**Invariant:** Sharing a word requires complete language metadata (`sourceLang`, `targetLang`) and non-blank word content.
+
+**Rule:** `WordBankViewModel.shareWord()` validates parsed language pair and text payload before invoking `ShareWordUseCase`; malformed custom-word categories must fail fast with user-facing error.
+
 ## 15.3 Friend-Chat Red Dot Consistency (Seen-State Write Path)
 
 **Invariant:** Marking a friend chat as seen must go through a single write path to avoid duplicate persistence races and inconsistent badge state.
