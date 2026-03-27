@@ -269,7 +269,7 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 **Rule:** `ChatViewModel.markMessagesAsRead()` must call only `SharedFriendsDataSource.markMessageFriendSeen(friendId)` and must not call `SeenItemsStorage` directly.
 
-**Rule:** `SharedFriendsDataSource.startObserving()` should restore persisted seen sets before starting Firestore listeners to avoid startup badge flicker from transient empty seen-state.
+**Rule:** `SharedFriendsDataSource.startObserving()` should restore persisted seen sets on `Dispatchers.IO` before starting Firestore listeners to avoid startup badge flicker from transient empty seen-state without blocking the main thread.
 
 **Rule:** Persistence operations in seen-state updates should be wrapped with error handling (`Log.e`) so storage failures are visible instead of silent.
 

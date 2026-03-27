@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -253,15 +254,27 @@ class SharedFriendsDataSource @Inject constructor(
         currentUserId = userId
         val uid = UserId(userId)
 
-        // Restore all persisted seen-state from SharedPreferences before listeners start.
-        try {
-            _seenSharedItemIds.value = SeenItemsStorage.loadSeenItemIds(context, userId)
-            _seenFriendRequestIds.value = SeenItemsStorage.loadSeenFriendRequestIds(context, userId)
-            _seenMessageFriendIds.value = SeenItemsStorage.loadSeenMessageFriendIds(context, userId)
-        } catch (e: Exception) {
-            Log.e("SharedFriendsDS", "Failed to restore seen-state for user=$userId", e)
+        scope.launch {
+            // Restore all persisted seen-state from SharedPreferences on IO before listeners start.
+            try {
+                val restored = withContext(Dispatchers.IO) {
+                    Triple(
+                        SeenItemsStorage.loadSeenItemIds(context, userId),
+                        SeenItemsStorage.loadSeenFriendRequestIds(context, userId),
+                        SeenItemsStorage.loadSeenMessageFriendIds(context, userId)
+                    )
+                }
+                _seenSharedItemIds.value = restored.first
+                _seenFriendRequestIds.value = restored.second
+                _seenMessageFriendIds.value = restored.third
+            } catch (e: Exception) {
+                Log.e("SharedFriendsDS", "Failed to restore seen-state for user=$userId", e)
+            }
+            startListeners(userId, uid)
         }
+    }
 
+    private fun startListeners(userId: String, uid: UserId) {
         friendsJob = scope.launch {
             try {
                 friendsRepository.observeFriends(uid).collect { list ->
@@ -278,7 +291,7 @@ class SharedFriendsDataSource @Inject constructor(
                 if (currentUserId == userId) startObserving(userId)
             }
         }
-
+    
         requestsJob = scope.launch {
             try {
                 friendsRepository.observeIncomingRequests(uid).collect { list ->
