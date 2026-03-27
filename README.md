@@ -40,6 +40,8 @@ Please use your gmail to register.
 
 **Secrets in CI:** GitHub secret `GOOGLE_SERVICES_JSON` required for builds (valid `app/google-services.json` content).
 
+**Local Build Note:** If `app/google-services.json` is absent, the app module now skips applying the Google Services plugin for local unit-test/debug build resilience; Firebase features that require runtime config still need a real file.
+
 **USB Debugging:** Enable in Developer Options when testing; disable after (security risk for online banking). Alternatively, use Android Studio emulator.
 
 **Firebase Setup:** Requires own Firebase project + `google-services.json` in `app/` folder. Firebase login required.
