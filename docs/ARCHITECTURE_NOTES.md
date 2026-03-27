@@ -298,7 +298,17 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 **Invariant:** Editing a custom word's target language must recompute `translatedWord` for the new language before persistence.
 
-**Rule:** Use translation use case with `(originalWord, sourceLang, newTargetLang)` and persist both `translatedWord` and `targetLang` in the same update.
+**Rule:** Use translation use case with `(currentTranslatedWord, currentTargetLang, newTargetLang)` when the current target language is known, and persist both `translatedWord` and `targetLang` in the same update.
+
+**Fallback:** For legacy/malformed category values where current target language cannot be parsed, fall back to `(originalWord, sourceLang, newTargetLang)`.
+
+## 15.12 Unread Counter Schema Self-Heal
+
+**Invariant:** Chat unread counters must remain functional even if `users/{uid}` unread fields are missing or malformed.
+
+**Rule:** On message send, unread counter updates must recover from:
+- missing user doc (`NOT_FOUND`) by creating baseline `totalUnreadMessages` + `unreadPerFriend`
+- malformed unread schema (`INVALID_ARGUMENT` / `FAILED_PRECONDITION`) by transactional repair of both fields before applying increment semantics.
 
 ## 15.8 Chat Read-Marking Visibility Gate
 
