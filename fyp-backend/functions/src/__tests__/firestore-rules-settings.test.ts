@@ -58,9 +58,12 @@ describe("firestore.rules settings validation", () => {
   });
 
   it("keeps chat metadata writes participant-scoped", () => {
-    expect(rules).toContain("function canWriteChatMetadata()");
-    expect(rules).toContain("return isParticipantFromChatId();");
+    // The rule uses isParticipantFromChatId() directly for participant checks
+    expect(rules).toContain("match /chats/{chatId}/metadata/info {");
+    expect(rules).toContain("function isParticipantFromChatId()");
     expect(rules).toContain("let userIds = chatId.split('_');");
     expect(rules).toContain("userIds.size() == 2");
+    expect(rules).toContain("&& isParticipantFromChatId()");
+    expect(rules).toContain("request.resource.data.unreadCount is map");
   });
 });

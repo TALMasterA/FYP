@@ -112,9 +112,26 @@ export const SUPPORTED_LANGUAGES = [
 
 /**
  * Backward-compatible aliases for legacy/non-canonical inputs.
+ * Keep in sync with CustomWordsViewModel.normalizeLanguageCode() on Android.
  */
 const LANGUAGE_CODE_ALIASES: Record<string, string> = {
   "en": "en-US",
+  "zh": "zh-CN",
+  "yue": "zh-HK",
+  "yue-hk": "zh-HK",
+  "ja": "ja-JP",
+  "fr": "fr-FR",
+  "de": "de-DE",
+  "ko": "ko-KR",
+  "es": "es-ES",
+  "id": "id-ID",
+  "vi": "vi-VN",
+  "th": "th-TH",
+  "fil": "fil-PH",
+  "ms": "ms-MY",
+  "pt": "pt-BR",
+  "it": "it-IT",
+  "ru": "ru-RU",
 };
 
 /**
