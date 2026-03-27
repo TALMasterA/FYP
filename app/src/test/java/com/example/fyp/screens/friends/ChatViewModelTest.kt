@@ -120,7 +120,6 @@ class ChatViewModelTest {
 
     private fun buildViewModel(): ChatViewModel = ChatViewModel(
         savedStateHandle = savedStateHandle,
-        context = context,
         authRepo = authRepo,
         observeMessagesUseCase = observeMessagesUseCase,
         sendMessageUseCase = sendMessageUseCase,
@@ -148,6 +147,7 @@ class ChatViewModelTest {
         authStateFlow.value = AuthState.LoggedIn(testUser)
 
         assertEquals("user1", vm.uiState.value.currentUserId)
+        verify(sharedFriendsDataSource, atLeastOnce()).markMessageFriendSeen(friendId)
     }
 
     // ── Logout resets state ─────────────────────────────────────────
