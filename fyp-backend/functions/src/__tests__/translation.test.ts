@@ -139,6 +139,56 @@ describe("translateText", () => {
       (translateText as any)({auth: {uid: "u1"}, data: {text: "hi", to: "en-US"}})
     ).rejects.toThrow("temporarily unavailable");
   });
+
+  it("maps 400 responses to invalid-argument", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse("bad request", false, 400));
+
+    await expect(
+      (translateText as any)({auth: {uid: "u1"}, data: {text: "hi", to: "en-US"}})
+    ).rejects.toThrow("request is invalid");
+  });
+
+  it("maps 401 responses to failed-precondition", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse("unauthorized", false, 401));
+
+    await expect(
+      (translateText as any)({auth: {uid: "u1"}, data: {text: "hi", to: "en-US"}})
+    ).rejects.toThrow("authentication failed");
+  });
+
+  it("maps unexpected non-5xx errors to internal", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse("teapot", false, 418));
+
+    await expect(
+      (translateText as any)({auth: {uid: "u1"}, data: {text: "hi", to: "en-US"}})
+    ).rejects.toThrow("Translation service unavailable");
+  });
+
+  it("maps fetch failures to unavailable", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("network down"));
+
+    await expect(
+      (translateText as any)({auth: {uid: "u1"}, data: {text: "hi", to: "en-US"}})
+    ).rejects.toThrow("Unable to reach translation service");
+  });
+
+  it("defaults detectedLanguage fields when API omits them", async () => {
+    const apiResponse = JSON.stringify([{
+      translations: [{text: "bonjour"}],
+      detectedLanguage: {},
+    }]);
+    mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
+
+    const result = await (translateText as any)({
+      auth: {uid: "u1"},
+      data: {text: "hello", to: "fr-FR"},
+    });
+
+    expect(result).toEqual({
+      translatedText: "bonjour",
+      detectedLanguage: {language: "", score: 0},
+    });
+  });
 });
 
 // ── translateTexts ────────────────────────────────────────────────────
@@ -214,6 +264,25 @@ describe("translateTexts", () => {
       (translateTexts as any)({auth: {uid: "u1"}, data: {texts: ["a"], to: "en-US"}})
     ).rejects.toThrow("rate limit exceeded");
   });
+
+  it("maps batch fetch failures to unavailable", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("socket hang up"));
+
+    await expect(
+      (translateTexts as any)({auth: {uid: "u1"}, data: {texts: ["hello"], to: "zh-HK"}})
+    ).rejects.toThrow("Unable to reach translation service");
+  });
+
+  it("returns empty list when batch payload is not an array", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse(JSON.stringify({translations: []})));
+
+    const result = await (translateTexts as any)({
+      auth: {uid: "u1"},
+      data: {texts: ["hello"], to: "es-ES"},
+    });
+
+    expect(result).toEqual({translatedTexts: []});
+  });
 });
 
 // ── detectLanguage ────────────────────────────────────────────────────
@@ -265,5 +334,37 @@ describe("detectLanguage", () => {
     await expect(
       (detectLanguage as any)({auth: {uid: "u1"}, data: {text: "hello"}})
     ).rejects.toThrow("Language detection service is temporarily unavailable");
+  });
+
+  it("maps 400 detection responses to invalid-argument", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse("bad detect request", false, 400));
+
+    await expect(
+      (detectLanguage as any)({auth: {uid: "u1"}, data: {text: "hello"}})
+    ).rejects.toThrow("Language detection service request is invalid");
+  });
+
+  it("maps detection fetch failures to unavailable", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("timeout"));
+
+    await expect(
+      (detectLanguage as any)({auth: {uid: "u1"}, data: {text: "hello"}})
+    ).rejects.toThrow("Unable to reach language detection service");
+  });
+
+  it("returns default payload when detection JSON shape is not an array", async () => {
+    mockFetch.mockResolvedValueOnce(mockResponse(JSON.stringify({language: "en"})));
+
+    const result = await (detectLanguage as any)({
+      auth: {uid: "u1"},
+      data: {text: "hello"},
+    });
+
+    expect(result).toEqual({
+      language: "",
+      score: 0,
+      isTranslationSupported: false,
+      alternatives: [],
+    });
   });
 });
