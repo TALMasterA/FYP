@@ -330,6 +330,8 @@ class CustomWordsViewModel @Inject constructor(
         val normalized = category.trim()
         if (normalized.isBlank()) return "" to ""
 
+        // Accept both normalized current format and legacy variants that may have
+        // been persisted with/without spaces or with a unicode arrow.
         val separators = listOf(" -> ", "→", "->")
         for (separator in separators) {
             val parts = normalized.split(separator)
