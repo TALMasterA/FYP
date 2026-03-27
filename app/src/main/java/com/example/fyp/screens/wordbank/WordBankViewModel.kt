@@ -87,6 +87,7 @@ class WordBankViewModel @Inject constructor(
     private var userSettings = UserSettings()
     private var historyJob: Job? = null
     private var settingsJob: Job? = null
+    private var friendsJob: Job? = null
 
     // Debounce for word bank generation to prevent duplicate API calls (Priority 2 #13)
     private var lastGenerationTime = 0L
@@ -141,7 +142,8 @@ class WordBankViewModel @Inject constructor(
                         }
                         // Subscribe friends list for share feature (uses shared listeners)
                         sharedFriendsDataSource.startObserving(auth.user.uid)
-                        launch {
+                        friendsJob?.cancel()
+                        friendsJob = launch {
                             sharedFriendsDataSource.friends.collect { friends ->
                                 _uiState.value = _uiState.value.copy(friends = friends)
                             }
@@ -152,6 +154,8 @@ class WordBankViewModel @Inject constructor(
                         userSettings = UserSettings()
                         historyJob?.cancel()
                         settingsJob?.cancel()
+                        friendsJob?.cancel()
+                        friendsJob = null
                         sharedHistoryDataSource.stopObserving()
                         wordBankExistsCache.clear()
                         cachedCustomWordsCount = null
@@ -758,16 +762,27 @@ class WordBankViewModel @Inject constructor(
     fun shareWord(word: WordBankItem, toUserId: UserId) {
         val fromId = currentUserId ?: return
         val state = _uiState.value
+        if (state.isSharing) return
 
         // Derive source/target language codes
         val (sourceLang, targetLang) = if (state.isCustomWordBankSelected) {
-            val parts = word.category.split(" → ")
-            Pair(parts.getOrNull(0)?.trim() ?: primaryLanguageCode, parts.getOrNull(1)?.trim() ?: "")
+            val (parsedSource, parsedTarget) = parseLanguagePair(word.category)
+            Pair(parsedSource.ifBlank { primaryLanguageCode }, parsedTarget)
         } else {
             Pair(
                 state.currentWordBank?.primaryLanguageCode ?: primaryLanguageCode,
                 state.currentWordBank?.targetLanguageCode ?: state.selectedLanguageCode ?: ""
             )
+        }
+
+        if (word.originalWord.isBlank() || word.translatedWord.isBlank() || sourceLang.isBlank() || targetLang.isBlank()) {
+            _uiState.value = state.copy(
+                isSharing = false,
+                shareSuccess = null,
+                shareError = "Word data is incomplete. Refresh and try again.",
+                pendingShareWord = null
+            )
+            return
         }
 
         // Resolve username from in-memory cache (avoids a Firestore read)
@@ -794,6 +809,21 @@ class WordBankViewModel @Inject constructor(
 
     fun clearShareMessages() {
         _uiState.value = _uiState.value.copy(shareSuccess = null, shareError = null)
+    }
+
+    private fun parseLanguagePair(category: String): Pair<String, String> {
+        val normalized = category.trim()
+        if (normalized.isBlank()) return "" to ""
+
+        val separators = listOf(" -> ", "->", " \u2192 ", "\u2192")
+        for (separator in separators) {
+            val parts = normalized.split(separator)
+            if (parts.size == 2) {
+                return parts[0].trim() to parts[1].trim()
+            }
+        }
+
+        return "" to ""
     }
 }
 

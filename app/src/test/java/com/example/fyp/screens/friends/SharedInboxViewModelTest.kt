@@ -187,6 +187,24 @@ class SharedInboxViewModelTest {
         verify(acceptSharedItemUseCase).invoke("item1", testUserId)
     }
 
+    @Test
+    fun `acceptItem ignores duplicate calls while processing`() = runTest {
+        whenever(acceptSharedItemUseCase.invoke("item1", testUserId))
+            .thenReturn(Result.success(Unit))
+
+        val viewModel = createViewModel()
+
+        authStateFlow.value = loggedInState
+        testScheduler.runCurrent()
+
+        viewModel.acceptItem("item1")
+        assertTrue(viewModel.uiState.value.isProcessing)
+        viewModel.acceptItem("item1")
+        testScheduler.runCurrent()
+
+        verify(acceptSharedItemUseCase, times(1)).invoke("item1", testUserId)
+    }
+
     // ── Delete (learning materials) uses dismiss ──────────────────────────────
 
     @Test

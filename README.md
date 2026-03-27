@@ -65,6 +65,7 @@ Please use your gmail to register.
 - Learning sheet, word bank, and quiz language pairs are controlled by account primary language (not App UI language)
 - Custom word bank for user-defined vocabulary
 - Favorites for bookmarking translations and saving full conversation sessions
+- Word/share actions now fail fast on incomplete language payloads and show a retry hint instead of submitting malformed requests
 
 **Friend System:**
 - Search & add friends by username or User ID with optional note (≤80 chars)
@@ -72,6 +73,7 @@ Please use your gmail to register.
 - Chat mark-read uses aggregated unread counters (no per-message read loop)
 - Share words and learning materials with friends
 - Shared inbox for received items with accept/dismiss actions
+- Shared inbox actions are single-flight guarded (rapid repeated taps are ignored while one action is processing)
 - Accepting shared words adds them directly to Custom Words only (no extra bank routing or receiver-side retranslation)
 - Block/unblock users; Firestore rules prevent blocked users from sending requests
 - Client-side friend-request rate limiting: 10 per hour, persisted across app restarts

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -46,6 +47,7 @@ class SharedInboxViewModel @Inject constructor(
     val uiState: StateFlow<SharedInboxUiState> = _uiState.asStateFlow()
 
     private var currentUserId: UserId? = null
+    private var processingJob: Job? = null
     // Track item count when screen was last "seen" to compute new arrivals
     private var seenCount: Int = -1
     // Track IDs seen at last markItemsAsSeen() call
@@ -89,6 +91,8 @@ class SharedInboxViewModel @Inject constructor(
                         }
                     }
                     is AuthState.LoggedOut -> {
+                        processingJob?.cancel()
+                        processingJob = null
                         currentUserId = null
                         seenCount = -1
                         seenItemIds = emptySet()
@@ -125,7 +129,8 @@ class SharedInboxViewModel @Inject constructor(
 
     fun acceptItem(itemId: String) {
         val userId = currentUserId ?: return
-        viewModelScope.launch {
+        if (processingJob?.isActive == true) return
+        processingJob = viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true, error = null) }
             acceptSharedItemUseCase(itemId, userId)
                 .onSuccess {
@@ -141,7 +146,8 @@ class SharedInboxViewModel @Inject constructor(
 
     fun deleteItem(itemId: String) {
         val userId = currentUserId ?: return
-        viewModelScope.launch {
+        if (processingJob?.isActive == true) return
+        processingJob = viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true, error = null) }
             dismissSharedItemUseCase(itemId, userId)
                 .onSuccess {
@@ -157,7 +163,8 @@ class SharedInboxViewModel @Inject constructor(
 
     fun dismissItem(itemId: String) {
         val userId = currentUserId ?: return
-        viewModelScope.launch {
+        if (processingJob?.isActive == true) return
+        processingJob = viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true, error = null) }
             dismissSharedItemUseCase(itemId, userId)
                 .onSuccess {
