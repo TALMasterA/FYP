@@ -111,7 +111,21 @@ class WordBankViewModel @Inject constructor(
             authRepo.currentUserState.collect { auth ->
                 when (auth) {
                     is AuthState.LoggedIn -> {
+                        val switchedUser = currentUserId != null && currentUserId != auth.user.uid
                         currentUserId = auth.user.uid
+                        if (switchedUser) {
+                            historyJob?.cancel()
+                            records = emptyList()
+                            wordBankExistsCache.clear()
+                            cachedCustomWordsCount = null
+                            _uiState.value = _uiState.value.copy(
+                                selectedLanguageCode = null,
+                                currentWordBank = null,
+                                languageClusters = emptyList(),
+                                customWordsCount = 0,
+                                error = null
+                            )
+                        }
                         // Load persisted cache on login
                         loadPersistedCache(auth.user.uid)
                         startListening(auth.user.uid)

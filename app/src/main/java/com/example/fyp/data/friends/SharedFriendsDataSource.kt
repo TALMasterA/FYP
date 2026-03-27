@@ -53,7 +53,6 @@ class SharedFriendsDataSource @Inject constructor(
     private var inboxJob: Job? = null
     private var startupJob: Job? = null
     private var observeGeneration: Long = 0
-    private var unreadBaselineInitialized = false
 
     // ── Shared state ─────────────────────────────────────────────────────────
 
@@ -193,12 +192,6 @@ class SharedFriendsDataSource @Inject constructor(
         val previousMap = _rawUnreadPerFriend.value
         _rawUnreadPerFriend.value = unreadMap
 
-        // First snapshot after start/login is baseline only (avoid resurrecting historical dots).
-        if (!unreadBaselineInitialized) {
-            unreadBaselineInitialized = true
-            return
-        }
-
         // Re-show a friend's red dot only when unread count increases.
         val friendsWithNewMessages = unreadMap
             .filter { (friendId, newCount) ->
@@ -286,7 +279,6 @@ class SharedFriendsDataSource @Inject constructor(
                 _seenSharedItemIds.value = restored.first
                 _seenFriendRequestIds.value = restored.second
                 _seenMessageFriendIds.value = restored.third
-                unreadBaselineInitialized = false
             } catch (_: CancellationException) {
                 // Expected during rapid stop/start or account switch; keep logs clean.
             } catch (e: Exception) {
@@ -386,7 +378,6 @@ class SharedFriendsDataSource @Inject constructor(
         _seenFriendRequestIds.value = emptySet()
         _seenMessageFriendIds.value = emptySet()
         _rawUnreadPerFriend.value = emptyMap()
-        unreadBaselineInitialized = false
         usernameCache.clear()
     }
 

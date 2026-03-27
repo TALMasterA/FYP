@@ -240,6 +240,8 @@ fun LearningScreen(
 
             items(uiState.clusters, key = { it.languageCode }) { c ->
                     val hasSheet = uiState.sheetExistsByLanguage[c.languageCode] == true
+                    val metaReadyForLanguage =
+                        !uiState.isSheetMetaLoading && uiState.sheetExistsByLanguage.containsKey(c.languageCode)
                     val isGeneratingThis = uiState.generatingLanguageCode == c.languageCode
                     val isGeneratingAny = uiState.generatingLanguageCode != null
 
@@ -253,10 +255,10 @@ fun LearningScreen(
 
                     // Disable Generate when ANY language is generating, or no history, or unchanged,
                     // or count not higher than previous, or not enough new records for regen
-                    val generateEnabled = !isGeneratingAny && c.count > 0 && !unchanged &&
+                    val generateEnabled = metaReadyForLanguage && !isGeneratingAny && c.count > 0 && !unchanged &&
                         countHigherThanPrevious && hasEnoughNewRecords
 
-                    val sheetEnabled = hasSheet
+                    val sheetEnabled = metaReadyForLanguage && hasSheet
 
                     val langLabel = uiLanguageNameFor(c.languageCode)
 

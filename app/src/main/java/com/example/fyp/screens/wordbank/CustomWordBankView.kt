@@ -20,6 +20,21 @@ import com.example.fyp.core.PaginationRow
 import com.example.fyp.core.pageCount
 import com.example.fyp.model.ui.UiTextKey
 
+private fun parseCustomWordLanguagePair(category: String): Pair<String, String> {
+    val normalized = category.trim()
+    if (normalized.isBlank()) return "" to ""
+
+    val separators = listOf(" -> ", "→", "->")
+    for (separator in separators) {
+        val parts = normalized.split(separator)
+        if (parts.size == 2) {
+            return parts[0].trim() to parts[1].trim()
+        }
+    }
+
+    return "" to ""
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomWordBankView(
@@ -252,10 +267,10 @@ private fun CustomWordCard(
 
     // Parse language codes from category and convert to names
     val languagePairDisplay = remember(word.category) {
-        val parts = word.category.split(" -> ").takeIf { it.size == 2 } ?: word.category.split(" → ")
-        if (parts.size == 2) {
-            val sourceName = uiLanguageNameFor(parts[0].trim())
-            val targetName = uiLanguageNameFor(parts[1].trim())
+        val (sourceCode, targetCode) = parseCustomWordLanguagePair(word.category)
+        if (sourceCode.isNotBlank() && targetCode.isNotBlank()) {
+            val sourceName = uiLanguageNameFor(sourceCode)
+            val targetName = uiLanguageNameFor(targetCode)
             "$sourceName → $targetName"
         } else {
             word.category // Fallback to original if format is unexpected
@@ -263,8 +278,7 @@ private fun CustomWordCard(
     }
 
     val categoryParts = remember(word.category) {
-        val parts = word.category.split(" -> ").takeIf { it.size == 2 } ?: word.category.split(" → ")
-        if (parts.size == 2) parts[0].trim() to parts[1].trim() else "" to ""
+        parseCustomWordLanguagePair(word.category)
     }
     val sourceLangCode = categoryParts.first
     val currentTargetLangCode = categoryParts.second

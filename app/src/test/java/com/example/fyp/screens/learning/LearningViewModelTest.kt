@@ -146,6 +146,44 @@ class LearningViewModelTest {
         verifyNoInteractions(generateLearningMaterials)
     }
 
+    @Test
+    fun `generateFor waits until sheet metadata fetch is ready`() = runTest(testDispatcher.scheduler) {
+        languageCountsFlow.value = mapOf("ja" to 25)
+        historyRecordsFlow.value = listOf(
+            TranslationRecord(
+                id = "1", userId = "u1",
+                sourceText = "hello", targetText = "こんにちは",
+                sourceLang = "en-US", targetLang = "ja",
+                mode = "discrete"
+            )
+        )
+
+        whenever(sheetsRepo.getBatchSheetMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(emptyMap())
+        whenever(quizRepo.getBatchQuizMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(emptyMap())
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        // Simulate race: user taps generate before metadata map is populated.
+        vm.uiState.value.run {
+            assertTrue(isSheetMetaLoading || !sheetExistsByLanguage.containsKey("ja"))
+        }
+        vm.generateFor("ja")
+        verifyNoInteractions(generateLearningMaterials)
+
+        // Once metadata is fetched, generation is allowed.
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        whenever(generateLearningMaterials.invoke(any(), any(), any(), any()))
+            .thenReturn("# Learning Material\nSome content here")
+        vm.generateFor("ja")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        verify(generateLearningMaterials, times(1)).invoke(any(), any(), any(), any())
+    }
+
     // ── generateFor rejected when unchanged ─────────────────────────
 
     @Test

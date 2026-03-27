@@ -336,6 +336,77 @@ class CustomWordsViewModelTest {
         )
     }
 
+    @Test
+    fun `updateCustomWordTargetLanguage parses legacy category without spaces`() = runTest {
+        translateTextUseCase.stub {
+            onBlocking { invoke("hello", "en-US", "fr-FR") } doReturn SpeechResult.Success("bonjour")
+        }
+        customWordsRepo.stub {
+            onBlocking {
+                updateCustomWord(
+                    userId = testUserId,
+                    wordId = "w1",
+                    originalWord = "hello",
+                    translatedWord = "bonjour",
+                    pronunciation = "",
+                    example = "",
+                    sourceLang = "en-US",
+                    targetLang = "fr-FR"
+                )
+            } doReturn Result.success(Unit)
+        }
+
+        val vm = buildViewModel()
+        vm.updateCustomWordTargetLanguage(
+            word = WordBankItem(
+                id = "custom_w1",
+                originalWord = "hello",
+                translatedWord = "hola",
+                category = "en-US->es-ES"
+            ),
+            newTargetLang = "fr-FR"
+        )
+
+        verify(translateTextUseCase).invoke("hello", "en-US", "fr-FR")
+        verify(customWordsRepo).updateCustomWord(
+            userId = testUserId,
+            wordId = "w1",
+            originalWord = "hello",
+            translatedWord = "bonjour",
+            pronunciation = "",
+            example = "",
+            sourceLang = "en-US",
+            targetLang = "fr-FR"
+        )
+    }
+
+    @Test
+    fun `switching account reloads selected custom words for new user`() = runTest {
+        val otherUserId = "user456"
+        val otherUser = User(uid = otherUserId, email = "other@test.com")
+
+        customWordsRepo.stub {
+            onBlocking { getAllCustomWordsOnce(testUserId) } doReturn listOf(
+                CustomWord(id = "a1", originalWord = "hello", translatedWord = "hola", sourceLang = "en-US", targetLang = "es-ES")
+            )
+            onBlocking { getAllCustomWordsOnce(otherUserId) } doReturn listOf(
+                CustomWord(id = "b1", originalWord = "thanks", translatedWord = "merci", sourceLang = "en-US", targetLang = "fr-FR")
+            )
+        }
+
+        val vm = buildViewModel()
+        vm.selectCustomWordBank()
+        assertEquals(1, vm.uiState.value.customWords.size)
+        assertEquals("custom_a1", vm.uiState.value.customWords.first().id)
+
+        authStateFlow.value = AuthState.LoggedIn(otherUser)
+
+        assertEquals(1, vm.uiState.value.customWords.size)
+        assertEquals("custom_b1", vm.uiState.value.customWords.first().id)
+        verify(customWordsRepo).getAllCustomWordsOnce(testUserId)
+        verify(customWordsRepo).getAllCustomWordsOnce(otherUserId)
+    }
+
     // ── translateCustomWord ──
 
     @Test

@@ -61,6 +61,7 @@ Please use your gmail to register.
 - AI-generated learning sheets from translation history (≥20 records per language pair)
 - Quiz system with coin rewards (anti-cheat verification: first-attempt only)
 - Auto-generated word bank with progress bar toward next regen
+- Learning actions stay disabled until account sheet metadata finishes loading, preventing premature generate/open operations on stale fetch state
 - Learning sheet, word bank, and quiz language pairs are controlled by account primary language (not App UI language)
 - Custom word bank for user-defined vocabulary
 - Favorites for bookmarking translations and saving full conversation sessions
@@ -75,7 +76,7 @@ Please use your gmail to register.
 - Block/unblock users; Firestore rules prevent blocked users from sending requests
 - Client-side friend-request rate limiting: 10 per hour, persisted across app restarts
 - Username changes have 30-day cooldown (same as primary language changes)
-- Red dot badges clear only by viewing their corresponding screen (Chat, Shared Inbox, Friends); refresh actions do not clear badges
+- Red dot badges clear only by viewing their corresponding screen (active/resumed Chat, Shared Inbox, Friends); refresh actions do not clear badges
 
 **Customization:**
 - UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, 10+ others via Azure
