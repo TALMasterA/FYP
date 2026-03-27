@@ -160,7 +160,11 @@ class FirestoreChatRepository @Inject constructor(
         return try {
             friendsRepository.areFriends(fromUserId, toUserId)
         } catch (e: Exception) {
-            AppLogger.w("FirestoreChatRepository", "Friendship check failed, blocking send", e)
+            AppLogger.w(
+                "FirestoreChatRepository",
+                "Friendship check failed, blocking send: from=${fromUserId.value}, to=${toUserId.value}",
+                e
+            )
             false
         }
     }
