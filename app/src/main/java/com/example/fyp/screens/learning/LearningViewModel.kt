@@ -324,13 +324,6 @@ class LearningViewModel @Inject constructor(
                             }
                         } catch (e: Exception) {
                             if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
-                            
-                            // Fill cache with error placeholders for this batch
-                            for (lang in batch) {
-                                if (lang !in sheetMetaCache) {
-                                    sheetMetaCache[lang] = SheetMetaCache(false, null, null, null)
-                                }
-                            }
                         }
                     }
                 } catch (ce: CancellationException) {

@@ -381,4 +381,36 @@ class LearningViewModelTest {
         assertEquals(false, vm.uiState.value.sheetExistsByLanguage["ja"])
         assertEquals(0, vm.uiState.value.sheetCountByLanguage["ja"])
     }
+
+    @Test
+    fun `metadata batch failure does not cache false negatives and retries on next refresh`() = runTest(testDispatcher.scheduler) {
+        // First read fails
+        whenever(sheetsRepo.getBatchSheetMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenThrow(RuntimeException("temporary error"))
+            .thenReturn(mapOf("ja" to SheetMetadata(exists = true, historyCountAtGenerate = 7)))
+        whenever(quizRepo.getBatchQuizMetadata(UserId("u1"), LanguageCode("en-US"), listOf("ja")))
+            .thenReturn(emptyMap())
+
+        val vm = buildViewModel()
+        languageCountsFlow.value = mapOf("ja" to 7)
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // First run failed, no cached false "missing" metadata should be present
+        assertEquals(null, vm.uiState.value.sheetExistsByLanguage["ja"])
+
+        // Trigger another refresh to ensure retry occurs and metadata is eventually loaded
+        historyRecordsFlow.value = listOf(
+            TranslationRecord(
+                id = "retry-1", userId = "u1",
+                sourceText = "a", targetText = "b",
+                sourceLang = "en-US", targetLang = "ja",
+                mode = "discrete"
+            )
+        )
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(true, vm.uiState.value.sheetExistsByLanguage["ja"])
+        assertEquals(7, vm.uiState.value.sheetCountByLanguage["ja"])
+    }
 }

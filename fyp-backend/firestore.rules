@@ -185,12 +185,20 @@ service cloud.firestore {
     // The recipient (owner) can read, update (accept/dismiss) via the owner rule above.
     // ============================================
     match /users/{userId}/shared_inbox/{itemId} {
+      function canShareToInboxRecipient(senderId, recipientId) {
+        return exists(/databases/$(database)/documents/users/$(recipientId)/friends/$(senderId))
+          && exists(/databases/$(database)/documents/users/$(senderId)/friends/$(recipientId))
+          && !exists(/databases/$(database)/documents/users/$(senderId)/blocked_users/$(recipientId))
+          && !exists(/databases/$(database)/documents/users/$(recipientId)/blocked_users/$(senderId));
+      }
+
       // Any authenticated user can send (create) a shared item to another user's inbox.
       // fromUserId in the document must match the authenticated sender.
       // toUserId must match the inbox owner path to prevent recipient mismatch.
       allow create: if request.auth != null
         && request.resource.data.fromUserId == request.auth.uid
         && request.resource.data.toUserId == userId
+        && canShareToInboxRecipient(request.auth.uid, userId)
         && request.resource.data.fromUserId is string
         && request.resource.data.toUserId is string
         && (!('createdAt' in request.resource.data)
@@ -207,6 +215,7 @@ service cloud.firestore {
         allow read: if request.auth != null && request.auth.uid == userId;
         allow create: if request.auth != null
           && request.resource.data.fromUserId == request.auth.uid
+          && canShareToInboxRecipient(request.auth.uid, userId)
           && request.resource.data.fromUserId is string
           && (!('contentType' in request.resource.data)
               || request.resource.data.contentType is string)

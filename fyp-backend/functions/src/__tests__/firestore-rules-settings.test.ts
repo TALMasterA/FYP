@@ -38,4 +38,13 @@ describe("firestore.rules settings validation", () => {
     expect(rules).toContain("match /users/{userId}/profile/public {");
     expect(rules).toContain("allow read: if request.auth != null;");
   });
+
+  it("requires friendship and no block relation for shared inbox writes", () => {
+    expect(rules).toContain("function canShareToInboxRecipient(senderId, recipientId)");
+    expect(rules).toContain("exists(/databases/$(database)/documents/users/$(recipientId)/friends/$(senderId))");
+    expect(rules).toContain("exists(/databases/$(database)/documents/users/$(senderId)/friends/$(recipientId))");
+    expect(rules).toContain("!exists(/databases/$(database)/documents/users/$(senderId)/blocked_users/$(recipientId))");
+    expect(rules).toContain("!exists(/databases/$(database)/documents/users/$(recipientId)/blocked_users/$(senderId))");
+    expect(rules).toContain("&& canShareToInboxRecipient(request.auth.uid, userId)");
+  });
 });

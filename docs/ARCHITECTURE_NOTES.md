@@ -383,6 +383,22 @@ This prevents job cancellation on route changes and avoids stale completion bann
 
 **Guard:** `LearningViewModelTest` includes a user-switch regression ensuring Account B does not inherit Account A sheet metadata.
 
+**Additional Guard:** Batch metadata fetch failures must not be cached as `exists=false` placeholders. Failed languages must remain uncached so subsequent refreshes can retry and recover automatically.
+
+---
+
+## 24.4 Share Inbox Write Gating — Friendship + Block Consistency
+
+**Invariant:** A shared inbox item can be created only when sender and receiver are mutual friends and neither has blocked the other.
+
+**Rule:**
+1. App-side `FirestoreSharingRepository.shareWord/shareLearningMaterial` must pre-check `areFriends` and both block directions (`isBlocked` / `isBlockedBy` equivalent) before write.
+2. Firestore rules for `users/{userId}/shared_inbox/{itemId}` and `.../content/{docId}` must enforce the same constraints via existence checks on both friend mirror docs and both blocked-user docs.
+
+**Why:** Prevents spam/injection writes from authenticated non-friends, and keeps client behavior aligned with server authorization.
+
+**Guard:** `firestore-rules-settings.test.ts` asserts presence of shared-inbox friendship/block guard function; `SharingRepositoryLogicTest` covers `canShareToUser` allow/deny logic.
+
 ---
 
 ## 25. NetworkRetry — Standard Exponential Backoff

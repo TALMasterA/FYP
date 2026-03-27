@@ -273,7 +273,8 @@ object AppModule {
     @Singleton
     fun provideSharingRepository(
         db: FirebaseFirestore,
-        translationRepository: TranslationRepository
+        translationRepository: TranslationRepository,
+        friendsRepository: com.example.fyp.data.friends.FriendsRepository
     ): com.example.fyp.data.friends.SharingRepository =
-        com.example.fyp.data.friends.FirestoreSharingRepository(db, translationRepository)
+        com.example.fyp.data.friends.FirestoreSharingRepository(db, translationRepository, friendsRepository)
 }

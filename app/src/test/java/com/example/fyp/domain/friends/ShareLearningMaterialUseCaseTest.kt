@@ -39,6 +39,7 @@ private class RecordingSharingRepository : SharingRepository {
     }
 
     // Unused methods - required by interface
+    override suspend fun canShareToUser(fromUserId: UserId, toUserId: UserId) = true
     override suspend fun shareWord(fromUserId: UserId, fromUsername: String, toUserId: UserId, wordData: Map<String, Any>) = Result.success(SharedItem())
     override suspend fun acceptSharedItem(itemId: String, userId: UserId) = Result.success(Unit)
     override suspend fun dismissSharedItem(itemId: String, userId: UserId) = Result.success(Unit)
