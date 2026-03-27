@@ -118,14 +118,18 @@ class FirestoreCustomWordsRepository @Inject constructor(
         originalWord: String,
         translatedWord: String,
         pronunciation: String,
-        example: String
+        example: String,
+        sourceLang: String,
+        targetLang: String
     ): Result<Unit> = try {
         colRef(userId).document(wordId).update(
             mapOf(
                 "originalWord" to originalWord.trim().take(MAX_WORD_LENGTH),
                 "translatedWord" to translatedWord.trim().take(MAX_WORD_LENGTH),
                 "pronunciation" to pronunciation.trim().take(MAX_WORD_LENGTH),
-                "example" to example.trim().take(MAX_EXAMPLE_LENGTH)
+                "example" to example.trim().take(MAX_EXAMPLE_LENGTH),
+                "sourceLang" to sourceLang,
+                "targetLang" to targetLang
             )
         ).await()
         Result.success(Unit)

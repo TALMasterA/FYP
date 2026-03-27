@@ -695,34 +695,6 @@ class FriendsViewModel @Inject constructor(
         sharedFriendsDataSource.markFriendRequestsSeen()
     }
 
-    /**
-     * Dismiss all in-app chat notification dots:
-     * - Marks all unread chat messages as read in Firestore.
-     * - Marks all friends as seen in SharedFriendsDataSource (clears filtered flow immediately).
-     * - Clears the local unread badge count.
-     */
-    fun dismissAllUnreadDots() {
-        val userId = currentUserId ?: return
-        val friends = _uiState.value.friends
-        viewModelScope.launch {
-            friends.forEach { friend ->
-                try {
-                    val chatId = chatRepository.generateChatId(userId, UserId(friend.friendId))
-                    chatRepository.markAllMessagesAsRead(chatId, userId)
-                    // Mark as seen in shared data source so unseenUnreadPerFriend flow clears immediately
-                    sharedFriendsDataSource.markMessageFriendSeen(friend.friendId)
-                } catch (_: Exception) { /* best-effort */ }
-            }
-            _uiState.value = _uiState.value.copy(unreadCountPerFriend = emptyMap())
-        }
-    }
-
-    /**
-     * Dismiss the shared inbox notification dot by marking all items as seen.
-     */
-    fun dismissSharedInboxDot() {
-        sharedFriendsDataSource.markSharedItemsSeen()
-    }
 
     // ── Block / Unblock ───────────────────────────────────────────────────────
 

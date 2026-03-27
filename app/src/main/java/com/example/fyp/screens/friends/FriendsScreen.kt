@@ -316,22 +316,6 @@ fun FriendsScreen(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Dismiss all unread dots — shown when there are unread messages, unseen shared items, OR unseen friend requests
-                        val hasAnyUnread = uiState.unreadCountPerFriend.values.any { it > 0 }
-                        val hasAnyNotifications = hasAnyUnread || liveHasUnseenSharedItems || liveUnseenFriendRequestCount > 0
-                        if (hasAnyNotifications) {
-                            IconButton(onClick = {
-                                if (hasAnyUnread) viewModel.dismissAllUnreadDots()
-                                if (liveHasUnseenSharedItems) viewModel.dismissSharedInboxDot()
-                                if (liveUnseenFriendRequestCount > 0) viewModel.markFriendRequestsSeen()
-                            }) {
-                                Icon(
-                                    Icons.Default.DoneAll,
-                                    contentDescription = "Dismiss all notifications",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
 
                         // Delete friends icon button
                         IconButton(onClick = {

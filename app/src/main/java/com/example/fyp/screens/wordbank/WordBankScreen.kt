@@ -166,6 +166,10 @@ fun WordBankScreen(
                             customWordsViewModel.deleteCustomWord(realId)
                             viewModel.invalidateCustomWordsCount()
                         },
+                        onUpdateWordLanguage = { word, targetLang ->
+                            customWordsViewModel.updateCustomWordTargetLanguage(word, targetLang)
+                            viewModel.invalidateCustomWordsCount()
+                        },
                         onAddWord = { original, translated, pronunciation, example, sourceLang, targetLang ->
                             customWordsViewModel.addCustomWord(
                                 originalWord = original,

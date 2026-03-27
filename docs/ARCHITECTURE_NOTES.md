@@ -243,6 +243,13 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 **Benefits:** Consistent badge behavior, no stale notifications on restart, multi-account safe.
 
+**View-only clear policy:**
+- Chat red dot clears only after opening that friend chat screen.
+- Shared inbox red dot clears only after opening the shared inbox screen.
+- Friend-request red dot clears only after opening the Friends screen.
+- Pull-to-refresh must not clear red dots.
+- "Dismiss all" style shortcuts must not clear red dots.
+
 ---
 
 ## 15.1 Settings Rules Type Safety — Notification Fields
@@ -262,6 +269,36 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 **Rule:** Track and cancel both unread jobs (`unreadJob` and badge combine job) on logout and before re-subscribing during user switches/re-login. Failing to cancel the badge collector can resurrect unread badges after logout or create duplicate collectors.
 
 **Guard:** `AppViewModelTest` includes regressions for post-logout unseen-map emissions and user-switch collector duplication.
+
+## 15.4 Unread Baseline Re-login Guard
+
+**Invariant:** Existing unread counts must not resurrect previously seen chat red dots after same-user relogin.
+
+**Rule:** In `SharedFriendsDataSource.updateRawUnreadPerFriend()`, treat the first unread snapshot after login/start as a baseline. Re-show a friend red dot only when unread count increases compared with the prior snapshot.
+
+---
+
+## 15.5 Shared Inbox Refresh Guard
+
+**Invariant:** Shared inbox pull-to-refresh must never clear unseen-item badges.
+
+**Rule:** Only `markItemsAsSeen()` when the inbox screen is viewed; refresh actions must not call mark-seen APIs.
+
+---
+
+## 15.6 Shared Word Accept Simplicity
+
+**Invariant:** Accepting a shared word writes exactly one record to `users/{uid}/custom_words` and does not perform receiver-primary retranslation.
+
+**Rule:** Preserve source/target language and translated text from the shared payload, then insert directly into custom words with trimming/length guards.
+
+---
+
+## 15.7 Custom Word Target-Language Edit
+
+**Invariant:** Editing a custom word's target language must recompute `translatedWord` for the new language before persistence.
+
+**Rule:** Use translation use case with `(originalWord, sourceLang, newTargetLang)` and persist both `translatedWord` and `targetLang` in the same update.
 
 ## 15.3 Friend-Chat Red Dot Consistency (Seen-State Write Path)
 

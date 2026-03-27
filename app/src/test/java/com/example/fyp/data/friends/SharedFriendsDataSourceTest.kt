@@ -327,48 +327,40 @@ class SharedFriendsDataSourceTest {
     // ── updateRawUnreadPerFriend ────────────────────────────────────────────
 
     @Test
-    fun `updateRawUnreadPerFriend removes friends from seen set when they have new messages`() {
-        // Pre-populate the seen set: friend1 and friend2 marked as seen
-        getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value =
-            setOf("friend1", "friend2")
-
-        // friend1 now has a new unread message
+    fun `updateRawUnreadPerFriend stores raw unread map`() {
         ds.updateRawUnreadPerFriend(mapOf("friend1" to 1))
 
-        val seenSet = getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value
-        assertFalse("friend1 should be removed from seen set", seenSet.contains("friend1"))
-        assertTrue("friend2 should remain in seen set", seenSet.contains("friend2"))
+        val rawMap = getPrivateStateFlow<Map<String, Int>>("_rawUnreadPerFriend").value
+        assertEquals(mapOf("friend1" to 1), rawMap)
     }
 
     @Test
-    fun `updateRawUnreadPerFriend keeps seen set intact when unread count is zero`() {
+    fun `updateRawUnreadPerFriend removes friends from seen set only on count increase`() {
         getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value =
             setOf("friend1", "friend2")
 
-        // friend1 has zero unread -- no new messages
-        ds.updateRawUnreadPerFriend(mapOf("friend1" to 0))
+        ds.updateRawUnreadPerFriend(mapOf("friend1" to 1, "friend2" to 0)) // baseline
+        ds.updateRawUnreadPerFriend(mapOf("friend1" to 2, "friend2" to 0)) // new unread for friend1
 
         val seenSet = getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value
-        assertTrue(seenSet.contains("friend1"))
+        assertFalse("friend1 should be un-seen after unread increase", seenSet.contains("friend1"))
         assertTrue(seenSet.contains("friend2"))
     }
 
     @Test
-    fun `updateRawUnreadPerFriend with empty map leaves seen set unchanged`() {
-        getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value =
-            setOf("friend1")
-
+    fun `updateRawUnreadPerFriend accepts empty map`() {
         ds.updateRawUnreadPerFriend(emptyMap())
 
-        val seenSet = getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value
-        assertTrue(seenSet.contains("friend1"))
+        val rawMap = getPrivateStateFlow<Map<String, Int>>("_rawUnreadPerFriend").value
+        assertTrue(rawMap.isEmpty())
     }
 
     @Test
-    fun `updateRawUnreadPerFriend removes multiple friends with new messages`() {
+    fun `updateRawUnreadPerFriend removes multiple friends with increased unread counts`() {
         getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value =
             setOf("f1", "f2", "f3")
 
+        ds.updateRawUnreadPerFriend(mapOf("f1" to 1, "f2" to 1, "f3" to 0))
         ds.updateRawUnreadPerFriend(mapOf("f1" to 2, "f2" to 5, "f3" to 0))
 
         val seenSet = getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value

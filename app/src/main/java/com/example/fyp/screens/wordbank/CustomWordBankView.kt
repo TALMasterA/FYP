@@ -30,6 +30,7 @@ fun CustomWordBankView(
     isTranslating: Boolean,
     onSpeakWord: (WordBankItem, SpeakingType) -> Unit,
     onDeleteWord: (WordBankItem) -> Unit,
+    onUpdateWordLanguage: (WordBankItem, String) -> Unit,
     onAddWord: (original: String, translated: String, pronunciation: String, example: String, sourceLang: String, targetLang: String) -> Unit,
     onTranslate: (text: String, sourceLang: String, targetLang: String, onResult: (String) -> Unit) -> Unit,
     supportedLanguages: List<String>,
@@ -208,6 +209,8 @@ fun CustomWordBankView(
                         onSpeakOriginal = { onSpeakWord(word, SpeakingType.ORIGINAL) },
                         onSpeakTranslated = { onSpeakWord(word, SpeakingType.TRANSLATED) },
                         onDelete = { onDeleteWord(word) },
+                        onUpdateWordLanguage = { newTargetLang -> onUpdateWordLanguage(word, newTargetLang) },
+                        supportedLanguages = supportedLanguages,
                         uiLanguageNameFor = uiLanguageNameFor,
                         t = t
                     )
@@ -239,14 +242,17 @@ private fun CustomWordCard(
     onSpeakOriginal: () -> Unit,
     onSpeakTranslated: () -> Unit,
     onDelete: () -> Unit,
+    onUpdateWordLanguage: (String) -> Unit,
+    supportedLanguages: List<String>,
     uiLanguageNameFor: (String) -> String,
     t: (UiTextKey) -> String
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
 
     // Parse language codes from category and convert to names
     val languagePairDisplay = remember(word.category) {
-        val parts = word.category.split(" → ")
+        val parts = word.category.split(" -> ").takeIf { it.size == 2 } ?: word.category.split(" → ")
         if (parts.size == 2) {
             val sourceName = uiLanguageNameFor(parts[0].trim())
             val targetName = uiLanguageNameFor(parts[1].trim())
@@ -255,6 +261,13 @@ private fun CustomWordCard(
             word.category // Fallback to original if format is unexpected
         }
     }
+
+    val categoryParts = remember(word.category) {
+        val parts = word.category.split(" -> ").takeIf { it.size == 2 } ?: word.category.split(" → ")
+        if (parts.size == 2) parts[0].trim() to parts[1].trim() else "" to ""
+    }
+    val sourceLangCode = categoryParts.first
+    val currentTargetLangCode = categoryParts.second
 
     if (showDeleteConfirm) {
         AlertDialog(
@@ -278,6 +291,21 @@ private fun CustomWordCard(
                 TextButton(onClick = { showDeleteConfirm = false }) {
                     Text(t(UiTextKey.ActionCancel))
                 }
+            }
+        )
+    }
+
+    if (showEditDialog) {
+        EditWordLanguageDialog(
+            sourceLangCode = sourceLangCode,
+            currentTargetLangCode = currentTargetLangCode,
+            supportedLanguages = supportedLanguages,
+            uiLanguageNameFor = uiLanguageNameFor,
+            t = t,
+            onDismiss = { showEditDialog = false },
+            onConfirm = { targetLang ->
+                onUpdateWordLanguage(targetLang)
+                showEditDialog = false
             }
         )
     }
@@ -376,20 +404,80 @@ private fun CustomWordCard(
                 }
 
                 // Delete icon button at top-right
-                IconButton(
-                    onClick = { showDeleteConfirm = true },
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
-                    )
+                Column {
+                    IconButton(
+                        onClick = { showEditDialog = true },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = t(UiTextKey.CustomWordsEdit),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    IconButton(
+                        onClick = { showDeleteConfirm = true },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun EditWordLanguageDialog(
+    sourceLangCode: String,
+    currentTargetLangCode: String,
+    supportedLanguages: List<String>,
+    uiLanguageNameFor: (String) -> String,
+    t: (UiTextKey) -> String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var selectedTarget by remember {
+        mutableStateOf(
+            currentTargetLangCode.ifBlank { supportedLanguages.firstOrNull() ?: "en-US" }
+        )
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(t(UiTextKey.CustomWordsEdit)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "${t(UiTextKey.CustomWordsOriginalLanguageLabel)}: ${uiLanguageNameFor(sourceLangCode)}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                LanguageDropdownField(
+                    label = t(UiTextKey.CustomWordsTranslationLanguageLabel),
+                    selectedCode = selectedTarget,
+                    options = supportedLanguages,
+                    nameFor = { uiLanguageNameFor(it) },
+                    onSelected = { selectedTarget = it }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(selectedTarget) }) {
+                Text(t(UiTextKey.CustomWordsSaveButton))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(t(UiTextKey.CustomWordsCancelButton))
+            }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

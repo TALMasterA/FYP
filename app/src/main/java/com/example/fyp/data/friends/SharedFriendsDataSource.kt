@@ -7,6 +7,7 @@ import com.example.fyp.model.friends.FriendRelation
 import com.example.fyp.model.friends.FriendRequest
 import com.example.fyp.model.friends.SharedItem
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -52,6 +53,7 @@ class SharedFriendsDataSource @Inject constructor(
     private var inboxJob: Job? = null
     private var startupJob: Job? = null
     private var observeGeneration: Long = 0
+    private var unreadBaselineInitialized = false
 
     // ── Shared state ─────────────────────────────────────────────────────────
 
@@ -188,8 +190,21 @@ class SharedFriendsDataSource @Inject constructor(
      * from the seen set so their red dot reappears correctly.
      */
     fun updateRawUnreadPerFriend(unreadMap: Map<String, Int>) {
+        val previousMap = _rawUnreadPerFriend.value
         _rawUnreadPerFriend.value = unreadMap
-        val friendsWithNewMessages = unreadMap.filter { it.value > 0 }.keys
+
+        // First snapshot after start/login is baseline only (avoid resurrecting historical dots).
+        if (!unreadBaselineInitialized) {
+            unreadBaselineInitialized = true
+            return
+        }
+
+        // Re-show a friend's red dot only when unread count increases.
+        val friendsWithNewMessages = unreadMap
+            .filter { (friendId, newCount) ->
+                newCount > 0 && newCount > (previousMap[friendId] ?: 0)
+            }
+            .keys
         if (friendsWithNewMessages.isNotEmpty()) {
             val currentSeen = _seenMessageFriendIds.value
             val stillSeen = currentSeen - friendsWithNewMessages
@@ -271,6 +286,9 @@ class SharedFriendsDataSource @Inject constructor(
                 _seenSharedItemIds.value = restored.first
                 _seenFriendRequestIds.value = restored.second
                 _seenMessageFriendIds.value = restored.third
+                unreadBaselineInitialized = false
+            } catch (_: CancellationException) {
+                // Expected during rapid stop/start or account switch; keep logs clean.
             } catch (e: Exception) {
                 Log.e("SharedFriendsDS", "Failed to restore seen-state for user=$userId", e)
             }
@@ -368,6 +386,7 @@ class SharedFriendsDataSource @Inject constructor(
         _seenFriendRequestIds.value = emptySet()
         _seenMessageFriendIds.value = emptySet()
         _rawUnreadPerFriend.value = emptyMap()
+        unreadBaselineInitialized = false
         usernameCache.clear()
     }
 

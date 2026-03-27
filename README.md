@@ -71,11 +71,11 @@ Please use your gmail to register.
 - Chat mark-read uses aggregated unread counters (no per-message read loop)
 - Share words and learning materials with friends
 - Shared inbox for received items with accept/dismiss actions
-- Accepting shared words keeps the original term language and auto-translates the translation text to receiver primary language when sender/receiver primaries differ (sender primary read from public profile to satisfy Firestore rules)
+- Accepting shared words adds them directly to Custom Words only (no extra bank routing or receiver-side retranslation)
 - Block/unblock users; Firestore rules prevent blocked users from sending requests
 - Client-side friend-request rate limiting: 10 per hour, persisted across app restarts
 - Username changes have 30-day cooldown (same as primary language changes)
-- Red dot badges for unread messages and new shared items (persisted per user/device across restarts and same-user relogin)
+- Red dot badges clear only by viewing their corresponding screen (Chat, Shared Inbox, Friends); refresh actions do not clear badges
 
 **Customization:**
 - UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, 10+ others via Azure
@@ -86,6 +86,7 @@ Please use your gmail to register.
 - Font size: 80%–150%
 - 11 color palettes (1 free + 10 unlockable at 10 coins each)
 - Voice settings per language
+- Custom Words entries can update target language per word, and translation is regenerated for the selected language
 - Notification settings (push + badge toggles) accessible from the Friends bell icon flow
 - Feedback submission is available in `Settings -> Feedback`
 - OCR settings (on-device model status and footprint)

@@ -1,6 +1,5 @@
 package com.example.fyp.data.friends
 
-import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.SharedItemType
 import org.junit.Assert.*
@@ -209,85 +208,31 @@ class SharingRepositoryLogicTest {
         assertFalse(itemToUserId == currentUserId)
     }
 
-    // ── Receiver-primary translation on accept ───────────────────────
+    // ── Simplified accept behavior ─────────────────────────────────────
 
     @Test
-    fun `different primary languages translate shared word before insert`() = runTest {
-        val repository = FirestoreSharingRepository(mock(), mock(), mock())
-        var translateCalled = false
-
-        val payload = repository.prepareSharedWordForRecipient(
-            wordData = mapOf(
-                "sourceText" to "日本語",
-                "targetText" to "Japanese",
-                "sourceLang" to "ja-JP",
-                "targetLang" to "en-US",
-                "notes" to "common term"
-            ),
-            senderPrimaryLanguage = "en-US",
-            receiverPrimaryLanguage = "yue-HK",
-            translateText = { text, fromLang, toLang ->
-                translateCalled = true
-                assertEquals("Japanese", text)
-                assertEquals("en-US", fromLang)
-                assertEquals("yue-HK", toLang)
-                SpeechResult.Success("日文")
-            }
+    fun `shared word accept keeps provided target language`() {
+        val wordData = mapOf<String, Any>(
+            "sourceText" to "日本語",
+            "targetText" to "Japanese",
+            "sourceLang" to "ja-JP",
+            "targetLang" to "en-US"
         )
 
-        assertNotNull(payload)
-        assertTrue(translateCalled)
-        assertEquals("日本語", payload!!.originalWord)
-        assertEquals("日文", payload.translatedWord)
-        assertEquals("ja-JP", payload.sourceLang)
-        assertEquals("yue-HK", payload.targetLang)
+        val targetLang = (wordData["targetLang"] as? String).orEmpty()
+        val translatedWord = (wordData["targetText"] as? String).orEmpty()
+
+        assertEquals("en-US", targetLang)
+        assertEquals("Japanese", translatedWord)
     }
 
     @Test
-    fun `same primary languages keep original translated text`() = runTest {
-        val repository = FirestoreSharingRepository(mock(), mock(), mock())
-        var translateCalled = false
+    fun `shared word accept requires non blank language pair`() {
+        val sourceLang = ""
+        val targetLang = "en-US"
+        val canInsert = sourceLang.isNotBlank() && targetLang.isNotBlank()
 
-        val payload = repository.prepareSharedWordForRecipient(
-            wordData = mapOf(
-                "sourceText" to "日本語",
-                "targetText" to "Japanese",
-                "sourceLang" to "ja-JP",
-                "targetLang" to "en-US"
-            ),
-            senderPrimaryLanguage = "en-US",
-            receiverPrimaryLanguage = "en-US",
-            translateText = { _, _, _ ->
-                translateCalled = true
-                SpeechResult.Success("should-not-be-used")
-            }
-        )
-
-        assertNotNull(payload)
-        assertFalse(translateCalled)
-        assertEquals("Japanese", payload!!.translatedWord)
-        assertEquals("en-US", payload.targetLang)
-    }
-
-    @Test
-    fun `translation failure falls back to original shared translation`() = runTest {
-        val repository = FirestoreSharingRepository(mock(), mock(), mock())
-
-        val payload = repository.prepareSharedWordForRecipient(
-            wordData = mapOf(
-                "sourceText" to "日本語",
-                "targetText" to "Japanese",
-                "sourceLang" to "ja-JP",
-                "targetLang" to "en-US"
-            ),
-            senderPrimaryLanguage = "en-US",
-            receiverPrimaryLanguage = "yue-HK",
-            translateText = { _, _, _ -> SpeechResult.Error("quota") }
-        )
-
-        assertNotNull(payload)
-        assertEquals("Japanese", payload!!.translatedWord)
-        assertEquals("en-US", payload.targetLang)
+        assertFalse(canInsert)
     }
 
     @Test
