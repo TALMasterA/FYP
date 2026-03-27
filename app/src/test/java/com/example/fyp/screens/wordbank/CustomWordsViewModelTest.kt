@@ -267,6 +267,75 @@ class CustomWordsViewModelTest {
         verify(customWordsRepo, never()).deleteCustomWord(any(), any())
     }
 
+    @Test
+    fun `updateCustomWordTargetLanguage retranslates and persists new language`() = runTest {
+        translateTextUseCase.stub {
+            onBlocking { invoke("hello", "en-US", "fr-FR") } doReturn SpeechResult.Success("bonjour")
+        }
+        customWordsRepo.stub {
+            onBlocking {
+                updateCustomWord(
+                    userId = testUserId,
+                    wordId = "w1",
+                    originalWord = "hello",
+                    translatedWord = "bonjour",
+                    pronunciation = "",
+                    example = "",
+                    sourceLang = "en-US",
+                    targetLang = "fr-FR"
+                )
+            } doReturn Result.success(Unit)
+            onBlocking { getAllCustomWordsOnce(testUserId) } doReturn emptyList()
+        }
+
+        val vm = buildViewModel()
+        vm.selectCustomWordBank()
+        vm.updateCustomWordTargetLanguage(
+            word = WordBankItem(
+                id = "custom_w1",
+                originalWord = "hello",
+                translatedWord = "hola",
+                category = "en-US -> es-ES"
+            ),
+            newTargetLang = "fr-FR"
+        )
+
+        verify(translateTextUseCase).invoke("hello", "en-US", "fr-FR")
+        verify(customWordsRepo).updateCustomWord(
+            userId = testUserId,
+            wordId = "w1",
+            originalWord = "hello",
+            translatedWord = "bonjour",
+            pronunciation = "",
+            example = "",
+            sourceLang = "en-US",
+            targetLang = "fr-FR"
+        )
+    }
+
+    @Test
+    fun `updateCustomWordTargetLanguage surfaces translation error`() = runTest {
+        translateTextUseCase.stub {
+            onBlocking { invoke(any(), any(), any()) } doReturn SpeechResult.Error("rate limit")
+        }
+
+        val vm = buildViewModel()
+        vm.updateCustomWordTargetLanguage(
+            word = WordBankItem(
+                id = "custom_w1",
+                originalWord = "hello",
+                translatedWord = "hola",
+                category = "en-US -> es-ES"
+            ),
+            newTargetLang = "fr-FR"
+        )
+
+        assertTrue(vm.uiState.value.error?.contains("Translation failed") == true)
+        verify(customWordsRepo, never()).updateCustomWord(
+            any(), any(), any(), any(), any(), any(), any(), any()
+        )
+    }
+
     // ── translateCustomWord ──
 
     @Test

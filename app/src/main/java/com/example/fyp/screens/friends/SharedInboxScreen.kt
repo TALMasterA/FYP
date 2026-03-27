@@ -105,7 +105,6 @@ fun SharedInboxScreen(
             isRefreshing = isRefreshing,
             onRefresh = {
                 isRefreshing = true
-                viewModel.markItemsAsSeen()
             },
             modifier = Modifier
                 .fillMaxSize()

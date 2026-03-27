@@ -2,8 +2,6 @@
 
 package com.example.fyp.data.friends
 
-import com.example.fyp.data.repositories.TranslationRepository
-import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.SharedItem
 import com.example.fyp.model.friends.SharedItemStatus
@@ -21,17 +19,9 @@ import javax.inject.Singleton
 @Singleton
 class FirestoreSharingRepository @Inject constructor(
     private val db: FirebaseFirestore,
-    private val translationRepository: TranslationRepository,
+    @Suppress("UNUSED_PARAMETER") private val translationRepository: com.example.fyp.data.repositories.TranslationRepository,
     private val friendsRepository: FriendsRepository
 ) : SharingRepository {
-
-    internal data class SharedWordInsertPayload(
-        val originalWord: String,
-        val translatedWord: String,
-        val sourceLang: String,
-        val targetLang: String,
-        val notes: String
-    )
 
     // ── Share Word ───────────────────────────────────────────────────────────
 
@@ -273,24 +263,20 @@ class FirestoreSharingRepository @Inject constructor(
      */
     private suspend fun addWordToUserWordBank(
         userId: UserId,
-        senderUserId: String,
+        @Suppress("UNUSED_PARAMETER") senderUserId: String,
         wordData: Map<String, Any>
     ) {
         try {
-            val senderPrimaryLanguage = fetchSenderPrimaryLanguageCode(senderUserId)
-            val receiverPrimaryLanguage = fetchPrimaryLanguageCode(userId.value)
-            val preparedWord = prepareSharedWordForRecipient(
-                wordData = wordData,
-                senderPrimaryLanguage = senderPrimaryLanguage,
-                receiverPrimaryLanguage = receiverPrimaryLanguage,
-                translateText = { text, fromLang, toLang ->
-                    translationRepository.translate(
-                        text = text,
-                        fromLanguage = fromLang,
-                        toLanguage = toLang
-                    )
-                }
-            ) ?: return
+            // Keep shared-word accept flow simple: insert exactly one custom-word record.
+            val originalWord = (wordData["sourceText"] as? String).orEmpty()
+            val translatedWord = (wordData["targetText"] as? String).orEmpty()
+            val sourceLang = (wordData["sourceLang"] as? String).orEmpty()
+            val targetLang = (wordData["targetLang"] as? String).orEmpty()
+            val notes = (wordData["notes"] as? String).orEmpty()
+
+            if (originalWord.isBlank() || translatedWord.isBlank() || sourceLang.isBlank() || targetLang.isBlank()) {
+                return
+            }
 
             // Write to users/{userId}/custom_words/{docId} — same collection that
             // FirestoreCustomWordsRepository reads, so the word shows in Word Bank instantly.
@@ -302,12 +288,12 @@ class FirestoreSharingRepository @Inject constructor(
             val word = mapOf(
                 "id"             to wordRef.id,
                 "userId"         to userId.value,
-                "originalWord"   to preparedWord.originalWord.trim().take(200),
-                "translatedWord" to preparedWord.translatedWord.trim().take(200),
+                "originalWord"   to originalWord.trim().take(200),
+                "translatedWord" to translatedWord.trim().take(200),
                 "pronunciation"  to "",
-                "example"        to preparedWord.notes.trim().take(500),
-                "sourceLang"     to preparedWord.sourceLang,
-                "targetLang"     to preparedWord.targetLang,
+                "example"        to notes.trim().take(500),
+                "sourceLang"     to sourceLang,
+                "targetLang"     to targetLang,
                 "createdAt"      to Timestamp.now()
             )
 
@@ -316,91 +302,5 @@ class FirestoreSharingRepository @Inject constructor(
             android.util.Log.w("SharingRepo", "addWordToUserWordBank failed", e)
             // Non-fatal: item is still marked ACCEPTED in the inbox
         }
-    }
-
-    private suspend fun fetchPrimaryLanguageCode(uid: String): String {
-        if (uid.isBlank()) return "en-US"
-        return try {
-            db.collection("users")
-                .document(uid)
-                .collection("profile")
-                .document("settings")
-                .get()
-                .await()
-                .getString("primaryLanguageCode")
-                .orEmpty()
-                .ifBlank { "en-US" }
-        } catch (e: Exception) {
-            android.util.Log.w("SharingRepo", "fetchPrimaryLanguageCode failed for $uid", e)
-            "en-US"
-        }
-    }
-
-    /**
-     * Sender primary language must be read from public profile.
-     * Reading another user's private settings path is denied by Firestore rules.
-     */
-    private suspend fun fetchSenderPrimaryLanguageCode(uid: String): String {
-        if (uid.isBlank()) return "en-US"
-        return try {
-            db.collection("users")
-                .document(uid)
-                .collection("profile")
-                .document("public")
-                .get()
-                .await()
-                .getString("primaryLanguage")
-                .orEmpty()
-                .ifBlank { "en-US" }
-        } catch (e: Exception) {
-            android.util.Log.w("SharingRepo", "fetchSenderPrimaryLanguageCode failed for $uid", e)
-            "en-US"
-        }
-    }
-
-    internal suspend fun prepareSharedWordForRecipient(
-        wordData: Map<String, Any>,
-        senderPrimaryLanguage: String,
-        receiverPrimaryLanguage: String,
-        translateText: suspend (text: String, fromLang: String, toLang: String) -> SpeechResult
-    ): SharedWordInsertPayload? {
-        val originalWord = wordData["sourceText"] as? String ?: return null
-        val translatedWord = wordData["targetText"] as? String ?: return null
-        val sourceLang = wordData["sourceLang"] as? String ?: return null
-        val rawTargetLang = wordData["targetLang"] as? String ?: ""
-        val notes = wordData["notes"] as? String ?: ""
-
-        if (originalWord.isBlank() || translatedWord.isBlank() || sourceLang.isBlank()) return null
-
-        var resolvedTranslatedWord = translatedWord
-        var resolvedTargetLang = rawTargetLang.ifBlank { senderPrimaryLanguage.ifBlank { "en-US" } }
-
-        val normalizedSenderPrimary = senderPrimaryLanguage.ifBlank { "en-US" }
-        val normalizedReceiverPrimary = receiverPrimaryLanguage.ifBlank { "en-US" }
-        val shouldTranslateForReceiver =
-            !normalizedSenderPrimary.equals(normalizedReceiverPrimary, ignoreCase = true) &&
-                !resolvedTargetLang.equals(normalizedReceiverPrimary, ignoreCase = true)
-
-        if (shouldTranslateForReceiver) {
-            val translationResult = try {
-                translateText(resolvedTranslatedWord, resolvedTargetLang, normalizedReceiverPrimary)
-            } catch (e: Exception) {
-                android.util.Log.w("SharingRepo", "shared-word translation failed", e)
-                null
-            }
-
-            if (translationResult is SpeechResult.Success && translationResult.text.isNotBlank()) {
-                resolvedTranslatedWord = translationResult.text
-                resolvedTargetLang = normalizedReceiverPrimary
-            }
-        }
-
-        return SharedWordInsertPayload(
-            originalWord = originalWord,
-            translatedWord = resolvedTranslatedWord,
-            sourceLang = sourceLang,
-            targetLang = resolvedTargetLang,
-            notes = notes
-        )
     }
 }

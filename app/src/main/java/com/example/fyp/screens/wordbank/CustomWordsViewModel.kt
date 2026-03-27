@@ -188,6 +188,51 @@ class CustomWordsViewModel @Inject constructor(
         }
     }
 
+    fun updateCustomWordTargetLanguage(word: WordBankItem, newTargetLang: String) {
+        val uid = currentUserId ?: return
+        val wordId = word.id.removePrefix("custom_")
+        val sourceLang = normalizeLanguageCode(parseSourceLang(word.category).ifBlank { primaryLanguageCode })
+        val targetLang = normalizeLanguageCode(newTargetLang)
+        if (wordId.isBlank() || sourceLang.isBlank() || targetLang.isBlank()) {
+            _uiState.value = _uiState.value.copy(error = "Invalid language update request")
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isTranslatingCustomWord = true, error = null)
+
+            val translatedWord = when (val translation = translateTextUseCase(word.originalWord, sourceLang, targetLang)) {
+                is SpeechResult.Success -> translation.text
+                is SpeechResult.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isTranslatingCustomWord = false,
+                        error = "Translation failed: ${translation.message}"
+                    )
+                    return@launch
+                }
+            }
+
+            customWordsRepo.updateCustomWord(
+                userId = uid,
+                wordId = wordId,
+                originalWord = word.originalWord,
+                translatedWord = translatedWord,
+                pronunciation = word.pronunciation,
+                example = word.example,
+                sourceLang = sourceLang,
+                targetLang = targetLang
+            ).onSuccess {
+                if (_uiState.value.isCustomWordBankSelected) {
+                    loadCustomWords()
+                }
+            }.onFailure {
+                _uiState.value = _uiState.value.copy(error = "Failed to update word language")
+            }
+
+            _uiState.value = _uiState.value.copy(isTranslatingCustomWord = false)
+        }
+    }
+
     /**
      * Translates text using the primary language as source.
      * Uses TranslateTextUseCase which handles caching and API calls.
@@ -246,6 +291,37 @@ class CustomWordsViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    private fun parseSourceLang(category: String): String {
+        val parts = category.split(" -> ")
+        return parts.firstOrNull()?.trim().orEmpty().ifBlank {
+            category.split(" → ").firstOrNull()?.trim().orEmpty()
+        }
+    }
+
+    private fun normalizeLanguageCode(code: String): String {
+        return when (code.trim()) {
+            "en" -> "en-US"
+            "zh" -> "zh-CN"
+            "yue", "yue-HK" -> "zh-HK"
+            "ja" -> "ja-JP"
+            "fr" -> "fr-FR"
+            "de" -> "de-DE"
+            "ko" -> "ko-KR"
+            "es" -> "es-ES"
+            "id" -> "id-ID"
+            "vi" -> "vi-VN"
+            "th" -> "th-TH"
+            "fil" -> "fil-PH"
+            "ms" -> "ms-MY"
+            "pt" -> "pt-BR"
+            "it" -> "it-IT"
+            "ru" -> "ru-RU"
+            "zh-HK", "zh-TW", "zh-CN", "en-US", "ja-JP", "fr-FR", "de-DE", "ko-KR", "es-ES",
+            "id-ID", "vi-VN", "th-TH", "fil-PH", "ms-MY", "pt-BR", "it-IT", "ru-RU" -> code.trim()
+            else -> code.trim()
+        }
     }
 
     /**

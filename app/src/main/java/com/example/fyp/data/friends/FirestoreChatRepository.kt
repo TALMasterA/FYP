@@ -190,10 +190,10 @@ class FirestoreChatRepository @Inject constructor(
         toUserId: UserId,
         lastMessageContent: String
     ) {
-        try {
-            val now = Timestamp.now()
+        val now = Timestamp.now()
 
-            // ── 1. Per-chat metadata ──
+        // ── 1. Per-chat metadata ──
+        try {
             val metaRef = db.collection("chats")
                 .document(chatId)
                 .collection("metadata")
@@ -226,8 +226,12 @@ class FirestoreChatRepository @Inject constructor(
                     throw e
                 }
             }
+        } catch (e: Exception) {
+            AppLogger.e("ChatRepository", "Failed to write chat metadata", e)
+        }
 
-            // ── 2. User-level unread counters (notification badge) ──
+        // ── 2. User-level unread counters (notification badge) ──
+        try {
             val receiverDocRef = db.collection("users").document(toUserId.value)
             try {
                 // update() with dot-notation preserves other friends' counts
@@ -252,11 +256,10 @@ class FirestoreChatRepository @Inject constructor(
                     throw e
                 }
             }
-
-            AppLogger.d("ChatRepository", "Updated chat metadata: chatId=$chatId, receiver=${toUserId.value}, sender=${fromUserId.value}")
+            AppLogger.d("ChatRepository", "Updated unread counters: receiver=${toUserId.value}, sender=${fromUserId.value}")
         } catch (e: Exception) {
-            AppLogger.e("ChatRepository", "Failed to update chat metadata", e)
-            // Non-fatal: message is still saved; counter will re-sync on next markRead
+            AppLogger.e("ChatRepository", "Failed to update unread counters", e)
+            // Non-fatal: message is still saved; counters can re-sync later.
         }
     }
 

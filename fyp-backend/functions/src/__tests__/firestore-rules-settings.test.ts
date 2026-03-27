@@ -57,9 +57,9 @@ describe("firestore.rules settings validation", () => {
     expect(rules).toContain("&& canWriteChatContent()");
   });
 
-  it("keeps chat metadata writes aligned with chat message authorization", () => {
+  it("keeps chat metadata writes participant-scoped", () => {
     expect(rules).toContain("function canWriteChatMetadata()");
-    expect(rules).toContain("canWriteChatMetadata()");
+    expect(rules).toContain("return isParticipantFromChatId();");
     expect(rules).toContain("let userIds = chatId.split('_');");
     expect(rules).toContain("userIds.size() == 2");
   });

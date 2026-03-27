@@ -158,5 +158,7 @@ _14 test files, 182 tests_
 - `SharedFriendsDataSourceTest`: startup generation invalidation + pending startup-job cancellation guard for stop/start race safety
 - `firestore-rules-settings.test.ts`: chat message + metadata write guards require mutual friendship/no-block parity with app-side checks
 - `translation.test.ts`: added regression coverage for API status mapping (400/401/internal fallback), network failure handling, and malformed payload defaults
+- `SharedFriendsDataSourceTest`: unread baseline/increment guards for badge reappearance logic on chat dots
+- `CustomWordsViewModelTest`: per-word target-language edit flow retranslation + persistence guard tests
 
 ---
