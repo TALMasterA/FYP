@@ -18,7 +18,7 @@ data class PublicUserProfile(
     val avatarUrl: String = "",                   // Profile picture URL (optional)
     val primaryLanguage: String = "",             // User's primary language code (e.g., "en-US")
     val learningLanguages: List<String>? = emptyList(),  // Languages being learned (nullable for Firestore compat)
-    val isDiscoverable: Boolean = true,           // Can be found via search
+    val isDiscoverable: Boolean = false,          // Can be found via search (defaults to PRIVATE for security)
     val createdAt: Timestamp = Timestamp.now(),
     val lastActiveAt: Timestamp = Timestamp.now()
 )

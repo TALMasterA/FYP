@@ -502,6 +502,7 @@ FYP/
 │       │   │   │   ├── ShareLearningMaterialUseCaseTest.kt ← Learning material sharing tests
 │       │   │   │   ├── ShareWordUseCaseTest.kt
 │       │   │   │   ├── TranslateAllMessagesUseCaseTest.kt
+│       │   │   │   ├── ProfileVisibilityToggleIntegrationTest.kt ← Profile public/private search visibility tests
 │       │   │   │   ├── UsernameEnforcementIntegrationTest.kt ← Domain-layer username enforcement tests
 │       │   │   │   └── UsernameRequirementIntegrationTest.kt ← ViewModel-layer username gate integration tests
 │       │   │   ├── history/

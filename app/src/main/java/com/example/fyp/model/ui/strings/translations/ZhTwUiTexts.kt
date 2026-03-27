@@ -135,7 +135,9 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
             "  • 重要翻譯請以專業服務驗證\n\n" +
             "帳號與資料：\n" +
             "  • 歷史紀錄、學習和硬幣功能需要登入\n" +
-            "  • 用戶資料安全儲存於 Firebase Firestore\n",
+            "  • 用戶資料安全儲存於 Firebase Firestore\n\n" +
+            "疑難排解：\n" +
+            "  • 若完成所需步驟後某個功能仍無法操作，請重新啟動 App 後再試一次\n",
     UiTextKey.HelpNotesTitle to "備註",
     UiTextKey.HelpNotes to "💡 使用技巧與疑難排解：\n\n" +
             "獲得最佳翻譯效果：\n" +

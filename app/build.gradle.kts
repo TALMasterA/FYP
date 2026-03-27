@@ -3,9 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
-    // Apply conditionally below so local test/build can run in environments
-    // where google-services.json is intentionally unavailable.
-    id("com.google.gms.google-services") apply false
+    id("com.google.gms.google-services")
     id("com.google.dagger.hilt.android")
 
     id("com.google.firebase.crashlytics")
@@ -13,16 +11,6 @@ plugins {
 
     alias(libs.plugins.ksp)
     kotlin("plugin.serialization")
-}
-
-// Local/CI resilience:
-// - If google-services.json exists, apply the Google Services plugin normally.
-// - If missing, skip plugin application so unit tests and debug compile can still run.
-//   (Firebase runtime features that require real config remain unavailable.)
-if (file("google-services.json").exists()) {
-    apply(plugin = "com.google.gms.google-services")
-} else {
-    logger.lifecycle("google-services.json not found in :app; skipping google-services plugin for this build.")
 }
 
 android {

@@ -233,6 +233,41 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ---
 
+## 14.2 Profile Visibility Toggle — Public/Private Consistency
+
+**Invariant:** 
+1. New profiles MUST default to `isDiscoverable = false` (PRIVATE) for security
+2. Toggling visibility MUST update both `users/{uid}/profile/public` AND `user_search/{uid}` atomically
+3. Private profiles (isDiscoverable=false) MUST NOT appear in search results
+4. Public profiles (isDiscoverable=true) MUST have a valid username (3-20 chars, [A-Za-z0-9_])
+
+**Model Default:** `PublicUserProfile.isDiscoverable` defaults to `false` (not `true`)
+
+**Code Locations:**
+- Model default: `app/src/main/java/com/example/fyp/model/friends/PublicUserProfile.kt:21`
+- Profile creation: `app/src/main/java/com/example/fyp/domain/friends/EnsurePublicProfileExistsUseCase.kt:45`
+- Profile update: `app/src/main/java/com/example/fyp/data/friends/FirestoreFriendsRepository.kt:99-147`
+- Search filtering: `app/src/main/java/com/example/fyp/data/friends/FirestoreFriendsRepository.kt:214-230`
+  - `.whereEqualTo("isDiscoverable", true)` ensures only public profiles indexed
+
+**UI Behavior:**
+- MyProfileScreen.kt displays two FilterChip buttons (Public / Private)
+- Default state shows Private chip selected for new profiles
+- MyProfileViewModel.updateVisibility() enforces username requirement before setting public
+
+**Firestore Rules Guard:**
+- `firestore.rules:247-268` validates `isDiscoverable` boolean and requires username for discovery
+- Public profile with blank username is automatically forced to private by client-side guard
+
+**Test Coverage:**
+- `ProfileVisibilityToggleIntegrationTest.kt` verifies:
+  - Default profiles are private and not searchable
+  - Toggling to public makes profile searchable (with valid username)
+  - Toggling back to private removes profile from search
+  - Multiple profiles show only public ones in search results
+
+---
+
 ## 15. Red Dot Notification Persistence — Seen Items Storage
 
 **Invariant:** Seen item/request/message IDs persist per user/device in SharedPreferences so red dots do not reappear after app restart or same-user logout/login.

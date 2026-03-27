@@ -102,7 +102,10 @@ val ScreenUiTexts: List<String> = listOf(
             
             "Account & Data:\n" +
             "  • Login required for history, learning, and coin features\n" +
-            "  • User data is stored securely in Firebase Firestore\n",
+            "  • User data is stored securely in Firebase Firestore\n\n" +
+            
+            "Troubleshooting:\n" +
+            "  • If an action is still unavailable after you completed the required steps, restart the app and try again\n",
 
     // HelpNotesTitle
     "Notes",
@@ -118,7 +121,7 @@ val ScreenUiTexts: List<String> = listOf(
             "UI Language:\n" +
             "  • Base language is English; other UI languages are AI-translated\n" +
             "  • Some translations may contain minor errors\n" +
-            
+
             "Updates & Feedback:\n" +
             "  • App version displayed in Settings → About\n" +
             "  • Send feedback via Settings → Feedback, or report issues on GitHub\n",
