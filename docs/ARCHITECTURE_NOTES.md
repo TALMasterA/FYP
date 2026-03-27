@@ -271,6 +271,8 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 **Rule:** `SharedFriendsDataSource.startObserving()` should restore persisted seen sets on `Dispatchers.IO` before starting Firestore listeners to avoid startup badge flicker from transient empty seen-state without blocking the main thread.
 
+**Rule:** Seen-state startup must be generation-scoped. `startObserving()` increments an observe generation token and `stopObserving()` cancels the pending startup job + invalidates the token. Startup completion must verify `(currentUserId, generation)` before attaching listeners.
+
 **Rule:** Persistence operations in seen-state updates should be wrapped with error handling (`Log.e`) so storage failures are visible instead of silent.
 
 ---
@@ -408,6 +410,21 @@ This prevents job cancellation on route changes and avoids stale completion bann
 **Why:** Prevents spam/injection writes from authenticated non-friends, and keeps client behavior aligned with server authorization.
 
 **Guard:** `firestore-rules-settings.test.ts` asserts presence of shared-inbox friendship/block guard function; `SharingRepositoryLogicTest` covers `canShareToUser` allow/deny logic.
+
+---
+
+## 24.5 Chat Write Gating — Friendship + Block Consistency
+
+**Invariant:** Creating chat messages or updating chat metadata must require the same authorization as normal chat send: participants are mutual friends and neither side is blocked.
+
+**Rule:** Firestore rules in `match /chats/{chatId}/messages/{messageId}` and `match /chats/{chatId}/metadata/info` must enforce:
+1. `chatId` participant format is exactly two UIDs (`userIds.size() == 2`)
+2. Mutual friendship mirror docs exist for both users
+3. No block relation in either direction
+
+**Why:** Client-side repository checks can be bypassed by direct SDK/API calls. Rules must fail-closed at write time.
+
+**Guard:** `firestore-rules-settings.test.ts` includes regression checks for `canWriteChatContent()` and `canWriteChatMetadata()` rule guards.
 
 ---
 
