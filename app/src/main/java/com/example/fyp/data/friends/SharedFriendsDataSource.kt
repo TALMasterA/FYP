@@ -129,7 +129,11 @@ class SharedFriendsDataSource @Inject constructor(
 
         // Persist to storage so red dots don't reappear on app restart
         scope.launch(Dispatchers.IO) {
-            SeenItemsStorage.saveSeenItemIds(context, userId, _seenSharedItemIds.value)
+            try {
+                SeenItemsStorage.saveSeenItemIds(context, userId, _seenSharedItemIds.value)
+            } catch (e: Exception) {
+                Log.e("SharedFriendsDS", "Failed to persist seen shared items", e)
+            }
         }
     }
 
@@ -147,7 +151,11 @@ class SharedFriendsDataSource @Inject constructor(
 
         // Persist to storage so badges don't reappear on app restart
         scope.launch(Dispatchers.IO) {
-            SeenItemsStorage.saveSeenFriendRequestIds(context, userId, _seenFriendRequestIds.value)
+            try {
+                SeenItemsStorage.saveSeenFriendRequestIds(context, userId, _seenFriendRequestIds.value)
+            } catch (e: Exception) {
+                Log.e("SharedFriendsDS", "Failed to persist seen friend requests", e)
+            }
         }
     }
 
@@ -160,7 +168,11 @@ class SharedFriendsDataSource @Inject constructor(
         val userId = currentUserId ?: return
         _seenMessageFriendIds.value = _seenMessageFriendIds.value + friendId
         scope.launch(Dispatchers.IO) {
-            SeenItemsStorage.addSeenMessageFriendId(context, userId, friendId)
+            try {
+                SeenItemsStorage.addSeenMessageFriendId(context, userId, friendId)
+            } catch (e: Exception) {
+                Log.e("SharedFriendsDS", "Failed to persist seen message friend: $friendId", e)
+            }
         }
     }
 
@@ -182,7 +194,11 @@ class SharedFriendsDataSource @Inject constructor(
                 _seenMessageFriendIds.value = stillSeen
                 val userId = currentUserId ?: return
                 scope.launch(Dispatchers.IO) {
-                    SeenItemsStorage.saveSeenMessageFriendIds(context, userId, stillSeen)
+                    try {
+                        SeenItemsStorage.saveSeenMessageFriendIds(context, userId, stillSeen)
+                    } catch (e: Exception) {
+                        Log.e("SharedFriendsDS", "Failed to persist seen message friend set", e)
+                    }
                 }
             }
         }
@@ -194,7 +210,11 @@ class SharedFriendsDataSource @Inject constructor(
      */
     fun clearAllSeenStateForUser(userId: String) {
         scope.launch(Dispatchers.IO) {
-            SeenItemsStorage.clearAllSeenState(context, userId)
+            try {
+                SeenItemsStorage.clearAllSeenState(context, userId)
+            } catch (e: Exception) {
+                Log.e("SharedFriendsDS", "Failed to clear seen state for user=$userId", e)
+            }
         }
     }
 
@@ -233,11 +253,13 @@ class SharedFriendsDataSource @Inject constructor(
         currentUserId = userId
         val uid = UserId(userId)
 
-        // Restore all persisted seen-state from SharedPreferences
-        scope.launch(Dispatchers.IO) {
+        // Restore all persisted seen-state from SharedPreferences before listeners start.
+        try {
             _seenSharedItemIds.value = SeenItemsStorage.loadSeenItemIds(context, userId)
             _seenFriendRequestIds.value = SeenItemsStorage.loadSeenFriendRequestIds(context, userId)
             _seenMessageFriendIds.value = SeenItemsStorage.loadSeenMessageFriendIds(context, userId)
+        } catch (e: Exception) {
+            Log.e("SharedFriendsDS", "Failed to restore seen-state for user=$userId", e)
         }
 
         friendsJob = scope.launch {

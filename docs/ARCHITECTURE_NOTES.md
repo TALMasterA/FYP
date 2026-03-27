@@ -263,6 +263,16 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 **Guard:** `AppViewModelTest` includes regressions for post-logout unseen-map emissions and user-switch collector duplication.
 
+## 15.3 Friend-Chat Red Dot Consistency (Seen-State Write Path)
+
+**Invariant:** Marking a friend chat as seen must go through a single write path to avoid duplicate persistence races and inconsistent badge state.
+
+**Rule:** `ChatViewModel.markMessagesAsRead()` must call only `SharedFriendsDataSource.markMessageFriendSeen(friendId)` and must not call `SeenItemsStorage` directly.
+
+**Rule:** `SharedFriendsDataSource.startObserving()` should restore persisted seen sets before starting Firestore listeners to avoid startup badge flicker from transient empty seen-state.
+
+**Rule:** Persistence operations in seen-state updates should be wrapped with error handling (`Log.e`) so storage failures are visible instead of silent.
+
 ---
 
 ## 16. Friend Request Rate Limiting — Persisted Hourly Window
