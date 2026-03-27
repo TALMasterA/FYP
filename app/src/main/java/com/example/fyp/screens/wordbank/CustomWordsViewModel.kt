@@ -205,20 +205,32 @@ class CustomWordsViewModel @Inject constructor(
         val wordId = word.id.removePrefix("custom_")
         val (parsedSourceLang, parsedTargetLang) = parseLanguagePair(word.category)
         val sourceLang = normalizeLanguageCode(parsedSourceLang.ifBlank { primaryLanguageCode })
+        val currentTargetLang = normalizeLanguageCode(parsedTargetLang)
         val targetLang = normalizeLanguageCode(newTargetLang)
         if (wordId.isBlank() || sourceLang.isBlank() || targetLang.isBlank()) {
             _uiState.value = _uiState.value.copy(error = "Invalid language update request")
             return
         }
 
-        if (parsedTargetLang.isNotBlank() && normalizeLanguageCode(parsedTargetLang) == targetLang) {
+        if (currentTargetLang.isNotBlank() && currentTargetLang == targetLang) {
             return
         }
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isTranslatingCustomWord = true, error = null)
 
-            val translatedWord = when (val translation = translateTextUseCase(word.originalWord, sourceLang, targetLang)) {
+            // Re-translate from the CURRENT translated text when we know its language.
+            // This keeps user customizations in translatedWord as the source of truth
+            // when switching target language in custom-word settings.
+            val translationSourceText = if (currentTargetLang.isNotBlank()) {
+                word.translatedWord
+            } else {
+                // Legacy fallback for malformed/missing category language pair.
+                word.originalWord
+            }
+            val translationSourceLang = if (currentTargetLang.isNotBlank()) currentTargetLang else sourceLang
+
+            val translatedWord = when (val translation = translateTextUseCase(translationSourceText, translationSourceLang, targetLang)) {
                 is SpeechResult.Success -> translation.text
                 is SpeechResult.Error -> {
                     _uiState.value = _uiState.value.copy(

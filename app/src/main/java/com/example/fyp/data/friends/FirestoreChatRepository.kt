@@ -252,11 +252,7 @@ class FirestoreChatRepository @Inject constructor(
                         ),
                         SetOptions.merge()
                     ).await()
-                } else {
-                    throw e
-                }
-            } catch (e: FirebaseFirestoreException) {
-                if (e.code == FirebaseFirestoreException.Code.INVALID_ARGUMENT ||
+                } else if (e.code == FirebaseFirestoreException.Code.INVALID_ARGUMENT ||
                     e.code == FirebaseFirestoreException.Code.FAILED_PRECONDITION
                 ) {
                     // Self-heal legacy/malformed unread fields (for example non-map unreadPerFriend)
