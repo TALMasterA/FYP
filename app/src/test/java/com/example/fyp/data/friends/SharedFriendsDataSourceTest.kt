@@ -335,11 +335,23 @@ class SharedFriendsDataSourceTest {
     }
 
     @Test
+    fun `updateRawUnreadPerFriend first snapshot re-shows unread friend from seen set`() {
+        getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value =
+            setOf("friend1", "friend2")
+
+        ds.updateRawUnreadPerFriend(mapOf("friend1" to 1, "friend2" to 0))
+
+        val seenSet = getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value
+        assertFalse("friend1 should be un-seen when unread appears", seenSet.contains("friend1"))
+        assertTrue("friend2 should stay seen with zero unread", seenSet.contains("friend2"))
+    }
+
+    @Test
     fun `updateRawUnreadPerFriend removes friends from seen set only on count increase`() {
         getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value =
             setOf("friend1", "friend2")
 
-        ds.updateRawUnreadPerFriend(mapOf("friend1" to 1, "friend2" to 0)) // baseline
+        ds.updateRawUnreadPerFriend(mapOf("friend1" to 1, "friend2" to 0))
         ds.updateRawUnreadPerFriend(mapOf("friend1" to 2, "friend2" to 0)) // new unread for friend1
 
         val seenSet = getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value

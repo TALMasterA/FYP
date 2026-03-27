@@ -255,6 +255,33 @@ class FirestoreChatRepository @Inject constructor(
                 } else {
                     throw e
                 }
+            } catch (e: FirebaseFirestoreException) {
+                if (e.code == FirebaseFirestoreException.Code.INVALID_ARGUMENT ||
+                    e.code == FirebaseFirestoreException.Code.FAILED_PRECONDITION
+                ) {
+                    // Self-heal legacy/malformed unread fields (for example non-map unreadPerFriend)
+                    db.runTransaction { tx ->
+                        val snap = tx.get(receiverDocRef)
+                        val existingTotal = (snap.get("totalUnreadMessages") as? Number)?.toLong() ?: 0L
+                        @Suppress("UNCHECKED_CAST")
+                        val existingRaw = snap.get("unreadPerFriend") as? Map<String, Any> ?: emptyMap()
+                        val repairedUnreadMap = existingRaw
+                            .mapValues { (_, v) -> ((v as? Number)?.toLong() ?: 0L).coerceAtLeast(0L) }
+                            .toMutableMap()
+                        repairedUnreadMap[fromUserId.value] = (repairedUnreadMap[fromUserId.value] ?: 0L) + 1L
+
+                        tx.set(
+                            receiverDocRef,
+                            mapOf(
+                                "totalUnreadMessages" to existingTotal.coerceAtLeast(0L) + 1L,
+                                "unreadPerFriend" to repairedUnreadMap
+                            ),
+                            SetOptions.merge()
+                        )
+                    }.await()
+                } else {
+                    throw e
+                }
             }
             AppLogger.d("ChatRepository", "Updated unread counters: receiver=${toUserId.value}, sender=${fromUserId.value}")
         } catch (e: Exception) {
@@ -311,9 +338,9 @@ class FirestoreChatRepository @Inject constructor(
                 "totalUnreadMessages" to FieldValue.increment(-chatUnread.toLong())
             )
             if (friendId != null) {
-                // DOT-NOTATION: delete this friend's entry to trigger listener update, preserves others
-                userUpdates["unreadPerFriend.$friendId"] = FieldValue.delete()
-                AppLogger.d("ChatRepository", "Clearing unread for friend: $friendId")
+                // Keep map key as 0 (instead of delete) so future increments are deterministic.
+                userUpdates["unreadPerFriend.$friendId"] = 0L
+                AppLogger.d("ChatRepository", "Reset unread for friend: $friendId")
             }
 
             val batch = db.batch()
@@ -333,7 +360,7 @@ class FirestoreChatRepository @Inject constructor(
                     "totalUnreadMessages" to 0
                 )
                 if (friendId != null) {
-                    recoveryUpdates["unreadPerFriend.$friendId"] = FieldValue.delete()
+                    recoveryUpdates["unreadPerFriend.$friendId"] = 0L
                 }
 
                 recoveryBatch.set(userDocRef, recoveryUpdates, SetOptions.merge())

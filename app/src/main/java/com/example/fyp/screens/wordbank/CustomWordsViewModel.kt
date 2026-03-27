@@ -57,13 +57,25 @@ class CustomWordsViewModel @Inject constructor(
             authRepo.currentUserState.collect { auth ->
                 when (auth) {
                     is AuthState.LoggedIn -> {
+                        val switchedUser = currentUserId != null && currentUserId != auth.user.uid
                         currentUserId = auth.user.uid
+                        if (switchedUser) {
+                            _uiState.value = _uiState.value.copy(
+                                customWords = emptyList(),
+                                customWordsCount = 0,
+                                isLoading = _uiState.value.isCustomWordBankSelected,
+                                error = null
+                            )
+                        }
                         sharedSettings.startObserving(auth.user.uid)
                         settingsJob?.cancel()
                         settingsJob = launch {
                             sharedSettings.settings.collect { settings ->
                                 primaryLanguageCode = settings.primaryLanguageCode.ifBlank { "en-US" }
                             }
+                        }
+                        if (switchedUser && _uiState.value.isCustomWordBankSelected) {
+                            loadCustomWords()
                         }
                     }
                     AuthState.LoggedOut -> {
@@ -191,10 +203,15 @@ class CustomWordsViewModel @Inject constructor(
     fun updateCustomWordTargetLanguage(word: WordBankItem, newTargetLang: String) {
         val uid = currentUserId ?: return
         val wordId = word.id.removePrefix("custom_")
-        val sourceLang = normalizeLanguageCode(parseSourceLang(word.category).ifBlank { primaryLanguageCode })
+        val (parsedSourceLang, parsedTargetLang) = parseLanguagePair(word.category)
+        val sourceLang = normalizeLanguageCode(parsedSourceLang.ifBlank { primaryLanguageCode })
         val targetLang = normalizeLanguageCode(newTargetLang)
         if (wordId.isBlank() || sourceLang.isBlank() || targetLang.isBlank()) {
             _uiState.value = _uiState.value.copy(error = "Invalid language update request")
+            return
+        }
+
+        if (parsedTargetLang.isNotBlank() && normalizeLanguageCode(parsedTargetLang) == targetLang) {
             return
         }
 
@@ -294,17 +311,30 @@ class CustomWordsViewModel @Inject constructor(
     }
 
     private fun parseSourceLang(category: String): String {
-        val parts = category.split(" -> ")
-        return parts.firstOrNull()?.trim().orEmpty().ifBlank {
-            category.split(" → ").firstOrNull()?.trim().orEmpty()
+        return parseLanguagePair(category).first
+    }
+
+    private fun parseLanguagePair(category: String): Pair<String, String> {
+        val normalized = category.trim()
+        if (normalized.isBlank()) return "" to ""
+
+        val separators = listOf(" -> ", "→", "->")
+        for (separator in separators) {
+            val parts = normalized.split(separator)
+            if (parts.size == 2) {
+                return parts[0].trim() to parts[1].trim()
+            }
         }
+
+        return "" to ""
     }
 
     private fun normalizeLanguageCode(code: String): String {
-        return when (code.trim()) {
+        val normalized = code.trim()
+        return when (normalized.lowercase()) {
             "en" -> "en-US"
             "zh" -> "zh-CN"
-            "yue", "yue-HK" -> "zh-HK"
+            "yue", "yue-hk" -> "zh-HK"
             "ja" -> "ja-JP"
             "fr" -> "fr-FR"
             "de" -> "de-DE"
@@ -318,9 +348,24 @@ class CustomWordsViewModel @Inject constructor(
             "pt" -> "pt-BR"
             "it" -> "it-IT"
             "ru" -> "ru-RU"
-            "zh-HK", "zh-TW", "zh-CN", "en-US", "ja-JP", "fr-FR", "de-DE", "ko-KR", "es-ES",
-            "id-ID", "vi-VN", "th-TH", "fil-PH", "ms-MY", "pt-BR", "it-IT", "ru-RU" -> code.trim()
-            else -> code.trim()
+            "zh-hk" -> "zh-HK"
+            "zh-tw" -> "zh-TW"
+            "zh-cn" -> "zh-CN"
+            "en-us" -> "en-US"
+            "ja-jp" -> "ja-JP"
+            "fr-fr" -> "fr-FR"
+            "de-de" -> "de-DE"
+            "ko-kr" -> "ko-KR"
+            "es-es" -> "es-ES"
+            "id-id" -> "id-ID"
+            "vi-vn" -> "vi-VN"
+            "th-th" -> "th-TH"
+            "fil-ph" -> "fil-PH"
+            "ms-my" -> "ms-MY"
+            "pt-br" -> "pt-BR"
+            "it-it" -> "it-IT"
+            "ru-ru" -> "ru-RU"
+            else -> normalized
         }
     }
 

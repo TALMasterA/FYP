@@ -37,6 +37,7 @@ import kotlinx.serialization.json.Json
 data class LearningUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
+    val isSheetMetaLoading: Boolean = true,
     val primaryLanguageCode: String = "en-US",
     val records: List<TranslationRecord> = emptyList(),
     val clusters: List<LanguageClusterUi> = emptyList(),
@@ -110,6 +111,7 @@ class LearningViewModel @Inject constructor(
     private var settingsJob: Job? = null
     private var generationJob: Job? = null
     private var quizGenerationJob: Job? = null
+    private var sheetMetaJob: Job? = null
 
     // Debounce tracking for quiz generation
     private var lastQuizGenerationTime = 0L
@@ -151,10 +153,12 @@ class LearningViewModel @Inject constructor(
         settingsJob?.cancel()
         generationJob?.cancel()
         quizGenerationJob?.cancel()
+        sheetMetaJob?.cancel()
         historyJob = null
         settingsJob = null
         generationJob = null
         quizGenerationJob = null
+        sheetMetaJob = null
     }
 
     private fun start(uid: String) {
@@ -165,7 +169,11 @@ class LearningViewModel @Inject constructor(
             sheetMetaCache.clear()
             lastPrimaryForCache = null
         }
-        _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            isSheetMetaLoading = true,
+            error = null
+        )
 
         settingsJob = viewModelScope.launch {
             sharedSettings.settings.collect { s ->
@@ -177,6 +185,7 @@ class LearningViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     primaryLanguageCode = primary,
                     isLoading = false,
+                    isSheetMetaLoading = if (primaryChanged) true else _uiState.value.isSheetMetaLoading,
                     // Critical: reset meta when switching primary language
                     generatingLanguageCode = if (primaryChanged) null else _uiState.value.generatingLanguageCode,
                     generatingQuizLanguageCode = if (primaryChanged) null else _uiState.value.generatingQuizLanguageCode,
@@ -280,7 +289,16 @@ class LearningViewModel @Inject constructor(
         val s = _uiState.value
         val primary = s.primaryLanguageCode
         val languages = s.clusters.map { it.languageCode }
-        if (languages.isEmpty()) return
+        if (languages.isEmpty()) {
+            _uiState.value = _uiState.value.copy(
+                sheetExistsByLanguage = emptyMap(),
+                sheetCountByLanguage = emptyMap(),
+                quizCountByLanguage = emptyMap(),
+                lastAwardedQuizCountByLanguage = emptyMap(),
+                isSheetMetaLoading = false
+            )
+            return
+        }
 
         // Clear cache if primary language changed
         if (lastPrimaryForCache != primary) {
@@ -288,7 +306,9 @@ class LearningViewModel @Inject constructor(
             lastPrimaryForCache = primary
         }
 
-        viewModelScope.launch {
+        sheetMetaJob?.cancel()
+        _uiState.value = _uiState.value.copy(isSheetMetaLoading = true)
+        sheetMetaJob = viewModelScope.launch {
             val existsMap = mutableMapOf<String, Boolean>()
             val countMap = mutableMapOf<String, Int>()
             val quizCountMap = mutableMapOf<String, Int>()
@@ -349,6 +369,7 @@ class LearningViewModel @Inject constructor(
                 sheetCountByLanguage = countMap,
                 quizCountByLanguage = quizCountMap,
                 lastAwardedQuizCountByLanguage = lastAwardedCountMap,
+                isSheetMetaLoading = false,
                 error = firstError
             )
         }
@@ -369,6 +390,12 @@ class LearningViewModel @Inject constructor(
 
         val current = uiState.value
         val primary = current.primaryLanguageCode
+
+        // Guard against interactions before account metadata has loaded.
+        if (current.isSheetMetaLoading || !current.sheetExistsByLanguage.containsKey(languageCode)) {
+            return
+        }
+
         val countNow = current.clusters.firstOrNull { it.languageCode == languageCode }?.count ?: 0
         val lastCount = current.sheetCountByLanguage[languageCode]
 

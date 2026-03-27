@@ -138,7 +138,7 @@ For document creation fallback: catch `FirebaseFirestoreException`, only fallbac
 **Rule:** Read `chats/{chatId}/metadata/info` once to get per-chat unread count, then batch:
 1. Reset `unreadCount.{uid}` to `0`
 2. Decrement `users/{uid}.totalUnreadMessages` with `FieldValue.increment(-chatUnread)`
-3. Delete `users/{uid}.unreadPerFriend.{friendId}` when applicable
+3. Reset `users/{uid}.unreadPerFriend.{friendId}` to `0` when applicable
 
 **Fallback:** If user doc update returns `NOT_FOUND`, recreate user counters with `set(..., merge=true)` and `totalUnreadMessages=0` to avoid negative bootstrap values.
 
@@ -272,9 +272,9 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ## 15.4 Unread Baseline Re-login Guard
 
-**Invariant:** Existing unread counts must not resurrect previously seen chat red dots after same-user relogin.
+**Invariant:** Per-friend unread reconciliation must run on every unread snapshot, including the first snapshot after login/start.
 
-**Rule:** In `SharedFriendsDataSource.updateRawUnreadPerFriend()`, treat the first unread snapshot after login/start as a baseline. Re-show a friend red dot only when unread count increases compared with the prior snapshot.
+**Rule:** `SharedFriendsDataSource.updateRawUnreadPerFriend()` must not skip first-snapshot processing. If a friend currently has unread messages, that friend must be removed from the seen set so chat red dots can appear reliably.
 
 ---
 
@@ -299,6 +299,14 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 **Invariant:** Editing a custom word's target language must recompute `translatedWord` for the new language before persistence.
 
 **Rule:** Use translation use case with `(originalWord, sourceLang, newTargetLang)` and persist both `translatedWord` and `targetLang` in the same update.
+
+## 15.8 Chat Read-Marking Visibility Gate
+
+**Invariant:** Chat unread counters and red-dot seen-state must only be cleared while the chat screen is actively visible (resumed).
+
+**Rule:** `ChatViewModel` must gate `markMessagesAsRead()` behind explicit screen visibility callbacks; message listener updates while the destination is off-screen/back-stacked must not trigger mark-read writes.
+
+**Rule:** `ChatScreen` must signal visibility via lifecycle (`ON_RESUME` => visible, `ON_PAUSE/ON_STOP` => hidden) so unread dots clear only when the user is actually in the chat screen.
 
 ## 15.3 Friend-Chat Red Dot Consistency (Seen-State Write Path)
 
@@ -417,6 +425,14 @@ This prevents job cancellation on route changes and avoids stale completion bann
 1. `LearningViewModel` and `WordBankViewModel` must derive primary language from `SharedSettingsDataSource.settings.primaryLanguageCode`
 2. `CustomWordsViewModel.translateCustomWord()` must also use settings primary language for source language
 3. Navigation-passed values can be used as initial hints only; runtime state must follow settings stream
+
+---
+
+## 24.3 Learning Interaction Readiness Guard
+
+**Invariant:** Learning page interactions must remain locked until account-specific sheet metadata has finished loading.
+
+**Rule:** `LearningViewModel` exposes `isSheetMetaLoading` and `generateFor()` must early-return while metadata is loading or missing for the target language. UI buttons (Generate/Open Sheet/Regenerate) must be disabled until metadata readiness is true for that language.
 
 **Guard:** `WordBankViewModelTest` verifies settings primary changes update word-bank primary automatically, and `CustomWordsViewModelTest` verifies translation source language follows settings primary.
 

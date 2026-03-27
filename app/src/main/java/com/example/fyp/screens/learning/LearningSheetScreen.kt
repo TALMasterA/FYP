@@ -90,9 +90,12 @@ fun LearningSheetScreen(
     val isFirstTime = previousSheetCount == null
     val hasEnoughNewRecords = isFirstTime || GenerationEligibility.canRegenerateLearningSheet(countNowFromCluster, previousCount)
     val countHigherThanPrevious = isFirstTime || countNowFromCluster > previousCount
+    val metaReadyForTarget =
+        !learningUiState.isSheetMetaLoading && learningUiState.sheetExistsByLanguage.containsKey(targetCode)
 
     val unchanged = previousSheetCount != null && previousSheetCount == countNowFromCluster
-    val regenEnabled = !uiState.isLoading && !isAnyGenerationOngoing && countNowFromCluster > 0 && !unchanged && countHigherThanPrevious && hasEnoughNewRecords
+    val regenEnabled = metaReadyForTarget && !uiState.isLoading && !isAnyGenerationOngoing &&
+        countNowFromCluster > 0 && !unchanged && countHigherThanPrevious && hasEnoughNewRecords
 
 
     // Reload the sheet whenever: the language pair changes, OR generation just completed

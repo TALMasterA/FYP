@@ -299,6 +299,26 @@ class WordBankViewModelTest {
         verify(sharedSettings, atLeastOnce()).startObserving("u1")
     }
 
+    @Test
+    fun `account switch invalidates cached custom words count`() = runTest {
+        val otherUser = User(uid = "u2", email = "other@test.com")
+        languageCountsFlow.value = mapOf("ja-JP" to 1)
+
+        whenever(customWordsRepo.getAllCustomWordsOnce("u1")).thenReturn(List(3) { idx ->
+            com.example.fyp.model.CustomWord(id = "u1_$idx", originalWord = "o$idx", translatedWord = "t$idx")
+        })
+        whenever(customWordsRepo.getAllCustomWordsOnce("u2")).thenReturn(List(1) { idx ->
+            com.example.fyp.model.CustomWord(id = "u2_$idx", originalWord = "o$idx", translatedWord = "t$idx")
+        })
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+        assertEquals(3, vm.uiState.value.customWordsCount)
+
+        authStateFlow.value = AuthState.LoggedIn(otherUser)
+        assertEquals(1, vm.uiState.value.customWordsCount)
+    }
+
     // ── shareWord success ───────────────────────────────────────────
 
     @Test

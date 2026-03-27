@@ -145,8 +145,30 @@ class ChatViewModelTest {
     fun `login sets currentUserId and loads messages`() = runTest {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
+        vm.onScreenVisibilityChanged(true)
 
         assertEquals("user1", vm.uiState.value.currentUserId)
+        verify(sharedFriendsDataSource, atLeastOnce()).markMessageFriendSeen(friendId)
+    }
+
+    @Test
+    fun `login does not mark messages as read while chat screen is not visible`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        assertEquals("user1", vm.uiState.value.currentUserId)
+        verifyNoInteractions(markMessagesAsReadUseCase)
+        verify(sharedFriendsDataSource, never()).markMessageFriendSeen(friendId)
+    }
+
+    @Test
+    fun `becoming visible marks messages as read`() = runTest {
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+
+        vm.onScreenVisibilityChanged(true)
+
+        verify(markMessagesAsReadUseCase, atLeastOnce()).invoke(UserId("user1"), UserId(friendId))
         verify(sharedFriendsDataSource, atLeastOnce()).markMessageFriendSeen(friendId)
     }
 

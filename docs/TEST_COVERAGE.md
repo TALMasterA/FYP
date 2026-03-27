@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-27_
+_Last updated: 2026-03-28_
 
 ## Summary
 
@@ -8,7 +8,7 @@ _Last updated: 2026-03-27_
 |---------------------------|---------|
 | Source files               | 251     |
 | Test files                 | 210     |
-| Total `@Test` methods      | 2,788   |
+| Total `@Test` methods      | 2,754   |
 | Key logic coverage         | ~100%   |
 
 ## CI/CD Pipeline & Quality Checks
@@ -160,5 +160,10 @@ _14 test files, 182 tests_
 - `translation.test.ts`: added regression coverage for API status mapping (400/401/internal fallback), network failure handling, and malformed payload defaults
 - `SharedFriendsDataSourceTest`: unread baseline/increment guards for badge reappearance logic on chat dots
 - `CustomWordsViewModelTest`: per-word target-language edit flow retranslation + persistence guard tests
+- `LearningViewModelTest`: readiness gate blocks generation until sheet metadata fetch completes for the target language
+- `CustomWordsViewModelTest`: legacy custom-word category parsing (`en-US->es-ES`) and account-switch reload regression guards
+- `WordBankViewModelTest`: account-switch custom-word count cache invalidation guard
+- `SharedFriendsDataSourceTest`: first unread snapshot now re-applies seen-set reconciliation for reliable red-dot reappearance
+- `ChatViewModelTest`: chat mark-read lifecycle guard so unread state is cleared only while chat screen is visible
 
 ---

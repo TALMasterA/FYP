@@ -89,6 +89,7 @@ class ChatViewModel @Inject constructor(
     private var profileLoadJob: Job? = null
     private var markReadJob: Job? = null
     private var currentUserId: UserId? = null
+    private var isChatScreenActive: Boolean = false
     private val friendId: UserId
     private val friendUsername: String
 
@@ -120,7 +121,9 @@ class ChatViewModel @Inject constructor(
                         updateUiState { it.copy(currentUserId = auth.user.uid) }
                         // Load cleared timestamp first, then start message observation
                         loadClearedAt(UserId(auth.user.uid))
-                        markMessagesAsRead(UserId(auth.user.uid))
+                        if (isChatScreenActive) {
+                            markMessagesAsRead(UserId(auth.user.uid))
+                        }
 
                         // Only load profile once on first login, or if not yet loaded
                         if (isFirstLogin || _uiState.value.friendProfile == null) {
@@ -166,10 +169,12 @@ class ChatViewModel @Inject constructor(
                     updateUiState { it.copy(messages = messages, isLoading = false) }
                     // Debounce mark-as-read so rapid message updates don't trigger
                     // redundant Firestore writes
-                    markReadJob?.cancel()
-                    markReadJob = launch {
-                        kotlinx.coroutines.delay(300)
-                        markMessagesAsRead(userId)
+                    if (isChatScreenActive) {
+                        markReadJob?.cancel()
+                        markReadJob = launch {
+                            kotlinx.coroutines.delay(300)
+                            markMessagesAsRead(userId)
+                        }
                     }
                 }
             } catch (_: kotlinx.coroutines.CancellationException) {
@@ -186,7 +191,18 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    fun onScreenVisibilityChanged(isVisible: Boolean) {
+        if (isChatScreenActive == isVisible) return
+        isChatScreenActive = isVisible
+        if (!isVisible) {
+            markReadJob?.cancel()
+            return
+        }
+        currentUserId?.let { markMessagesAsRead(it) }
+    }
+
     private fun markMessagesAsRead(userId: UserId) {
+        if (!isChatScreenActive) return
         viewModelScope.launch {
             try {
                 markMessagesAsReadUseCase(userId, friendId)
@@ -463,6 +479,7 @@ class ChatViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+        isChatScreenActive = false
         messagesJob?.cancel()
         profileLoadJob?.cancel()
         markReadJob?.cancel()
