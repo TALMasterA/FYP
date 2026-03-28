@@ -48,17 +48,19 @@ class FirebaseTranslationRepositoryTest {
         val text = "Hello"
         val from = "en"
         val to = "es"
+        val canonicalFrom = "en-US"
+        val canonicalTo = "es-ES"
         val cachedTranslation = "Hola (cached)"
 
         translationCache.stub {
-            onBlocking { getCached(text, from, to) } doReturn cachedTranslation
+            onBlocking { getCached(text, canonicalFrom, canonicalTo) } doReturn cachedTranslation
         }
 
         val result = repository.translate(text, from, to)
 
         assertTrue(result is SpeechResult.Success)
         assertEquals(cachedTranslation, (result as SpeechResult.Success).text)
-        verify(translationCache).getCached(text, from, to)
+        verify(translationCache).getCached(text, canonicalFrom, canonicalTo)
         verifyNoInteractions(cloudClient)
     }
 
@@ -67,23 +69,25 @@ class FirebaseTranslationRepositoryTest {
         val text = "Hello"
         val from = "en"
         val to = "es"
+        val canonicalFrom = "en-US"
+        val canonicalTo = "es-ES"
         val apiTranslation = "Hola"
 
         translationCache.stub {
-            onBlocking { getCached(text, from, to) } doReturn null
+            onBlocking { getCached(text, canonicalFrom, canonicalTo) } doReturn null
         }
 
         cloudClient.stub {
-            onBlocking { translateText(text, from, to) } doReturn TranslationResult(apiTranslation)
+            onBlocking { translateText(text, canonicalFrom, canonicalTo) } doReturn TranslationResult(apiTranslation)
         }
 
         val result = repository.translate(text, from, to)
 
         assertTrue(result is SpeechResult.Success)
         assertEquals(apiTranslation, (result as SpeechResult.Success).text)
-        verify(translationCache).getCached(text, from, to)
-        verify(cloudClient).translateText(text, from, to)
-        verify(translationCache).cache(text, apiTranslation, from, to)
+        verify(translationCache).getCached(text, canonicalFrom, canonicalTo)
+        verify(cloudClient).translateText(text, canonicalFrom, canonicalTo)
+        verify(translationCache).cache(text, apiTranslation, canonicalFrom, canonicalTo)
     }
 
     @Test
@@ -91,6 +95,7 @@ class FirebaseTranslationRepositoryTest {
         val text = "Hello"
         val from = "" // empty = auto-detect
         val to = "es"
+        val canonicalTo = "es-ES"
         val apiResult = TranslationResult(
             translatedText = "Hola",
             detectedLanguage = "en",
@@ -98,11 +103,11 @@ class FirebaseTranslationRepositoryTest {
         )
 
         translationCache.stub {
-            onBlocking { getCached(text, from, to) } doReturn null
+            onBlocking { getCached(text, from, canonicalTo) } doReturn null
         }
 
         cloudClient.stub {
-            onBlocking { translateText(text, from, to) } doReturn apiResult
+            onBlocking { translateText(text, from, canonicalTo) } doReturn apiResult
         }
 
         val result = repository.translate(text, from, to)
@@ -119,14 +124,16 @@ class FirebaseTranslationRepositoryTest {
         val text = "Hello"
         val from = "en"
         val to = "es"
+        val canonicalFrom = "en-US"
+        val canonicalTo = "es-ES"
         val exception = RuntimeException("Network error")
 
         translationCache.stub {
-            onBlocking { getCached(text, from, to) } doReturn null
+            onBlocking { getCached(text, canonicalFrom, canonicalTo) } doReturn null
         }
 
         cloudClient.stub {
-            onBlocking { translateText(text, from, to) } doThrow exception
+            onBlocking { translateText(text, canonicalFrom, canonicalTo) } doThrow exception
         }
 
         val result = repository.translate(text, from, to)
@@ -148,6 +155,8 @@ class FirebaseTranslationRepositoryTest {
         val texts = listOf("Hello", "Goodbye", "Thank you")
         val from = "en"
         val to = "es"
+        val canonicalFrom = "en-US"
+        val canonicalTo = "es-ES"
         val translations = listOf("Hola", "Adiós", "Gracias")
         val cacheResult = BatchCacheResult(
             found = emptyMap(),
@@ -155,11 +164,11 @@ class FirebaseTranslationRepositoryTest {
         )
 
         translationCache.stub {
-            onBlocking { getBatchCached(texts, from, to) } doReturn cacheResult
+            onBlocking { getBatchCached(texts, canonicalFrom, canonicalTo) } doReturn cacheResult
         }
 
         cloudClient.stub {
-            onBlocking { translateTexts(texts, from, to) } doReturn translations
+            onBlocking { translateTexts(texts, canonicalFrom, canonicalTo) } doReturn translations
         }
 
         val result = repository.translateBatch(texts, from, to)
@@ -168,7 +177,7 @@ class FirebaseTranslationRepositoryTest {
         val resultMap = result.getOrNull()
         assertNotNull(resultMap)
         assertEquals(3, resultMap!!.size)
-        verify(cloudClient).translateTexts(texts, from, to)
+        verify(cloudClient).translateTexts(texts, canonicalFrom, canonicalTo)
     }
 
     @Test

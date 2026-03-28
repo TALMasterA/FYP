@@ -1,12 +1,14 @@
 package com.example.fyp.data.repositories
 
 import com.example.fyp.core.AppLogger
+import com.example.fyp.data.azure.LanguageDisplayNames
 import com.example.fyp.data.cloud.LanguageDetectionCache
 import com.example.fyp.data.cloud.TranslationCache
 import com.example.fyp.data.clients.CloudTranslatorClient
 import com.example.fyp.data.clients.DetectedLanguage
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.utils.ErrorMessageMapper
+import com.google.firebase.functions.FirebaseFunctionsException
 import javax.inject.Inject
 
 /**
@@ -27,11 +29,37 @@ class FirebaseTranslationRepository @Inject constructor(
     private val languageDetectionCache: LanguageDetectionCache
 ) : TranslationRepository {
 
-    private fun normalizedLanguageCode(code: String): String {
-        val trimmed = code.trim()
-        if (trimmed.isEmpty()) return ""
-        val dash = trimmed.indexOf('-')
-        return if (dash > 0) trimmed.substring(0, dash).lowercase() else trimmed.lowercase()
+    private fun canonicalLanguageCode(code: String): String {
+        val normalized = code.trim().replace('_', '-')
+        if (normalized.isEmpty() || normalized.equals("auto", ignoreCase = true)) {
+            return ""
+        }
+
+        val mapped = LanguageDisplayNames.mapDetectedToSupportedCode(normalized)
+        return if (LanguageDisplayNames.isSupportedLanguage(mapped)) mapped else ""
+    }
+
+    private fun resolveTargetLanguageCode(code: String): String? {
+        val canonical = canonicalLanguageCode(code)
+        return canonical.takeIf { it.isNotBlank() }
+    }
+
+    private fun isExpectedTranslationFailure(error: Throwable): Boolean {
+        if (error is FirebaseFunctionsException) {
+            return when (error.code) {
+                FirebaseFunctionsException.Code.INVALID_ARGUMENT,
+                FirebaseFunctionsException.Code.UNAUTHENTICATED,
+                FirebaseFunctionsException.Code.PERMISSION_DENIED,
+                FirebaseFunctionsException.Code.FAILED_PRECONDITION -> true
+                else -> false
+            }
+        }
+
+        val message = error.message?.lowercase().orEmpty()
+        return message.contains("permission_denied") ||
+            message.contains("unauthenticated") ||
+            message.contains("invalid-argument") ||
+            message.contains("must be one of:")
     }
 
     /**
@@ -53,15 +81,17 @@ class FirebaseTranslationRepository @Inject constructor(
             return SpeechResult.Success("")
         }
 
-        val normalizedFrom = normalizedLanguageCode(fromLanguage)
-        val normalizedTo = normalizedLanguageCode(toLanguage)
-        if (normalizedFrom.isNotEmpty() && normalizedFrom == normalizedTo) {
+        val requestFromLanguage = canonicalLanguageCode(fromLanguage)
+        val requestToLanguage = resolveTargetLanguageCode(toLanguage)
+            ?: return SpeechResult.Error("Selected language is not supported.")
+
+        if (requestFromLanguage.isNotEmpty() && requestFromLanguage == requestToLanguage) {
             return SpeechResult.Success(sourceText)
         }
 
         return try {
             // Check cache first
-            val cached = translationCache.getCached(sourceText, fromLanguage, toLanguage)
+            val cached = translationCache.getCached(sourceText, requestFromLanguage, requestToLanguage)
             if (cached != null) {
                 return SpeechResult.Success(cached)
             }
@@ -69,12 +99,12 @@ class FirebaseTranslationRepository @Inject constructor(
             // Call API if not cached
             val result = cloudTranslatorClient.translateText(
                 text = sourceText,
-                from = fromLanguage,
-                to = toLanguage
+                from = requestFromLanguage,
+                to = requestToLanguage
             )
 
             // Cache the result (fire-and-forget to avoid blocking the caller)
-            translationCache.cache(sourceText, result.translatedText, fromLanguage, toLanguage)
+            translationCache.cache(sourceText, result.translatedText, requestFromLanguage, requestToLanguage)
 
             SpeechResult.Success(
                 text = result.translatedText,
@@ -105,19 +135,21 @@ class FirebaseTranslationRepository @Inject constructor(
                 return Result.success(emptyMap())
             }
 
-            val normalizedFrom = normalizedLanguageCode(fromLanguage)
-            val normalizedTo = normalizedLanguageCode(toLanguage)
-            val cleanedTexts = texts.map { it.trim() }
+            val requestFromLanguage = canonicalLanguageCode(fromLanguage)
+            val requestToLanguage = resolveTargetLanguageCode(toLanguage)
+                ?: return Result.failure(IllegalArgumentException("Unsupported target language code: $toLanguage"))
+
+            val cleanedTexts = texts.map { it.trim() }.filter { it.isNotEmpty() }
             if (cleanedTexts.isEmpty()) {
                 return Result.success(emptyMap())
             }
 
-            if (normalizedFrom.isNotEmpty() && normalizedFrom == normalizedTo) {
+            if (requestFromLanguage.isNotEmpty() && requestFromLanguage == requestToLanguage) {
                 return Result.success(cleanedTexts.associateWith { it })
             }
 
             // Check cache for already translated texts
-            val cacheResult = translationCache.getBatchCached(cleanedTexts, fromLanguage, toLanguage)
+            val cacheResult = translationCache.getBatchCached(cleanedTexts, requestFromLanguage, requestToLanguage)
             val result = cacheResult.found.toMutableMap()
 
             // If all texts are cached, return immediately
@@ -131,8 +163,8 @@ class FirebaseTranslationRepository @Inject constructor(
             // Call API for texts not in cache
             val apiTranslations = cloudTranslatorClient.translateTexts(
                 texts = cacheResult.notFound,
-                from = fromLanguage,
-                to = toLanguage
+                from = requestFromLanguage,
+                to = requestToLanguage
             )
 
             // Map results back to source texts
@@ -144,11 +176,15 @@ class FirebaseTranslationRepository @Inject constructor(
             }
 
             // Cache new translations in batch
-            translationCache.cacheBatch(newTranslations, fromLanguage, toLanguage)
+            translationCache.cacheBatch(newTranslations, requestFromLanguage, requestToLanguage)
 
             Result.success(result)
         } catch (e: Exception) {
-            AppLogger.e("BatchTranslate", "Batch translation failed", e)
+            if (isExpectedTranslationFailure(e)) {
+                AppLogger.w("BatchTranslate", "Batch translation rejected by upstream validation/auth", e)
+            } else {
+                AppLogger.e("BatchTranslate", "Batch translation failed", e)
+            }
             Result.failure(e)
         }
     }
@@ -181,7 +217,11 @@ class FirebaseTranslationRepository @Inject constructor(
 
             result
         } catch (e: Exception) {
-            AppLogger.e("DetectLanguage", "Detection failed", e)
+            if (isExpectedTranslationFailure(e)) {
+                AppLogger.w("DetectLanguage", "Detection rejected by upstream validation/auth", e)
+            } else {
+                AppLogger.e("DetectLanguage", "Detection failed", e)
+            }
             null
         }
     }

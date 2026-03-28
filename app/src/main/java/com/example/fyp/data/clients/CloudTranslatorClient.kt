@@ -102,30 +102,37 @@ class CloudTranslatorClient(
         to: String
     ): List<String> {
         return try {
-            NetworkRetry.withRetry(
-                maxAttempts = 3,
-                shouldRetry = NetworkRetry::isRetryableFirebaseException
-            ) {
-                val data = hashMapOf(
-                    "texts" to texts,
-                    "to" to to
-                )
-                if (!from.isNullOrBlank()) data["from"] = from
+            val allTranslatedTexts = mutableListOf<String>()
+            
+            // Azure Translator API limits the array size to 100 elements per request
+            texts.chunked(100).forEach { chunk ->
+                val chunkResult = NetworkRetry.withRetry(
+                    maxAttempts = 3,
+                    shouldRetry = NetworkRetry::isRetryableFirebaseException
+                ) {
+                    val data = hashMapOf(
+                        "texts" to chunk,
+                        "to" to to
+                    )
+                    if (!from.isNullOrBlank()) data["from"] = from
 
-                val result = translateTextsCallable
-                    .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                    .call(data)
-                    .await()
+                    val result = translateTextsCallable
+                        .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                        .call(data)
+                        .await()
 
-                @Suppress("UNCHECKED_CAST")
-                val map = result.data as? Map<String, Any?>
-                    ?: throw IllegalStateException("Unexpected result type: ${result.data}")
+                    @Suppress("UNCHECKED_CAST")
+                    val map = result.data as? Map<String, Any?>
+                        ?: throw IllegalStateException("Unexpected result type: ${result.data}")
 
-                val list = map["translatedTexts"] as? List<*>
-                    ?: throw IllegalStateException("Missing translatedTexts in result")
+                    val list = map["translatedTexts"] as? List<*>
+                        ?: throw IllegalStateException("Missing translatedTexts in result")
 
-                list.map { it as? String ?: "" }
+                    list.map { it as? String ?: "" }
+                }
+                allTranslatedTexts.addAll(chunkResult)
             }
+            allTranslatedTexts
         } catch (e: FirebaseFunctionsException) {
             throw mapFunctionsError(e)
         }

@@ -21,6 +21,7 @@ import com.example.fyp.core.security.RateLimiter
 import com.example.fyp.core.security.ValidationResult
 import com.example.fyp.core.security.sanitizeInput
 import com.example.fyp.core.security.validateTextLength
+import com.google.firebase.functions.FirebaseFunctionsException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -95,6 +96,23 @@ class ChatViewModel @Inject constructor(
 
     private inline fun updateUiState(transform: (ChatUiState) -> ChatUiState) {
         _uiState.update(transform)
+    }
+
+    private fun logTranslationIssue(message: String, throwable: Throwable) {
+        if (throwable is FirebaseFunctionsException) {
+            when (throwable.code) {
+                FirebaseFunctionsException.Code.INVALID_ARGUMENT,
+                FirebaseFunctionsException.Code.UNAUTHENTICATED,
+                FirebaseFunctionsException.Code.PERMISSION_DENIED,
+                FirebaseFunctionsException.Code.FAILED_PRECONDITION -> {
+                    AppLogger.w("ChatViewModel", message, throwable)
+                    return
+                }
+                else -> Unit
+            }
+        }
+
+        AppLogger.e("ChatViewModel", message, throwable)
     }
 
     init {
@@ -404,7 +422,7 @@ class ChatViewModel @Inject constructor(
                         }
                     },
                     onFailure = { error ->
-                        AppLogger.e("ChatViewModel", "translateAllMessages failed", error)
+                        logTranslationIssue("translateAllMessages failed", error)
                         updateUiState {
                             it.copy(
                                 translationError = "Translation failed. Please try again.",
@@ -414,7 +432,7 @@ class ChatViewModel @Inject constructor(
                     }
                 )
             } catch (e: Exception) {
-                AppLogger.e("ChatViewModel", "translateAllMessages catch failed", e)
+                logTranslationIssue("translateAllMessages catch failed", e)
                 updateUiState {
                     it.copy(
                         translationError = "Translation failed. Please try again.",
