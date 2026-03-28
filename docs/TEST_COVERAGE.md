@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-28_
+_Last updated: 2025-03-28_
 
 ## Summary
 
@@ -112,16 +112,20 @@ _14 test files, 182 tests_
 
 | File | Tests | Coverage |
 |------|-------|----------|
-| `helpers.test.ts` | 31 | Validation, auth guards, rate limiting, URL building |
-| `logger.test.ts` | 6 | Structured JSON logger output format |
-| `translation.test.ts` | 34 | getSpeechToken, translateText(s), detectLanguage, network failures, API error mapping, legacy-code compatibility |
-| `coins.test.ts` | 26 | awardQuizCoins anti-cheat, spendCoins purchases |
-| `notifications.test.ts` | 12 | FCM triggers, spam detection, rate limiting |
-| `learning.test.ts` | 17 | generateLearningContent: auth, validation, rate-limit ordering |
-| `maintenance.test.ts` | 9 | Scheduled cleanup: stale tokens, rate-limits, friends repair |
+| `coins.test.ts` | 27 | awardQuizCoins anti-cheat, spendCoins purchases |
+| `firestore-rules.test.ts` | 6 | Guard tests for settings booleans, profile read-access, shared inbox write gating, chat write authorization |
 | `health.test.ts` | 3 | Readiness endpoint validation |
-| `rate-limit.test.ts` | 5 | Rate-limit enforcement, fail-closed behavior |
-| `firestore-rules-settings.test.ts` | 6 | Guard tests for settings booleans, profile read-access, shared inbox write gating, and chat write authorization invariants in `firestore.rules` |
+| `helpers.test.ts` | 32 | Validation, auth guards, rate limiting, URL building |
+| `index.test.ts` | 2 | Main entry point exports |
+| `learning.test.ts` | 20 | generateLearningContent: auth, validation, rate-limit ordering |
+| `learning-sync.test.ts` | 6 | Learning sync operations |
+| `logger.test.ts` | 6 | Structured JSON logger output format |
+| `maintenance.test.ts` | 9 | Scheduled cleanup: stale tokens, rate-limits, friends repair |
+| `maintenance-deep.test.ts` | 3 | Deep maintenance tests |
+| `notifications.test.ts` | 17 | FCM triggers, spam detection, rate limiting |
+| `notifications-deep.test.ts` | 11 | Deep notification tests |
+| `rate-limit.test.ts` | 6 | Rate-limit enforcement, fail-closed behavior |
+| `translation.test.ts` | 34 | getSpeechToken, translateText(s), detectLanguage, network failures, API error mapping |
 
 **Coverage Gate (CI-enforced):** `npm run test:coverage` with `coverageThreshold.global`: statements 50%, branches 45%, functions 50%, lines 50%.
 **Current baseline:** Statements 99.14%, Branches 84.29%, Functions 100%, Lines 100%.
