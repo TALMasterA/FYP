@@ -63,6 +63,10 @@ Please use your gmail to register.
 - Auto-generated word bank with progress bar toward next regen
 - Learning actions stay disabled until account sheet metadata finishes loading, preventing premature generate/open operations on stale fetch state
 - Learning sheet, word bank, and quiz language pairs are controlled by account primary language (not App UI language)
+- Generation rules (per non-primary language, using your translation history counts):
+  - **Learning sheet:** needs at least 1 translation involving the language; first generate is allowed, regenerate only after 5+ additional records (blocks if counts drop).
+  - **Quiz:** locked to sheet versions; first quiz is allowed, later regeneration only when the sheet’s saved history count changes (one quiz per sheet version).
+  - **Word bank:** needs translation history for the target; first generate is allowed, refresh only after 20+ additional records since last generation and it appends new words without overwriting existing entries.
 - Custom word bank for user-defined vocabulary
 - Favorites for bookmarking translations and saving full conversation sessions
 - Word/share actions now fail fast on incomplete language payloads and show a retry hint instead of submitting malformed requests
