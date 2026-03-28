@@ -102,9 +102,9 @@ test-cases.yaml
 # Android App Bundles
 # CMake native build directory
 .cxx/
-FYP_Final_Report_v4_with_screenshots.pdf
-FYPHandBook.pdf
-report_review.md
-FYP_Final_Report_v4_with_screenshots.pdf.txt
-FYPHandBook.pdf.txt
-extract.py
+
+# Report audit folder (contains PDFs, extracted text, review docs)
+report-audit/
+
+# Temporary Python scripts
+organize_files.py
