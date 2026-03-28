@@ -90,6 +90,8 @@ Please use your gmail to register.
 - 11 color palettes (1 free + 10 unlockable at 10 coins each)
 - Voice settings per language
 - Custom Words entries can update target language per word, and translation is regenerated for the selected language
+- Word direction is unified across generated and custom banks: top text is the source/original side, bottom text is its translation (including accepted shared words)
+- Changing a custom word's translation language now keeps the original/source text fixed and only refreshes the translated side
 - Notification settings (push + badge toggles) accessible from the Friends bell icon flow
 - Feedback submission is available in `Settings -> Feedback`
 - OCR settings (on-device model status and footprint)

@@ -270,7 +270,7 @@ class CustomWordsViewModelTest {
     @Test
     fun `updateCustomWordTargetLanguage retranslates and persists new language`() = runTest {
         translateTextUseCase.stub {
-            onBlocking { invoke("hola", "es-ES", "fr-FR") } doReturn SpeechResult.Success("bonjour")
+            onBlocking { invoke("hello", "en-US", "fr-FR") } doReturn SpeechResult.Success("bonjour")
         }
         customWordsRepo.stub {
             onBlocking {
@@ -300,7 +300,7 @@ class CustomWordsViewModelTest {
             newTargetLang = "fr-FR"
         )
 
-        verify(translateTextUseCase).invoke("hola", "es-ES", "fr-FR")
+        verify(translateTextUseCase).invoke("hello", "en-US", "fr-FR")
         verify(customWordsRepo).updateCustomWord(
             userId = testUserId,
             wordId = "w1",
@@ -339,7 +339,7 @@ class CustomWordsViewModelTest {
     @Test
     fun `updateCustomWordTargetLanguage parses legacy category without spaces`() = runTest {
         translateTextUseCase.stub {
-            onBlocking { invoke("hola", "es-ES", "fr-FR") } doReturn SpeechResult.Success("bonjour")
+            onBlocking { invoke("hello", "en-US", "fr-FR") } doReturn SpeechResult.Success("bonjour")
         }
         customWordsRepo.stub {
             onBlocking {
@@ -367,7 +367,7 @@ class CustomWordsViewModelTest {
             newTargetLang = "fr-FR"
         )
 
-        verify(translateTextUseCase).invoke("hola", "es-ES", "fr-FR")
+        verify(translateTextUseCase).invoke("hello", "en-US", "fr-FR")
         verify(customWordsRepo).updateCustomWord(
             userId = testUserId,
             wordId = "w1",

@@ -770,8 +770,8 @@ class WordBankViewModel @Inject constructor(
             Pair(parsedSource.ifBlank { primaryLanguageCode }, parsedTarget)
         } else {
             Pair(
-                state.currentWordBank?.primaryLanguageCode ?: primaryLanguageCode,
-                state.currentWordBank?.targetLanguageCode ?: state.selectedLanguageCode ?: ""
+                state.currentWordBank?.targetLanguageCode ?: state.selectedLanguageCode ?: "",
+                state.currentWordBank?.primaryLanguageCode ?: primaryLanguageCode
             )
         }
 

@@ -339,6 +339,16 @@ class WordBankViewModelTest {
 
         vm.shareWord(word, UserId("friend1"))
 
+        verify(shareWordUseCase).invoke(
+            UserId("u1"),
+            "myuser",
+            UserId("friend1"),
+            "hello",
+            "こんにちは",
+            "ja",
+            "en-US",
+            "Hello example"
+        )
         assertNotNull(vm.uiState.value.shareSuccess)
         assertFalse(vm.uiState.value.isSharing)
     }
@@ -355,7 +365,7 @@ class WordBankViewModelTest {
         whenever(customWordsRepo.getCustomWordsOnce(any(), any(), any())).thenReturn(emptyList())
         whenever(sharedFriendsDataSource.getCachedUsername(any())).thenReturn("myuser")
         // Use raw values to avoid inline value class boxing mismatch with eq() matchers
-        whenever(shareWordUseCase.invoke(UserId("u1"), "myuser", UserId("friend1"), "hello", "こんにちは", "en-US", "ja", ""))
+        whenever(shareWordUseCase.invoke(UserId("u1"), "myuser", UserId("friend1"), "hello", "こんにちは", "ja", "en-US", ""))
             .thenReturn(Result.failure(RuntimeException("Network error")))
 
         val vm = buildViewModel()

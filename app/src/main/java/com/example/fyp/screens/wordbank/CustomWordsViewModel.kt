@@ -219,18 +219,9 @@ class CustomWordsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isTranslatingCustomWord = true, error = null)
 
-            // Re-translate from the CURRENT translated text when we know its language.
-            // This keeps user customizations in translatedWord as the source of truth
-            // when switching target language in custom-word settings.
-            val translationSourceText = if (currentTargetLang.isNotBlank()) {
-                word.translatedWord
-            } else {
-                // Legacy fallback for malformed/missing category language pair.
-                word.originalWord
-            }
-            val translationSourceLang = if (currentTargetLang.isNotBlank()) currentTargetLang else sourceLang
-
-            val translatedWord = when (val translation = translateTextUseCase(translationSourceText, translationSourceLang, targetLang)) {
+            // Always translate from originalWord/sourceLang so changing target language
+            // cannot mutate the source side of the custom word entry.
+            val translatedWord = when (val translation = translateTextUseCase(word.originalWord, sourceLang, targetLang)) {
                 is SpeechResult.Success -> translation.text
                 is SpeechResult.Error -> {
                     _uiState.value = _uiState.value.copy(

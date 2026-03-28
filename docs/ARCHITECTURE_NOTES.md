@@ -91,6 +91,17 @@ For document creation fallback: catch `FirebaseFirestoreException`, only fallbac
 
 ---
 
+## 2.3 Word Bank Direction Invariant (Generated + Custom + Shared)
+
+**Invariant:** `WordBankItem.originalWord` is always the top/source-side text and `WordBankItem.translatedWord` is always the bottom/translated-side text, for both generated and custom entries.
+
+**Rule:**
+1. Non-custom sharing must send language codes aligned to the actual text fields (`originalWord` language, then `translatedWord` language).
+2. Accepting shared words must persist the same direction into `custom_words`.
+3. Changing custom target language must always retranslate from `originalWord` + `sourceLang` so source text remains immutable.
+
+---
+
 ## 3. Username Propagation — Cache Consistency
 
 **Invariant:** `FriendRelation.friendUsername` is cached and must stay in sync via `propagateUsernameChange()` (when user renames) and `syncFriendUsernames()` (on refresh).
