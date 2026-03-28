@@ -247,6 +247,7 @@ These are not callable functions — they fire automatically on Firestore docume
 | `sendFriendRequestNotification`    | `friend_requests/{requestId}` created            | Notifies recipient of new request; enforces 3/hour rate limit |
 | `sendRequestAcceptedNotification`  | `friend_requests/{requestId}` updated            | Notifies sender when request accepted |
 | `sendSharedInboxNotification`      | `users/{userId}/shared_inbox/{itemId}` created   | Notifies recipient of new shared item |
+| `syncQuizVersionFromLearningSheet` | `learning_sheets/{sheetId}` created/updated      | Syncs quiz version for anti-cheat validation |
 
 ---
 

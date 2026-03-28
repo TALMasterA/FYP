@@ -1,14 +1,14 @@
 # Test Coverage Report
 
-_Last updated: 2025-03-28_
+_Last updated: 2026-03-28_
 
 ## Summary
 
 | Metric                    | Count   |
 |---------------------------|---------|
-| Source files               | 251     |
-| Test files                 | 210     |
-| Total `@Test` methods      | 2,754   |
+| Source files               | 408     |
+| Test files                 | 270     |
+| Total `@Test` methods      | 3,486   |
 | Key logic coverage         | ~100%   |
 
 ## CI/CD Pipeline & Quality Checks
@@ -23,8 +23,8 @@ _Last updated: 2025-03-28_
 
 | Layer                     | Files | Coverage |
 |---------------------------|-------|----------|
-| **Screens / ViewModels**  | 21    | 100%     |
-| **Domain / Use Cases**    | 40    | 100%     |
+| **Screens / ViewModels**  | 20    | 100%     |
+| **Domain / Use Cases**    | 47    | 100%     |
 | **Models**                | 24    | 100%     |
 | **Core / Utilities**      | 12    | 100%     |
 | **Data / Repositories**   | 35    | 100%     |
@@ -34,17 +34,17 @@ _Last updated: 2025-03-28_
 
 ## What Is Tested
 
-### ViewModels & Controllers (21/21)
-All 21 ViewModels and controllers fully tested: AppViewModel, AuthViewModel, ChatViewModel, FavoritesViewModel, FeedbackViewModel, FriendsViewModel, HistoryViewModel, LearningViewModel, LearningSheetViewModel, MyProfileViewModel, ProfileViewModel, SettingsViewModel, SharedInboxViewModel, SharedMaterialDetailViewModel, ShopViewModel, SpeechViewModel, WordBankViewModel, CustomWordsViewModel, ContinuousConversationController, TtsController.
+### ViewModels & Controllers (20/20)
+All 20 ViewModels and controllers fully tested:AppViewModel, AuthViewModel, ChatViewModel, FavoritesViewModel, FeedbackViewModel, FriendsViewModel, HistoryViewModel, LearningViewModel, LearningSheetViewModel, MyProfileViewModel, ProfileViewModel, SettingsViewModel, SharedInboxViewModel, SharedMaterialDetailViewModel, ShopViewModel, SpeechViewModel, WordBankViewModel, CustomWordsViewModel, ContinuousConversationController, TtsController.
 
 Also includes critical controller tests: `LearningScreenLogicTest` (18 tests — cluster filtering, generation eligibility, quiz regeneration).
 
-### Domain Use Cases (40/40)
-**Friends (20 use cases):** Send request, accept, reject, cancel, remove, chat, share word/material. Integration tests verify friend system rules (51 extra tests). **NEW:** `UsernameEnforcementIntegrationTest` (12 tests) and `UsernameRequirementIntegrationTest` (11 tests) verify domain-layer vs ViewModel-layer username enforcement split.
+### Domain Use Cases (47/47)
+**Friends (21 use cases):** Send request, accept, reject, cancel, remove, chat, share word/material, translate messages.Integration tests verify friend system rules (51 extra tests). **NEW:** `UsernameEnforcementIntegrationTest` (12 tests) and `UsernameRequirementIntegrationTest` (11 tests) verify domain-layer vs ViewModel-layer username enforcement split.
 
 **Learning:** Coin eligibility (19), generation eligibility (24), learning material generation (3), quiz generation (3), quiz parsing (13). Integration: coin economy (7), quiz flow (13), generation rules (25).
 
-**Settings (9 use cases):** Covered via `SettingsUseCasesTest` (20 tests).
+**Settings (10 use cases):** Covered via `SettingsUseCasesTest` (20 tests), includes color palette unlocking with coins.
 
 **History:** All use cases via `HistoryUseCasesTest` + dedicated files for delete session, observe history, rename session (12 tests total).
 

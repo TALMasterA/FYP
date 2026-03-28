@@ -58,7 +58,7 @@ Please use your gmail to register.
 - Language swap button (swaps recognized/translated text)
 
 **Learning System:**
-- AI-generated learning sheets from translation history (≥20 records per language pair)
+- AI-generated learning sheets from translation history
 - Quiz system with coin rewards (anti-cheat verification: first-attempt only)
 - Auto-generated word bank with progress bar toward next regen
 - Learning actions stay disabled until account sheet metadata finishes loading, preventing premature generate/open operations on stale fetch state
@@ -280,7 +280,8 @@ cd fyp-backend/functions && npm test
 **Firestore collections:**
 - `users/{uid}/history` — Translation records
 - `users/{uid}/sessions` — Continuous sessions
-- `users/{uid}/profile/` — Settings, info, public
+- `users/{uid}/profile/settings` — User settings (theme, font, language prefs)
+- `users/{uid}/profile/public` — Public profile (username, isDiscoverable)
 - `users/{uid}/learning_sheets/{pair}` — Generated content per language pair
 - `users/{uid}/quiz_attempts`, `quiz_stats/{pair}` — Quiz data
 - `users/{uid}/generated_quizzes/{pair}` — Cached quiz questions
@@ -288,9 +289,16 @@ cd fyp-backend/functions && npm test
 - `users/{uid}/favorites`, `favorite_sessions` — Bookmarks
 - `users/{uid}/word_banks/{pair}`, `custom_words` — Vocabulary
 - `users/{uid}/friends`, `shared_inbox`, `blocked_users` — Friend system
+- `users/{uid}/shared_inbox/{itemId}/content` — Shared item content subcollection
 - `users/{uid}/fcm_tokens` — Notification tokens (pruned after 60 days)
+- `users/{uid}/last_awarded_quiz` — Anti-cheat last quiz award state
 - `usernames`, `user_search` — Username registry & searchable index
 - `friend_requests`, `chats/{chatId}/messages` — Requests & messages
+- `quiz_versions` — Server-side quiz version tracking (anti-cheat)
+- `coin_awards` — Server-side coin award history (anti-cheat)
+- `language_counts` — Per-user, per-language history record counts
+- `rate_limits` — Server-side rate limiting (learning content generation)
+- `feedback` — User feedback submissions
 
 --------------------------------------------------------------
 
