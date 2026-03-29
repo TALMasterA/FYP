@@ -239,5 +239,10 @@ class SharedInboxViewModel @Inject constructor(
             }
         }
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        processingJob?.cancel()
+    }
 }
 

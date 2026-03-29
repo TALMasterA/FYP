@@ -169,13 +169,20 @@ service cloud.firestore {
       // Type validation: totalUnreadMessages must be a non-negative integer to prevent
       // a malicious sender from corrupting the counter with strings or negative values.
 
+      // Validate unreadPerFriend is a map (if present) and limit size to prevent abuse.
+      // Note: Firestore rules cannot iterate map entries to validate each value type,
+      // but we enforce that it's a map and limit key count to reasonable friend limit.
       return resource == null
         ? request.resource.data.keys().hasOnly(['totalUnreadMessages', 'unreadPerFriend'])
           && request.resource.data.totalUnreadMessages is int
           && request.resource.data.totalUnreadMessages >= 0
+          && (!('unreadPerFriend' in request.resource.data) || request.resource.data.unreadPerFriend is map)
+          && (!('unreadPerFriend' in request.resource.data) || request.resource.data.unreadPerFriend.keys().size() <= 500)
         : request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalUnreadMessages', 'unreadPerFriend'])
           && request.resource.data.totalUnreadMessages is int
-          && request.resource.data.totalUnreadMessages >= 0;
+          && request.resource.data.totalUnreadMessages >= 0
+          && (!('unreadPerFriend' in request.resource.data) || request.resource.data.unreadPerFriend is map)
+          && (!('unreadPerFriend' in request.resource.data) || request.resource.data.unreadPerFriend.keys().size() <= 500);
     }
 
     // ============================================

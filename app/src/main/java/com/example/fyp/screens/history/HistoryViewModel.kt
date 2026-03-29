@@ -532,4 +532,11 @@ class HistoryViewModel @Inject constructor(
         val uid = currentUserId ?: return
         startListening(uid)
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        historyJob?.cancel()
+        sessionsJob?.cancel()
+        settingsJob?.cancel()
+    }
 }

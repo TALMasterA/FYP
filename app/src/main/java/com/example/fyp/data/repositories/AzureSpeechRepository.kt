@@ -15,6 +15,7 @@ import com.microsoft.cognitiveservices.speech.SpeechSynthesizer
 import com.microsoft.cognitiveservices.speech.audio.AudioConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
 
 /**
  * Repository for Azure Speech Services integration.
@@ -42,11 +43,18 @@ class AzureSpeechRepository(
 
         /** Maximum number of candidate languages for auto-detection */
         const val MAX_AUTO_DETECT_LANGUAGES = 4
+
+        /** Default timeout for Azure Speech SDK async operations (seconds) */
+        const val SPEECH_OPERATION_TIMEOUT_SECONDS = 30L
     }
 
     private var cachedToken: String? = null
     private var cachedRegion: String? = null
     private var cachedTokenTimeMs: Long = 0L
+
+    // Track continuous recognition resources for proper cleanup
+    private var continuousSpeechConfig: SpeechConfig? = null
+    private var continuousAudioConfig: AudioConfig? = null
 
     /**
      * Gets or refreshes the Azure Speech configuration.
@@ -86,7 +94,7 @@ class AzureSpeechRepository(
                 audioConfig = AudioConfig.fromDefaultMicrophoneInput()
                 recognizer = SpeechRecognizer(speechConfig, audioConfig)
 
-                val result = recognizer.recognizeOnceAsync().get()
+                val result = recognizer.recognizeOnceAsync().get(SPEECH_OPERATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 if (result.reason == ResultReason.RecognizedSpeech) {
                     Log.i("AzureSpeech", "Recognized: ${result.text}")
                     SpeechResult.Success(result.text)
@@ -138,7 +146,7 @@ class AzureSpeechRepository(
             audioConfig = AudioConfig.fromDefaultMicrophoneInput()
             recognizer = SpeechRecognizer(speechConfig, autoDetectConfig, audioConfig)
 
-            val result = recognizer.recognizeOnceAsync().get()
+            val result = recognizer.recognizeOnceAsync().get(SPEECH_OPERATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             if (result.reason == ResultReason.RecognizedSpeech) {
                 val autoDetectResult = com.microsoft.cognitiveservices.speech.AutoDetectSourceLanguageResult.fromResult(result)
                 val detectedLanguage = autoDetectResult.language ?: languages.first()
@@ -187,7 +195,7 @@ class AzureSpeechRepository(
                 }
                 synthesizer = SpeechSynthesizer(speechConfig)
 
-                val result = synthesizer.SpeakTextAsync(text).get()
+                val result = synthesizer.SpeakTextAsync(text).get(SPEECH_OPERATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 when (result.reason) {
                     ResultReason.SynthesizingAudioCompleted -> {
                         Log.i("AzureTTS", "Speech synthesized for text: $text")
@@ -229,11 +237,18 @@ class AzureSpeechRepository(
         onFinal: (String) -> Unit,
         onError: (String) -> Unit
     ): SpeechRecognizer = withContext(Dispatchers.IO) {
+        // Clean up any previous continuous session resources
+        cleanupContinuousResources()
+
         val speechConfig = getSpeechConfig()
         speechConfig.speechRecognitionLanguage = languageCode
 
         val audioConfig = AudioConfig.fromDefaultMicrophoneInput()
         val recognizer = SpeechRecognizer(speechConfig, audioConfig)
+
+        // Store references for cleanup in stopContinuous
+        continuousSpeechConfig = speechConfig
+        continuousAudioConfig = audioConfig
 
         recognizer.recognizing.addEventListener { _, e ->
             onPartial(e.result.text)
@@ -271,10 +286,24 @@ class AzureSpeechRepository(
     override suspend fun stopContinuous(recognizer: SpeechRecognizer?) = withContext(Dispatchers.IO) {
         if (recognizer == null) return@withContext
 
-        runCatching { recognizer.stopContinuousRecognitionAsync().get() }
+        runCatching { recognizer.stopContinuousRecognitionAsync().get(SPEECH_OPERATION_TIMEOUT_SECONDS, TimeUnit.SECONDS) }
         runCatching { recognizer.close() }
 
+        // Clean up stored configs to prevent memory leaks
+        cleanupContinuousResources()
+
         Unit
+    }
+
+    /**
+     * Clean up continuous recognition resources (speechConfig and audioConfig).
+     * Should be called when stopping continuous recognition or before starting a new session.
+     */
+    private fun cleanupContinuousResources() {
+        runCatching { continuousAudioConfig?.close() }
+        runCatching { continuousSpeechConfig?.close() }
+        continuousAudioConfig = null
+        continuousSpeechConfig = null
     }
 
     private fun logAndError(

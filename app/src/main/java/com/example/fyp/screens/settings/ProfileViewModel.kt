@@ -243,4 +243,9 @@ class ProfileViewModel @Inject constructor(
     fun clearSuccessMessage() {
         _uiState.value = _uiState.value.copy(successMessage = null)
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        profileJob?.cancel()
+    }
 }

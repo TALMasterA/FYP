@@ -168,6 +168,7 @@ export const translateTexts = onCall(
   {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
   async (request) => {
     const MAX_BATCH_TEXTS = 800;
+    const MAX_TEXT_LENGTH = 5000; // Azure limit per text element
 
     const to = validateLanguageCode(request.data?.to, "to");
     const from = request.data?.from ? validateLanguageCode(request.data.from, "from") : "";
@@ -180,6 +181,16 @@ export const translateTexts = onCall(
         "invalid-argument",
         `Too many texts (max ${MAX_BATCH_TEXTS})`
       );
+    }
+
+    // Validate each text's length
+    for (let i = 0; i < texts.length; i++) {
+      if (texts[i].length > MAX_TEXT_LENGTH) {
+        throw new HttpsError(
+          "invalid-argument",
+          `Text at index ${i} exceeds maximum length (${MAX_TEXT_LENGTH} chars)`
+        );
+      }
     }
 
     const key = AZURE_TRANSLATOR_KEY.value();

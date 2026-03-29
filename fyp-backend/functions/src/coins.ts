@@ -241,7 +241,7 @@ export const spendCoins = onCall(
       const paletteId = requireString(request.data?.paletteId, "paletteId");
 
       if (!VALID_PALETTE_IDS.includes(paletteId)) {
-        throw new HttpsError("invalid-argument", `Invalid palette ID: ${paletteId}`);
+        throw new HttpsError("invalid-argument", "Invalid palette ID");
       }
 
       const result = await getFirestore().runTransaction(async (tx) => {

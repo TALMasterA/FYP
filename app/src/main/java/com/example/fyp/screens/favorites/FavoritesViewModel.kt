@@ -273,4 +273,9 @@ class FavoritesViewModel @Inject constructor(
             }
         }
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        settingsJob?.cancel()
+    }
 }

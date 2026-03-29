@@ -313,6 +313,11 @@ class CustomWordsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(error = null)
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        settingsJob?.cancel()
+    }
+
     private fun parseSourceLang(category: String): String {
         return parseLanguagePair(category).first
     }

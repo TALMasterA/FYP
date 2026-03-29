@@ -44,6 +44,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 /**
@@ -96,7 +97,7 @@ class WordBankViewModel @Inject constructor(
     private var primaryLanguageCode: String = "en-US"
 
     // In-memory cache backed by persistent DataStore
-    private val wordBankExistsCache: MutableMap<String, Boolean> = mutableMapOf()
+    private val wordBankExistsCache: ConcurrentHashMap<String, Boolean> = ConcurrentHashMap()
     private var lastPrimaryForCache: String? = null
 
     /**
@@ -824,6 +825,14 @@ class WordBankViewModel @Inject constructor(
         }
 
         return "" to ""
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        historyJob?.cancel()
+        settingsJob?.cancel()
+        friendsJob?.cancel()
+        generationJob?.cancel()
     }
 }
 

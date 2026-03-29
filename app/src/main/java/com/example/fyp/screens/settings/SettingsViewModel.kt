@@ -367,6 +367,11 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(unlockError = null)
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        settingsJob?.cancel()
+    }
+
     fun updateAutoThemeEnabled(enabled: Boolean) {
         val uid = _uiState.value.uid ?: run {
             _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)

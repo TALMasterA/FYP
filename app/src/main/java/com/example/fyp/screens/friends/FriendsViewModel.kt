@@ -830,4 +830,12 @@ class FriendsViewModel @Inject constructor(
      */
     fun canSendRequestTo(userId: String): Boolean =
         getRequestStatusFor(userId) == RequestStatus.NONE
+
+    override fun onCleared() {
+        super.onCleared()
+        outgoingRequestsJob?.cancel()
+        unreadPerFriendJob?.cancel()
+        batchJob?.cancel()
+        searchJob?.cancel()
+    }
 }

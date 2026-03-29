@@ -33,6 +33,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.util.Collections
 
 data class LearningUiState(
     val isLoading: Boolean = true,
@@ -117,16 +118,18 @@ class LearningViewModel @Inject constructor(
     private var lastQuizGenerationTime = 0L
 
     // Cache for sheet metadata to avoid repeated Firestore reads
-    // Using LRU cache with max entries to prevent memory leaks
-    private val sheetMetaCache = object : LinkedHashMap<String, SheetMetaCache>(
-        16,  // Initial capacity
-        0.75f,  // Load factor
-        true  // Access order (for LRU)
-    ) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SheetMetaCache>): Boolean {
-            return size > MAX_SHEET_CACHE_SIZE
+    // Using synchronized LRU cache with max entries to prevent memory leaks
+    private val sheetMetaCache: MutableMap<String, SheetMetaCache> = Collections.synchronizedMap(
+        object : LinkedHashMap<String, SheetMetaCache>(
+            16,  // Initial capacity
+            0.75f,  // Load factor
+            true  // Access order (for LRU)
+        ) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SheetMetaCache>): Boolean {
+                return size > MAX_SHEET_CACHE_SIZE
+            }
         }
-    }
+    )
     private var lastPrimaryForCache: String? = null
 
     init {
@@ -573,5 +576,10 @@ class LearningViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopJobs()
     }
 }

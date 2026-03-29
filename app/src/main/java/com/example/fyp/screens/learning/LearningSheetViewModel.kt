@@ -385,4 +385,10 @@ class LearningSheetViewModel @Inject constructor(
     fun clearShareMessages() {
         _uiState.value = _uiState.value.copy(shareSuccessKey = null, shareError = null)
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        historyJob?.cancel()
+        friendsJob?.cancel()
+    }
 }
