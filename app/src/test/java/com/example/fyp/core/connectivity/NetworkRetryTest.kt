@@ -42,8 +42,18 @@ class NetworkRetryTest {
     }
 
     @Test
-    fun `isRetryable - resource-exhausted is retryable`() {
-        assertTrue(NetworkRetry.isRetryableFirebaseException(Exception("resource-exhausted")))
+    fun `isRetryable - resource-exhausted is NOT retryable`() {
+        assertFalse(NetworkRetry.isRetryableFirebaseException(Exception("resource-exhausted")))
+    }
+
+    @Test
+    fun `isRetryable - rate limit exceeded is NOT retryable`() {
+        assertFalse(NetworkRetry.isRetryableFirebaseException(Exception("Translation service rate limit exceeded")))
+    }
+
+    @Test
+    fun `isRetryable - too many requests is NOT retryable`() {
+        assertFalse(NetworkRetry.isRetryableFirebaseException(Exception("Too many requests")))
     }
 
     @Test

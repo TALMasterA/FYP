@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-28_
+_Last updated: 2026-03-30_
 
 ## Summary
 
@@ -8,7 +8,7 @@ _Last updated: 2026-03-28_
 |---------------------------|---------|
 | Source files               | 408     |
 | Test files                 | 270     |
-| Total `@Test` methods      | 3,486   |
+| Total `@Test` methods      | 3,489   |
 | Key logic coverage         | ~100%   |
 
 ## CI/CD Pipeline & Quality Checks
@@ -56,7 +56,7 @@ Also includes critical controller tests: `LearningScreenLogicTest` (18 tests —
 TranslationRecord, HistorySession, HistorySessionExtended, Quiz, FavoriteRecord, FavoriteSession, ValueTypes, SpeechResult, OcrResult, CustomWord, FriendMessage, FriendRelation, FriendRequest, PublicUserProfile, SharedItem, UserSettings, ColorPalette, UserAndProfile, SpeechModels, WordBankModels, LearningModels, QuizAttemptTest, OcrScriptTest.
 
 ### Core Utilities (12/12)
-SecurityUtils (40+9 tests), CertificatePinning (7), ErrorMessages (35), NetworkRetry (21), ExtensionFunctions (16), Constants (13), FontSizeUtils (13), PerformanceUtils (13), AuditLogger (9), ViewModelHelpers (9), Pagination (9), FeatureFlagDefaults (16).
+SecurityUtils (40+9 tests), CertificatePinning (7), ErrorMessages (35), NetworkRetry (23), ExtensionFunctions (16), Constants (13), FontSizeUtils (13), PerformanceUtils (13), AuditLogger (9), ViewModelHelpers (9), Pagination (9), FeatureFlagDefaults (16).
 
 ### Data Layer (35/35 key files)
 Cloud clients: CloudGenAiClient (11), CloudQuizClient (12), AzureVoiceConfig (18).
@@ -169,5 +169,7 @@ _14 test files, 182 tests_
 - `WordBankViewModelTest`: account-switch custom-word count cache invalidation guard
 - `SharedFriendsDataSourceTest`: first unread snapshot now re-applies seen-set reconciliation for reliable red-dot reappearance
 - `ChatViewModelTest`: chat mark-read lifecycle guard so unread state is cleared only while chat screen is visible
+- `NetworkRetryTest`: rate-limit/resource-exhausted classification guard (no futile immediate retries)
+- `EnsurePublicProfileExistsUseCaseTest`: visibility persistence guard (existing public/private choice remains unchanged)
 
 ---

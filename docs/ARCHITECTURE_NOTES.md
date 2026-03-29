@@ -561,6 +561,8 @@ This prevents job cancellation on route changes and avoids stale completion bann
 
 **Default sequence (initial=500ms, factor=2.0):** 500ms → 1000ms → 2000ms → 4000ms → 5000ms (capped).
 
+**Rule:** Treat backend quota/rate-limit failures (`resource-exhausted`, "rate limit", "too many requests") as non-retryable for immediate client retries. Keep exponential retry for transient connectivity/server failures only.
+
 ---
 
 ## 26. SpeechViewModel — Synchronized Pending Saves

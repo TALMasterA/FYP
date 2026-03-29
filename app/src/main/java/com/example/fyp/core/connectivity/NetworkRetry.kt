@@ -108,10 +108,16 @@ object NetworkRetry {
             return false
         }
 
-        // Retry on internal/server errors
+        // Don't retry on quota/rate-limit errors; immediate retries are usually rejected again.
+        if (message.contains("resource-exhausted") ||
+            message.contains("rate limit") ||
+            message.contains("too many requests")) {
+            return false
+        }
+
+        // Retry on transient internal/server errors.
         if (message.contains("internal") ||
-            message.contains("deadline") ||
-            message.contains("resource-exhausted")) {
+            message.contains("deadline")) {
             return true
         }
 

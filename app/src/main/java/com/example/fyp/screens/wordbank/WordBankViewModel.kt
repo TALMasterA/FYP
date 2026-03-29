@@ -317,7 +317,7 @@ class WordBankViewModel @Inject constructor(
 
             // OPTIMIZED: Load the entire DataStore cache once (1 DataStore read) and query
             // all language entries from the in-memory map — instead of N individual reads.
-            val languagesToCheck = directionalCounts.keys.filter { it !in wordBankExistsCache }
+            val languagesToCheck = directionalCounts.keys.filterNot { wordBankExistsCache.containsKey(it) }
             if (languagesToCheck.isNotEmpty()) {
                 coroutineScope {
                     // Single DataStore read for all missing languages

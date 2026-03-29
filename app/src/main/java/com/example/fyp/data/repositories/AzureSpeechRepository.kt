@@ -9,10 +9,13 @@ import com.microsoft.cognitiveservices.speech.AutoDetectSourceLanguageConfig
 import com.microsoft.cognitiveservices.speech.CancellationDetails
 import com.microsoft.cognitiveservices.speech.ResultReason
 import com.microsoft.cognitiveservices.speech.SpeechConfig
+import com.microsoft.cognitiveservices.speech.SpeechRecognitionCanceledEventArgs
+import com.microsoft.cognitiveservices.speech.SpeechRecognitionEventArgs
 import com.microsoft.cognitiveservices.speech.SpeechRecognizer
 import com.microsoft.cognitiveservices.speech.SpeechSynthesisCancellationDetails
 import com.microsoft.cognitiveservices.speech.SpeechSynthesizer
 import com.microsoft.cognitiveservices.speech.audio.AudioConfig
+import com.microsoft.cognitiveservices.speech.util.EventHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -53,8 +56,17 @@ class AzureSpeechRepository(
     private var cachedTokenTimeMs: Long = 0L
 
     // Track continuous recognition resources for proper cleanup
-    private var continuousSpeechConfig: SpeechConfig? = null
-    private var continuousAudioConfig: AudioConfig? = null
+    private val continuousSessionLock = Any()
+    private var continuousSession: ContinuousSession? = null
+
+    private data class ContinuousSession(
+        val recognizer: SpeechRecognizer,
+        val speechConfig: SpeechConfig,
+        val audioConfig: AudioConfig,
+        val recognizingListener: EventHandler<SpeechRecognitionEventArgs>,
+        val recognizedListener: EventHandler<SpeechRecognitionEventArgs>,
+        val canceledListener: EventHandler<SpeechRecognitionCanceledEventArgs>,
+    )
 
     /**
      * Gets or refreshes the Azure Speech configuration.
@@ -237,8 +249,13 @@ class AzureSpeechRepository(
         onFinal: (String) -> Unit,
         onError: (String) -> Unit
     ): SpeechRecognizer = withContext(Dispatchers.IO) {
-        // Clean up any previous continuous session resources
-        cleanupContinuousResources()
+        // Ensure any previous session is fully torn down before creating another.
+        val previous = synchronized(continuousSessionLock) {
+            continuousSession.also { continuousSession = null }
+        }
+        if (previous != null) {
+            closeContinuousSession(previous)
+        }
 
         val speechConfig = getSpeechConfig()
         speechConfig.speechRecognitionLanguage = languageCode
@@ -246,15 +263,11 @@ class AzureSpeechRepository(
         val audioConfig = AudioConfig.fromDefaultMicrophoneInput()
         val recognizer = SpeechRecognizer(speechConfig, audioConfig)
 
-        // Store references for cleanup in stopContinuous
-        continuousSpeechConfig = speechConfig
-        continuousAudioConfig = audioConfig
-
-        recognizer.recognizing.addEventListener { _, e ->
+        val recognizingListener = EventHandler<SpeechRecognitionEventArgs> { _, e ->
             onPartial(e.result.text)
         }
 
-        recognizer.recognized.addEventListener { _, e ->
+        val recognizedListener = EventHandler<SpeechRecognitionEventArgs> { _, e ->
             val result = e.result
             when (result.reason) {
                 ResultReason.RecognizedSpeech -> onFinal(result.text)
@@ -268,13 +281,36 @@ class AzureSpeechRepository(
             }
         }
 
-        recognizer.canceled.addEventListener { _, e ->
+        val canceledListener = EventHandler<SpeechRecognitionCanceledEventArgs> { _, e ->
             val det = CancellationDetails.fromResult(e.result)
             val errorDetails = "Canceled: ${det.reason} - ${det.errorDetails}"
             onError(ErrorMessageMapper.mapSpeechRecognitionError(errorDetails))
         }
 
-        recognizer.startContinuousRecognitionAsync()
+        recognizer.recognizing.addEventListener(recognizingListener)
+        recognizer.recognized.addEventListener(recognizedListener)
+        recognizer.canceled.addEventListener(canceledListener)
+
+        val session = ContinuousSession(
+            recognizer = recognizer,
+            speechConfig = speechConfig,
+            audioConfig = audioConfig,
+            recognizingListener = recognizingListener,
+            recognizedListener = recognizedListener,
+            canceledListener = canceledListener,
+        )
+
+        try {
+            recognizer.startContinuousRecognitionAsync().get(SPEECH_OPERATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        } catch (ex: Exception) {
+            closeContinuousSession(session)
+            throw ex
+        }
+
+        synchronized(continuousSessionLock) {
+            continuousSession = session
+        }
+
         recognizer
     }
 
@@ -286,11 +322,22 @@ class AzureSpeechRepository(
     override suspend fun stopContinuous(recognizer: SpeechRecognizer?) = withContext(Dispatchers.IO) {
         if (recognizer == null) return@withContext
 
-        runCatching { recognizer.stopContinuousRecognitionAsync().get(SPEECH_OPERATION_TIMEOUT_SECONDS, TimeUnit.SECONDS) }
-        runCatching { recognizer.close() }
+        val session = synchronized(continuousSessionLock) {
+            val active = continuousSession
+            if (active != null && active.recognizer == recognizer) {
+                continuousSession = null
+                active
+            } else {
+                null
+            }
+        }
 
-        // Clean up stored configs to prevent memory leaks
-        cleanupContinuousResources()
+        if (session != null) {
+            closeContinuousSession(session)
+        } else {
+            runCatching { recognizer.stopContinuousRecognitionAsync().get(SPEECH_OPERATION_TIMEOUT_SECONDS, TimeUnit.SECONDS) }
+            runCatching { recognizer.close() }
+        }
 
         Unit
     }
@@ -299,11 +346,21 @@ class AzureSpeechRepository(
      * Clean up continuous recognition resources (speechConfig and audioConfig).
      * Should be called when stopping continuous recognition or before starting a new session.
      */
-    private fun cleanupContinuousResources() {
-        runCatching { continuousAudioConfig?.close() }
-        runCatching { continuousSpeechConfig?.close() }
-        continuousAudioConfig = null
-        continuousSpeechConfig = null
+    private fun closeContinuousSession(session: ContinuousSession) {
+        runCatching { session.recognizer.recognizing.removeEventListener(session.recognizingListener) }
+        runCatching { session.recognizer.recognized.removeEventListener(session.recognizedListener) }
+        runCatching { session.recognizer.canceled.removeEventListener(session.canceledListener) }
+
+        runCatching {
+            session.recognizer
+                .stopContinuousRecognitionAsync()
+                .get(SPEECH_OPERATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        }
+
+        runCatching { session.recognizer.close() }
+        runCatching { session.audioConfig.close() }
+        kotlinx.coroutines.runBlocking { kotlinx.coroutines.delay(50) }
+        runCatching { session.speechConfig.close() }
     }
 
     private fun logAndError(

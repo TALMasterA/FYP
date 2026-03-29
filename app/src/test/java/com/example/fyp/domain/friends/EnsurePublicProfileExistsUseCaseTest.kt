@@ -117,6 +117,30 @@ class EnsurePublicProfileExistsUseCaseTest {
     }
 
     @Test
+    fun `keeps existing visibility choice when profile already exists`() = runTest {
+        // Arrange: user had already chosen public visibility.
+        val existingProfile = PublicUserProfile(
+            uid = "user1",
+            username = "test_user",
+            primaryLanguage = "en-US",
+            isDiscoverable = true
+        )
+
+        whenever(settingsRepository.fetchUserSettings(UserId("user1")))
+            .thenReturn(UserSettings(primaryLanguageCode = "ja-JP"))
+        whenever(friendsRepository.getPublicProfile(UserId("user1")))
+            .thenReturn(existingProfile)
+
+        // Act
+        useCase("user1")
+
+        // Assert: only language + timestamp patch is sent; visibility is not overwritten.
+        val updates = captureUpdateMap()
+        assertEquals("ja-JP", updates["primaryLanguage"])
+        assertFalse("Visibility should remain untouched", updates.containsKey("isDiscoverable"))
+    }
+
+    @Test
     fun `uses knownPrimaryLanguage instead of fetching settings`() = runTest {
         // Arrange
         whenever(friendsRepository.getPublicProfile(UserId("user1")))

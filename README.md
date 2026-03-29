@@ -246,7 +246,7 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 210 test files, 3,486 unit tests (100% on key logic)
+- **Android:** 210 test files, 3,489 unit tests (100% on key logic)
 - **Backend:** 14 test files, 182 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.
