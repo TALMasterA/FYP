@@ -46,6 +46,10 @@ Please use your gmail to register.
 
 **Backup/Security Posture:** App manifest sets `android:allowBackup="false"` to avoid unintended cloud/device backup of app data by default.
 
+**Registration Disabled:** The account registration action is disabled during development stage (whole project).
+
+**Language Pair Visibility:** When there are no related translation records, the Learning screen and Word Bank screen will NOT show that language/sheet pair for generation. Users must first create translation history for a language pair before it becomes visible for learning content generation.
+
 --------------------------------------------------------------
 
 ## 🎯 Core Features
