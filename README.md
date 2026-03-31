@@ -179,8 +179,9 @@ See `docs/treeOfImportantfiles.txt` for complete file tree.
 ```bash
 cd fyp-backend/functions
 npm install
+npm run lint
 npm run build
-npm test
+npm run test:coverage -- --runInBand
 npm run deploy
 ```
 
@@ -250,7 +251,7 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 210 test files, 3,489 unit tests (100% on key logic)
+- **Android:** 211 test files, 2,766 unit tests (from `testDebugUnitTest` report)
 - **Backend:** 14 test files, 182 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.
@@ -324,4 +325,4 @@ cd fyp-backend/functions && npm test
 
 --------------------------------------------------------------
 
-**Last Updated:** March 24, 2026
+**Last Updated:** March 31, 2026

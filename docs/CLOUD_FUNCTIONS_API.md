@@ -207,7 +207,7 @@ or
 { "awarded": false, "reason": "already_awarded" }
 ```
 
-**Rejection reasons:** `zero_score`, `already_awarded`, `no_sheet`, `invalid_sheet`, `version_mismatch`, `insufficient_records`
+**Rejection reasons:** `zero_score`, `already_awarded`, `no_quiz_version`, `invalid_quiz_version`, `version_mismatch`, `insufficient_records`
 
 ---
 
