@@ -183,6 +183,8 @@ This keeps common-path mark-read at 1 read + 2 writes, independent of message vo
 
 **Friend mirror-delete invariant:** Client-side batch deletes both `users/A/friends/B` and `users/B/friends/A` atomically. Rules allow counterpart `delete` only; counterpart `update` is forbidden.
 
+**Unread counter integrity invariant:** Owner writes to `users/{uid}` may update any profile/account fields, but if a write touches `totalUnreadMessages` or `unreadPerFriend`, rules must enforce: `totalUnreadMessages` is integer and `>= 0`, `unreadPerFriend` is a map, and map key count is capped (`<= 500`). Cross-user writes remain restricted to unread-counter-only updates.
+
 **Rule:** Update rules after field renames. Run `firebase deploy --only firestore:rules` after changes.
 
 ---

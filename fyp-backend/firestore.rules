@@ -137,18 +137,45 @@ service cloud.firestore {
     // ============================================
     // Main User Document: /users/{userId}
     // Two access patterns:
-    // 1. Owner can read/write their own document
+    // 1. Owner can read/write their own document with unread counter validation
     // 2. Cross-user writes for unread message counters only
     // ============================================
     match /users/{userId} {
-      // Allow owner to read/write their own document
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Owner can read their own user document.
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Owner can write their own user document.
+      // If unread counters are touched, enforce non-negative/type constraints.
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && ownerWriteHasValidUnreadCounters();
 
       // Allow cross-user writes for unread counters only
       // This covers both .update() and .set() with merge
       allow write: if request.auth != null
         && request.auth.uid != userId
         && onlyUpdatingUnreadCounters();
+    }
+
+    // Owner writes may touch many user fields.
+    // We only enforce unread constraints when unread fields are touched,
+    // so existing legacy data does not block unrelated profile edits.
+    function ownerWriteHasValidUnreadCounters() {
+      return resource == null
+        ? unreadCountersAreValidIfPresent()
+        : request.resource.data.diff(resource.data).affectedKeys().hasAny(['totalUnreadMessages', 'unreadPerFriend'])
+          ? unreadCountersAreValidIfPresent()
+          : true;
+    }
+
+    function unreadCountersAreValidIfPresent() {
+      return (!('totalUnreadMessages' in request.resource.data)
+              || (request.resource.data.totalUnreadMessages is int
+                  && request.resource.data.totalUnreadMessages >= 0))
+        && (!('unreadPerFriend' in request.resource.data)
+            || request.resource.data.unreadPerFriend is map)
+        && (!('unreadPerFriend' in request.resource.data)
+            || request.resource.data.unreadPerFriend.keys().size() <= 500);
     }
 
     // Helper function to check if only unread counter fields are being modified
