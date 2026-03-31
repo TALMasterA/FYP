@@ -6,10 +6,13 @@ _Last updated: 2026-03-30_
 
 | Metric                    | Count   |
 |---------------------------|---------|
-| Source files               | 408     |
-| Test files                 | 270     |
-| Total `@Test` methods      | 3,489   |
-| Key logic coverage         | ~100%   |
+| Android source files      | 250     |
+| Backend source files      | 9       |
+| Android test files        | 188     |
+| Backend test files        | 14      |
+| Total Android `@Test`     | 2,651   |
+| Total backend tests       | 182     |
+| Key logic coverage        | ~100%   |
 
 ## CI/CD Pipeline & Quality Checks
 
