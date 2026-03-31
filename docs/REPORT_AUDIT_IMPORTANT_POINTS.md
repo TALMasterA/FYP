@@ -20,7 +20,7 @@ Use this guide when auditing and regenerating the final report from DOCX/PlantUM
 - Backend test files: 14
 - Backend tests: 182
 - Backend coverage: statements 99.00%, branches 84.21%, functions 100.00%, lines 99.84%
-- Git commit count baseline used in report v17: 562+
+- Git commit count baseline used in report v19: 564+
 
 ## Report Schema Alignment Rules
 When auditing Chapter 4 tables, align to real persisted fields (not conceptual names):
@@ -44,7 +44,7 @@ Replace the diagrams should maintain the diagram size in report. Not affect the 
 Also, when editing table, use the same format for alignment.
 
 ## Repeatable Audit Workflow
-1. Generate updated report DOCX from the latest generator script.
+1. Generate updated report DOCX from the latest generator script (`report-audit/generate_v19.py` for the current baseline).
 2. Run:
    - `python report-audit/tools/docx_audit.py <docx> --out report-audit/<name>_audit.json`
    - `python report-audit/tools/extract_docx_full.py <docx> --json-out report-audit/<name>_full.json --txt-out report-audit/<name>_full.txt`
@@ -54,3 +54,5 @@ Also, when editing table, use the same format for alignment.
 
 ## Security Reminder
 Never commit service-account credential JSON files or keys into tracked source. Keep credentials local-only and rotate if exposed.
+
+Note: The report should use Times New Romen.
