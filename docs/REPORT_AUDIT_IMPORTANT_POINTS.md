@@ -55,6 +55,26 @@ Also, when editing table, use the same format for alignment.
 ## Security Reminder
 Never commit service-account credential JSON files or keys into tracked source. Keep credentials local-only and rotate if exposed.
 
+## Font Size Convention (Mandatory Rule)
+When inserting or editing DOCX content, these sizes **must** be followed:
+
+| Element | Size | How to apply |
+|---|---|---|
+| Body text (Normal style) | **12 pt** | Explicit `run.font.size = Pt(12)` on every new run |
+| Table cells | **~11 pt** (inherited from theme) | Do **NOT** set an explicit font size; leave as `None` |
+| Heading 1 | 16 pt | Set by style |
+| Heading 2 | 13–14 pt | Set by style |
+| Heading 3 | Inherited | Set by style |
+
+- `generate_v24.py` enforces this via `BODY_FONT_SIZE = Pt(12)`.
+- Cross-run paragraph replacement (`_replace_in_paragraph`) must preserve the original run's font size.
+- Device-compatibility table rows must **not** override the inherited size.
+
+## Table Cell Replacement Rule (Mandatory)
+DOCX table cells are individual paragraphs — they do **not** contain pipe `|` characters.
+Never use markdown-style `col1 | col2 | col3` patterns in TEXT_REPLACEMENTS for table cells.
+Use table-aware replacement: identify the table by header row, then replace individual cells by key.
+
 ## Audit note (do not delete)
 
 1. If you need regen the diagrams during audit, remember to keep the size of the diagrams.
