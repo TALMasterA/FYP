@@ -84,7 +84,7 @@ Please use your gmail to register.
 - Shared inbox actions are single-flight guarded (rapid repeated taps are ignored while one action is processing)
 - Accepting shared words adds them directly to Custom Words only (no extra bank routing or receiver-side retranslation)
 - Block/unblock users; Firestore rules prevent blocked users from sending requests
-- Client-side friend-request rate limiting: 10 per hour, persisted across app restarts
+- Client & server friend-request rate limiting: 5 per hour, persisted across app restarts
 - Username changes have 30-day cooldown (same as primary language changes)
 - Red dot badges clear only by viewing their corresponding screen (active/resumed Chat, Shared Inbox, Friends); refresh actions do not clear badges
 

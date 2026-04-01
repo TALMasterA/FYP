@@ -6,7 +6,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-const val MAX_FRIEND_REQUESTS_PER_HOUR = 10
+const val MAX_FRIEND_REQUESTS_PER_HOUR = 5
 private const val FRIEND_REQUEST_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000L
 
 data class FriendRequestRateLimitStatus(

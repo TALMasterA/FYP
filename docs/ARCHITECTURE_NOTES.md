@@ -224,7 +224,7 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ## 13. Input Validation and Sanitization — Security Guards
 
-**Rule:** Validate all user input at entry points using `validateEmail()`, `validatePassword()`, `validateUsername()`, `validateTextLength()`. Sanitize with `sanitizeInput()`. Apply rate limiting (login: 5/min, friend requests: 10/hr, API: 100/min, password reset: 3/hr).
+**Rule:** Validate all user input at entry points using `validateEmail()`, `validatePassword()`, `validateUsername()`, `validateTextLength()`. Sanitize with `sanitizeInput()`. Apply rate limiting (login: 5/min, friend requests: 5/hr, API: 100/min, password reset: 3/hr). Server-side enforcement: friend request notifications (5/hr, Firestore query + delete), chat notifications (10/min, `checkWriteRateLimit`), feedback submissions (3/hr, `checkWriteRateLimit` + delete), learning content generation (10/hr, `enforceRateLimit`).
 
 **Encoding order in `sanitizeInput()`:** `&` → `&amp;` (FIRST), then `<`, `>`, `"`, `'`, `/`.
 

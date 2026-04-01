@@ -55,12 +55,12 @@ class FriendRequestRateLimiterTest {
         val result = limiter.canSend("user1", nowMillis = 2_000L)
 
         assertTrue(result.allowed)
-        assertEquals(9, result.remainingSends)
+        assertEquals(4, result.remainingSends)
     }
 
     @Test
-    fun `blocks send after ten requests in window`() {
-        repeat(10) { index ->
+    fun `blocks send after five requests in window`() {
+        repeat(5) { index ->
             limiter.recordSend("user1", nowMillis = 1_000L + index)
         }
 

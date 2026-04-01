@@ -243,10 +243,11 @@ These are not callable functions — they fire automatically on Firestore docume
 
 | Function                           | Trigger                                          | Description                        |
 |------------------------------------|--------------------------------------------------|------------------------------------|
-| `sendChatNotification`             | `chats/{chatId}/messages/{messageId}` created    | Notifies recipient of new message  |
-| `sendFriendRequestNotification`    | `friend_requests/{requestId}` created            | Notifies recipient of new request; enforces 3/hour rate limit |
+| `sendChatNotification`             | `chats/{chatId}/messages/{messageId}` created    | Notifies recipient of new message; enforces 10/min rate limit (notification suppressed on exceed) |
+| `sendFriendRequestNotification`    | `friend_requests/{requestId}` created            | Notifies recipient of new request; enforces 5/hour rate limit (request deleted on exceed) |
 | `sendRequestAcceptedNotification`  | `friend_requests/{requestId}` updated            | Notifies sender when request accepted |
 | `sendSharedInboxNotification`      | `users/{userId}/shared_inbox/{itemId}` created   | Notifies recipient of new shared item |
+| `enforceFeedbackRateLimit`         | `feedback/{feedbackId}` created                  | Enforces 3/hour feedback rate limit (feedback deleted on exceed) |
 | `syncQuizVersionFromLearningSheet` | `learning_sheets/{sheetId}` created/updated      | Syncs quiz version for anti-cheat validation |
 
 ---

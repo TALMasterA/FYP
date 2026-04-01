@@ -32,6 +32,7 @@ export {
   sendFriendRequestNotification,
   sendRequestAcceptedNotification,
   sendSharedInboxNotification,
+  enforceFeedbackRateLimit,
 } from "./notifications.js";
 
 // ── Scheduled Maintenance ────────────────────────────────────────────

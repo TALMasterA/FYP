@@ -18,6 +18,7 @@ class LanguageValidationTest {
     private val supportedLanguages = setOf(
         "en-US",  // English
         "zh-HK",  // Cantonese
+        "zh-TW",  // Traditional Chinese
         "ja-JP",  // Japanese
         "zh-CN",  // Mandarin
         "fr-FR",  // French
@@ -107,7 +108,7 @@ class LanguageValidationTest {
 
     @Test
     fun `supported languages count matches expected`() {
-        assertEquals(16, supportedLanguages.size)
+        assertEquals(17, supportedLanguages.size)
     }
 
     // --- Language Pair Validity Tests ---
@@ -204,7 +205,7 @@ class LanguageValidationTest {
     @Test
     fun `asian language group all supported`() {
         val asianLanguages = listOf(
-            "ja-JP", "zh-CN", "zh-HK", "ko-KR",
+            "ja-JP", "zh-CN", "zh-HK", "zh-TW", "ko-KR",
             "th-TH", "vi-VN", "fil-PH", "ms-MY", "id-ID"
         )
 

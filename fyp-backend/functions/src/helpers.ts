@@ -287,3 +287,62 @@ export async function enforceRateLimit(uid: string): Promise<void> {
     throw new HttpsError("internal", "Rate limit check failed. Please try again.");
   }
 }
+
+// ============ Generic Write Rate Limiting (for Firestore triggers) ============
+
+/**
+ * Check and record a rate-limited action using the rate_limits collection.
+ * Returns true if the action is allowed, false if rate limit is exceeded.
+ * Unlike enforceRateLimit (which throws), this returns a boolean for trigger use.
+ */
+export async function checkWriteRateLimit(
+  uid: string,
+  action: string,
+  maxRequests: number,
+  windowMs: number
+): Promise<boolean> {
+  const rateLimitRef = getFirestore()
+    .collection("rate_limits")
+    .doc(`${uid}_${action}`);
+
+  const now = Date.now();
+  const windowStart = now - windowMs;
+
+  try {
+    return await getFirestore().runTransaction(async (tx) => {
+      const doc = await tx.get(rateLimitRef);
+
+      let timestamps: number[] = [];
+      if (doc.exists) {
+        const data = doc.data();
+        const rawTimestamps = data?.timestamps;
+        if (rawTimestamps != null) {
+          if (!Array.isArray(rawTimestamps) || rawTimestamps.some((ts) => typeof ts !== "number" || !Number.isFinite(ts))) {
+            logger.error("checkWriteRateLimit: malformed timestamps", {uid, action});
+            return false; // fail-closed
+          }
+          timestamps = rawTimestamps;
+        }
+      }
+
+      const activeWindow = timestamps.filter((ts: number) => ts > windowStart);
+
+      if (activeWindow.length >= maxRequests) {
+        tx.set(rateLimitRef, {
+          timestamps: activeWindow,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return false;
+      }
+
+      tx.set(rateLimitRef, {
+        timestamps: [...activeWindow, now],
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      return true;
+    });
+  } catch (error: any) {
+    logger.error("checkWriteRateLimit: transaction failed", {uid, action, error: error?.message});
+    return false; // fail-closed
+  }
+}

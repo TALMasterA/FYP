@@ -6,11 +6,13 @@
  */
 import {onDocumentCreated, onDocumentUpdated} from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
-import {getFirestore} from "./helpers.js";
+import {getFirestore, checkWriteRateLimit} from "./helpers.js";
 import {logger} from "./logger.js";
 
 const MAX_MESSAGE_PREVIEW_LENGTH = 100;
-const MAX_FRIEND_REQUESTS_PER_HOUR = 3;
+const MAX_FRIEND_REQUESTS_PER_HOUR = 5;
+const MAX_CHAT_MESSAGES_PER_MINUTE = 10;
+const CHAT_RATE_WINDOW_MS = 60 * 1000; // 1 minute
 
 // ---- Spam detection constants ----
 const SPAM_RECENT_MESSAGES_WINDOW = 5; // check the last N messages
@@ -155,6 +157,18 @@ export const sendChatNotification = onDocumentCreated(
     // Server-side spam check — skip notification for spam messages
     if (await isSpamMessage(event.params.chatId, senderId, content)) return;
 
+    // Server-side rate limiting — suppress notification for rapid message senders
+    const chatAllowed = await checkWriteRateLimit(
+      senderId, "chat", MAX_CHAT_MESSAGES_PER_MINUTE, CHAT_RATE_WINDOW_MS
+    );
+    if (!chatAllowed) {
+      logger.warn("Chat message rate limit exceeded, suppressing notification", {
+        senderId,
+        chatId: event.params.chatId,
+      });
+      return;
+    }
+
     try {
       let senderUsername = senderUsernameFromMessage;
       if (!senderUsername) {
@@ -192,7 +206,7 @@ export const sendChatNotification = onDocumentCreated(
 
 /**
  * Sends an FCM push notification to the recipient when a new friend request is created.
- * Also enforces server-side rate limiting (max 3 requests/hour) to prevent spam.
+ * Also enforces server-side rate limiting (max 5 requests/hour) to prevent spam.
  *
  * Trigger: Firestore document create at friend_requests/{requestId}
  */
@@ -354,6 +368,40 @@ export const sendSharedInboxNotification = onDocumentCreated(
         userId: event.params.userId,
         itemId: event.params.itemId,
       });
+    }
+  }
+);
+
+const MAX_FEEDBACK_PER_HOUR = 3;
+const FEEDBACK_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Enforces server-side rate limiting for feedback submissions.
+ * If the user exceeds 3 submissions per hour, the feedback document is deleted.
+ *
+ * Trigger: Firestore document create at feedback/{feedbackId}
+ */
+export const enforceFeedbackRateLimit = onDocumentCreated(
+  {
+    document: "feedback/{feedbackId}",
+    region: "us-central1",
+  },
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    const userId: string = data.userId ?? "";
+    if (!userId) return;
+
+    const allowed = await checkWriteRateLimit(
+      userId, "feedback", MAX_FEEDBACK_PER_HOUR, FEEDBACK_RATE_WINDOW_MS
+    );
+    if (!allowed) {
+      logger.warn("Feedback rate limit exceeded, deleting feedback", {
+        userId,
+        feedbackId: event.params.feedbackId,
+      });
+      await event.data?.ref.delete();
     }
   }
 );

@@ -101,6 +101,7 @@ jest.mock("firebase-admin", () => ({
 
 jest.mock("../helpers.js", () => ({
   getFirestore: jest.fn(() => mockFirestore),
+  checkWriteRateLimit: jest.fn().mockResolvedValue(true),
 }));
 
 jest.mock("../logger.js", () => ({
@@ -123,7 +124,7 @@ describe("notifications deep branches", () => {
     const handler = createdHandlers["friend_requests/{requestId}"];
     const mockDeleteRequest = jest.fn().mockResolvedValue(undefined);
 
-    mockGetFriendRequests.mockResolvedValueOnce({size: 4});
+    mockGetFriendRequests.mockResolvedValueOnce({size: 6});
 
     await handler({
       params: {requestId: "req-1"},
