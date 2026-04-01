@@ -55,4 +55,8 @@ Also, when editing table, use the same format for alignment.
 ## Security Reminder
 Never commit service-account credential JSON files or keys into tracked source. Keep credentials local-only and rotate if exposed.
 
-Note: The report should use Times New Romen.
+## Audit note (do not delete)
+
+1. If you need regen the diagrams during audit, remember to keep the size of the diagrams.
+2. Whole report use Times New Romen.
+3. If you need, you may access my firbase through firebase-sa.json.
