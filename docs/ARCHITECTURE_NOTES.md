@@ -400,9 +400,9 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ## 16. Friend Request Rate Limiting — Persisted Hourly Window
 
-**Invariant:** 10 sends per hour, persisted in SharedPreferences to survive app restarts.
+**Invariant:** 5 sends per hour, persisted in SharedPreferences to survive app restarts.
 
-**Rule:** (1) Prune expired timestamps before reads/writes; (2) Only record send after successful request; (3) Keep aligned with documented 10-per-hour rule.
+**Rule:** (1) Prune expired timestamps before reads/writes; (2) Only record send after successful request; (3) Keep aligned with documented 5-per-hour rule.
 
 **Guard:** `FriendRequestRateLimiterTest` verifies persistence and restart safety.
 

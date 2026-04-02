@@ -61,7 +61,7 @@ When inserting or editing DOCX content, these sizes **must** be followed:
 | Element | Size | How to apply |
 |---|---|---|
 | Body text (Normal style) | **12 pt** | Explicit `run.font.size = Pt(12)` on every new run |
-| Table cells | **~11 pt** (inherited from theme) | Do **NOT** set an explicit font size; leave as `None` |
+| Table cells | **12 pt** (inherited from docDefaults) | Do **NOT** set an explicit font size; leave as `None` |
 | Heading 1 | 16 pt | Set by style |
 | Heading 2 | 13–14 pt | Set by style |
 | Heading 3 | Inherited | Set by style |
@@ -80,3 +80,7 @@ Use table-aware replacement: identify the table by header row, then replace indi
 1. If you need regen the diagrams during audit, remember to keep the size of the diagrams.
 2. Whole report use Times New Romen.
 3. If you need, you may access my firbase through firebase-sa.json.
+4. `figure_3_8.puml` media target in DOCX is `image9.png`; `figure_4_10.puml` is `image29.png`.
+5. docDefaults `sz` is in half-points (24 = 12pt). Check with `tools/_check_inherited.py`.
+6. Font audit tool: `python tools/audit_fonts_comprehensive.py <docx> [--json-out <path>]`.
+7. Report-audit skill available at `.agents/skills/fyp-report-audit/SKILL.md`.
