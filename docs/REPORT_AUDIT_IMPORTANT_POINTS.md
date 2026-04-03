@@ -1,6 +1,6 @@
 # Report Audit Important Points
 
-Last updated: 2026-03-31
+Last updated: 2026-04-03
 
 ## Scope
 Use this guide when auditing and regenerating the final report from DOCX/PlantUML sources.
@@ -29,6 +29,7 @@ When auditing Chapter 4 tables, align to real persisted fields (not conceptual n
 - Quiz anti-cheat validates against `users/{uid}/quiz_versions/{pair}` and awards update `user_stats/coins` (`coinTotal`, `coinByLang`).
 - Chat messages use `content`, `createdAt`, `type`, `metadata`, and unread counters via chat metadata + root user counters.
 - Friend request cancel flow currently deletes the request doc instead of persisting `CANCELLED`.
+- Global registry tables: `usernames` and `user_search` use explicit document IDs (`username`, `uid`) and should mark Document ID as Required = Yes.
 
 ## Diagram Accuracy Hotspots
 Always re-check these because they drift often:
@@ -44,13 +45,23 @@ Replace the diagrams should maintain the diagram size in report. Not affect the 
 Also, when editing table, use the same format for alignment.
 
 ## Repeatable Audit Workflow
-1. Generate updated report DOCX from the latest generator script (`report-audit/generate_v19.py` for the current baseline).
+1. Generate updated report DOCX from the latest baseline generator script in `report-audit/` (use the newest `generate_v*.py` relevant to the current cycle).
 2. Run:
    - `python report-audit/tools/docx_audit.py <docx> --out report-audit/<name>_audit.json`
    - `python report-audit/tools/extract_docx_full.py <docx> --json-out report-audit/<name>_full.json --txt-out report-audit/<name>_full.txt`
+   - `python report-audit/tools/audit_toc_bookmarks.py <docx> --out report-audit/<name>_toc_bookmark_audit.json`
 3. Scan extracted TXT for stale terms (old field names, old metrics, outdated anti-cheat reasons).
 4. Re-run Android quality gates before finalizing repository-changing tasks. 
 (Do not need to do this if you have not move the actual code files)
+
+## One-Off Tool Hygiene (Mandatory after full audit)
+- Keep reusable scripts in `report-audit/tools/` only.
+- Archive version-specific one-off scripts (for example `check_v26_*.py`) instead of leaving them mixed with reusable tools.
+- Use cleanup helper:
+  - `python report-audit/tools/cleanup_oneoff_tools.py --dry-run`
+  - `python report-audit/tools/cleanup_oneoff_tools.py --apply`
+- Always review dry-run candidates before apply.
+- Archive destination default: `report-audit/previous-report-versions/tool-archive/<timestamp>/`.
 
 ## Security Reminder
 Never commit service-account credential JSON files or keys into tracked source. Keep credentials local-only and rotate if exposed.
@@ -78,9 +89,9 @@ Use table-aware replacement: identify the table by header row, then replace indi
 ## Audit note (do not delete)
 
 1. If you need regen the diagrams during audit, remember to keep the size of the diagrams.
-2. Whole report use Times New Romen.
+2. Whole report uses Times New Roman.
 3. If you need, you may access my firbase through firebase-sa.json.
-4. `figure_3_8.puml` media target in DOCX is `image9.png`; `figure_4_10.puml` is `image29.png`.
-5. docDefaults `sz` is in half-points (24 = 12pt). Check with `tools/_check_inherited.py`.
+4. `figure_3_8.puml` media target in DOCX is `image9.png`; for v27/v28, `figure_4_10.puml` is `image33.png`.
+5. docDefaults `sz` is in half-points (24 = 12pt). Check with `report-audit/previous-report-versions/_check_inherited.py`.
 6. Font audit tool: `python tools/audit_fonts_comprehensive.py <docx> [--json-out <path>]`.
 7. Report-audit skill available at `.agents/skills/fyp-report-audit/SKILL.md`.
