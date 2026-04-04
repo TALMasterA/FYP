@@ -57,6 +57,8 @@ Please use your gmail to register.
 **Translation Modes:**
 - **Quick Translate (Discrete):** Real-time voice translation for short phrases with auto-detect or manual language selection
 - **Live Conversation (Continuous):** Multi-turn dialogue with automatic speaker detection (Person A/B)
+- Translation requests now apply a short local cooldown after upstream rate-limit responses, and continuous mode auto-stops on rate-limit errors to prevent repeated failed calls
+- Continuous speaker-toggle restarts are briefly debounced to stabilize microphone/session handoff on some devices
 - **Camera / OCR:** Scan text from images via camera or gallery with language hints
 - Multi-language: English, Cantonese, Traditional/Simplified Chinese, Japanese, and 10+ more via Azure
 - Language swap button (swaps recognized/translated text)

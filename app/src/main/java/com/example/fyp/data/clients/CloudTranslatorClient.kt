@@ -34,6 +34,41 @@ class CloudTranslatorClient(
 ) {
     private companion object {
         const val TIMEOUT_SECONDS = 30L
+        const val RATE_LIMIT_COOLDOWN_MS = 2 * 60 * 1000L
+
+        @Volatile
+        private var rateLimitedUntilMs: Long = 0L
+
+        private fun isRateLimitMessage(message: String?): Boolean {
+            val lowered = message?.lowercase().orEmpty()
+            return lowered.contains("resource-exhausted") ||
+                lowered.contains("rate limit") ||
+                lowered.contains("too many requests") ||
+                lowered.contains("http 429")
+        }
+
+        private fun remainingRateLimitSeconds(nowMs: Long = System.currentTimeMillis()): Long {
+            val remainingMs = (rateLimitedUntilMs - nowMs).coerceAtLeast(0L)
+            if (remainingMs == 0L) return 0L
+            return ((remainingMs + 999L) / 1000L).coerceAtLeast(1L)
+        }
+
+        private fun enforceRateLimitCooldown() {
+            val seconds = remainingRateLimitSeconds()
+            if (seconds <= 0L) return
+            throw Exception("Translation service is temporarily rate-limited. Please wait ${seconds}s and try again.")
+        }
+
+        private fun markRateLimited(message: String?): Exception {
+            val nextUntil = System.currentTimeMillis() + RATE_LIMIT_COOLDOWN_MS
+            if (nextUntil > rateLimitedUntilMs) {
+                rateLimitedUntilMs = nextUntil
+            }
+            return Exception(
+                message?.takeIf { it.isNotBlank() }
+                    ?: "Translation service rate limit exceeded. Please wait a few minutes and try again."
+            )
+        }
     }
 
     // Reuse callable instances to avoid repeated lookup/allocation on hot paths.
@@ -56,7 +91,11 @@ class CloudTranslatorClient(
                 serverMessage ?: "Permission denied while calling translation service."
             else -> serverMessage ?: "Translation request failed. Please try again."
         }
-        return Exception(message, e)
+        return if (e.code == FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED || isRateLimitMessage(serverMessage)) {
+            markRateLimited(message)
+        } else {
+            Exception(message, e)
+        }
     }
 
     suspend fun translateText(
@@ -64,35 +103,45 @@ class CloudTranslatorClient(
         from: String?,
         to: String
     ): TranslationResult {
-        return NetworkRetry.withRetry(
-            maxAttempts = 3,
-            shouldRetry = NetworkRetry::isRetryableFirebaseException
-        ) {
-            val data = hashMapOf(
-                "text" to text,
-                "to" to to
-            )
-            if (!from.isNullOrBlank()) data["from"] = from
+        return try {
+            enforceRateLimitCooldown()
+            NetworkRetry.withRetry(
+                maxAttempts = 3,
+                shouldRetry = NetworkRetry::isRetryableFirebaseException
+            ) {
+                val data = hashMapOf(
+                    "text" to text,
+                    "to" to to
+                )
+                if (!from.isNullOrBlank()) data["from"] = from
 
-            val result = translateTextCallable
-                .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .call(data)
-                .await()
+                val result = translateTextCallable
+                    .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .call(data)
+                    .await()
 
-            @Suppress("UNCHECKED_CAST")
-            val map = result.data as? Map<String, Any?>
-                ?: throw IllegalStateException("Unexpected result type: ${result.data}")
+                @Suppress("UNCHECKED_CAST")
+                val map = result.data as? Map<String, Any?>
+                    ?: throw IllegalStateException("Unexpected result type: ${result.data}")
 
-            val translatedText = map["translatedText"] as? String
-                ?: throw IllegalStateException("Missing translatedText in result")
+                val translatedText = map["translatedText"] as? String
+                    ?: throw IllegalStateException("Missing translatedText in result")
 
-            @Suppress("UNCHECKED_CAST")
-            val detected = map["detectedLanguage"] as? Map<String, Any?>
-            TranslationResult(
-                translatedText = translatedText,
-                detectedLanguage = detected?.get("language") as? String,
-                detectedScore = (detected?.get("score") as? Number)?.toDouble()
-            )
+                @Suppress("UNCHECKED_CAST")
+                val detected = map["detectedLanguage"] as? Map<String, Any?>
+                TranslationResult(
+                    translatedText = translatedText,
+                    detectedLanguage = detected?.get("language") as? String,
+                    detectedScore = (detected?.get("score") as? Number)?.toDouble()
+                )
+            }
+        } catch (e: FirebaseFunctionsException) {
+            throw mapFunctionsError(e)
+        } catch (e: Exception) {
+            if (isRateLimitMessage(e.message)) {
+                throw markRateLimited(e.message)
+            }
+            throw e
         }
     }
 
@@ -102,6 +151,7 @@ class CloudTranslatorClient(
         to: String
     ): List<String> {
         return try {
+            enforceRateLimitCooldown()
             val allTranslatedTexts = mutableListOf<String>()
             
             // Azure Translator API limits the array size to 100 elements per request
@@ -135,6 +185,11 @@ class CloudTranslatorClient(
             allTranslatedTexts
         } catch (e: FirebaseFunctionsException) {
             throw mapFunctionsError(e)
+        } catch (e: Exception) {
+            if (isRateLimitMessage(e.message)) {
+                throw markRateLimited(e.message)
+            }
+            throw e
         }
     }
 

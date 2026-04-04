@@ -68,6 +68,14 @@ internal class ContinuousConversationController(
         )
     }
 
+    private fun isRateLimitError(message: String): Boolean {
+        val lowered = message.lowercase()
+        return lowered.contains("resource-exhausted") ||
+            lowered.contains("rate limit") ||
+            lowered.contains("too many requests") ||
+            lowered.contains("429")
+    }
+
     fun start(
         speakingLang: String,
         targetLang: String,
@@ -142,6 +150,10 @@ internal class ContinuousConversationController(
 
                                 is SpeechResult.Error -> {
                                     setStatus("Continuous translation error: ${tr.message}")
+                                    if (isRateLimitError(tr.message)) {
+                                        setStatus("${tr.message} Continuous mode stopped to avoid repeated failed requests.")
+                                        stop()
+                                    }
                                 }
                             }
 

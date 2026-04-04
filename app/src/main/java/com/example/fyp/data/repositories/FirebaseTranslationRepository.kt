@@ -59,7 +59,12 @@ class FirebaseTranslationRepository @Inject constructor(
         return message.contains("permission_denied") ||
             message.contains("unauthenticated") ||
             message.contains("invalid-argument") ||
-            message.contains("must be one of:")
+            message.contains("must be one of:") ||
+            message.contains("resource-exhausted") ||
+            message.contains("rate limit") ||
+            message.contains("too many requests") ||
+            message.contains("unavailable") ||
+            message.contains("deadline exceeded")
     }
 
     /**

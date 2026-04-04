@@ -565,6 +565,10 @@ This prevents job cancellation on route changes and avoids stale completion bann
 
 **Rule:** Treat backend quota/rate-limit failures (`resource-exhausted`, "rate limit", "too many requests") as non-retryable for immediate client retries. Keep exponential retry for transient connectivity/server failures only.
 
+**Client Guard:** `CloudTranslatorClient` enforces a short local cooldown after a rate-limit response so repeated taps/segments do not immediately re-hit the callable and extend throttling windows.
+
+**Continuous Mode Guard:** `ContinuousConversationController` must stop continuous translation when rate-limit signatures are detected in translation errors to avoid an endless fail loop for every recognized segment.
+
 ---
 
 ## 26. SpeechViewModel — Synchronized Pending Saves
@@ -616,6 +620,8 @@ The third parameter is named `currentSheetHistoryCount` (sheet version), not `cu
 ## 32. Camera OCR — Language Hint
 
 **Invariant:** `ImageSourceDialog` shows language hint reminding users to set "From" language to match scanned text, because different script recognizers have different accuracy.
+
+**Lifecycle Guard:** `CameraCaptureScreen` must avoid blocking `ProcessCameraProvider.get()` during disposal. Acquire provider asynchronously, bind/unbind only local use-cases, and prefer `PreviewView.ImplementationMode.COMPATIBLE` on unstable devices to reduce HWUI/native surface crashes.
 
 ---
 

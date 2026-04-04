@@ -94,7 +94,9 @@ object ErrorMessageMapper {
                 "Translation timed out. Please try again."
 
             errorMessage.contains("rate limit", ignoreCase = true) ||
-            errorMessage.contains("quota", ignoreCase = true) ->
+            errorMessage.contains("quota", ignoreCase = true) ||
+            errorMessage.contains("resource-exhausted", ignoreCase = true) ||
+            errorMessage.contains("429") ->
                 "Service temporarily unavailable. Please try again later."
 
             errorMessage.contains("invalid", ignoreCase = true) ->

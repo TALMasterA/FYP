@@ -139,6 +139,12 @@ class ErrorHandlingTest {
     }
 
     @Test
+    fun `translation resource-exhausted error mapped correctly`() {
+        val result = ErrorMessageMapper.mapTranslationError("FirebaseFunctionsException: resource-exhausted")
+        assertTrue(result.contains("temporarily unavailable"))
+    }
+
+    @Test
     fun `translation invalid input error mapped correctly`() {
         val result = ErrorMessageMapper.mapTranslationError("invalid text input")
         assertTrue(result.contains("Invalid input"))

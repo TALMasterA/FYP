@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-03-31_
+_Last updated: 2026-04-04_
 
 ## Verified Snapshot (from local audit)
 
@@ -38,6 +38,7 @@ CI threshold in `fyp-backend/functions/jest.config.js`:
 ## High-Value Regression Suites
 
 - Android guard/invariant suites: `UiTextAlignmentTest`, `AccountDeletionGuardTest`, `PrimaryLanguageCooldownTest`, `UsernameCooldownTest`, `FavoriteLimitTest`, `NavigationBarInsetsTest`, `LanguageValidationTest`.
+- Translation resilience coverage includes `ErrorHandlingTest` assertions for `resource-exhausted` / rate-limit message mapping.
 - Android flow/integration suites: `FriendSystemIntegrationTest`, `FriendsFlowIntegrationTest`, `CoinAndGenerationIntegrationTest`, `QuizFlowIntegrationTest`, `DataLayerIntegrationTest`, `CrossLayerIntegrationTest`.
 - Backend contract/security suites: `translation.test.ts`, `learning.test.ts`, `coins.test.ts`, `notifications.test.ts` (includes friend-request, chat, and feedback rate-limit enforcement), `maintenance.test.ts`, `firestore-rules-settings.test.ts`.
 

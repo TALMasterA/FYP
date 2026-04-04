@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.lazy.LazyListState
+import kotlinx.coroutines.delay
 
 @Composable
 fun ContinuousConversationEffects(
@@ -59,10 +60,12 @@ fun ContinuousConversationEffects(
         }
     }
 
-    // Restart recognizer on person switch while running (but never during preparing/processing)
+    // Restart recognizer on person switch while running (but never during preparing/processing).
+    // Small debounce gives stop() time to release native recognizer resources.
     LaunchedEffect(isPersonATalking, isLoggedIn) {
         if (isRunning && isLoggedIn && !isPreparing && !isProcessing) {
             onStopRecognizer()
+            delay(250)
 
             val speakLang = if (isPersonATalking) fromLanguage else toLanguage
             val otherLang = if (isPersonATalking) toLanguage else fromLanguage

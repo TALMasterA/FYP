@@ -25,11 +25,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 /**
  * Dialog to choose image source (camera or gallery)
@@ -127,32 +129,37 @@ fun CameraCaptureScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
-    
+    var cameraProvider by remember { mutableStateOf<ProcessCameraProvider?>(null) }
+    val previewUseCase = remember { Preview.Builder().build() }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
-    val previewView = remember { PreviewView(context) }
-    
-    // Setup camera
-    LaunchedEffect(cameraProviderFuture) {
-        val cameraProvider = cameraProviderFuture.get()
-        
-        val preview = Preview.Builder().build().also {
-            it.setSurfaceProvider(previewView.surfaceProvider)
+    val previewView = remember {
+        PreviewView(context).apply {
+            // TextureView-backed preview is less crash-prone on some device/GPU combinations.
+            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
         }
-        
+    }
+
+    // Setup camera
+    LaunchedEffect(lifecycleOwner) {
+        val provider = awaitCameraProvider(context)
+        cameraProvider = provider
+
+        previewUseCase.setSurfaceProvider(previewView.surfaceProvider)
+
         imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .build()
-        
+        val activeCapture = imageCapture ?: return@LaunchedEffect
+
         val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-        
+
         try {
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
+            provider.unbind(previewUseCase, activeCapture)
+            provider.bindToLifecycle(
                 lifecycleOwner,
                 cameraSelector,
-                preview,
-                imageCapture
+                previewUseCase,
+                activeCapture,
             )
         } catch (e: Exception) {
             onError(e)
@@ -218,10 +225,29 @@ fun CameraCaptureScreen(
     // Cleanup
     DisposableEffect(Unit) {
         onDispose {
-            cameraProviderFuture.get().unbindAll()
+            cameraProvider?.let { provider ->
+                imageCapture?.let { capture ->
+                    runCatching { provider.unbind(previewUseCase, capture) }
+                }
+            }
         }
     }
 }
+
+private suspend fun awaitCameraProvider(context: android.content.Context): ProcessCameraProvider =
+    withContext(Dispatchers.Main.immediate) {
+        suspendCancellableCoroutine { cont ->
+            val future = ProcessCameraProvider.getInstance(context)
+            future.addListener(
+                {
+                    @Suppress("BlockingMethodInNonBlockingContext")
+                    val provider = future.get()
+                    if (cont.isActive) cont.resume(provider)
+                },
+                ContextCompat.getMainExecutor(context),
+            )
+        }
+    }
 
 /**
  * Image picker launcher helper
