@@ -1,6 +1,6 @@
 # Report Audit Important Points
 
-Last updated: 2026-04-03
+Last updated: 2026-04-04
 
 ## Scope
 Use this guide when auditing and regenerating the final report from DOCX/PlantUML sources.
@@ -43,6 +43,10 @@ For this report file family, embedded media names are `image24.png`, `image25.pn
 If diagram replacement fails, check `report-audit/v*_audit.json` for actual media targets first.
 Replace the diagrams should maintain the diagram size in report. Not affect the format.
 Also, when editing table, use the same format for alignment.
+
+## TOC / Heading Text Update Rule
+When wording changes affect headings that already appear in the Table of Contents, update both the heading text and the stored TOC display text inside the DOCX package, or refresh fields in Word before finalising.
+`python-docx` paragraph edits alone do not automatically refresh TOC field results.
 
 ## Repeatable Audit Workflow
 1. Generate updated report DOCX from the latest baseline generator script in `report-audit/` (use the newest `generate_v*.py` relevant to the current cycle).
