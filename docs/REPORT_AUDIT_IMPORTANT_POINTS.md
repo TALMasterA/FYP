@@ -16,7 +16,7 @@ Use this guide when auditing and regenerating the final report from DOCX/PlantUM
 - Android source files: 252
 - Backend source files: 9
 - Android unit test files: 211
-- Android unit tests: 2,766
+- Android unit tests: 2,817
 - Backend test files: 14
 - Backend tests: 182
 - Backend coverage: statements 99.00%, branches 84.21%, functions 100.00%, lines 99.84%

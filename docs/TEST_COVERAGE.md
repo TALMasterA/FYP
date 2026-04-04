@@ -10,7 +10,7 @@ _Last updated: 2026-04-04_
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 9 |
 | Android unit test files (`app/src/test/java/com/example/fyp`) | 211 |
 | Android test suites in latest `testDebugUnitTest` run | 211 |
-| Android unit tests executed (`testDebugUnitTest`) | 2,766 |
+| Android unit tests executed (`testDebugUnitTest`) | 2,817 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 14 |
 | Backend tests (`it`/`test` blocks) | 182 |
 

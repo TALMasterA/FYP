@@ -70,3 +70,6 @@ firebase-sa.json
 
 # dataconnect generated files
 .dataconnect
+
+# reports generated output
+jest_output.json
