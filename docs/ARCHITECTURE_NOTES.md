@@ -140,6 +140,19 @@ For document creation fallback: catch `FirebaseFirestoreException`, only fallbac
 
 **Rule:** Never increase `DEFAULT_HISTORY_LIMIT` — it controls a Firestore read quota boundary.
 
+**HistoryViewModel Reactive Tracking:** The `historyJob` must use `combine(historyRecords, isLoading, error)` to track all three SharedHistoryDataSource flows reactively. Never capture the limit in a closure — always read `_uiState.value.historyViewLimit` at collect time so limit expansions are reflected immediately.
+
+---
+
+## 7.0.1 Primary Language Change — WordBank Reset Contract
+
+**Invariant:** When `primaryLanguageCode` changes, `WordBankViewModel.setPrimaryLanguageCode` must clear ALL language-specific state immediately (clusters, caches, selection) before triggering the async refresh — same as `LearningViewModel` does for sheet metadata.
+
+**Rule:** `setPrimaryLanguageCode` must:
+1. Clear `wordBankExistsCache` and `cachedCustomWordsCount`
+2. Reset `languageClusters` to empty and `isLoading` to true in the UiState
+3. Then launch `forceRefreshLanguageCounts` + `refreshClusters` asynchronously
+
 ---
 
 ## 7.1 Chat Mark-Read Cost Guard

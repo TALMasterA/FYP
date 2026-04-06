@@ -242,10 +242,16 @@ class WordBankViewModel @Inject constructor(
     fun setPrimaryLanguageCode(code: String) {
         if (primaryLanguageCode != code) {
             primaryLanguageCode = code
-            // Clear selection when primary language changes
+            // Critical: clear all language-specific state immediately when primary changes
+            // (mirrors LearningViewModel behaviour so the UI doesn't briefly show stale clusters)
+            wordBankExistsCache.clear()
+            cachedCustomWordsCount = null
             _uiState.value = _uiState.value.copy(
                 selectedLanguageCode = null,
-                currentWordBank = null
+                currentWordBank = null,
+                languageClusters = emptyList(),
+                isLoading = true,
+                error = null
             )
             // Force refresh to ensure immediate data update
             viewModelScope.launch {

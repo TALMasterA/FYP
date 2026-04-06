@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -445,23 +446,31 @@ class HistoryViewModel @Inject constructor(
         }
 
         // Use shared history data source (single listener shared across ViewModels)
-        val initialLimit = _uiState.value.historyViewLimit.toLong()
-        sharedHistoryDataSource.startObserving(userId, initialLimit)
+        // Note: settingsJob above will quickly update the limit to the real value from Firestore;
+        // we start observing with the default so data appears immediately.
+        sharedHistoryDataSource.startObserving(userId)
 
         historyJob = viewModelScope.launch {
-            // Observe from shared data source instead of creating new listener
-            sharedHistoryDataSource.historyRecords
-                .collect { list ->
-                    // Check if there might be more records
-                    val hasMore = list.size >= initialLimit
-                    
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = sharedHistoryDataSource.isLoading.value,
-                        error = sharedHistoryDataSource.error.value,
-                        records = list,
-                        hasMoreRecords = hasMore
-                    )
-                }
+            // Combine records, isLoading, and error into a single reactive stream
+            // so the UI updates whenever ANY of these change (not just records).
+            combine(
+                sharedHistoryDataSource.historyRecords,
+                sharedHistoryDataSource.isLoading,
+                sharedHistoryDataSource.error
+            ) { list, loading, error ->
+                Triple(list, loading, error)
+            }.collect { (list, loading, error) ->
+                // Use current limit from uiState (not a stale captured value)
+                val currentLimit = _uiState.value.historyViewLimit.toLong()
+                val hasMore = list.size >= currentLimit
+
+                _uiState.value = _uiState.value.copy(
+                    isLoading = loading,
+                    error = error,
+                    records = list,
+                    hasMoreRecords = hasMore
+                )
+            }
         }
 
         sessionsJob = viewModelScope.launch {
