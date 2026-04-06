@@ -26,7 +26,6 @@ internal fun NavGraphBuilder.learningWordBankGraph(
     learningViewModel: LearningViewModel,
     wordBankViewModel: WordBankViewModel,
     customWordsViewModel: CustomWordsViewModel,
-    primaryLanguageCode: String,
 ) {
     composableRequireLogin(
         route = AppScreen.Learning.route,
@@ -115,7 +114,6 @@ internal fun NavGraphBuilder.learningWordBankGraph(
             viewModel = wordBankViewModel,
             customWordsViewModel = customWordsViewModel,
             appLanguageState = appLanguageState,
-            primaryLanguageCode = primaryLanguageCode,
             onBack = { navController.popBackStack() }
         )
     }

@@ -112,7 +112,7 @@ For document creation fallback: catch `FirebaseFirestoreException`, only fallbac
 
 ## 4. Account Deletion — Complete Cleanup Required
 
-**Invariant:** `deleteAccount()` must clean up ALL 17 subcollections.
+**Invariant:** `deleteAccount()` must clean up ALL 18 subcollections.
 
 **Rule:** If adding a new collection, add its cleanup to `deleteAccount()`. Write a test asserting cleanup count stays in sync.
 
@@ -152,6 +152,8 @@ For document creation fallback: catch `FirebaseFirestoreException`, only fallbac
 1. Clear `wordBankExistsCache` and `cachedCustomWordsCount`
 2. Reset `languageClusters` to empty and `isLoading` to true in the UiState
 3. Then launch `forceRefreshLanguageCounts` + `refreshClusters` asynchronously
+
+**Immediate Propagation Rule:** `SettingsViewModel` (and `ShopViewModel` for history-limit changes) must call `sharedSettings.updateCache(updatedSettings)` after every successful write. This ensures all subscribing ViewModels (`WordBankViewModel`, `LearningViewModel`, `HistoryViewModel`) react immediately instead of waiting for the Firestore listener round-trip. `WordBankScreen` no longer accepts a `primaryLanguageCode` navigation parameter — it relies entirely on the ViewModel's settings observation.
 
 ---
 

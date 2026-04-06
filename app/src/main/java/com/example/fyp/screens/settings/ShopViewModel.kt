@@ -6,6 +6,7 @@ import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.cloud.CloudQuizClient
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.settings.UserSettingsRepository
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.UserSettings
 import com.example.fyp.model.UserId
@@ -34,7 +35,8 @@ class ShopViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val settingsRepo: UserSettingsRepository,
     private val quizRepo: QuizRepository,
-    private val cloudClient: CloudQuizClient
+    private val cloudClient: CloudQuizClient,
+    private val sharedSettings: SharedSettingsDataSource
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ShopUiState())
@@ -123,6 +125,11 @@ class ShopViewModel @Inject constructor(
                     purchaseSuccess = "History limit expanded to ${result.newLimit} records!",
                     purchaseError = null
                 )
+                // Propagate new limit immediately so HistoryViewModel can show
+                // the expanded record count without waiting for Firestore listener.
+                val newLimit = result.newLimit ?: _uiState.value.currentHistoryLimit
+                val current = sharedSettings.settings.value
+                sharedSettings.updateCache(current.copy(historyViewLimit = newLimit))
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isPurchasing = false,

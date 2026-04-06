@@ -370,7 +370,6 @@ fun AppNavigation() {
                                 learningViewModel = learningViewModel,
                                 wordBankViewModel = wordBankViewModel,
                                 customWordsViewModel = customWordsViewModel,
-                                primaryLanguageCode = settingsUiState.settings.primaryLanguageCode,
                             )
                             friendsChatGraph(
                                 navController = navController,

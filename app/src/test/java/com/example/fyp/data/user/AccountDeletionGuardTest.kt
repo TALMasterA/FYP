@@ -10,10 +10,10 @@ import org.junit.Assert.*
  * its cleanup call to FirestoreProfileRepository.deleteAccount().
  * This test ensures the deletion code references all expected collections.
  *
- * Current expected subcollections (17):
+ * Current expected subcollections (18):
  *   history, word_banks, learning_sheets, quiz_attempts, quiz_stats,
- *   generated_quizzes, favorites, custom_words, sessions, coin_awards,
- *   last_awarded_quiz, user_stats, friends, shared_inbox,
+ *   generated_quizzes, quiz_versions, favorites, custom_words, sessions,
+ *   coin_awards, last_awarded_quiz, user_stats, friends, shared_inbox,
  *   favorite_sessions, blocked_users, fcm_tokens
  *
  * Current expected profile docs (3):
@@ -33,6 +33,7 @@ class AccountDeletionGuardTest {
             "quiz_attempts",
             "quiz_stats",
             "generated_quizzes",
+            "quiz_versions",
             "favorites",
             "custom_words",
             "sessions",
@@ -48,10 +49,10 @@ class AccountDeletionGuardTest {
     }
 
     @Test
-    fun `expected subcollection count is 17`() {
+    fun `expected subcollection count is 18`() {
         assertEquals(
             "Update this test if you add a new user subcollection — and also update deleteAccount()!",
-            17,
+            18,
             EXPECTED_SUBCOLLECTIONS.size
         )
     }

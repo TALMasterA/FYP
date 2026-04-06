@@ -52,6 +52,7 @@ class FirestoreProfileRepository @Inject constructor(
         deleteCollection(userId, "quiz_attempts")
         deleteCollection(userId, "quiz_stats")
         deleteCollection(userId, "generated_quizzes")
+        deleteCollection(userId, "quiz_versions")
         deleteCollection(userId, "favorites")
         deleteCollection(userId, "custom_words")
         deleteCollection(userId, "sessions")

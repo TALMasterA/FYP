@@ -31,7 +31,6 @@ fun WordBankScreen(
     viewModel: WordBankViewModel,
     customWordsViewModel: CustomWordsViewModel,
     appLanguageState: AppLanguageState,
-    primaryLanguageCode: String,
     onBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -43,18 +42,10 @@ fun WordBankScreen(
     // Use cached languages from ViewModel instead of loading on composition
     val supportedLanguages = viewModel.supportedLanguages
 
-    // Track current primary language in viewModel
-    var currentPrimaryCode by remember { mutableStateOf(primaryLanguageCode) }
 
     // Info dialog state
     var showInfoDialog by remember { mutableStateOf(false) }
 
-    // Set primary language code on first load
-    LaunchedEffect(primaryLanguageCode) {
-        viewModel.setPrimaryLanguageCode(primaryLanguageCode)
-        customWordsViewModel.setPrimaryLanguageCode(primaryLanguageCode)
-        currentPrimaryCode = primaryLanguageCode
-    }
 
     LaunchedEffect(uiState.error) {
         if (!uiState.error.isNullOrBlank()) {

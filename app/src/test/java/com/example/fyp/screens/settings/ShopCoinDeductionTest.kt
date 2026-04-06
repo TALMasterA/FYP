@@ -5,6 +5,7 @@ import com.example.fyp.data.cloud.SpendCoinsResult
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.data.settings.UserSettingsRepository
+import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.model.UserId
 import com.example.fyp.model.UserCoinStats
 import com.example.fyp.model.user.AuthState
@@ -46,6 +47,7 @@ class ShopCoinDeductionTest {
     private lateinit var settingsRepo: UserSettingsRepository
     private lateinit var quizRepo: QuizRepository
     private lateinit var cloudClient: CloudQuizClient
+    private lateinit var sharedSettings: SharedSettingsDataSource
     private lateinit var viewModel: ShopViewModel
 
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -70,12 +72,16 @@ class ShopCoinDeductionTest {
             onBlocking { fetchUserCoinStats(UserId(testUserId)) } doReturn UserCoinStats(coinTotal = 5000)
         }
         cloudClient = mock()
+        sharedSettings = mock {
+            on { settings } doReturn MutableStateFlow(UserSettings())
+        }
 
         viewModel = ShopViewModel(
             authRepo = authRepo,
             settingsRepo = settingsRepo,
             quizRepo = quizRepo,
-            cloudClient = cloudClient
+            cloudClient = cloudClient,
+            sharedSettings = sharedSettings
         )
     }
 

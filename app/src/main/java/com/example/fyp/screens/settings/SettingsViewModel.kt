@@ -161,11 +161,15 @@ class SettingsViewModel @Inject constructor(
                                 mapOf("primaryLanguage" to newCode)
                             )
                         }
+                        val updatedSettings = _uiState.value.settings.copy(primaryLanguageCode = newCode)
                         _uiState.value = _uiState.value.copy(
-                            settings = _uiState.value.settings.copy(primaryLanguageCode = newCode),
+                            settings = updatedSettings,
                             errorKey = null,
                             errorRaw = null
                         )
+                        // Propagate immediately so WordBankViewModel / LearningViewModel
+                        // react without waiting for the Firestore listener round-trip.
+                        sharedSettings.updateCache(updatedSettings)
                     }
                     is SetPrimaryLanguageUseCase.Result.CooldownActive -> {
                         _uiState.value = _uiState.value.copy(
@@ -198,11 +202,13 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { setFontSizeScale(UserId(uid), validated) }
                 .onSuccess {
+                    val updatedSettings = _uiState.value.settings.copy(fontSizeScale = validated)
                     _uiState.value = _uiState.value.copy(
-                        settings = _uiState.value.settings.copy(fontSizeScale = validated),
+                        settings = updatedSettings,
                         errorKey = null,
                         errorRaw = null
                     )
+                    sharedSettings.updateCache(updatedSettings)
                 }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
@@ -224,11 +230,13 @@ class SettingsViewModel @Inject constructor(
             if (newMode == "scheduled") {
                 runCatching { setAutoThemeEnabled(UserId(uid), true) }
                     .onSuccess {
+                        val updatedSettings = _uiState.value.settings.copy(autoThemeEnabled = true)
                         _uiState.value = _uiState.value.copy(
-                            settings = _uiState.value.settings.copy(autoThemeEnabled = true),
+                            settings = updatedSettings,
                             errorKey = null,
                             errorRaw = null
                         )
+                        sharedSettings.updateCache(updatedSettings)
                     }
                     .onFailure { e ->
                         _uiState.value = _uiState.value.copy(
@@ -251,11 +259,13 @@ class SettingsViewModel @Inject constructor(
                 // 2. Set the mode
                 runCatching { setThemeMode(UserId(uid), newMode) }
                     .onSuccess {
+                        val updatedSettings = _uiState.value.settings.copy(themeMode = newMode)
                         _uiState.value = _uiState.value.copy(
-                            settings = _uiState.value.settings.copy(themeMode = newMode),
+                            settings = updatedSettings,
                             errorKey = null,
                             errorRaw = null
                         )
+                        sharedSettings.updateCache(updatedSettings)
                     }
                     .onFailure { e ->
                         _uiState.value = _uiState.value.copy(
@@ -276,11 +286,13 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { setColorPalette(UserId(uid), PaletteId(paletteId)) }
                 .onSuccess {
+                    val updatedSettings = _uiState.value.settings.copy(colorPaletteId = paletteId)
                     _uiState.value = _uiState.value.copy(
-                        settings = _uiState.value.settings.copy(colorPaletteId = paletteId),
+                        settings = updatedSettings,
                         errorKey = null,
                         errorRaw = null
                     )
+                    sharedSettings.updateCache(updatedSettings)
                 }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
@@ -306,13 +318,15 @@ class SettingsViewModel @Inject constructor(
                         UnlockResult.Success -> {
                             val currentSettings = _uiState.value.settings
                             val updated = currentSettings.unlockedPalettes + paletteId
+                            val updatedSettings = currentSettings.copy(unlockedPalettes = updated)
                             _uiState.value = _uiState.value.copy(
-                                settings = currentSettings.copy(unlockedPalettes = updated),
+                                settings = updatedSettings,
                                 errorKey = null,
                                 errorRaw = null,
                                 unlockingPaletteId = null,
                                 unlockError = null
                             )
+                            sharedSettings.updateCache(updatedSettings)
                         }
                         UnlockResult.InsufficientCoins -> {
                             _uiState.value = _uiState.value.copy(
@@ -344,11 +358,13 @@ class SettingsViewModel @Inject constructor(
                     val currentSettings = _uiState.value.settings
                     val updatedVoices = currentSettings.voiceSettings.toMutableMap()
                     updatedVoices[languageCode] = voiceName
+                    val updatedSettings = currentSettings.copy(voiceSettings = updatedVoices)
                     _uiState.value = _uiState.value.copy(
-                        settings = currentSettings.copy(voiceSettings = updatedVoices),
+                        settings = updatedSettings,
                         errorKey = null,
                         errorRaw = null
                     )
+                    sharedSettings.updateCache(updatedSettings)
                 }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
@@ -381,11 +397,13 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { setAutoThemeEnabled(UserId(uid), enabled) }
                 .onSuccess {
+                    val updatedSettings = _uiState.value.settings.copy(autoThemeEnabled = enabled)
                     _uiState.value = _uiState.value.copy(
-                        settings = _uiState.value.settings.copy(autoThemeEnabled = enabled),
+                        settings = updatedSettings,
                         errorKey = null,
                         errorRaw = null
                     )
+                    sharedSettings.updateCache(updatedSettings)
                 }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
@@ -419,6 +437,7 @@ class SettingsViewModel @Inject constructor(
                         else -> _uiState.value.settings
                     }
                     _uiState.value = _uiState.value.copy(settings = updated)
+                    sharedSettings.updateCache(updated)
                     // Mirror to SharedPreferences so FcmNotificationService can read it
                     // without any Firestore I/O on the FCM worker thread
                     FcmNotificationService
