@@ -213,7 +213,7 @@ export const translateTexts = onCall(
       if (!allowed) {
         throw new HttpsError(
           "resource-exhausted",
-          `UI language translation is rate-limited. Please wait a moment and try again (max ${UI_TRANSLATE_AUTH_MAX} changes per 10 minutes).`
+          "Rate limit hit. Please wait and try again."
         );
       }
     } else {
@@ -226,7 +226,7 @@ export const translateTexts = onCall(
       if (!allowed) {
         throw new HttpsError(
           "resource-exhausted",
-          "Guest UI language translation is limited to once per hour. Please log in for more frequent changes."
+          "Guest UI language translation is limited to once."
         );
       }
     }
@@ -336,7 +336,8 @@ export const translateTexts = onCall(
       }
 
       if (!succeeded) {
-        throwTranslationApiError("Batch", resp!.status, bodyText);
+        const status = resp ? resp.status : 500;
+        throwTranslationApiError("Batch", status, bodyText);
       }
 
       const json = safeParseJson(bodyText, "batch translation");

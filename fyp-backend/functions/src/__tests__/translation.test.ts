@@ -373,7 +373,7 @@ describe("translateTexts", () => {
 
     await expect(
       (translateTexts as any)({auth: {uid: "u1"}, data: {texts: ["hello"], to: "es-ES"}})
-    ).rejects.toThrow("rate-limited");
+    ).rejects.toThrow(/rate limit/i);
 
     expect(mockCheckWriteRateLimit).toHaveBeenCalledWith(
       "u1", "ui_translate", 20, 10 * 60 * 1000

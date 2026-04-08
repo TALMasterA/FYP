@@ -18,10 +18,10 @@ _Last updated: 2026-04-08_
 
 | Metric | Current |
 |---|---:|
-| Statements | 95.45% |
-| Branches | 81.01% |
+| Statements | 95.33% |
+| Branches | 80.83% |
 | Functions | 93.42% |
-| Lines | 96.47% |
+| Lines | 96.34% |
 
 CI threshold in `fyp-backend/functions/jest.config.js`:
 - statements >= 50%
