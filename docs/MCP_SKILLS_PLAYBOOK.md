@@ -1,6 +1,6 @@
 # MCP + Skills Playbook for FYP
 
-Last updated: 2026-03-24
+Last updated: 2026-04-08
 
 This playbook lists practical skills/MCP tooling that work well for this Android + Firebase app and how to use them during audits and coding tasks.
 
@@ -18,19 +18,23 @@ This playbook lists practical skills/MCP tooling that work well for this Android
 - Use for Android unit-test fixes, regression additions, and docs/tree maintenance.
 - Best for: repository-changing Android tasks that must pass mandatory gates.
 
-4. fyp-frontend-state-audit (local, machine-level)
+4. create-reusable-skill (repo skill)
+- Use to turn a repeated workflow or user prompt into a reusable shared skill when the process is likely to recur.
+- Best for: skill authoring, workflow standardization, and proactive skill curation.
+
+5. fyp-frontend-state-audit (local, machine-level)
 - Focuses on non-atomic StateFlow updates and race-safe UI state patterns.
 - Best for: ViewModel quality checks.
 
-5. fyp-backend-database-alignment (local, machine-level)
+6. fyp-backend-database-alignment (local, machine-level)
 - Focuses on frontend callable contracts vs backend implementations and rules.
 - Best for: backend/database/frontend alignment reviews.
 
-6. firebase-firestore-basics
+7. firebase-firestore-basics
 - Use for Firestore rules review and index checks.
 - Best for: access-control audits and data-model guardrails.
 
-7. firebase-ai-logic
+8. firebase-ai-logic
 - Use for AI generation feature review (prompt flow, safety, model setup).
 - Best for: learning-content generation architecture checks.
 
@@ -64,6 +68,10 @@ This playbook lists practical skills/MCP tooling that work well for this Android
 - Update `docs/TEST_COVERAGE.md` if test totals or suite notes change.
 - Update `README.md` if workflows, commands, or user-visible behavior changes.
 - Update `docs/treeOfImportantfiles.txt` when files are added/removed/renamed.
+
+8. Skill curation
+- If a task reveals a repeatable, high-value workflow that is not covered by an existing skill, prefer creating or refining a repo skill instead of re-solving it ad hoc.
+- Prefer `.github/skills/` for shared FYP workflows and `.agents/skills/` only for machine-local personal tooling.
 
 ## Notes
 

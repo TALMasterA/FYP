@@ -220,6 +220,7 @@ See `docs/SECRETS_ROTATION.md` for rotation runbook.
 **Agent Completion Policy (mandatory for repository-changing prompts):**
 - Refresh `docs/treeOfImportantfiles.txt` when files/structure or key entries change
 - Audit and update affected docs in `docs/` plus `README.md` when behavior/workflow/metrics change
+- If a repeated FYP workflow is likely to recur, prefer creating or refining a shared repo skill under `.github/skills/` instead of leaving the process ad hoc
 - Run Android verification before finalizing: `.\\gradlew.bat :app:testDebugUnitTest` and `.\\gradlew.bat :app:assembleDebug`
 - Include verification outcomes in task summary
 - Policy source: `.github/copilot-instructions.md`

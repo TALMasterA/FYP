@@ -10,7 +10,8 @@ FYP/
 │   │   ├── backend-quality-gates-and-build/SKILL.md← Backend coverage+build quality-gate skill
 │   │   ├── backend-test-gap-audit/SKILL.md        ← Coverage-first backend Jest gap-audit skill
 │   │   ├── android-quality-gates-and-docs/SKILL.md← Android unit-test + docs/tree quality-gate skill
-│   │   └── comprehensive-quality-workflow/SKILL.md← Full fix+tests+docs+verification workflow skill
+│   │   ├── comprehensive-quality-workflow/SKILL.md← Full fix+tests+docs+verification workflow skill
+│   │   └── create-reusable-skill/SKILL.md         ← Repo skill for authoring new reusable skills from repeated workflows
 │   └── workflows/
 │       ├── ci.yml                                  ← GitHub Actions CI (Android build + backend lint/build/test)
 │       ├── codeql.yml                              ← CodeQL security analysis (Java/Kotlin + JS/TS)
