@@ -61,35 +61,37 @@ class UsernameEnforcementIntegrationTest {
         acceptRequest = AcceptFriendRequestUseCase(friendsRepo)
     }
 
-    /** Helper: extract the profile passed to createOrUpdatePublicProfile. */
-    private fun captureCreatedProfile(): PublicUserProfile {
-        val invocation = mockingDetails(friendsRepo).invocations
-            .single { it.method.name.contains("createOrUpdatePublicProfile") }
-        @Suppress("UNCHECKED_CAST")
-        return invocation.arguments[1] as PublicUserProfile
-    }
-
-    /** Helper: extract the updates map passed to updatePublicProfile. */
+    /**
+     * Helper: extract the init/update map passed to updatePublicProfile.
+     * Since the use case now uses merge-based writes (not createOrUpdatePublicProfile),
+     * capture the first updatePublicProfile invocation.
+     */
     @Suppress("UNCHECKED_CAST")
-    private fun captureUpdateMap(): Map<String, Any> {
+    private fun captureInitMap(): Map<String, Any> {
         val invocation = mockingDetails(friendsRepo).invocations
-            .single { it.method.name.contains("updatePublicProfile") }
+            .first { it.method.name.contains("updatePublicProfile") }
         return invocation.arguments[1] as Map<String, Any>
     }
+
+    /** Alias for clarity when the profile already existed and only language was updated. */
+    @Suppress("UNCHECKED_CAST")
+    private fun captureUpdateMap(): Map<String, Any> = captureInitMap()
 
     // ── Test 1: New profile created with empty username ──
 
     @Test
-    fun `new profile is created with empty username`() = runTest {
+    fun `new profile is created with merge that omits username`() = runTest {
         whenever(settingsRepo.fetchUserSettings(uid))
             .thenReturn(UserSettings(primaryLanguageCode = "en-US"))
         whenever(friendsRepo.getPublicProfile(uid)).thenReturn(null)
 
         ensureProfile(userId)
 
-        val profile = captureCreatedProfile()
-        assertEquals("", profile.username)
-        assertEquals("user1", profile.uid)
+        val initMap = captureInitMap()
+        assertEquals("user1", initMap["uid"])
+        // username is NOT included in the merge — it will be absent on the
+        // Firestore document, which maps to "" via the Kotlin default.
+        assertFalse("username must not be in merge", initMap.containsKey("username"))
     }
 
     // ── Test 2: Existing username preserved on update ──
@@ -146,30 +148,30 @@ class UsernameEnforcementIntegrationTest {
     // ── Test 5: New profile is private with empty username ──
 
     @Test
-    fun `new profile is private when username is empty`() = runTest {
+    fun `new profile merge omits isDiscoverable so default is private`() = runTest {
         whenever(settingsRepo.fetchUserSettings(uid))
             .thenReturn(UserSettings(primaryLanguageCode = "zh-HK"))
         whenever(friendsRepo.getPublicProfile(uid)).thenReturn(null)
 
         ensureProfile(userId)
 
-        val profile = captureCreatedProfile()
-        assertFalse("New profiles should default to private until username is set", profile.isDiscoverable)
-        assertEquals("", profile.username)
-        assertEquals("zh-HK", profile.primaryLanguage)
+        val initMap = captureInitMap()
+        assertFalse("isDiscoverable must not be in merge (defaults to private)", initMap.containsKey("isDiscoverable"))
+        assertFalse("username must not be in merge", initMap.containsKey("username"))
+        assertEquals("zh-HK", initMap["primaryLanguage"])
     }
 
     // ── Test 6: Profile creation then send request (no ViewModel gate) ──
 
     @Test
     fun `domain layer allows send request right after profile creation without username`() = runTest {
-        // Step 1: create profile (empty username)
+        // Step 1: create profile (merge-based, no username in map)
         whenever(settingsRepo.fetchUserSettings(uid))
             .thenReturn(UserSettings(primaryLanguageCode = "en-US"))
         whenever(friendsRepo.getPublicProfile(uid)).thenReturn(null)
         ensureProfile(userId)
-        val profile = captureCreatedProfile()
-        assertEquals("", profile.username)
+        val initMap = captureInitMap()
+        assertFalse("username must not be in merge", initMap.containsKey("username"))
 
         // Step 2: send request (domain layer allows it — ViewModel gate is what blocks)
         whenever(friendsRepo.sendFriendRequest(uid, friendId, ""))
@@ -269,19 +271,17 @@ class UsernameEnforcementIntegrationTest {
     // ── Test 12: Empty vs blank username consistency ──
 
     @Test
-    fun `empty and blank usernames are both treated as unset by profile creation`() = runTest {
-        // When profile doesn't exist, username is set to "" (empty)
+    fun `merge-based profile init omits username entirely`() = runTest {
+        // When profile doesn't exist, the merge map should NOT contain username
+        // so existing documents keep their value and new documents use the Kotlin default "".
         whenever(settingsRepo.fetchUserSettings(uid))
             .thenReturn(UserSettings(primaryLanguageCode = "en-US"))
         whenever(friendsRepo.getPublicProfile(uid)).thenReturn(null)
 
         ensureProfile(userId)
 
-        val profile = captureCreatedProfile()
-        // Verify isBlank() and isEmpty() both return true
-        assertTrue("Username should be empty", profile.username.isEmpty())
-        assertTrue("Username should be blank", profile.username.isBlank())
-        // This is the value that FriendsViewModel.loadOwnUsername() checks with isNotBlank()
-        assertFalse("isNotBlank should be false for empty username", profile.username.isNotBlank())
+        val initMap = captureInitMap()
+        assertFalse("username must not be in merge (preserves existing or defaults to empty)", initMap.containsKey("username"))
+        assertFalse("isDiscoverable must not be in merge", initMap.containsKey("isDiscoverable"))
     }
 }

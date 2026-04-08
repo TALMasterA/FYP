@@ -12,6 +12,7 @@ import {
   safeParseJson,
   validateLanguageCode,
   buildTranslateUrl,
+  checkWriteRateLimit,
   AZURE_TRANSLATOR_KEY,
   AZURE_TRANSLATOR_REGION,
   AZURE_SPEECH_KEY,
@@ -21,6 +22,17 @@ import {
   MAX_TRANSLATE_TEXT_LENGTH,
 } from "./helpers.js";
 import {logger} from "./logger.js";
+
+// ── UI-language batch translation rate limits ────────────────────────
+// Each language change = 1 Cloud Function call (server-side Azure chunking).
+// Authenticated users get a generous allowance; guests are strict.
+const UI_TRANSLATE_AUTH_MAX = 20;
+const UI_TRANSLATE_AUTH_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const UI_TRANSLATE_GUEST_MAX = 1;
+const UI_TRANSLATE_GUEST_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+// Azure Translator API limits: max 100 elements per request.
+const AZURE_CHUNK_SIZE = 100;
 
 function throwTranslationApiError(
   operation: "Single" | "Batch" | "Detection",
@@ -162,11 +174,44 @@ export const translateText = onCall(
 );
 
 /**
- * No requireAuth — this function must be callable without authentication (one-time use).
+ * No requireAuth — guests may call this once.
+ * Server-side rate limiting:
+ *   - Authenticated users: 20 requests per 10 minutes (per uid)
+ *   - Guests: 1 request per hour (per raw IP)
+ * Server-side Azure chunking: splits large batches into 100-element Azure
+ * API calls so the client only needs ONE Cloud Function invocation per
+ * language change.
  */
 export const translateTexts = onCall(
   {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
   async (request) => {
+    // ── Rate-limit check (before any heavy work) ──────────────────────
+    const uid = request.auth?.uid;
+    if (uid) {
+      const allowed = await checkWriteRateLimit(
+        uid, "ui_translate", UI_TRANSLATE_AUTH_MAX, UI_TRANSLATE_AUTH_WINDOW_MS
+      );
+      if (!allowed) {
+        throw new HttpsError(
+          "resource-exhausted",
+          `UI language translation is rate-limited. Please wait a moment and try again (max ${UI_TRANSLATE_AUTH_MAX} changes per 10 minutes).`
+        );
+      }
+    } else {
+      // Guest: rate-limit by raw IP (best-effort).
+      const rawIp = request.rawRequest?.ip ?? "unknown";
+      const guestKey = `guest_${rawIp.replace(/[^a-zA-Z0-9]/g, "_")}`;
+      const allowed = await checkWriteRateLimit(
+        guestKey, "ui_translate", UI_TRANSLATE_GUEST_MAX, UI_TRANSLATE_GUEST_WINDOW_MS
+      );
+      if (!allowed) {
+        throw new HttpsError(
+          "resource-exhausted",
+          "Guest UI language translation is limited to once per hour. Please log in for more frequent changes."
+        );
+      }
+    }
+
     const MAX_BATCH_TEXTS = 800;
     const MAX_TEXT_LENGTH = 5000; // Azure limit per text element
 
@@ -197,36 +242,48 @@ export const translateTexts = onCall(
     const region = AZURE_TRANSLATOR_REGION.value();
 
     const url = buildTranslateUrl({to, from: from || undefined});
-    const reqBody = texts.map((t: string) => ({Text: t}));
 
-    let resp;
-    try {
-      resp = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "Ocp-Apim-Subscription-Key": key,
-          "Ocp-Apim-Subscription-Region": region,
-        },
-        body: JSON.stringify(reqBody),
-      });
-    } catch (fetchError: any) {
-      logger.error("Batch translation network error", {
-        error: fetchError?.message,
-      });
-      throw new HttpsError(
-        "unavailable",
-        "Unable to reach translation service. Please check your internet connection and try again."
-      );
+    // ── Server-side Azure chunking ──────────────────────────────────
+    // Azure Translator limits each request to 100 elements.
+    // We chunk here so the client sends ONE Cloud Function call per
+    // language change, keeping the rate-limit count at 1.
+    const translatedTexts: string[] = [];
+
+    for (let i = 0; i < texts.length; i += AZURE_CHUNK_SIZE) {
+      const chunk = texts.slice(i, i + AZURE_CHUNK_SIZE);
+      const reqBody = chunk.map((t: string) => ({Text: t}));
+
+      let resp;
+      try {
+        resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            "Ocp-Apim-Subscription-Key": key,
+            "Ocp-Apim-Subscription-Region": region,
+          },
+          body: JSON.stringify(reqBody),
+        });
+      } catch (fetchError: any) {
+        logger.error("Batch translation network error", {
+          error: fetchError?.message,
+          chunkIndex: i,
+        });
+        throw new HttpsError(
+          "unavailable",
+          "Unable to reach translation service. Please check your internet connection and try again."
+        );
+      }
+
+      const bodyText = await resp.text();
+      if (!resp.ok) throwTranslationApiError("Batch", resp.status, bodyText);
+
+      const json = safeParseJson(bodyText, "batch translation");
+      const chunkTranslated: string[] = Array.isArray(json)
+        ? json.map((item: any) => item?.translations?.[0]?.text ?? "")
+        : [];
+      translatedTexts.push(...chunkTranslated);
     }
-
-    const bodyText = await resp.text();
-    if (!resp.ok) throwTranslationApiError("Batch", resp.status, bodyText);
-
-    const json = safeParseJson(bodyText, "batch translation");
-    const translatedTexts: string[] = Array.isArray(json) ?
-      json.map((item: any) => item?.translations?.[0]?.text ?? "") :
-      [];
 
     return {translatedTexts};
   }

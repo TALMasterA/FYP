@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-04-06_
+_Last updated: 2026-04-08_
 
 ## Verified Snapshot (from local audit)
 
@@ -8,20 +8,20 @@ _Last updated: 2026-04-06_
 |---|---:|
 | Android source files (`app/src/main/java/com/example/fyp`) | 252 |
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 9 |
-| Android unit test files (`app/src/test/java/com/example/fyp`) | 211 |
-| Android test suites in latest `testDebugUnitTest` run | 211 |
-| Android unit tests executed (`testDebugUnitTest`) | 2,767 |
+| Android unit test files (`app/src/test/java/com/example/fyp`) | 212 |
+| Android test suites in latest `testDebugUnitTest` run | 212 |
+| Android unit tests executed (`testDebugUnitTest`) | 2,778 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 14 |
-| Backend tests (`it`/`test` blocks) | 182 |
+| Backend tests (`it`/`test` blocks) | 187 |
 
 ## Backend Coverage (from `coverage-summary.json`)
 
 | Metric | Current |
 |---|---:|
-| Statements | 99.00% |
-| Branches | 84.21% |
-| Functions | 100.00% |
-| Lines | 99.84% |
+| Statements | 95.28% |
+| Branches | 80.84% |
+| Functions | 93.24% |
+| Lines | 96.34% |
 
 CI threshold in `fyp-backend/functions/jest.config.js`:
 - statements >= 50%
@@ -37,7 +37,7 @@ CI threshold in `fyp-backend/functions/jest.config.js`:
 
 ## High-Value Regression Suites
 
-- Android guard/invariant suites: `UiTextAlignmentTest`, `AccountDeletionGuardTest`, `PrimaryLanguageCooldownTest`, `UsernameCooldownTest`, `FavoriteLimitTest`, `NavigationBarInsetsTest`, `LanguageValidationTest`.
+- Android guard/invariant suites: `UiTextAlignmentTest`, `AccountDeletionGuardTest`, `PrimaryLanguageCooldownTest`, `UsernameCooldownTest`, `FavoriteLimitTest`, `NavigationBarInsetsTest`, `LanguageValidationTest`, `EnsurePublicProfileExistsUseCaseTest` (visibility-persistence merge-safety).
 - Translation resilience coverage includes `ErrorHandlingTest` assertions for `resource-exhausted` / rate-limit message mapping.
 - Android flow/integration suites: `FriendSystemIntegrationTest`, `FriendsFlowIntegrationTest`, `CoinAndGenerationIntegrationTest`, `QuizFlowIntegrationTest`, `DataLayerIntegrationTest`, `CrossLayerIntegrationTest`.
 - Backend contract/security suites: `translation.test.ts`, `learning.test.ts`, `coins.test.ts`, `notifications.test.ts` (includes friend-request, chat, and feedback rate-limit enforcement), `maintenance.test.ts`, `firestore-rules-settings.test.ts`.

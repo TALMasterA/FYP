@@ -205,7 +205,8 @@ See `docs/SECRETS_ROTATION.md` for rotation runbook.
 - Base: English (hardcoded)
 - Hardcoded: Traditional Chinese (zh-TW), Cantonese (zh-HK)
 - Cached: All other languages via Azure Translator API (DataStore, 30-day TTL, 1000 max entries)
-- Guest users: 1 free UI language change; logged-in: unlimited
+- Guest users: 1 free UI language change per hour (server-enforced); logged-in: 20 per 10 min
+- Client-side cooldown on rate-limit hit: 15 s (logged-in) / 2 min (guest)
 - Dropdown order: English → Cantonese → Traditional Chinese → others
 - Azure codes normalized: `zh-HK → yue`, `zh-TW → zh-Hant`, `zh-CN → zh-Hans`
 

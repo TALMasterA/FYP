@@ -29,24 +29,16 @@ class EnsurePublicProfileExistsUseCaseTest {
         useCase = EnsurePublicProfileExistsUseCase(friendsRepository, settingsRepository)
     }
 
-    /** Helper: find the profile passed to createOrUpdatePublicProfile. */
-    private fun captureCreatedProfile(): PublicUserProfile {
-        val invocation = mockingDetails(friendsRepository).invocations
-            .single { it.method.name.contains("createOrUpdatePublicProfile") }
-        @Suppress("UNCHECKED_CAST")
-        return invocation.arguments[1] as PublicUserProfile
-    }
-
     /** Helper: find the updates map passed to updatePublicProfile. */
     @Suppress("UNCHECKED_CAST")
     private fun captureUpdateMap(): Map<String, Any> {
         val invocation = mockingDetails(friendsRepository).invocations
-            .single { it.method.name.contains("updatePublicProfile") }
+            .first { it.method.name.contains("updatePublicProfile") }
         return invocation.arguments[1] as Map<String, Any>
     }
 
     @Test
-    fun `creates new profile when none exists`() = runTest {
+    fun `creates new profile via merge when none exists`() = runTest {
         // Arrange
         whenever(settingsRepository.fetchUserSettings(UserId("user1")))
             .thenReturn(UserSettings(primaryLanguageCode = "ja-JP"))
@@ -56,13 +48,45 @@ class EnsurePublicProfileExistsUseCaseTest {
         // Act
         useCase("user1")
 
-        // Assert
-        val created = captureCreatedProfile()
-        assertEquals("user1", created.uid)
-        assertEquals("ja-JP", created.primaryLanguage)
-        assertEquals("", created.username)
-        assertFalse(created.isDiscoverable)
+        // Assert: merge-based write (updatePublicProfile) is used, NOT createOrUpdatePublicProfile
+        val updates = captureUpdateMap()
+        assertEquals("user1", updates["uid"])
+        assertEquals("ja-JP", updates["primaryLanguage"])
+        assertTrue("lastActiveAt must be present", updates.containsKey("lastActiveAt"))
+
+        // Crucially, isDiscoverable and username must NOT be in the merge
+        // to preserve existing values on the server if the profile actually exists
+        assertFalse("isDiscoverable must not be set (safe merge)", updates.containsKey("isDiscoverable"))
+        assertFalse("username must not be set (safe merge)", updates.containsKey("username"))
+
+        // createOrUpdatePublicProfile (full overwrite) must NOT be called
+        val createInvocations = mockingDetails(friendsRepository).invocations
+            .filter { it.method.name.contains("createOrUpdatePublicProfile") }
+        assertTrue("Full overwrite must not be used", createInvocations.isEmpty())
+
+        // ensureUserDocumentExists must still be called
+        verify(friendsRepository).ensureUserDocumentExists(UserId("user1"))
     }
+
+    @Test
+    fun `merge does not overwrite visibility when getPublicProfile returns null for existing profile`() = runTest {
+        // Arrange: Simulate a scenario where getPublicProfile returns null (transient error)
+        // but the profile actually exists on the server with isDiscoverable = true.
+        whenever(settingsRepository.fetchUserSettings(UserId("user1")))
+            .thenReturn(UserSettings(primaryLanguageCode = "en-US"))
+        whenever(friendsRepository.getPublicProfile(UserId("user1")))
+            .thenReturn(null)
+
+        // Act
+        useCase("user1")
+
+        // Assert: The merge write must NOT include isDiscoverable or username,
+        // so the server-side values are preserved.
+        val updates = captureUpdateMap()
+        assertFalse("isDiscoverable must not be in merge", updates.containsKey("isDiscoverable"))
+        assertFalse("username must not be in merge", updates.containsKey("username"))
+    }
+
     @Test
     fun `does not write when profile exists with same language`() = runTest {
         // Arrange
@@ -151,7 +175,8 @@ class EnsurePublicProfileExistsUseCaseTest {
 
         // Assert — settingsRepository should NOT be called
         verifyNoInteractions(settingsRepository)
-        val created = captureCreatedProfile()
-        assertEquals("fr-FR", created.primaryLanguage)
+        val updates = captureUpdateMap()
+        assertEquals("fr-FR", updates["primaryLanguage"])
+        assertFalse("isDiscoverable must not be set", updates.containsKey("isDiscoverable"))
     }
 }

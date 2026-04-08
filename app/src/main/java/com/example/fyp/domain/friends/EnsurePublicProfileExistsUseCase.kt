@@ -3,7 +3,6 @@ package com.example.fyp.domain.friends
 import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.settings.UserSettingsRepository
 import com.example.fyp.model.UserId
-import com.example.fyp.model.friends.PublicUserProfile
 import com.google.firebase.Timestamp
 import javax.inject.Inject
 
@@ -16,6 +15,11 @@ import javax.inject.Inject
  *   the extra [UserSettingsRepository.fetchUserSettings] read entirely.
  * - Only writes `lastActiveAt` when the profile exists AND the primary language
  *   has actually changed, eliminating a pointless write on every login.
+ *
+ * Safety: Uses a merge-based write (updatePublicProfile) instead of a full-overwrite
+ * (createOrUpdatePublicProfile). This ensures that if `getPublicProfile` returns null
+ * due to a transient read error (not because the profile truly doesn't exist), the
+ * existing `isDiscoverable` and `username` fields are **not** reset to defaults.
  *
  * Cost (profile already exists, same primary language): 2 reads, 0 writes.
  * Cost (profile already exists, language changed):       2 reads, 1 write.
@@ -36,18 +40,22 @@ class EnsurePublicProfileExistsUseCase @Inject constructor(
         val existingProfile = friendsRepository.getPublicProfile(uid)
 
         if (existingProfile == null) {
-            val newProfile = PublicUserProfile(
-                uid = userId,
-                username = "",
-                avatarUrl = "",
-                primaryLanguage = currentPrimaryLanguage,
-                learningLanguages = emptyList(),
-                // Username must be set before profile can be discoverable in search.
-                isDiscoverable = false,
-                createdAt = Timestamp.now(),
-                lastActiveAt = Timestamp.now()
+            // Profile was not found. This could mean:
+            // (a) Profile truly doesn't exist (new user), OR
+            // (b) Read failed (network error / Firestore cache miss on cold start).
+            //
+            // Use a merge-based write that initialises only non-identity fields.
+            // Crucially, we do NOT include 'isDiscoverable' or 'username' so that:
+            //   • For case (a): the new document has no isDiscoverable field; Kotlin
+            //     default (false = private) applies on read — correct for new users.
+            //   • For case (b): the existing isDiscoverable and username values on the
+            //     server are preserved, preventing an accidental visibility reset.
+            val defaultFields = mapOf<String, Any>(
+                "uid" to userId,
+                "primaryLanguage" to currentPrimaryLanguage,
+                "lastActiveAt" to Timestamp.now()
             )
-            friendsRepository.createOrUpdatePublicProfile(uid, newProfile)
+            friendsRepository.updatePublicProfile(uid, defaultFields)
             // Ensure the main user document exists with default unread fields
             // so chat update() calls don't fail with NOT_FOUND for new users.
             friendsRepository.ensureUserDocumentExists(uid)

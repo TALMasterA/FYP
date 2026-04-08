@@ -50,6 +50,26 @@
 
 ---
 
+## 1.4.1 Tiered UI Translation Rate Limiting
+
+**Invariant:** Logged-in users get lenient rate limits for UI-language changes; guests remain strictly limited.
+
+**Backend (`translateTexts`):**
+- Authenticated: 20 requests per 10 minutes (per `uid`, via `checkWriteRateLimit`)
+- Guest: 1 request per hour (per raw IP hash, via `checkWriteRateLimit`)
+- Server-side Azure chunking: the Cloud Function accepts up to 800 texts and internally chunks into 100-element Azure API calls, so each language change costs only **1 rate-limit count**.
+
+**Android client (`CloudTranslatorClient`):**
+- Sends all UI texts in a **single** Cloud Function call (no client-side chunking)
+- Batch timeout: 120 s (`BATCH_TIMEOUT_SECONDS`) to accommodate server-side multi-chunk processing
+- Authenticated cooldown on 429: 15 seconds (`RATE_LIMIT_COOLDOWN_AUTH_MS`)
+- Guest cooldown on 429: 2 minutes (`RATE_LIMIT_COOLDOWN_GUEST_MS`)
+- `isLoggedIn` flag is set by `CommonUi.AppLanguageDropdown` via `LaunchedEffect`
+
+**Rule:** Both layers must agree — keep server-side limits as the source of truth; client-side cooldowns are a UX courtesy to avoid re-hitting the backend during the wait window.
+
+---
+
 ## 1.5 Learning Sheet Generated-Count Freshness
 
 **Invariant:** Learning sheet detail should show the latest generated-count immediately after generation, without requiring page re-entry.
@@ -268,15 +288,37 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 2. Toggling visibility MUST update both `users/{uid}/profile/public` AND `user_search/{uid}` atomically
 3. Private profiles (isDiscoverable=false) MUST NOT appear in search results
 4. Public profiles (isDiscoverable=true) MUST have a valid username (3-20 chars, [A-Za-z0-9_])
+5. `EnsurePublicProfileExistsUseCase` MUST NOT include `isDiscoverable` or `username` in its merge write, so that existing values survive transient read failures on cold start
 
 **Model Default:** `PublicUserProfile.isDiscoverable` defaults to `false` (not `true`)
 
 **Code Locations:**
 - Model default: `app/src/main/java/com/example/fyp/model/friends/PublicUserProfile.kt:21`
-- Profile creation: `app/src/main/java/com/example/fyp/domain/friends/EnsurePublicProfileExistsUseCase.kt:45`
+- Profile init (merge-safe): `app/src/main/java/com/example/fyp/domain/friends/EnsurePublicProfileExistsUseCase.kt:42-61`
 - Profile update: `app/src/main/java/com/example/fyp/data/friends/FirestoreFriendsRepository.kt:99-147`
 - Search filtering: `app/src/main/java/com/example/fyp/data/friends/FirestoreFriendsRepository.kt:214-230`
   - `.whereEqualTo("isDiscoverable", true)` ensures only public profiles indexed
+
+**@PropertyName Annotation (Bug Fix — April 2026):**
+- Kotlin `val isDiscoverable: Boolean` generates getter `isDiscoverable()` in bytecode.
+- Firebase SDK JavaBean convention strips the `is` prefix → infers Firestore field name as
+  `discoverable`, but `updatePublicProfile()` writes the field as `isDiscoverable` (Map key).
+- `toObject(PublicUserProfile::class.java)` looked for `discoverable`, never found it, and
+  silently returned the default `false` — making every read show the profile as private
+  regardless of the actual Firestore value.
+- **Fix:** `@field:PropertyName("isDiscoverable")` and `@get:PropertyName("isDiscoverable")`
+  on `PublicUserProfile.isDiscoverable` force the Firebase SDK to use the correct field name
+  for both serialization (`.set(object)`) and deserialization (`.toObject()`).
+- **Rule:** Any future `is`-prefixed Boolean in a Firestore data class MUST carry
+  `@field:PropertyName` + `@get:PropertyName` annotations.
+
+**Merge-Safety (Bug Fix):**
+- `EnsurePublicProfileExistsUseCase` now uses `updatePublicProfile` (merge) instead of
+  `createOrUpdatePublicProfile` (full `.set()` overwrite) when `getPublicProfile` returns null.
+- Because `getPublicProfile` returns null on BOTH "document doesn't exist" AND "read error",
+  the old full-overwrite could reset `isDiscoverable` to false on a cold-start cache miss.
+- The new merge write only includes `uid`, `primaryLanguage`, and `lastActiveAt` — never
+  `isDiscoverable` or `username` — so existing server-side values are preserved.
 
 **UI Behavior:**
 - MyProfileScreen.kt displays two FilterChip buttons (Public / Private)
@@ -288,6 +330,9 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 - Public profile with blank username is automatically forced to private by client-side guard
 
 **Test Coverage:**
+- `EnsurePublicProfileExistsUseCaseTest.kt` verifies:
+  - Merge-based init omits isDiscoverable and username (7 tests)
+  - Existing profile visibility is preserved on language update
 - `ProfileVisibilityToggleIntegrationTest.kt` verifies:
   - Default profiles are private and not searchable
   - Toggling to public makes profile searchable (with valid username)

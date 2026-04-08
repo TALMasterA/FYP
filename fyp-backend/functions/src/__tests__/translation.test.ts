@@ -9,8 +9,22 @@ jest.mock("node-fetch", () => ({
   default: mockFetch,
 }));
 
+const mockRunTransaction = jest.fn();
+const mockDoc = jest.fn();
+const mockCollection = jest.fn(() => ({doc: mockDoc}));
+
 jest.mock("firebase-admin", () => ({
-  firestore: jest.fn(() => ({})),
+  firestore: Object.assign(
+    jest.fn(() => ({
+      runTransaction: mockRunTransaction,
+      collection: mockCollection,
+    })),
+    {
+      FieldValue: {
+        serverTimestamp: jest.fn(() => "mock-timestamp"),
+      },
+    }
+  ),
   initializeApp: jest.fn(),
 }));
 
@@ -26,6 +40,16 @@ jest.mock("firebase-functions/v2/https", () => {
   };
 });
 
+// Mock checkWriteRateLimit to allow calls by default in existing tests.
+const mockCheckWriteRateLimit = jest.fn().mockResolvedValue(true);
+jest.mock("../helpers.js", () => {
+  const actual = jest.requireActual("../helpers.js");
+  return {
+    ...actual,
+    checkWriteRateLimit: (...args: any[]) => mockCheckWriteRateLimit(...args),
+  };
+});
+
 // ── Import after mocks ────────────────────────────────────────────────
 
 import {
@@ -35,7 +59,10 @@ import {
   detectLanguage,
 } from "../translation.js";
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockCheckWriteRateLimit.mockResolvedValue(true);
+});
 
 // Helper to create a mock fetch response
 function mockResponse(body: string, ok = true, status = 200) {
@@ -241,13 +268,37 @@ describe("translateTexts", () => {
   });
 
   it("handles empty texts array", async () => {
-    const apiResponse = JSON.stringify([]);
-    mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
     const result = await (translateTexts as any)({
       auth: {uid: "u1"},
       data: {texts: [], to: "en-US"},
     });
     expect(result).toEqual({translatedTexts: []});
+    // No Azure fetch needed for empty input.
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("chunks large batches into Azure 100-element requests server-side", async () => {
+    // 150 texts → should produce 2 Azure fetch calls (100 + 50)
+    const texts = Array.from({length: 150}, (_, i) => `text_${i}`);
+    const chunk1Response = JSON.stringify(
+      Array.from({length: 100}, (_, i) => ({translations: [{text: `t_${i}`}]}))
+    );
+    const chunk2Response = JSON.stringify(
+      Array.from({length: 50}, (_, i) => ({translations: [{text: `t_${100 + i}`}]}))
+    );
+    mockFetch
+      .mockResolvedValueOnce(mockResponse(chunk1Response))
+      .mockResolvedValueOnce(mockResponse(chunk2Response));
+
+    const result = await (translateTexts as any)({
+      auth: {uid: "u1"},
+      data: {texts, to: "es-ES"},
+    });
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(result.translatedTexts).toHaveLength(150);
+    expect(result.translatedTexts[0]).toBe("t_0");
+    expect(result.translatedTexts[149]).toBe("t_149");
   });
 
   it("throws on batch translation API error", async () => {
@@ -282,6 +333,77 @@ describe("translateTexts", () => {
     });
 
     expect(result).toEqual({translatedTexts: []});
+  });
+
+  // ── Server-side rate limiting for translateTexts ──────────────────
+
+  it("blocks authenticated user when rate limit exceeded", async () => {
+    mockCheckWriteRateLimit.mockResolvedValueOnce(false);
+
+    await expect(
+      (translateTexts as any)({auth: {uid: "u1"}, data: {texts: ["hello"], to: "es-ES"}})
+    ).rejects.toThrow("rate-limited");
+
+    expect(mockCheckWriteRateLimit).toHaveBeenCalledWith(
+      "u1", "ui_translate", 20, 10 * 60 * 1000
+    );
+  });
+
+  it("blocks guest user when rate limit exceeded", async () => {
+    mockCheckWriteRateLimit.mockResolvedValueOnce(false);
+
+    await expect(
+      (translateTexts as any)({
+        auth: null,
+        data: {texts: ["hello"], to: "es-ES"},
+        rawRequest: {ip: "1.2.3.4"},
+      })
+    ).rejects.toThrow("Guest UI language translation is limited");
+
+    expect(mockCheckWriteRateLimit).toHaveBeenCalledWith(
+      "guest_1_2_3_4", "ui_translate", 1, 60 * 60 * 1000
+    );
+  });
+
+  it("uses different rate-limit windows for auth vs guest", async () => {
+    // Authenticated call
+    mockCheckWriteRateLimit.mockResolvedValueOnce(true);
+    const apiResponse = JSON.stringify([{translations: [{text: "hola"}]}]);
+    mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
+    await (translateTexts as any)({
+      auth: {uid: "u1"}, data: {texts: ["hello"], to: "es-ES"},
+    });
+    expect(mockCheckWriteRateLimit).toHaveBeenCalledWith(
+      "u1", "ui_translate", 20, 10 * 60 * 1000
+    );
+
+    jest.clearAllMocks();
+    mockCheckWriteRateLimit.mockResolvedValueOnce(true);
+    mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
+
+    // Guest call
+    await (translateTexts as any)({
+      auth: null, data: {texts: ["hello"], to: "es-ES"},
+      rawRequest: {ip: "10.0.0.1"},
+    });
+    expect(mockCheckWriteRateLimit).toHaveBeenCalledWith(
+      "guest_10_0_0_1", "ui_translate", 1, 60 * 60 * 1000
+    );
+  });
+
+  it("falls back to 'unknown' IP key when rawRequest is absent", async () => {
+    mockCheckWriteRateLimit.mockResolvedValueOnce(false);
+
+    await expect(
+      (translateTexts as any)({
+        auth: null,
+        data: {texts: ["hi"], to: "en-US"},
+      })
+    ).rejects.toThrow("Guest UI language translation is limited");
+
+    expect(mockCheckWriteRateLimit).toHaveBeenCalledWith(
+      "guest_unknown", "ui_translate", 1, 60 * 60 * 1000
+    );
   });
 });
 

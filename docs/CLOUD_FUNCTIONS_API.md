@@ -59,9 +59,13 @@ When `from` is omitted (auto-detect mode), the response also includes:
 ---
 
 ### `translateTexts`
-Batch-translates multiple texts in a single API call.
+Batch-translates multiple texts in a single API call. Server internally chunks into 100-element Azure API requests.
 
-**Auth:** Not required (used for guest UI language switching)
+**Auth:** Not required (guest access allowed with stricter rate limit)
+**Rate Limit:**
+- Authenticated users: 20 requests per 10 minutes (per user)
+- Guests: 1 request per hour (per IP address)
+
 **Request:**
 | Field   | Type     | Required | Description                  |
 |---------|----------|----------|------------------------------|
@@ -78,7 +82,7 @@ Batch-translates multiple texts in a single API call.
 
 **Error Codes:**
 - `invalid-argument` — Invalid/missing language parameters or payload too large
-- `resource-exhausted` — Azure Translator rate limit exceeded (HTTP 429)
+- `resource-exhausted` — Server-side rate limit exceeded **or** Azure Translator rate limit (HTTP 429)
 - `unavailable` — Upstream service/network temporarily unavailable
 - `failed-precondition` — Translator service authentication/configuration issue
 

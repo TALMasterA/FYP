@@ -238,6 +238,10 @@ fun AppLanguageDropdown(
     val appContext = remember(context) { context.applicationContext }
     val cache = remember { UiLanguageCacheStore(appContext) }
     val cloud = remember { CloudTranslatorClient() }
+
+    // Keep the cloud client aware of auth state for tiered rate-limit cooldowns.
+    LaunchedEffect(isLoggedIn) { cloud.isLoggedIn = isLoggedIn }
+
     val translationStatus by UiLanguageTranslationCoordinator.status.collectAsState()
 
     // State for showing guest limit dialog
