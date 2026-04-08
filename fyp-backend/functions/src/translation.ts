@@ -34,6 +34,25 @@ const UI_TRANSLATE_GUEST_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 // Azure Translator API limits: max 100 elements per request.
 const AZURE_CHUNK_SIZE = 100;
 
+// ── Azure chunk throttling ───────────────────────────────────────────
+// Delay between consecutive Azure Translator API calls within a single
+// batch to avoid hitting Azure's per-second request rate limit.
+// With ~7 chunks per language change, 200 ms spacing keeps the burst
+// under Azure's free-tier rate ceiling (~10 req/s) and allows two
+// concurrent devices to succeed without colliding.
+const AZURE_INTER_CHUNK_DELAY_MS = 200;
+
+// If an individual Azure chunk is throttled (HTTP 429), retry that chunk
+// up to this many times with exponential backoff before failing the
+// entire request.  This absorbs transient Azure throttling so the
+// client never sees the error.
+const AZURE_CHUNK_MAX_RETRIES = 2;
+const AZURE_CHUNK_RETRY_BASE_MS = 1000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function throwTranslationApiError(
   operation: "Single" | "Batch" | "Detection",
   status: number,
@@ -243,40 +262,82 @@ export const translateTexts = onCall(
 
     const url = buildTranslateUrl({to, from: from || undefined});
 
-    // ── Server-side Azure chunking ──────────────────────────────────
+    // ── Server-side Azure chunking (throttled + per-chunk retry) ────
     // Azure Translator limits each request to 100 elements.
     // We chunk here so the client sends ONE Cloud Function call per
     // language change, keeping the rate-limit count at 1.
+    //
+    // Inter-chunk delay prevents hitting Azure's per-second rate limit
+    // when ~7 chunks fire in sequence (or when two devices translate
+    // concurrently).  Per-chunk retry absorbs transient Azure 429s so
+    // the client almost never sees a rate-limit error.
     const translatedTexts: string[] = [];
+    let chunkIndex = 0;
 
     for (let i = 0; i < texts.length; i += AZURE_CHUNK_SIZE) {
+      // Throttle: pause between chunks (skip delay before the first one).
+      if (chunkIndex > 0) {
+        await sleep(AZURE_INTER_CHUNK_DELAY_MS);
+      }
+      chunkIndex++;
+
       const chunk = texts.slice(i, i + AZURE_CHUNK_SIZE);
       const reqBody = chunk.map((t: string) => ({Text: t}));
 
       let resp;
-      try {
-        resp = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json; charset=utf-8",
-            "Ocp-Apim-Subscription-Key": key,
-            "Ocp-Apim-Subscription-Region": region,
-          },
-          body: JSON.stringify(reqBody),
-        });
-      } catch (fetchError: any) {
-        logger.error("Batch translation network error", {
-          error: fetchError?.message,
-          chunkIndex: i,
-        });
-        throw new HttpsError(
-          "unavailable",
-          "Unable to reach translation service. Please check your internet connection and try again."
-        );
+      let bodyText = "";
+      let succeeded = false;
+
+      for (let attempt = 0; attempt <= AZURE_CHUNK_MAX_RETRIES; attempt++) {
+        try {
+          resp = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json; charset=utf-8",
+              "Ocp-Apim-Subscription-Key": key,
+              "Ocp-Apim-Subscription-Region": region,
+            },
+            body: JSON.stringify(reqBody),
+          });
+        } catch (fetchError: any) {
+          logger.error("Batch translation network error", {
+            error: fetchError?.message,
+            chunkStart: i,
+            attempt,
+          });
+          // Network errors are not retryable within this loop.
+          throw new HttpsError(
+            "unavailable",
+            "Unable to reach translation service. Please check your internet connection and try again."
+          );
+        }
+
+        bodyText = await resp.text();
+
+        if (resp.ok) {
+          succeeded = true;
+          break;
+        }
+
+        // Azure 429 — retry this chunk with exponential back-off.
+        if (resp.status === 429 && attempt < AZURE_CHUNK_MAX_RETRIES) {
+          const backoff = AZURE_CHUNK_RETRY_BASE_MS * Math.pow(2, attempt);
+          logger.warn("Azure 429 on chunk, retrying", {
+            chunkStart: i,
+            attempt: attempt + 1,
+            backoffMs: backoff,
+          });
+          await sleep(backoff);
+          continue;
+        }
+
+        // Non-retryable error or retries exhausted — surface to client.
+        throwTranslationApiError("Batch", resp.status, bodyText);
       }
 
-      const bodyText = await resp.text();
-      if (!resp.ok) throwTranslationApiError("Batch", resp.status, bodyText);
+      if (!succeeded) {
+        throwTranslationApiError("Batch", resp!.status, bodyText);
+      }
 
       const json = safeParseJson(bodyText, "batch translation");
       const chunkTranslated: string[] = Array.isArray(json)

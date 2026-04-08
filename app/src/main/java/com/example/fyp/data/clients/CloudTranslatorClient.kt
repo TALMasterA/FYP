@@ -38,8 +38,14 @@ class CloudTranslatorClient(
         const val BATCH_TIMEOUT_SECONDS = 120L
         /** Cooldown after a rate-limit hit for guests / unknown auth state. */
         const val RATE_LIMIT_COOLDOWN_GUEST_MS = 2 * 60 * 1000L
-        /** Shorter cooldown for authenticated users (just enough for Azure to recover). */
-        const val RATE_LIMIT_COOLDOWN_AUTH_MS = 15 * 1000L
+        /**
+         * Shorter cooldown for authenticated users.
+         * The server now retries Azure 429s internally with back-off, so
+         * the client rarely sees transient rate-limit errors.  5 s is
+         * enough to let the server window advance while still allowing
+         * two devices and three consecutive changes to succeed.
+         */
+        const val RATE_LIMIT_COOLDOWN_AUTH_MS = 5 * 1000L
 
         @Volatile
         private var rateLimitedUntilMs: Long = 0L

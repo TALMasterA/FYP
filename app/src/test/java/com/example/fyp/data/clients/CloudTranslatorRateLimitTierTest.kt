@@ -13,7 +13,7 @@ class CloudTranslatorRateLimitTierTest {
 
     // Mirror the production constants so any drift will break these tests.
     private val guestCooldownMs = 2 * 60 * 1000L   // 2 min
-    private val authCooldownMs = 15 * 1000L          // 15 s
+    private val authCooldownMs = 5 * 1000L           // 5 s
 
     @Test
     fun `authenticated cooldown is shorter than guest cooldown`() {
@@ -29,8 +29,8 @@ class CloudTranslatorRateLimitTierTest {
     }
 
     @Test
-    fun `authenticated cooldown is 15 seconds`() {
-        assertEquals(15_000L, authCooldownMs)
+    fun `authenticated cooldown is 5 seconds`() {
+        assertEquals(5_000L, authCooldownMs)
     }
 
     @Test

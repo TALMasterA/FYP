@@ -59,7 +59,7 @@ When `from` is omitted (auto-detect mode), the response also includes:
 ---
 
 ### `translateTexts`
-Batch-translates multiple texts in a single API call. Server internally chunks into 100-element Azure API requests.
+Batch-translates multiple texts in a single API call. Server internally chunks into 100-element Azure API requests with **200 ms inter-chunk throttle** and **per-chunk retry** (up to 2 retries with exponential back-off for Azure HTTP 429).
 
 **Auth:** Not required (guest access allowed with stricter rate limit)
 **Rate Limit:**

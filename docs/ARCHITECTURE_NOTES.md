@@ -58,13 +58,19 @@
 - Authenticated: 20 requests per 10 minutes (per `uid`, via `checkWriteRateLimit`)
 - Guest: 1 request per hour (per raw IP hash, via `checkWriteRateLimit`)
 - Server-side Azure chunking: the Cloud Function accepts up to 800 texts and internally chunks into 100-element Azure API calls, so each language change costs only **1 rate-limit count**.
+- **Inter-chunk throttle:** 200 ms delay between consecutive Azure chunk requests (`AZURE_INTER_CHUNK_DELAY_MS`) to stay under Azure's per-second rate ceiling (~10 req/s on free tier).  This allows two devices to translate concurrently without colliding on Azure's rate limit.
+- **Per-chunk retry:** If an individual Azure chunk returns HTTP 429, the server retries that chunk up to 2 times with exponential back-off (1 s → 2 s, via `AZURE_CHUNK_MAX_RETRIES`/`AZURE_CHUNK_RETRY_BASE_MS`) before surfacing the error to the client.
 
 **Android client (`CloudTranslatorClient`):**
 - Sends all UI texts in a **single** Cloud Function call (no client-side chunking)
 - Batch timeout: 120 s (`BATCH_TIMEOUT_SECONDS`) to accommodate server-side multi-chunk processing
-- Authenticated cooldown on 429: 15 seconds (`RATE_LIMIT_COOLDOWN_AUTH_MS`)
+- Authenticated cooldown on 429: 5 seconds (`RATE_LIMIT_COOLDOWN_AUTH_MS`) — reduced from 15 s because the server now handles Azure 429 retries internally
 - Guest cooldown on 429: 2 minutes (`RATE_LIMIT_COOLDOWN_GUEST_MS`)
 - `isLoggedIn` flag is set by `CommonUi.AppLanguageDropdown` via `LaunchedEffect`
+
+**Design targets (validated by the above tuning):**
+1. Two devices (same authenticated user) can each change UI language successfully.
+2. Three consecutive UI language changes from the same device succeed without rate-limit errors.
 
 **Rule:** Both layers must agree — keep server-side limits as the source of truth; client-side cooldowns are a UX courtesy to avoid re-hitting the backend during the wait window.
 

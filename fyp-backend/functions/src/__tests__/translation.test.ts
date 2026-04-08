@@ -242,6 +242,13 @@ describe("translateTexts", () => {
     ).rejects.toThrow("must be one of:");
   });
 
+  it("rejects individual text exceeding max length in batch", async () => {
+    const texts = ["short", "a".repeat(5001)];
+    await expect(
+      (translateTexts as any)({auth: {uid: "u1"}, data: {texts, to: "en-US"}})
+    ).rejects.toThrow("exceeds maximum length");
+  });
+
   it("returns translated texts on success", async () => {
     const apiResponse = JSON.stringify([
       {translations: [{text: "hola"}]},
@@ -308,12 +315,36 @@ describe("translateTexts", () => {
     ).rejects.toThrow("temporarily unavailable");
   });
 
-  it("maps batch translation 429 responses to rate-limit error", async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse("rate limit", false, 429));
+  it("retries Azure 429 per-chunk and surfaces error after exhausting retries", async () => {
+    // With AZURE_CHUNK_MAX_RETRIES = 2, the server tries 3 times total.
+    mockFetch
+      .mockResolvedValueOnce(mockResponse("rate limit", false, 429))
+      .mockResolvedValueOnce(mockResponse("rate limit", false, 429))
+      .mockResolvedValueOnce(mockResponse("rate limit", false, 429));
 
     await expect(
       (translateTexts as any)({auth: {uid: "u1"}, data: {texts: ["a"], to: "en-US"}})
     ).rejects.toThrow("rate limit exceeded");
+
+    // 1 initial + 2 retries = 3 Azure fetch calls
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+  });
+
+  it("recovers from a transient Azure 429 on chunk retry", async () => {
+    // First attempt returns 429, second succeeds.
+    mockFetch
+      .mockResolvedValueOnce(mockResponse("rate limit", false, 429))
+      .mockResolvedValueOnce(
+        mockResponse(JSON.stringify([{translations: [{text: "hola"}]}]))
+      );
+
+    const result = await (translateTexts as any)({
+      auth: {uid: "u1"},
+      data: {texts: ["hello"], to: "es-ES"},
+    });
+
+    expect(result).toEqual({translatedTexts: ["hola"]});
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
   it("maps batch fetch failures to unavailable", async () => {
