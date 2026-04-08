@@ -80,7 +80,7 @@ class SecurityUtilsTest {
 
     @Test
     fun `validateUsername - valid username returns Valid`() {
-        val result = validateUsername("user_name-123")
+        val result = validateUsername("user_name123")
         assertTrue(result is ValidationResult.Valid)
     }
 
@@ -99,6 +99,12 @@ class SecurityUtilsTest {
     @Test
     fun `validateUsername - special characters returns Invalid`() {
         val result = validateUsername("user@name!")
+        assertTrue(result is ValidationResult.Invalid)
+    }
+
+    @Test
+    fun `validateUsername - hyphens returns Invalid`() {
+        val result = validateUsername("user-name")
         assertTrue(result is ValidationResult.Invalid)
     }
 

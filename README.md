@@ -255,7 +255,7 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 211 test files, 2,767 unit tests (from `testDebugUnitTest` report)
+- **Android:** 212 test files, 2,779 unit tests (from `testDebugUnitTest` report)
 - **Backend:** 14 test files, 182 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.

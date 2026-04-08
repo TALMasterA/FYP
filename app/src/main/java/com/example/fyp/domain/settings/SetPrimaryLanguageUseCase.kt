@@ -25,7 +25,7 @@ class SetPrimaryLanguageUseCase @Inject constructor(
             val remainingMs = UserSettings.primaryLanguageCooldownRemainingMs(
                 settings.lastPrimaryLanguageChangeMs, now
             )
-            val totalHours = ((remainingMs / (60 * 60 * 1000)) + 1).toInt()
+            val totalHours = ((remainingMs + 3_599_999) / (60 * 60 * 1000)).toInt()
             val remainingDays = totalHours / 24
             val remainingHours = totalHours % 24
             return Result.CooldownActive(remainingDays = remainingDays, remainingHours = remainingHours)

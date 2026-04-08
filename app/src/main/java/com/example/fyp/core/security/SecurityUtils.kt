@@ -62,11 +62,11 @@ fun validateUsername(username: String, minLength: Int = 3, maxLength: Int = 20):
         return ValidationResult.Invalid("Username must not exceed $maxLength characters")
     }
 
-    val usernameRegex = "^[a-zA-Z0-9_-]+$".toRegex()
+    val usernameRegex = "^[a-zA-Z0-9_]+$".toRegex()
     return if (usernameRegex.matches(username)) {
         ValidationResult.Valid
     } else {
-        ValidationResult.Invalid("Username can only contain letters, numbers, underscores, and hyphens")
+        ValidationResult.Invalid("Username can only contain letters, numbers, and underscores")
     }
 }
 

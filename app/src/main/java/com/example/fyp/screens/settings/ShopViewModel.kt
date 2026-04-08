@@ -186,6 +186,12 @@ class ShopViewModel @Inject constructor(
                     purchaseSuccess = "Palette unlocked!",
                     unlockError = null
                 )
+                // Propagate unlocked palette immediately so other screens
+                // see the change without waiting for Firestore listener.
+                val currentSettings = sharedSettings.settings.value
+                sharedSettings.updateCache(
+                    currentSettings.copy(unlockedPalettes = currentSettings.unlockedPalettes + paletteId)
+                )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isPurchasing = false,

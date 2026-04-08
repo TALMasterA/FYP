@@ -70,7 +70,7 @@ class ProfileViewModelTest {
         viewModel.updateUsername("bad name!")
 
         assertEquals(
-            "Username can only contain letters, numbers, underscores, and hyphens",
+            "Username can only contain letters, numbers, and underscores",
             viewModel.uiState.value.error
         )
     }
@@ -84,7 +84,7 @@ class ProfileViewModelTest {
         viewModel.updateUsername("bad name")
 
         assertEquals(
-            "Username can only contain letters, numbers, underscores, and hyphens",
+            "Username can only contain letters, numbers, and underscores",
             viewModel.uiState.value.error
         )
     }

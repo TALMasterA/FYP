@@ -46,6 +46,7 @@ data class LearningSheetUiState(
     val currentAttempt: QuizAttempt? = null,
     val quizLoading: Boolean = false,
     val quizError: String? = null,
+    val coinRewardMessage: String? = null,
 
     // Generated quiz metadata
     val generatedQuizHistoryCountAtGenerate: Int? = null,
@@ -299,7 +300,8 @@ class LearningSheetViewModel @Inject constructor(
                     quizLoading = false,
                     currentAttempt = finalAttempt,
                     isQuizTaken = true,
-                    quizError = coinMessage
+                    quizError = null,
+                    coinRewardMessage = coinMessage
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -315,7 +317,8 @@ class LearningSheetViewModel @Inject constructor(
             quizQuestions = emptyList(),
             currentAttempt = null,
             isQuizTaken = false,
-            quizError = null
+            quizError = null,
+            coinRewardMessage = null
         )
     }
 

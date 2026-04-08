@@ -100,7 +100,7 @@ fun ColorPaletteSelector(
             ColorPaletteCard(
                 palette = palette,
                 isSelected = currentPaletteId == palette.id,
-                isUnlocked = unlockedPalettes.contains(palette.id),
+                isUnlocked = unlockedPalettes.contains(palette.id) || palette.cost == 0,
                 onSelect = { onPaletteSelected(palette.id) },
                 onUnlock = { pendingUnlockPalette = palette.id },
                 t = t

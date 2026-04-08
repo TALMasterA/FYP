@@ -76,7 +76,7 @@ fun QuizScreen(
 
     // Show coins alert when quiz is taken and has coin message
     LaunchedEffect(uiState.isQuizTaken) {
-        if (uiState.isQuizTaken && uiState.quizError?.contains("✨") == true) {
+        if (uiState.isQuizTaken && uiState.coinRewardMessage != null) {
             showCoinsAlert = true
         }
     }

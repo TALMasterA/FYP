@@ -255,6 +255,15 @@ export const spendCoins = onCall(
         if (unlockedPalettes.includes(paletteId)) {
           return {success: false, reason: "already_unlocked"};
         }
+
+        // Default palette is free – unlock without deducting coins
+        if (paletteId === "default") {
+          tx.set(settingsRef, {
+            unlockedPalettes: admin.firestore.FieldValue.arrayUnion(paletteId),
+          }, {merge: true});
+          return {success: true, newBalance: currentTotal};
+        }
+
         if (currentTotal < PALETTE_UNLOCK_COST) {
           return {success: false, reason: "insufficient_coins"};
         }
@@ -262,8 +271,9 @@ export const spendCoins = onCall(
         const newTotal = currentTotal - PALETTE_UNLOCK_COST;
 
         tx.set(coinStatsRef, {coinTotal: newTotal, coinByLang}, {merge: true});
+        // Always include "default" so the free palette is never missing
         tx.set(settingsRef, {
-          unlockedPalettes: admin.firestore.FieldValue.arrayUnion(paletteId),
+          unlockedPalettes: admin.firestore.FieldValue.arrayUnion(paletteId, "default"),
         }, {merge: true});
 
         return {success: true, newBalance: newTotal};

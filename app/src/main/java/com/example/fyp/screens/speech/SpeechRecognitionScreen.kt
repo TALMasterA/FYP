@@ -237,6 +237,7 @@ fun SpeechRecognitionScreen(
                 onClick = {
                     // Only swap if source is not auto
                     if (selectedLanguage != "auto") {
+                        detectedSourceLanguage = null
                         val tmp = selectedLanguage
                         selectedLanguage = selectedTargetLanguage
                         selectedTargetLanguage = tmp

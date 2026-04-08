@@ -41,7 +41,9 @@ class FirestoreUserSettingsRepository @Inject constructor(
             .coerceIn(MIN_FONT_SIZE_SCALE, MAX_FONT_SIZE_SCALE)
         val themeMode = snap?.getString("themeMode") ?: "system"
         val colorPaletteId = snap?.getString("colorPaletteId") ?: "default"
-        val unlockedPalettes = snap?.get("unlockedPalettes") as? List<String> ?: listOf("default")
+        val unlockedPalettes = (snap?.get("unlockedPalettes") as? List<String> ?: listOf("default")).let {
+            if ("default" !in it) it + "default" else it
+        }
         val voiceSettings = snap?.get("voiceSettings") as? Map<String, String> ?: emptyMap()
         val historyViewLimit = (snap?.getLong("historyViewLimit")?.toInt() ?: UserSettings.BASE_HISTORY_LIMIT)
             .coerceIn(UserSettings.BASE_HISTORY_LIMIT, UserSettings.MAX_HISTORY_LIMIT)

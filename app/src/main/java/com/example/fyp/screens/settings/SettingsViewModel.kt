@@ -250,7 +250,13 @@ class SettingsViewModel @Inject constructor(
                 // 1. Disable auto theme if it enabled
                 if (_uiState.value.settings.autoThemeEnabled) {
                      runCatching { setAutoThemeEnabled(UserId(uid), false) }
-                     // Update local state temporarily
+                         .onFailure {
+                             _uiState.value = _uiState.value.copy(
+                                 errorRaw = "Failed to disable auto theme. Please try again."
+                             )
+                             return@launch
+                         }
+                     // Update local state after successful write
                      _uiState.value = _uiState.value.copy(
                         settings = _uiState.value.settings.copy(autoThemeEnabled = false)
                     )
