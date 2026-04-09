@@ -37,20 +37,53 @@ const AZURE_CHUNK_SIZE = 100;
 // ── Azure chunk throttling ───────────────────────────────────────────
 // Delay between consecutive Azure Translator API calls within a single
 // batch to avoid hitting Azure's per-second request rate limit.
-// With ~7 chunks per language change, 200 ms spacing keeps the burst
-// under Azure's free-tier rate ceiling (~10 req/s) and allows two
-// concurrent devices to succeed without colliding.
-const AZURE_INTER_CHUNK_DELAY_MS = 200;
+// With ~7 chunks per language change, 350 ms spacing keeps the burst
+// comfortably under Azure's free-tier request ceiling and reduces the
+// chance of consecutive chunks colliding with the same short window.
+const AZURE_INTER_CHUNK_DELAY_MS = 350;
 
 // If an individual Azure chunk is throttled (HTTP 429), retry that chunk
-// up to this many times with exponential backoff before failing the
-// entire request.  This absorbs transient Azure throttling so the
-// client never sees the error.
-const AZURE_CHUNK_MAX_RETRIES = 2;
-const AZURE_CHUNK_RETRY_BASE_MS = 1000;
+// up to this many times with exponential backoff (or Azure's Retry-After
+// value when provided) before failing the entire request. This absorbs
+// transient Azure throttling so the client rarely sees the error.
+const AZURE_CHUNK_MAX_RETRIES = 3;
+const AZURE_CHUNK_RETRY_BASE_MS = 750;
+const AZURE_CHUNK_RETRY_MAX_MS = 6000;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function parseRetryAfterMs(value: string | null | undefined): number | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+
+  const seconds = Number(trimmed);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.max(250, Math.round(seconds * 1000));
+  }
+
+  const dateMs = Date.parse(trimmed);
+  if (!Number.isNaN(dateMs)) {
+    return Math.max(250, dateMs - Date.now());
+  }
+
+  return null;
+}
+
+function getChunkRetryDelayMs(
+  response: {headers?: {get?: (name: string) => string | null}},
+  attempt: number
+): number {
+  const retryAfterMs = parseRetryAfterMs(response.headers?.get?.("retry-after"));
+  if (retryAfterMs != null) {
+    return retryAfterMs;
+  }
+
+  return Math.min(
+    AZURE_CHUNK_RETRY_BASE_MS * Math.pow(2, attempt),
+    AZURE_CHUNK_RETRY_MAX_MS
+  );
 }
 
 function throwTranslationApiError(
@@ -321,11 +354,13 @@ export const translateTexts = onCall(
 
         // Azure 429 — retry this chunk with exponential back-off.
         if (resp.status === 429 && attempt < AZURE_CHUNK_MAX_RETRIES) {
-          const backoff = AZURE_CHUNK_RETRY_BASE_MS * Math.pow(2, attempt);
+          const retryAfterHeader = resp.headers?.get?.("retry-after") ?? null;
+          const backoff = getChunkRetryDelayMs(resp, attempt);
           logger.warn("Azure 429 on chunk, retrying", {
             chunkStart: i,
             attempt: attempt + 1,
             backoffMs: backoff,
+            retryAfterHeader,
           });
           await sleep(backoff);
           continue;

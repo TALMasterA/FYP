@@ -65,8 +65,26 @@ beforeEach(() => {
 });
 
 // Helper to create a mock fetch response
-function mockResponse(body: string, ok = true, status = 200) {
-  return {ok, status, text: async () => body, statusText: "OK"};
+function mockResponse(
+  body: string,
+  ok = true,
+  status = 200,
+  headers: Record<string, string> = {}
+) {
+  return {
+    ok,
+    status,
+    text: async () => body,
+    statusText: "OK",
+    headers: {
+      get: (name: string) => {
+        const entry = Object.entries(headers).find(
+          ([key]) => key.toLowerCase() === name.toLowerCase()
+        );
+        return entry?.[1] ?? null;
+      },
+    },
+  };
 }
 
 // ── getSpeechToken ────────────────────────────────────────────────────
@@ -316,35 +334,90 @@ describe("translateTexts", () => {
   });
 
   it("retries Azure 429 per-chunk and surfaces error after exhausting retries", async () => {
-    // With AZURE_CHUNK_MAX_RETRIES = 2, the server tries 3 times total.
-    mockFetch
-      .mockResolvedValueOnce(mockResponse("rate limit", false, 429))
-      .mockResolvedValueOnce(mockResponse("rate limit", false, 429))
-      .mockResolvedValueOnce(mockResponse("rate limit", false, 429));
+    jest.useFakeTimers();
+    try {
+      // With AZURE_CHUNK_MAX_RETRIES = 3, the server tries 4 times total.
+      mockFetch
+        .mockResolvedValueOnce(mockResponse("rate limit", false, 429))
+        .mockResolvedValueOnce(mockResponse("rate limit", false, 429))
+        .mockResolvedValueOnce(mockResponse("rate limit", false, 429))
+        .mockResolvedValueOnce(mockResponse("rate limit", false, 429));
 
-    await expect(
-      (translateTexts as any)({auth: {uid: "u1"}, data: {texts: ["a"], to: "en-US"}})
-    ).rejects.toThrow("rate limit exceeded");
+      const resultPromise = (translateTexts as any)({
+        auth: {uid: "u1"},
+        data: {texts: ["a"], to: "en-US"},
+      }).then(
+        (value: unknown) => ({ok: true as const, value}),
+        (error: Error) => ({ok: false as const, error})
+      );
 
-    // 1 initial + 2 retries = 3 Azure fetch calls
-    expect(mockFetch).toHaveBeenCalledTimes(3);
+      await jest.runAllTimersAsync();
+
+      const outcome = await resultPromise;
+
+      expect(outcome.ok).toBe(false);
+      if (!outcome.ok) {
+        expect(outcome.error.message).toContain("rate limit exceeded");
+      }
+
+      // 1 initial + 3 retries = 4 Azure fetch calls
+      expect(mockFetch).toHaveBeenCalledTimes(4);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("recovers from a transient Azure 429 on chunk retry", async () => {
-    // First attempt returns 429, second succeeds.
-    mockFetch
-      .mockResolvedValueOnce(mockResponse("rate limit", false, 429))
-      .mockResolvedValueOnce(
-        mockResponse(JSON.stringify([{translations: [{text: "hola"}]}]))
-      );
+    jest.useFakeTimers();
+    try {
+      // First attempt returns 429, second succeeds.
+      mockFetch
+        .mockResolvedValueOnce(mockResponse("rate limit", false, 429))
+        .mockResolvedValueOnce(
+          mockResponse(JSON.stringify([{translations: [{text: "hola"}]}]))
+        );
 
-    const result = await (translateTexts as any)({
-      auth: {uid: "u1"},
-      data: {texts: ["hello"], to: "es-ES"},
-    });
+      const resultPromise = (translateTexts as any)({
+        auth: {uid: "u1"},
+        data: {texts: ["hello"], to: "es-ES"},
+      });
 
-    expect(result).toEqual({translatedTexts: ["hola"]});
-    expect(mockFetch).toHaveBeenCalledTimes(2);
+      await jest.runAllTimersAsync();
+
+      const result = await resultPromise;
+
+      expect(result).toEqual({translatedTexts: ["hola"]});
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("honors Azure Retry-After header for chunk retries", async () => {
+    jest.useFakeTimers();
+    const setTimeoutSpy = jest.spyOn(global, "setTimeout");
+    try {
+      mockFetch
+        .mockResolvedValueOnce(mockResponse("rate limit", false, 429, {"retry-after": "0"}))
+        .mockResolvedValueOnce(
+          mockResponse(JSON.stringify([{translations: [{text: "hola"}]}]))
+        );
+
+      const resultPromise = (translateTexts as any)({
+        auth: {uid: "u1"},
+        data: {texts: ["hello"], to: "es-ES"},
+      });
+
+      await jest.runAllTimersAsync();
+
+      const result = await resultPromise;
+
+      expect(result).toEqual({translatedTexts: ["hola"]});
+      expect(setTimeoutSpy.mock.calls.map((call) => call[1])).toContain(250);
+    } finally {
+      setTimeoutSpy.mockRestore();
+      jest.useRealTimers();
+    }
   });
 
   it("maps batch fetch failures to unavailable", async () => {

@@ -94,6 +94,7 @@ Please use your gmail to register.
 - UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, 10+ others via Azure
 - UI language dropdown shows translation progress/status; completion auto-hides
 - UI language switching keeps current language on failures and surfaces explicit rate-limit/service timeout messages
+- First-time UI language downloads now pace Azure batch requests more conservatively and honor upstream `Retry-After` hints, reducing failed locale downloads caused by burst throttling
 - Primary language selector (30-day cooldown) in Settings
 - Theme: Light / Dark / System (smooth animated transitions)
 - Font size: 80%–150%
@@ -104,7 +105,6 @@ Please use your gmail to register.
 - Changing a custom word's translation language now keeps the original/source text fixed and only refreshes the translated side
 - Notification settings (push + badge toggles) accessible from the Friends bell icon flow
 - Feedback submission is available in `Settings -> Feedback`
-- OCR settings (on-device model status and footprint)
 
 **History & Organization:**
 - Translation history (30–60 records, configurable)
@@ -187,6 +187,8 @@ npm run test:coverage -- --runInBand
 npm run deploy
 ```
 
+Keep `fyp-backend/functions/package-lock.json` committed. If Firebase backend dependencies need updating, edit `fyp-backend/functions/package.json` intentionally and run a clean `npm install`; avoid `npm audit fix --force` here because npm can suggest incompatible Firebase package downgrades that break deploy analysis.
+
 See `docs/SECRETS_ROTATION.md` for rotation runbook.
 
 --------------------------------------------------------------
@@ -206,7 +208,8 @@ See `docs/SECRETS_ROTATION.md` for rotation runbook.
 - Hardcoded: Traditional Chinese (zh-TW), Cantonese (zh-HK)
 - Cached: All other languages via Azure Translator API (DataStore, 30-day TTL, 1000 max entries)
 - Guest users: 1 free UI language change per hour (server-enforced); logged-in: 20 per 10 min
-- Client-side cooldown on rate-limit hit: 15 s (logged-in) / 2 min (guest)
+- Client-side cooldown on rate-limit hit: 5 s (logged-in) / 2 min (guest)
+- Backend UI-language batch translation uses 350 ms chunk spacing and up to 3 Azure 429 retries, honoring `Retry-After` when Azure provides it
 - Dropdown order: English → Cantonese → Traditional Chinese → others
 - Azure codes normalized: `zh-HK → yue`, `zh-TW → zh-Hant`, `zh-CN → zh-Hans`
 
@@ -256,7 +259,7 @@ gh pr checkout "PR number"
 
 **Coverage:**
 - **Android:** 212 test files, 2,779 unit tests (from `testDebugUnitTest` report)
-- **Backend:** 14 test files, 182 tests
+- **Backend:** 14 test files, 189 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.
 
@@ -329,4 +332,4 @@ cd fyp-backend/functions && npm test
 
 --------------------------------------------------------------
 
-**Last Updated:** March 31, 2026
+**Last Updated:** April 9, 2026

@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-04-08_
+_Last updated: 2026-04-09_
 
 ## Verified Snapshot (from local audit)
 
@@ -12,16 +12,16 @@ _Last updated: 2026-04-08_
 | Android test suites in latest `testDebugUnitTest` run | 212 |
 | Android unit tests executed (`testDebugUnitTest`) | 2,779 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 14 |
-| Backend tests (`it`/`test` blocks) | 189 |
+| Backend tests (`it`/`test` blocks) | 190 |
 
 ## Backend Coverage (from `coverage-summary.json`)
 
 | Metric | Current |
 |---|---:|
-| Statements | 95.33% |
-| Branches | 80.83% |
-| Functions | 93.42% |
-| Lines | 96.34% |
+| Statements | 94.70% |
+| Branches | 80.70% |
+| Functions | 93.58% |
+| Lines | 95.63% |
 
 CI threshold in `fyp-backend/functions/jest.config.js`:
 - statements >= 50%

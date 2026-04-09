@@ -14,12 +14,14 @@ module.exports = {
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
+    tsconfigRootDir: __dirname,
     project: ["tsconfig.json", "tsconfig.dev.json"],
     sourceType: "module",
   },
   ignorePatterns: [
     "/lib/**/*", // Ignore built files.
     "/generated/**/*", // Ignore generated files.
+    "/coverage/**/*", // Ignore generated coverage reports.
     "jest.config.js",
   ],
   plugins: [
@@ -28,6 +30,7 @@ module.exports = {
   ],
   rules: {
     "quotes": ["error", "double"],
+    "linebreak-style": "off",
     "import/no-unresolved": 0,
     "indent": ["error", 2],
     "require-jsdoc": "off",

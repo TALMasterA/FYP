@@ -42,6 +42,14 @@
 
 ---
 
+## 1.3.1 Cloud Functions Dependency Locking
+
+**Invariant:** `fyp-backend/functions/package-lock.json` must stay committed and in sync with `fyp-backend/functions/package.json` so Firebase deploy uses a deterministic dependency graph.
+
+**Rule:** Update Firebase backend dependencies through an intentional `package.json` edit followed by a clean `npm install`. Do **not** use `npm audit fix --force` for this backend: npm currently suggests incompatible downgrade paths for `firebase-admin` / `firebase-functions`, which can break local manifest generation and cause Firebase CLI deploy-analysis failures.
+
+---
+
 ## 1.4 UI Language Switching Failure Contract
 
 **Invariant:** Failed UI-language translations must not force-reset the app to English.
@@ -58,8 +66,8 @@
 - Authenticated: 20 requests per 10 minutes (per `uid`, via `checkWriteRateLimit`)
 - Guest: 1 request per hour (per raw IP hash, via `checkWriteRateLimit`)
 - Server-side Azure chunking: the Cloud Function accepts up to 800 texts and internally chunks into 100-element Azure API calls, so each language change costs only **1 rate-limit count**.
-- **Inter-chunk throttle:** 200 ms delay between consecutive Azure chunk requests (`AZURE_INTER_CHUNK_DELAY_MS`) to stay under Azure's per-second rate ceiling (~10 req/s on free tier).  This allows two devices to translate concurrently without colliding on Azure's rate limit.
-- **Per-chunk retry:** If an individual Azure chunk returns HTTP 429, the server retries that chunk up to 2 times with exponential back-off (1 s → 2 s, via `AZURE_CHUNK_MAX_RETRIES`/`AZURE_CHUNK_RETRY_BASE_MS`) before surfacing the error to the client.
+- **Inter-chunk throttle:** 350 ms delay between consecutive Azure chunk requests (`AZURE_INTER_CHUNK_DELAY_MS`) to reduce burst pressure when the 663-string UI pack is translated for a new locale.
+- **Per-chunk retry:** If an individual Azure chunk returns HTTP 429, the server retries that chunk up to 3 times. Azure `Retry-After` is honored when present; otherwise the server uses exponential back-off (750 ms → 1.5 s → 3 s, capped via `AZURE_CHUNK_RETRY_MAX_MS`) before surfacing the error to the client.
 
 **Android client (`CloudTranslatorClient`):**
 - Sends all UI texts in a **single** Cloud Function call (no client-side chunking)

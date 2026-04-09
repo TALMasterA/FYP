@@ -34,7 +34,7 @@ FYP/
 ├── docs/
 │   ├── treeOfImportantfiles.txt                    ← This file
 │   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants
-│   ├── TEST_COVERAGE.md                            ← Test coverage report (211 Android test files, 2,767 Android + 182 backend tests)
+│   ├── TEST_COVERAGE.md                            ← Test coverage report (212 Android test files, 2,779 Android + 189 backend tests)
 │   ├── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
 │   ├── MCP_SKILLS_PLAYBOOK.md                      ← Team playbook for MCP skills usage
 │   ├── CLOUD_FUNCTIONS_API.md                      ← Backend Cloud Functions API reference
@@ -57,7 +57,7 @@ FYP/
 │       │       │   ├── MainFeatureGraph.kt              ← Home, speech, history, favorites sub-graph
 │       │       │   ├── LearningWordBankGraph.kt         ← Learning, quiz, word bank sub-graph
 │       │       │   ├── FriendsChatGraph.kt              ← Friends, chat, shared inbox sub-graph
-│       │       │   ├── SettingsProfileGraph.kt          ← Settings, profile, shop, notification, OCR sub-graph
+│       │       │   ├── SettingsProfileGraph.kt          ← Settings, profile, shop, voice, favorites, feedback, notification sub-graph
 │       │       │   └── StartupAuthGraph.kt              ← Startup, login, onboarding sub-graph
 │       │       │
 │       │       ├── appstate/                            ← App-level state & lifecycle
@@ -680,11 +680,11 @@ FYP/
             ├── maintenance.ts                      ← Scheduled: pruneStaleTokens, pruneStaleRateLimits, repairFriendsData
             ├── health.ts                           ← Healthcheck HTTP endpoint (validates GenAI config)
             └── __tests__/
-                ├── helpers.test.ts                 ← 29 unit tests for validation helpers
+                ├── helpers.test.ts                 ← 32 unit tests for validation helpers
                 ├── logger.test.ts                  ← 6 unit tests for structured logger
-                ├── translation.test.ts             ← 15 unit tests for getSpeechToken, translateText(s), detectLanguage
-                ├── coins.test.ts                   ← 26 unit tests for awardQuizCoins and spendCoins
-                ├── notifications.test.ts           ← 12 unit tests for FCM triggers and spam detection
+                ├── translation.test.ts             ← 41 unit tests for getSpeechToken, translateText(s), detectLanguage
+                ├── coins.test.ts                   ← 27 unit tests for awardQuizCoins and spendCoins
+                ├── notifications.test.ts           ← 17 unit tests for FCM triggers and spam detection
                 ├── health.test.ts                  ← Healthcheck endpoint tests
                 ├── rate-limit.test.ts              ← Rate limiting validation tests
                 ├── learning.test.ts                ← 20 unit tests for AI learning content generation callable
@@ -692,5 +692,5 @@ FYP/
                 ├── maintenance.test.ts             ← 9 unit tests for scheduled maintenance handlers
                 ├── maintenance-deep.test.ts        ← 3 unit tests for deep maintenance tests
                 ├── notifications-deep.test.ts      ← 11 unit tests for deep notification tests
-                ├── firestore-rules.test.ts         ← 6 unit tests for Firestore security rules
+                ├── firestore-rules-settings.test.ts ← 6 unit tests for Firestore security rules
                 └── index.test.ts                   ← 2 unit tests for main entry point
