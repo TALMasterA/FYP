@@ -9,6 +9,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.fyp.MainActivity
 import com.example.fyp.R
+import com.example.fyp.core.security.SecureStorage
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -220,6 +221,9 @@ class FcmNotificationService : FirebaseMessagingService() {
             com.google.firebase.messaging.FirebaseMessaging.getInstance().token
                 .addOnSuccessListener { token ->
                     if (token.isNullOrBlank()) return@addOnSuccessListener
+                    // Cache token in encrypted local storage for sign-out cleanup
+                    SecureStorage.forContext(context)
+                        .putString(SecureStorage.KEY_FCM_TOKEN, token)
                     FirebaseFirestore.getInstance()
                         .collection("users").document(uid)
                         .collection("fcm_tokens").document(token)
@@ -261,6 +265,8 @@ class FcmNotificationService : FirebaseMessagingService() {
          */
         fun removeTokenOnSignOut() {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+            // Clear locally-cached FCM token from encrypted storage
+            SecureStorage.instance()?.remove(SecureStorage.KEY_FCM_TOKEN)
             com.google.firebase.messaging.FirebaseMessaging.getInstance().token
                 .addOnSuccessListener { token ->
                     if (token.isNullOrBlank()) return@addOnSuccessListener

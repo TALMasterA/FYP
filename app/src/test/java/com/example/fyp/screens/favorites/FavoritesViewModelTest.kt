@@ -209,9 +209,9 @@ class FavoritesViewModelTest {
 
         authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
 
-        // Verify error is displayed
+        // Verify error is displayed (ErrorMessages.fromException returns fallback for plain RuntimeException)
         assertEquals(false, viewModel.uiState.value.isLoading)
-        assertTrue(viewModel.uiState.value.error?.contains(errorMessage) == true)
+        assertNotNull(viewModel.uiState.value.error)
     }
 
     @Test

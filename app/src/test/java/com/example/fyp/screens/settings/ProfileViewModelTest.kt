@@ -9,6 +9,7 @@ import com.example.fyp.model.Username
 import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.User
+import com.example.fyp.model.user.UserSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,6 +56,8 @@ class ProfileViewModelTest {
         runBlocking {
             whenever(friendsRepo.getPublicProfile(UserId("user1")))
                 .thenReturn(PublicUserProfile(uid = "user1", username = "old_user"))
+            whenever(settingsRepo.fetchUserSettings(UserId("user1")))
+                .thenReturn(UserSettings()) // lastUsernameChangeMs = 0L → no cooldown
         }
         return ProfileViewModel(authRepo, profileRepo, friendsRepo, settingsRepo)
     }
@@ -224,6 +227,28 @@ class ProfileViewModelTest {
 
         assertNull(viewModel.uiState.value.error)
         assertNotNull(viewModel.uiState.value.successMessage)
+    }
+
+    // ── updateUsername: cooldown fetch fails → fail closed ──────────────────
+
+    @Test
+    fun `updateUsername fails closed when settings fetch throws`() = runTest {
+        val viewModel = createViewModel()
+        authStateFlow.value = loggedInState
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Override the default stub to throw
+        whenever(settingsRepo.fetchUserSettings(UserId("user1")))
+            .thenThrow(RuntimeException("Firestore unavailable"))
+
+        viewModel.updateUsername("new_name")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(
+            "Unable to verify account status. Please try again.",
+            viewModel.uiState.value.error
+        )
+        assertFalse(viewModel.uiState.value.isLoading)
     }
 
     // ── Logged out state ─────────────────────────────────────────────────────

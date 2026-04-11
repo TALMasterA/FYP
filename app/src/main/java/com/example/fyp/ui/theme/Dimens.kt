@@ -31,5 +31,4 @@ object AppElevation {
     val none: Dp = 0.dp
     val small: Dp = 2.dp
     val medium: Dp = 4.dp
-    val large: Dp = 8.dp
 }

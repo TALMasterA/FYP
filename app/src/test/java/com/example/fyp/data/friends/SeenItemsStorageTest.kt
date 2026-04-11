@@ -3,6 +3,7 @@ package com.example.fyp.data.friends
 import android.content.Context
 import android.content.SharedPreferences
 import org.junit.Assert.*
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.*
@@ -28,11 +29,17 @@ class SeenItemsStorageTest {
         mockPrefs = mock(SharedPreferences::class.java)
         mockEditor = mock(SharedPreferences.Editor::class.java)
 
-        `when`(mockContext.getSharedPreferences("notification_seen_prefs", Context.MODE_PRIVATE))
-            .thenReturn(mockPrefs)
         `when`(mockPrefs.edit()).thenReturn(mockEditor)
         `when`(mockEditor.putString(anyString(), anyString())).thenReturn(mockEditor)
         `when`(mockEditor.remove(anyString())).thenReturn(mockEditor)
+
+        // Route SeenItemsStorage through mock prefs (bypasses SecureStorage)
+        SeenItemsStorage.prefsProvider = { mockPrefs }
+    }
+
+    @After
+    fun tearDown() {
+        SeenItemsStorage.prefsProvider = null
     }
 
     @Test

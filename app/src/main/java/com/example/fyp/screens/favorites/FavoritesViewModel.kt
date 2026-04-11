@@ -2,6 +2,7 @@ package com.example.fyp.screens.favorites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.core.ErrorMessages
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.data.user.FirestoreFavoritesRepository
 import com.example.fyp.domain.speech.SpeakTextUseCase
@@ -101,9 +102,10 @@ class FavoritesViewModel @Inject constructor(
                     error = null
                 )
             } catch (e: Exception) {
+                android.util.Log.e("FavoritesViewModel", "Failed to load favorites", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Failed to load favorites"
+                    error = ErrorMessages.fromException(e, "Failed to load favorites")
                 )
             }
         }
@@ -127,8 +129,9 @@ class FavoritesViewModel @Inject constructor(
                     hasMore = hasMore
                 )
             } catch (e: Exception) {
+                android.util.Log.e("FavoritesViewModel", "Failed to load more favorites", e)
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Failed to load more favorites"
+                    error = ErrorMessages.fromException(e, "Failed to load more favorites")
                 )
             }
         }
@@ -156,9 +159,10 @@ class FavoritesViewModel @Inject constructor(
                     error = null
                 )
             } catch (e: Exception) {
+                android.util.Log.e("FavoritesViewModel", "Failed to refresh favorites", e)
                 _uiState.value = _uiState.value.copy(
                     isRefreshing = false,
-                    error = e.message ?: "Failed to refresh favorites"
+                    error = ErrorMessages.fromException(e, "Failed to refresh favorites")
                 )
             }
         }

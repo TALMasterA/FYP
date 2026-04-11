@@ -97,8 +97,9 @@ class FirestoreUserSettingsRepository @Inject constructor(
         // The real-time listener (observeUserSettings) handles updates after initial load.
         val snap = try {
             ref.get(Source.SERVER).await()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             // Offline or server error: fall back to cache-then-server default
+            android.util.Log.i("FirestoreUserSettingsRepository", "Server fetch failed, falling back to cache", e)
             ref.get().await()
         }
         return parseSettings(snap)

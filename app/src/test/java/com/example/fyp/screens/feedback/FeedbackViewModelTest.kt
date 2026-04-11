@@ -101,7 +101,10 @@ class FeedbackViewModelTest {
 
         val state = viewModel.uiState.value
         assertTrue(state.showErrorDialog)
-        assertEquals("Network error", state.errorMessage)
+        assertEquals(
+            "No internet connection. Please check your network and try again.",
+            state.errorMessage
+        )
         assertFalse(state.isSubmitting)
     }
 

@@ -4,86 +4,77 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
- * Wrapper around [EncryptedSharedPreferences] that uses the Android Keystore
- * to protect sensitive data at rest (e.g., FCM tokens, session tokens).
+ * Android Keystore-backed [EncryptedSharedPreferences] for sensitive local data.
  *
- * Data is encrypted with AES-256 GCM; the encryption key lives in the
- * hardware-backed Android Keystore and never leaves the device.
+ * The master key is protected by the hardware-backed Android Keystore, ensuring
+ * encryption keys cannot be extracted even with root access or backup extraction.
  *
- * Usage:
- * ```
- * val secure = SecureStorage(applicationContext)
- * secure.putString("fcm_token", token)
- * val token = secure.getString("fcm_token")
- * ```
+ * Used for FCM device-token caching, rate-limiter timestamps, and notification
+ * seen-state persistence.
  */
-class SecureStorage(context: Context) {
-
-    private val prefs: SharedPreferences
-
-    init {
-        val masterKey = MasterKey.Builder(context)
+@Singleton
+class SecureStorage @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
+    private val masterKey: MasterKey by lazy {
+        MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
+    }
 
-        prefs = EncryptedSharedPreferences.create(
+    val prefs: SharedPreferences by lazy {
+        EncryptedSharedPreferences.create(
             context,
-            PREFS_FILE_NAME,
+            PREFS_FILENAME,
             masterKey,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
     }
 
-    /** Stores a string value securely. */
-    fun putString(key: String, value: String) {
+    fun getString(key: String, defaultValue: String? = null): String? =
+        prefs.getString(key, defaultValue)
+
+    fun putString(key: String, value: String?) {
         prefs.edit().putString(key, value).apply()
     }
 
-    /** Retrieves a securely stored string, or null if absent. */
-    fun getString(key: String): String? = prefs.getString(key, null)
-
-    /** Stores a boolean value securely. */
-    fun putBoolean(key: String, value: Boolean) {
-        prefs.edit().putBoolean(key, value).apply()
-    }
-
-    /** Retrieves a securely stored boolean (default false). */
-    fun getBoolean(key: String, default: Boolean = false): Boolean =
-        prefs.getBoolean(key, default)
-
-    /** Stores a long value securely. */
-    fun putLong(key: String, value: Long) {
-        prefs.edit().putLong(key, value).apply()
-    }
-
-    /** Retrieves a securely stored long (default 0). */
-    fun getLong(key: String, default: Long = 0L): Long =
-        prefs.getLong(key, default)
-
-    /** Removes a single key. */
     fun remove(key: String) {
         prefs.edit().remove(key).apply()
     }
 
-    /** Clears all securely stored data. */
-    fun clear() {
-        prefs.edit().clear().apply()
+    init {
+        @Suppress("LeakingThis")
+        staticInstance = this
     }
 
-    /** Returns true if the key exists. */
-    fun contains(key: String): Boolean = prefs.contains(key)
-
     companion object {
-        private const val PREFS_FILE_NAME = "fyp_secure_prefs"
+        private const val PREFS_FILENAME = "secure_prefs"
+        const val KEY_FCM_TOKEN = "fcm_token"
 
-        /** Well-known keys for common secure values. */
-        object Keys {
-            const val FCM_TOKEN = "fcm_token"
-            const val SESSION_TOKEN = "session_token"
-            const val LAST_AUTH_TIME = "last_auth_time"
+        @Volatile
+        private var staticInstance: SecureStorage? = null
+
+        /**
+         * Obtain a [SecureStorage] without Hilt injection.
+         *
+         * Returns the Hilt-managed singleton when available; otherwise creates
+         * a standalone instance backed by the same encrypted preference file.
+         */
+        fun forContext(context: Context): SecureStorage {
+            return staticInstance ?: synchronized(this) {
+                staticInstance ?: SecureStorage(context.applicationContext).also {
+                    staticInstance = it
+                }
+            }
         }
+
+        /** Access the singleton without context; null before first init. */
+        internal fun instance(): SecureStorage? = staticInstance
     }
 }

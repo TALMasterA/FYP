@@ -1,16 +1,16 @@
 # Test Coverage Report
 
-_Last updated: 2026-04-09_
+_Last updated: 2026-04-13_
 
 ## Verified Snapshot (from local audit)
 
 | Metric | Count |
 |---|---:|
-| Android source files (`app/src/main/java/com/example/fyp`) | 252 |
+| Android source files (`app/src/main/java/com/example/fyp`) | 249 |
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 9 |
-| Android unit test files (`app/src/test/java/com/example/fyp`) | 212 |
-| Android test suites in latest `testDebugUnitTest` run | 212 |
-| Android unit tests executed (`testDebugUnitTest`) | 2,779 |
+| Android unit test files (`app/src/test/java/com/example/fyp`) | 210 |
+| Android test suites in latest `testDebugUnitTest` run | 210 |
+| Android unit tests executed (`testDebugUnitTest`) | 2,723 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 14 |
 | Backend tests (`it`/`test` blocks) | 190 |
 
@@ -47,7 +47,6 @@ CI threshold in `fyp-backend/functions/jest.config.js`:
 | File | Reason |
 |---|---|
 | `app/src/main/java/com/example/fyp/data/repositories/AzureSpeechRepository.kt` | Hardware-dependent speech stack |
-| `app/src/main/java/com/example/fyp/core/security/SecureStorage.kt` | Android Keystore/system API wrapper |
 | `app/src/main/java/com/example/fyp/model/ui/AppLanguageState.kt` | Simple data holder |
 | `app/src/main/java/com/example/fyp/data/network/NetworkMonitor.kt` | Android connectivity system observer |
 

@@ -347,7 +347,10 @@ class WordBankViewModel @Inject constructor(
                                     exists = exists
                                 )
                                 exists
-                            } catch (_: Exception) { false }
+                            } catch (e: Exception) {
+                                android.util.Log.w("WordBankViewModel", "Failed to check word bank existence for $lang", e)
+                                false
+                            }
                         }
                     }
 

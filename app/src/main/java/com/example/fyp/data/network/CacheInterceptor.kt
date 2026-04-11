@@ -19,8 +19,11 @@ class CacheInterceptor : Interceptor {
         val request = chain.request()
         val response = chain.proceed(request)
         
-        // Cache successful GET requests for 5 minutes
-        return if (request.method == "GET" && response.isSuccessful) {
+        // Cache successful GET requests for 5 minutes,
+        // but skip caching if the request carried an Authorization header
+        // to avoid storing sensitive authenticated responses on disk.
+        val hasAuth = request.header("Authorization") != null
+        return if (request.method == "GET" && response.isSuccessful && !hasAuth) {
             response.newBuilder()
                 .header("Cache-Control", "public, max-age=300") // 5 minutes
                 .removeHeader("Pragma") // Remove no-cache directive

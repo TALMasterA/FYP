@@ -184,8 +184,8 @@ class FirestoreFriendsRepository @Inject constructor(
             if (oldUsername != null) {
                 try {
                     db.collection("usernames").document(oldUsername).delete().await()
-                } catch (_: Exception) {
-                    // Non-critical: old name cleanup failed, but new name is set
+                } catch (e: Exception) {
+                    android.util.Log.w("FirestoreFriendsRepository", "Non-critical: old username '$oldUsername' cleanup failed", e)
                 }
             }
 

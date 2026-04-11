@@ -2,6 +2,7 @@ package com.example.fyp.data.friends
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.fyp.data.friends.SeenItemsStorage
 import com.example.fyp.model.friends.FriendRelation
 import com.example.fyp.model.friends.FriendRequest
 import com.example.fyp.model.friends.SharedItem
@@ -54,6 +55,9 @@ class SharedFriendsDataSourceTest {
         whenever(mockPrefs.getString(any(), anyOrNull())).thenReturn(null)
         whenever(mockPrefs.edit()).thenReturn(mockEditor)
 
+        // Route SeenItemsStorage through mock prefs (bypasses SecureStorage)
+        SeenItemsStorage.prefsProvider = { mockPrefs }
+
         mockContext = mock()
         whenever(mockContext.getSharedPreferences(any(), any<Int>())).thenReturn(mockPrefs)
 
@@ -66,6 +70,7 @@ class SharedFriendsDataSourceTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        SeenItemsStorage.prefsProvider = null
     }
 
     // ── Reflection helpers ──────────────────────────────────────────────────

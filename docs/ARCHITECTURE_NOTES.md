@@ -273,7 +273,13 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ## 13. Input Validation and Sanitization — Security Guards
 
-**Rule:** Validate all user input at entry points using `validateEmail()`, `validatePassword()`, `validateUsername()`, `validateTextLength()`. Sanitize with `sanitizeInput()`. Apply rate limiting (login: 5/min, friend requests: 5/hr, API: 100/min, password reset: 3/hr). Server-side enforcement: friend request notifications (5/hr, Firestore query + delete), chat notifications (10/min, `checkWriteRateLimit`), feedback submissions (3/hr, `checkWriteRateLimit` + delete), learning content generation (10/hr, `enforceRateLimit`).
+**Rule:** Validate all user input at entry points using `validateEmail()`, `validateUsername()`, `validateTextLength()`. Sanitize with `sanitizeInput()`. Apply rate limiting (login: 5/min, friend requests: 5/hr, API: 100/min, password reset: 3/hr). Server-side enforcement: friend request notifications (5/hr, Firestore query + delete), chat notifications (10/min, `checkWriteRateLimit`), feedback submissions (3/hr, `checkWriteRateLimit` + delete), learning content generation (10/hr, `enforceRateLimit`).
+
+**RateLimiter memory bound:** `RateLimiter` is bounded to 10,000 tracked keys. When the limit is exceeded, stale keys (those with no recent attempts within the window) are pruned automatically.
+
+**Audit logging PII:** `AuditLogger.logLoginFailed()` and `logPasswordResetRequested()` obfuscate email addresses before logging to Crashlytics (first 2 chars + domain only).
+
+**CacheInterceptor safety:** `CacheInterceptor` skips caching for requests carrying an `Authorization` header to avoid persisting sensitive authenticated responses.
 
 **Encoding order in `sanitizeInput()`:** `&` → `&amp;` (FIRST), then `<`, `>`, `"`, `'`, `/`.
 
@@ -357,7 +363,7 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ## 15. Red Dot Notification Persistence — Seen Items Storage
 
-**Invariant:** Seen item/request/message IDs persist per user/device in SharedPreferences so red dots do not reappear after app restart or same-user logout/login.
+**Invariant:** Seen item/request/message IDs persist per user/device in EncryptedSharedPreferences (via `SecureStorage`) so red dots do not reappear after app restart or same-user logout/login.
 
 **Rule:** (1) Load persisted IDs in `startObserving()`; (2) Save IDs after mark-seen actions; (3) `stopObserving()` clears only in-memory state and must not clear persisted seen IDs.
 
@@ -474,7 +480,7 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ## 16. Friend Request Rate Limiting — Persisted Hourly Window
 
-**Invariant:** 5 sends per hour, persisted in SharedPreferences to survive app restarts.
+**Invariant:** 5 sends per hour, persisted in EncryptedSharedPreferences (via `SecureStorage`) to survive app restarts.
 
 **Rule:** (1) Prune expired timestamps before reads/writes; (2) Only record send after successful request; (3) Keep aligned with documented 5-per-hour rule.
 
@@ -778,3 +784,37 @@ The following components cannot be unit tested due to Android framework dependen
 **Note:** This constraint exists because long-running Cloud Functions rely on the client maintaining an active HTTP connection. Future improvement could use FCM push notifications to deliver results even when app is backgrounded.
 
 ---
+
+## 37. Favorites Limit — Server-Side Count Enforcement
+
+**Invariant:** `UserSettings.MAX_FAVORITE_RECORDS` (20) must be enforced via Firestore count, not in-memory state.
+
+**Bug (fixed 2026-04-11):** The original `HistoryViewModel.toggleFavorite()` and `favouriteSession()` checked `_uiState.value.favoritedTexts.size` — an in-memory `Set` populated asynchronously by `loadFavoritedTexts()`. If the set hadn't loaded yet (race condition on first tap), the check always passed and unlimited favorites could be added.
+
+**Fix:** Both methods now call `favoritesRepo.getFavoriteCount(uid)` inside the existing Mutex-protected coroutine. Since the max is 20 documents, this is a trivial Firestore read. The in-memory `favoritedTexts` set is kept solely for UI bookmark icon display.
+
+**Rule:** Never use client-side collection size for hard limit enforcement. Always query the server count.
+
+---
+
+## 38. AuditLogger — Friend System Audit Trail
+
+**Invariant:** Security-relevant friend-system actions must be audit-logged via `AuditLogger` for Crashlytics observability.
+
+**Wired (2026-04-11):** `FriendsViewModel` now calls `AuditLogger` in the success path of 6 operations: `sendFriendRequest`, `acceptFriendRequest`, `rejectFriendRequest`, `removeFriend`, `blockUser`, `unblockUser`.
+
+**Rule:** When adding new friend-system actions, include an `AuditLogger` call in the success callback. Log calls are fire-and-forget and must not block the UI or fail the action.
+
+---
+
+## 39. Error Handling — Dual Visibility Invariant
+
+**Invariant:** Every catch block in ViewModel/repository code must produce BOTH a log entry AND a user-facing message (or be explicitly documented as non-fatal with log-only).
+
+**Rules:**
+1. **User-facing errors:** Use `ErrorMessages.fromException(e, fallback)` to map exceptions to consistent, user-friendly messages. Never expose raw `e.message` to the UI.
+2. **Logging:** Use `Log.e(TAG, ...)` for errors affecting user flow, `Log.w(TAG, ...)` for non-fatal/best-effort failures, `Log.i(TAG, ...)` for expected fallbacks (e.g., network-to-cache).
+3. **Fail-closed security:** When a security-relevant check (cooldown, permissions) cannot verify state due to an exception, block the action rather than proceeding. Example: `ProfileViewModel` cooldown check fails closed when `fetchUserSettings` throws.
+4. **No empty catch blocks:** Every `catch` must at minimum log the exception. Silent swallowing is prohibited.
+
+**Guard:** `ProfileViewModelTest.updateUsername fails closed when settings fetch throws` verifies the cooldown fail-closed behavior.

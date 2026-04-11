@@ -174,7 +174,9 @@ class ChatViewModel @Inject constructor(
                 val chatId = chatRepository.generateChatId(userId, friendId)
                 val clearedAt = chatRepository.getClearedAt(chatId, userId)
                 updateUiState { it.copy(clearedAt = clearedAt) }
-            } catch (_: Exception) { /* non-fatal: proceed without filter */ }
+            } catch (e: Exception) {
+                android.util.Log.w("ChatViewModel", "getClearedAt failed, loading unfiltered messages", e)
+            }
             loadMessages(userId)
         }
     }
@@ -256,7 +258,9 @@ class ChatViewModel @Inject constructor(
                 val blocked = friendsRepository.isBlocked(userId, friendId)
                 val blockedBy = friendsRepository.isBlockedBy(userId, friendId)
                 updateUiState { it.copy(isBlocked = blocked, isBlockedBy = blockedBy) }
-            } catch (_: Exception) { /* non-fatal */ }
+            } catch (e: Exception) {
+                android.util.Log.w("ChatViewModel", "Failed to check block status", e)
+            }
         }
     }
 

@@ -31,6 +31,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 data class HistoryUiState(
@@ -79,6 +81,7 @@ class HistoryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HistoryUiState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
 
+    private val favoriteMutex = Mutex()
     private var currentUserId: String? = null
     private var historyJob: Job? = null
     private var sessionsJob: Job? = null
@@ -213,63 +216,61 @@ class HistoryViewModel @Inject constructor(
         val recordKey = "${record.sourceText}|${record.targetText}"
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(addingFavoriteId = record.id)
+            favoriteMutex.withLock {
+                _uiState.value = _uiState.value.copy(addingFavoriteId = record.id)
 
-            // Check if already favorited
-            val existingFavoriteId = favoritesRepo.getFavoriteId(uid, record.sourceText, record.targetText)
+                // Check if already favorited
+                val existingFavoriteId = favoritesRepo.getFavoriteId(uid, record.sourceText, record.targetText)
 
-            if (existingFavoriteId != null) {
-                // Remove from favorites
-                favoritesRepo.removeFavorite(uid, existingFavoriteId)
-                    .onSuccess {
+                if (existingFavoriteId != null) {
+                    // Remove from favorites
+                    favoritesRepo.removeFavorite(uid, existingFavoriteId)
+                        .onSuccess {
+                            _uiState.value = _uiState.value.copy(
+                                addingFavoriteId = null,
+                                favoriteIds = _uiState.value.favoriteIds - record.id,
+                                favoritedTexts = _uiState.value.favoritedTexts - recordKey
+                            )
+                        }
+                        .onFailure {
+                            _uiState.value = _uiState.value.copy(
+                                addingFavoriteId = null,
+                                error = "Failed to remove from favorites"
+                            )
+                        }
+                } else {
+                    // Check limit before adding (server count to avoid stale in-memory race)
+                    val serverCount = favoritesRepo.getFavoriteCount(uid)
+                    if (serverCount >= UserSettings.MAX_FAVORITE_RECORDS) {
                         _uiState.value = _uiState.value.copy(
                             addingFavoriteId = null,
-                            favoriteIds = _uiState.value.favoriteIds - record.id,
-                            favoritedTexts = _uiState.value.favoritedTexts - recordKey
+                            favoriteLimitExceeded = true
                         )
+                        return@withLock
                     }
-                    .onFailure {
+                    // Add to favorites
+                    favoritesRepo.addFavorite(
+                        userId = uid,
+                        sourceText = record.sourceText,
+                        targetText = record.targetText,
+                        sourceLang = record.sourceLang,
+                        targetLang = record.targetLang
+                    ).onSuccess {
                         _uiState.value = _uiState.value.copy(
                             addingFavoriteId = null,
-                            error = "Failed to remove from favorites"
+                            favoriteIds = _uiState.value.favoriteIds + record.id,
+                            favoritedTexts = _uiState.value.favoritedTexts + recordKey
+                        )
+                    }.onFailure {
+                        _uiState.value = _uiState.value.copy(
+                            addingFavoriteId = null,
+                            error = "Failed to add to favorites"
                         )
                     }
-            } else {
-                // Check limit before adding
-                if (_uiState.value.favoritedTexts.size >= UserSettings.MAX_FAVORITE_RECORDS) {
-                    _uiState.value = _uiState.value.copy(
-                        addingFavoriteId = null,
-                        favoriteLimitExceeded = true
-                    )
-                    return@launch
-                }
-                // Add to favorites
-                favoritesRepo.addFavorite(
-                    userId = uid,
-                    sourceText = record.sourceText,
-                    targetText = record.targetText,
-                    sourceLang = record.sourceLang,
-                    targetLang = record.targetLang
-                ).onSuccess {
-                    _uiState.value = _uiState.value.copy(
-                        addingFavoriteId = null,
-                        favoriteIds = _uiState.value.favoriteIds + record.id,
-                        favoritedTexts = _uiState.value.favoritedTexts + recordKey
-                    )
-                }.onFailure {
-                    _uiState.value = _uiState.value.copy(
-                        addingFavoriteId = null,
-                        error = "Failed to add to favorites"
-                    )
                 }
             }
         }
     }
-
-    /**
-     * Legacy method - redirects to toggle
-     */
-    fun addToFavorites(record: TranslationRecord) = toggleFavorite(record)
 
     /**
      * Favourite an entire live conversation session.
@@ -299,7 +300,7 @@ class HistoryViewModel @Inject constructor(
             }
 
             // Check if adding this session's records would exceed the limit
-            val currentCount = _uiState.value.favoritedTexts.size
+            val currentCount = favoritesRepo.getFavoriteCount(uid)
             if (currentCount + sessionRecords.size > UserSettings.MAX_FAVORITE_RECORDS) {
                 _uiState.value = _uiState.value.copy(
                     favouritingSessionId = null,
@@ -396,20 +397,6 @@ class HistoryViewModel @Inject constructor(
             val sessionIds = sessions.map { it.sessionId }.toSet()
             _uiState.value = _uiState.value.copy(favouritedSessionIds = sessionIds)
         }
-    }
-
-    /**
-     * Check if a record is already favorited
-     */
-    fun checkIfFavorited(record: TranslationRecord, onResult: (Boolean) -> Unit) {
-        val recordKey = "${record.sourceText}|${record.targetText}"
-        val isFavorited = _uiState.value.favoritedTexts.contains(recordKey)
-        if (isFavorited) {
-            _uiState.value = _uiState.value.copy(
-                favoriteIds = _uiState.value.favoriteIds + record.id
-            )
-        }
-        onResult(isFavorited)
     }
 
     /**

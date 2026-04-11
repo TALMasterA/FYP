@@ -1,7 +1,7 @@
 package com.example.fyp.data.friends
 
-import android.content.Context
 import android.content.SharedPreferences
+import com.example.fyp.core.security.SecureStorage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -14,7 +14,7 @@ import org.mockito.kotlin.mock
 
 class FriendRequestRateLimiterTest {
 
-    private lateinit var context: Context
+    private lateinit var secureStorage: SecureStorage
     private lateinit var prefs: SharedPreferences
     private lateinit var editor: SharedPreferences.Editor
     private lateinit var storage: MutableMap<String, String>
@@ -22,13 +22,12 @@ class FriendRequestRateLimiterTest {
 
     @Before
     fun setup() {
-        context = mock()
+        secureStorage = mock()
         prefs = mock()
         editor = mock()
         storage = mutableMapOf()
 
-        `when`(context.getSharedPreferences("friend_request_rate_limit_prefs", Context.MODE_PRIVATE))
-            .thenReturn(prefs)
+        `when`(secureStorage.prefs).thenReturn(prefs)
         `when`(prefs.edit()).thenReturn(editor)
         `when`(editor.putString(any(), anyOrNull())).thenAnswer { invocation ->
             val key = invocation.getArgument<String>(0)
@@ -45,7 +44,7 @@ class FriendRequestRateLimiterTest {
             storage[key]
         }
 
-        limiter = SharedPreferencesFriendRequestRateLimiter(context)
+        limiter = SharedPreferencesFriendRequestRateLimiter(secureStorage)
     }
 
     @Test

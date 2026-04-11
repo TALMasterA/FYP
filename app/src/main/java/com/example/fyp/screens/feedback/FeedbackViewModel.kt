@@ -71,9 +71,10 @@ class FeedbackViewModel @Inject constructor(
                 feedbackRepository.submitFeedback(sanitizedMessage)
                 _uiState.value = FeedbackUiState(showSuccessDialog = true)
             } catch (e: Exception) {
+                android.util.Log.e("FeedbackViewModel", "Failed to submit feedback", e)
                 _uiState.value = FeedbackUiState(
                     showErrorDialog = true,
-                    errorMessage = e.message ?: "Failed to submit feedback. Please check your internet connection."
+                    errorMessage = com.example.fyp.core.ErrorMessages.fromException(e, "Failed to submit feedback. Please check your internet connection.")
                 )
             }
         }

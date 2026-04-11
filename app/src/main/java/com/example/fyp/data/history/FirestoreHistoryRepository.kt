@@ -139,6 +139,11 @@ class FirestoreHistoryRepository @Inject constructor(
             .delete()
             .await()
 
+        // Invalidate cached records so the live getHistory flow doesn't serve stale data.
+        cachedRecords[userId.value]?.let { cached ->
+            cachedRecords[userId.value] = cached.filter { it.id != recordId.value }
+        }
+
         if (sourceLang != null && targetLang != null) {
             updateLanguageCountsCache(userId, sourceLang, targetLang, increment = false)
         }
@@ -161,6 +166,7 @@ class FirestoreHistoryRepository @Inject constructor(
             .limit(limit)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
+                    Log.e("FirestoreHistoryRepository", "History snapshot listener error for user $uid", error)
                     close(error)
                     return@addSnapshotListener
                 }
@@ -432,6 +438,7 @@ class FirestoreHistoryRepository @Inject constructor(
             .limit(1_000)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
+                    Log.e("FirestoreHistoryRepository", "Sessions snapshot listener error", error)
                     close(error)
                     return@addSnapshotListener
                 }
@@ -512,7 +519,9 @@ class FirestoreHistoryRepository @Inject constructor(
                     }
                 } catch (e: Exception) {
                     Log.w("FirestoreHistoryRepository", "Incremental count decrement failed, rebuilding cache", e)
-                    try { rebuildLanguageCountsCache(userId.value) } catch (_: Exception) {}
+                    try { rebuildLanguageCountsCache(userId.value) } catch (re: Exception) {
+                        Log.e("FirestoreHistoryRepository", "Cache rebuild also failed for user ${userId.value}", re)
+                    }
                 }
             }
         }

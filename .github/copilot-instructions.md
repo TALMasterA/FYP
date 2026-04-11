@@ -32,3 +32,10 @@ At minimum, review:
 ## Completion Rule
 
 Do not finalize until code changes, tree maintenance, documentation updates, and verification commands are all completed (or explicitly blocked with a reason).
+
+## Dead Code / Report Truthfulness Guard
+
+1. **Never create code that is not wired into the live app.** Every new file, function, or class must be called from at least one production code path. Run a grep/usage check before finalizing.
+2. **Never remove code that is referenced in the submitted report** (`report-audit/Project_Report_ISA_22235876.md`) without re-implementing equivalent functionality first.
+3. **Never write report content about code that does not actually work.** If a feature is described in the report, the corresponding code must exist, compile, be reachable, and be tested.
+4. When deleting or refactoring, check whether the affected symbol appears in the submitted report. If it does, either preserve the functionality or flag it to the user before proceeding.

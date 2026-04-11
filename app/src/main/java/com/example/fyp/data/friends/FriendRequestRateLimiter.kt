@@ -1,8 +1,7 @@
 package com.example.fyp.data.friends
 
-import android.content.Context
 import android.content.SharedPreferences
-import dagger.hilt.android.qualifiers.ApplicationContext
+import com.example.fyp.core.security.SecureStorage
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,16 +22,14 @@ interface FriendRequestRateLimiter {
 
 @Singleton
 class SharedPreferencesFriendRequestRateLimiter @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val secureStorage: SecureStorage
 ) : FriendRequestRateLimiter {
 
     private companion object {
-        const val PREFS_NAME = "friend_request_rate_limit_prefs"
         const val KEY_PREFIX = "friend_request_timestamps_"
     }
 
-    private fun prefs(): SharedPreferences =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private fun prefs(): SharedPreferences = secureStorage.prefs
 
     override fun canSend(
         userId: String,

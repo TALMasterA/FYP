@@ -33,6 +33,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import kotlinx.coroutines.delay
 import com.example.fyp.core.UiConstants
+import com.example.fyp.core.security.ValidationResult
+import com.example.fyp.core.security.validatePassword
 import com.example.fyp.ui.theme.AppSpacing
 import com.example.fyp.ui.theme.AppCorners
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -204,7 +206,7 @@ fun LoginScreen(
                             if (!isLogin) {
                                 localError = when {
                                     password.trim() != confirmPassword.trim() -> t(UiTextKey.AuthErrorPasswordsMismatch)
-                                    password.trim().length < 6 -> t(UiTextKey.AuthErrorPasswordTooShort)
+                                    validatePassword(password) is ValidationResult.Invalid -> t(UiTextKey.AuthErrorPasswordTooShort)
                                     else -> null
                                 }
                                 if (localError == null) viewModel.register(email.trim(), password.trim())
@@ -232,7 +234,7 @@ fun LoginScreen(
                             localError = t(UiTextKey.AuthErrorPasswordsMismatch)
                             return@Button
                         }
-                        if (password.trim().length < 6) {
+                        if (validatePassword(password) is ValidationResult.Invalid) {
                             localError = t(UiTextKey.AuthErrorPasswordTooShort)
                             return@Button
                         }

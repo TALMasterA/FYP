@@ -78,9 +78,10 @@ class ShopViewModel @Inject constructor(
                     unlockedPalettes = settings.unlockedPalettes
                 )
             } catch (e: Exception) {
+                android.util.Log.e("ShopViewModel", "Failed to load shop data", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    purchaseError = e.message
+                    purchaseError = com.example.fyp.core.ErrorMessages.fromException(e, "Failed to load shop data")
                 )
             }
         }

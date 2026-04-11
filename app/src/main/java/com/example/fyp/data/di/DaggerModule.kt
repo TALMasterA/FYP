@@ -258,8 +258,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideFriendRequestRateLimiter(
-        @ApplicationContext context: Context
-    ): FriendRequestRateLimiter = SharedPreferencesFriendRequestRateLimiter(context)
+        secureStorage: com.example.fyp.core.security.SecureStorage
+    ): FriendRequestRateLimiter = SharedPreferencesFriendRequestRateLimiter(secureStorage)
 
     @Provides
     @Singleton

@@ -552,7 +552,9 @@ class FirestoreChatRepository @Inject constructor(
                 .document("info")
                 .delete()
                 .await()
-        } catch (_: Exception) { /* best-effort */ }
+        } catch (e: Exception) {
+            android.util.Log.w("FirestoreChatRepository", "Best-effort metadata cleanup failed for chat $chatId", e)
+        }
 
         // Delete cleared timestamps subcollection (chats/{chatId}/cleared/*)
         try {
@@ -563,7 +565,9 @@ class FirestoreChatRepository @Inject constructor(
                 clearedSnap.documents.forEach { batch.delete(it.reference) }
                 batch.commit().await()
             }
-        } catch (_: Exception) { /* best-effort */ }
+        } catch (e: Exception) {
+            android.util.Log.w("FirestoreChatRepository", "Best-effort cleared-timestamps cleanup failed for chat $chatId", e)
+        }
 
         // Clean up per-friend unread counters on both user documents
         try {
@@ -579,7 +583,9 @@ class FirestoreChatRepository @Inject constructor(
                 batch.update(doc2, "unreadPerFriend.$uid1", FieldValue.delete())
                 batch.commit().await()
             }
-        } catch (_: Exception) { /* best-effort */ }
+        } catch (e: Exception) {
+            android.util.Log.w("FirestoreChatRepository", "Best-effort unread-counters cleanup failed for chat $chatId", e)
+        }
 
         Result.success(Unit)
     } catch (e: Exception) {

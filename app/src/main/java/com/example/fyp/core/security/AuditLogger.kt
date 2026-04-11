@@ -72,7 +72,7 @@ object AuditLogger {
      * @param reason The failure reason
      */
     fun logLoginFailed(email: String, reason: String) {
-        log(EventType.LOGIN_FAILED, details = "email=$email reason=$reason")
+        log(EventType.LOGIN_FAILED, details = "email=${obfuscateEmail(email)} reason=$reason")
     }
 
     /**
@@ -120,7 +120,7 @@ object AuditLogger {
      * @param email The email for which reset was requested
      */
     fun logPasswordResetRequested(email: String) {
-        log(EventType.PASSWORD_RESET_REQUESTED, details = "email=$email")
+        log(EventType.PASSWORD_RESET_REQUESTED, details = "email=${obfuscateEmail(email)}")
     }
 
     // FIX 5.4: Friend-system audit helpers
@@ -158,5 +158,18 @@ object AuditLogger {
     /** Logs a permission denied event. */
     fun logPermissionDenied(userId: String? = null, action: String) {
         log(EventType.PERMISSION_DENIED, userId = userId, details = "action=$action")
+    }
+
+    /**
+     * Obfuscates an email address for safe logging (keeps first 2 chars + domain).
+     * e.g. "user@example.com" -> "us***@example.com"
+     */
+    private fun obfuscateEmail(email: String): String {
+        val parts = email.split("@")
+        if (parts.size != 2) return "***"
+        val local = parts[0]
+        val domain = parts[1]
+        val visible = local.take(2)
+        return "$visible***@$domain"
     }
 }

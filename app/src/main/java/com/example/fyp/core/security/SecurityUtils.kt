@@ -30,26 +30,6 @@ fun validateEmail(email: String): ValidationResult {
 }
 
 /**
- * Validates password strength.
- * Requires minimum length and character variety.
- */
-fun validatePassword(password: String, minLength: Int = 6): ValidationResult {
-    if (password.length < minLength) {
-        return ValidationResult.Invalid("Password must be at least $minLength characters")
-    }
-
-    val hasUpperCase = password.any { it.isUpperCase() }
-    val hasLowerCase = password.any { it.isLowerCase() }
-    val hasDigit = password.any { it.isDigit() }
-
-    return if (hasUpperCase && hasLowerCase && hasDigit) {
-        ValidationResult.Valid
-    } else {
-        ValidationResult.Invalid("Password must contain uppercase, lowercase, and numbers")
-    }
-}
-
-/**
  * Validates username format.
  * Allows alphanumeric characters, underscores, and hyphens.
  */
@@ -68,6 +48,20 @@ fun validateUsername(username: String, minLength: Int = 3, maxLength: Int = 20):
     } else {
         ValidationResult.Invalid("Username can only contain letters, numbers, and underscores")
     }
+}
+
+/**
+ * Validates password minimum-strength requirements.
+ *
+ * Currently enforces minimum length (matching Firebase Auth's own minimum).
+ * The trimmed password is checked to prevent passwords that are only whitespace.
+ */
+fun validatePassword(password: String, minLength: Int = 6): ValidationResult {
+    val trimmed = password.trim()
+    if (trimmed.length < minLength) {
+        return ValidationResult.Invalid("Password must be at least $minLength characters")
+    }
+    return ValidationResult.Valid
 }
 
 /**
@@ -106,25 +100,14 @@ fun validateTextLength(
 }
 
 /**
- * Validates that a string contains only safe characters.
- * Useful for file names, IDs, and other system identifiers.
- */
-fun validateSafeString(input: String): ValidationResult {
-    val safeRegex = "^[a-zA-Z0-9_.-]+$".toRegex()
-    return if (safeRegex.matches(input)) {
-        ValidationResult.Valid
-    } else {
-        ValidationResult.Invalid("Input contains invalid characters")
-    }
-}
-
-/**
  * Rate limiter to prevent abuse of sensitive operations.
  * Tracks operation attempts and enforces cooldown periods.
+ * Bounded to [maxKeys] tracked keys to prevent unbounded memory growth.
  */
 class RateLimiter(
     private val maxAttempts: Int = 5,
-    private val windowMillis: Long = 60 * 1000L // 1 minute
+    private val windowMillis: Long = 60 * 1000L, // 1 minute
+    private val maxKeys: Int = 10_000
 ) {
     private data class AttemptRecord(
         val attempts: MutableList<Long> = mutableListOf()
@@ -138,6 +121,7 @@ class RateLimiter(
      */
     fun isAllowed(key: String): Boolean {
         val now = System.currentTimeMillis()
+        pruneStaleKeys(now)
         val record = records.getOrPut(key) { AttemptRecord() }
 
         // Remove old attempts outside the window
@@ -178,41 +162,18 @@ class RateLimiter(
     fun clear() {
         records.clear()
     }
-}
 
-/**
- * Validates that a string doesn't contain SQL injection patterns.
- * Note: This is a basic check. Always use parameterized queries for database operations.
- */
-fun validateNoSqlInjection(input: String): ValidationResult {
-    val sqlKeywords = listOf("SELECT", "INSERT", "UPDATE", "DELETE", "DROP", "UNION", "EXEC", "--", ";")
-    val upperInput = input.uppercase()
-
-    for (keyword in sqlKeywords) {
-        if (upperInput.contains(keyword)) {
-            return ValidationResult.Invalid("Input contains potentially dangerous content")
+    /**
+     * Removes keys whose attempts are all outside the current window,
+     * preventing unbounded memory growth from one-time callers.
+     */
+    private fun pruneStaleKeys(now: Long) {
+        if (records.size <= maxKeys) return
+        val iterator = records.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            entry.value.attempts.removeAll { now - it > windowMillis }
+            if (entry.value.attempts.isEmpty()) iterator.remove()
         }
-    }
-
-    return ValidationResult.Valid
-}
-
-/**
- * Validates URL format and ensures it uses a safe protocol.
- */
-fun validateUrl(url: String, allowedProtocols: List<String> = listOf("http", "https")): ValidationResult {
-    if (url.isBlank()) {
-        return ValidationResult.Invalid("URL cannot be empty")
-    }
-
-    try {
-        val javaUrl = java.net.URL(url)
-        return if (javaUrl.protocol in allowedProtocols) {
-            ValidationResult.Valid
-        } else {
-            ValidationResult.Invalid("URL must use ${allowedProtocols.joinToString(" or ")} protocol")
-        }
-    } catch (e: Exception) {
-        return ValidationResult.Invalid("Invalid URL format")
     }
 }

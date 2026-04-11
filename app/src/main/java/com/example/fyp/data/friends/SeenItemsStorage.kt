@@ -2,6 +2,8 @@ package com.example.fyp.data.friends
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.VisibleForTesting
+import com.example.fyp.core.security.SecureStorage
 
 /**
  * Persistent storage for tracking which notifications the user has already seen.
@@ -22,13 +24,20 @@ import android.content.SharedPreferences
  * Users should only see red dot badges for truly NEW items they haven't yet viewed.
  */
 object SeenItemsStorage {
-    private const val PREFS_NAME = "notification_seen_prefs"
     private const val KEY_PREFIX_SEEN_ITEMS = "seen_shared_items_"
     private const val KEY_PREFIX_SEEN_REQUESTS = "seen_friend_requests_"
     private const val KEY_PREFIX_SEEN_MESSAGE_FRIENDS = "seen_message_friends_"
 
+    /**
+     * Override for unit tests to supply a mock [SharedPreferences].
+     * When null (production), [SecureStorage]-backed encrypted prefs are used.
+     */
+    @VisibleForTesting
+    internal var prefsProvider: ((Context) -> SharedPreferences)? = null
+
     private fun getPrefs(context: Context): SharedPreferences =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefsProvider?.invoke(context)
+            ?: SecureStorage.forContext(context).prefs
 
     // ── Shared Inbox Items ───────────────────────────────────────────────────
 

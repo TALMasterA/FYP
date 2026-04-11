@@ -91,6 +91,7 @@ class HistoryViewModelTest {
         favoritesRepo = mock {
             onBlocking { getAllFavoritesOnce(testUserId) } doReturn emptyList()
             onBlocking { getAllFavoriteSessionsOnce(testUserId) } doReturn emptyList()
+            onBlocking { getFavoriteCount(testUserId) } doReturn 0
         }
 
         historyRepo = mock()
@@ -473,37 +474,4 @@ class HistoryViewModelTest {
         assertFalse(vm.uiState.value.favoriteLimitExceeded)
     }
 
-    // ── checkIfFavorited tests ──
-
-    @Test
-    fun `checkIfFavorited returns true for favorited records`() = runTest {
-        favoritesRepo.stub {
-            onBlocking { getAllFavoritesOnce(testUserId) } doReturn listOf(
-                FavoriteRecord(sourceText = "Hello", targetText = "Hola")
-            )
-        }
-
-        val vm = buildViewModel()
-        authStateFlow.value = AuthState.LoggedIn(testUser)
-
-        var result = false
-        vm.checkIfFavorited(TranslationRecord(id = "r1", sourceText = "Hello", targetText = "Hola")) {
-            result = it
-        }
-
-        assertTrue(result)
-    }
-
-    @Test
-    fun `checkIfFavorited returns false for non-favorited records`() = runTest {
-        val vm = buildViewModel()
-        authStateFlow.value = AuthState.LoggedIn(testUser)
-
-        var result = true
-        vm.checkIfFavorited(TranslationRecord(id = "r1", sourceText = "Bye", targetText = "Adiós")) {
-            result = it
-        }
-
-        assertFalse(result)
-    }
 }

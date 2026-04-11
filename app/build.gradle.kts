@@ -21,8 +21,8 @@ android {
         applicationId = "com.example.fyp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 52
-        versionName = "2.1.0"
+        versionCode = 54
+        versionName = "2.1.2"
 
         testInstrumentationRunner = "com.example.fyp.HiltTestRunner"
     }
@@ -102,9 +102,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
 
-    // Security - Encrypted SharedPreferences
-    implementation(libs.androidx.security.crypto)
-
     // Networking
     implementation(libs.okhttp)
 
@@ -157,6 +154,9 @@ dependencies {
     debugImplementation(libs.leakcanary.android)
 
     implementation(libs.androidx.datastore.preferences)
+
+    // Android Keystore-backed encrypted storage
+    implementation(libs.androidx.security.crypto)
 
     implementation(libs.androidx.compose.material.icons.extended)
 

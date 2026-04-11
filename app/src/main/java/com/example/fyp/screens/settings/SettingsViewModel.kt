@@ -140,7 +140,9 @@ class SettingsViewModel @Inject constructor(
                 quizRepo.observeUserCoinStats(UserId(uid)).collect { stats ->
                     _uiState.value = _uiState.value.copy(coinStats = stats)
                 }
-            } catch (_: Exception) { /* non-fatal */ }
+            } catch (e: Exception) {
+                android.util.Log.w("SettingsViewModel", "Failed to observe coin stats", e)
+            }
         }
     }
 

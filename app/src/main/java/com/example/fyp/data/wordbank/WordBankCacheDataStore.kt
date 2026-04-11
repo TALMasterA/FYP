@@ -168,6 +168,7 @@ class WordBankCacheDataStore @Inject constructor(
                 .first()
                 .also { memCache = it }
         } catch (e: Exception) {
+            android.util.Log.w("WordBankCacheDataStore", "Failed to read word bank cache", e)
             WordBankCacheData()
         }
     }
@@ -179,7 +180,7 @@ class WordBankCacheDataStore @Inject constructor(
                 prefs[CACHE_KEY] = json.encodeToString(data)
             }
         } catch (e: Exception) {
-            // Ignore cache save errors
+            android.util.Log.w("WordBankCacheDataStore", "Failed to save word bank cache", e)
         }
     }
 }

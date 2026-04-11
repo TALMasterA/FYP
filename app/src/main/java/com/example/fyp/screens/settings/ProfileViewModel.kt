@@ -134,8 +134,14 @@ class ProfileViewModel @Inject constructor(
                     )
                     return@launch
                 }
-            } catch (_: Exception) {
-                // If settings fetch fails, proceed without cooldown check
+            } catch (e: Exception) {
+                // Fail closed: block username change if we can't verify cooldown
+                android.util.Log.w("ProfileViewModel", "Settings fetch failed during cooldown check", e)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Unable to verify account status. Please try again."
+                )
+                return@launch
             }
 
             // First, check if username is available

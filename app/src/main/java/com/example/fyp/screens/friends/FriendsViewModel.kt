@@ -3,6 +3,7 @@ package com.example.fyp.screens.friends
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.core.ErrorMessages
+import com.example.fyp.core.security.AuditLogger
 import com.example.fyp.core.security.ValidationResult
 import com.example.fyp.core.security.sanitizeInput
 import com.example.fyp.core.security.validateTextLength
@@ -442,6 +443,7 @@ class FriendsViewModel @Inject constructor(
             sendFriendRequestUseCase(fromUserId, UserId(toUserId), sanitizedNote).fold(
                 onSuccess = {
                     friendRequestRateLimiter.recordSend(fromUserId.value)
+                    AuditLogger.logFriendRequestSent(fromUserId.value, toUserId)
                     _uiState.value = _uiState.value.copy(
                         error = null,
                         // Clear search so the outgoing-requests listener re-evaluates status
@@ -483,6 +485,7 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             acceptFriendRequestUseCase(requestId, userId, friendUserId).fold(
                 onSuccess = {
+                    AuditLogger.logFriendRequestAccepted(userId.value, friendUserId.value)
                     _uiState.value = _uiState.value.copy(error = null)
                     showSuccessMessage("Friend request accepted! You are now friends.")
                 },
@@ -501,9 +504,13 @@ class FriendsViewModel @Inject constructor(
     }
 
     fun rejectFriendRequest(requestId: String) {
+        val uid = currentUserId?.value ?: ""
+        val fromUser = _uiState.value.incomingRequests
+            .firstOrNull { it.requestId == requestId }?.fromUserId ?: ""
         viewModelScope.launch {
             rejectFriendRequestUseCase(requestId).fold(
                 onSuccess = {
+                    AuditLogger.logFriendRequestRejected(uid, fromUser)
                     _uiState.value = _uiState.value.copy(error = null)
                     showSuccessMessage("Request declined.")
                 },
@@ -551,6 +558,7 @@ class FriendsViewModel @Inject constructor(
             )
             removeFriendUseCase(userId, UserId(friendId)).fold(
                 onSuccess = {
+                    AuditLogger.logFriendRemoved(userId.value, friendId)
                     _uiState.value = _uiState.value.copy(error = null)
                     showSuccessMessage(ErrorMessages.FRIEND_REMOVED)
                     // Refresh to sync Firestore state so re-search shows correct status
@@ -706,7 +714,9 @@ class FriendsViewModel @Inject constructor(
                     blockedUsers = blockedList,
                     blockedUserIds = blockedList.map { it.userId }.toSet()
                 )
-            } catch (_: Exception) { /* non-fatal */ }
+            } catch (e: Exception) {
+                android.util.Log.w("FriendsViewModel", "Failed to load blocked users", e)
+            }
         }
     }
 
@@ -758,6 +768,7 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             friendsRepository.blockUser(userId, UserId(targetUserId)).fold(
                 onSuccess = {
+                    AuditLogger.logUserBlocked(userId.value, targetUserId)
                     val updated = _uiState.value.blockedUserIds + targetUserId
                     _uiState.value = _uiState.value.copy(
                         blockedUserIds = updated,
@@ -777,6 +788,7 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             friendsRepository.unblockUser(userId, UserId(targetUserId)).fold(
                 onSuccess = {
+                    AuditLogger.logUserUnblocked(userId.value, targetUserId)
                     val updatedIds = _uiState.value.blockedUserIds - targetUserId
                     val updatedList = _uiState.value.blockedUsers.filter { it.userId != targetUserId }
                     _uiState.value = _uiState.value.copy(

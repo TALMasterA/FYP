@@ -43,39 +43,6 @@ class SecurityUtilsTest {
         assertTrue(result is ValidationResult.Invalid)
     }
 
-    // ── Password validation ────────────────────────────────────────
-
-    @Test
-    fun `validatePassword - strong password returns Valid`() {
-        val result = validatePassword("Abc12345")
-        assertTrue(result is ValidationResult.Valid)
-    }
-
-    @Test
-    fun `validatePassword - too short returns Invalid`() {
-        val result = validatePassword("Ab1")
-        assertTrue(result is ValidationResult.Invalid)
-        assertTrue((result as ValidationResult.Invalid).message.contains("at least"))
-    }
-
-    @Test
-    fun `validatePassword - no uppercase returns Invalid`() {
-        val result = validatePassword("abc12345")
-        assertTrue(result is ValidationResult.Invalid)
-    }
-
-    @Test
-    fun `validatePassword - no digit returns Invalid`() {
-        val result = validatePassword("Abcdefgh")
-        assertTrue(result is ValidationResult.Invalid)
-    }
-
-    @Test
-    fun `validatePassword - custom min length enforced`() {
-        val result = validatePassword("Ab123", minLength = 6)
-        assertTrue(result is ValidationResult.Invalid)
-    }
-
     // ── Username validation ────────────────────────────────────────
 
     @Test
@@ -130,76 +97,38 @@ class SecurityUtilsTest {
         assertTrue((result as ValidationResult.Invalid).message.contains("Title"))
     }
 
-    // ── Safe string validation ─────────────────────────────────────
+    // ── Password validation ────────────────────────────────────────
 
     @Test
-    fun `validateSafeString - alphanumeric with dots returns Valid`() {
-        val result = validateSafeString("file_name.txt")
+    fun `validatePassword - valid password returns Valid`() {
+        val result = validatePassword("secret")
         assertTrue(result is ValidationResult.Valid)
     }
 
     @Test
-    fun `validateSafeString - string with spaces returns Invalid`() {
-        val result = validateSafeString("not safe")
+    fun `validatePassword - too short returns Invalid`() {
+        val result = validatePassword("abc")
         assertTrue(result is ValidationResult.Invalid)
-    }
-
-    // ── SQL injection detection ────────────────────────────────────
-
-    @Test
-    fun `validateNoSqlInjection - clean input returns Valid`() {
-        val result = validateNoSqlInjection("Hello world 123")
-        assertTrue(result is ValidationResult.Valid)
+        assertTrue((result as ValidationResult.Invalid).message.contains("6"))
     }
 
     @Test
-    fun `validateNoSqlInjection - SELECT keyword returns Invalid`() {
-        val result = validateNoSqlInjection("'; SELECT * FROM users --")
+    fun `validatePassword - blank returns Invalid`() {
+        val result = validatePassword("   ")
         assertTrue(result is ValidationResult.Invalid)
     }
 
     @Test
-    fun `validateNoSqlInjection - DROP keyword returns Invalid`() {
-        val result = validateNoSqlInjection("DROP TABLE students")
+    fun `validatePassword - whitespace trimmed before check`() {
+        val result = validatePassword("  ab  ")
         assertTrue(result is ValidationResult.Invalid)
     }
 
     @Test
-    fun `validateNoSqlInjection - comment syntax returns Invalid`() {
-        val result = validateNoSqlInjection("admin'--")
+    fun `validatePassword - custom minLength respected`() {
+        val result = validatePassword("abcdefgh", minLength = 10)
         assertTrue(result is ValidationResult.Invalid)
-    }
-
-    // ── URL validation ─────────────────────────────────────────────
-
-    @Test
-    fun `validateUrl - valid HTTPS returns Valid`() {
-        val result = validateUrl("https://example.com/path")
-        assertTrue(result is ValidationResult.Valid)
-    }
-
-    @Test
-    fun `validateUrl - valid HTTP returns Valid`() {
-        val result = validateUrl("http://example.com")
-        assertTrue(result is ValidationResult.Valid)
-    }
-
-    @Test
-    fun `validateUrl - blank URL returns Invalid`() {
-        val result = validateUrl("")
-        assertTrue(result is ValidationResult.Invalid)
-    }
-
-    @Test
-    fun `validateUrl - FTP protocol rejected by default`() {
-        val result = validateUrl("ftp://files.example.com")
-        assertTrue(result is ValidationResult.Invalid)
-    }
-
-    @Test
-    fun `validateUrl - malformed URL returns Invalid`() {
-        val result = validateUrl("not a url at all")
-        assertTrue(result is ValidationResult.Invalid)
+        assertTrue((result as ValidationResult.Invalid).message.contains("10"))
     }
 
     // ── Sanitization ───────────────────────────────────────────────
