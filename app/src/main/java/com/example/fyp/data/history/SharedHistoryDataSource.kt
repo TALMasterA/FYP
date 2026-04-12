@@ -1,6 +1,7 @@
 package com.example.fyp.data.history
 
 import android.util.Log
+import com.example.fyp.core.performance.TimedCache
 import com.example.fyp.model.LanguageCode
 import com.example.fyp.model.TranslationRecord
 import com.example.fyp.model.UserId
@@ -55,14 +56,8 @@ class SharedHistoryDataSource @Inject constructor(
     val languageCounts: StateFlow<Map<String, Int>> = _languageCounts.asStateFlow()
 
     // Cache for filtered language records (Priority 2 #8: Cache Filtered History Results)
-    // Uses LRU eviction with a max of 10 entries to bound memory usage
-    private val _languageRecordsCache = object : LinkedHashMap<String, List<TranslationRecord>>(
-        10, 0.75f, true
-    ) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<TranslationRecord>>?): Boolean {
-            return size > 10
-        }
-    }
+    // Uses TimedCache with 30-second TTL to avoid stale data while reducing repeated O(n) filtering
+    private val _languageRecordsCache = TimedCache<String, List<TranslationRecord>>(ttlMillis = 30_000L)
 
     /**
      * Start observing history for a user with optional limit.
@@ -170,13 +165,13 @@ class SharedHistoryDataSource @Inject constructor(
      */
     fun getRecordsForLanguage(languageCode: String): List<TranslationRecord> {
         // Check cache first
-        _languageRecordsCache[languageCode]?.let { return it }
+        _languageRecordsCache.get(languageCode)?.let { return it }
         
         // Cache miss - compute and store
         val filtered = _historyRecords.value.filter {
             it.sourceLang == languageCode || it.targetLang == languageCode
         }
-        _languageRecordsCache[languageCode] = filtered
+        _languageRecordsCache.put(languageCode, filtered)
         return filtered
     }
 

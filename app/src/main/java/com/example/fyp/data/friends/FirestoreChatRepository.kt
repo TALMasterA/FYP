@@ -514,10 +514,6 @@ class FirestoreChatRepository @Inject constructor(
         }
     }
 
-    // ── User chat list ───────────────────────────────────────────────────────
-
-    override suspend fun getUserChats(userId: UserId): List<ChatMetadata> = emptyList()
-
     // ── Delete chat conversation ─────────────────────────────────────────────
 
     override suspend fun deleteChatConversation(chatId: String): Result<Unit> = try {

@@ -14,8 +14,8 @@ import javax.inject.Singleton
  * The master key is protected by the hardware-backed Android Keystore, ensuring
  * encryption keys cannot be extracted even with root access or backup extraction.
  *
- * Used for FCM device-token caching, rate-limiter timestamps, and notification
- * seen-state persistence.
+ * Used for FCM device-token caching, session-token caching (e.g. Azure Speech
+ * service tokens), rate-limiter timestamps, and notification seen-state persistence.
  */
 @Singleton
 class SecureStorage @Inject constructor(
@@ -48,6 +48,13 @@ class SecureStorage @Inject constructor(
         prefs.edit().remove(key).apply()
     }
 
+    fun putLong(key: String, value: Long) {
+        prefs.edit().putLong(key, value).apply()
+    }
+
+    fun getLong(key: String, defaultValue: Long = 0L): Long =
+        prefs.getLong(key, defaultValue)
+
     init {
         @Suppress("LeakingThis")
         staticInstance = this
@@ -56,6 +63,9 @@ class SecureStorage @Inject constructor(
     companion object {
         private const val PREFS_FILENAME = "secure_prefs"
         const val KEY_FCM_TOKEN = "fcm_token"
+        const val KEY_SESSION_TOKEN = "session_token"
+        const val KEY_SESSION_TOKEN_REGION = "session_token_region"
+        const val KEY_SESSION_TOKEN_TIME = "session_token_time"
 
         @Volatile
         private var staticInstance: SecureStorage? = null

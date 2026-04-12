@@ -12,7 +12,6 @@ object UiConstants {
     const val COIN_UNLOCK_SUCCESS_DURATION_MS = 3000L
 
     // UI transition and animation delays
-    const val UI_TRANSITION_DELAY_MS = 200L
     const val SPEECH_PREPARE_DELAY_MS = 200L
     const val SPEECH_LISTENING_DEBOUNCE_MS = 150L
     const val TTS_FINISH_DELAY_MS = 300L

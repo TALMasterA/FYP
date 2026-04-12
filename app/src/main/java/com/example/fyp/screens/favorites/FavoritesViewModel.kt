@@ -14,6 +14,7 @@ import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import com.example.fyp.core.performance.OperationBatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -255,9 +256,12 @@ class FavoritesViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isDeleting = true)
             try {
-                state.selectedRecordIds.forEach { id ->
-                    favoritesRepo.removeFavorite(userId, id)
+                val recordBatcher = OperationBatcher<String, Unit>(batchSize = 10) { batch ->
+                    batch.map { id -> favoritesRepo.removeFavorite(userId, id).getOrThrow() }
                 }
+                state.selectedRecordIds.forEach { id -> recordBatcher.submit(id) }
+                recordBatcher.flush()
+
                 state.selectedSessionIds.forEach { id ->
                     favoritesRepo.removeFavoriteSession(userId, id).getOrThrow()
                 }

@@ -34,11 +34,6 @@ class ConstantsTest {
     }
 
     @Test
-    fun `UI transition delay is positive`() {
-        assertTrue(UiConstants.UI_TRANSITION_DELAY_MS > 0)
-    }
-
-    @Test
     fun `speech delays are positive`() {
         assertTrue(UiConstants.SPEECH_PREPARE_DELAY_MS > 0)
         assertTrue(UiConstants.SPEECH_LISTENING_DEBOUNCE_MS > 0)

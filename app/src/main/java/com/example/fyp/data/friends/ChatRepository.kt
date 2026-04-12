@@ -112,11 +112,6 @@ interface ChatRepository {
     fun observeUnreadPerFriend(userId: UserId): Flow<Map<String, Int>>
 
     /**
-     * Get list of chats for a user (sorted by last message time).
-     */
-    suspend fun getUserChats(userId: UserId): List<ChatMetadata>
-
-    /**
      * Delete an entire chat conversation including all messages and metadata.
      * Used when removing a friend.
      */

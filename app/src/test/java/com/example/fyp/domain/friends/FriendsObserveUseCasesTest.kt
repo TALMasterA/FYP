@@ -5,7 +5,6 @@ import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.friends.SharingRepository
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.FriendMessage
-import com.example.fyp.model.friends.FriendRelation
 import com.example.fyp.model.friends.FriendRequest
 import com.example.fyp.model.friends.SharedItem
 import com.example.fyp.model.friends.SharedItemType
@@ -16,18 +15,14 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 /**
  * Unit tests for friends observe and sharing use cases:
- * - ObserveFriendsUseCase
- * - ObserveSharedInboxUseCase
  * - ObserveMessagesUseCase
  * - ObserveOutgoingRequestsUseCase
- * - ObserveIncomingRequestsUseCase
  * - ShareLearningMaterialUseCase
  */
 class FriendsObserveUseCasesTest {
@@ -41,58 +36,6 @@ class FriendsObserveUseCasesTest {
         friendsRepository = mock()
         chatRepository = mock()
         sharingRepository = mock()
-    }
-
-    // ── ObserveFriendsUseCase ───────────────────────────────────────
-
-    @Test
-    fun `ObserveFriends returns flow from repository`() = runTest {
-        val friends = listOf(
-            FriendRelation(friendId = "f1", friendUsername = "Alice"),
-            FriendRelation(friendId = "f2", friendUsername = "Bob")
-        )
-        whenever(friendsRepository.observeFriends(UserId("user1")))
-            .thenReturn(flowOf(friends))
-
-        val useCase = ObserveFriendsUseCase(friendsRepository)
-        val result = useCase(UserId("user1")).first()
-
-        assertEquals(2, result.size)
-        assertEquals("Alice", result[0].friendUsername)
-        assertEquals("Bob", result[1].friendUsername)
-    }
-
-    @Test
-    fun `ObserveFriends returns empty list when no friends`() = runTest {
-        whenever(friendsRepository.observeFriends(UserId("user1")))
-            .thenReturn(flowOf(emptyList()))
-
-        val useCase = ObserveFriendsUseCase(friendsRepository)
-        val result = useCase(UserId("user1")).first()
-
-        assertTrue(result.isEmpty())
-    }
-
-    // ── ObserveSharedInboxUseCase ───────────────────────────────────
-
-    @Test
-    fun `ObserveSharedInbox returns flow from repository`() = runTest {
-        val items = listOf(
-            SharedItem(
-                itemId = "item1",
-                fromUserId = "sender1",
-                toUserId = "user1",
-                type = SharedItemType.WORD
-            )
-        )
-        whenever(sharingRepository.observeSharedInbox(UserId("user1")))
-            .thenReturn(flowOf(items))
-
-        val useCase = ObserveSharedInboxUseCase(sharingRepository)
-        val result = useCase(UserId("user1")).first()
-
-        assertEquals(1, result.size)
-        assertEquals("item1", result[0].itemId)
     }
 
     // ── ObserveMessagesUseCase ──────────────────────────────────────
@@ -168,23 +111,6 @@ class FriendsObserveUseCasesTest {
 
         assertEquals(1, result.size)
         assertEquals("target1", result[0].toUserId)
-    }
-
-    // ── ObserveIncomingRequestsUseCase ──────────────────────────────
-
-    @Test
-    fun `ObserveIncomingRequests returns flow from repository`() = runTest {
-        val requests = listOf(
-            FriendRequest(requestId = "r1", fromUserId = "sender1", toUserId = "user1"),
-            FriendRequest(requestId = "r2", fromUserId = "sender2", toUserId = "user1")
-        )
-        whenever(friendsRepository.observeIncomingRequests(UserId("user1")))
-            .thenReturn(flowOf(requests))
-
-        val useCase = ObserveIncomingRequestsUseCase(friendsRepository)
-        val result = useCase(UserId("user1")).first()
-
-        assertEquals(2, result.size)
     }
 
     // ── ShareLearningMaterialUseCase ────────────────────────────────

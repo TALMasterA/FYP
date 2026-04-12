@@ -2,6 +2,7 @@ package com.example.fyp.data.learning
 
 import com.example.fyp.core.decodeOrDefault
 import com.example.fyp.data.cloud.CloudQuizClient
+import com.example.fyp.domain.learning.CoinEligibility
 import com.example.fyp.domain.learning.GeneratedQuizDoc
 import com.example.fyp.domain.learning.QuizRepository
 import com.example.fyp.domain.learning.QuizMetadata
@@ -392,6 +393,16 @@ class FirestoreQuizRepository @Inject constructor(
         attempt: QuizAttempt,
         latestHistoryCount: Int?
     ): Boolean {
+        // Client-side pre-check — skip the Cloud Function call when locally
+        // determinable conditions (score, history-count mismatch) already fail.
+        if (!CoinEligibility.isEligibleForCoins(
+                attemptScore = attempt.totalScore,
+                generatedHistoryCount = attempt.generatedHistoryCountAtGenerate,
+                currentSheetHistoryCount = latestHistoryCount,
+                lastAwardedCount = null          // not available client-side
+            )
+        ) return false
+
         // Client-side debounce to prevent rapid duplicate calls
         val now = System.currentTimeMillis()
         if (now - lastCoinAwardTime < COIN_AWARD_DEBOUNCE_MS) return false

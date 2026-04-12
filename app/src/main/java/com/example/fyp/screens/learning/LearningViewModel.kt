@@ -491,7 +491,7 @@ class LearningViewModel @Inject constructor(
             .removeQuizFromContent(sheetContent).trim()
         if (materialOnly.isBlank()) return
 
-        val relatedRecords = current.records.filter { it.sourceLang == languageCode || it.targetLang == languageCode }
+        val relatedRecords = sharedHistoryDataSource.getRecordsForLanguage(languageCode)
 
         quizGenerationJob = viewModelScope.launch {
             _uiState.value = uiState.value.copy(generatingQuizLanguageCode = languageCode, error = null)

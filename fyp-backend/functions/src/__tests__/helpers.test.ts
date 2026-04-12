@@ -18,7 +18,6 @@ import {
   getFirestore,
   requireAuth,
   requireString,
-  optionalString,
   safeParseJson,
   toTranslatorCode,
   buildTranslateUrl,
@@ -83,26 +82,6 @@ describe("requireString", () => {
 
   it("coerces numbers to strings", () => {
     expect(requireString(42, "field")).toBe("42");
-  });
-});
-
-// ── optionalString ───────────────────────────────────────────────────
-
-describe("optionalString", () => {
-  it("returns trimmed string for valid input", () => {
-    expect(optionalString("  hi  ")).toBe("hi");
-  });
-
-  it("returns empty string for null", () => {
-    expect(optionalString(null)).toBe("");
-  });
-
-  it("returns empty string for undefined", () => {
-    expect(optionalString(undefined)).toBe("");
-  });
-
-  it("returns empty string for empty string", () => {
-    expect(optionalString("")).toBe("");
   });
 });
 

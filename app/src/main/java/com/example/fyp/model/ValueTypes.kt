@@ -121,13 +121,3 @@ value class Username(val value: String) {
         }
     }
 }
-
-// Extension functions for common conversions
-fun String.toUserId() = UserId(this)
-fun String.toLanguageCode() = LanguageCode(this)
-fun String.toRecordId() = RecordId(this)
-fun String.toSessionId() = SessionId(this)
-fun String.toPaletteId() = PaletteId(this)
-fun String.toVoiceName() = VoiceName(this)
-fun String.toDeploymentName() = DeploymentName(this)
-fun String.toUsername() = Username(this)

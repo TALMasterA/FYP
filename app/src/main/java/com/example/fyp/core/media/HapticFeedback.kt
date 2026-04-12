@@ -37,14 +37,6 @@ class HapticFeedback(private val view: View) {
     }
 
     /**
-     * Perform a long press haptic feedback.
-     * Use for long press actions and drag operations.
-     */
-    fun longPress() {
-        performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-    }
-
-    /**
      * Perform a reject/error haptic feedback.
      * Use for error states or rejected actions.
      */
@@ -67,49 +59,6 @@ class HapticFeedback(private val view: View) {
         } else {
             // Fallback for older versions
             performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-        }
-    }
-
-    /**
-     * Perform a keyboard key press haptic feedback.
-     * Use for virtual keyboard interactions.
-     */
-    fun keyboardPress() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            performHapticFeedback(HapticFeedbackConstants.KEYBOARD_PRESS)
-        } else {
-            performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-        }
-    }
-
-    /**
-     * Perform haptic feedback for virtual key release.
-     */
-    fun keyboardRelease() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            performHapticFeedback(HapticFeedbackConstants.KEYBOARD_RELEASE)
-        }
-    }
-
-    /**
-     * Perform a gesture start haptic feedback.
-     * Use when starting drag or swipe gestures.
-     */
-    fun gestureStart() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            performHapticFeedback(HapticFeedbackConstants.GESTURE_START)
-        } else {
-            performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
-        }
-    }
-
-    /**
-     * Perform a gesture end haptic feedback.
-     * Use when completing drag or swipe gestures.
-     */
-    fun gestureEnd() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
         }
     }
 

@@ -119,23 +119,4 @@ class ValueTypesTest {
         VoiceName("")
     }
 
-    // ── Extension functions ─────────────────────────────────────────────────
-
-    @Test
-    fun `toUserId extension creates valid UserId`() {
-        val uid = "user123".toUserId()
-        assertEquals("user123", uid.value)
-    }
-
-    @Test
-    fun `toLanguageCode extension creates valid LanguageCode`() {
-        val code = "ja-JP".toLanguageCode()
-        assertEquals("ja-JP", code.value)
-    }
-
-    @Test
-    fun `toUsername extension creates valid Username`() {
-        val name = "test_user".toUsername()
-        assertEquals("test_user", name.value)
-    }
 }

@@ -86,23 +86,12 @@ class FirestoreFavoritesRepository @Inject constructor(
     }
 
     /**
-     * Update favorite note
-     */
-    suspend fun updateNote(userId: String, favoriteId: String, note: String): Result<Unit> = try {
-        colRef(userId).document(favoriteId).update("note", note).await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
-    }
-
-    /**
      * Find a favorite by source and target text.
-     * Consolidates the duplicate query logic from isFavorited(), getFavorite(), and getFavoriteId().
+     * Consolidates the duplicate query logic from isFavorited() and getFavoriteId().
      * Single method reduces Firestore reads when any of these operations is needed.
      *
      * Callers can derive what they need:
      * - isFavorited: findFavorite(...) != null
-     * - favorite: findFavorite(...)
      * - favoriteId: findFavorite(...)?.id
      */
     suspend fun findFavorite(
@@ -130,16 +119,6 @@ class FirestoreFavoritesRepository @Inject constructor(
         sourceText: String,
         targetText: String
     ): Boolean = findFavorite(userId, sourceText, targetText) != null
-
-    /**
-     * Get favorite by source and target text.
-     * Delegates to findFavorite() to avoid duplicate queries.
-     */
-    suspend fun getFavorite(
-        userId: String,
-        sourceText: String,
-        targetText: String
-    ): FavoriteRecord? = findFavorite(userId, sourceText, targetText)
 
     /**
      * Get favorite ID by source and target text (for deletion).

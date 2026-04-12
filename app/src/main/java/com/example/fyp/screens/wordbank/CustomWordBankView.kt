@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.PaginationRow
 import com.example.fyp.core.pageCount
+import com.example.fyp.core.performance.rememberDebouncedValue
+import com.example.fyp.core.performance.rememberMemoized
 import com.example.fyp.model.ui.UiTextKey
 
 private fun parseCustomWordLanguagePair(category: String): Pair<String, String> {
@@ -58,28 +60,29 @@ fun CustomWordBankView(
 
     // Filter state
     var filterKeyword by remember { mutableStateOf("") }
+    val debouncedFilter = rememberDebouncedValue(filterKeyword, 300L)
 
     // Filter words
-    val filteredWords = remember(customWords, filterKeyword) {
-        if (filterKeyword.isBlank()) {
-            customWords
+    val filteredWords = rememberMemoized(customWords, debouncedFilter) { words, kw ->
+        if (kw.isBlank()) {
+            words
         } else {
-            customWords.filter { word ->
-                word.originalWord.contains(filterKeyword, ignoreCase = true) ||
-                word.translatedWord.contains(filterKeyword, ignoreCase = true) ||
-                word.category.contains(filterKeyword, ignoreCase = true)
+            words.filter { word ->
+                word.originalWord.contains(kw, ignoreCase = true) ||
+                word.translatedWord.contains(kw, ignoreCase = true) ||
+                word.category.contains(kw, ignoreCase = true)
             }
         }
     }
 
     // Paginate
     val totalPages = pageCount(filteredWords.size, pageSize)
-    val paginatedWords = remember(filteredWords, currentPage) {
-        filteredWords.drop(currentPage * pageSize).take(pageSize)
+    val paginatedWords = rememberMemoized(filteredWords, currentPage) { filtered, page ->
+        filtered.drop(page * pageSize).take(pageSize)
     }
 
     // Reset page when filter changes
-    LaunchedEffect(filterKeyword) {
+    LaunchedEffect(debouncedFilter) {
         currentPage = 0
     }
 

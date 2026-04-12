@@ -38,7 +38,6 @@ enum class MessageType {
 data class ChatMetadata(
     val chatId: String = "",
     val participants: List<String> = emptyList(),  // List of user IDs
-    val participantNames: Map<String, String> = emptyMap(), // userId -> username
     val lastMessageContent: String = "",
     val lastMessageAt: Timestamp = Timestamp.now(),
     val unreadCount: Map<String, Any> = emptyMap()  // userId -> unread count (any Number)

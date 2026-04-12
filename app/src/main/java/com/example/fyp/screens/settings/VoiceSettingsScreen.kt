@@ -31,7 +31,11 @@ fun VoiceSettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
-    val supportedLanguages = remember { AzureLanguageConfig.loadSupportedLanguages(context) }
+    val supportedLanguages = remember {
+        val voiceSupportedSet = AzureVoiceConfig.getSupportedLanguages()
+        AzureLanguageConfig.loadSupportedLanguages(context)
+            .filter { it in voiceSupportedSet }
+    }
 
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }

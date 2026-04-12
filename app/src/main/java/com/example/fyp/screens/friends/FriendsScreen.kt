@@ -31,6 +31,8 @@ import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
+import com.example.fyp.core.performance.ThrottledLaunchedEffect
+import com.example.fyp.core.performance.generateStableKeys
 import com.example.fyp.ui.components.EmptyStateView
 import com.example.fyp.ui.theme.AppSpacing
 
@@ -64,7 +66,8 @@ fun FriendsScreen(
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
 
     // Mark friend requests as seen when screen loads (persists across app restarts)
-    LaunchedEffect(Unit) {
+    // Uses ThrottledLaunchedEffect to prevent redundant calls on rapid recompositions
+    ThrottledLaunchedEffect(key = Unit, intervalMillis = 5000L) {
         viewModel.markFriendRequestsSeen()
     }
 
@@ -489,6 +492,8 @@ fun FriendsScreen(
 
                                 // Friends section
                                 if (uiState.friends.isNotEmpty()) {
+                                    // Pre-compute stable keys for friends list performance
+                                    val friendKeys = generateStableKeys(uiState.friends) { it.friendId }
                                     item {
                                         Text(
                                             text = t(UiTextKey.FriendsSectionTitle).replace("{count}", "${uiState.friends.size}"),
@@ -497,7 +502,7 @@ fun FriendsScreen(
                                             modifier = Modifier.padding(vertical = 8.dp)
                                         )
                                     }
-                                    items(uiState.friends, key = { it.friendId }) { friend ->
+                                    items(uiState.friends, key = { friendKeys[it] ?: it.friendId }) { friend ->
                                         FriendCard(
                                             friend = friend,
                                             unreadCount = uiState.unreadCountPerFriend[friend.friendId] ?: 0,

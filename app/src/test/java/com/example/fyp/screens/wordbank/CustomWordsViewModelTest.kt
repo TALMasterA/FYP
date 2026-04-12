@@ -98,6 +98,7 @@ class CustomWordsViewModelTest {
             onBlocking { addCustomWord(any(), any(), any(), any(), any(), any(), any()) } doReturn Result.success(
                 CustomWord(id = "w1", originalWord = "hello", translatedWord = "world")
             )
+            onBlocking { wordExists(any(), any(), any(), any()) } doReturn false
         }
 
         vm.addCustomWord("hello", "world", sourceLang = "en-US", targetLang = "ja-JP")
@@ -205,6 +206,7 @@ class CustomWordsViewModelTest {
                 CustomWord(id = "w1", originalWord = "hello", translatedWord = "world")
             )
             onBlocking { getAllCustomWordsOnce(testUserId) } doReturn emptyList()
+            onBlocking { wordExists(any(), any(), any(), any()) } doReturn false
         }
 
         val vm = buildViewModel()
@@ -223,6 +225,7 @@ class CustomWordsViewModelTest {
         customWordsRepo.stub {
             onBlocking { addCustomWord(any(), any(), any(), any(), any(), any(), any()) } doReturn
                 Result.failure(RuntimeException("DB error"))
+            onBlocking { wordExists(any(), any(), any(), any()) } doReturn false
         }
 
         val vm = buildViewModel()

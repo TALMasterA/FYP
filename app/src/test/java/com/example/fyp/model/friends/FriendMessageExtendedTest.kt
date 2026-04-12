@@ -91,7 +91,6 @@ class FriendMessageExtendedTest {
 
         assertEquals("", meta.chatId)
         assertTrue(meta.participants.isEmpty())
-        assertTrue(meta.participantNames.isEmpty())
         assertEquals("", meta.lastMessageContent)
         assertTrue(meta.unreadCount.isEmpty())
     }
@@ -147,13 +146,11 @@ class FriendMessageExtendedTest {
         val meta = ChatMetadata(
             chatId = "chat1",
             participants = listOf("user1", "user2"),
-            participantNames = mapOf("user1" to "Alice", "user2" to "Bob"),
             lastMessageContent = "Hello!"
         )
 
         assertEquals("chat1", meta.chatId)
         assertEquals(2, meta.participants.size)
-        assertEquals("Alice", meta.participantNames["user1"])
         assertEquals("Hello!", meta.lastMessageContent)
     }
 }

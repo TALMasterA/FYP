@@ -9,6 +9,7 @@ import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.settings.SharedSettingsDataSource
 import com.example.fyp.data.user.FirebaseAuthRepository
+import com.example.fyp.data.wordbank.WordBankCacheDataStore
 import com.example.fyp.core.FcmNotificationService
 import com.example.fyp.domain.friends.EnsurePublicProfileExistsUseCase
 import com.example.fyp.model.UserId
@@ -48,6 +49,7 @@ class AppViewModel @Inject constructor(
     private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val chatRepository: ChatRepository,
     private val friendsRepository: FriendsRepository,
+    private val wordBankCacheDataStore: WordBankCacheDataStore,
 ) : AndroidViewModel(application) {
 
     private var lastInitializedUserId: String? = null
@@ -122,10 +124,14 @@ class AppViewModel @Inject constructor(
                         }
                     }
                     is AuthState.LoggedOut -> {
+                        val previousUserId = lastInitializedUserId
                         lastInitializedUserId = null
                         sharedFriendsDataSource.stopObserving()
                         sharedSettingsDataSource.stopObserving()
                         sharedHistoryDataSource.stopObserving()
+                        if (previousUserId != null) {
+                            wordBankCacheDataStore.invalidateAllForUser(previousUserId)
+                        }
                         unreadJob?.cancel()
                         unreadBadgeJob?.cancel()
                         usernameJob?.cancel()

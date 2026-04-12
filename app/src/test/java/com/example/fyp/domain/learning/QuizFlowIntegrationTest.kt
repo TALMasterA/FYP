@@ -105,45 +105,6 @@ class QuizFlowIntegrationTest {
         assertEquals(50f, completed.percentage)
     }
 
-    // ── Test 3: First quiz always eligible for coins ──
-
-    @Test
-    fun `first quiz for language pair is always eligible for coins`() = runTest {
-        val eligible = CoinEligibility.isEligibleForCoins(
-            attemptScore = 8,
-            generatedHistoryCount = 50,
-            currentSheetHistoryCount = 50,
-            lastAwardedCount = null // first quiz
-        )
-
-        assertTrue(eligible)
-    }
-
-    // ── Test 4: Need 10+ more records for subsequent quiz ──
-
-    @Test
-    fun `subsequent quiz needs 10+ more records than last awarded`() {
-        // Not enough records (only 5 more than last awarded at 50)
-        assertFalse(
-            CoinEligibility.isEligibleForCoins(
-                attemptScore = 8,
-                generatedHistoryCount = 55,
-                currentSheetHistoryCount = 55,
-                lastAwardedCount = 50
-            )
-        )
-
-        // Exactly 10 more records (should be eligible)
-        assertTrue(
-            CoinEligibility.isEligibleForCoins(
-                attemptScore = 8,
-                generatedHistoryCount = 60,
-                currentSheetHistoryCount = 60,
-                lastAwardedCount = 50
-            )
-        )
-    }
-
     // ── Test 5: Replace existing answer ──
 
     @Test
@@ -161,20 +122,6 @@ class QuizFlowIntegrationTest {
         attempt = parseAndStore.recordAnswer(attempt, questions[0].id, 0)
         assertEquals(1, attempt.answers.size) // still 1 answer, not 2
         assertTrue(attempt.answers[0].isCorrect)
-    }
-
-    // ── Test 6: Zero score not eligible ──
-
-    @Test
-    fun `zero score quiz is not eligible for coins`() {
-        assertFalse(
-            CoinEligibility.isEligibleForCoins(
-                attemptScore = 0,
-                generatedHistoryCount = 50,
-                currentSheetHistoryCount = 50,
-                lastAwardedCount = null
-            )
-        )
     }
 
     // ── Test 7: Malformed JSON ──
@@ -200,17 +147,4 @@ class QuizFlowIntegrationTest {
         assertEquals(1, questions.size) // Only the first valid question
     }
 
-    // ── Test: History count mismatch prevents coins ──
-
-    @Test
-    fun `history count mismatch prevents coin award`() {
-        assertFalse(
-            CoinEligibility.isEligibleForCoins(
-                attemptScore = 10,
-                generatedHistoryCount = 50,
-                currentSheetHistoryCount = 60, // Changed since quiz was generated
-                lastAwardedCount = null
-            )
-        )
-    }
 }

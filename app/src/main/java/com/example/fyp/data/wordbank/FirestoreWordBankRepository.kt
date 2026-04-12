@@ -122,14 +122,9 @@ class FirestoreWordBankRepository @Inject constructor(
         return getWordBankMetadata(uid, primary, target).exists
     }
 
-    suspend fun getWordBankHistoryCount(uid: String, primary: String, target: String): Int {
-        return getWordBankMetadata(uid, primary, target).historyCountAtGenerate
-    }
-
     /**
      * Get both existence and history count in a single Firestore read.
-     * This consolidates the logic of wordBankExists() and getWordBankHistoryCount()
-     * which previously made separate document reads.
+     * This consolidates the existence check with the history count metadata.
      *
      * Use this method if you need both pieces of metadata, or when adding future code
      * that requires both pieces of information.

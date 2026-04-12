@@ -57,15 +57,6 @@ export function requireString(value: unknown, paramName: string): string {
 }
 
 /**
- * Validates an optional string parameter, returning empty string if not provided.
- * @param value The value to validate
- * @returns The trimmed string value or empty string
- */
-export function optionalString(value: unknown): string {
-  return value ? String(value).trim() : "";
-}
-
-/**
  * Safely parse a JSON response body, throwing a user-friendly HttpsError on failure.
  * @param body The raw response text
  * @param context A short label for the log message (e.g. "translation", "detection")

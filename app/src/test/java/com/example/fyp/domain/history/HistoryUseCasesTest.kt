@@ -16,7 +16,6 @@ import org.mockito.kotlin.verify
  * - DeleteSessionUseCase
  * - RenameSessionUseCase
  * - DeleteHistoryRecordUseCase
- * - ObserveUserHistoryUseCase
  */
 class HistoryUseCasesTest {
 
@@ -117,13 +116,4 @@ class HistoryUseCasesTest {
         )
     }
 
-    // ── ObserveUserHistoryUseCase ───────────────────────────────────
-
-    @Test
-    fun `ObserveUserHistory delegates to repository`() = runTest {
-        val useCase = ObserveUserHistoryUseCase(repo)
-        useCase(UserId("user1"))
-
-        verify(repo).getHistory(UserId("user1"))
-    }
 }

@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import com.example.fyp.core.LanguageDropdownField
 import com.example.fyp.core.rememberHapticFeedback
 import com.example.fyp.core.UiConstants
+import com.example.fyp.core.performance.rememberDebouncedValue
 import com.example.fyp.ui.components.TranslationCardSkeleton
 import com.example.fyp.ui.theme.AppSpacing
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -98,7 +99,7 @@ fun HistoryScreen(
             .map { it.key }
     }
 
-    val keyword = filterKeyword.trim()
+    val keyword = rememberDebouncedValue(filterKeyword.trim(), 300L)
 
     val filteredRecords = uiState.records.filter { rec ->
         val langOk = filterLanguageCode.isBlank() ||

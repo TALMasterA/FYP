@@ -1,32 +1,33 @@
 package com.example.fyp.domain.learning
 
 /**
- * Pure domain logic for determining quiz coin eligibility.
+ * Pure domain logic for quiz coin-earning eligibility checks.
  *
- * Extracted from [com.example.fyp.data.learning.FirestoreQuizRepository.awardCoinsIfEligible]
- * to enable comprehensive unit testing and separation of business logic from database operations.
+ * Used as a client-side pre-check before calling the awardQuizCoins Cloud Function.
+ * The server performs the authoritative check; this avoids unnecessary network calls
+ * when the client can already determine that a quiz attempt is ineligible.
  *
- * Rules (must match server-side awardQuizCoins Cloud Function):
- * 1. Score must be > 0 (1 correct answer = 1 coin)
- * 2. Only first attempt per quiz version can earn coins (managed by caller via versionKey)
- * 3. Quiz version must EQUAL current learning sheet version (historyCountAtGenerate)
- * 4. Must have 10+ more records than previously awarded quiz (prevents farming)
- * 5. First quiz for a language pair is always eligible (no minimum threshold)
+ * Rules:
+ * 1. Score must be >= [MIN_VALID_SCORE] (at least 1 correct answer)
+ * 2. Generated history count must be > 0
+ * 3. Current sheet history count must match generated count (anti-cheat: prevents
+ *    adding history after quiz generation to inflate eligibility)
+ * 4. First attempt for a language pair is always eligible (lastAwardedCount == null)
+ * 5. Subsequent attempts require [MIN_INCREMENT_FOR_COINS] (10) more records
+ *    than the last awarded quiz
  */
 object CoinEligibility {
     const val MIN_INCREMENT_FOR_COINS = 10
     const val MIN_VALID_SCORE = 1
 
     /**
-     * Determine if a completed quiz is eligible for coin awards.
+     * Determine whether a quiz attempt is eligible for coin rewards.
      *
-     * @param attemptScore The score from the completed quiz attempt (1 coin per correct answer)
-     * @param generatedHistoryCount The history count when the quiz was generated
-     * @param currentSheetHistoryCount The current learning sheet's historyCountAtGenerate
-     *        (read from Firestore, NOT the user's live history count).
-     *        This ensures the quiz matches the current sheet version.
-     * @param lastAwardedCount The history count at which coins were last awarded for this language pair (null if first)
-     * @return true if the attempt is eligible for coins, false otherwise
+     * @param attemptScore Number of correct answers in the quiz attempt
+     * @param generatedHistoryCount History count when the quiz was generated
+     * @param currentSheetHistoryCount Current history count at submission time
+     * @param lastAwardedCount History count of the last quiz that earned coins, or null if none
+     * @return true if the attempt is eligible to earn coins
      */
     fun isEligibleForCoins(
         attemptScore: Int,
@@ -34,28 +35,19 @@ object CoinEligibility {
         currentSheetHistoryCount: Int?,
         lastAwardedCount: Int?
     ): Boolean {
-        // Check 1: Generated history count must be positive and score must be > 0
-        if (generatedHistoryCount <= 0) return false
+        // Must have at least 1 correct answer
         if (attemptScore < MIN_VALID_SCORE) return false
 
-        // Check 2: Quiz version must EQUAL current learning sheet version.
-        // This prevents: user regenerates the sheet (new version), then tries to submit
-        // a quiz from the old version to earn coins.
-        // Server does: generatedCount !== currentSheetVersion => version_mismatch
-        val sheetVersion = currentSheetHistoryCount ?: return false
-        if (generatedHistoryCount != sheetVersion) return false
+        // Must have generated from real history
+        if (generatedHistoryCount <= 0) return false
 
-        // Check 3: Anti-cheat - need 10+ more records than last awarded quiz count
-        // (First quiz for a language pair is always eligible)
-        if (lastAwardedCount != null) {
-            val minRequired = lastAwardedCount + MIN_INCREMENT_FOR_COINS
-            if (generatedHistoryCount < minRequired) {
-                // User needs at least MIN_INCREMENT_FOR_COINS more records than previous awarded quiz
-                return false
-            }
-        }
+        // History count must not have changed since generation (anti-cheat)
+        if (currentSheetHistoryCount == null || currentSheetHistoryCount != generatedHistoryCount) return false
 
-        return true
+        // First quiz for this language pair is always eligible
+        if (lastAwardedCount == null) return true
+
+        // Need MIN_INCREMENT_FOR_COINS more records than last awarded quiz
+        return generatedHistoryCount - lastAwardedCount >= MIN_INCREMENT_FOR_COINS
     }
 }
-

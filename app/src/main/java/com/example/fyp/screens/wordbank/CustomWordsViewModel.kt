@@ -170,6 +170,12 @@ class CustomWordsViewModel @Inject constructor(
         val sanitizedExample = sanitizeInput(example)
 
         viewModelScope.launch {
+            // Check for duplicates before adding
+            if (customWordsRepo.wordExists(uid, sanitizedOriginal, sourceLang, targetLang)) {
+                _uiState.value = _uiState.value.copy(error = "This word already exists in your custom word bank")
+                return@launch
+            }
+
             customWordsRepo.addCustomWord(
                 userId = uid,
                 originalWord = sanitizedOriginal,

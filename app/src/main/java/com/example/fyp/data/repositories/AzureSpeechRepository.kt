@@ -2,6 +2,7 @@ package com.example.fyp.data.repositories
 
 import android.util.Log
 import com.example.fyp.data.clients.CloudSpeechTokenClient
+import com.example.fyp.core.security.SecureStorage
 import com.example.fyp.data.azure.AzureSpeechProvider
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.utils.ErrorMessageMapper
@@ -33,7 +34,8 @@ import java.util.concurrent.TimeUnit
  * All operations run on [Dispatchers.IO] for proper thread management.
  */
 class AzureSpeechRepository(
-    private val tokenClient: CloudSpeechTokenClient
+    private val tokenClient: CloudSpeechTokenClient,
+    private val secureStorage: SecureStorage? = null
 ) : SpeechRepository {
 
     // Token validity constants
@@ -54,6 +56,20 @@ class AzureSpeechRepository(
     private var cachedToken: String? = null
     private var cachedRegion: String? = null
     private var cachedTokenTimeMs: Long = 0L
+
+    init {
+        // Restore any persisted session token on startup
+        secureStorage?.let { storage ->
+            val token = storage.getString(SecureStorage.KEY_SESSION_TOKEN)
+            val region = storage.getString(SecureStorage.KEY_SESSION_TOKEN_REGION)
+            val time = storage.getLong(SecureStorage.KEY_SESSION_TOKEN_TIME)
+            if (token != null && region != null && time > 0L) {
+                cachedToken = token
+                cachedRegion = region
+                cachedTokenTimeMs = time
+            }
+        }
+    }
 
     // Track continuous recognition resources for proper cleanup
     private val continuousSessionLock = Any()
@@ -87,6 +103,12 @@ class AzureSpeechRepository(
             cachedToken = resp.token
             cachedRegion = resp.region
             cachedTokenTimeMs = now
+            // Persist session token to encrypted storage for warm restarts
+            secureStorage?.let { storage ->
+                storage.putString(SecureStorage.KEY_SESSION_TOKEN, resp.token)
+                storage.putString(SecureStorage.KEY_SESSION_TOKEN_REGION, resp.region)
+                storage.putLong(SecureStorage.KEY_SESSION_TOKEN_TIME, now)
+            }
         }
 
         return AzureSpeechProvider.speechConfigFromToken(

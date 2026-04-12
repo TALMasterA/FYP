@@ -4,6 +4,7 @@ import android.app.Application
 import com.example.fyp.core.FcmNotificationService
 import com.example.fyp.data.friends.ChatRepository
 import com.example.fyp.data.friends.FriendsRepository
+import com.example.fyp.data.wordbank.WordBankCacheDataStore
 import com.example.fyp.data.friends.SharedFriendsDataSource
 import com.example.fyp.data.history.SharedHistoryDataSource
 import com.example.fyp.data.settings.SharedSettingsDataSource
@@ -75,6 +76,7 @@ class AppViewModelTest {
     private lateinit var sharedHistory: SharedHistoryDataSource
     private lateinit var chatRepo: ChatRepository
     private lateinit var friendsRepo: FriendsRepository
+    private lateinit var wordBankCacheDataStore: WordBankCacheDataStore
     private lateinit var fcmMock: MockedStatic<FcmNotificationService>
     private lateinit var firebaseAuthMock: MockedStatic<FirebaseAuth>
 
@@ -115,6 +117,7 @@ class AppViewModelTest {
         }
 
         friendsRepo = mock()
+        wordBankCacheDataStore = mock()
     }
 
     @After
@@ -132,7 +135,8 @@ class AppViewModelTest {
         sharedSettingsDataSource = sharedSettings,
         sharedHistoryDataSource = sharedHistory,
         chatRepository = chatRepo,
-        friendsRepository = friendsRepo
+        friendsRepository = friendsRepo,
+        wordBankCacheDataStore = wordBankCacheDataStore
     )
 
     // ── Test 1: LoggedIn starts shared data sources ──

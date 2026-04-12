@@ -2,6 +2,8 @@ package com.example.fyp.core.performance
 
 import androidx.compose.runtime.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Performance optimization utilities for the app.
@@ -97,22 +99,49 @@ fun <T> generateStableKeys(items: List<T>, keySelector: (T) -> Any): Map<T, Any>
 
 /**
  * Helper for batching operations to reduce repeated expensive calls.
- * Collects multiple requests and processes them together.
+ * Collects multiple requests and processes them together once [batchSize]
+ * items have been submitted or [flush] is called explicitly.
  *
- * Note: This is a simplified version. For production use, consider using
- * a proper batching library or implementing with proper coroutine scopes.
+ * Thread-safe: all mutations are guarded by a [Mutex].
  */
 class OperationBatcher<T, R>(
     private val batchSize: Int = 10,
-    private val batchDelayMillis: Long = 100L,
     private val processor: suspend (List<T>) -> List<R>
 ) {
-    // Implementation requires careful coroutine handling
-    // Users should implement based on their specific needs
-    // Example pattern:
-    // - Collect items in a Channel
-    // - Process in batches using Flow.chunked()
-    // - Use proper CoroutineScope for lifecycle management
+    private val mutex = Mutex()
+    private val pending = mutableListOf<T>()
+
+    /**
+     * Add an item to the pending batch.
+     * If the batch reaches [batchSize], it is flushed automatically
+     * and the results are returned. Otherwise returns `null`.
+     */
+    suspend fun submit(item: T): List<R>? {
+        val batch: List<T>
+        mutex.withLock {
+            pending.add(item)
+            if (pending.size < batchSize) return null
+            batch = pending.toList()
+            pending.clear()
+        }
+        return processor(batch)
+    }
+
+    /**
+     * Force-process whatever items are pending, regardless of batch size.
+     * Returns an empty list when there is nothing pending.
+     */
+    suspend fun flush(): List<R> {
+        val batch: List<T>
+        mutex.withLock {
+            batch = pending.toList()
+            pending.clear()
+        }
+        return if (batch.isEmpty()) emptyList() else processor(batch)
+    }
+
+    /** Number of items waiting to be processed. */
+    suspend fun pendingCount(): Int = mutex.withLock { pending.size }
 }
 
 /**

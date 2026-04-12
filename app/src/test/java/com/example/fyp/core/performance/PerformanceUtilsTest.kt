@@ -1,5 +1,6 @@
 package com.example.fyp.core.performance
 
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -128,5 +129,59 @@ class PerformanceUtilsTest {
         assertEquals(2, keyMap.size)
         assertEquals("key_x", keyMap["x"])
         assertEquals("key_y", keyMap["y"])
+    }
+
+    // ── OperationBatcher ───────────────────────────────────────────
+
+    @Test
+    fun `batcher - submit below batch size returns null`() = runBlocking {
+        val batcher = OperationBatcher<Int, Int>(batchSize = 3) { it.map { v -> v * 2 } }
+        assertNull(batcher.submit(1))
+        assertNull(batcher.submit(2))
+    }
+
+    @Test
+    fun `batcher - submit reaching batch size triggers processor`() = runBlocking {
+        val batcher = OperationBatcher<Int, Int>(batchSize = 3) { it.map { v -> v * 2 } }
+        batcher.submit(1)
+        batcher.submit(2)
+        val result = batcher.submit(3)
+        assertNotNull(result)
+        assertEquals(listOf(2, 4, 6), result)
+    }
+
+    @Test
+    fun `batcher - flush processes partial batch`() = runBlocking {
+        val batcher = OperationBatcher<Int, Int>(batchSize = 10) { it.map { v -> v + 1 } }
+        batcher.submit(5)
+        batcher.submit(10)
+        val result = batcher.flush()
+        assertEquals(listOf(6, 11), result)
+    }
+
+    @Test
+    fun `batcher - flush on empty returns empty list`() = runBlocking {
+        val batcher = OperationBatcher<Int, Int>(batchSize = 5) { it }
+        val result = batcher.flush()
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `batcher - pendingCount tracks items`() = runBlocking {
+        val batcher = OperationBatcher<Int, Int>(batchSize = 5) { it }
+        assertEquals(0, batcher.pendingCount())
+        batcher.submit(1)
+        batcher.submit(2)
+        assertEquals(2, batcher.pendingCount())
+        batcher.flush()
+        assertEquals(0, batcher.pendingCount())
+    }
+
+    @Test
+    fun `batcher - batch clears pending after auto-flush`() = runBlocking {
+        val batcher = OperationBatcher<Int, Int>(batchSize = 2) { it }
+        batcher.submit(1)
+        batcher.submit(2) // triggers auto-flush
+        assertEquals(0, batcher.pendingCount())
     }
 }

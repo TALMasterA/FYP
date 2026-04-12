@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 /**
  * Fake UserSettingsRepository that records calls to all settings methods.
@@ -157,13 +158,13 @@ class SettingsUseCasesTest {
         assertEquals(paletteId, repo.colorPaletteCalls[0].second)
     }
 
-    // ── UnlockColorPaletteUseCase ───────────────────────────────────
+    // ── UnlockColorPaletteWithCoinsUseCase ──────────────────────────
 
     @Test
-    fun `UnlockColorPalette delegates to repository`() = runBlocking {
-        val useCase = UnlockColorPaletteUseCase(repo)
+    fun `UnlockColorPaletteWithCoins delegates to repository for free palette`() = runBlocking {
+        val useCase = UnlockColorPaletteWithCoinsUseCase(repo, mock())
         val paletteId = PaletteId("premium")
-        useCase(testUserId, paletteId)
+        useCase(testUserId, paletteId, 0)
 
         assertEquals(1, repo.unlockPaletteCalls.size)
         assertEquals(testUserId, repo.unlockPaletteCalls[0].first)

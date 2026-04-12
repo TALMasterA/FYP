@@ -189,30 +189,6 @@ class SecurityUtilsTest {
     }
 
     @Test
-    fun `rateLimiter - remaining attempts tracks correctly`() {
-        assertEquals(3, limiter.getRemainingAttempts("user1"))
-        limiter.isAllowed("user1")
-        assertEquals(2, limiter.getRemainingAttempts("user1"))
-    }
-
-    @Test
-    fun `rateLimiter - reset clears attempts`() {
-        repeat(3) { limiter.isAllowed("user1") }
-        assertFalse(limiter.isAllowed("user1"))
-        limiter.reset("user1")
-        assertTrue(limiter.isAllowed("user1"))
-    }
-
-    @Test
-    fun `rateLimiter - clear removes all records`() {
-        repeat(3) { limiter.isAllowed("user1") }
-        repeat(3) { limiter.isAllowed("user2") }
-        limiter.clear()
-        assertTrue(limiter.isAllowed("user1"))
-        assertTrue(limiter.isAllowed("user2"))
-    }
-
-    @Test
     fun `rateLimiter - window expiry resets attempts`() {
         // Use a very short window so the test completes quickly
         val shortWindowLimiter = RateLimiter(maxAttempts = 2, windowMillis = 50L)
@@ -229,16 +205,4 @@ class SecurityUtilsTest {
         assertTrue(shortWindowLimiter.isAllowed("user1"))
     }
 
-    @Test
-    fun `rateLimiter - getRemainingAttempts reflects window expiry`() {
-        val shortWindowLimiter = RateLimiter(maxAttempts = 2, windowMillis = 50L)
-
-        shortWindowLimiter.isAllowed("user1")
-        assertEquals(1, shortWindowLimiter.getRemainingAttempts("user1"))
-
-        Thread.sleep(100)
-
-        // After window, all attempts should be available again
-        assertEquals(2, shortWindowLimiter.getRemainingAttempts("user1"))
-    }
 }

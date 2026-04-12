@@ -110,9 +110,6 @@ FYP/
 │       │       │   │   ├── SecurityUtils.kt             ← Input validation, sanitization, rate limiting
 │       │       │   │   └── AuditLogger.kt               ← Security event logging (login, rate-limit, friend actions, etc.)
 │       │       │   │
-│       │       │   ├── accessibility/                   ← Accessibility helpers
-│       │       │   │   └── AccessibilityUtils.kt        ← Semantic modifiers & screen-reader helpers
-│       │       │   │
 │       │       │   └── navigation/                      ← Navigation helpers
 │       │       │       └── NavigationHelpers.kt
 │       │       │

@@ -137,33 +137,6 @@ class RateLimiter(
     }
 
     /**
-     * Gets remaining attempts for the key.
-     */
-    fun getRemainingAttempts(key: String): Int {
-        val now = System.currentTimeMillis()
-        val record = records[key] ?: return maxAttempts
-
-        // Remove old attempts
-        record.attempts.removeAll { now - it > windowMillis }
-
-        return maxAttempts - record.attempts.size
-    }
-
-    /**
-     * Resets the rate limit for a key.
-     */
-    fun reset(key: String) {
-        records.remove(key)
-    }
-
-    /**
-     * Clears all records.
-     */
-    fun clear() {
-        records.clear()
-    }
-
-    /**
      * Removes keys whose attempts are all outside the current window,
      * preventing unbounded memory growth from one-time callers.
      */
@@ -175,5 +148,10 @@ class RateLimiter(
             entry.value.attempts.removeAll { now - it > windowMillis }
             if (entry.value.attempts.isEmpty()) iterator.remove()
         }
+    }
+
+    /** Removes all recorded attempts — used for test isolation via reflection. */
+    fun clear() {
+        records.clear()
     }
 }

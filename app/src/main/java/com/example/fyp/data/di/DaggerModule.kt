@@ -11,6 +11,7 @@ import com.example.fyp.data.cloud.LanguageDetectionCache
 import com.example.fyp.data.cloud.TranslationCache
 import com.example.fyp.data.clients.CloudSpeechTokenClient
 import com.example.fyp.data.clients.CloudTranslatorClient
+import com.example.fyp.core.security.SecureStorage
 import com.example.fyp.data.friends.FriendRequestRateLimiter
 import com.example.fyp.data.friends.SharedPreferencesFriendRequestRateLimiter
 import com.example.fyp.data.user.FirebaseAuthRepository
@@ -119,8 +120,11 @@ object AppModule {
         CloudSpeechTokenClient(functions)
 
     @Provides @Singleton
-    fun provideSpeechRepository(tokenClient: CloudSpeechTokenClient): SpeechRepository =
-        AzureSpeechRepository(tokenClient)
+    fun provideSpeechRepository(
+        tokenClient: CloudSpeechTokenClient,
+        secureStorage: SecureStorage
+    ): SpeechRepository =
+        AzureSpeechRepository(tokenClient, secureStorage)
 
     @Provides
     fun provideRecognizeUseCase(repo: SpeechRepository) = RecognizeFromMicUseCase(repo)
