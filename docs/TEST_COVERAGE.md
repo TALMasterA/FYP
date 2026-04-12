@@ -1,27 +1,27 @@
 # Test Coverage Report
 
-_Last updated: 2026-04-13_
+_Last updated: 2026-04-12_
 
 ## Verified Snapshot (from local audit)
 
 | Metric | Count |
 |---|---:|
-| Android source files (`app/src/main/java/com/example/fyp`) | 249 |
+| Android source files (`app/src/main/java/com/example/fyp`) | 235 |
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 9 |
-| Android unit test files (`app/src/test/java/com/example/fyp`) | 210 |
-| Android test suites in latest `testDebugUnitTest` run | 210 |
-| Android unit tests executed (`testDebugUnitTest`) | 2,729 |
+| Android unit test files (`app/src/test/java/com/example/fyp`) | 197 |
+| Android test suites in latest `testDebugUnitTest` run | 197 |
+| Android unit tests executed (`testDebugUnitTest`) | 2,585 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 14 |
-| Backend tests (`it`/`test` blocks) | 190 |
+| Backend Jest tests executed (`npm test`) | 186 |
 
 ## Backend Coverage (from `coverage-summary.json`)
 
 | Metric | Current |
 |---|---:|
-| Statements | 94.70% |
-| Branches | 80.70% |
-| Functions | 93.58% |
-| Lines | 95.63% |
+| Statements | 94.69% |
+| Branches | 80.66% |
+| Functions | 93.50% |
+| Lines | 95.62% |
 
 CI threshold in `fyp-backend/functions/jest.config.js`:
 - statements >= 50%
@@ -29,7 +29,7 @@ CI threshold in `fyp-backend/functions/jest.config.js`:
 - functions >= 50%
 - lines >= 50%
 
-## CI/CD Pipeline Checks
+## CI And Security Checks
 
 - `ci.yml` runs Android unit tests (`testDebugUnitTest`) and debug build (`assembleDebug`).
 - `ci.yml` backend job runs `npm ci`, `npm run lint`, `npm run build`, and `npm run test:coverage`.

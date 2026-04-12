@@ -35,7 +35,7 @@ FYP/
 ├── docs/
 │   ├── treeOfImportantfiles.txt                    ← This file
 │   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants
-│   ├── TEST_COVERAGE.md                            ← Test coverage report (210 Android test files, 2,718 Android + 190 backend tests)
+│   ├── TEST_COVERAGE.md                            ← Test coverage report (197 Android test files, 2,585 Android + 186 backend tests)
 │   ├── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
 │   ├── MCP_SKILLS_PLAYBOOK.md                      ← Team playbook for MCP skills usage
 │   ├── CLOUD_FUNCTIONS_API.md                      ← Backend Cloud Functions API reference
@@ -71,12 +71,10 @@ FYP/
 │       │       │
 │       │       ├── core/                                ← Organized into focused sub-groups
 │       │       │   ├── ErrorMessages.kt                 ← Centralized error message mapper (fromException, isNetworkError)
-│       │       │   ├── FeatureFlags.kt                  ← Firebase Remote Config feature flags (singleton)
 │       │       │   ├── foundation/                      ← Basic utilities & logger
 │       │       │   │   ├── Logger.kt
 │       │       │   │   ├── Constants.kt
 │       │       │   │   ├── UiEvent.kt                   ← Sealed UiEvent class & Channel wrapper
-│       │       │   │   └── ViewModelHelpers.kt
 │       │       │   │
 │       │       │   ├── permissions/                     ← Permission handling & gating
 │       │       │   │   ├── CameraPermissions.kt
@@ -136,7 +134,7 @@ FYP/
 │       │       │   │   ├── FirestoreChatRepository.kt
 │       │       │   │   ├── FirestoreFriendsRepository.kt
 │       │       │   │   ├── FirestoreSharingRepository.kt
-│       │       │   │   ├── FriendsCache.kt              ← In-memory TTL cache for friend-system data
+│       │       │   │   ├── FriendRequestRateLimiter.kt  ← Client-side friend-request limiter backed by secure storage
 │       │       │   │   ├── FriendsRepository.kt
 │       │       │   │   ├── SeenItemsStorage.kt          ← Persists seen shared-items, friend-requests, message-friend IDs
 │       │       │   │   ├── SharedFriendsDataSource.kt
@@ -179,13 +177,8 @@ FYP/
 │       │       │   │   ├── FirestoreWordBankRepository.kt
 │       │       │   │   ├── WordBankCacheDataStore.kt
 │       │       │   │   └── WordBankGenerationRepository.kt
-│       │       │   └── database/                        ← Database utilities
-│       │       │       ├── DatabaseUtils.kt              ← Batch write/delete/set/update helpers
-│       │       │       └── DataCleanupUtils.kt           ← Old doc deletion, archive, orphan cleanup
 │       │       │
 │       │       ├── domain/
-│       │       │   ├── auth/
-│       │       │   │   └── LoginUseCase.kt
 │       │       │   ├── feedback/
 │       │       │   │   └── FeedbackRepository.kt
 │       │       │   ├── friends/
@@ -196,12 +189,8 @@ FYP/
 │       │       │   │   ├── EnsurePublicProfileExistsUseCase.kt
 │       │       │   │   ├── GetCurrentUserProfileUseCase.kt
 │       │       │   │   ├── MarkMessagesAsReadUseCase.kt
-│       │       │   │   ├── ObserveFriendsUseCase.kt
-│       │       │   │   ├── ObserveIncomingRequestsUseCase.kt
 │       │       │   │   ├── ObserveMessagesUseCase.kt
 │       │       │   │   ├── ObserveOutgoingRequestsUseCase.kt
-│       │       │   │   ├── ObserveSharedInboxUseCase.kt
-│       │       │   │   ├── ObserveUnreadCountUseCase.kt
 │       │       │   │   ├── RejectFriendRequestUseCase.kt
 │       │       │   │   ├── RemoveFriendUseCase.kt
 │       │       │   │   ├── SearchUsersUseCase.kt
@@ -215,9 +204,7 @@ FYP/
 │       │       │   │   ├── DeleteSessionUseCase.kt
 │       │       │   │   ├── HistoryRepository.kt
 │       │       │   │   ├── ObserveSessionNamesUseCase.kt
-│       │       │   │   ├── ObserveUserHistoryUseCase.kt
-│       │       │   │   ├── RenameSessionUseCase.kt
-│       │       │   │   └── SaveTranslationUseCase.kt
+│       │       │   │   └── RenameSessionUseCase.kt
 │       │       │   ├── learning/
 │       │       │   │   ├── CoinEligibility.kt
 │       │       │   │   ├── GenerateLearningMaterialsUseCase.kt
@@ -231,7 +218,6 @@ FYP/
 │       │       │   ├── ocr/
 │       │       │   │   └── RecognizeTextFromImageUseCase.kt
 │       │       │   ├── settings/
-│       │       │   │   ├── ObserveUserSettingsUseCase.kt
 │       │       │   │   ├── SetAutoThemeEnabledUseCase.kt
 │       │       │   │   ├── SetColorPaletteUseCase.kt
 │       │       │   │   ├── SetFontSizeScaleUseCase.kt
@@ -239,7 +225,6 @@ FYP/
 │       │       │   │   ├── SetPrimaryLanguageUseCase.kt
 │       │       │   │   ├── SetThemeModeUseCase.kt
 │       │       │   │   ├── SetVoiceForLanguageUseCase.kt
-│       │       │   │   ├── UnlockColorPaletteUseCase.kt
 │       │       │   │   └── UnlockColorPaletteWithCoinsUseCase.kt
 │       │       │   └── speech/
 │       │       │       ├── DetectLanguageUseCase.kt
@@ -367,7 +352,6 @@ FYP/
 │       │       │
 │       │       └── ui/
 │       │           ├── components/
-│       │           │   ├── AnimatedComponents.kt
 │       │           │   ├── EmptyStateView.kt
 │       │           │   ├── FriendSelectorDialog.kt
 │       │           │   ├── LoadingSkeletons.kt
@@ -396,9 +380,7 @@ FYP/
 │       │   │   ├── ErrorMessagesTest.kt
 │       │   │   ├── FeatureFlagDefaultsTest.kt             ← Remote Config feature flag default values
 │       │   │   ├── FontSizeUtilsTest.kt
-│       │   │   ├── LanguagePairCacheTest.kt
 │       │   │   ├── PaginationTest.kt
-│       │   │   ├── ViewModelHelpersTest.kt                ← LanguagePairCache tests
 │       │   │   ├── connectivity/
 │       │   │   │   └── NetworkRetryTest.kt
 │       │   │   ├── performance/
@@ -423,17 +405,12 @@ FYP/
 │       │   │   │   ├── CloudQuizClientTest.kt             ← Quiz client logic tests
 │       │   │   │   ├── LanguageDetectionCacheDataTest.kt  ← Cache data model tests
 │       │   │   │   └── TranslationCacheDataTest.kt        ← Cache data model tests
-│       │   │   ├── database/
-│       │   │   │   ├── DatabaseUtilsTest.kt               ← Firestore batch constant test
-│       │   │   │   └── DataCleanupUtilsTest.kt            ← Old doc deletion, archive, cleanup tests
 │       │   │   ├── feedback/
 │       │   │   │   └── FirestoreFeedbackRepositoryTest.kt ← Feedback repository tests
 │       │   │   ├── friends/
 │       │   │   │   ├── ChatRepositoryLogicTest.kt         ← Chat repository logic tests
 │       │   │   │   ├── FirestoreChatRepositoryTest.kt     ← Chat repository integration test
 │       │   │   │   ├── FriendRequestRateLimiterTest.kt    ← Friend request rate limiting tests
-│       │   │   │   ├── FriendsCacheExtendedTest.kt        ← Friends, blocked, friendship cache tests
-│       │   │   │   ├── FriendsCacheTest.kt
 │       │   │   │   ├── FriendsRepositoryLogicTest.kt      ← Friends repository logic tests
 │       │   │   │   ├── SeenItemsStorageTest.kt
 │       │   │   │   ├── SharedFriendsDataSourceTest.kt     ← Shared friends data source tests
@@ -444,7 +421,6 @@ FYP/
 │       │   │   │   ├── SharedHistoryDataSourceExtendedLogicTest.kt ← Extended data source logic tests
 │       │   │   │   └── SharedHistoryLogicTest.kt          ← Shared history logic tests
 │       │   │   ├── learning/
-│       │   │   │   ├── CoinEligibilityTest.kt
 │       │   │   │   ├── ContentCleanerTest.kt
 │       │   │   │   ├── ContentCleanerExtendedTest.kt
 │       │   │   │   ├── LearningContentPromptTest.kt        ← Prompt construction & takeLast(20) tests
@@ -475,8 +451,6 @@ FYP/
 │       │   │       └── WordBankPromptTest.kt               ← Prompt construction tests
 │       │   ├── domain/
 │       │   │   ├── CrossLayerIntegrationTest.kt           ← Cross-layer integration tests
-│       │   │   ├── auth/
-│       │   │   │   └── LoginUseCaseTest.kt
 │       │   │   ├── friends/
 │       │   │   │   ├── AcceptFriendRequestUseCaseTest.kt
 │       │   │   │   ├── AcceptSharedItemUseCaseTest.kt
@@ -490,7 +464,6 @@ FYP/
 │       │   │   │   ├── GetCurrentUserProfileUseCaseTest.kt
 │       │   │   │   ├── MarkMessagesAsReadUseCaseTest.kt
 │       │   │   │   ├── ObserveMessagesLogicTest.kt         ← Observe messages business logic tests
-│       │   │   │   ├── ObserveUnreadCountUseCaseTest.kt
 │       │   │   │   ├── RejectFriendRequestUseCaseTest.kt
 │       │   │   │   ├── RemoveFriendUseCaseTest.kt
 │       │   │   │   ├── SearchUsersUseCaseTest.kt
@@ -507,9 +480,7 @@ FYP/
 │       │   │   │   ├── DeleteSessionUseCaseTest.kt         ← Delete session use case tests
 │       │   │   │   ├── HistoryUseCasesTest.kt
 │       │   │   │   ├── ObserveSessionNamesUseCaseTest.kt  ← Session names observation tests
-│       │   │   │   ├── ObserveUserHistoryUseCaseTest.kt    ← Observe user history use case tests
 │       │   │   │   ├── RenameSessionUseCaseTest.kt         ← Rename session use case tests
-│       │   │   │   ├── SaveTranslationUseCaseTest.kt
 │       │   │   │   └── SessionManagementLogicTest.kt       ← Session management logic tests
 │       │   │   ├── learning/
 │       │   │   │   ├── CoinAndGenerationIntegrationTest.kt
@@ -520,12 +491,10 @@ FYP/
 │       │   │   │   ├── LearningGenerationRulesTest.kt
 │       │   │   │   ├── ParseAndStoreQuizUseCaseTest.kt
 │       │   │   │   ├── QuizCoinEarningGuardTest.kt
-│       │   │   │   ├── QuizCoinEarningRulesTest.kt
 │       │   │   │   └── QuizFlowIntegrationTest.kt              ← Quiz flow integration tests
 │       │   │   ├── ocr/
 │       │   │   │   └── RecognizeTextFromImageUseCaseTest.kt
 │       │   │   ├── settings/
-│       │   │   │   ├── ObserveUserSettingsUseCaseTest.kt  ← Settings observation tests
 │       │   │   │   ├── SetPrimaryLanguageUseCaseTest.kt
 │       │   │   │   ├── SettingsUseCasesTest.kt
 │       │   │   │   └── UnlockColorPaletteWithCoinsUseCaseTest.kt
@@ -672,9 +641,9 @@ FYP/
             ├── maintenance.ts                      ← Scheduled: pruneStaleTokens, pruneStaleRateLimits, repairFriendsData
             ├── health.ts                           ← Healthcheck HTTP endpoint (validates GenAI config)
             └── __tests__/
-                ├── helpers.test.ts                 ← 32 unit tests for validation helpers
+                ├── helpers.test.ts                 ← 28 unit tests for validation helpers
                 ├── logger.test.ts                  ← 6 unit tests for structured logger
-                ├── translation.test.ts             ← 41 unit tests for getSpeechToken, translateText(s), detectLanguage
+                ├── translation.test.ts             ← 42 unit tests for getSpeechToken, translateText(s), detectLanguage
                 ├── coins.test.ts                   ← 27 unit tests for awardQuizCoins and spendCoins
                 ├── notifications.test.ts           ← 17 unit tests for FCM triggers and spam detection
                 ├── health.test.ts                  ← Healthcheck endpoint tests

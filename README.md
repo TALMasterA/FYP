@@ -24,10 +24,10 @@ Please use your gmail to register.
 
 --------------------------------------------------------------
 
-## 🛠️ CI/CD & Quality Checks
+## 🛠️ CI & Quality Checks
 
 **GitHub Actions workflows:**
-1. **CI (`ci.yml`)**: Android unit tests, debug APK build, backend linting & Jest coverage (50% threshold)
+1. **CI (`ci.yml`)**: Android unit tests, debug APK build, backend linting, backend build, and Jest coverage (50% threshold)
 2. **CodeQL (`codeql.yml`)**: Weekly + on-demand semantic analysis for security vulnerabilities
 
 **Status:**  
@@ -258,15 +258,15 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 210 test files, 2,729 unit tests (from `testDebugUnitTest` report)
-- **Backend:** 14 test files, 189 tests
+- **Android:** 197 test files, 2,585 unit tests (from the latest `testDebugUnitTest` report)
+- **Backend:** 14 test files, 186 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.
 
 **Key test suites:**
 - `OnboardingLogicTest` — First-launch & version-based re-show
 - `GenerationEligibilityTest` — Word bank & learning sheet regen rules
-- `CoinEligibilityTest` — Coin award anti-cheat
+- `QuizCoinEarningGuardTest` — Coin award anti-cheat
 - `UiTextAlignmentTest` — Critical guard: enum count == list count
 - `SecurityUtilsTest` — Input validation & encoding correctness
 - `ChatRepositoryLogicTest` — Chat ID generation, unread math
@@ -299,22 +299,22 @@ cd fyp-backend/functions && npm test
 - `users/{uid}/profile/settings` — User settings (theme, font, language prefs)
 - `users/{uid}/profile/public` — Public profile (username, isDiscoverable)
 - `users/{uid}/learning_sheets/{pair}` — Generated content per language pair
-- `users/{uid}/quiz_attempts`, `quiz_stats/{pair}` — Quiz data
+- `users/{uid}/quiz_attempts/{attemptId}`, `users/{uid}/quiz_stats/{pair}` — Quiz data
 - `users/{uid}/generated_quizzes/{pair}` — Cached quiz questions
 - `users/{uid}/user_stats/coins` — Coin balance
-- `users/{uid}/favorites`, `favorite_sessions` — Bookmarks
-- `users/{uid}/word_banks/{pair}`, `custom_words` — Vocabulary
-- `users/{uid}/friends`, `shared_inbox`, `blocked_users` — Friend system
-- `users/{uid}/shared_inbox/{itemId}/content` — Shared item content subcollection
-- `users/{uid}/fcm_tokens` — Notification tokens (pruned after 60 days)
-- `users/{uid}/last_awarded_quiz` — Anti-cheat last quiz award state
-- `usernames`, `user_search` — Username registry & searchable index
-- `friend_requests`, `chats/{chatId}/messages` — Requests & messages
-- `quiz_versions` — Server-side quiz version tracking (anti-cheat)
-- `coin_awards` — Server-side coin award history (anti-cheat)
-- `language_counts` — Per-user, per-language history record counts
-- `rate_limits` — Server-side rate limiting (learning content generation)
-- `feedback` — User feedback submissions
+- `users/{uid}/favorites/{favoriteId}`, `users/{uid}/favorite_sessions/{sessionId}` — Bookmarks
+- `users/{uid}/word_banks/{pair}`, `users/{uid}/custom_words/{wordId}` — Vocabulary
+- `users/{uid}/friends/{friendUid}`, `users/{uid}/shared_inbox/{itemId}`, `users/{uid}/blocked_users/{blockedUid}` — Friend system
+- `users/{uid}/shared_inbox/{itemId}/content/body` — Shared item full-content document
+- `users/{uid}/fcm_tokens/{token}` — Notification tokens (pruned after 60 days)
+- `users/{uid}/last_awarded_quiz/{pair}` — Anti-cheat last quiz award state
+- `users/{uid}/quiz_versions/{pair}` — Server-side quiz version tracking (anti-cheat)
+- `users/{uid}/coin_awards/{versionKey}` — Server-side coin award history (anti-cheat)
+- `users/{uid}/user_stats/language_counts` — Per-user, per-language history record counts cache
+- `usernames/{username}`, `user_search/{uid}` — Username registry & searchable index
+- `friend_requests/{requestId}`, `chats/{chatId}/messages/{messageId}` — Requests & messages
+- `rate_limits/{docId}` — Server-side rate limiting (learning content generation and write throttles)
+- `feedback/{feedbackId}` — User feedback submissions
 
 --------------------------------------------------------------
 
@@ -332,4 +332,4 @@ cd fyp-backend/functions && npm test
 
 --------------------------------------------------------------
 
-**Last Updated:** April 9, 2026
+**Last Updated:** April 12, 2026

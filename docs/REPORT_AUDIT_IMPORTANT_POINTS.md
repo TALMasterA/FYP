@@ -1,6 +1,6 @@
 # Report Audit Important Points
 
-Last updated: 2026-04-09
+Last updated: 2026-04-12
 
 ## Scope
 Use this guide when auditing and regenerating the final report from DOCX/PlantUML sources.
@@ -13,14 +13,14 @@ Use this guide when auditing and regenerating the final report from DOCX/PlantUM
 5. Report files in `report-audit/`
 
 ## Critical Metrics (Current Verified Snapshot)
-- Android source files: 252
+- Android source files: 235
 - Backend source files: 9
-- Android unit test files: 212
-- Android unit tests: 2,779
+- Android unit test files: 197
+- Android unit tests: 2,585
 - Backend test files: 14
-- Backend tests: 189
-- Backend coverage: statements 95.33%, branches 80.83%, functions 93.42%, lines 96.34%
-- Git commit count baseline used in report v19: 564+
+- Backend tests: 186
+- Backend coverage: statements 94.69%, branches 80.66%, functions 93.50%, lines 95.62%
+- Git commit count at current repository snapshot: 585
 
 ## Report Schema Alignment Rules
 When auditing Chapter 4 tables, align to real persisted fields (not conceptual names):
