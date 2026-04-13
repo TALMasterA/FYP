@@ -34,8 +34,6 @@ class FirestoreHistoryRepository @Inject constructor(
         const val DEFAULT_HISTORY_LIMIT = 200L
     }
 
-    // Track last fetched timestamp for incremental loading (Priority 3 #18)
-    private val lastFetchTimestamp = mutableMapOf<String, Timestamp>()
     private val cachedRecords = mutableMapOf<String, List<TranslationRecord>>()
 
     // Background scope for non-blocking cache maintenance tasks
@@ -173,12 +171,7 @@ class FirestoreHistoryRepository @Inject constructor(
 
                 val newRecords = snapshot?.toObjects(TranslationRecord::class.java) ?: emptyList()
 
-                // Track the latest timestamp for incremental loading
-                if (newRecords.isNotEmpty()) {
-                    lastFetchTimestamp[uid] = newRecords.first().timestamp
-                }
-
-                // Cache records for merge with incremental updates
+                // Cache records for optimistic UI updates
                 cachedRecords[uid] = newRecords
 
                 trySend(newRecords)
@@ -187,7 +180,6 @@ class FirestoreHistoryRepository @Inject constructor(
             listener.remove()
             // Clean up cache when listener is removed
             cachedRecords.remove(uid)
-            lastFetchTimestamp.remove(uid)
         }
     }
 
@@ -213,42 +205,6 @@ class FirestoreHistoryRepository @Inject constructor(
             snapshot.toObjects(TranslationRecord::class.java)
         } catch (e: Exception) {
             Log.w("FirestoreHistoryRepository", "Failed to load more history", e)
-            emptyList()
-        }
-    }
-
-    /**
-     * Fetch only new records since last update (incremental loading).
-     * This is called internally when we want to update history without re-fetching everything.
-     */
-    suspend fun getIncrementalHistory(userId: String): List<TranslationRecord> {
-        val lastTimestamp = lastFetchTimestamp[userId] ?: return emptyList()
-
-        return try {
-            val snapshot = firestore.collection("users")
-                .document(userId)
-                .collection("history")
-                .whereGreaterThan("timestamp", lastTimestamp)
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .get()
-                .await()
-
-            val newRecords = snapshot.toObjects(TranslationRecord::class.java)
-
-            // Update timestamp if we got new records
-            if (newRecords.isNotEmpty()) {
-                lastFetchTimestamp[userId] = newRecords.first().timestamp
-
-                // Merge with cached records
-                val cached = cachedRecords[userId] ?: emptyList()
-                val merged = (newRecords + cached).distinctBy { it.id }
-                    .sortedByDescending { it.timestamp.seconds }
-                cachedRecords[userId] = merged
-            }
-
-            newRecords
-        } catch (e: Exception) {
-            Log.w("FirestoreHistoryRepository", "Failed to get incremental history", e)
             emptyList()
         }
     }

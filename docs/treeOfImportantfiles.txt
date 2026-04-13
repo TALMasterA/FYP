@@ -74,7 +74,6 @@ FYP/
 │       │       │   ├── foundation/                      ← Basic utilities & logger
 │       │       │   │   ├── Logger.kt
 │       │       │   │   ├── Constants.kt
-│       │       │   │   ├── UiEvent.kt                   ← Sealed UiEvent class & Channel wrapper
 │       │       │   │
 │       │       │   ├── permissions/                     ← Permission handling & gating
 │       │       │   │   ├── CameraPermissions.kt
@@ -149,8 +148,7 @@ FYP/
 │       │       │   │   ├── QuizGenerationRepositoryImpl.kt
 │       │       │   │   └── QuizParser.kt
 │       │       │   ├── network/
-│       │       │   │   ├── CacheInterceptor.kt
-│       │       │   │   └── NetworkMonitor.kt            ← ConnectivityManager StateFlow (isOnline), @Singleton
+│       │       │   │   └── CacheInterceptor.kt
 │       │       │   ├── ocr/
 │       │       │   │   └── MLKitOcrRepository.kt
 │       │       │   ├── repositories/
@@ -352,7 +350,6 @@ FYP/
 │       │           │   ├── EmptyStateView.kt
 │       │           │   ├── FriendSelectorDialog.kt
 │       │           │   ├── LoadingSkeletons.kt
-│       │           │   ├── StandardComponents.kt           ← Cards, empty states, error cards
 │       │           │   ├── StandardButtons.kt              ← Standardized button components
 │       │           │   ├── StandardTextFields.kt           ← Standardized text field components
 │       │           │   └── StandardDialogs.kt              ← Standardized dialog components

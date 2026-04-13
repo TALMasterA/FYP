@@ -740,7 +740,6 @@ The following components cannot be unit tested due to Android framework dependen
 | `SecureStorage.kt` | Android Keystore + EncryptedSharedPreferences | Manual test on device |
 | `AzureSpeechRepository.kt` | Azure Speech SDK hardware-dependendent | Integration test on device |
 | `AzureSpeechProvider.kt` | Speech SDK native bindings | Integration test on device |
-| `NetworkMonitor.kt` | ConnectivityManager system service | Verify offline banner shows |
 | `UiLanguageStateController.kt` | `@Composable` + SharedPreferences | Visual test on device |
 | `ConnectivityObserver.kt` | Android ConnectivityManager callbacks | Visual test on device |
 | `LocalAppLanguage.kt` | Compose `CompositionLocal` | Visual test on device |

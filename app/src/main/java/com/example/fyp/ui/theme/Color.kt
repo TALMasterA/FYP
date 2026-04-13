@@ -23,14 +23,6 @@ val SurfaceLight = Color(0xFFFFFFFF)
 val SurfaceVariantLight = Color(0xFFE3F2FD) // Light blue tint
 
 // Dark Theme Colors
-val PrimaryDark = Color(0xFF90CAF9) // Light Blue
-val PrimaryVariantDark = Color(0xFF64B5F6)
-val SecondaryDark = Color(0xFF80DEEA) // Light Cyan
-val SecondaryVariantDark = Color(0xFF4DD0E1)
-
-val TertiaryDark = Color(0xFFCE93D8) // Light Purple
-val TertiaryVariantDark = Color(0xFFBA68C8)
-
 val BackgroundDark = Color(0xFF121212) // Material Dark
 val SurfaceDark = Color(0xFF1E1E1E)
 val SurfaceVariantDark = Color(0xFF2C2C2C)

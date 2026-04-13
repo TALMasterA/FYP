@@ -5,7 +5,6 @@ import android.net.Uri
 import com.example.fyp.model.OcrResult
 import com.example.fyp.model.OcrScript
 import com.example.fyp.model.TextBlock
-import android.util.Log
 import com.example.fyp.utils.ErrorMessageMapper
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
@@ -39,7 +38,6 @@ class MLKitOcrRepository @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private companion object {
-        const val TAG = "MLKitOcrRepository"
         /** Length of language code prefix used for script detection */
         const val LANGUAGE_PREFIX_LENGTH = 2
     }
@@ -59,18 +57,6 @@ class MLKitOcrRepository @Inject constructor(
     private val koreanRecognizer by lazy {
         TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build())
     }
-
-    /**
-     * Get the script required for a language code.
-     */
-    fun getScriptForLanguage(languageCode: String?): OcrScript {
-        return OcrScript.fromLanguageCode(languageCode)
-    }
-
-    /**
-     * Get list of all supported OCR scripts with their info.
-     */
-    fun getSupportedScripts(): List<OcrScript> = OcrScript.entries
 
     /**
      * Recognize text from an image URI.
@@ -126,16 +112,5 @@ class MLKitOcrRepository @Inject constructor(
             val errorMessage = ErrorMessageMapper.mapOcrError(e.message ?: "Failed to load image")
             OcrResult.Error(errorMessage)
         }
-    }
-
-    /**
-     * Clean up resources when repository is no longer needed.
-     * Closes all text recognizer instances to free memory.
-     */
-    fun close() {
-        try { latinRecognizer.close() } catch (e: Exception) { Log.w(TAG, "Failed to close Latin recognizer", e) }
-        try { chineseRecognizer.close() } catch (e: Exception) { Log.w(TAG, "Failed to close Chinese recognizer", e) }
-        try { japaneseRecognizer.close() } catch (e: Exception) { Log.w(TAG, "Failed to close Japanese recognizer", e) }
-        try { koreanRecognizer.close() } catch (e: Exception) { Log.w(TAG, "Failed to close Korean recognizer", e) }
     }
 }
