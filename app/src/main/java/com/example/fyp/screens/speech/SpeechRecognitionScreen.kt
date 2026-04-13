@@ -44,7 +44,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.fyp.core.AudioRecorder
 import com.example.fyp.core.RecordAudioPermissionRequest
 import com.example.fyp.core.RequestCameraPermission
 import com.example.fyp.core.StandardScreenScaffold
@@ -340,7 +339,7 @@ fun SpeechRecognitionScreen(
                                     viewModel.recognize(selectedLanguage)
                                 }
                             },
-                            enabled = !isRecognizing && !AudioRecorder.isRecording,
+                            enabled = !isRecognizing,
                             modifier = Modifier.weight(1f),
                             contentPadding = PaddingValues(vertical = 14.dp),
                             colors = if (recognizePhase == RecognizePhase.Listening)

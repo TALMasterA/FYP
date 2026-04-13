@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-04-12_
+_Last updated: 2026-04-13_
 
 ## Verified Snapshot (from local audit)
 
@@ -10,7 +10,7 @@ _Last updated: 2026-04-12_
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 9 |
 | Android unit test files (`app/src/test/java/com/example/fyp`) | 197 |
 | Android test suites in latest `testDebugUnitTest` run | 197 |
-| Android unit tests executed (`testDebugUnitTest`) | 2,585 |
+| Android unit tests executed (`testDebugUnitTest`) | 2,586 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 14 |
 | Backend Jest tests executed (`npm test`) | 186 |
 

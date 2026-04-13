@@ -39,7 +39,6 @@ object AiConfig {
 object DataConstants {
     const val DEFAULT_HISTORY_LIMIT = 200L
     const val COUNT_REFRESH_DEBOUNCE_MS = 5_000L
-    const val BATCH_DELETE_LIMIT = 400
 }
 
 /**

@@ -20,7 +20,7 @@ Please use your gmail to register.
 
 **Frontend:** Android Studio, Kotlin, Compose  
 **Backend:** Firebase (Auth, Firestore, Cloud Functions), Azure (Speech, Translation, OpenAI)  
-**Key Libraries:** Hilt (DI), Coroutines & Flow, Serialization, OkHttp, Coil, DataStore
+**Key Libraries:** Hilt (DI), Coroutines & Flow, Serialization, OkHttp, DataStore
 
 --------------------------------------------------------------
 
@@ -74,7 +74,7 @@ Please use your gmail to register.
   - **Quiz:** locked to sheet versions; first quiz is allowed, later regeneration only when the sheet’s saved history count changes (one quiz per sheet version).
   - **Word bank:** needs translation history for the target; first generate is allowed, refresh only after 20+ additional records since last generation and it appends new words without overwriting existing entries.
 - Custom word bank for user-defined vocabulary
-- Favorites for bookmarking translations and saving full conversation sessions
+- Favorites for bookmarking translations and saving full conversation sessions (20-record limit; sessions count as N records where N is the number of messages inside)
 - Word/share actions now fail fast on incomplete language payloads and show a retry hint instead of submitting malformed requests
 
 **Friend System:**
@@ -258,7 +258,7 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 197 test files, 2,585 unit tests (from the latest `testDebugUnitTest` report)
+- **Android:** 197 test files, 2,586 unit tests (from the latest `testDebugUnitTest` report)
 - **Backend:** 14 test files, 186 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.
@@ -332,4 +332,4 @@ cd fyp-backend/functions && npm test
 
 --------------------------------------------------------------
 
-**Last Updated:** April 12, 2026
+**Last Updated:** April 13, 2026

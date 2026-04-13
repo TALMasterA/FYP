@@ -92,6 +92,7 @@ class HistoryViewModelTest {
             onBlocking { getAllFavoritesOnce(testUserId) } doReturn emptyList()
             onBlocking { getAllFavoriteSessionsOnce(testUserId) } doReturn emptyList()
             onBlocking { getFavoriteCount(testUserId) } doReturn 0
+            onBlocking { getTotalFavoriteRecordCount(testUserId) } doReturn 0
         }
 
         historyRepo = mock()

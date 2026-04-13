@@ -82,4 +82,27 @@ class FavoriteLimitTest {
 
         assertTrue(wouldExceed) // 20 + 1 = 21 > 20
     }
+
+    @Test
+    fun `total count includes individual records plus session records`() {
+        // 3 individual records + 2 sessions with 5 and 7 records = 3 + 5 + 7 = 15
+        val individualCount = 3
+        val sessionRecordCounts = listOf(5, 7)
+        val totalCount = individualCount + sessionRecordCounts.sum()
+
+        assertEquals(15, totalCount)
+        assertTrue(totalCount < UserSettings.MAX_FAVORITE_RECORDS)
+    }
+
+    @Test
+    fun `session records push total over limit`() {
+        // 10 individual records + 1 session with 12 records = 22
+        val individualCount = 10
+        val sessionRecordCounts = listOf(12)
+        val totalCount = individualCount + sessionRecordCounts.sum()
+        val wouldExceedIfAddOne = (totalCount + 1) > UserSettings.MAX_FAVORITE_RECORDS
+
+        assertTrue(totalCount > UserSettings.MAX_FAVORITE_RECORDS)
+        assertTrue(wouldExceedIfAddOne)
+    }
 }

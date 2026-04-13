@@ -744,7 +744,6 @@ The following components cannot be unit tested due to Android framework dependen
 | `UiLanguageStateController.kt` | `@Composable` + SharedPreferences | Visual test on device |
 | `ConnectivityObserver.kt` | Android ConnectivityManager callbacks | Visual test on device |
 | `LocalAppLanguage.kt` | Compose `CompositionLocal` | Visual test on device |
-| `AudioRecorder.kt` | MediaRecorder hardware access | Manual recording test |
 | `HapticFeedback.kt` | Vibrator system service | Manual haptic test |
 | `FcmNotificationService.kt` dispatch | Firebase Messaging service | Push notification test |
 | Navigation graphs (e.g., `FriendsChatGraph.kt`) | Compose Navigation DSL | UI navigation test |
@@ -787,13 +786,15 @@ The following components cannot be unit tested due to Android framework dependen
 
 ## 37. Favorites Limit — Server-Side Count Enforcement
 
-**Invariant:** `UserSettings.MAX_FAVORITE_RECORDS` (20) must be enforced via Firestore count, not in-memory state.
+**Invariant:** `UserSettings.MAX_FAVORITE_RECORDS` (20) must be enforced via Firestore count, not in-memory state. Each individual record counts as 1; each favourite session counts as N where N is the number of records it contains.
 
 **Bug (fixed 2026-04-11):** The original `HistoryViewModel.toggleFavorite()` and `favouriteSession()` checked `_uiState.value.favoritedTexts.size` — an in-memory `Set` populated asynchronously by `loadFavoritedTexts()`. If the set hadn't loaded yet (race condition on first tap), the check always passed and unlimited favorites could be added.
 
-**Fix:** Both methods now call `favoritesRepo.getFavoriteCount(uid)` inside the existing Mutex-protected coroutine. Since the max is 20 documents, this is a trivial Firestore read. The in-memory `favoritedTexts` set is kept solely for UI bookmark icon display.
+**Fix (2026-04-11):** Both methods now call `favoritesRepo.getFavoriteCount(uid)` inside the existing Mutex-protected coroutine.
 
-**Rule:** Never use client-side collection size for hard limit enforcement. Always query the server count.
+**Bug (fixed 2026-04-13):** `getFavoriteCount()` only counted documents in the `favorites` collection (individual records) and ignored records embedded inside `favorite_sessions` documents. Users could bypass the 20-record limit by favouriting sessions.
+
+**Fix (2026-04-13):** Added `getTotalFavoriteRecordCount()` to `FirestoreFavoritesRepository` which sums individual records + session-embedded records. Both `toggleFavorite()` and `favouriteSession()` now use this method. The old `getFavoriteCount()` is retained for individual-count queries.
 
 ---
 

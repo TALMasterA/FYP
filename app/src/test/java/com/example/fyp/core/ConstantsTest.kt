@@ -66,11 +66,6 @@ class ConstantsTest {
         assertEquals(5000L, DataConstants.COUNT_REFRESH_DEBOUNCE_MS)
     }
 
-    @Test
-    fun `batch delete limit is within Firestore bounds`() {
-        assertTrue(DataConstants.BATCH_DELETE_LIMIT in 1..500)
-    }
-
     // ── GenerationConstants ─────────────────────────────────────────
 
     @Test

@@ -240,7 +240,7 @@ class HistoryViewModel @Inject constructor(
                         }
                 } else {
                     // Check limit before adding (server count to avoid stale in-memory race)
-                    val serverCount = favoritesRepo.getFavoriteCount(uid)
+                    val serverCount = favoritesRepo.getTotalFavoriteRecordCount(uid)
                     if (serverCount >= UserSettings.MAX_FAVORITE_RECORDS) {
                         _uiState.value = _uiState.value.copy(
                             addingFavoriteId = null,
@@ -300,7 +300,7 @@ class HistoryViewModel @Inject constructor(
             }
 
             // Check if adding this session's records would exceed the limit
-            val currentCount = favoritesRepo.getFavoriteCount(uid)
+            val currentCount = favoritesRepo.getTotalFavoriteRecordCount(uid)
             if (currentCount + sessionRecords.size > UserSettings.MAX_FAVORITE_RECORDS) {
                 _uiState.value = _uiState.value.copy(
                     favouritingSessionId = null,
