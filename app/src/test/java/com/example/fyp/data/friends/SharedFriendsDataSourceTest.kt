@@ -238,33 +238,6 @@ class SharedFriendsDataSourceTest {
         assertEquals("NewName", ds.getCachedUsername("user1"))
     }
 
-    // ── isFriend ────────────────────────────────────────────────────────────
-
-    @Test
-    fun `isFriend returns false when friends list empty`() {
-        assertFalse(ds.isFriend("someone"))
-    }
-
-    @Test
-    fun `isFriend returns true when friend exists`() {
-        getPrivateStateFlow<List<FriendRelation>>("_friends").value = listOf(
-            FriendRelation(friendId = "friend1", friendUsername = "Alice"),
-            FriendRelation(friendId = "friend2", friendUsername = "Bob")
-        )
-
-        assertTrue(ds.isFriend("friend1"))
-        assertTrue(ds.isFriend("friend2"))
-    }
-
-    @Test
-    fun `isFriend returns false when friend not in list`() {
-        getPrivateStateFlow<List<FriendRelation>>("_friends").value = listOf(
-            FriendRelation(friendId = "friend1", friendUsername = "Alice")
-        )
-
-        assertFalse(ds.isFriend("stranger"))
-    }
-
     // ── applyUsernameUpdates ────────────────────────────────────────────────
 
     @Test

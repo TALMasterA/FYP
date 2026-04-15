@@ -24,40 +24,6 @@ class StandardTextFieldsTest {
     }
 
     @Test
-    fun `StandardSearchField clear button shows only when non-empty`() {
-        // When value is empty, trailingIcon should be null
-        val value = ""
-        val showClear = value.isNotEmpty()
-        assertFalse(showClear)
-    }
-
-    @Test
-    fun `StandardSearchField clear button shows when has text`() {
-        val value = "search query"
-        val showClear = value.isNotEmpty()
-        assertTrue(showClear)
-    }
-
-    @Test
-    fun `StandardMultiLineTextField default min lines is 3`() {
-        val defaultMinLines = 3
-        assertEquals(3, defaultMinLines)
-    }
-
-    @Test
-    fun `StandardMultiLineTextField default max lines is 6`() {
-        val defaultMaxLines = 6
-        assertEquals(6, defaultMaxLines)
-    }
-
-    @Test
-    fun `StandardPasswordField starts with hidden password`() {
-        // Initial passwordVisible state should be false
-        val initialVisibility = false
-        assertFalse(initialVisibility)
-    }
-
-    @Test
     fun `icon size specification is 20dp`() {
         val expectedIconSizeDp = 20
         assertEquals(20, expectedIconSizeDp)

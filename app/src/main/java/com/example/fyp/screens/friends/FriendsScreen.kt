@@ -909,31 +909,3 @@ fun SearchResultCard(
         }
     }
 }
-
-/** A single row with a label and a Switch for notification toggles. */
-@Composable
-private fun NotifToggleRow(
-    label: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            // Minimum 48dp touch target per Material Design accessibility guidelines
-            .heightIn(min = 48.dp)
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f)
-        )
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange
-        )
-    }
-}

@@ -491,22 +491,3 @@ fun buildUiTextMap(translatedJoined: String, uiLanguageCode: String?): Map<UiTex
 fun baseUiTextsHash(): Int {
     return BaseUiTexts.joinToString(separator = "\u0001").hashCode()
 }
-
-/**
- * Helper: Get a single UI text by key with fallback
- */
-fun getUiText(key: UiTextKey): String {
-    return BaseUiTexts.getOrNull(key.ordinal).orEmpty()
-}
-
-/**
- * Helper: Replace template variables in UI text
- * Example: "Scale: {pct}%" -> "Scale: 125%"
- */
-fun String.replaceTemplateTokens(vararg replacements: Pair<String, String>): String {
-    var result = this
-    replacements.forEach { (token, value) ->
-        result = result.replace("{$token}", value)
-    }
-    return result
-}

@@ -99,19 +99,6 @@ class SeenItemsStorageTest {
     }
 
     @Test
-    fun `addSeenItemIds merges new IDs with existing ones`() {
-        val userId = "user123"
-        val existingCsv = "item1,item2"
-        `when`(mockPrefs.getString("seen_shared_items_user123", null)).thenReturn(existingCsv)
-
-        val newIds = setOf("item3", "item4")
-        SeenItemsStorage.addSeenItemIds(mockContext, userId, newIds)
-
-        verify(mockEditor).putString(eq("seen_shared_items_user123"), anyString())
-        verify(mockEditor).apply()
-    }
-
-    @Test
     fun `clearSeenItemIds removes stored data for user`() {
         val userId = "user123"
 
@@ -191,19 +178,6 @@ class SeenItemsStorageTest {
         val seenIds = setOf("reqA", "reqB")
 
         SeenItemsStorage.saveSeenFriendRequestIds(mockContext, userId, seenIds)
-
-        verify(mockEditor).putString(eq("seen_friend_requests_user123"), anyString())
-        verify(mockEditor).apply()
-    }
-
-    @Test
-    fun `addSeenFriendRequestIds merges new IDs with existing ones`() {
-        val userId = "user123"
-        val existingCsv = "req1,req2"
-        `when`(mockPrefs.getString("seen_friend_requests_user123", null)).thenReturn(existingCsv)
-
-        val newIds = setOf("req3", "req4")
-        SeenItemsStorage.addSeenFriendRequestIds(mockContext, userId, newIds)
 
         verify(mockEditor).putString(eq("seen_friend_requests_user123"), anyString())
         verify(mockEditor).apply()

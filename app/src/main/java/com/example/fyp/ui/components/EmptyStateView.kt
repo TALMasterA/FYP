@@ -110,40 +110,6 @@ object EmptyStates {
     }
 
     @Composable
-    fun NoFriends(
-        message: String = "Add friends to connect and share learning materials.",
-        modifier: Modifier = Modifier,
-        actionLabel: String? = "Add Friends",
-        onActionClick: (() -> Unit)? = null
-    ) {
-        EmptyStateView(
-            icon = Icons.Filled.People,
-            title = "No Friends Yet",
-            message = message,
-            modifier = modifier,
-            actionLabel = actionLabel,
-            onActionClick = onActionClick
-        )
-    }
-
-    @Composable
-    fun NoWords(
-        message: String,
-        modifier: Modifier = Modifier,
-        actionLabel: String? = null,
-        onActionClick: (() -> Unit)? = null
-    ) {
-        EmptyStateView(
-            icon = Icons.AutoMirrored.Filled.LibraryBooks,
-            title = "No Words Yet",
-            message = message,
-            modifier = modifier,
-            actionLabel = actionLabel,
-            onActionClick = onActionClick
-        )
-    }
-
-    @Composable
     fun NoLearningSheets(
         message: String,
         modifier: Modifier = Modifier,

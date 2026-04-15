@@ -33,8 +33,7 @@ class AuditLoggerTest {
             "BLOCK_USER",
             "UNBLOCK_USER",
             "SEND_MESSAGE",
-            "DELETE_CHAT",
-            "PERMISSION_DENIED"
+            "DELETE_CHAT"
         )
 
         val actualEvents = AuditLogger.EventType.entries.map { it.name }
@@ -42,8 +41,8 @@ class AuditLoggerTest {
     }
 
     @Test
-    fun `EventType has 18 entries`() {
-        assertEquals(18, AuditLogger.EventType.entries.size)
+    fun `EventType has 17 entries`() {
+        assertEquals(17, AuditLogger.EventType.entries.size)
     }
 
     @Test
@@ -75,7 +74,6 @@ class AuditLoggerTest {
     @Test
     fun `EventType security events exist`() {
         assertNotNull(AuditLogger.EventType.valueOf("SUSPICIOUS_ACTIVITY"))
-        assertNotNull(AuditLogger.EventType.valueOf("PERMISSION_DENIED"))
         assertNotNull(AuditLogger.EventType.valueOf("FRIEND_REQUEST_BLOCKED"))
     }
 

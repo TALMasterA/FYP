@@ -86,7 +86,7 @@ class TranslationConsistencyTest {
 
     @Test
     fun `HelpAppVersionNotes English text mentions correct history limit range`() {
-        val text = getUiText(UiTextKey.HelpAppVersionNotes)
+        val text = BaseUiTexts.getOrNull(UiTextKey.HelpAppVersionNotes.ordinal).orEmpty()
         val base = UserSettings.BASE_HISTORY_LIMIT
         val max = UserSettings.MAX_HISTORY_LIMIT
 
@@ -124,7 +124,7 @@ class TranslationConsistencyTest {
 
     @Test
     fun `English ShopBuyHistoryExpansion uses placeholder tokens`() {
-        val text = getUiText(UiTextKey.ShopBuyHistoryExpansion)
+        val text = BaseUiTexts.getOrNull(UiTextKey.ShopBuyHistoryExpansion.ordinal).orEmpty()
         assertTrue(
             "English ShopBuyHistoryExpansion should contain {increment}",
             text.contains("{increment}")
@@ -267,7 +267,7 @@ class TranslationConsistencyTest {
             zhTwText.contains("6")
         )
 
-        val enText = getUiText(UiTextKey.AuthRegisterRules)
+        val enText = BaseUiTexts.getOrNull(UiTextKey.AuthRegisterRules.ordinal).orEmpty()
         assertTrue(
             "English register rules should mention '6' for password length",
             enText.contains("6")

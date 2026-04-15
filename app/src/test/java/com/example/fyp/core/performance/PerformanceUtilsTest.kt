@@ -165,23 +165,4 @@ class PerformanceUtilsTest {
         val result = batcher.flush()
         assertTrue(result.isEmpty())
     }
-
-    @Test
-    fun `batcher - pendingCount tracks items`() = runBlocking {
-        val batcher = OperationBatcher<Int, Int>(batchSize = 5) { it }
-        assertEquals(0, batcher.pendingCount())
-        batcher.submit(1)
-        batcher.submit(2)
-        assertEquals(2, batcher.pendingCount())
-        batcher.flush()
-        assertEquals(0, batcher.pendingCount())
-    }
-
-    @Test
-    fun `batcher - batch clears pending after auto-flush`() = runBlocking {
-        val batcher = OperationBatcher<Int, Int>(batchSize = 2) { it }
-        batcher.submit(1)
-        batcher.submit(2) // triggers auto-flush
-        assertEquals(0, batcher.pendingCount())
-    }
 }

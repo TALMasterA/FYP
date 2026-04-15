@@ -60,15 +60,6 @@ object SeenItemsStorage {
     }
 
     /**
-     * Mark additional shared inbox item IDs as seen.
-     */
-    fun addSeenItemIds(context: Context, userId: String, newSeenIds: Set<String>) {
-        val existing = loadSeenItemIds(context, userId)
-        val updated = existing + newSeenIds
-        saveSeenItemIds(context, userId, updated)
-    }
-
-    /**
      * Clear all seen shared inbox item IDs for a user.
      */
     fun clearSeenItemIds(context: Context, userId: String) {
@@ -95,15 +86,6 @@ object SeenItemsStorage {
         val key = KEY_PREFIX_SEEN_REQUESTS + userId
         val csv = seenIds.joinToString(",")
         getPrefs(context).edit().putString(key, csv).apply()
-    }
-
-    /**
-     * Mark additional friend request IDs as seen.
-     */
-    fun addSeenFriendRequestIds(context: Context, userId: String, newSeenIds: Set<String>) {
-        val existing = loadSeenFriendRequestIds(context, userId)
-        val updated = existing + newSeenIds
-        saveSeenFriendRequestIds(context, userId, updated)
     }
 
     /**

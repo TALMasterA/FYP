@@ -4,7 +4,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 /**
- * Unit tests for UiTextHelpers – buildUiTextMap, baseUiTextsHash, getUiText, replaceTemplateTokens.
+ * Unit tests for UiTextHelpers – buildUiTextMap, baseUiTextsHash.
  *
  * Tests:
  *  1. buildUiTextMap with matching part count returns all entries
@@ -16,10 +16,7 @@ import org.junit.Test
  *  7. Language name override skipped for en-US
  *  8. Language name override skipped when locale not in LanguageNameTranslations
  *  9. baseUiTextsHash returns consistent value
- * 10. getUiText returns correct fallback
- * 11. replaceTemplateTokens replaces multiple tokens
- * 12. replaceTemplateTokens returns original when no matching tokens
- * 13. BaseUiTexts size matches UiTextKey entries count
+ * 10. BaseUiTexts size matches UiTextKey entries count
  */
 class UiTextHelpersTest {
 
@@ -163,33 +160,6 @@ class UiTextHelpersTest {
         val hash1 = baseUiTextsHash()
         val hash2 = baseUiTextsHash()
         assertEquals(hash1, hash2)
-    }
-
-    // ── getUiText ──
-
-    @Test
-    fun `getUiText returns correct BaseUiTexts value`() {
-        val key = UiTextKey.AzureRecognizeButton
-        val expected = BaseUiTexts.getOrNull(key.ordinal).orEmpty()
-        assertEquals(expected, getUiText(key))
-    }
-
-    // ── replaceTemplateTokens ──
-
-    @Test
-    fun `replaceTemplateTokens replaces multiple tokens`() {
-        val result = "Page {page} of {total}".replaceTemplateTokens(
-            "page" to "3",
-            "total" to "10"
-        )
-        assertEquals("Page 3 of 10", result)
-    }
-
-    @Test
-    fun `replaceTemplateTokens returns original when no matching tokens`() {
-        val text = "No tokens here"
-        val result = text.replaceTemplateTokens("page" to "1")
-        assertEquals("No tokens here", result)
     }
 
     // ── BaseUiTexts consistency ──

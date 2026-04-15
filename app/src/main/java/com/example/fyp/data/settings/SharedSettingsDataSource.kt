@@ -70,14 +70,6 @@ class SharedSettingsDataSource @Inject constructor(
     }
 
     /**
-     * Fetch settings once without starting a listener.
-     * Useful for screens that don't need real-time updates.
-     */
-    suspend fun fetchOnce(userId: String): UserSettings {
-        return settingsRepo.fetchUserSettings(UserId(userId))
-    }
-
-    /**
      * Stop observing settings (call when user logs out).
      */
     fun stopObserving() {

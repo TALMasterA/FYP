@@ -373,16 +373,6 @@ class FirestoreChatRepository @Inject constructor(
 
     // ── Observe messages ─────────────────────────────────────────────────────
 
-    /**
-     * Validate that the given user is a participant in the chat.
-     * The chatId format is "userId1_userId2" (sorted alphabetically).
-     * FIX 2.8: Prevents unauthorized users from reading chat messages.
-     */
-    private fun isParticipant(chatId: String, userId: String): Boolean {
-        val parts = chatId.split("_", limit = 2)
-        return parts.size == 2 && (parts[0] == userId || parts[1] == userId)
-    }
-
     override fun observeMessages(chatId: String, limit: Long): Flow<List<FriendMessage>> = callbackFlow {
         val listener = db.collection("chats")
             .document(chatId)

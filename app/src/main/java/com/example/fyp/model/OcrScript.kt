@@ -29,19 +29,5 @@ enum class OcrScript(
         displayName = "Korean",
         estimatedSizeMb = 8,
         languagePrefixes = listOf("ko")
-    );
-
-    companion object {
-        /**
-         * Determines the appropriate OCR script for a given language code.
-         * Falls back to LATIN for unknown/unsupported languages.
-         */
-        fun fromLanguageCode(code: String?): OcrScript {
-            if (code.isNullOrBlank()) return LATIN
-            val prefix = code.lowercase().take(2)
-            return entries.find { script ->
-                script.languagePrefixes.any { it == prefix }
-            } ?: LATIN
-        }
-    }
+    )
 }

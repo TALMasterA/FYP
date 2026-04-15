@@ -23,18 +23,4 @@ object ContentCleaner {
         }
     }
 
-    /**
-     * Extract only the quiz section from content
-     */
-    fun extractQuizSection(content: String): String {
-        val quizStart = findQuizStart(content)
-        return if (quizStart >= 0) {
-            // Find the end of the "QUIZ SECTION" line
-            val lineEnd = content.indexOf('\n', quizStart)
-            val actualStart = if (lineEnd != -1) lineEnd + 1 else quizStart
-            content.substring(actualStart).trim()
-        } else {
-            ""
-        }
-    }
 }

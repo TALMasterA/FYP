@@ -25,50 +25,7 @@ class FirestoreCustomWordsRepository @Inject constructor(
     private fun colRef(uid: String) =
         db.collection("users").document(uid).collection("custom_words")
 
-    /**
-     * Observe custom words for a specific language pair
-     */
-    fun observeCustomWords(
-        userId: String,
-        sourceLang: String,
-        targetLang: String
-    ): Flow<List<CustomWord>> = callbackFlow {
-        val reg = colRef(userId)
-            .whereEqualTo("sourceLang", sourceLang)
-            .whereEqualTo("targetLang", targetLang)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .limit(QUERY_LIMIT)
-            .addSnapshotListener { snap, err ->
-                if (err != null) {
-                    close(err)
-                    return@addSnapshotListener
-                }
-                val words = snap?.toObjects(CustomWord::class.java) ?: emptyList()
-                trySend(words)
-            }
-        awaitClose { reg.remove() }
-    }
-
-    /**
-     * Observe all custom words
-     */
-    fun observeAllCustomWords(userId: String): Flow<List<CustomWord>> = callbackFlow {
-        val reg = colRef(userId)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .limit(QUERY_LIMIT)
-            .addSnapshotListener { snap, err ->
-                if (err != null) {
-                    close(err)
-                    return@addSnapshotListener
-                }
-                val words = snap?.toObjects(CustomWord::class.java) ?: emptyList()
-                trySend(words)
-            }
-        awaitClose { reg.remove() }
-    }
-
-    /**
-     * Add a custom word with input validation
+    /**\n     * Add a custom word with input validation
      */
     suspend fun addCustomWord(
         userId: String,

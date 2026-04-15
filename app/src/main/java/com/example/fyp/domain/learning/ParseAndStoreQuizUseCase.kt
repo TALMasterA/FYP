@@ -21,13 +21,6 @@ class ParseAndStoreQuizUseCase @Inject constructor(
 ) {
 
     /**
-     * Parse questions from AI-generated learning content
-     */
-    suspend fun parseQuestionsFromContent(content: String): List<QuizQuestion> {
-        return QuizParser.parseQuizFromContent(content)
-    }
-
-    /**
      * Create a quiz attempt from parsed questions
      */
     fun createAttempt(
@@ -107,21 +100,6 @@ class ParseAndStoreQuizUseCase @Inject constructor(
      */
     suspend fun saveAttempt(uid: String, attempt: QuizAttempt): String {
         return quizRepository.saveAttempt(UserId(uid), attempt)
-    }
-
-    /**
-     * Get attempt history for a language pair
-     */
-    suspend fun getAttemptHistory(
-        uid: String,
-        primaryLanguageCode: String,
-        targetLanguageCode: String
-    ): List<QuizAttempt> {
-        return quizRepository.getAttemptsByLanguagePair(
-            UserId(uid),
-            LanguageCode(primaryLanguageCode),
-            LanguageCode(targetLanguageCode)
-        )
     }
 
     /**

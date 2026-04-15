@@ -198,11 +198,6 @@ class WordBankViewModel @Inject constructor(
     }
 
     /**
-     * Get primary language code for display
-     */
-    fun getPrimaryLanguageCode(): String = primaryLanguageCode
-
-    /**
      * Delete a word from the generated word bank
      */
     fun deleteWordFromBank(wordId: String, targetLanguageCode: String) {
@@ -483,15 +478,6 @@ class WordBankViewModel @Inject constructor(
      */
     fun getCurrentHistoryCount(targetLanguageCode: String): Int {
         return sharedHistoryDataSource.getCountForLanguage(targetLanguageCode)
-    }
-
-    /**
-     * Get precise record count for a specific language pair (primary → target).
-     * More accurate than [getCurrentHistoryCount] which counts any record matching
-     * the target language regardless of the source language.
-     */
-    fun getPairSpecificHistoryCount(targetLanguageCode: String): Int {
-        return sharedHistoryDataSource.getCountForLanguagePair(primaryLanguageCode, targetLanguageCode)
     }
 
     fun cancelGeneration() {

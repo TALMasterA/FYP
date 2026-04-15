@@ -2,20 +2,8 @@ package com.example.fyp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Light Theme Colors - Modern, vibrant palette for language learning
-val Primary = Color(0xFF2196F3) // Bright Blue - Primary actions
-val PrimaryVariant = Color(0xFF1976D2) // Darker Blue
-val Secondary = Color(0xFF00BCD4) // Cyan - Secondary actions
-val SecondaryVariant = Color(0xFF0097A7) // Darker Cyan
-
-val Tertiary = Color(0xFF9C27B0) // Purple - Accents
-val TertiaryVariant = Color(0xFF7B1FA2)
-
 // Semantic Colors
-val Success = Color(0xFF4CAF50) // Green - Correct answers, success states
-val Warning = Color(0xFFFF9800) // Orange - Warnings
 val Error = Color(0xFFF44336) // Red - Errors, wrong answers
-val Info = Color(0xFF2196F3) // Blue - Information
 
 // Background Colors
 val BackgroundLight = Color(0xFFF5F7FA) // Soft gray-blue

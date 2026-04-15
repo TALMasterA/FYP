@@ -382,13 +382,6 @@ class SharedFriendsDataSource @Inject constructor(
     }
 
     /**
-     * Returns true if [friendId] is in the current friends list.
-     * O(n) but the friends list is small and already in memory — avoids a Firestore read.
-     */
-    fun isFriend(friendId: String): Boolean =
-        _friends.value.any { it.friendId == friendId }
-
-    /**
      * Update in-memory friend display names from a freshly-fetched username map.
      * Called after syncFriendUsernames() returns so the UI shows the latest names
      * without waiting for the real-time listener to pick up the Firestore write.

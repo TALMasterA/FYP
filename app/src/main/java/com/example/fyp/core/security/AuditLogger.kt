@@ -33,8 +33,7 @@ object AuditLogger {
         BLOCK_USER,
         UNBLOCK_USER,
         SEND_MESSAGE,
-        DELETE_CHAT,
-        PERMISSION_DENIED
+        DELETE_CHAT
     }
 
     /**
@@ -153,11 +152,6 @@ object AuditLogger {
     /** Logs a user being unblocked. */
     fun logUserUnblocked(userId: String, unblockedId: String) {
         log(EventType.UNBLOCK_USER, userId = userId, details = "unblocked=$unblockedId")
-    }
-
-    /** Logs a permission denied event. */
-    fun logPermissionDenied(userId: String? = null, action: String) {
-        log(EventType.PERMISSION_DENIED, userId = userId, details = "action=$action")
     }
 
     /**

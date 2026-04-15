@@ -48,13 +48,6 @@ class UiLanguageCacheStore(private val context: Context) {
         context.uiLangDataStore.edit { it[keyGuestTranslationUsed] = true }
     }
 
-    /**
-     * Reset guest translation usage (called when user logs in, so they can use cached translations).
-     */
-    suspend fun resetGuestTranslationUsed() {
-        context.uiLangDataStore.edit { it.remove(keyGuestTranslationUsed) }
-    }
-
     suspend fun getBaseHash(code: String): Int? {
         val prefs = context.uiLangDataStore.data.first()
         return prefs[keyHashForLang(code)]
@@ -82,7 +75,4 @@ class UiLanguageCacheStore(private val context: Context) {
         }
     }
 
-    suspend fun clearUiTexts(code: String) {
-        context.uiLangDataStore.edit { it.remove(keyForLang(code)) }
-    }
 }

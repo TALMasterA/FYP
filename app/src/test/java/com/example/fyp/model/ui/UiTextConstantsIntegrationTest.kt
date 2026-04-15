@@ -109,7 +109,7 @@ class UiTextConstantsIntegrationTest {
     @Test
     fun `ShopBuyHistoryExpansion does not hardcode wrong numbers in any language`() {
         // English must use {increment} and {cost} placeholders
-        val enText = getUiText(UiTextKey.ShopBuyHistoryExpansion)
+        val enText = BaseUiTexts.getOrNull(UiTextKey.ShopBuyHistoryExpansion.ordinal).orEmpty()
         assertTrue("English must use {increment}", enText.contains("{increment}"))
         assertTrue("English must use {cost}", enText.contains("{cost}"))
 

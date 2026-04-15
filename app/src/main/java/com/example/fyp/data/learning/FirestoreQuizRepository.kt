@@ -54,11 +54,6 @@ class FirestoreQuizRepository @Inject constructor(
             .collection("user_stats")
             .document("coins")
 
-    private fun coinAwardDoc(uid: String, versionKey: String) =
-        db.collection("users").document(uid)
-            .collection("coin_awards")
-            .document(versionKey)
-
     override suspend fun saveAttempt(uid: UserId, attempt: QuizAttempt): String {
         val attemptId = attempt.id.ifEmpty { db.collection("dummy").document().id }
 

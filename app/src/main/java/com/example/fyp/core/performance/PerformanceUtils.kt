@@ -58,18 +58,6 @@ fun ThrottledLaunchedEffect(
 }
 
 /**
- * Memoized computation result that only recalculates when dependencies change.
- * Prevents expensive recalculations on every recomposition.
- *
- * @param calculation The expensive calculation to memoize
- * @return The memoized result
- */
-@Composable
-fun <T> rememberMemoized(calculation: () -> T): T {
-    return remember(calculation)
-}
-
-/**
  * Memoized computation with a single dependency.
  */
 @Composable
@@ -140,8 +128,6 @@ class OperationBatcher<T, R>(
         return if (batch.isEmpty()) emptyList() else processor(batch)
     }
 
-    /** Number of items waiting to be processed. */
-    suspend fun pendingCount(): Int = mutex.withLock { pending.size }
 }
 
 /**

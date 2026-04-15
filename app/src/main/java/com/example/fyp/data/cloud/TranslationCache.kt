@@ -164,22 +164,6 @@ class TranslationCache @Inject constructor(
     }
 
     /**
-     * Get cache statistics
-     */
-    suspend fun getStats(): CacheStats {
-        val cacheData = loadCache()
-        val now = System.currentTimeMillis()
-        val validEntries = cacheData.entries.values.filter {
-            now - it.timestamp <= CACHE_TTL_MS
-        }
-        return CacheStats(
-            totalEntries = cacheData.entries.size,
-            validEntries = validEntries.size,
-            expiredEntries = cacheData.entries.size - validEntries.size
-        )
-    }
-
-    /**
      * Batch get cached translations.
      * Returns a map of text -> translation for found entries, and list of texts not in cache.
      */

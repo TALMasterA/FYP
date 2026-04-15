@@ -30,24 +30,6 @@ class FirestoreFavoritesRepository @Inject constructor(
         db.collection("users").document(uid).collection("favorite_sessions")
 
     /**
-     * Observe all favorites in real-time
-     */
-    fun observeFavorites(userId: String): Flow<List<FavoriteRecord>> = callbackFlow {
-        val reg = colRef(userId)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .limit(QUERY_LIMIT)
-            .addSnapshotListener { snap, err ->
-                if (err != null) {
-                    close(err)
-                    return@addSnapshotListener
-                }
-                val favorites = snap?.toObjects(FavoriteRecord::class.java) ?: emptyList()
-                trySend(favorites)
-            }
-        awaitClose { reg.remove() }
-    }
-
-    /**
      * Add a translation to favorites
      */
     suspend fun addFavorite(
@@ -142,17 +124,6 @@ class FirestoreFavoritesRepository @Inject constructor(
         snapshot.toObjects(FavoriteRecord::class.java)
     } catch (e: Exception) {
         emptyList()
-    }
-
-    /**
-     * Get the total number of favorite records for a user.
-     * Counts individual records only (ignores session records).
-     */
-    suspend fun getFavoriteCount(userId: String): Int = try {
-        val snapshot = colRef(userId).get().await()
-        snapshot.size()
-    } catch (e: Exception) {
-        0
     }
 
     /**

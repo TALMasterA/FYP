@@ -27,8 +27,7 @@ import org.mockito.kotlin.*
  * 8. completeAttempt with no answers gives 0% score
  * 9. completeAttempt with all correct gives 100%
  * 10. saveAttempt delegates to repository
- * 11. getAttemptHistory delegates to repository
- * 12. getRecentAttempts delegates to repository
+ * 11. getRecentAttempts delegates to repository
  */
 class ParseAndStoreQuizUseCaseTest {
 
@@ -209,22 +208,6 @@ class ParseAndStoreQuizUseCaseTest {
 
         assertEquals("attempt123", result)
         verify(quizRepository).saveAttempt(UserId("u1"), attempt)
-    }
-
-    // ── getAttemptHistory delegates ─────────────────────────────────
-
-    @Test
-    fun `getAttemptHistory delegates to repository`() = runTest {
-        val uid = UserId("u1")
-        val primary = LanguageCode("en-US")
-        val target = LanguageCode("ja-JP")
-        whenever(quizRepository.getAttemptsByLanguagePair(uid, primary, target))
-            .thenReturn(emptyList())
-
-        val result = useCase.getAttemptHistory("u1", "en-US", "ja-JP")
-
-        assertTrue(result.isEmpty())
-        verify(quizRepository).getAttemptsByLanguagePair(uid, primary, target)
     }
 
     // ── getRecentAttempts delegates ──────────────────────────────────

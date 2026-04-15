@@ -324,10 +324,6 @@ class CustomWordsViewModel @Inject constructor(
         settingsJob?.cancel()
     }
 
-    private fun parseSourceLang(category: String): String {
-        return parseLanguagePair(category).first
-    }
-
     private fun parseLanguagePair(category: String): Pair<String, String> {
         val normalized = category.trim()
         if (normalized.isBlank()) return "" to ""

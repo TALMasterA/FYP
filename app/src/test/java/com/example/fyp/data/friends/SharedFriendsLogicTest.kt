@@ -289,34 +289,6 @@ class SharedFriendsLogicTest {
         assertTrue(cleaned.isEmpty())
     }
 
-    // ── isFriend membership check ────────────────────────────────────────────
-
-    private fun isFriend(friends: List<FriendRelation>, friendId: String): Boolean {
-        return friends.any { it.friendId == friendId }
-    }
-
-    @Test
-    fun `isFriend - returns true when friend exists`() {
-        val friends = listOf(
-            FriendRelation(friendId = "user1", friendUsername = "Alice"),
-            FriendRelation(friendId = "user2", friendUsername = "Bob")
-        )
-        assertTrue(isFriend(friends, "user1"))
-    }
-
-    @Test
-    fun `isFriend - returns false when friend not in list`() {
-        val friends = listOf(
-            FriendRelation(friendId = "user1", friendUsername = "Alice")
-        )
-        assertFalse(isFriend(friends, "user999"))
-    }
-
-    @Test
-    fun `isFriend - returns false for empty list`() {
-        assertFalse(isFriend(emptyList(), "user1"))
-    }
-
     // ── applyUsernameUpdates ─────────────────────────────────────────────────
 
     /**

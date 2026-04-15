@@ -242,10 +242,6 @@ class ProfileViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(error = null)
     }
 
-    fun clearDeleteError() {
-        _uiState.value = _uiState.value.copy(deleteError = null)
-    }
-
     fun clearSuccessMessage() {
         _uiState.value = _uiState.value.copy(successMessage = null)
     }
