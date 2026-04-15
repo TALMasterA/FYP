@@ -127,21 +127,6 @@ object EmptyStates {
     }
 
     @Composable
-    fun NoRecords(
-        title: String,
-        message: String,
-        icon: ImageVector = Icons.Filled.Info,
-        modifier: Modifier = Modifier
-    ) {
-        EmptyStateView(
-            icon = icon,
-            title = title,
-            message = message,
-            modifier = modifier
-        )
-    }
-
-    @Composable
     fun NoSharedItems(
         t: (UiTextKey) -> String,
         message: String = "No items shared with you yet",

@@ -267,21 +267,6 @@ class HistoryViewModelTest {
     // ── Record favourite ──
 
     @Test
-    fun `isRecordFavorited checks text key`() = runTest {
-        favoritesRepo.stub {
-            onBlocking { getAllFavoritesOnce(testUserId) } doReturn listOf(
-                FavoriteRecord(sourceText = "Hi", targetText = "Hola")
-            )
-        }
-
-        val vm = buildViewModel()
-        authStateFlow.value = AuthState.LoggedIn(testUser)
-
-        assertTrue(vm.isRecordFavorited(TranslationRecord(sourceText = "Hi", targetText = "Hola")))
-        assertFalse(vm.isRecordFavorited(TranslationRecord(sourceText = "Bye", targetText = "Adiós")))
-    }
-
-    @Test
     fun `toggleFavorite adds when not favorited`() = runTest {
         favoritesRepo.stub {
             onBlocking { getFavoriteId(testUserId, "Hello", "Hola") } doReturn null

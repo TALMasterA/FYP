@@ -136,7 +136,4 @@ class MyProfileViewModel @Inject constructor(
         _uiState.update { it.copy(error = null) }
     }
 
-    fun refreshProfile() {
-        currentUserId?.let { loadProfile(it) }
-    }
 }

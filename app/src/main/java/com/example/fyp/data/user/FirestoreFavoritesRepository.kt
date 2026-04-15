@@ -69,11 +69,9 @@ class FirestoreFavoritesRepository @Inject constructor(
 
     /**
      * Find a favorite by source and target text.
-     * Consolidates the duplicate query logic from isFavorited() and getFavoriteId().
-     * Single method reduces Firestore reads when any of these operations is needed.
+     * Single method reduces Firestore reads.
      *
      * Callers can derive what they need:
-     * - isFavorited: findFavorite(...) != null
      * - favoriteId: findFavorite(...)?.id
      */
     suspend fun findFavorite(
@@ -91,16 +89,6 @@ class FirestoreFavoritesRepository @Inject constructor(
     } catch (e: Exception) {
         null
     }
-
-    /**
-     * Check if a translation is already favorited.
-     * Delegates to findFavorite() to avoid duplicate queries.
-     */
-    suspend fun isFavorited(
-        userId: String,
-        sourceText: String,
-        targetText: String
-    ): Boolean = findFavorite(userId, sourceText, targetText) != null
 
     /**
      * Get favorite ID by source and target text (for deletion).

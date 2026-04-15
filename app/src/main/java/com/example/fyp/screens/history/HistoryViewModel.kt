@@ -369,14 +369,6 @@ class HistoryViewModel @Inject constructor(
     }
 
     /**
-     * Check if a record is already favorited (by text content)
-     */
-    fun isRecordFavorited(record: TranslationRecord): Boolean {
-        val recordKey = "${record.sourceText}|${record.targetText}"
-        return _uiState.value.favoritedTexts.contains(recordKey)
-    }
-
-    /**
      * Load all favorited texts to check against history records
      */
     private fun loadFavoritedTexts(userId: String) {

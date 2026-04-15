@@ -805,9 +805,6 @@ class FriendsViewModel @Inject constructor(
         }
     }
 
-    fun isUserBlocked(targetUserId: String): Boolean =
-        _uiState.value.blockedUserIds.contains(targetUserId)
-
     /**
      * Manually refresh friends list by restarting the shared data source.
      * This helps ensure the latest state after operations like removing friends.

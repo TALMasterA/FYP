@@ -267,27 +267,4 @@ class MyProfileViewModelTest {
         assertNull(vm.uiState.value.error)
     }
 
-    // ── Test 11: refreshProfile reloads ──
-
-    @Test
-    fun `refreshProfile reloads with current user`() = runTest {
-        whenever(getCurrentUserProfile.invoke(UserId(testUserId))).thenReturn(testProfile)
-
-        val vm = buildViewModel()
-        authStateFlow.value = AuthState.LoggedIn(testUser)
-
-        vm.refreshProfile()
-
-        // Called twice: once on login, once on refresh
-        verify(getCurrentUserProfile, times(2)).invoke(UserId(testUserId))
-    }
-
-    @Test
-    fun `refreshProfile before login does nothing`() = runTest {
-        val vm = buildViewModel()
-
-        vm.refreshProfile()
-
-        verifyNoInteractions(getCurrentUserProfile)
-    }
 }

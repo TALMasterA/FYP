@@ -51,13 +51,9 @@ import org.mockito.kotlin.*
  *  9. updateFontSizeScale failure sets errorRaw
  * 10. updateThemeMode scheduled enables auto theme
  * 11. updateThemeMode system disables auto theme first
- * 12. updateColorPalette success updates settings
- * 13. unlockPaletteWithCoins success adds to unlockedPalettes
- * 14. unlockPaletteWithCoins insufficient coins sets unlockError
- * 15. clearError clears both errorKey and errorRaw
- * 16. clearUnlockError clears unlockError
- * 17. updateNotificationPref success updates correct field
- * 18. updateNotificationPref caches preference to SharedPreferences for FCM
+ * 12. clearError clears both errorKey and errorRaw
+ * 13. updateNotificationPref success updates correct field
+ * 14. updateNotificationPref caches preference to SharedPreferences for FCM
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
@@ -289,47 +285,7 @@ class SettingsViewModelTest {
         assertNull(vm.uiState.value.errorRaw)
     }
 
-    // ── updateColorPalette ──
-
-    @Test
-    fun `updateColorPalette success updates settings`() = runTest {
-        val vm = buildViewModel()
-        vm.updateColorPalette("sunset")
-
-        assertEquals("sunset", vm.uiState.value.settings.colorPaletteId)
-    }
-
-    // ── unlockPaletteWithCoins ──
-
-    @Test
-    fun `unlockPaletteWithCoins success adds palette to unlockedPalettes`() = runTest {
-        unlockColorPaletteWithCoins.stub {
-            onBlocking { invoke(UserId(testUserId), PaletteId("ocean"), 50) } doReturn
-                UnlockColorPaletteWithCoinsUseCase.Result.Success
-        }
-
-        val vm = buildViewModel()
-        vm.unlockPaletteWithCoins("ocean", 50)
-
-        assertTrue(vm.uiState.value.settings.unlockedPalettes.contains("ocean"))
-        assertNull(vm.uiState.value.unlockingPaletteId)
-    }
-
-    @Test
-    fun `unlockPaletteWithCoins insufficient coins sets unlockError`() = runTest {
-        unlockColorPaletteWithCoins.stub {
-            onBlocking { invoke(UserId(testUserId), PaletteId("ocean"), 50) } doReturn
-                UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins
-        }
-
-        val vm = buildViewModel()
-        vm.unlockPaletteWithCoins("ocean", 50)
-
-        assertEquals("Insufficient coins", vm.uiState.value.unlockError)
-        assertNull(vm.uiState.value.unlockingPaletteId)
-    }
-
-    // ── clearError / clearUnlockError ──
+    // ── clearError ──
 
     @Test
     fun `clearError clears both errorKey and errorRaw`() = runTest {
@@ -343,22 +299,6 @@ class SettingsViewModelTest {
 
         assertNull(vm.uiState.value.errorKey)
         assertNull(vm.uiState.value.errorRaw)
-    }
-
-    @Test
-    fun `clearUnlockError clears unlockError`() = runTest {
-        unlockColorPaletteWithCoins.stub {
-            onBlocking { invoke(UserId(testUserId), PaletteId("ocean"), 50) } doReturn
-                UnlockColorPaletteWithCoinsUseCase.Result.InsufficientCoins
-        }
-
-        val vm = buildViewModel()
-        vm.unlockPaletteWithCoins("ocean", 50)
-        assertNotNull(vm.uiState.value.unlockError)
-
-        vm.clearUnlockError()
-
-        assertNull(vm.uiState.value.unlockError)
     }
 
     // ── updateNotificationPref ──
@@ -540,60 +480,4 @@ class SettingsViewModelTest {
         assertTrue(vm.uiState.value.errorRaw!!.contains("voice"))
     }
 
-    // ── updateAutoThemeEnabled ──
-
-    @Test
-    fun `updateAutoThemeEnabled success enables auto theme`() = runTest {
-        setAutoThemeEnabled.stub {
-            onBlocking { invoke(UserId(testUserId), true) } doReturn Unit
-        }
-
-        val vm = buildViewModel()
-        vm.updateAutoThemeEnabled(true)
-
-        verify(setAutoThemeEnabled).invoke(UserId(testUserId), true)
-        assertTrue(vm.uiState.value.settings.autoThemeEnabled)
-        assertNull(vm.uiState.value.errorRaw)
-    }
-
-    @Test
-    fun `updateAutoThemeEnabled success disables auto theme`() = runTest {
-        settingsFlow.value = UserSettings(autoThemeEnabled = true)
-        setAutoThemeEnabled.stub {
-            onBlocking { invoke(UserId(testUserId), false) } doReturn Unit
-        }
-
-        val vm = buildViewModel()
-        vm.updateAutoThemeEnabled(false)
-
-        verify(setAutoThemeEnabled).invoke(UserId(testUserId), false)
-        assertFalse(vm.uiState.value.settings.autoThemeEnabled)
-    }
-
-    @Test
-    fun `updateAutoThemeEnabled when not logged in sets error`() = runTest {
-        authStateFlow.value = AuthState.LoggedOut
-        val vm = SettingsViewModel(
-            app, authRepo, sharedSettings, friendsRepo, setPrimaryLanguage,
-            setFontSizeScale, setThemeMode, setColorPalette, unlockColorPaletteWithCoins,
-            setVoiceForLanguage, setAutoThemeEnabled, setNotificationPref, quizRepo
-        )
-
-        vm.updateAutoThemeEnabled(true)
-
-        assertEquals(UiTextKey.SettingsNotLoggedInWarning, vm.uiState.value.errorKey)
-    }
-
-    @Test
-    fun `updateAutoThemeEnabled failure sets errorRaw`() = runTest {
-        setAutoThemeEnabled.stub {
-            onBlocking { invoke(UserId(testUserId), true) } doThrow RuntimeException("fail")
-        }
-
-        val vm = buildViewModel()
-        vm.updateAutoThemeEnabled(true)
-
-        assertNotNull(vm.uiState.value.errorRaw)
-        assertTrue(vm.uiState.value.errorRaw!!.contains("auto theme"))
-    }
 }

@@ -42,8 +42,6 @@ data class SettingsUiState(
     val uid: String? = null,
     val settings: UserSettings = UserSettings(),
     val coinStats: UserCoinStats = UserCoinStats(),
-    val unlockingPaletteId: String? = null,
-    val unlockError: String? = null,
     val primaryLanguageCooldownDays: Int? = null,
     val primaryLanguageCooldownHours: Int? = null,
 )
@@ -285,74 +283,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun updateColorPalette(paletteId: String) {
-        val uid = _uiState.value.uid ?: run {
-            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
-            return
-        }
-
-        viewModelScope.launch {
-            runCatching { setColorPalette(UserId(uid), PaletteId(paletteId)) }
-                .onSuccess {
-                    val updatedSettings = _uiState.value.settings.copy(colorPaletteId = paletteId)
-                    _uiState.value = _uiState.value.copy(
-                        settings = updatedSettings,
-                        errorKey = null,
-                        errorRaw = null
-                    )
-                    sharedSettings.updateCache(updatedSettings)
-                }
-                .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(
-                        errorKey = null,
-                        errorRaw = "Failed to save color palette. Please try again."
-                    )
-                }
-        }
-    }
-
-    fun unlockPaletteWithCoins(paletteId: String, cost: Int) {
-        val uid = _uiState.value.uid ?: run {
-            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
-            return
-        }
-
-        _uiState.value = _uiState.value.copy(unlockingPaletteId = paletteId, unlockError = null)
-
-        viewModelScope.launch {
-            runCatching { unlockColorPaletteWithCoins(UserId(uid), PaletteId(paletteId), cost) }
-                .onSuccess { result ->
-                    when (result) {
-                        UnlockResult.Success -> {
-                            val currentSettings = _uiState.value.settings
-                            val updated = currentSettings.unlockedPalettes + paletteId
-                            val updatedSettings = currentSettings.copy(unlockedPalettes = updated)
-                            _uiState.value = _uiState.value.copy(
-                                settings = updatedSettings,
-                                errorKey = null,
-                                errorRaw = null,
-                                unlockingPaletteId = null,
-                                unlockError = null
-                            )
-                            sharedSettings.updateCache(updatedSettings)
-                        }
-                        UnlockResult.InsufficientCoins -> {
-                            _uiState.value = _uiState.value.copy(
-                                unlockError = "Insufficient coins",
-                                unlockingPaletteId = null
-                            )
-                        }
-                    }
-                }
-                .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(
-                        unlockError = e.message ?: "Failed to unlock palette",
-                        unlockingPaletteId = null
-                    )
-                }
-        }
-    }
-
     fun updateVoiceForLanguage(languageCode: String, voiceName: String) {
         val uid = _uiState.value.uid ?: run {
             _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
@@ -387,39 +317,9 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(errorKey = null, errorRaw = null)
     }
 
-    fun clearUnlockError() {
-        _uiState.value = _uiState.value.copy(unlockError = null)
-    }
-
     override fun onCleared() {
         super.onCleared()
         settingsJob?.cancel()
-    }
-
-    fun updateAutoThemeEnabled(enabled: Boolean) {
-        val uid = _uiState.value.uid ?: run {
-            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
-            return
-        }
-
-        viewModelScope.launch {
-            runCatching { setAutoThemeEnabled(UserId(uid), enabled) }
-                .onSuccess {
-                    val updatedSettings = _uiState.value.settings.copy(autoThemeEnabled = enabled)
-                    _uiState.value = _uiState.value.copy(
-                        settings = updatedSettings,
-                        errorKey = null,
-                        errorRaw = null
-                    )
-                    sharedSettings.updateCache(updatedSettings)
-                }
-                .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(
-                        errorKey = null,
-                        errorRaw = "Failed to save auto theme setting. Please try again."
-                    )
-                }
-        }
     }
 
     /**

@@ -1,6 +1,6 @@
 # Report Audit Important Points
 
-Last updated: 2026-04-12
+Last updated: 2026-04-15
 
 ## Scope
 Use this guide when auditing and regenerating the final report from DOCX/PlantUML sources.
@@ -16,11 +16,29 @@ Use this guide when auditing and regenerating the final report from DOCX/PlantUM
 - Android source files: 235
 - Backend source files: 9
 - Android unit test files: 197
-- Android unit tests: 2,585
+- Android unit tests: 2,520
 - Backend test files: 14
 - Backend tests: 186
 - Backend coverage: statements 94.69%, branches 80.66%, functions 93.50%, lines 95.62%
 - Git commit count at current repository snapshot: 585
+
+## Testing Framework Identity (CRITICAL — v3 fix)
+- Android: **JUnit 4.13.2** + **Mockito 5.7.0** + **Mockito-Kotlin 5.1.0**
+- NOT JUnit 5, NOT MockK, NOT Turbine
+- Source of truth: `gradle/libs.versions.toml`
+- Backend: **Jest** + **ts-jest** (unchanged)
+
+## Generation Threshold Rules (CRITICAL)
+- First-time learning sheet generation: **≥1 record** (`count > 0`)
+- Learning sheet regeneration: **+5 new records** (`newRecordsSince >= 5`)
+- Word bank regeneration: **+20 new records** (`newRecordsSince >= 20`)
+- **DO NOT** change the ≥1 threshold in UC-02, BT-11, user manual, or diagrams
+- The ≥5/≥20 thresholds apply only to regeneration, NOT first-time generation
+
+## Unused Schema Field Exclusion Rule
+- Database fields existing in code models but NOT wired to UI must NOT appear in report, in all form, include tables and diagrams
+- Examples: `avatarUrl`, `friendAvatarUrl`, `fromAvatarUrl`, `photoUrl` (all default empty/null)
+- Rationale: User instruction — "all database schema that is not wired into the system DO NOT APPEAR in report"
 
 ## Report Schema Alignment Rules
 When auditing Chapter 4 tables, align to real persisted fields (not conceptual names):

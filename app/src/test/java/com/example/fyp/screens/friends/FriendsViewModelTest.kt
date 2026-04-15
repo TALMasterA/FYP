@@ -436,11 +436,11 @@ class FriendsViewModelTest {
         // First block
         whenever(friendsRepository.blockUser(eq(UserId("user1")), eq(UserId("f1")), any())).thenReturn(Result.success(Unit))
         vm.blockUser("f1")
-        assertTrue(vm.isUserBlocked("f1"))
+        assertTrue(vm.uiState.value.blockedUserIds.contains("f1"))
 
         // Then unblock
         vm.unblockUser("f1")
-        assertFalse(vm.isUserBlocked("f1"))
+        assertFalse(vm.uiState.value.blockedUserIds.contains("f1"))
     }
 
     // ── Max pending requests limit ──────────────────────────────────
