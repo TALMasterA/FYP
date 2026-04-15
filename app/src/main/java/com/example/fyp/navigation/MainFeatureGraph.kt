@@ -89,7 +89,8 @@ internal fun NavGraphBuilder.mainFeatureGraph(
             uiLanguages = uiLanguages,
             appLanguageState = appLanguageState,
             onUpdateAppLanguage = updateAppLanguage,
-            onBack = { navController.popBackStack() }
+            onBack = { navController.popBackStack() },
+            onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) { launchSingleTop = true } }
         )
     }
 }

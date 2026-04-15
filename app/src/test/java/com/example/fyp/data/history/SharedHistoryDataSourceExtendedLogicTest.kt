@@ -6,11 +6,10 @@ import org.junit.Assert.*
 import org.junit.Test
 
 /**
- * Tests for SharedHistoryDataSource updateLimit and getCountForLanguagePair logic.
+ * Tests for SharedHistoryDataSource updateLimit and getRecordsForLanguage logic.
  *
  * Covers:
  *  - updateLimit restart conditions
- *  - getCountForLanguagePair bidirectional counting
  *  - getRecordsForLanguage filtering (cache miss path)
  */
 class SharedHistoryDataSourceExtendedLogicTest {
@@ -54,7 +53,7 @@ class SharedHistoryDataSourceExtendedLogicTest {
         assertTrue(shouldRestartForLimitChange("user1", 60L, 30L))
     }
 
-    // ── getCountForLanguagePair bidirectional ──────────────────────
+    // ── getRecordsForLanguage filtering ────────────────────────────
 
     private fun record(
         sourceLang: String,
@@ -66,72 +65,6 @@ class SharedHistoryDataSourceExtendedLogicTest {
         targetLang = targetLang,
         timestamp = Timestamp(timestampSeconds, 0)
     )
-
-    /**
-     * Replicates getCountForLanguagePair: counts records in both directions.
-     */
-    private fun countForLanguagePair(
-        records: List<TranslationRecord>,
-        primaryLang: String,
-        targetLang: String
-    ): Int {
-        return records.count {
-            (it.sourceLang == primaryLang && it.targetLang == targetLang) ||
-            (it.sourceLang == targetLang && it.targetLang == primaryLang)
-        }
-    }
-
-    @Test
-    fun `countForLanguagePair - counts forward direction`() {
-        val records = listOf(
-            record("en-US", "ja-JP"),
-            record("en-US", "ja-JP"),
-            record("en-US", "ko-KR")
-        )
-        assertEquals(2, countForLanguagePair(records, "en-US", "ja-JP"))
-    }
-
-    @Test
-    fun `countForLanguagePair - counts reverse direction`() {
-        val records = listOf(
-            record("ja-JP", "en-US"),
-            record("ja-JP", "en-US")
-        )
-        assertEquals(2, countForLanguagePair(records, "en-US", "ja-JP"))
-    }
-
-    @Test
-    fun `countForLanguagePair - counts both directions combined`() {
-        val records = listOf(
-            record("en-US", "ja-JP"),
-            record("ja-JP", "en-US"),
-            record("en-US", "ja-JP")
-        )
-        assertEquals(3, countForLanguagePair(records, "en-US", "ja-JP"))
-    }
-
-    @Test
-    fun `countForLanguagePair - excludes other language pairs`() {
-        val records = listOf(
-            record("en-US", "ja-JP"),
-            record("en-US", "ko-KR"),
-            record("fr-FR", "de-DE")
-        )
-        assertEquals(1, countForLanguagePair(records, "en-US", "ja-JP"))
-    }
-
-    @Test
-    fun `countForLanguagePair - returns zero for empty list`() {
-        assertEquals(0, countForLanguagePair(emptyList(), "en-US", "ja-JP"))
-    }
-
-    @Test
-    fun `countForLanguagePair - returns zero for no matches`() {
-        val records = listOf(record("fr-FR", "de-DE"))
-        assertEquals(0, countForLanguagePair(records, "en-US", "ja-JP"))
-    }
-
-    // ── getRecordsForLanguage filtering ────────────────────────────
 
     /**
      * Replicates getRecordsForLanguage: filters records where source OR target matches.

@@ -734,8 +734,8 @@ val ScreenUiTexts: List<String> = listOf(
     // HistoryInfoFavoritesMessage
     "To keep important translations permanently accessible, add them to your Favorites by tapping the heart ❤️ icon on any record.",
 
-    // HistoryInfoViewFavoritesMessage
-    "View your saved Favorites in Settings → Favorites.",
+        // HistoryInfoViewFavoritesMessage
+        "Open your saved Favorites by tapping the heart icon in the top bar of this History screen.",
 
     // HistoryInfoFilterMessage
     "Use the Filter button to search within the displayed {limit} records.",

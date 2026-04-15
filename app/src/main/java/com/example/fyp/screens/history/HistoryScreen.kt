@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,15 +42,11 @@ fun HistoryScreen(
     appLanguageState: AppLanguageState,
     onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
     onBack: () -> Unit,
+    onOpenFavorites: () -> Unit = {},
 ) {
     val viewModel: HistoryViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val haptic = rememberHapticFeedback()
-
-    // Refresh coin stats when screen becomes visible (on-demand instead of real-time listener)
-    LaunchedEffect(Unit) {
-        viewModel.refreshCoinStats()
-    }
 
     // Auto-dismiss error after 3 seconds
     LaunchedEffect(uiState.error) {
@@ -79,7 +75,6 @@ fun HistoryScreen(
     var showFilterDialog by remember { mutableStateOf(false) }
     var filterLanguageCode by remember { mutableStateOf("") }
     var filterKeyword by remember { mutableStateOf("") }
-    var showCoinRulesDialog by remember { mutableStateOf(false) }
     var showHistoryInfoDialog by remember { mutableStateOf(false) }
 
     // History limit from user settings (default if not available)
@@ -312,9 +307,9 @@ fun HistoryScreen(
                     Icon(Icons.Default.Info, contentDescription = "History Info")
                 }
 
-                // Coin button - opens dialog with coin count and rules
-                IconButton(onClick = { showCoinRulesDialog = true }) {
-                    Icon(Icons.Default.MonetizationOn, contentDescription = "Coins")
+                // Favorites button - navigates to favorites screen
+                IconButton(onClick = onOpenFavorites) {
+                    Icon(Icons.Default.Favorite, contentDescription = "Favorites")
                 }
 
                 TextButton(onClick = { showFilterDialog = true }) { Text(t(UiTextKey.FilterHistoryScreenTitle)) }
@@ -360,14 +355,6 @@ fun HistoryScreen(
                 }
             )
         }
-
-        // Coin Rules Dialog - extracted to separate component
-        CoinRulesDialog(
-            isVisible = showCoinRulesDialog,
-            onDismiss = { showCoinRulesDialog = false },
-            coinTotal = uiState.coinStats.coinTotal,
-            t = t
-        )
 
         StandardScreenBody(
             innerPadding = innerPadding,

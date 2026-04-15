@@ -183,17 +183,4 @@ class SharedHistoryDataSource @Inject constructor(
     fun getCountForLanguage(languageCode: String): Int {
         return _languageCounts.value[languageCode] ?: 0
     }
-
-    /**
-     * Get count of records for a specific language pair (both directions).
-     * Uses languageCounts for consistency with ALL records.
-     */
-    fun getCountForLanguagePair(primaryLang: String, targetLang: String): Int {
-        // This would need to count from ALL records, but languageCounts is per-language
-        // For now, keep the in-memory count but this may be inaccurate with history limits
-        return _historyRecords.value.count {
-            (it.sourceLang == primaryLang && it.targetLang == targetLang) ||
-            (it.sourceLang == targetLang && it.targetLang == primaryLang)
-        }
-    }
 }

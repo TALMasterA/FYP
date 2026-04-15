@@ -155,61 +155,6 @@ class SharedHistoryLogicTest {
         assertTrue(result.isEmpty())
     }
 
-    // ── Bidirectional language pair counting ─────────────────────────────────
-
-    /**
-     * Replicates getCountForLanguagePair from SharedHistoryDataSource (line 196-203).
-     */
-    private fun countForLanguagePair(
-        records: List<TranslationRecord>,
-        primaryLang: String,
-        targetLang: String
-    ): Int {
-        return records.count {
-            (it.sourceLang == primaryLang && it.targetLang == targetLang) ||
-            (it.sourceLang == targetLang && it.targetLang == primaryLang)
-        }
-    }
-
-    @Test
-    fun `countForLanguagePair - counts forward direction`() {
-        val count = countForLanguagePair(sampleRecords, "en-US", "zh-TW")
-        assertEquals(1, count) // record 1 only
-    }
-
-    @Test
-    fun `countForLanguagePair - counts reverse direction`() {
-        val count = countForLanguagePair(sampleRecords, "en-US", "fr-FR")
-        assertEquals(1, count) // record 4 (fr->en)
-    }
-
-    @Test
-    fun `countForLanguagePair - counts both directions`() {
-        // Only forward: en->ja (record 2)
-        // zh->ja: record 3 does NOT match en-US/ja-JP pair
-        val count = countForLanguagePair(sampleRecords, "en-US", "ja-JP")
-        assertEquals(1, count)
-    }
-
-    @Test
-    fun `countForLanguagePair - is symmetric`() {
-        val forward = countForLanguagePair(sampleRecords, "en-US", "zh-TW")
-        val reverse = countForLanguagePair(sampleRecords, "zh-TW", "en-US")
-        assertEquals(forward, reverse)
-    }
-
-    @Test
-    fun `countForLanguagePair - no match returns zero`() {
-        val count = countForLanguagePair(sampleRecords, "de-DE", "ru-RU")
-        assertEquals(0, count)
-    }
-
-    @Test
-    fun `countForLanguagePair - empty records returns zero`() {
-        val count = countForLanguagePair(emptyList(), "en-US", "zh-TW")
-        assertEquals(0, count)
-    }
-
     // ── Language count lookup ────────────────────────────────────────────────
 
     /**

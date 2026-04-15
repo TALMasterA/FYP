@@ -13,7 +13,6 @@ import com.example.fyp.screens.settings.ProfileScreen
 import com.example.fyp.screens.settings.SettingsScreen
 import com.example.fyp.screens.settings.SettingsViewModel
 import com.example.fyp.screens.settings.ShopScreen
-import com.example.fyp.screens.settings.VoiceSettingsScreen
 
 /**
  * Navigation sub-graph: Settings hub, profile, shop, voice, notifications,
@@ -35,10 +34,8 @@ internal fun NavGraphBuilder.settingsProfileGraph(
             onBack = { navController.popBackStack() },
             onOpenResetPassword = { navController.navigate(AppScreen.ResetPassword.route) { launchSingleTop = true } },
             onOpenProfile = { navController.navigate(AppScreen.Profile.route) { launchSingleTop = true } },
-            onOpenFavorites = { navController.navigate(AppScreen.Favorites.route) { launchSingleTop = true } },
             onOpenMyProfile = { navController.navigate(AppScreen.MyProfile.route) { launchSingleTop = true } },
             onOpenShop = { navController.navigate(AppScreen.Shop.route) { launchSingleTop = true } },
-            onOpenVoiceSettings = { navController.navigate(AppScreen.VoiceSettings.route) { launchSingleTop = true } },
             onOpenFeedback = { navController.navigate(AppScreen.Feedback.route) { launchSingleTop = true } },
             viewModel = settingsViewModel
         )
@@ -51,17 +48,6 @@ internal fun NavGraphBuilder.settingsProfileGraph(
         ShopScreen(
             appLanguageState = appLanguageState,
             onBack = { navController.popBackStack() }
-        )
-    }
-
-    composableRequireLogin(
-        route = AppScreen.VoiceSettings.route,
-        onNeedLogin = navigateToLogin
-    ) {
-        VoiceSettingsScreen(
-            appLanguageState = appLanguageState,
-            onBack = { navController.popBackStack() },
-            viewModel = settingsViewModel
         )
     }
 

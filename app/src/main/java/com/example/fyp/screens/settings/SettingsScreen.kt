@@ -45,6 +45,7 @@ import com.example.fyp.core.rememberUiTextFunctions
 import com.example.fyp.core.validateScale
 import com.example.fyp.core.UiConstants
 import com.example.fyp.data.azure.AzureLanguageConfig
+import com.example.fyp.data.azure.AzureVoiceConfig
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.BaseUiTexts
 import com.example.fyp.model.ui.UiTextKey
@@ -61,10 +62,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenResetPassword: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
-    onOpenFavorites: () -> Unit = {},
     onOpenMyProfile: () -> Unit = {},
     onOpenShop: () -> Unit = {},
-    onOpenVoiceSettings: () -> Unit = {},
     onOpenFeedback: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -73,6 +72,10 @@ fun SettingsScreen(
 
     val context = LocalContext.current
     val supportedLanguages = remember { AzureLanguageConfig.loadSupportedLanguages(context) }
+    val supportedVoiceLanguages = remember {
+        val voiceSupportedSet = AzureVoiceConfig.getSupportedLanguages()
+        supportedLanguages.filter { it in voiceSupportedSet }
+    }
 
     val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
     val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
@@ -273,6 +276,7 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                     ) {
 
+                        // Profile and Shop buttons
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
@@ -287,12 +291,13 @@ fun SettingsScreen(
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                             }
+
                             TextButton(
-                                onClick = onOpenFavorites,
+                                onClick = onOpenShop,
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Text(
-                                    text = t(UiTextKey.FavoritesTitle),
+                                    text = t(UiTextKey.ShopEntry),
                                     style = MaterialTheme.typography.bodyLarge,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
@@ -314,33 +319,6 @@ fun SettingsScreen(
                                 text = t(UiTextKey.MyProfileTitle),
                                 style = MaterialTheme.typography.bodyLarge
                             )
-                        }
-
-                        // Shop and Voice Settings buttons
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
-                        ) {
-                            TextButton(
-                                onClick = onOpenShop,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = t(UiTextKey.ShopEntry),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                            }
-                            TextButton(
-                                onClick = onOpenVoiceSettings,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = t(UiTextKey.VoiceSettingsTitle),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                            }
                         }
 
                         // Feedback buttons - Two separate options
@@ -514,6 +492,31 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+
+            // Voice settings — only for logged-in users (moved from separate screen)
+            if (isLoggedIn) Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)) {
+                Text(
+                    t(UiTextKey.VoiceSettingsTitle),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = t(UiTextKey.VoiceSettingsDesc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                VoiceSettingsSelector(
+                    voiceSettings = uiState.settings.voiceSettings,
+                    supportedLanguages = supportedVoiceLanguages,
+                    onVoiceSelected = { languageCode, voice ->
+                        viewModel.updateVoiceForLanguage(languageCode, voice)
+                    },
+                    languageNameFor = uiLanguageNameFor,
+                    t = t
+                )
             }
 
             // Theme — only for logged-in users
