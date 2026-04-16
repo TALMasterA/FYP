@@ -290,15 +290,21 @@ class SpeechViewModel @Inject constructor(
                         // Keep auto-detect status visible briefly, then clear it.
                         statusMessage = if (isAutoDetect) speechState.statusMessage else "",
                     )
-                    // Save history with ACTUAL detected language for source
-                    saveHistory(
-                        mode = "discrete",
-                        sourceText = recognizedText,
-                        targetText = tr.text,
-                        sourceLang = actualFromLanguage,
-                        targetLang = toLanguage,
-                        sessionId = "",
-                    )
+                    // Skip saving history when source and target languages are the
+                    // same — this happens when auto-detect resolves to the target
+                    // language, or when the user manually selects the same language
+                    // for both fields.  Saving such records would create misleading
+                    // language pairs on the learning screen.
+                    if (actualFromLanguage != toLanguage) {
+                        saveHistory(
+                            mode = "discrete",
+                            sourceText = recognizedText,
+                            targetText = tr.text,
+                            sourceLang = actualFromLanguage,
+                            targetLang = toLanguage,
+                            sessionId = "",
+                        )
+                    }
                 }
 
                 is SpeechResult.Error -> {

@@ -367,4 +367,39 @@ class SpeechViewModelTest {
         assertTrue(vm.statusMessage.contains("Recognition error"))
         assertEquals(RecognizePhase.Idle, vm.recognizePhase)
     }
+
+    // ── translate skips history when sourceLang == targetLang ────────
+
+    @Test
+    fun `translate with same from and to language does not save history`() = runTest {
+        whenever(translateTextUseCase.invoke(any(), any(), any()))
+            .thenReturn(SpeechResult.Success("Hello"))
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+        vm.updateSourceText("Hello")
+        vm.translate("en-US", "en-US")
+
+        assertEquals("Hello", vm.translatedText)
+        verify(historyRepo, never()).save(any())
+    }
+
+    @Test
+    fun `translate auto-detect resolving to target language does not save history`() = runTest {
+        // Auto-detect detects "en" which maps to "en-US" — same as target
+        whenever(translateTextUseCase.invoke(any(), any(), any()))
+            .thenReturn(SpeechResult.Success(
+                text = "Hello",
+                detectedLanguage = "en",
+                detectedScore = 0.99
+            ))
+
+        val vm = buildViewModel()
+        authStateFlow.value = AuthState.LoggedIn(testUser)
+        vm.updateSourceText("Hello")
+        vm.translate("auto", "en-US")
+
+        assertEquals("Hello", vm.translatedText)
+        verify(historyRepo, never()).save(any())
+    }
 }

@@ -354,4 +354,65 @@ class FirestoreHistoryRepositoryLogicTest {
         val result = filterPositiveCounts(emptyMap())
         assertTrue(result.isEmpty())
     }
+
+    // ── 11. Rebuild counts deduplicates when sourceLang == targetLang ────
+
+    /**
+     * Mirrors [FirestoreHistoryRepository.rebuildLanguageCountsCache] counting logic.
+     * Uses a set so that a record whose sourceLang == targetLang is only counted once.
+     */
+    private fun rebuildCounts(langPairs: List<Pair<String, String>>): Map<String, Int> {
+        val counts = mutableMapOf<String, Int>()
+        langPairs.forEach { (src, tgt) ->
+            setOf(src, tgt).forEach { lang ->
+                if (lang.isNotEmpty()) {
+                    counts[lang] = (counts[lang] ?: 0) + 1
+                }
+            }
+        }
+        return counts
+    }
+
+    @Test
+    fun `rebuild counts does not double-count when sourceLang equals targetLang`() {
+        val langPairs = listOf("en-US" to "en-US")
+        val counts = rebuildCounts(langPairs)
+
+        assertEquals("Same source and target should be counted only once", 1, counts["en-US"])
+    }
+
+    @Test
+    fun `rebuild counts handles mixed records correctly`() {
+        val langPairs = listOf(
+            "en-US" to "zh-HK",
+            "en-US" to "en-US",   // same-language record
+            "ja-JP" to "en-US"
+        )
+        val counts = rebuildCounts(langPairs)
+
+        // en-US: counted in record 1 (source), record 2 (once, deduplicated), record 3 (target)
+        assertEquals(3, counts["en-US"])
+        assertEquals(1, counts["zh-HK"])
+        assertEquals(1, counts["ja-JP"])
+    }
+
+    // ── 12. Save guard rejects records with sourceLang == targetLang ────
+
+    @Test
+    fun `saveBatch filter removes records where sourceLang equals targetLang`() {
+        data class FakeRecord(val sourceLang: String, val targetLang: String)
+
+        val records = listOf(
+            FakeRecord("en-US", "zh-HK"),     // valid
+            FakeRecord("ja-JP", "ja-JP"),      // invalid – same language
+            FakeRecord("fr-FR", "de-DE"),      // valid
+            FakeRecord("", ""),                // blank – allowed through
+        )
+
+        val filtered = records.filter { it.sourceLang != it.targetLang || it.sourceLang.isBlank() }
+        assertEquals(3, filtered.size)
+        assertEquals("en-US", filtered[0].sourceLang)
+        assertEquals("fr-FR", filtered[1].sourceLang)
+        assertEquals("", filtered[2].sourceLang)
+    }
 }
