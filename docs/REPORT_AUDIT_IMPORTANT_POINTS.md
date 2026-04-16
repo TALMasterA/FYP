@@ -1,6 +1,6 @@
 # Report Audit Important Points
 
-Last updated: 2026-04-15
+Last updated: 2026-04-16
 
 ## Scope
 Use this guide when auditing and regenerating the final report from DOCX/PlantUML sources.
@@ -13,14 +13,14 @@ Use this guide when auditing and regenerating the final report from DOCX/PlantUM
 5. Report files in `report-audit/`
 
 ## Critical Metrics (Current Verified Snapshot)
-- Android source files: 235
+- Android source files: 223
 - Backend source files: 9
-- Android unit test files: 197
-- Android unit tests: 2,520
+- Android unit test files: 191
+- Android unit tests: 2,500
 - Backend test files: 14
 - Backend tests: 186
 - Backend coverage: statements 94.69%, branches 80.66%, functions 93.50%, lines 95.62%
-- Git commit count at current repository snapshot: 585
+- Git commit count at current repository snapshot: 591
 
 ## Testing Framework Identity (CRITICAL — v3 fix)
 - Android: **JUnit 4.13.2** + **Mockito 5.7.0** + **Mockito-Kotlin 5.1.0**

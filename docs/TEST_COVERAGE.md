@@ -6,11 +6,11 @@ _Last updated: 2026-04-19_
 
 | Metric | Count |
 |---|---:|
-| Android source files (`app/src/main/java/com/example/fyp`) | 227 |
+| Android source files (`app/src/main/java/com/example/fyp`) | 223 |
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 9 |
-| Android unit test files (`app/src/test/java/com/example/fyp`) | 193 |
-| Android test suites in latest `testDebugUnitTest` run | 193 |
-| Android unit tests executed (`testDebugUnitTest`) | 2,520 |
+| Android unit test files (`app/src/test/java/com/example/fyp`) | 191 |
+| Android test suites in latest `testDebugUnitTest` run | 191 |
+| Android unit tests executed (`testDebugUnitTest`) | 2,500 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 14 |
 | Backend Jest tests executed (`npm test`) | 186 |
 

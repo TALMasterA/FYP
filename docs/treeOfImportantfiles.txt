@@ -35,7 +35,7 @@ FYP/
 ├── docs/
 │   ├── treeOfImportantfiles.txt                    ← This file
 │   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants
-│   ├── TEST_COVERAGE.md                            ← Test coverage report (193 Android test files, 2,520 Android + 186 backend tests)
+│   ├── TEST_COVERAGE.md                            ← Test coverage report (191 Android test files, 2,520 Android + 186 backend tests)
 │   ├── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
 │   ├── MCP_SKILLS_PLAYBOOK.md                      ← Team playbook for MCP skills usage
 │   ├── CLOUD_FUNCTIONS_API.md                      ← Backend Cloud Functions API reference
@@ -345,9 +345,7 @@ FYP/
 │       │           ├── components/
 │       │           │   ├── EmptyStateView.kt
 │       │           │   ├── FriendSelectorDialog.kt
-│       │           │   ├── LoadingSkeletons.kt
-│       │           │   ├── StandardButtons.kt              ← Standardized button components
-│       │           │   └── StandardTextFields.kt           ← Standardized text field components
+│       │           │   └── LoadingSkeletons.kt
 │       │           └── theme/
 │       │               ├── Color.kt
 │       │               ├── ColorPalette.kt
@@ -589,10 +587,6 @@ FYP/
 │       │   │       ├── WordBankLogicTest.kt
 │       │   │       └── WordBankViewModelTest.kt
 │       │   ├── ui/
-│       │   │   ├── components/
-│       │   │   │   ├── StandardButtonsTest.kt             ← Button click/state tests
-
-│       │   │   │   └── StandardTextFieldsTest.kt          ← Input/validation toggle tests
 │       │   │   └── theme/
 │       │   │       ├── ColorPaletteTest.kt
 │       │   │       ├── ThemeHelperExtendedTest.kt         ← Auto theme, dark/light/system tests
