@@ -818,3 +818,17 @@ The following components cannot be unit tested due to Android framework dependen
 4. **No empty catch blocks:** Every `catch` must at minimum log the exception. Silent swallowing is prohibited.
 
 **Guard:** `ProfileViewModelTest.updateUsername fails closed when settings fetch throws` verifies the cooldown fail-closed behavior.
+
+---
+
+## 40. Translation Record — Same-Language Guard
+
+**Invariant:** A translation record must never be saved with `sourceLang == targetLang`. Such records carry no translatable content and create misleading language pairs on the learning screen.
+
+**Rules:**
+1. **SpeechViewModel.translate():** After resolving the actual source language (via auto-detect or manual selection), skip `saveHistory()` when `actualFromLanguage == toLanguage`.
+2. **ContinuousConversationController:** Same guard before calling `saveHistory` in the `onFinal` callback.
+3. **FirestoreHistoryRepository.save() / saveBatch():** Defensive repository-level guard that logs a warning and silently drops records where `sourceLang == targetLang`.
+4. **rebuildLanguageCountsCache:** Uses `setOf(sourceLang, targetLang)` (not `listOf`) to prevent double-counting if a same-language record exists in Firestore from before this guard.
+
+**Guard:** `SpeechViewModelTest.translate with same from and to language does not save history`, `SpeechViewModelTest.translate auto-detect resolving to target language does not save history`, `FirestoreHistoryRepositoryLogicTest.rebuild counts does not double-count when sourceLang equals targetLang`.
