@@ -135,17 +135,21 @@ internal class ContinuousConversationController(
                                     val direction = if (isFromPersonA) "A_to_B" else "B_to_A"
                                     val seq = continuousSequence++
 
-                                    saveHistory(
-                                        "continuous",
-                                        finalText,
-                                        tr.text,
-                                        speakingLang,
-                                        targetLang,
-                                        continuousSessionId.orEmpty(),
-                                        speaker,
-                                        direction,
-                                        seq,
-                                    )
+                                    // Only save when source ≠ target to prevent
+                                    // misleading language pairs on the learning screen.
+                                    if (speakingLang != targetLang) {
+                                        saveHistory(
+                                            "continuous",
+                                            finalText,
+                                            tr.text,
+                                            speakingLang,
+                                            targetLang,
+                                            continuousSessionId.orEmpty(),
+                                            speaker,
+                                            direction,
+                                            seq,
+                                        )
+                                    }
                                 }
 
                                 is SpeechResult.Error -> {

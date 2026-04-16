@@ -40,6 +40,14 @@ class FirestoreHistoryRepository @Inject constructor(
     private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override suspend fun save(record: TranslationRecord) {
+        // Guard: reject records where source and target languages are identical –
+        // they carry no translatable content and would create misleading language
+        // pairs on the learning screen.
+        if (record.sourceLang.isNotBlank() && record.sourceLang == record.targetLang) {
+            Log.w("FirestoreHistoryRepository", "Skipping save: sourceLang == targetLang (${record.sourceLang})")
+            return
+        }
+
         NetworkRetry.withRetry(shouldRetry = NetworkRetry::isRetryableFirebaseException) {
             firestore.collection("users")
                 .document(record.userId)
@@ -69,8 +77,15 @@ class FirestoreHistoryRepository @Inject constructor(
     suspend fun saveBatch(records: List<TranslationRecord>) {
         if (records.isEmpty()) return
 
+        // Filter out records where source and target languages are identical
+        val validRecords = records.filter { it.sourceLang != it.targetLang || it.sourceLang.isBlank() }
+        if (validRecords.isEmpty()) {
+            Log.w("FirestoreHistoryRepository", "saveBatch: all records filtered out (sourceLang == targetLang)")
+            return
+        }
+
         // Firestore batch limit is 500 ops; split in chunks of 490 to leave headroom.
-        records.chunked(490).forEach { chunk ->
+        validRecords.chunked(490).forEach { chunk ->
             NetworkRetry.withRetry(shouldRetry = NetworkRetry::isRetryableFirebaseException) {
                 val batch = firestore.batch()
                 chunk.forEach { record ->
@@ -363,7 +378,8 @@ class FirestoreHistoryRepository @Inject constructor(
                 val sourceLang = doc.getString("sourceLang")?.trim() ?: ""
                 val targetLang = doc.getString("targetLang")?.trim() ?: ""
 
-                listOf(sourceLang, targetLang).forEach { lang ->
+                // Use a set to avoid double-counting when sourceLang == targetLang
+                setOf(sourceLang, targetLang).forEach { lang ->
                     if (lang.isNotEmpty()) {
                         counts[lang] = (counts[lang] ?: 0) + 1
                     }
