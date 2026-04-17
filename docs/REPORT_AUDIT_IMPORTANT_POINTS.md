@@ -1,9 +1,15 @@
 # Report Audit Important Points
 
-Last updated: 2026-04-16
+Last updated: 2026-04-20
 
 ## Scope
 Use this guide when auditing and regenerating the final report from DOCX/PlantUML sources.
+
+## Latest Report Version
+- **Current**: `report-audit/Project_Report_ISA_22235876_v6.docx` (generated from v5)
+- **Audit**: `report-audit/AUDIT_REPORT_V6.md` — 37 claims verified (0 MISMATCH), 3 documentation gaps fixed
+- **Generator**: `report-audit/generate_v6.py` (applies F-01–F-04 to v5 DOCX)
+- **Validation**: TOC/bookmark audit clean (112/112), font audit clean (59 intentional only)
 
 ## Source Of Truth Order
 1. Android/backend code in `app/src/main/java/...` and `fyp-backend/functions/src/...`
