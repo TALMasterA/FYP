@@ -55,7 +55,6 @@ class FriendRelationTest {
         assertEquals("", request.fromUsername)
         assertEquals("", request.toUsername)
         assertEquals("", request.fromUsername)
-        assertEquals("", request.fromAvatarUrl)
     }
 
     // --- FriendRelation Tests ---
@@ -64,12 +63,10 @@ class FriendRelationTest {
     fun `friend relation stores friend info`() {
         val friend = FriendRelation(
             friendId = "user2",
-            friendUsername = "john_doe",
-            friendAvatarUrl = "https://example.com/avatar.jpg"
+            friendUsername = "john_doe"
         )
         assertEquals("user2", friend.friendId)
         assertEquals("john_doe", friend.friendUsername)
-        assertEquals("https://example.com/avatar.jpg", friend.friendAvatarUrl)
     }
 
     @Test
@@ -77,7 +74,6 @@ class FriendRelationTest {
         val friend = FriendRelation()
         assertEquals("", friend.friendId)
         assertEquals("", friend.friendUsername)
-        assertEquals("", friend.friendAvatarUrl)
     }
 
     @Test

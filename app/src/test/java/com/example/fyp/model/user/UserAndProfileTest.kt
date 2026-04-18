@@ -66,7 +66,6 @@ class UserAndProfileTest {
     @Test
     fun `UserProfile has correct defaults`() {
         val profile = UserProfile()
-        assertNull(profile.photoUrl)
         assertNull(profile.createdAt)
         assertNull(profile.updatedAt)
     }
@@ -75,11 +74,9 @@ class UserAndProfileTest {
     fun `UserProfile stores all fields`() {
         val ts = com.google.firebase.Timestamp(1000, 0)
         val profile = UserProfile(
-            photoUrl = "https://example.com/photo.jpg",
             createdAt = ts,
             updatedAt = ts
         )
-        assertEquals("https://example.com/photo.jpg", profile.photoUrl)
         assertEquals(ts, profile.createdAt)
         assertEquals(ts, profile.updatedAt)
     }
@@ -87,22 +84,9 @@ class UserAndProfileTest {
     @Test
     fun `UserProfile equality based on all fields`() {
         val ts = com.google.firebase.Timestamp(1000, 0)
-        val a = UserProfile("url", ts, ts)
-        val b = UserProfile("url", ts, ts)
+        val a = UserProfile(ts, ts)
+        val b = UserProfile(ts, ts)
         assertEquals(a, b)
-    }
-
-    @Test
-    fun `UserProfile inequality when photoUrl differs`() {
-        val a = UserProfile(photoUrl = "url1")
-        val b = UserProfile(photoUrl = "url2")
-        assertNotEquals(a, b)
-    }
-
-    @Test
-    fun `UserProfile with null photoUrl`() {
-        val profile = UserProfile(photoUrl = null)
-        assertNull(profile.photoUrl)
     }
 
     @Test
@@ -110,14 +94,12 @@ class UserAndProfileTest {
         val created = com.google.firebase.Timestamp(1000, 0)
         val updated = com.google.firebase.Timestamp(2000, 0)
         val profile = UserProfile(
-            photoUrl = "url",
             createdAt = created,
             updatedAt = created
         )
         val modified = profile.copy(updatedAt = updated)
         assertEquals(created, modified.createdAt)
         assertEquals(updated, modified.updatedAt)
-        assertEquals("url", modified.photoUrl)
     }
 
     // ── AuthState sealed interface ─────────────────────────────────

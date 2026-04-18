@@ -55,7 +55,6 @@ class FirestoreFriendsRepository @Inject constructor(
         // Update search index — store full profile fields to avoid N reads in searchByUsername
         val searchData = mutableMapOf<String, Any>(
             "username" to normalizedUsername,
-            "avatarUrl" to profile.avatarUrl,
             "isDiscoverable" to canBeDiscoverable,
             "primaryLanguage" to profile.primaryLanguage,
             "learningLanguages" to (profile.learningLanguages ?: emptyList<String>()),
@@ -134,7 +133,6 @@ class FirestoreFriendsRepository @Inject constructor(
             }
         }
         updates["displayName"]?.let { /* displayName field removed — username is the sole identity field */ }
-        updates["avatarUrl"]?.let { searchUpdates["avatarUrl"] = it }
         updates["isDiscoverable"]?.let {
             // Never allow discoverable=true to be indexed with a blank username.
             if (requestedUsername == null || requestedUsername.isNotBlank() || it == false) {
@@ -235,7 +233,6 @@ class FirestoreFriendsRepository @Inject constructor(
                     PublicUserProfile(
                         uid = doc.id,
                         username = username,
-                        avatarUrl = doc.getString("avatarUrl") ?: "",
                         isDiscoverable = doc.getBoolean("isDiscoverable") ?: true,
                         primaryLanguage = doc.getString("primaryLanguage") ?: "",
                         learningLanguages = learningLangs,
@@ -337,7 +334,6 @@ class FirestoreFriendsRepository @Inject constructor(
                 requestId = requestRef.id,
                 fromUserId = fromUserId.value,
                 fromUsername = fromProfile.username,
-                fromAvatarUrl = fromProfile.avatarUrl,
                 toUserId = toUserId.value,
                 toUsername = toProfile?.username ?: "",
                 status = RequestStatus.PENDING,
@@ -400,7 +396,6 @@ class FirestoreFriendsRepository @Inject constructor(
                     mapOf(
                         "friendId" to currentUserId.value,
                         "friendUsername" to (request.toUsername.ifBlank { currentUserId.value }),
-                        "friendAvatarUrl" to "",
                         "addedAt" to now
                     )
                 )
@@ -415,7 +410,6 @@ class FirestoreFriendsRepository @Inject constructor(
                     mapOf(
                         "friendId" to request.fromUserId,
                         "friendUsername" to request.fromUsername,
-                        "friendAvatarUrl" to request.fromAvatarUrl,
                         "addedAt" to now
                     )
                 )
@@ -429,16 +423,14 @@ class FirestoreFriendsRepository @Inject constructor(
                     db.collection("users").document(currentUserId.value)
                         .collection("friends").document(friendUserId.value)
                         .update(mapOf(
-                            "friendUsername" to fromProfile.username,
-                            "friendAvatarUrl" to fromProfile.avatarUrl
+                            "friendUsername" to fromProfile.username
                         )).await()
                 }
                 if (toProfile != null) {
                     db.collection("users").document(friendUserId.value)
                         .collection("friends").document(currentUserId.value)
                         .update(mapOf(
-                            "friendUsername" to toProfile.username,
-                            "friendAvatarUrl" to toProfile.avatarUrl
+                            "friendUsername" to toProfile.username
                         )).await()
                 }
             } catch (e: Exception) {

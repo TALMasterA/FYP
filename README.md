@@ -120,7 +120,7 @@ Please use your gmail to register.
 
 **User Accounts:**
 - Email/password authentication via Firebase
-- Profile management (display name, account deletion)
+- Profile management (username, account deletion)
 - Password reset via email
 - Auto sign-out on app version update
 - First-launch and post-update onboarding (re-shown after each update)
@@ -258,7 +258,7 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 191 test files, 2,505 unit tests (from the latest `testDebugUnitTest` report)
+- **Android:** 191 test files, 2,503 unit tests (from the latest `testDebugUnitTest` report)
 - **Backend:** 14 test files, 186 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.
@@ -332,4 +332,4 @@ cd fyp-backend/functions && npm test
 
 --------------------------------------------------------------
 
-**Last Updated:** April 13, 2026
+**Last Updated:** April 18, 2026

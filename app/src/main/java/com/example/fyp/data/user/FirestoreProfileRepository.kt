@@ -1,13 +1,8 @@
 package com.example.fyp.data.user
 
-import com.example.fyp.model.user.UserProfile
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,26 +15,6 @@ class FirestoreProfileRepository @Inject constructor(
     private fun docRef(uid: String) =
         db.collection("users").document(uid)
             .collection("profile").document("info")
-
-    /**
-     * Observe user profile changes in real-time
-     */
-    fun observeProfile(userId: String): Flow<UserProfile> = callbackFlow {
-        val reg = docRef(userId).addSnapshotListener { snap, err ->
-            if (err != null) {
-                close(err)
-                return@addSnapshotListener
-            }
-
-            val profile = UserProfile(
-                photoUrl = snap?.getString("photoUrl"),
-                createdAt = snap?.getTimestamp("createdAt"),
-                updatedAt = snap?.getTimestamp("updatedAt")
-            )
-            trySend(profile)
-        }
-        awaitClose { reg.remove() }
-    }
 
     /**
      * Delete all user data and account

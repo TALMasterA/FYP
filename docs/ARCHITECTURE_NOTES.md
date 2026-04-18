@@ -715,7 +715,7 @@ The third parameter is named `currentSheetHistoryCount` (sheet version), not `cu
 
 ## 34. updatePublicProfile — Must Propagate All Searchable Fields
 
-**Invariant:** Must update both `profile/public` AND `user_search/{uid}`. Search update must include ALL fields: `username`, `avatarUrl`, `isDiscoverable`, `lastActiveAt`, `primaryLanguage`.
+**Invariant:** Must update both `profile/public` AND `user_search/{uid}`. Search update must include ALL fields: `username`, `isDiscoverable`, `lastActiveAt`, `primaryLanguage`.
 
 **Rule:** If adding new field to `user_search`, add to propagation block too.
 

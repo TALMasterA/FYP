@@ -30,7 +30,6 @@ class FriendRequestTest {
             requestId = "req1",
             fromUserId = "user1",
             fromUsername = "sender",
-            fromAvatarUrl = "https://example.com/avatar1.jpg",
             toUserId = "user2",
             toUsername = "recipient",
             status = RequestStatus.PENDING

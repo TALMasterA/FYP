@@ -7,7 +7,6 @@ import com.google.firebase.Timestamp
  * This is separate from FirebaseAuth User data.
  */
 data class UserProfile(
-    val photoUrl: String? = null,
     val createdAt: Timestamp? = null,
     val updatedAt: Timestamp? = null
 )

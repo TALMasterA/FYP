@@ -43,7 +43,7 @@ Use this guide when auditing and regenerating the final report from DOCX/PlantUM
 
 ## Unused Schema Field Exclusion Rule
 - Database fields existing in code models but NOT wired to UI must NOT appear in report, in all form, include tables and diagrams
-- Examples: `avatarUrl`, `friendAvatarUrl`, `fromAvatarUrl`, `photoUrl` (all default empty/null)
+- Previously applied to: `avatarUrl`, `friendAvatarUrl`, `fromAvatarUrl`, `photoUrl` — these fields have been **removed from the codebase** entirely
 - Rationale: User instruction — "all database schema that is not wired into the system DO NOT APPEAR in report"
 
 ## Report Schema Alignment Rules

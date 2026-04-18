@@ -63,6 +63,7 @@ Once verified, go back to Azure Portal and regenerate Key 1 (which was the old a
 
 ## Rotation Log
 
+- 2026-04-18 — Rotated: `GENAI_API_KEY` (rotated by operator)
 - 2026-03-20 — Rotated: `AZURE_SPEECH_KEY`, `AZURE_TRANSLATOR_KEY`, `GENAI_API_KEY` (rotated by operator)
 
 ## Notes

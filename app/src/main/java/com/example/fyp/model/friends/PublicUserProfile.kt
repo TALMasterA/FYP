@@ -23,7 +23,6 @@ import com.google.firebase.firestore.PropertyName
 data class PublicUserProfile(
     val uid: String = "",                         // Firestore document ID
     val username: String = "",                    // Unique, searchable username
-    val avatarUrl: String = "",                   // Profile picture URL (optional)
     val primaryLanguage: String = "",             // User's primary language code (e.g., "en-US")
     val learningLanguages: List<String>? = emptyList(),  // Languages being learned (nullable for Firestore compat)
     @field:PropertyName("isDiscoverable")

@@ -13,8 +13,6 @@ class PublicUserProfileTest {
         val profile = PublicUserProfile()
         assertEquals("", profile.uid)
         assertEquals("", profile.username)
-        assertEquals("", profile.avatarUrl)
-        assertEquals("", profile.avatarUrl)
         assertEquals("", profile.primaryLanguage)
         assertFalse("Default profile should be private (isDiscoverable=false)", profile.isDiscoverable)
     }
@@ -24,16 +22,12 @@ class PublicUserProfileTest {
         val profile = PublicUserProfile(
             uid = "user123",
             username = "test_user",
-
-            avatarUrl = "https://example.com/avatar.jpg",
             primaryLanguage = "en-US",
             learningLanguages = listOf("ja-JP", "es-ES"),
             isDiscoverable = false
         )
         assertEquals("user123", profile.uid)
         assertEquals("test_user", profile.username)
-
-        assertEquals("https://example.com/avatar.jpg", profile.avatarUrl)
         assertEquals("en-US", profile.primaryLanguage)
         assertEquals(2, profile.learningLanguages?.size)
         assertFalse(profile.isDiscoverable)
