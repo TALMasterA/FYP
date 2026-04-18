@@ -10,7 +10,7 @@ val ScreenUiTexts: List<String> = listOf(
             "If auto-detect looks stale after you change text/language, tap the refresh icon and try again.",
 
     // HomeInstructions
-        "You can change the app UI language using the dropdown at the top. \n" +
+        "Select a feature to get started.\n" +
             "Please review Notes & Cautions before using the app.",
 
     // ContinuousInstructions
