@@ -108,3 +108,7 @@ report-audit/
 
 # Temporary Python scripts
 organize_files.py
+
+# Submission packaging output
+submission/
+package_submission.ps1

@@ -3,6 +3,7 @@
 
 FYP/
 ├── README.md
+├── INSTALLATION_GUIDE.md                          ← Submission installation guide (also provided as .docx)
 ├── .gitignore
 ├── .github/
 │   ├── copilot-instructions.md                    ← Mandatory agent completion checklist (tree/docs/build/test)
@@ -20,7 +21,6 @@ FYP/
 ├── settings.gradle.kts
 ├── build.gradle.kts
 ├── gradle.properties
-├── local.properties
 ├── gradlew / gradlew.bat
 ├── gradle/
 │   ├── gradle-daemon-jvm.properties
@@ -45,7 +45,6 @@ FYP/
 ├── app/
 │   ├── build.gradle.kts
 │   ├── proguard-rules.pro
-│   ├── google-services.json
 │   └── src/
 │       ├── main/
 │       │   ├── AndroidManifest.xml
