@@ -257,7 +257,3 @@ This project uses **Firebase Firestore** — a cloud-hosted NoSQL document datab
 | App crashes on launch | Check Logcat for missing Firebase configuration. Ensure your Firebase project is set up correctly. |
 | Tests fail | Run `./gradlew clean` then retry. Ensure no stale build artifacts. |
 | Node.js version mismatch | The backend requires Node.js 24. Use `nvm` or `fnm` to manage versions. |
-
----
-
-*Generated: April 2026*
