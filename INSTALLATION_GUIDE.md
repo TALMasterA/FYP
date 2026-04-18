@@ -186,7 +186,7 @@ The repository contains:
 
 ### Android Unit Tests
 ```bash
-# Run all unit tests (2,505 tests across 191 test files)
+# Run all unit tests (2,496 tests across 191 test files)
 ./gradlew testDebugUnitTest
 
 # Run a specific test class

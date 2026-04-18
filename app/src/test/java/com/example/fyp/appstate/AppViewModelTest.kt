@@ -226,29 +226,6 @@ class AppViewModelTest {
         assertNull(vm.currentUsername.value)
     }
 
-    // ── Test 7: LoggedOut preserves seen state ──
-
-    @Test
-    fun `logout does not clear seen state for previous user`() = runTest {
-        val vm = buildViewModel()
-        authStateFlow.value = AuthState.LoggedIn(testUser)
-        authStateFlow.value = AuthState.LoggedOut
-
-        verify(sharedFriends, never()).clearAllSeenStateForUser(any())
-    }
-
-    @Test
-    fun `logout and relogin same user preserves seen-state by avoiding clear call`() = runTest {
-        val vm = buildViewModel()
-
-        authStateFlow.value = AuthState.LoggedIn(testUser)
-        authStateFlow.value = AuthState.LoggedOut
-        authStateFlow.value = AuthState.LoggedIn(testUser)
-
-        verify(sharedFriends, never()).clearAllSeenStateForUser(any())
-        verify(sharedFriends, times(2)).startObserving(testUserId)
-    }
-
     // ── Test 8: pendingFriendRequestCount gated by setting ──
 
     @Test

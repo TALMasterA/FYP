@@ -99,16 +99,6 @@ class SeenItemsStorageTest {
     }
 
     @Test
-    fun `clearSeenItemIds removes stored data for user`() {
-        val userId = "user123"
-
-        SeenItemsStorage.clearSeenItemIds(mockContext, userId)
-
-        verify(mockEditor).remove("seen_shared_items_user123")
-        verify(mockEditor).apply()
-    }
-
-    @Test
     fun `different users have separate storage keys`() {
         val user1 = "user123"
         val user2 = "user456"
@@ -183,16 +173,6 @@ class SeenItemsStorageTest {
         verify(mockEditor).apply()
     }
 
-    @Test
-    fun `clearSeenFriendRequestIds removes stored data for user`() {
-        val userId = "user123"
-
-        SeenItemsStorage.clearSeenFriendRequestIds(mockContext, userId)
-
-        verify(mockEditor).remove("seen_friend_requests_user123")
-        verify(mockEditor).apply()
-    }
-
     // ── Chat Message Tests ────────────────────────────────────────────────
 
     @Test
@@ -229,39 +209,6 @@ class SeenItemsStorageTest {
 
         verify(mockEditor).putString(eq("seen_message_friends_user123"), anyString())
         verify(mockEditor).apply()
-    }
-
-    @Test
-    fun `clearSeenMessageFriendIds removes stored data for user`() {
-        val userId = "user123"
-
-        SeenItemsStorage.clearSeenMessageFriendIds(mockContext, userId)
-
-        verify(mockEditor).remove("seen_message_friends_user123")
-        verify(mockEditor).apply()
-    }
-
-    // ── Bulk Clear Tests ──────────────────────────────────────────────────
-
-    @Test
-    fun `clearAllSeenState removes all notification types for user`() {
-        val userId = "user123"
-
-        SeenItemsStorage.clearAllSeenState(mockContext, userId)
-
-        verify(mockEditor).remove("seen_shared_items_user123")
-        verify(mockEditor).remove("seen_friend_requests_user123")
-        verify(mockEditor).remove("seen_message_friends_user123")
-        verify(mockEditor, times(3)).apply()
-    }
-
-    @Test
-    fun `clearAllSeenState only clears targeted user keys`() {
-        SeenItemsStorage.clearAllSeenState(mockContext, "user123")
-
-        verify(mockEditor, never()).remove("seen_shared_items_user456")
-        verify(mockEditor, never()).remove("seen_friend_requests_user456")
-        verify(mockEditor, never()).remove("seen_message_friends_user456")
     }
 
     @Test

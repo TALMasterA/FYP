@@ -145,16 +145,6 @@ class WordBankCacheDataStore @Inject constructor(
         saveCache(WordBankCacheData(newEntries))
     }
 
-    /**
-     * Clear all cached data
-     */
-    suspend fun clearAll() {
-        memCache = null
-        context.wordBankCacheDataStore.edit { prefs ->
-            prefs.remove(CACHE_KEY)
-        }
-    }
-
     private suspend fun loadCache(): WordBankCacheData {
         // Serve from the in-memory mirror when available — avoids DataStore + JSON overhead.
         memCache?.let { return it }

@@ -151,19 +151,6 @@ class TranslationCache @Inject constructor(
     }
 
     /**
-     * Clear all cached translations
-     */
-    suspend fun clearAll() {
-        synchronized(inMemoryCache) {
-            inMemoryCache.clear()
-        }
-        memCache = null
-        context.translationCacheDataStore.edit { prefs ->
-            prefs.remove(CACHE_KEY)
-        }
-    }
-
-    /**
      * Batch get cached translations.
      * Returns a map of text -> translation for found entries, and list of texts not in cache.
      */

@@ -215,20 +215,6 @@ class SharedFriendsDataSource @Inject constructor(
         }
     }
 
-    /**
-     * Explicitly clear all persisted notification-seen state for [userId].
-     * Reserved for explicit reset flows (for example account reset/cleanup).
-     */
-    fun clearAllSeenStateForUser(userId: String) {
-        scope.launch(Dispatchers.IO) {
-            try {
-                SeenItemsStorage.clearAllSeenState(context, userId)
-            } catch (e: Exception) {
-                Log.e("SharedFriendsDS", "Failed to clear seen state for user=$userId", e)
-            }
-        }
-    }
-
     // ── In-memory username cache (avoid re-fetching sender profile on share) ──
 
     /** Cache: userId → username. Populated when friends list loads. */
@@ -356,7 +342,6 @@ class SharedFriendsDataSource @Inject constructor(
      *
      * IMPORTANT: Persisted seen-item IDs are intentionally NOT cleared here.
      * They must survive app restarts so badges don't reappear for already-viewed items.
-     * Use [clearAllSeenStateForUser] only on explicit reset flows.
      */
     fun stopObserving() {
         observeGeneration += 1

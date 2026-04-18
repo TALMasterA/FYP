@@ -59,14 +59,6 @@ object SeenItemsStorage {
         getPrefs(context).edit().putString(key, csv).apply()
     }
 
-    /**
-     * Clear all seen shared inbox item IDs for a user.
-     */
-    fun clearSeenItemIds(context: Context, userId: String) {
-        val key = KEY_PREFIX_SEEN_ITEMS + userId
-        getPrefs(context).edit().remove(key).apply()
-    }
-
     // ── Friend Requests ───────────────────────────────────────────────────────
 
     /**
@@ -86,14 +78,6 @@ object SeenItemsStorage {
         val key = KEY_PREFIX_SEEN_REQUESTS + userId
         val csv = seenIds.joinToString(",")
         getPrefs(context).edit().putString(key, csv).apply()
-    }
-
-    /**
-     * Clear all seen friend request IDs for a user.
-     */
-    fun clearSeenFriendRequestIds(context: Context, userId: String) {
-        val key = KEY_PREFIX_SEEN_REQUESTS + userId
-        getPrefs(context).edit().remove(key).apply()
     }
 
     // ── Chat Messages ─────────────────────────────────────────────────────────
@@ -126,22 +110,4 @@ object SeenItemsStorage {
         saveSeenMessageFriendIds(context, userId, updated)
     }
 
-    /**
-     * Clear all seen message friend IDs for a user.
-     */
-    fun clearSeenMessageFriendIds(context: Context, userId: String) {
-        val key = KEY_PREFIX_SEEN_MESSAGE_FRIENDS + userId
-        getPrefs(context).edit().remove(key).apply()
-    }
-
-    // ── Bulk Clear ────────────────────────────────────────────────────────────
-
-    /**
-     * Clear all notification seen state for a user (e.g., on logout).
-     */
-    fun clearAllSeenState(context: Context, userId: String) {
-        clearSeenItemIds(context, userId)
-        clearSeenFriendRequestIds(context, userId)
-        clearSeenMessageFriendIds(context, userId)
-    }
 }

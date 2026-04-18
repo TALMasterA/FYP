@@ -129,16 +129,6 @@ class LanguageDetectionCache @Inject constructor(
         saveCache(LanguageDetectionCacheData(newEntries))
     }
 
-    /**
-     * Clear all cached detections
-     */
-    suspend fun clearAll() {
-        memCache = null
-        context.languageDetectionCacheDataStore.edit { prefs ->
-            prefs.remove(CACHE_KEY)
-        }
-    }
-
     private suspend fun loadCache(): LanguageDetectionCacheData {
         // Serve from the in-memory mirror when available — avoids DataStore + JSON overhead.
         memCache?.let { return it }
