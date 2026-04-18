@@ -35,7 +35,7 @@ FYP/
 ├── docs/
 │   ├── treeOfImportantfiles.txt                    ← This file
 │   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants
-│   ├── TEST_COVERAGE.md                            ← Test coverage report (191 Android test files, 2,496 Android + 186 backend tests)
+│   ├── TEST_COVERAGE.md                            ← Test coverage report (187 Android test files, 2,449 Android + 186 backend tests)
 │   ├── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
 │   ├── MCP_SKILLS_PLAYBOOK.md                      ← Team playbook for MCP skills usage
 │   ├── CLOUD_FUNCTIONS_API.md                      ← Backend Cloud Functions API reference
@@ -240,10 +240,24 @@ FYP/
 │       │       │   │   ├── strings/                      ← Localized UI text definitions
 │       │       │   │   │   ├── UiTextCore.kt            ← UiTextKey enum + BaseUiTexts list
 │       │       │   │   │   ├── UiTextScreens.kt         ← English base UI strings list
-│       │       │   │   │   ├── UiTextHelpers.kt         ← helper fns (language names, etc.)
-│       │       │   │   │   └── translations/            ← Language-specific implementations
-│       │       │   │   │       ├── CantoneseUiTexts.kt  ← hardcoded zh-HK UI strings
-│       │       │   │   │       └── ZhTwUiTexts.kt       ← hardcoded zh-TW UI strings
+│       │       │   │   │   ├── UiTextHelpers.kt         ← BaseUiTexts aggregate (CoreUiTexts + ScreenUiTexts)
+│       │       │   │   │   └── translations/            ← Hardcoded UI strings for all 17 languages
+│       │       │   │   │       ├── CantoneseUiTexts.kt  ← zh-HK
+│       │       │   │   │       ├── ZhTwUiTexts.kt       ← zh-TW
+│       │       │   │   │       ├── ZhCnUiTexts.kt       ← zh-CN
+│       │       │   │   │       ├── JaJpUiTexts.kt       ← ja-JP
+│       │       │   │   │       ├── KoKrUiTexts.kt       ← ko-KR
+│       │       │   │   │       ├── FrFrUiTexts.kt       ← fr-FR
+│       │       │   │   │       ├── DeDeUiTexts.kt       ← de-DE
+│       │       │   │   │       ├── EsEsUiTexts.kt       ← es-ES
+│       │       │   │   │       ├── IdIdUiTexts.kt       ← id-ID
+│       │       │   │   │       ├── ViVnUiTexts.kt       ← vi-VN
+│       │       │   │   │       ├── ThThUiTexts.kt       ← th-TH
+│       │       │   │   │       ├── FilPhUiTexts.kt      ← fil-PH
+│       │       │   │   │       ├── MsMyUiTexts.kt       ← ms-MY
+│       │       │   │   │       ├── PtBrUiTexts.kt       ← pt-BR
+│       │       │   │   │       ├── ItItUiTexts.kt       ← it-IT
+│       │       │   │   │       └── RuRuUiTexts.kt       ← ru-RU
 │       │       │   ├── user/
 │       │       │   │   ├── AuthState.kt
 │       │       │   │   ├── User.kt
@@ -384,8 +398,7 @@ FYP/
 │       │   │   │   └── LanguageDisplayNamesExtendedTest.kt ← Additional language name edge cases
 │       │   │   ├── clients/
 │       │   │   │   ├── CloudClientLogicTest.kt            ← Cloud client request/response logic tests
-│       │   │   │   ├── CloudTranslatorLogicTest.kt        ← Translator client logic tests
-│       │   │   │   └── CloudTranslatorRateLimitTierTest.kt  ← Tiered rate-limit cooldown invariant tests
+│       │   │   │   └── CloudTranslatorLogicTest.kt        ← Translator client logic tests
 │       │   │   ├── cloud/
 │       │   │   │   ├── CloudGenAiClientTest.kt            ← GenAI client logic tests
 │       │   │   │   ├── CloudQuizClientTest.kt             ← Quiz client logic tests
@@ -426,8 +439,6 @@ FYP/
 │       │   │   │   ├── SettingsNotificationFieldsTest.kt  ← Notification fields, history clamping, parse defaults
 │       │   │   │   ├── SharedSettingsDataSourceLogicTest.kt ← Settings data source logic tests
 │       │   │   │   └── SharedSettingsLogicTest.kt          ← Shared settings logic tests
-│       │   │   ├── ui/
-│       │   │   │   └── UiLanguageCorrectionTest.kt        ← Language name correction algorithm tests
 │       │   │   ├── user/
 │       │   │   │   └── AccountDeletionGuardTest.kt        ← Subcollection cleanup guard test
 │       │   │   └── wordbank/
@@ -507,8 +518,7 @@ FYP/
 │       │   │   │   ├── TranslationConsistencyTest.kt      ← Translation consistency across languages
 │       │   │   │   ├── UiTextAlignmentTest.kt
 │       │   │   │   ├── UiTextCompletenessTest.kt          ← UiTextKey enum completeness tests
-│       │   │   │   ├── UiTextConstantsIntegrationTest.kt  ← UI text constants integration tests
-│       │   │   │   └── UiTextHelpersTest.kt               ← UI text helper function tests
+│       │   │   └── UiTextConstantsIntegrationTest.kt  ← UI text constants integration tests
 │       │   │   ├── user/
 │       │   │   │   ├── AuthStateTest.kt                   ← AuthState sealed interface tests
 │       │   │   │   ├── FavoriteLimitTest.kt

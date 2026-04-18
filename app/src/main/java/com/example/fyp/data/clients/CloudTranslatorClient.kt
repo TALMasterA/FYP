@@ -29,93 +29,26 @@ data class TranslationResult(
     val detectedScore: Double? = null
 )
 
+/**
+ * Cloud Functions client for content translation and language detection.
+ *
+ * All UI translations are now hardcoded — this client is NOT used for UI strings.
+ * It handles user-generated content only:
+ * - [translateText]: single-text translation (speech, custom words)
+ * - [translateTexts]: batch translation (chat messages)
+ * - [detectLanguage]: auto-detect source language
+ */
 class CloudTranslatorClient(
     private val functions: FirebaseFunctions = FirebaseFunctions.getInstance()
 ) {
     private companion object {
         const val TIMEOUT_SECONDS = 30L
-        /** Extended timeout for batch UI translation (server chunks internally). */
-        const val BATCH_TIMEOUT_SECONDS = 120L
-        /** Cooldown after a rate-limit hit for guests / unknown auth state. */
-        const val RATE_LIMIT_COOLDOWN_GUEST_MS = 2 * 60 * 1000L
-        /**
-         * Shorter cooldown for authenticated users.
-         * The server now retries Azure 429s internally with back-off, so
-         * the client rarely sees transient rate-limit errors.  5 s is
-         * enough to let the server window advance while still allowing
-         * two devices and three consecutive changes to succeed.
-         */
-        const val RATE_LIMIT_COOLDOWN_AUTH_MS = 5 * 1000L
-
-        @Volatile
-        private var rateLimitedUntilMs: Long = 0L
-
-        private fun isRateLimitMessage(message: String?): Boolean {
-            val lowered = message?.lowercase().orEmpty()
-            return lowered.contains("resource-exhausted") ||
-                lowered.contains("rate limit") ||
-                lowered.contains("too many requests") ||
-                lowered.contains("http 429")
-        }
-
-        private fun remainingRateLimitSeconds(nowMs: Long = System.currentTimeMillis()): Long {
-            val remainingMs = (rateLimitedUntilMs - nowMs).coerceAtLeast(0L)
-            if (remainingMs == 0L) return 0L
-            return ((remainingMs + 999L) / 1000L).coerceAtLeast(1L)
-        }
-
-        private fun enforceRateLimitCooldown() {
-            val seconds = remainingRateLimitSeconds()
-            if (seconds <= 0L) return
-            throw Exception("Translation service is temporarily rate-limited. Please wait ${seconds}s and try again.")
-        }
-
-        private fun markRateLimited(message: String?, isLoggedIn: Boolean): Exception {
-            val cooldownMs = if (isLoggedIn) RATE_LIMIT_COOLDOWN_AUTH_MS else RATE_LIMIT_COOLDOWN_GUEST_MS
-            val nextUntil = System.currentTimeMillis() + cooldownMs
-            if (nextUntil > rateLimitedUntilMs) {
-                rateLimitedUntilMs = nextUntil
-            }
-            return Exception(
-                message?.takeIf { it.isNotBlank() }
-                    ?: "Translation service rate limit exceeded. Please wait a few minutes and try again."
-            )
-        }
     }
-
-    /**
-     * When true, rate-limit cooldowns are shorter (15 s vs 2 min).
-     * Set by the UI layer before triggering a batch translation.
-     */
-    @Volatile
-    var isLoggedIn: Boolean = false
 
     // Reuse callable instances to avoid repeated lookup/allocation on hot paths.
     private val translateTextCallable by lazy { functions.getHttpsCallable("translateText") }
     private val translateTextsCallable by lazy { functions.getHttpsCallable("translateTexts") }
     private val detectLanguageCallable by lazy { functions.getHttpsCallable("detectLanguage") }
-
-    private fun mapFunctionsError(e: FirebaseFunctionsException): Exception {
-        val serverMessage = e.message?.takeIf { it.isNotBlank() }
-        val message = when (e.code) {
-            FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED ->
-                serverMessage ?: "Rate limit reached while changing UI language. Please wait and try again."
-            FirebaseFunctionsException.Code.DEADLINE_EXCEEDED ->
-                serverMessage ?: "Language translation timed out. Please try again."
-            FirebaseFunctionsException.Code.UNAVAILABLE ->
-                serverMessage ?: "Translation service is temporarily unavailable. Please try again later."
-            FirebaseFunctionsException.Code.UNAUTHENTICATED ->
-                serverMessage ?: "Authentication required. Please log in again."
-            FirebaseFunctionsException.Code.PERMISSION_DENIED ->
-                serverMessage ?: "Permission denied while calling translation service."
-            else -> serverMessage ?: "Translation request failed. Please try again."
-        }
-        return if (e.code == FirebaseFunctionsException.Code.RESOURCE_EXHAUSTED || isRateLimitMessage(serverMessage)) {
-            markRateLimited(message, isLoggedIn)
-        } else {
-            Exception(message, e)
-        }
-    }
 
     suspend fun translateText(
         text: String,
@@ -123,7 +56,6 @@ class CloudTranslatorClient(
         to: String
     ): TranslationResult {
         return try {
-            enforceRateLimitCooldown()
             NetworkRetry.withRetry(
                 maxAttempts = 3,
                 shouldRetry = NetworkRetry::isRetryableFirebaseException
@@ -155,23 +87,20 @@ class CloudTranslatorClient(
                 )
             }
         } catch (e: FirebaseFunctionsException) {
-            throw mapFunctionsError(e)
-        } catch (e: Exception) {
-            if (isRateLimitMessage(e.message)) {
-                throw markRateLimited(e.message, isLoggedIn)
-            }
-            throw e
+            throw Exception(e.message ?: "Translation request failed.", e)
         }
     }
 
+    /**
+     * Batch-translate multiple texts. Used by [FirebaseTranslationRepository] for
+     * content translation (chat messages, etc.) — NOT for UI strings.
+     */
     suspend fun translateTexts(
         texts: List<String>,
         from: String?,
         to: String
     ): List<String> {
         return try {
-            enforceRateLimitCooldown()
-            // Send all texts in ONE call — server handles Azure chunking internally.
             NetworkRetry.withRetry(
                 maxAttempts = 3,
                 shouldRetry = NetworkRetry::isRetryableFirebaseException
@@ -183,7 +112,7 @@ class CloudTranslatorClient(
                 if (!from.isNullOrBlank()) data["from"] = from
 
                 val result = translateTextsCallable
-                    .withTimeout(BATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                     .call(data)
                     .await()
 
@@ -197,12 +126,7 @@ class CloudTranslatorClient(
                 list.map { it as? String ?: "" }
             }
         } catch (e: FirebaseFunctionsException) {
-            throw mapFunctionsError(e)
-        } catch (e: Exception) {
-            if (isRateLimitMessage(e.message)) {
-                throw markRateLimited(e.message, isLoggedIn)
-            }
-            throw e
+            throw Exception(e.message ?: "Batch translation request failed.", e)
         }
     }
 

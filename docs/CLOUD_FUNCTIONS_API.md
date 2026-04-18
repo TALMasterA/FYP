@@ -61,10 +61,8 @@ When `from` is omitted (auto-detect mode), the response also includes:
 ### `translateTexts`
 Batch-translates multiple texts in a single API call. Server internally chunks into 100-element Azure API requests with **350 ms inter-chunk throttle** and **per-chunk retry** (up to 3 retries for Azure HTTP 429, honoring Azure `Retry-After` when provided and otherwise using exponential back-off).
 
-**Auth:** Not required (guest access allowed with stricter rate limit)
-**Rate Limit:**
-- Authenticated users: 20 requests per 10 minutes (per user)
-- Guests: 1 request per hour (per IP address)
+**Auth:** Required
+**Rate Limit:** 20 requests per 10 minutes (per user)
 
 **Request:**
 | Field   | Type     | Required | Description                  |

@@ -21,12 +21,18 @@ Use this guide when auditing and regenerating the final report from DOCX/PlantUM
 ## Critical Metrics (Current Verified Snapshot)
 - Android source files: 223
 - Backend source files: 9
-- Android unit test files: 191
-- Android unit tests: 2,496
+- Android unit test files: 187
+- Android unit tests: 2,449
 - Backend test files: 14
 - Backend tests: 186
 - Backend coverage: statements 94.69%, branches 80.66%, functions 93.50%, lines 95.62%
 - Git commit count at current repository snapshot: 591
+
+## UI Language System (Hardcoded — v7 change)
+- All 17 UI languages are fully hardcoded — switching is instant with zero API calls
+- Azure Translator API is used ONLY for content translation (speech/chat), NOT for UI strings
+- Authentication is NOT required for language switching
+- Report must distinguish "UI language" (hardcoded) from "Content translation" (API-based)
 
 ## Testing Framework Identity (CRITICAL — v3 fix)
 - Android: **JUnit 4.13.2** + **Mockito 5.7.0** + **Mockito-Kotlin 5.1.0**

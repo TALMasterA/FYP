@@ -441,6 +441,12 @@ describe("translateTexts", () => {
 
   // ── Server-side rate limiting for translateTexts ──────────────────
 
+  it("rejects unauthenticated requests", async () => {
+    await expect(
+      (translateTexts as any)({auth: null, data: {texts: ["hello"], to: "es-ES"}})
+    ).rejects.toThrow("Login required.");
+  });
+
   it("blocks authenticated user when rate limit exceeded", async () => {
     mockCheckWriteRateLimit.mockResolvedValueOnce(false);
 
@@ -449,64 +455,7 @@ describe("translateTexts", () => {
     ).rejects.toThrow(/rate limit/i);
 
     expect(mockCheckWriteRateLimit).toHaveBeenCalledWith(
-      "u1", "ui_translate", 20, 10 * 60 * 1000
-    );
-  });
-
-  it("blocks guest user when rate limit exceeded", async () => {
-    mockCheckWriteRateLimit.mockResolvedValueOnce(false);
-
-    await expect(
-      (translateTexts as any)({
-        auth: null,
-        data: {texts: ["hello"], to: "es-ES"},
-        rawRequest: {ip: "1.2.3.4"},
-      })
-    ).rejects.toThrow("Guest UI language translation is limited");
-
-    expect(mockCheckWriteRateLimit).toHaveBeenCalledWith(
-      "guest_1_2_3_4", "ui_translate", 1, 60 * 60 * 1000
-    );
-  });
-
-  it("uses different rate-limit windows for auth vs guest", async () => {
-    // Authenticated call
-    mockCheckWriteRateLimit.mockResolvedValueOnce(true);
-    const apiResponse = JSON.stringify([{translations: [{text: "hola"}]}]);
-    mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
-    await (translateTexts as any)({
-      auth: {uid: "u1"}, data: {texts: ["hello"], to: "es-ES"},
-    });
-    expect(mockCheckWriteRateLimit).toHaveBeenCalledWith(
-      "u1", "ui_translate", 20, 10 * 60 * 1000
-    );
-
-    jest.clearAllMocks();
-    mockCheckWriteRateLimit.mockResolvedValueOnce(true);
-    mockFetch.mockResolvedValueOnce(mockResponse(apiResponse));
-
-    // Guest call
-    await (translateTexts as any)({
-      auth: null, data: {texts: ["hello"], to: "es-ES"},
-      rawRequest: {ip: "10.0.0.1"},
-    });
-    expect(mockCheckWriteRateLimit).toHaveBeenCalledWith(
-      "guest_10_0_0_1", "ui_translate", 1, 60 * 60 * 1000
-    );
-  });
-
-  it("falls back to 'unknown' IP key when rawRequest is absent", async () => {
-    mockCheckWriteRateLimit.mockResolvedValueOnce(false);
-
-    await expect(
-      (translateTexts as any)({
-        auth: null,
-        data: {texts: ["hi"], to: "en-US"},
-      })
-    ).rejects.toThrow("Guest UI language translation is limited");
-
-    expect(mockCheckWriteRateLimit).toHaveBeenCalledWith(
-      "guest_unknown", "ui_translate", 1, 60 * 60 * 1000
+      "u1", "content_translate", 20, 10 * 60 * 1000
     );
   });
 });

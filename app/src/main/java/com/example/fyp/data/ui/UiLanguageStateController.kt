@@ -9,35 +9,45 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.example.fyp.model.ui.AppLanguageState
 import com.example.fyp.model.ui.UiTextKey
-import com.example.fyp.model.ui.ZhTwUiTexts
 import com.example.fyp.model.ui.CantoneseUiTexts
-import com.example.fyp.model.ui.baseUiTextsHash
-import com.example.fyp.model.ui.LanguageNameTranslations
-import com.example.fyp.model.ui.LanguageNameKeys
+import com.example.fyp.model.ui.ZhTwUiTexts
+import com.example.fyp.model.ui.ZhCnUiTexts
+import com.example.fyp.model.ui.JaJpUiTexts
+import com.example.fyp.model.ui.KoKrUiTexts
+import com.example.fyp.model.ui.FrFrUiTexts
+import com.example.fyp.model.ui.DeDeUiTexts
+import com.example.fyp.model.ui.EsEsUiTexts
+import com.example.fyp.model.ui.IdIdUiTexts
+import com.example.fyp.model.ui.ViVnUiTexts
+import com.example.fyp.model.ui.ThThUiTexts
+import com.example.fyp.model.ui.FilPhUiTexts
+import com.example.fyp.model.ui.MsMyUiTexts
+import com.example.fyp.model.ui.PtBrUiTexts
+import com.example.fyp.model.ui.ItItUiTexts
+import com.example.fyp.model.ui.RuRuUiTexts
 
 typealias UiTextMap = Map<UiTextKey, String>
 typealias UpdateAppLanguage = (String, UiTextMap) -> Unit
 
-/**
- * Apply predefined language name corrections to a UI text map.
- * This fixes translation API errors where language names are incorrectly translated.
- */
-private fun applyLanguageNameCorrections(
-    map: Map<UiTextKey, String>,
-    uiLanguageCode: String
-): Map<UiTextKey, String> {
-    if (uiLanguageCode.startsWith("en")) return map
-
-    val langNameTranslations = LanguageNameTranslations[uiLanguageCode] ?: return map
-
-    val correctedMap = map.toMutableMap()
-    LanguageNameKeys.forEach { key ->
-        langNameTranslations[key]?.let { correctTranslation ->
-            correctedMap[key] = correctTranslation
-        }
-    }
-    return correctedMap
-}
+/** Maps a BCP-47 language code to its hardcoded UI-text map. */
+private val hardcodedUiTexts: Map<String, Map<UiTextKey, String>> = mapOf(
+    "zh-HK" to CantoneseUiTexts,
+    "zh-TW" to ZhTwUiTexts,
+    "zh-CN" to ZhCnUiTexts,
+    "ja-JP" to JaJpUiTexts,
+    "ko-KR" to KoKrUiTexts,
+    "fr-FR" to FrFrUiTexts,
+    "de-DE" to DeDeUiTexts,
+    "es-ES" to EsEsUiTexts,
+    "id-ID" to IdIdUiTexts,
+    "vi-VN" to ViVnUiTexts,
+    "th-TH" to ThThUiTexts,
+    "fil-PH" to FilPhUiTexts,
+    "ms-MY" to MsMyUiTexts,
+    "pt-BR" to PtBrUiTexts,
+    "it-IT" to ItItUiTexts,
+    "ru-RU" to RuRuUiTexts,
+)
 
 @Composable
 fun rememberUiLanguageState(
@@ -58,85 +68,22 @@ fun rememberUiLanguageState(
     LaunchedEffect(Unit) {
         val defaultCode = uiLanguages[0].first
         val selected = cache.getSelectedLanguage(defaultCode)
-        val currentHash = baseUiTextsHash()
 
-        if (selected.startsWith("en")) {
-            appLanguageState = appLanguageState.copy(
-                selectedUiLanguage = selected,
-                uiTexts = emptyMap()
-            )
-            return@LaunchedEffect
-        }
+        // All languages are now hardcoded — instant restore, no cache-hash check needed.
+        val texts = if (selected.startsWith("en")) emptyMap()
+                    else hardcodedUiTexts[selected] ?: emptyMap()
 
-        // Traditional Chinese (zh-TW): use hardcoded map, no API call needed
-        if (selected == "zh-TW") {
-            appLanguageState = appLanguageState.copy(
-                selectedUiLanguage = "zh-TW",
-                uiTexts = ZhTwUiTexts
-            )
-            return@LaunchedEffect
-        }
-
-        // Cantonese (zh-HK): use hardcoded map, no API call needed
-        if (selected == "zh-HK") {
-            appLanguageState = appLanguageState.copy(
-                selectedUiLanguage = "zh-HK",
-                uiTexts = CantoneseUiTexts
-            )
-            return@LaunchedEffect
-        }
-
-        val cachedHash = cache.getBaseHash(selected)
-
-        // If cache matches current BaseUiTexts => load it; else fallback to English (empty map)
-        if (cachedHash == currentHash) {
-            val cachedMap = cache.loadUiTexts(selected)
-            // Apply language name corrections to fix any translation API errors
-            val correctedMap = if (cachedMap != null) {
-                applyLanguageNameCorrections(cachedMap, selected)
-            } else {
-                emptyMap()
-            }
-            appLanguageState = appLanguageState.copy(
-                selectedUiLanguage = selected,
-                uiTexts = correctedMap
-            )
-        } else {
-            // Cached UI texts belong to an older BaseUiTexts version.
-            // Reset dropdown to default (English) so UI + dropdown are consistent.
-            cache.setSelectedLanguage(defaultCode)
-            appLanguageState = appLanguageState.copy(
-                selectedUiLanguage = defaultCode,
-                uiTexts = emptyMap()
-            )
-        }
+        appLanguageState = appLanguageState.copy(
+            selectedUiLanguage = selected,
+            uiTexts = texts
+        )
     }
-
-    var pendingSave by remember { mutableStateOf<Pair<String, UiTextMap>?>(null) }
 
     val updateAppLanguage: UpdateAppLanguage = { code, uiTexts ->
         appLanguageState = appLanguageState.copy(
             selectedUiLanguage = code,
             uiTexts = uiTexts
         )
-        pendingSave = code to uiTexts
-    }
-
-    LaunchedEffect(pendingSave) {
-        val pair = pendingSave ?: return@LaunchedEffect
-        val (code, uiTexts) = pair
-
-        cache.setSelectedLanguage(code)
-
-        // If english, we store no map (fallback to BaseUiTexts)
-        if (code.startsWith("en")) {
-            cache.setBaseHash(code, baseUiTextsHash())
-            return@LaunchedEffect
-        }
-
-        // Save whatever we have (can be partial; missing keys fallback to English in UI)
-        cache.saveUiTexts(code, uiTexts)
-        cache.setBaseHash(code, baseUiTextsHash())
     }
 
     return appLanguageState to updateAppLanguage

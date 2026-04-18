@@ -57,9 +57,6 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ActionSave to "儲存",
     UiTextKey.ActionConfirm to "確認",
 
-    // Guest limit
-    UiTextKey.GuestTranslationLimitTitle to "需要登入",
-    UiTextKey.GuestTranslationLimitMessage to "您已更換一次介面語言。請登入後再次更換。已登入用戶可無限次更換介面語言並享有本地快取功能。",
 
     // Speech
     UiTextKey.SpeechInputPlaceholder to "在此輸入或使用麥克風...",

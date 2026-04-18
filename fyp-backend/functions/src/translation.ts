@@ -23,13 +23,10 @@ import {
 } from "./helpers.js";
 import {logger} from "./logger.js";
 
-// ── UI-language batch translation rate limits ────────────────────────
-// Each language change = 1 Cloud Function call (server-side Azure chunking).
-// Authenticated users get a generous allowance; guests are strict.
-const UI_TRANSLATE_AUTH_MAX = 20;
-const UI_TRANSLATE_AUTH_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
-const UI_TRANSLATE_GUEST_MAX = 1;
-const UI_TRANSLATE_GUEST_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+// ── Batch content-translation rate limits ────────────────────────────
+// Each translateTexts call = 1 Cloud Function call (server-side Azure chunking).
+const CONTENT_TRANSLATE_AUTH_MAX = 20;
+const CONTENT_TRANSLATE_AUTH_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
 // Azure Translator API limits: max 100 elements per request.
 const AZURE_CHUNK_SIZE = 100;
@@ -226,10 +223,8 @@ export const translateText = onCall(
 );
 
 /**
- * No requireAuth — guests may call this once.
- * Server-side rate limiting:
- *   - Authenticated users: 20 requests per 10 minutes (per uid)
- *   - Guests: 1 request per hour (per raw IP)
+ * Batch translation for chat messages. Requires authentication.
+ * Server-side rate limiting: 20 requests per 10 minutes (per uid).
  * Server-side Azure chunking: splits large batches into 100-element Azure
  * API calls so the client only needs ONE Cloud Function invocation per
  * language change.
@@ -237,31 +232,19 @@ export const translateText = onCall(
 export const translateTexts = onCall(
   {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
   async (request) => {
+    requireAuth(request.auth);
+
     // ── Rate-limit check (before any heavy work) ──────────────────────
-    const uid = request.auth?.uid;
-    if (uid) {
-      const allowed = await checkWriteRateLimit(
-        uid, "ui_translate", UI_TRANSLATE_AUTH_MAX, UI_TRANSLATE_AUTH_WINDOW_MS
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guaranteed by requireAuth above
+    const uid = request.auth!.uid;
+    const allowed = await checkWriteRateLimit(
+      uid, "content_translate", CONTENT_TRANSLATE_AUTH_MAX, CONTENT_TRANSLATE_AUTH_WINDOW_MS
+    );
+    if (!allowed) {
+      throw new HttpsError(
+        "resource-exhausted",
+        "Rate limit hit. Please wait and try again."
       );
-      if (!allowed) {
-        throw new HttpsError(
-          "resource-exhausted",
-          "Rate limit hit. Please wait and try again."
-        );
-      }
-    } else {
-      // Guest: rate-limit by raw IP (best-effort).
-      const rawIp = request.rawRequest?.ip ?? "unknown";
-      const guestKey = `guest_${rawIp.replace(/[^a-zA-Z0-9]/g, "_")}`;
-      const allowed = await checkWriteRateLimit(
-        guestKey, "ui_translate", UI_TRANSLATE_GUEST_MAX, UI_TRANSLATE_GUEST_WINDOW_MS
-      );
-      if (!allowed) {
-        throw new HttpsError(
-          "resource-exhausted",
-          "Guest UI language translation is limited to once."
-        );
-      }
     }
 
     const MAX_BATCH_TEXTS = 800;

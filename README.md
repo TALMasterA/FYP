@@ -91,10 +91,7 @@ Please use your gmail to register.
 - Red dot badges clear only by viewing their corresponding screen (active/resumed Chat, Shared Inbox, Friends); refresh actions do not clear badges
 
 **Customization:**
-- UI language: English, Cantonese (hardcoded), Traditional Chinese (hardcoded), Simplified Chinese, Japanese, 10+ others via Azure
-- UI language dropdown shows translation progress/status; completion auto-hides
-- UI language switching keeps current language on failures and surfaces explicit rate-limit/service timeout messages
-- First-time UI language downloads now pace Azure batch requests more conservatively and honor upstream `Retry-After` hints, reducing failed locale downloads caused by burst throttling
+- UI language: 17 languages fully hardcoded (English, Cantonese, Traditional Chinese, Simplified Chinese, Japanese, Korean, French, German, Spanish, Indonesian, Vietnamese, Thai, Filipino, Malay, Portuguese, Italian, Russian) — instant switching, no API calls
 - Primary language selector (30-day cooldown) in Settings
 - Theme: Light / Dark / System (smooth animated transitions)
 - Font size: 80%–150%
@@ -203,15 +200,9 @@ See `docs/SECRETS_ROTATION.md` for rotation runbook.
 5. Use composable via `t(UiTextKey.YourKey)`
 6. Run `UiTextAlignmentTest` to verify enum count == list count
 
-**Translation System:**
-- Base: English (hardcoded)
-- Hardcoded: Traditional Chinese (zh-TW), Cantonese (zh-HK)
-- Cached: All other languages via Azure Translator API (DataStore, 30-day TTL, 1000 max entries)
-- Guest users: 1 free UI language change per hour (server-enforced); logged-in: 20 per 10 min
-- Client-side cooldown on rate-limit hit: 5 s (logged-in) / 2 min (guest)
-- Backend UI-language batch translation uses 350 ms chunk spacing and up to 3 Azure 429 retries, honoring `Retry-After` when Azure provides it
+**UI Language System:**
+- All 17 UI languages are hardcoded — switching is instant with zero API calls
 - Dropdown order: English → Cantonese → Traditional Chinese → others
-- Azure codes normalized: `zh-HK → yue`, `zh-TW → zh-Hant`, `zh-CN → zh-Hans`
 
 **Data Flow:**
 1. Compose UI → ViewModel → Use Cases → Repositories → Firestore / Cloud Functions → Azure APIs
@@ -258,8 +249,8 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 191 test files, 2,496 unit tests (from the latest `testDebugUnitTest` report)
-- **Backend:** 14 test files, 186 tests
+- **Android:** 187 test files, 2,449 unit tests (from the latest `testDebugUnitTest` report)
+- **Backend:** 14 test files, 184 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.
 

@@ -54,10 +54,6 @@ enum class UiTextKey {
     ActionSave,
     ActionConfirm,
 
-    // --- Guest Translation Limit ---
-    GuestTranslationLimitTitle,
-    GuestTranslationLimitMessage,
-
     // --- Placeholders & Input ---
     SpeechInputPlaceholder,
     SpeechTranslatedPlaceholder,
@@ -928,12 +924,6 @@ val CoreUiTexts: List<String> = listOf(
     "Save",
     // ActionConfirm
     "Confirm",
-
-    // --- Guest Translation Limit ---
-    // GuestTranslationLimitTitle
-    "Login Required",
-    // GuestTranslationLimitMessage
-    "You have already changed the UI language once. Please login to change it again. Switching between cached languages is free.",
 
     // --- Placeholders & Input ---
     // SpeechInputPlaceholder

@@ -1,18 +1,18 @@
 # Test Coverage Report
 
-_Last updated: 2026-04-19_
+_Last updated: 2026-04-20_
 
 ## Verified Snapshot (from local audit)
 
 | Metric | Count |
 |---|---:|
-| Android source files (`app/src/main/java/com/example/fyp`) | 223 |
+| Android source files (`app/src/main/java/com/example/fyp`) | 237 |
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 9 |
-| Android unit test files (`app/src/test/java/com/example/fyp`) | 191 |
-| Android test suites in latest `testDebugUnitTest` run | 191 |
-| Android unit tests executed (`testDebugUnitTest`) | 2,496 |
+| Android unit test files (`app/src/test/java/com/example/fyp`) | 187 |
+| Android test suites in latest `testDebugUnitTest` run | 187 |
+| Android unit tests executed (`testDebugUnitTest`) | 2,449 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 14 |
-| Backend Jest tests executed (`npm test`) | 186 |
+| Backend Jest tests executed (`npm test`) | 184 |
 
 ## Backend Coverage (from `coverage-summary.json`)
 
@@ -38,7 +38,7 @@ CI threshold in `fyp-backend/functions/jest.config.js`:
 ## High-Value Regression Suites
 
 - Android guard/invariant suites: `UiTextAlignmentTest`, `AccountDeletionGuardTest`, `PrimaryLanguageCooldownTest`, `UsernameCooldownTest`, `FavoriteLimitTest`, `NavigationBarInsetsTest`, `LanguageValidationTest`, `EnsurePublicProfileExistsUseCaseTest` (visibility-persistence merge-safety).
-- Translation resilience coverage includes `ErrorHandlingTest` assertions for `resource-exhausted` / rate-limit message mapping.
+- Translation resilience coverage includes `ErrorHandlingTest` assertions for `resource-exhausted` / rate-limit message mapping (content-translation only; UI language translations are now fully hardcoded — no API calls).
 - Android flow/integration suites: `FriendSystemIntegrationTest`, `FriendsFlowIntegrationTest`, `CoinAndGenerationIntegrationTest`, `QuizFlowIntegrationTest`, `DataLayerIntegrationTest`, `CrossLayerIntegrationTest`.
 - Backend contract/security suites: `translation.test.ts`, `learning.test.ts`, `coins.test.ts`, `notifications.test.ts` (includes friend-request, chat, and feedback rate-limit enforcement), `maintenance.test.ts`, `firestore-rules-settings.test.ts`.
 

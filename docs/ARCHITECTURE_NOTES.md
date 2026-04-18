@@ -50,37 +50,11 @@
 
 ---
 
-## 1.4 UI Language Switching Failure Contract
+## 1.4 UI Language Switching — Hardcoded Translations
 
-**Invariant:** Failed UI-language translations must not force-reset the app to English.
+**Invariant:** All 17 UI languages are fully hardcoded. Switching is instant with zero API calls.
 
-**Rule:** Keep the current selected UI language on failure, and surface a user-facing message derived from the backend error. For rate-limit (`RESOURCE_EXHAUSTED`/429), show an explicit retry-later explanation.
-
----
-
-## 1.4.1 Tiered UI Translation Rate Limiting
-
-**Invariant:** Logged-in users get lenient rate limits for UI-language changes; guests remain strictly limited.
-
-**Backend (`translateTexts`):**
-- Authenticated: 20 requests per 10 minutes (per `uid`, via `checkWriteRateLimit`)
-- Guest: 1 request per hour (per raw IP hash, via `checkWriteRateLimit`)
-- Server-side Azure chunking: the Cloud Function accepts up to 800 texts and internally chunks into 100-element Azure API calls, so each language change costs only **1 rate-limit count**.
-- **Inter-chunk throttle:** 350 ms delay between consecutive Azure chunk requests (`AZURE_INTER_CHUNK_DELAY_MS`) to reduce burst pressure when the 663-string UI pack is translated for a new locale.
-- **Per-chunk retry:** If an individual Azure chunk returns HTTP 429, the server retries that chunk up to 3 times. Azure `Retry-After` is honored when present; otherwise the server uses exponential back-off (750 ms → 1.5 s → 3 s, capped via `AZURE_CHUNK_RETRY_MAX_MS`) before surfacing the error to the client.
-
-**Android client (`CloudTranslatorClient`):**
-- Sends all UI texts in a **single** Cloud Function call (no client-side chunking)
-- Batch timeout: 120 s (`BATCH_TIMEOUT_SECONDS`) to accommodate server-side multi-chunk processing
-- Authenticated cooldown on 429: 5 seconds (`RATE_LIMIT_COOLDOWN_AUTH_MS`) — reduced from 15 s because the server now handles Azure 429 retries internally
-- Guest cooldown on 429: 2 minutes (`RATE_LIMIT_COOLDOWN_GUEST_MS`)
-- `isLoggedIn` flag is set by `CommonUi.AppLanguageDropdown` via `LaunchedEffect`
-
-**Design targets (validated by the above tuning):**
-1. Two devices (same authenticated user) can each change UI language successfully.
-2. Three consecutive UI language changes from the same device succeed without rate-limit errors.
-
-**Rule:** Both layers must agree — keep server-side limits as the source of truth; client-side cooldowns are a UX courtesy to avoid re-hitting the backend during the wait window.
+**Rule:** The `hardcodedUiTexts` map (keyed by language code) in `CommonUi.kt` and `UiLanguageStateController.kt` is the single source of truth for UI strings. Adding a new UI language requires creating a new translations file and adding its entry to both maps. Content translation (speech/chat) still uses Azure API.
 
 ---
 
@@ -502,13 +476,11 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ---
 
-## 18. UI Language Switching Continuity — Background Job Coordinator
+## 18. UI Language Switching — Instant Hardcoded Lookup
 
-**Invariant:** Long-running UI-language translation jobs must continue even when users navigate away.
+**Invariant:** UI language switching is instant because all 17 translations are hardcoded at compile time.
 
-**Rule:** (1) Run via shared `UiLanguageTranslationCoordinator` scope, not screen scope; (2) Surface explicit status (`in progress`, `completed`, `failed`) in dropdown; (3) Auto-dismiss status after delay; (4) Enforce guest translation limits before network call.
-
-This prevents job cancellation on route changes and avoids stale completion banners.
+**Rule:** No background jobs, coordinators, or network calls are needed for UI language switching. The `UiLanguageStateController` reads from the in-memory `hardcodedUiTexts` map and updates `appTexts` state immediately.
 
 ---
 

@@ -57,9 +57,6 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ActionSave to "儲存",
     UiTextKey.ActionConfirm to "確認",
 
-    // Guest limit
-    UiTextKey.GuestTranslationLimitTitle to "需要登入",
-    UiTextKey.GuestTranslationLimitMessage to "你已經換過一次介面語言喇。請登入先可以再換。登入用戶可以無限次換介面語言，仲有本地快取功能。",
 
     // Speech
     UiTextKey.SpeechInputPlaceholder to "喺度輸入或使用麥克風...",
