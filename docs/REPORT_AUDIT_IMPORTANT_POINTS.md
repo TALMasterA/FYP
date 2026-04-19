@@ -129,3 +129,5 @@ Use table-aware replacement: identify the table by header row, then replace indi
 5. docDefaults `sz` is in half-points (24 = 12pt). Check with `report-audit/previous-report-versions/_check_inherited.py`.
 6. Font audit tool: `python tools/audit_fonts_comprehensive.py <docx> [--json-out <path>]`.
 7. Report-audit skill available at `.agents/skills/fyp-report-audit/SKILL.md`.
+8. Number need not , (e.g. 2000, not 2,000)
+9. For the number, sometimes need not to specific (e.g. 2449, over 2000 seems better as the 2449 may change very frequent)
