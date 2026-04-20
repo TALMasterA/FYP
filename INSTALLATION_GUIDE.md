@@ -197,7 +197,7 @@ The repository contains:
 ```bash
 cd fyp-backend/functions
 
-# Run all tests (186 tests across 14 test files)
+# Run all tests (184 tests across 14 test files)
 npm test
 
 # Run with coverage
