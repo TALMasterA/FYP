@@ -39,7 +39,6 @@ FYP/
 │   ├── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
 │   ├── MCP_SKILLS_PLAYBOOK.md                      ← Team playbook for MCP skills usage
 │   ├── CLOUD_FUNCTIONS_API.md                      ← Backend Cloud Functions API reference
-│   ├── REPORT_AUDIT_IMPORTANT_POINTS.md            ← Report audit checklist, schema truth sources, and regeneration guardrails
 │   └── SECRETS_ROTATION.md                         ← API key rotation runbook
 │
 ├── app/
