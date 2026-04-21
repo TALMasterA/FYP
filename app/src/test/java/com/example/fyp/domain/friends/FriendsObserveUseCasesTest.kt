@@ -162,10 +162,10 @@ class FriendsObserveUseCasesTest {
                 UserId("user1"),
                 "myuser",
                 UserId("friend1"),
-                SharedItemType.QUIZ,
+                SharedItemType.LEARNING_SHEET,
                 mapOf(
-                    "materialId" to "quiz1",
-                    "title" to "Quiz",
+                    "materialId" to "sheet1",
+                    "title" to "Sheet",
                     "description" to "",
                     "fullContent" to ""
                 )
@@ -177,9 +177,9 @@ class FriendsObserveUseCasesTest {
             fromUserId = UserId("user1"),
             fromUsername = "myuser",
             toUserId = UserId("friend1"),
-            type = SharedItemType.QUIZ,
-            materialId = "quiz1",
-            title = "Quiz"
+            type = SharedItemType.LEARNING_SHEET,
+            materialId = "sheet1",
+            title = "Sheet"
         )
 
         assertTrue(result.isFailure)

@@ -387,7 +387,6 @@ private fun SharedItemCard(
                             when (item.type) {
                                 SharedItemType.WORD -> Icons.Default.Book
                                 SharedItemType.LEARNING_SHEET -> Icons.AutoMirrored.Filled.Article
-                                SharedItemType.QUIZ -> Icons.Default.Quiz
                             },
                             contentDescription = t(UiTextKey.AccessibilitySharedItemTypeIcon),
                             tint = MaterialTheme.colorScheme.primary
@@ -397,7 +396,6 @@ private fun SharedItemCard(
                         when (item.type) {
                             SharedItemType.WORD -> t(UiTextKey.ShareTypeWord)
                             SharedItemType.LEARNING_SHEET -> t(UiTextKey.ShareTypeLearningSheet)
-                            SharedItemType.QUIZ -> t(UiTextKey.ShareTypeQuiz)
                         },
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
@@ -444,7 +442,7 @@ private fun SharedItemCard(
                         }
                     }
                 }
-                SharedItemType.LEARNING_SHEET, SharedItemType.QUIZ -> {
+                SharedItemType.LEARNING_SHEET -> {
                     val content = item.content
                     // Parse language codes from title (format: "Learning Sheet: en-US → zh-CN")
                     val rawTitle = content["title"] as? String ?: ""
@@ -504,7 +502,7 @@ private fun SharedItemCard(
                         }
                     }
                 }
-                SharedItemType.LEARNING_SHEET, SharedItemType.QUIZ -> {
+                SharedItemType.LEARNING_SHEET -> {
                     // Learning materials: View full content or Delete
                     Row(
                         modifier = Modifier.fillMaxWidth(),

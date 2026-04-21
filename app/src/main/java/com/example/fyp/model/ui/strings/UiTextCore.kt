@@ -550,7 +550,6 @@ enum class UiTextKey {
     ShareActionFailed,
     ShareTypeWord,
     ShareTypeLearningSheet,
-    ShareTypeQuiz,
     ShareReceivedFrom,
     ShareNewItemsTemplate,
     ShareViewFullMaterial,

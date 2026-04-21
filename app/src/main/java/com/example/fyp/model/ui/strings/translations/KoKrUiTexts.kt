@@ -576,7 +576,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "작업 실패",
     UiTextKey.ShareTypeWord to "단어",
     UiTextKey.ShareTypeLearningSheet to "학습 시트",
-    UiTextKey.ShareTypeQuiz to "퀴즈",
     UiTextKey.ShareReceivedFrom to "보낸이: {username}",
     UiTextKey.ShareNewItemsTemplate to "{count} 건의 새 항목!",
     UiTextKey.ShareViewFullMaterial to "\"보기\"를 탭하여 전체 자료 열람",

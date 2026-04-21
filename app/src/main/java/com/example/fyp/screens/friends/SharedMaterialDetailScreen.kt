@@ -109,7 +109,7 @@ fun SharedMaterialDetailScreen(
             sourceLangCode = content["sourceLang"] as? String ?: ""
             targetLangCode = content["targetLang"] as? String ?: ""
         }
-        SharedItemType.LEARNING_SHEET, SharedItemType.QUIZ -> {
+        SharedItemType.LEARNING_SHEET -> {
             // Title format: "Learning Sheet: en-US → zh-CN"
             val arrow = rawTitle.indexOf(" → ")
             if (arrow != -1) {
@@ -133,7 +133,7 @@ fun SharedMaterialDetailScreen(
     val description = content["description"] as? String ?: ""
     val fetchedFullContent = uiState.fullContent
     val isContentLoading = fetchedFullContent == null
-        && (item.type == SharedItemType.LEARNING_SHEET || item.type == SharedItemType.QUIZ)
+        && item.type == SharedItemType.LEARNING_SHEET
     val bodyText = when {
         !fetchedFullContent.isNullOrBlank() -> fetchedFullContent
         description.isNotBlank()            -> description
@@ -204,7 +204,7 @@ fun SharedMaterialDetailScreen(
                         }
                     }
                 }
-                SharedItemType.LEARNING_SHEET, SharedItemType.QUIZ -> {
+                SharedItemType.LEARNING_SHEET -> {
                     when {
                         isContentLoading -> {
                             Row(

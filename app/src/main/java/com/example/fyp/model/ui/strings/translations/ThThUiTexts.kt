@@ -576,7 +576,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "ดำเนินการไม่สำเร็จ",
     UiTextKey.ShareTypeWord to "คำ",
     UiTextKey.ShareTypeLearningSheet to "สื่อการเรียน",
-    UiTextKey.ShareTypeQuiz to "แบบทดสอบ",
     UiTextKey.ShareReceivedFrom to "จาก: {username}",
     UiTextKey.ShareNewItemsTemplate to "{count} รายการใหม่!",
     UiTextKey.ShareViewFullMaterial to "กด \"ดู\" เพื่อดูสื่อทั้งหมด",

@@ -576,7 +576,6 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "操作失敗",
     UiTextKey.ShareTypeWord to "生字",
     UiTextKey.ShareTypeLearningSheet to "學習表",
-    UiTextKey.ShareTypeQuiz to "測驗",
     UiTextKey.ShareReceivedFrom to "來自：{username}",
     UiTextKey.ShareNewItemsTemplate to "收到 {count} 個新項目！",
     UiTextKey.ShareViewFullMaterial to "撳「查看」以閱讀完整材料",

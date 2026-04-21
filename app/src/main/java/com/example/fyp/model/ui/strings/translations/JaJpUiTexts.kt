@@ -576,7 +576,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "操作に失敗",
     UiTextKey.ShareTypeWord to "単語",
     UiTextKey.ShareTypeLearningSheet to "学習シート",
-    UiTextKey.ShareTypeQuiz to "クイズ",
     UiTextKey.ShareReceivedFrom to "送信者：{username}",
     UiTextKey.ShareNewItemsTemplate to "{count} 件の新しいアイテム！",
     UiTextKey.ShareViewFullMaterial to "「表示」をタップして教材全文を閲覧",

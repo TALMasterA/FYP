@@ -133,30 +133,6 @@ class FriendSystemIntegrationTest {
     }
 
     @Test
-    fun `shared word message type`() {
-        val message = FriendMessage(
-            messageId = "m1",
-            senderId = "user1",
-            receiverId = "user2",
-            content = "hello = hola",
-            type = MessageType.SHARED_WORD
-        )
-
-        assertEquals(MessageType.SHARED_WORD, message.type)
-    }
-
-    @Test
-    fun `shared learning material message type`() {
-        val message = FriendMessage(
-            type = MessageType.SHARED_LEARNING_MATERIAL,
-            metadata = mapOf("materialId" to "mat1")
-        )
-
-        assertEquals(MessageType.SHARED_LEARNING_MATERIAL, message.type)
-        assertEquals("mat1", message.metadata["materialId"])
-    }
-
-    @Test
     fun `message content cannot be blank for sending`() {
         val content = "   "
         val isBlank = content.isBlank()
@@ -220,11 +196,10 @@ class FriendSystemIntegrationTest {
     }
 
     @Test
-    fun `shared item types include WORD, LEARNING_SHEET, QUIZ`() {
-        assertEquals(3, SharedItemType.entries.size)
+    fun `shared item types include WORD, LEARNING_SHEET`() {
+        assertEquals(2, SharedItemType.entries.size)
         assertNotNull(SharedItemType.valueOf("WORD"))
         assertNotNull(SharedItemType.valueOf("LEARNING_SHEET"))
-        assertNotNull(SharedItemType.valueOf("QUIZ"))
     }
 
     @Test

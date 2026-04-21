@@ -576,7 +576,6 @@ val EsEsUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "Error en la acción",
     UiTextKey.ShareTypeWord to "Palabra",
     UiTextKey.ShareTypeLearningSheet to "Hoja de aprendizaje",
-    UiTextKey.ShareTypeQuiz to "Cuestionario",
     UiTextKey.ShareReceivedFrom to "De: {username}",
     UiTextKey.ShareNewItemsTemplate to "¡{count} elemento(s) nuevo(s)!",
     UiTextKey.ShareViewFullMaterial to "Toque \"Ver\" para el material completo",

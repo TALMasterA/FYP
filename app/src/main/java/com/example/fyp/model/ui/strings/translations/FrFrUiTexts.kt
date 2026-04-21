@@ -576,7 +576,6 @@ val FrFrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "Action échouée",
     UiTextKey.ShareTypeWord to "Mot",
     UiTextKey.ShareTypeLearningSheet to "Fiche d'apprentissage",
-    UiTextKey.ShareTypeQuiz to "Quiz",
     UiTextKey.ShareReceivedFrom to "De : {username}",
     UiTextKey.ShareNewItemsTemplate to "{count} nouvel(aux) élément(s) !",
     UiTextKey.ShareViewFullMaterial to "Appuyez sur « Voir » pour consulter le matériel complet",

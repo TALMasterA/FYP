@@ -576,7 +576,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "Hindi nagawa",
     UiTextKey.ShareTypeWord to "Salita",
     UiTextKey.ShareTypeLearningSheet to "Materyal sa pag-aaral",
-    UiTextKey.ShareTypeQuiz to "Pagsusulit",
     UiTextKey.ShareReceivedFrom to "Mula kay: {username}",
     UiTextKey.ShareNewItemsTemplate to "{count} bagong item!",
     UiTextKey.ShareViewFullMaterial to "Pindutin ang \"Tingnan\" para makita ang buong materyal",

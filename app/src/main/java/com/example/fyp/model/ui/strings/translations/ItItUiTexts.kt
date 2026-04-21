@@ -576,7 +576,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "Azione fallita",
     UiTextKey.ShareTypeWord to "Parola",
     UiTextKey.ShareTypeLearningSheet to "Materiale di apprendimento",
-    UiTextKey.ShareTypeQuiz to "Quiz",
     UiTextKey.ShareReceivedFrom to "Da: {username}",
     UiTextKey.ShareNewItemsTemplate to "{count} nuovi elementi!",
     UiTextKey.ShareViewFullMaterial to "Tocca \"Vedi\" per visualizzare il materiale completo",

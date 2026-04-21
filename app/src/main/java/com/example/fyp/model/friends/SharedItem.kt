@@ -21,8 +21,7 @@ data class SharedItem(
  */
 enum class SharedItemType {
     WORD,                    // Word bank word
-    LEARNING_SHEET,          // Learning sheet
-    QUIZ                     // Quiz
+    LEARNING_SHEET           // Learning sheet
 }
 
 /**

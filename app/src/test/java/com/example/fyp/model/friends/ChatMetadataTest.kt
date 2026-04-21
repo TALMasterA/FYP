@@ -82,27 +82,6 @@ class ChatMetadataTest {
     }
 
     @Test
-    fun `shared word message has correct type`() {
-        val msg = FriendMessage(
-            messageId = "msg1",
-            type = MessageType.SHARED_WORD,
-            metadata = mapOf("sourceText" to "hello", "targetText" to "hola")
-        )
-        assertEquals(MessageType.SHARED_WORD, msg.type)
-        assertEquals("hello", msg.metadata["sourceText"])
-    }
-
-    @Test
-    fun `shared learning material message has correct type`() {
-        val msg = FriendMessage(
-            messageId = "msg1",
-            type = MessageType.SHARED_LEARNING_MATERIAL,
-            metadata = mapOf("title" to "English → Spanish")
-        )
-        assertEquals(MessageType.SHARED_LEARNING_MATERIAL, msg.type)
-    }
-
-    @Test
     fun `FriendMessage content can store up to 2000 chars`() {
         val longContent = "a".repeat(2000)
         val msg = FriendMessage(content = longContent)

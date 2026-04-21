@@ -576,7 +576,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "操作失败",
     UiTextKey.ShareTypeWord to "单词",
     UiTextKey.ShareTypeLearningSheet to "学习表",
-    UiTextKey.ShareTypeQuiz to "测验",
     UiTextKey.ShareReceivedFrom to "来自：{username}",
     UiTextKey.ShareNewItemsTemplate to "收到 {count} 个新项目！",
     UiTextKey.ShareViewFullMaterial to "点击「查看」以阅读完整材料",

@@ -576,7 +576,6 @@ val PtBrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "Ação falhou",
     UiTextKey.ShareTypeWord to "Palavra",
     UiTextKey.ShareTypeLearningSheet to "Material de aprendizagem",
-    UiTextKey.ShareTypeQuiz to "Quiz",
     UiTextKey.ShareReceivedFrom to "De: {username}",
     UiTextKey.ShareNewItemsTemplate to "{count} novos itens!",
     UiTextKey.ShareViewFullMaterial to "Toque em \"Ver\" para visualizar o material completo",

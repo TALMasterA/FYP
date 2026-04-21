@@ -35,7 +35,7 @@ class FriendMessageExtendedTest {
             senderId = "sender1",
             receiverId = "receiver1",
             content = "Hello!",
-            type = MessageType.SHARED_WORD,
+            type = MessageType.TEXT,
             metadata = metadata,
             isRead = true,
             createdAt = ts
@@ -46,7 +46,7 @@ class FriendMessageExtendedTest {
         assertEquals("sender1", msg.senderId)
         assertEquals("receiver1", msg.receiverId)
         assertEquals("Hello!", msg.content)
-        assertEquals(MessageType.SHARED_WORD, msg.type)
+        assertEquals(MessageType.TEXT, msg.type)
         assertEquals(metadata, msg.metadata)
         assertTrue(msg.isRead)
         assertEquals(ts, msg.createdAt)
@@ -64,23 +64,13 @@ class FriendMessageExtendedTest {
     // ── MessageType enum ────────────────────────────────────────────
 
     @Test
-    fun `MessageType has three values`() {
-        assertEquals(3, MessageType.entries.size)
+    fun `MessageType has one value`() {
+        assertEquals(1, MessageType.entries.size)
     }
 
     @Test
     fun `MessageType TEXT exists`() {
         assertEquals(MessageType.TEXT, MessageType.valueOf("TEXT"))
-    }
-
-    @Test
-    fun `MessageType SHARED_WORD exists`() {
-        assertEquals(MessageType.SHARED_WORD, MessageType.valueOf("SHARED_WORD"))
-    }
-
-    @Test
-    fun `MessageType SHARED_LEARNING_MATERIAL exists`() {
-        assertEquals(MessageType.SHARED_LEARNING_MATERIAL, MessageType.valueOf("SHARED_LEARNING_MATERIAL"))
     }
 
     // ── ChatMetadata ────────────────────────────────────────────────

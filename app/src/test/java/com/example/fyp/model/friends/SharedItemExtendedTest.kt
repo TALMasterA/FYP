@@ -17,16 +17,15 @@ class SharedItemExtendedTest {
     // ── SharedItemType ──────────────────────────────────────────────
 
     @Test
-    fun `SharedItemType has 3 types`() {
-        assertEquals(3, SharedItemType.entries.size)
+    fun `SharedItemType has 2 types`() {
+        assertEquals(2, SharedItemType.entries.size)
     }
 
     @Test
-    fun `SharedItemType contains WORD, LEARNING_SHEET, QUIZ`() {
+    fun `SharedItemType contains WORD, LEARNING_SHEET`() {
         val types = SharedItemType.entries.map { it.name }
         assertTrue(types.contains("WORD"))
         assertTrue(types.contains("LEARNING_SHEET"))
-        assertTrue(types.contains("QUIZ"))
     }
 
     // ── SharedItemStatus ────────────────────────────────────────────

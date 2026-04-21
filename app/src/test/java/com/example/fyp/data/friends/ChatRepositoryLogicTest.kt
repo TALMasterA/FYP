@@ -182,36 +182,8 @@ class ChatRepositoryLogicTest {
     }
 
     // ── Shared item content mapping ───────────────────────────────────
-
-    @Test
-    fun `shared word message type maps to correct content text`() {
-        val content = when (MessageType.SHARED_WORD) {
-            MessageType.SHARED_WORD -> "Shared a word"
-            MessageType.SHARED_LEARNING_MATERIAL -> "Shared learning material"
-            else -> "Shared an item"
-        }
-        assertEquals("Shared a word", content)
-    }
-
-    @Test
-    fun `shared learning material message type maps to correct content text`() {
-        val content = when (MessageType.SHARED_LEARNING_MATERIAL) {
-            MessageType.SHARED_WORD -> "Shared a word"
-            MessageType.SHARED_LEARNING_MATERIAL -> "Shared learning material"
-            else -> "Shared an item"
-        }
-        assertEquals("Shared learning material", content)
-    }
-
-    @Test
-    fun `TEXT message type maps to shared an item fallback`() {
-        val content = when (MessageType.TEXT) {
-            MessageType.SHARED_WORD -> "Shared a word"
-            MessageType.SHARED_LEARNING_MATERIAL -> "Shared learning material"
-            else -> "Shared an item"
-        }
-        assertEquals("Shared an item", content)
-    }
+    // (Dead code removed: MessageType.SHARED_WORD / SHARED_LEARNING_MATERIAL
+    //  no longer exist; only MessageType.TEXT is produced.)
 
     // ── ChatMetadata.getUnreadFor ─────────────────────────────────────
 

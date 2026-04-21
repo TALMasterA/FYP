@@ -576,7 +576,6 @@ val MsMyUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "Tindakan gagal",
     UiTextKey.ShareTypeWord to "Perkataan",
     UiTextKey.ShareTypeLearningSheet to "Bahan pembelajaran",
-    UiTextKey.ShareTypeQuiz to "Kuiz",
     UiTextKey.ShareReceivedFrom to "Dari: {username}",
     UiTextKey.ShareNewItemsTemplate to "{count} item baru!",
     UiTextKey.ShareViewFullMaterial to "Tekan \"Lihat\" untuk melihat bahan penuh",

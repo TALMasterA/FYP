@@ -99,23 +99,6 @@ class ShareLearningMaterialUseCaseTest {
     }
 
     @Test
-    fun `share quiz succeeds`() = runTest {
-        repo.resultToReturn = Result.success(SharedItem(itemId = "quiz1", fromUserId = "user1", toUserId = "user2"))
-
-        val result = useCase(
-            fromUserId = UserId("user1"),
-            fromUsername = "quizzer",
-            toUserId = UserId("user2"),
-            type = SharedItemType.QUIZ,
-            materialId = "quiz_en-US_ja-JP",
-            title = "English-Japanese Quiz"
-        )
-
-        assertTrue(result.isSuccess)
-        assertEquals(SharedItemType.QUIZ, repo.lastType)
-    }
-
-    @Test
     fun `handles repository failure`() = runTest {
         repo.resultToReturn = Result.failure(RuntimeException("Permission denied"))
 

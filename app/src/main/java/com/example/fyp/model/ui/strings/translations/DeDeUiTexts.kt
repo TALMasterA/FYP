@@ -576,7 +576,6 @@ val DeDeUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "Aktion fehlgeschlagen",
     UiTextKey.ShareTypeWord to "Wort",
     UiTextKey.ShareTypeLearningSheet to "Lernblatt",
-    UiTextKey.ShareTypeQuiz to "Quiz",
     UiTextKey.ShareReceivedFrom to "Von: {username}",
     UiTextKey.ShareNewItemsTemplate to "{count} neue(s) Element(e)!",
     UiTextKey.ShareViewFullMaterial to "Tippen Sie auf „Ansehen“ für das vollständige Material",

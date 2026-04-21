@@ -48,10 +48,9 @@ class SharedItemTest {
     @Test
     fun `SharedItemType has all expected values`() {
         val types = SharedItemType.entries
-        assertEquals(3, types.size)
+        assertEquals(2, types.size)
         assertTrue(types.contains(SharedItemType.WORD))
         assertTrue(types.contains(SharedItemType.LEARNING_SHEET))
-        assertTrue(types.contains(SharedItemType.QUIZ))
     }
 
     @Test
@@ -79,14 +78,5 @@ class SharedItemTest {
         )
         assertEquals(SharedItemType.LEARNING_SHEET, item.type)
         assertEquals("English Basics", item.content["title"])
-    }
-
-    @Test
-    fun `quiz SharedItem has correct type`() {
-        val item = SharedItem(
-            type = SharedItemType.QUIZ,
-            content = mapOf("quizTitle" to "Vocabulary Test" as Any)
-        )
-        assertEquals(SharedItemType.QUIZ, item.type)
     }
 }

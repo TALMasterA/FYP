@@ -80,7 +80,7 @@ class FirestoreSharingRepository @Inject constructor(
         materialData: Map<String, Any>
     ): Result<SharedItem> {
         return try {
-            require(type == SharedItemType.LEARNING_SHEET || type == SharedItemType.QUIZ) {
+            require(type == SharedItemType.LEARNING_SHEET) {
                 "Invalid material type"
             }
             if (!canShareToUser(fromUserId, toUserId)) {
@@ -163,8 +163,7 @@ class FirestoreSharingRepository @Inject constructor(
                     senderUserId = item.fromUserId,
                     wordData = item.content
                 )
-                SharedItemType.LEARNING_SHEET -> { /* future: add to learning materials */ }
-                SharedItemType.QUIZ -> { /* future: add to quiz collection */ }
+                SharedItemType.LEARNING_SHEET -> { /* view-only on Accept; nothing to import */ }
             }
 
             Result.success(Unit)

@@ -25,11 +25,13 @@ data class FriendMessage(
 
 /**
  * Type of message in chat.
+ *
+ * Only TEXT is produced by current call sites. The enum is retained
+ * so the stored ``type`` field and backward compatibility with existing
+ * Firestore documents are preserved.
  */
 enum class MessageType {
-    TEXT,                    // Regular text message
-    SHARED_WORD,             // Shared word bank word
-    SHARED_LEARNING_MATERIAL // Shared learning sheet/quiz
+    TEXT
 }
 
 /**

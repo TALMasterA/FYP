@@ -22,28 +22,21 @@ class SharingRepositoryLogicTest {
     @Test
     fun `LEARNING_SHEET type passes validation`() {
         val type = SharedItemType.LEARNING_SHEET
-        val valid = type == SharedItemType.LEARNING_SHEET || type == SharedItemType.QUIZ
-        assertTrue(valid)
-    }
-
-    @Test
-    fun `QUIZ type passes validation`() {
-        val type = SharedItemType.QUIZ
-        val valid = type == SharedItemType.LEARNING_SHEET || type == SharedItemType.QUIZ
+        val valid = type == SharedItemType.LEARNING_SHEET
         assertTrue(valid)
     }
 
     @Test
     fun `WORD type fails material validation`() {
         val type = SharedItemType.WORD
-        val valid = type == SharedItemType.LEARNING_SHEET || type == SharedItemType.QUIZ
+        val valid = type == SharedItemType.LEARNING_SHEET
         assertFalse("WORD type should not be valid for shareLearningMaterial", valid)
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun `require throws for WORD type in shareLearningMaterial`() {
         val type = SharedItemType.WORD
-        require(type == SharedItemType.LEARNING_SHEET || type == SharedItemType.QUIZ) {
+        require(type == SharedItemType.LEARNING_SHEET) {
             "Invalid material type"
         }
     }

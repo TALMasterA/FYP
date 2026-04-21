@@ -102,60 +102,8 @@ class FirestoreChatRepository @Inject constructor(
     }
 
     /**
-     * SECURITY FIX (1.2): Restored areFriends() check for shared item messages.
+     * SECURITY FIX (1.2): Restored areFriends() check before sending messages.
      */
-    override suspend fun sendSharedItemMessage(
-        fromUserId: UserId,
-        toUserId: UserId,
-        type: MessageType,
-        metadata: Map<String, Any>
-    ): Result<FriendMessage> {
-        return try {
-            // Security: verify friendship before allowing shared item send
-            val areFriends = verifyFriendshipForSend(fromUserId, toUserId)
-            if (!areFriends) {
-                return Result.failure(
-                    SecurityException("Cannot share items with non-friends")
-                )
-            }
-
-            val chatId = generateChatId(fromUserId, toUserId)
-            val messageRef = db.collection("chats")
-                .document(chatId)
-                .collection("messages")
-                .document()
-
-            val content = when (type) {
-                MessageType.SHARED_WORD -> "Shared a word"
-                MessageType.SHARED_LEARNING_MATERIAL -> "Shared learning material"
-                else -> "Shared an item"
-            }
-
-            val message = FriendMessage(
-                messageId = messageRef.id,
-                chatId = chatId,
-                senderId = fromUserId.value,
-                senderUsername = "",
-                receiverId = toUserId.value,
-                content = content,
-                type = type,
-                metadata = metadata,
-                isRead = false,
-                createdAt = Timestamp.now()
-            )
-
-            // Save message
-            messageRef.set(message).await()
-
-            // Update chat metadata
-            updateChatMetadata(chatId, fromUserId, toUserId, content)
-
-            Result.success(message)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     internal suspend fun verifyFriendshipForSend(fromUserId: UserId, toUserId: UserId): Boolean {
         return try {
             friendsRepository.areFriends(fromUserId, toUserId)

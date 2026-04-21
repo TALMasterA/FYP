@@ -576,7 +576,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "Thao tác thất bại",
     UiTextKey.ShareTypeWord to "Từ",
     UiTextKey.ShareTypeLearningSheet to "Tài liệu học",
-    UiTextKey.ShareTypeQuiz to "Câu đố",
     UiTextKey.ShareReceivedFrom to "Từ: {username}",
     UiTextKey.ShareNewItemsTemplate to "{count} mục mới!",
     UiTextKey.ShareViewFullMaterial to "Nhấn \"Xem\" để xem tài liệu đầy đủ",

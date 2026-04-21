@@ -1209,8 +1209,6 @@ val ScreenUiTexts: List<String> = listOf(
     "Word",
     // ShareTypeLearningSheet
     "Learning Sheet",
-    // ShareTypeQuiz
-    "Quiz",
     // ShareReceivedFrom
     "From: {username}",
 

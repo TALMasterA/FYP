@@ -576,7 +576,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareActionFailed to "Ошибка действия",
     UiTextKey.ShareTypeWord to "Слово",
     UiTextKey.ShareTypeLearningSheet to "Учебный материал",
-    UiTextKey.ShareTypeQuiz to "Тест",
     UiTextKey.ShareReceivedFrom to "От: {username}",
     UiTextKey.ShareNewItemsTemplate to "{count} новых элементов!",
     UiTextKey.ShareViewFullMaterial to "Нажмите \"Смотреть\" для просмотра полного материала",

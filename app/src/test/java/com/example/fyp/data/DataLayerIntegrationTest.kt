@@ -102,21 +102,18 @@ class DataLayerIntegrationTest {
     }
 
     @Test
-    fun `SharedItemType has exactly 3 types`() {
-        assertEquals(3, SharedItemType.entries.size)
+    fun `SharedItemType has exactly 2 types`() {
+        assertEquals(2, SharedItemType.entries.size)
         assertTrue(SharedItemType.entries.contains(SharedItemType.WORD))
         assertTrue(SharedItemType.entries.contains(SharedItemType.LEARNING_SHEET))
-        assertTrue(SharedItemType.entries.contains(SharedItemType.QUIZ))
     }
 
-    // ── MessageType covers all shared item types ──────────────────────
+    // ── MessageType ─────────────────────────────────────────────────
 
     @Test
-    fun `MessageType has 3 types matching shared item needs`() {
-        assertEquals(3, MessageType.entries.size)
+    fun `MessageType has only TEXT`() {
+        assertEquals(1, MessageType.entries.size)
         assertTrue(MessageType.entries.contains(MessageType.TEXT))
-        assertTrue(MessageType.entries.contains(MessageType.SHARED_WORD))
-        assertTrue(MessageType.entries.contains(MessageType.SHARED_LEARNING_MATERIAL))
     }
 
     // ── QuizStats defaults are compatible with update logic ───────────

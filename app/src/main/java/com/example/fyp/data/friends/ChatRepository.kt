@@ -3,7 +3,6 @@ package com.example.fyp.data.friends
 import com.example.fyp.model.UserId
 import com.example.fyp.model.friends.ChatMetadata
 import com.example.fyp.model.friends.FriendMessage
-import com.example.fyp.model.friends.MessageType
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -37,16 +36,6 @@ interface ChatRepository {
         content: String,
         senderUsername: String = ""
     ): Result<Unit>
-
-    /**
-     * Send a shared item message (word or learning material).
-     */
-    suspend fun sendSharedItemMessage(
-        fromUserId: UserId,
-        toUserId: UserId,
-        type: MessageType,
-        metadata: Map<String, Any>
-    ): Result<FriendMessage>
     
     /**
      * Mark a message as read.
