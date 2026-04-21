@@ -18,7 +18,11 @@ data class FriendMessage(
     val receiverId: String = "",
     val content: String = "",
     val type: MessageType = MessageType.TEXT,
-    val metadata: Map<String, Any> = emptyMap(), // For shared items metadata
+    /**
+     * Legacy field retained for backward-compatibility with existing
+     * Firestore chat documents. Not read or written by current code.
+     */
+    val metadata: Map<String, Any> = emptyMap(),
     val isRead: Boolean = false,
     val createdAt: Timestamp = Timestamp.now()
 )
