@@ -22,7 +22,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 55
-        versionName = "2.1.3"
+        versionName = "2.2.0"
 
         testInstrumentationRunner = "com.example.fyp.HiltTestRunner"
     }
