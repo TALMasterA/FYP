@@ -25,16 +25,10 @@ class FYPApplication : Application() {
             android.util.Log.e("FYPApplication", "Firebase initialization failed", e)
         }
 
-        // Enable Firestore offline persistence so data is cached locally.
-        // Reads will be served from cache when offline, and writes are queued until online.
-        try {
-            com.google.firebase.firestore.FirebaseFirestore.getInstance().firestoreSettings =
-                com.google.firebase.firestore.FirebaseFirestoreSettings.Builder()
-                    .setPersistenceEnabled(true)
-                    .build()
-        } catch (e: Exception) {
-            android.util.Log.w("FYPApplication", "Firestore persistence already configured", e)
-        }
+        // Firestore offline persistence + 50 MB cache cap is configured exclusively in
+        // DaggerModule.provideFirestore() using PersistentCacheSettings (the modern API).
+        // Do not configure FirebaseFirestoreSettings here — the first caller wins and
+        // the loser silently throws, hiding misconfiguration.
 
         // Create notification channels for push notifications (required on Android 8+)
         try {

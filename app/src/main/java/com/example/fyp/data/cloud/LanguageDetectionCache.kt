@@ -166,4 +166,21 @@ class LanguageDetectionCache @Inject constructor(
         newEntries.remove(key)
         saveCache(LanguageDetectionCacheData(newEntries))
     }
+
+    /**
+     * Wipe every entry from both the in-memory mirror and the on-disk DataStore.
+     * Invoked by [com.example.fyp.core.SessionDataCleaner] on logout and account
+     * deletion so a subsequent user on a shared device cannot read prior detection
+     * results.
+     */
+    suspend fun clearAll() {
+        memCache = null
+        try {
+            context.languageDetectionCacheDataStore.edit { prefs ->
+                prefs.remove(CACHE_KEY)
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("LanguageDetectionCache", "Failed to clear language detection cache", e)
+        }
+    }
 }

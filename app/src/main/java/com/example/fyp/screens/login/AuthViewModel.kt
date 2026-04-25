@@ -2,6 +2,7 @@ package com.example.fyp.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.fyp.core.SessionDataCleaner
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.ui.UiTextKey
@@ -35,7 +36,8 @@ data class AuthUiState(
  */
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: FirebaseAuthRepository
+    private val authRepository: FirebaseAuthRepository,
+    private val sessionDataCleaner: SessionDataCleaner
 ) : ViewModel() {
 
     companion object {
@@ -197,8 +199,14 @@ class AuthViewModel @Inject constructor(
     }
 
     fun logout() {
-        authRepository.logout()
-        _uiState.value = AuthUiState()
+        // Wipe session-scoped local caches BEFORE Firebase signOut so we still hold
+        // any auth-derived context (e.g. Azure tokens). Errors inside the cleaner are
+        // already swallowed individually so they cannot block logout.
+        viewModelScope.launch {
+            runCatching { sessionDataCleaner.clearSessionData() }
+            authRepository.logout()
+            _uiState.value = AuthUiState()
+        }
     }
 
     fun clearError() {

@@ -35,11 +35,12 @@ FYP/
 ├── docs/
 │   ├── treeOfImportantfiles.txt                    ← This file
 │   ├── ARCHITECTURE_NOTES.md                       ← Critical business logic & invariants
-│   ├── TEST_COVERAGE.md                            ← Test coverage report (187 Android test files, 2,441 Android + 184 backend tests)
+│   ├── TEST_COVERAGE.md                            ← Test coverage report (188 Android test files, 2,443 Android + 184 backend tests)
 │   ├── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
 │   ├── MCP_SKILLS_PLAYBOOK.md                      ← Team playbook for MCP skills usage
 │   ├── CLOUD_FUNCTIONS_API.md                      ← Backend Cloud Functions API reference
 │   ├── SECRETS_ROTATION.md                         ← API key rotation runbook
+│   ├── PRIVACY_AND_COMPLIANCE.md                   ← Data categories, retention, processors, right-to-erasure procedure
 │   └── APP_SUGGESTIONS.md                          ← Audit-style suggestions (security, QA, performance, features)
 │
 ├── app/
@@ -70,6 +71,7 @@ FYP/
 │       │       │
 │       │       ├── core/                                ← Organized into focused sub-groups
 │       │       │   ├── ErrorMessages.kt                 ← Centralized error message mapper (fromException, isNetworkError)
+│       │       │   ├── SessionDataCleaner.kt            ← Wipes per-session local caches on logout / account deletion
 │       │       │   ├── foundation/                      ← Basic utilities & logger
 │       │       │   │   ├── Logger.kt
 │       │       │   │   ├── Constants.kt
@@ -381,6 +383,7 @@ FYP/
 │       │   │   ├── FeatureFlagDefaultsTest.kt             ← Remote Config feature flag default values
 │       │   │   ├── FontSizeUtilsTest.kt
 │       │   │   ├── PaginationTest.kt
+│       │   │   ├── SessionDataCleanerRegistrationTest.kt  ← Guards SessionDataCleaner cleanup target list
 │       │   │   ├── connectivity/
 │       │   │   │   └── NetworkRetryTest.kt
 │       │   │   ├── performance/

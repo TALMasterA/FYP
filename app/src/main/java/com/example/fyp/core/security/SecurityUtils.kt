@@ -110,26 +110,40 @@ class RateLimiter(
     private val maxKeys: Int = 10_000
 ) {
     private data class AttemptRecord(
-        val attempts: MutableList<Long> = mutableListOf()
+        val attempts: ArrayDeque<Long> = ArrayDeque()
     )
 
-    private val records = mutableMapOf<String, AttemptRecord>()
+    /**
+     * Access-order [LinkedHashMap] used as an LRU cache: every read or update via
+     * [LinkedHashMap.get] / [LinkedHashMap.put] moves the entry to the tail, so the
+     * iterator visits least-recently-used entries first. This gives deterministic
+     * eviction order in [pruneStaleKeys] regardless of insertion history.
+     */
+    private val records = object : LinkedHashMap<String, AttemptRecord>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, AttemptRecord>?): Boolean {
+            // Hard cap: never let the map exceed maxKeys, even if pruneStaleKeys hasn't run yet.
+            return size > maxKeys
+        }
+    }
 
     /**
      * Checks if an operation is allowed for the given key (e.g., user ID, IP).
      * Returns true if allowed, false if rate limit exceeded.
      */
+    @Synchronized
     fun isAllowed(key: String): Boolean {
         val now = System.currentTimeMillis()
         pruneStaleKeys(now)
         val record = records.getOrPut(key) { AttemptRecord() }
 
         // Remove old attempts outside the window
-        record.attempts.removeAll { now - it > windowMillis }
+        while (record.attempts.isNotEmpty() && now - record.attempts.first() > windowMillis) {
+            record.attempts.removeFirst()
+        }
 
         // Check if under limit
         return if (record.attempts.size < maxAttempts) {
-            record.attempts.add(now)
+            record.attempts.addLast(now)
             true
         } else {
             false
@@ -137,20 +151,25 @@ class RateLimiter(
     }
 
     /**
-     * Removes keys whose attempts are all outside the current window,
-     * preventing unbounded memory growth from one-time callers.
+     * Evicts the least-recently-used keys whose entire attempt window has expired,
+     * preventing unbounded memory growth from one-time callers. Iteration order
+     * is LRU-first thanks to [records] being an access-order [LinkedHashMap].
      */
     private fun pruneStaleKeys(now: Long) {
         if (records.size <= maxKeys) return
-        val iterator = records.iterator()
-        while (iterator.hasNext()) {
+        val iterator = records.entries.iterator()
+        while (iterator.hasNext() && records.size > maxKeys) {
             val entry = iterator.next()
-            entry.value.attempts.removeAll { now - it > windowMillis }
-            if (entry.value.attempts.isEmpty()) iterator.remove()
+            val attempts = entry.value.attempts
+            while (attempts.isNotEmpty() && now - attempts.first() > windowMillis) {
+                attempts.removeFirst()
+            }
+            if (attempts.isEmpty()) iterator.remove()
         }
     }
 
     /** Removes all recorded attempts — used for test isolation via reflection. */
+    @Synchronized
     fun clear() {
         records.clear()
     }

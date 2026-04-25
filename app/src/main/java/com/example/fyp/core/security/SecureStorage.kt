@@ -55,6 +55,21 @@ class SecureStorage @Inject constructor(
     fun getLong(key: String, defaultValue: Long = 0L): Long =
         prefs.getLong(key, defaultValue)
 
+    /**
+     * Wipe Azure Speech session-token state (token, region, issuance time).
+     *
+     * Must be invoked by [com.example.fyp.core.SessionDataCleaner] on logout
+     * and after account deletion so a subsequent user on a shared device
+     * cannot reuse a cached speech token.
+     */
+    fun clearSessionTokens() {
+        prefs.edit()
+            .remove(KEY_SESSION_TOKEN)
+            .remove(KEY_SESSION_TOKEN_REGION)
+            .remove(KEY_SESSION_TOKEN_TIME)
+            .apply()
+    }
+
     init {
         @Suppress("LeakingThis")
         staticInstance = this

@@ -9,6 +9,7 @@ import com.example.fyp.model.UserId
 import com.example.fyp.model.Username
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.friends.PublicUserProfile
+import com.example.fyp.core.SessionDataCleaner
 import com.example.fyp.core.security.AuditLogger
 import com.example.fyp.core.security.ValidationResult
 import com.example.fyp.core.security.sanitizeInput
@@ -41,7 +42,8 @@ class ProfileViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val profileRepo: FirestoreProfileRepository,
     private val friendsRepo: FriendsRepository,
-    private val settingsRepo: FirestoreUserSettingsRepository
+    private val settingsRepo: FirestoreUserSettingsRepository,
+    private val sessionDataCleaner: SessionDataCleaner
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -217,6 +219,10 @@ class ProfileViewModel @Inject constructor(
                     profileRepo.deleteAccount(userId)
                         .onSuccess {
                             AuditLogger.logAccountDeleted(userId = userId)
+                            // Wipe session-scoped local caches before signalling success.
+                            // Failures are swallowed individually inside the cleaner so they
+                            // cannot block the deleted-account UI signal.
+                            runCatching { sessionDataCleaner.clearSessionData() }
                             _uiState.value = _uiState.value.copy(
                                 isDeletingAccount = false,
                                 accountDeleted = true

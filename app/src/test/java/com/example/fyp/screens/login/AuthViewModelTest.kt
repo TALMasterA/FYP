@@ -1,5 +1,6 @@
 package com.example.fyp.screens.login
 
+import com.example.fyp.core.SessionDataCleaner
 import com.example.fyp.data.user.FirebaseAuthRepository
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.User
@@ -42,6 +43,7 @@ class AuthViewModelTest {
     private val authStateFlow = MutableStateFlow<AuthState>(AuthState.Loading)
 
     private lateinit var authRepo: FirebaseAuthRepository
+    private lateinit var sessionDataCleaner: SessionDataCleaner
     private lateinit var viewModel: AuthViewModel
 
     @Before
@@ -57,7 +59,8 @@ class AuthViewModelTest {
         authRepo = mock {
             on { currentUserState } doReturn authStateFlow
         }
-        viewModel = AuthViewModel(authRepo)
+        sessionDataCleaner = mock()
+        viewModel = AuthViewModel(authRepo, sessionDataCleaner)
     }
 
     @After

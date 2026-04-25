@@ -9,7 +9,7 @@ Findings are anchored to concrete files and observed implementation patterns, no
 
 ## 1. Executive Summary
 
-The codebase is mature for an FYP: 187 Android unit-test suites / 2,441 Android tests; well-documented invariants (`docs/ARCHITECTURE_NOTES.md`); strong coverage around friends, notifications, coins, history, learning, and UI text; Hilt DI; encrypted preferences via `EncryptedSharedPreferences`; secrets vended through `defineSecret(...)`. The biggest concrete post-FYP gaps are:
+The codebase is mature for an FYP: 188 Android unit-test suites / 2,443 Android tests; well-documented invariants (`docs/ARCHITECTURE_NOTES.md`); strong coverage around friends, notifications, coins, history, learning, and UI text; Hilt DI; encrypted preferences via `EncryptedSharedPreferences`; secrets vended through `defineSecret(...)`. The biggest concrete post-FYP gaps are:
 
 1. **Auth strength**: `validatePassword` enforces only 6-char minimum; no Firebase App Check; no MFA / email-verification gate.
 2. **Branch safety**: `.github/workflows/ci.yml` only runs on `main` pushes and PRs to `main`; direct work on `postFYP` will not get automatic CI unless pushed through a PR or the workflow branch filter is widened.
@@ -240,54 +240,6 @@ The rest of this document expands each, plus performance, observability, privacy
 
 ### 5.4 `@PropertyName` Firebase JavaBean trap
 - `ARCHITECTURE_NOTES.md` notes the `isDiscoverable` bug fix. Add a static analyser or unit test scanning `model/**/*.kt` for any `val isXxx: Boolean` without `@PropertyName("isXxx")` to prevent regression.
-
----
-
-## 6. Code Quality / Architecture
-
-### 6.1 Domain layer purity
-- Verify `domain/**` has no Android imports (`android.*`, `androidx.*`, `com.google.firebase.*`). Add a Detekt rule (`ForbiddenImport`) to enforce.
-
-### 6.2 ViewModel constructor sprawl
-- `ChatViewModel` has **10** constructor dependencies. Even with Hilt, this is a smell.
-- **Action**: introduce a `ChatDependencies` aggregate (Use-Cases + Repositories) or split the VM into `ChatMessagesViewModel` + `ChatProfileViewModel` + `ChatTranslationViewModel`.
-
-### 6.3 Reduce stringly-typed `SavedStateHandle` access
-- `savedStateHandle.get<String>("friendId")` etc. — no compile-time safety.
-- **Action**: use `androidx.navigation` `Navigation Compose 2.8` typed routes (`@Serializable data class ChatRoute(val friendId: String, ...)`) and `toRoute<ChatRoute>()` helper.
-
-### 6.4 Replace `mutableMapOf` in `RateLimiter` with `LinkedHashMap` LRU
-- For deterministic eviction order in `pruneStaleKeys`, an LRU map (or `ArrayMap` with manual ordering) is clearer than the current first-iterator-wins eviction.
-
-### 6.5 Manage dependency updates with evidence, not guessed future versions
-- Current pins include `composeBom = 2024.09.00`, `kotlin = 2.0.21`, `navigationCompose = 2.8.3`, `securityCrypto = 1.1.0-alpha06`, and `org.json = 20240303` (test-only). Some are intentionally stable for the FYP baseline.
-- **Action**: add the Ben Manes versions plugin or Renovate/Dependabot grouping, then update in small batches: Compose BOM + UI test artifacts together; Kotlin + KSP together; Firebase BOM alone; security-crypto only after an encrypted-preferences migration test.
-- **Specific cleanup**: `androidx-ui-test-junit4` is version-pinned separately (`composeUiTest = 1.7.6`) while the app already uses a Compose BOM. Confirm whether the test artifact can also be BOM-managed; if not, keep the explicit pin and document why.
-
-### 6.6 Add CI dependency-graph submission for SCA
-- `.github/workflows/codeql.yml` covers source CodeQL but not vulnerable dependencies.
-- **Action**: add `gradle/actions/dependency-submission@v3` and `actions/dependency-review-action@v4` so Dependabot alerts surface for transitive deps.
-
-### 6.7 Treat duplicate Firestore setup as a code-quality smell
-- The double Firestore setup in `FYPApplication` and `DaggerModule` is not just performance noise; it creates a hidden "first initializer wins" rule.
-- **Action**: move all Firebase instance configuration into `DaggerModule` or a single `FirebaseInitializer` invoked before DI consumers. Add a small test/README note documenting the local-cache size and persistence behavior.
-
----
-
-## 7. Privacy & Compliance
-
-### 7.1 Harden the existing "Delete my account" flow
-- The delete-account UI is already exposed in [`ProfileScreen.kt`](../app/src/main/java/com/example/fyp/screens/settings/ProfileScreen.kt#L269-L312), and `AccountDeletionGuardTest` protects the 18-subcollection cleanup count.
-- **Action**: add local-cleanup completion to the same flow: clear Azure Speech token, DataStore caches, OkHttp cache, FCM cached preferences, and any local notification state after remote deletion succeeds. Add one regression test proving newly-added per-user DataStores must register with the cleaner.
-
-### 7.2 Add "Export my data"
-- Provide a callable `exportUserData` Cloud Function that returns a signed-URL ZIP containing the user's history, word bank, learning sheets, friend list, and chat history JSON. Ship with a 7-day URL expiry.
-
-### 7.3 Document privacy posture
-- Create `docs/PRIVACY_AND_COMPLIANCE.md` covering: data categories collected, retention windows (FCM 60 d, rate-limits 30 d), processors (Firebase, Azure Translator, Azure Speech, Azure OpenAI), legal basis, right-to-erasure procedure (1-tap delete), DPO contact.
-
-### 7.4 Azure Speech token caching scope
-- `SecureStorage.KEY_SESSION_TOKEN`, `KEY_SESSION_TOKEN_REGION`, and `KEY_SESSION_TOKEN_TIME` are global. After logout, update-triggered signout, or account deletion, clear all three so the next user on a shared device cannot reuse a cached speech token.
 
 ---
 

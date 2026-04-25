@@ -1,5 +1,6 @@
 package com.example.fyp.screens.settings
 
+import com.example.fyp.core.SessionDataCleaner
 import com.example.fyp.data.friends.FriendsRepository
 import com.example.fyp.data.settings.FirestoreUserSettingsRepository
 import com.example.fyp.data.user.FirebaseAuthRepository
@@ -30,6 +31,7 @@ class ProfileViewModelTest {
     private lateinit var profileRepo: FirestoreProfileRepository
     private lateinit var friendsRepo: FriendsRepository
     private lateinit var settingsRepo: FirestoreUserSettingsRepository
+    private lateinit var sessionDataCleaner: SessionDataCleaner
 
     private val authStateFlow = MutableStateFlow<AuthState>(AuthState.Loading)
     private val loggedInState = AuthState.LoggedIn(User(uid = "user1", email = "test@example.com"))
@@ -45,6 +47,7 @@ class ProfileViewModelTest {
         profileRepo = mock()
         friendsRepo = mock()
         settingsRepo = mock()
+        sessionDataCleaner = mock()
     }
 
     @After
@@ -59,7 +62,7 @@ class ProfileViewModelTest {
             whenever(settingsRepo.fetchUserSettings(UserId("user1")))
                 .thenReturn(UserSettings()) // lastUsernameChangeMs = 0L → no cooldown
         }
-        return ProfileViewModel(authRepo, profileRepo, friendsRepo, settingsRepo)
+        return ProfileViewModel(authRepo, profileRepo, friendsRepo, settingsRepo, sessionDataCleaner)
     }
 
     // ── updateUsername: format validation ─────────────────────────────────────

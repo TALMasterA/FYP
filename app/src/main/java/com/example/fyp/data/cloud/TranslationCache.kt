@@ -277,6 +277,26 @@ class TranslationCache @Inject constructor(
         newEntries.remove(key)
         saveCache(TranslationCacheData(newEntries))
     }
+
+    /**
+     * Wipe every entry from both the in-memory mirror and the on-disk DataStore.
+     * Invoked by [com.example.fyp.core.SessionDataCleaner] on logout and account
+     * deletion so a subsequent user on a shared device cannot read prior cached
+     * translations.
+     */
+    suspend fun clearAll() {
+        synchronized(inMemoryCache) {
+            inMemoryCache.clear()
+        }
+        memCache = null
+        try {
+            context.translationCacheDataStore.edit { prefs ->
+                prefs.remove(CACHE_KEY)
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("TranslationCache", "Failed to clear translation cache", e)
+        }
+    }
 }
 
 data class CacheStats(
