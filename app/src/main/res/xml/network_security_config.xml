@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Network security policy for the FYP app (§2.8 of docs/APP_SUGGESTIONS.md).
+
+    Cleartext HTTP is denied for the entire app surface, on every supported API
+    level (the app supports API 26+, so the implicit `targetSdk >= 28` default
+    is not sufficient on its own). System-installed CAs are the only trust
+    anchor; user-installed CAs (on API 24+) are intentionally NOT trusted, so
+    a debug proxy (Charles, mitmproxy) cannot transparently intercept Firebase
+    or Azure traffic without explicitly building a debug variant that overrides
+    this file.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

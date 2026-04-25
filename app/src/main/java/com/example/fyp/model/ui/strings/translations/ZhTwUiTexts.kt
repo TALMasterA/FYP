@@ -207,7 +207,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "開發階段停用註冊功能。\n注意：如使用不存在的電子郵件，將無法重設密碼。\n" +
             "註冊規則：\n" +
             "• 電子郵件格式需正確（例如 name@example.com）\n" +
-            "• 密碼至少 6 個字元\n" +
+            "• 密碼至少 8 個字元\n" +
             "• 確認密碼需與密碼相符",
     UiTextKey.AuthEmailLabel to "電子郵件",
     UiTextKey.AuthPasswordLabel to "密碼",
@@ -217,7 +217,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "沒有帳號？註冊（已停用）",
     UiTextKey.AuthToggleToLogin to "已有帳號？登入",
     UiTextKey.AuthErrorPasswordsMismatch to "密碼不相符。",
-    UiTextKey.AuthErrorPasswordTooShort to "密碼至少需要 6 個字元。",
+    UiTextKey.AuthErrorPasswordTooShort to "密碼至少需要 8 個字元。",
     UiTextKey.AuthRegistrationDisabled to "開發期間停用註冊功能。",
     UiTextKey.AuthResetEmailSent to "重設電子郵件已發送（如電子郵件真實存在）。請檢查您的收件匣。",
 

@@ -207,7 +207,7 @@ val EsEsUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "El registro está pausado durante el desarrollo.\nNota: Un correo inexistente impedirá restablecer la contraseña.\n" +
             "Reglas de registro:\n" +
             "• Formato de correo válido (ej. nombre@ejemplo.com)\n" +
-            "• Contraseña de al menos 6 caracteres\n" +
+            "• Contraseña de al menos 8 caracteres\n" +
             "• La confirmación debe coincidir",
     UiTextKey.AuthEmailLabel to "Correo electrónico",
     UiTextKey.AuthPasswordLabel to "Contraseña",
@@ -217,7 +217,7 @@ val EsEsUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "¿No tiene cuenta? Registrarse (pausado)",
     UiTextKey.AuthToggleToLogin to "¿Ya tiene cuenta? Iniciar sesión",
     UiTextKey.AuthErrorPasswordsMismatch to "Las contraseñas no coinciden.",
-    UiTextKey.AuthErrorPasswordTooShort to "La contraseña debe tener al menos 6 caracteres.",
+    UiTextKey.AuthErrorPasswordTooShort to "La contraseña debe tener al menos 8 caracteres.",
     UiTextKey.AuthRegistrationDisabled to "El registro está pausado durante el desarrollo.",
     UiTextKey.AuthResetEmailSent to "Correo de restablecimiento enviado (si existe). Revise su bandeja.",
 

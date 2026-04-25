@@ -207,7 +207,7 @@ val FrFrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "L'inscription est suspendue pendant le développement.\nAttention : un e-mail inexistant empêchera la réinitialisation du mot de passe.\n" +
             "Règles d'inscription :\n" +
             "• Format d'e-mail valide (ex : nom@exemple.com)\n" +
-            "• Mot de passe d'au moins 6 caractères\n" +
+            "• Mot de passe d'au moins 8 caractères\n" +
             "• Confirmation du mot de passe identique",
     UiTextKey.AuthEmailLabel to "E-mail",
     UiTextKey.AuthPasswordLabel to "Mot de passe",
@@ -217,7 +217,7 @@ val FrFrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "Pas de compte ? S'inscrire (suspendu)",
     UiTextKey.AuthToggleToLogin to "Déjà un compte ? Se connecter",
     UiTextKey.AuthErrorPasswordsMismatch to "Les mots de passe ne correspondent pas.",
-    UiTextKey.AuthErrorPasswordTooShort to "Le mot de passe doit contenir au moins 6 caractères.",
+    UiTextKey.AuthErrorPasswordTooShort to "Le mot de passe doit contenir au moins 8 caractères.",
     UiTextKey.AuthRegistrationDisabled to "L'inscription est suspendue pendant le développement.",
     UiTextKey.AuthResetEmailSent to "E-mail de réinitialisation envoyé (si l'e-mail existe). Vérifiez votre boîte de réception.",
 

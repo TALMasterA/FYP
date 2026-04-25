@@ -97,13 +97,14 @@ class ValidatorPropertyTest {
     fun `validatePassword rejects short and whitespace-only inputs`() {
         val rng = rng()
         repeat(iterations) {
-            val len = rng.nextInt(0, 6)
-            val pwd = " ".repeat(len) + "a".repeat(rng.nextInt(0, 6 - len))
+            // After the §2.1 sweep validatePassword's default minLength is 8.
+            val len = rng.nextInt(0, 8)
+            val pwd = " ".repeat(len) + "a".repeat(rng.nextInt(0, 8 - len))
             assertTrue(
-                "expected Invalid for length<6 '$pwd'",
+                "expected Invalid for trimmed-length<8 '$pwd'",
                 validatePassword(pwd) is ValidationResult.Invalid,
             )
         }
-        assertTrue(validatePassword("      ") is ValidationResult.Invalid)
+        assertTrue(validatePassword("        ") is ValidationResult.Invalid)
     }
 }

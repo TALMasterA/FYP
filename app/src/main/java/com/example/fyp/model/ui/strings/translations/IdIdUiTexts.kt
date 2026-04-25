@@ -207,7 +207,7 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "Pendaftaran dijeda selama pengembangan.\nCatatan: Email tidak valid akan mencegah pemulihan kata sandi.\n" +
             "Aturan pendaftaran:\n" +
             "• Format email valid (cth. nama@contoh.com)\n" +
-            "• Kata sandi minimal 6 karakter\n" +
+            "• Kata sandi minimal 8 karakter\n" +
             "• Konfirmasi harus cocok",
     UiTextKey.AuthEmailLabel to "Email",
     UiTextKey.AuthPasswordLabel to "Kata sandi",
@@ -217,7 +217,7 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "Belum punya akun? Daftar (dijeda)",
     UiTextKey.AuthToggleToLogin to "Sudah punya akun? Masuk",
     UiTextKey.AuthErrorPasswordsMismatch to "Kata sandi tidak cocok.",
-    UiTextKey.AuthErrorPasswordTooShort to "Kata sandi minimal 6 karakter.",
+    UiTextKey.AuthErrorPasswordTooShort to "Kata sandi minimal 8 karakter.",
     UiTextKey.AuthRegistrationDisabled to "Pendaftaran dijeda selama pengembangan.",
     UiTextKey.AuthResetEmailSent to "Email pemulihan terkirim (jika ada). Periksa kotak masuk.",
 

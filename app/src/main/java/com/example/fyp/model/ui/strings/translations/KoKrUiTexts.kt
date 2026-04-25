@@ -207,7 +207,7 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "개발 단계이므로 등록 기능이 중지되었습니다.\n주의: 존재하지 않는 이메일을 사용하면 비밀번호를 재설정할 수 없습니다.\n" +
             "등록 규칙:\n" +
             "• 올바른 이메일 형식 (예: name@example.com)\n" +
-            "• 비밀번호는 6자 이상\n" +
+            "• 비밀번호는 8자 이상\n" +
             "• 확인 비밀번호 일치",
     UiTextKey.AuthEmailLabel to "이메일",
     UiTextKey.AuthPasswordLabel to "비밀번호",
@@ -217,7 +217,7 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "계정이 없으신가요? 등록 (중지)",
     UiTextKey.AuthToggleToLogin to "계정이 있으신가요? 로그인",
     UiTextKey.AuthErrorPasswordsMismatch to "비밀번호가 일치하지 않습니다.",
-    UiTextKey.AuthErrorPasswordTooShort to "비밀번호는 6자 이상이어야 합니다.",
+    UiTextKey.AuthErrorPasswordTooShort to "비밀번호는 8자 이상이어야 합니다.",
     UiTextKey.AuthRegistrationDisabled to "개발 단계이므로 등록 기능이 중지되었습니다.",
     UiTextKey.AuthResetEmailSent to "재설정 이메일을 전송했습니다 (이메일이 존재하는 경우). 받은편지함을 확인하세요.",
 

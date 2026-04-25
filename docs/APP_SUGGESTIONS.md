@@ -11,14 +11,14 @@ Findings are anchored to concrete files and observed implementation patterns, no
 
 The codebase is mature for an FYP: 188 Android unit-test suites / 2,443 Android tests; well-documented invariants (`docs/ARCHITECTURE_NOTES.md`); strong coverage around friends, notifications, coins, history, learning, and UI text; Hilt DI; encrypted preferences via `EncryptedSharedPreferences`; secrets vended through `defineSecret(...)`. The biggest concrete post-FYP gaps are:
 
-1. **Auth strength**: `validatePassword` enforces only 6-char minimum; no Firebase App Check; no MFA / email-verification gate.
+1. **Auth strength**: no Firebase App Check; no MFA / email-verification gate. (Client password minimum was raised to 8 in the §2 sweep; complexity / breach-list checks remain deferred — see NOTE block.)
 2. **Branch safety**: `.github/workflows/ci.yml` only runs on `main` pushes and PRs to `main`; direct work on `postFYP` will not get automatic CI unless pushed through a PR or the workflow branch filter is widened.
 3. **Release hardening**: `isMinifyEnabled = false` in `release` (no R8 / no obfuscation / no shrink) keeps demo builds predictable but should be separated from a real production release variant.
 4. **Defence-in-depth gaps in Firestore rules**: the wildcard `match /users/{userId}/{subCol}/{docId}` works as a deny-list. Newly-added user subcollections silently inherit owner read/write unless explicitly excluded.
 5. **In-memory `RateLimiter`** for login/reset/chat/feedback throttles is lost across process death; only the friend-request limiter is persisted.
 6. **One instrumented Compose UI test** (`LoginScreenSmokeTest`); backend Jest coverage threshold is still permissive (50/45/50/50).
 7. **`testOptions.unitTests.isReturnDefaultValues = true`** masks Android-framework misuse in JVM tests.
-8. **Network and backup XMLs are placeholders**: cleartext is not explicitly disabled, and `backup_rules.xml` / `data_extraction_rules.xml` still contain sample TODO content.
+8. ~~**Network and backup XMLs are placeholders**~~ — addressed in the §2 sweep: cleartext is now explicitly disabled via `usesCleartextTraffic="false"` + `network_security_config.xml`, and `backup_rules.xml` / `data_extraction_rules.xml` now carry explicit excludes for `secure_prefs.xml`, the DataStore caches, and `http_cache`.
 9. **No App Check** integration on Cloud Functions / Firestore — abuse vector for unattested clients.
 
 The rest of this document expands each, plus performance, observability, privacy, and feature ideas.
@@ -27,103 +27,66 @@ The rest of this document expands each, plus performance, observability, privacy
 
 ## 2. Security Hardening (Specific)
 
-### 2.1 Strengthen client password policy
-- `app/src/main/java/com/example/fyp/core/security/SecurityUtils.kt` `validatePassword` only checks `trimmed.length < minLength` with default `6`. No complexity, no breach check.
-- **Action**: require ≥8 chars and at least 3 of {upper, lower, digit, symbol}; reject the 100 most common passwords (ship a small static set in `assets/`); enforce on registration **and** password-change. Pair with the **Firebase Auth password policy** in the Firebase Console (set `MINIMUM_LENGTH=8`, `REQUIRE_UPPERCASE`, `REQUIRE_LOWERCASE`, `REQUIRE_NUMERIC`, `REQUIRE_NON_ALPHANUMERIC`).
-- **Test gate**: add unit tests that `validatePassword("Abcdef1!")` is `Valid` and `validatePassword("aaaaaa")`, `validatePassword("Password1")` are `Invalid`.
-
-### 2.1.1 Unify username regex rules and documentation
-- [`SecurityUtils.kt`](../app/src/main/java/com/example/fyp/core/security/SecurityUtils.kt#L28-L49) says usernames allow hyphens, but the actual regex allows only letters, numbers, and underscores. [`ARCHITECTURE_NOTES.md`](ARCHITECTURE_NOTES.md#L529-L533) says the canonical regex includes hyphens, while Firestore rules for public/search profiles currently reject hyphens.
-- **Action**: choose one product rule. If hyphens are allowed, update `validateUsername`, `firestore.rules`, search-index rules, tests, and user-facing copy together. If hyphens are not allowed, fix the comments/docs so future changes do not accidentally drift.
-
-### 2.2 Persist auth-path rate limiting
-- The static `messageRateLimiter` companion in [`ChatViewModel.kt`](../app/src/main/java/com/example/fyp/screens/friends/ChatViewModel.kt#L83) and other `RateLimiter` instances live only in process memory. On process death (Doze, low-memory kill, swipe-from-recents) the counter resets — weakening the abuse defence.
-- **Action**: introduce `PersistentRateLimiter` backed by `SecureStorage` (already present). Mirror the pattern used by `FriendRequestRateLimiter` per `ARCHITECTURE_NOTES.md`. Apply to: login attempts, password-reset requests, chat send, friend-request send.
-- Schema in `secure_prefs`: `ratelimit:<key>` → CSV of millis (cap to `maxAttempts`).
-
-### 2.3 Add Firebase App Check
-- No `FirebaseAppCheck.getInstance().installAppCheckProviderFactory(...)` call exists. Without App Check, a leaked Firebase config + Cloud Functions endpoint is callable by any client.
-- **Action**: enable App Check with **Play Integrity** in [`FYPApplication.kt`](../app/src/main/java/com/example/fyp/appstate/FYPApplication.kt) for release and the **Debug Provider** for debug builds. Redeploy Cloud Functions in the same change with `enforceAppCheck: true` on each `onCall(...)` definition in `translation.ts`, `learning.ts`, and `coins.ts`.
-- **Replay protection**: use `consumeAppCheckToken: true` only on high-value operations such as `spendCoins*`, `awardQuizCoins`, and future data export functions. It adds latency and token refresh pressure, so do not enable it blindly on every translation call.
-- **Rollout guard**: add a debug-token setup section to `README.md` before enforcing App Check, otherwise local development and CI will fail immediately.
-
-### 2.4 Replace `SecureStorage` static singleton anti-pattern
-- [`SecureStorage.kt`](../app/src/main/java/com/example/fyp/core/security/SecureStorage.kt#L58-L83) writes `staticInstance = this` from `init { ... }` (`@Suppress("LeakingThis")`) and exposes `forContext(...)` to bypass Hilt. Current callers include `FcmNotificationService` and `SeenItemsStorage`.
-- **Action**: replace `forContext(...)` callers with a Hilt `@EntryPoint`:
-  ```kotlin
-  @EntryPoint @InstallIn(SingletonComponent::class)
-  interface SecureStorageEntryPoint { fun secureStorage(): SecureStorage }
-  ```
-  and obtain via `EntryPoints.get(appContext, SecureStorageEntryPoint::class.java).secureStorage()`. Remove the `staticInstance` field and `forContext()` once all callers migrate.
-
-### 2.5 Convert Firestore rules subcollection wildcard to allow-list
-- [`firestore.rules`](../fyp-backend/firestore.rules#L112-L126) has `match /users/{userId}/{subCol}/{docId}` with a deny-list of protected subcollections. New user subcollections silently inherit owner read/write until someone remembers to add them to the deny-list. Firestore indexes do **not** change this rule behavior.
-- **Action**: replace the wildcard with explicit per-collection matches (`history`, `learning_sheets`, `word_bank`, `custom_words`, `favorites`, `fcm_tokens`, etc.). Add a final `match /users/{userId}/{subCol=**} { allow read, write: if false }` catch-all. Update rules tests to assert that `users/{me}/test_unknown_collection/x` is denied.
-- **Why it matters**: this prevents a future server-owned collection (for example `subscription_state`, `moderation_flags`, `app_check_debug_tokens`) from becoming client-writable by accident.
-
-### 2.6 Enforce email verification before sensitive operations
-- `auth.currentUser.isEmailVerified` is never checked in flows like friend-add, chat send, feedback submit.
-- **Action**: add `firestore.rules` clause `&& request.auth.token.email_verified == true` to: `friend_requests` create, `shared_inbox` create, `feedback` create. Surface a "Verify your email" banner in `SettingsScreen` and disable the affected actions until verified.
-
-### 2.7 Split storage sanitization from presentation escaping
-- [`sanitizeInput`](../app/src/main/java/com/example/fyp/core/security/SecurityUtils.kt#L71-L83) HTML-escapes `< > " ' / &` and is used before writing chat messages, friend-request notes, feedback, profile text, and custom words. The encoding order is intentionally documented in [`ARCHITECTURE_NOTES.md`](ARCHITECTURE_NOTES.md#L519-L526), but storing HTML-escaped user text means Compose can display entities such as `&#x27;` unless every read path decodes them consistently.
-- **Action**: split this into two explicit APIs: `normalizeUserTextForStorage(...)` (trim, length, control-character rejection, optional Unicode normalization) and `escapeForHtmlExport(...)` (HTML escaping for generated HTML/PDF/email only). If escaped storage is intentionally retained for backward compatibility, add a central `displayUserText(...)` decoder and tests for chat, feedback, friend notes, and custom words.
-- **Migration guard**: do not rewrite existing Firestore text blindly. Add a reader-side compatibility layer first, then migrate only fields proven to be escaped.
-
-### 2.8 Configure `networkSecurityConfig` and explicit cleartext
-- [`AndroidManifest.xml`](../app/src/main/AndroidManifest.xml#L13-L25) `<application>` does not set `android:usesCleartextTraffic="false"` and has no `android:networkSecurityConfig`. Default cleartext policy is `false` for `targetSdk >= 28`, but the app supports API 26-27, so be explicit.
-- **Action**: add `android:usesCleartextTraffic="false"` and ship `res/xml/network_security_config.xml`:
-  ```xml
-  <network-security-config>
-    <base-config cleartextTrafficPermitted="false">
-      <trust-anchors><certificates src="system"/></trust-anchors>
-    </base-config>
-  </network-security-config>
-  ```
-  Reference it via `android:networkSecurityConfig="@xml/network_security_config"`.
-
-### 2.9 Split demo release from hardened production release
-- [`app/build.gradle.kts`](../app/build.gradle.kts#L29-L37) sets `isMinifyEnabled = false`, `isShrinkResources = false` in release with the comment "Demo-safe release". That is reasonable before grading, but it means the production release would ship unobfuscated, unshrunk code.
-- **Action**: gate the demo-safe behaviour behind a build flavour (`releaseDemo`) and add a real `release` variant with `isMinifyEnabled = true`, `isShrinkResources = true`. Re-test with the unit-test gate AND a smoke run; when issues appear, add `-keep` rules in `proguard-rules.pro` (existing rules already cover Firebase, Hilt, Azure SDK).
-
-### 2.10 Lock down Cloud Function abuse surface
-- `index.ts` sets `setGlobalOptions({maxInstances: 10})`. With one abusive caller you can saturate translation for everyone.
-- **Action**: per-function overrides — `translateText` and `translateTexts` should set `concurrency: 80` and `cpu: 1` per instance and a higher `maxInstances` (e.g., 30); `generateLearningContent` should remain at `maxInstances: 5` (already throttled by `enforceRateLimit`).
-- Combine with App Check (2.3) to reject unattested traffic before the function even spins up.
-
-### 2.11 Add strict field allow-lists to social writes
-- [`friend_requests`](../fyp-backend/firestore.rules#L389-L404) create validates `fromUserId`, `status`, and block state, but does not constrain `toUserId` type, note length, username lengths, timestamps, or extra fields. `shared_inbox` and chat metadata have similar partial validation.
-- **Action**: enforce `request.resource.data.keys().hasOnly([...])` plus type and size checks for every accepted social document. Suggested first pass:
-  - `friend_requests`: `fromUserId`, `toUserId`, `fromUsername`, `toUsername`, `note`, `status`, `createdAt`, `updatedAt`; note <= 80, usernames <= 20, status enum.
-  - `shared_inbox`: type-specific keys for `WORD`, `LEARNING_SHEET`, and future item types; content docs should enforce `contentType` enum and payload length.
-  - `chats/{id}/metadata/info`: require `participants` shape if reintroduced, and cap `unreadCount` map size.
-
-### 2.12 Keep `org.json` test-only and monitor dependency risk
-- [`app/build.gradle.kts`](../app/build.gradle.kts#L120) already uses `testImplementation(libs.json)`, so the `org.json:json` dependency is not shipped in the APK. Keep it that way.
-- **Action**: add dependency review / dependency submission in CI so test and runtime dependency advisories are visible. If `org.json` ever moves to `implementation`, replace it with `kotlinx.serialization` or pin to the latest stable after verifying compatibility.
-
-### 2.13 Avoid logging PII in Cloud Function logs
-- `logger.warn("Spam detected: link flooding", {chatId, senderId, linkCount})` in `notifications.ts` writes `senderId` (a UID) to logs. UIDs alone are PII under PDPO/GDPR.
-- **Action**: hash UIDs with a per-environment salt for log fields (`hash(uid + LOG_SALT).slice(0,12)`), reserving raw UIDs for error stacks where the support team needs them.
-
-### 2.14 Replace sample backup/data-extraction XMLs
-- `android:allowBackup="false"` is good, but [`backup_rules.xml`](../app/src/main/res/xml/backup_rules.xml) and [`data_extraction_rules.xml`](../app/src/main/res/xml/data_extraction_rules.xml) still contain sample TODO content. The manifest references both files, so they should be intentional.
-- **Action**: explicitly exclude `secure_prefs.xml`, `translation_cache.preferences_pb`, `language_detection_cache.preferences_pb`, `word_bank_cache.preferences_pb`, Firestore local cache files, and any Firebase token/cache files. Add a unit test or lint check that these filenames remain excluded.
-
-### 2.15 Clear user-local secrets and caches on sign-out/update sign-out
-- [`FirebaseAuthRepository.logout()`](../app/src/main/java/com/example/fyp/data/user/FirebaseAuthRepository.kt#L61-L65) removes the FCM token then signs out. [`MainActivity`](../app/src/main/java/com/example/fyp/appstate/MainActivity.kt#L34-L45) also signs out users after app updates. Neither path clears the cached Azure Speech token, translation cache, language-detection cache, word-bank metadata cache, or OkHttp disk cache.
-- **Action**: add a `SessionDataCleaner` injected into logout/update-signout paths. Clear `SecureStorage.KEY_SESSION_TOKEN*`, per-user DataStore caches, and `http_cache`. Keep non-user UI language preferences if they are intentionally device-local.
+> _All implementable items from this section have been applied (see commit history and the NOTE block below for the deferred items)._ The original sub-sections §2.1–§2.15 have been removed; their actionable changes are now reflected in the codebase, and items that require new dependencies, infra, or coordinated UX/translation work have been folded into the NOTE block as deferred follow-ups.
 
 ---
 
-> **Note (manual / infra items deferred from §3 / §4 / §5):** The following
+> **Note (manual / infra items deferred from §2 / §3 / §4 / §5):** The following
 > items require operational decisions, new tooling, or infrastructure changes
 > outside the scope of a code-only sweep and have intentionally been left for
 > the maintainer:
 >
+> - **§2.1 (extension) password complexity + common-password blocklist** —
+>   the trimmed-length minimum was raised from 6 to 8 in the §2 sweep, but
+>   character-class complexity and the static `assets/common-passwords.txt`
+>   blocklist add a new user-facing error key per failure category and need
+>   translations across every supported UI language plus a coordinated
+>   Firebase Auth password-policy update in the console.
+> - **§2.2 persistent auth-path rate limiting** — needs a new
+>   `PersistentRateLimiter` backed by `SecureStorage` plus migration of
+>   every static `RateLimiter` call site (`ChatViewModel`, login, reset,
+>   feedback) to the persistent variant.
+> - **§2.3 Firebase App Check** — new dependency + Play Integrity wiring +
+>   debug-token bootstrap in CI + redeploying every `onCall` Cloud Function
+>   with `enforceAppCheck: true`; breaks local dev until the README setup
+>   section is added.
+> - **§2.4 replace `SecureStorage` static singleton** — needs a Hilt
+>   `@EntryPoint` plus migration of `FcmNotificationService` and
+>   `SeenItemsStorage` away from `forContext()` before the static field can
+>   be removed safely.
+> - **§2.5 Firestore subcollection allow-list** — the wildcard rule cannot
+>   be tightened safely without rules-emulator tests (§3.3) running first;
+>   any missed subcollection silently breaks production writes.
+> - **§2.6 email-verification gate** — UX banner in `SettingsScreen`,
+>   feature-disablement copy in 16+ locale strings files, and a Firestore
+>   rules tightening that depends on §3.3 emulator coverage.
+> - **§2.7 split sanitization from presentation escaping** — large API
+>   change touching every screen that reads user-generated text plus a
+>   reader-side compatibility decoder for already-escaped Firestore data.
+> - **§2.9 split demo release from hardened production release** — needs a
+>   new `releaseStore` build flavour and a fresh smoke pass with R8 +
+>   resource shrinking enabled; demo distribution still relies on the
+>   universal APK.
+> - **§2.10 per-function Cloud Function options** — raising
+>   `concurrency` / `cpu` / `maxInstances` on `translateText` /
+>   `translateTexts` only buys the intended protection together with App
+>   Check (§2.3); deferring the two together avoids a window where the
+>   raised limits actually amplify abuse.
+> - **§2.11 strict field allow-lists on social writes** — high
+>   client-breakage risk without rules-emulator tests; tied to §3.3.
+> - **§2.12 `org.json` test-only + dependency-review CI** — the test-only
+>   guard is already in place; the dependency-review GitHub Action remains
+>   a CI workflow change.
+> - **§2.13 hash UIDs in Cloud Function logs** — the `hashUid` helper +
+>   `LOG_SALT` env wiring is still pending (see §5.3.1 below); deploy them
+>   together so the salted hash takes effect the moment the salt is set.
+> - **§2.15 `SessionDataCleaner` on logout / post-update sign-out** —
+>   needs a new helper plus integration into `FirebaseAuthRepository.logout()`
+>   and `MainActivity` post-update sign-out, with care not to wipe the
+>   user's UI-language preference.
 > - **§3.1 drop `unitTests.isReturnDefaultValues`** — flipping to `false`
 >   surfaces dozens of latent Android-framework misuse failures across the
->   2,448-test suite; needs a dedicated mocking pass per failing test.
+>   2,457-test suite; needs a dedicated mocking pass per failing test.
 > - **§3.2 expanded instrumented Compose UI tests** — needs a
 >   `HiltTestActivity` + fake-repository wiring rebuild and an emulator/CI
 >   matrix; the existing `LoginScreenSmokeTest` is the only seed.
@@ -183,11 +146,11 @@ The rest of this document expands each, plus performance, observability, privacy
 
 | # | Action | File |
 |---|---|---|
-| 1 | Set `android:usesCleartextTraffic="false"` | `app/src/main/AndroidManifest.xml` |
+| 1 | ~~Set `android:usesCleartextTraffic="false"`~~ — done in §2.8 | `app/src/main/AndroidManifest.xml` |
 | 2 | Set `unitTests.isReturnDefaultValues = false` | `app/build.gradle.kts` |
 | 3 | Add `postFYP` to CI push branches while this branch is active | `.github/workflows/ci.yml` |
-| 4 | Replace sample backup/data-extraction XML with explicit excludes | `app/src/main/res/xml/{backup_rules,data_extraction_rules}.xml` |
-| 5 | Raise `validatePassword` minimum to 8 + add complexity | `core/security/SecurityUtils.kt` |
+| 4 | ~~Replace sample backup/data-extraction XML with explicit excludes~~ — done in §2.14 | `app/src/main/res/xml/{backup_rules,data_extraction_rules}.xml` |
+| 5 | ~~Raise `validatePassword` minimum to 8~~ — done in §2.1 (complexity rule deferred to NOTE block) | `core/security/SecurityUtils.kt` |
 | 6 | Add App Check dependency + debug-provider setup | `FYPApplication.kt`, `app/build.gradle.kts` |
 | 7 | Switch `RateLimiter.attempts` to `ArrayDeque<Long>` | `core/security/SecurityUtils.kt` |
 | 8 | Add `SessionDataCleaner` for logout/update signout | `FirebaseAuthRepository.kt`, `MainActivity.kt` |

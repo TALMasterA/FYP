@@ -207,7 +207,7 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "Registrazione sospesa durante lo sviluppo\nAttenzione: La password non può essere recuperata se l'email è sbagliata\n" +
             "Regole di registrazione:\n" +
             "• Formato email valido (es: nome@esempio.com)\n" +
-            "• Password di almeno 6 caratteri\n" +
+            "• Password di almeno 8 caratteri\n" +
             "• Conferma password deve corrispondere",
     UiTextKey.AuthEmailLabel to "Email",
     UiTextKey.AuthPasswordLabel to "Password",
@@ -217,7 +217,7 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "Non hai un account? Registrati (Sospeso)",
     UiTextKey.AuthToggleToLogin to "Hai già un account? Accedi",
     UiTextKey.AuthErrorPasswordsMismatch to "Le password non corrispondono",
-    UiTextKey.AuthErrorPasswordTooShort to "La password deve avere almeno 6 caratteri",
+    UiTextKey.AuthErrorPasswordTooShort to "La password deve avere almeno 8 caratteri",
     UiTextKey.AuthRegistrationDisabled to "Registrazione sospesa durante lo sviluppo",
     UiTextKey.AuthResetEmailSent to "Email di reimpostazione inviata (se l'account esiste). Controlla la posta",
 

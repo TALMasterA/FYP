@@ -207,7 +207,7 @@ val PtBrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "Registro suspenso durante o desenvolvimento\nAviso: A senha não pode ser recuperada se o e-mail estiver errado\n" +
             "Regras de registro:\n" +
             "• Formato de e-mail válido (ex: nome@exemplo.com)\n" +
-            "• Senha com pelo menos 6 caracteres\n" +
+            "• Senha com pelo menos 8 caracteres\n" +
             "• Confirmação de senha deve coincidir",
     UiTextKey.AuthEmailLabel to "E-mail",
     UiTextKey.AuthPasswordLabel to "Senha",
@@ -217,7 +217,7 @@ val PtBrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "Não tem conta? Registre-se (Suspenso)",
     UiTextKey.AuthToggleToLogin to "Já tem conta? Entre",
     UiTextKey.AuthErrorPasswordsMismatch to "As senhas não coincidem",
-    UiTextKey.AuthErrorPasswordTooShort to "Senha precisa de pelo menos 6 caracteres",
+    UiTextKey.AuthErrorPasswordTooShort to "Senha precisa de pelo menos 8 caracteres",
     UiTextKey.AuthRegistrationDisabled to "Registro suspenso durante o desenvolvimento",
     UiTextKey.AuthResetEmailSent to "E-mail de redefinição enviado (se a conta existir). Verifique sua caixa de entrada",
 

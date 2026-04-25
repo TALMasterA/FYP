@@ -101,7 +101,7 @@ class SecurityUtilsTest {
 
     @Test
     fun `validatePassword - valid password returns Valid`() {
-        val result = validatePassword("secret")
+        val result = validatePassword("Abcdef1!")
         assertTrue(result is ValidationResult.Valid)
     }
 
@@ -109,7 +109,14 @@ class SecurityUtilsTest {
     fun `validatePassword - too short returns Invalid`() {
         val result = validatePassword("abc")
         assertTrue(result is ValidationResult.Invalid)
-        assertTrue((result as ValidationResult.Invalid).message.contains("6"))
+        assertTrue((result as ValidationResult.Invalid).message.contains("8"))
+    }
+
+    @Test
+    fun `validatePassword - six char input now Invalid after minimum raised to 8`() {
+        val result = validatePassword("secret")
+        assertTrue(result is ValidationResult.Invalid)
+        assertTrue((result as ValidationResult.Invalid).message.contains("8"))
     }
 
     @Test

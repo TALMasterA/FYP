@@ -207,7 +207,7 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "Ang pagrehistro ay naka-pause habang nasa development\nPaalala: Hindi maaaring ma-recover ang password kung mali ang email\n" +
             "Mga patakaran sa pagrehistro:\n" +
             "• Tamang format ng email (hal. name@example.com)\n" +
-            "• Hindi bababa sa 6 na karakter ang password\n" +
+            "• Hindi bababa sa 8 na karakter ang password\n" +
             "• Dapat magkatugma ang kumpirmasyon ng password",
     UiTextKey.AuthEmailLabel to "Email",
     UiTextKey.AuthPasswordLabel to "Password",
@@ -217,7 +217,7 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "Walang account? Magrehistro (Naka-pause)",
     UiTextKey.AuthToggleToLogin to "May account na? Mag-log in",
     UiTextKey.AuthErrorPasswordsMismatch to "Hindi magkatugma ang password",
-    UiTextKey.AuthErrorPasswordTooShort to "Hindi bababa sa 6 na karakter ang password",
+    UiTextKey.AuthErrorPasswordTooShort to "Hindi bababa sa 8 na karakter ang password",
     UiTextKey.AuthRegistrationDisabled to "Ang pagrehistro ay naka-pause habang nasa development",
     UiTextKey.AuthResetEmailSent to "Naipadala na ang reset email (kung may account). Suriin ang inbox",
 

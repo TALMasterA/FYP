@@ -207,7 +207,7 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "開發期間停用註冊功能。\n注意：如果用唔存在嘅電郵，就唔可以重設密碼。\n" +
             "註冊規則：\n" +
             "• 電郵格式需正確（例如 name@example.com）\n" +
-            "• 密碼最少 6 個字元\n" +
+            "• 密碼最少 8 個字元\n" +
             "• 確認密碼需同密碼一樣",
     UiTextKey.AuthEmailLabel to "電郵",
     UiTextKey.AuthPasswordLabel to "密碼",
@@ -217,7 +217,7 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "未有帳號？註冊（停用中）",
     UiTextKey.AuthToggleToLogin to "已有帳號？登入",
     UiTextKey.AuthErrorPasswordsMismatch to "密碼唔一樣。",
-    UiTextKey.AuthErrorPasswordTooShort to "密碼最少需要 6 個字元。",
+    UiTextKey.AuthErrorPasswordTooShort to "密碼最少需要 8 個字元。",
     UiTextKey.AuthRegistrationDisabled to "開發期間停用註冊功能。",
     UiTextKey.AuthResetEmailSent to "重設電郵已發出（如果電郵真實存在）。請查收你嘅收件箱。",
 

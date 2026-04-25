@@ -207,7 +207,7 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "開発段階のため登録機能は停止中です。\n注意：存在しないメールを使用するとパスワードをリセットできません。\n" +
             "登録ルール：\n" +
             "• メール形式は正しくする（例：name@example.com）\n" +
-            "• パスワードは6文字以上\n" +
+            "• パスワードは8文字以上\n" +
             "• 確認パスワードは一致させる",
     UiTextKey.AuthEmailLabel to "メール",
     UiTextKey.AuthPasswordLabel to "パスワード",
@@ -217,7 +217,7 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "アカウントをお持ちでないですか？登録（停止中）",
     UiTextKey.AuthToggleToLogin to "アカウントをお持ちですか？ログイン",
     UiTextKey.AuthErrorPasswordsMismatch to "パスワードが一致しません。",
-    UiTextKey.AuthErrorPasswordTooShort to "パスワードは6文字以上必要です。",
+    UiTextKey.AuthErrorPasswordTooShort to "パスワードは8文字以上必要です。",
     UiTextKey.AuthRegistrationDisabled to "開発段階のため登録機能は停止中です。",
     UiTextKey.AuthResetEmailSent to "リセットメールを送信しました（メールが存在する場合）。受信トレイを確認してください。",
 

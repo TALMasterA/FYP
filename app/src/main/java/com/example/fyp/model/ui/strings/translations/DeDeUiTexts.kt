@@ -207,7 +207,7 @@ val DeDeUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "Die Registrierung ist während der Entwicklung pausiert.\nHinweis: Eine nicht existierende E-Mail verhindert die Passwortzurücksetzung.\n" +
             "Registrierungsregeln:\n" +
             "• Gültiges E-Mail-Format (z.B. name@beispiel.de)\n" +
-            "• Passwort mindestens 6 Zeichen\n" +
+            "• Passwort mindestens 8 Zeichen\n" +
             "• Passwortbestätigung muss übereinstimmen",
     UiTextKey.AuthEmailLabel to "E-Mail",
     UiTextKey.AuthPasswordLabel to "Passwort",
@@ -217,7 +217,7 @@ val DeDeUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "Kein Konto? Registrieren (pausiert)",
     UiTextKey.AuthToggleToLogin to "Bereits ein Konto? Anmelden",
     UiTextKey.AuthErrorPasswordsMismatch to "Passwörter stimmen nicht überein.",
-    UiTextKey.AuthErrorPasswordTooShort to "Passwort muss mindestens 6 Zeichen lang sein.",
+    UiTextKey.AuthErrorPasswordTooShort to "Passwort muss mindestens 8 Zeichen lang sein.",
     UiTextKey.AuthRegistrationDisabled to "Registrierung ist während der Entwicklung pausiert.",
     UiTextKey.AuthResetEmailSent to "Zurücksetzungs-E-Mail gesendet (falls vorhanden). Überprüfen Sie Ihren Posteingang.",
 

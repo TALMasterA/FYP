@@ -31,7 +31,10 @@ fun validateEmail(email: String): ValidationResult {
 
 /**
  * Validates username format.
- * Allows alphanumeric characters, underscores, and hyphens.
+ * Allows alphanumeric characters and underscores (no hyphens, spaces, or symbols).
+ * The accepted character set is `^[a-zA-Z0-9_]+$`; this matches the
+ * `firestore.rules` enforcement and the canonical regex documented in
+ * `docs/ARCHITECTURE_NOTES.md` (§ Username — Format and Discoverability).
  */
 fun validateUsername(username: String, minLength: Int = 3, maxLength: Int = 20): ValidationResult {
     if (username.length < minLength) {
@@ -53,10 +56,16 @@ fun validateUsername(username: String, minLength: Int = 3, maxLength: Int = 20):
 /**
  * Validates password minimum-strength requirements.
  *
- * Currently enforces minimum length (matching Firebase Auth's own minimum).
- * The trimmed password is checked to prevent passwords that are only whitespace.
+ * Enforces a trimmed-length minimum (default 8) so passwords made entirely of
+ * whitespace are rejected. The default was raised from 6 to 8 as part of the
+ * §2.1 sweep in `docs/APP_SUGGESTIONS.md`; complexity rules (mixed character
+ * classes, common-password blocklist) are intentionally NOT enforced here
+ * because they would require new user-facing error strings translated into
+ * every supported UI language and a coordinated Firebase Auth password
+ * policy update. Callers that need stricter validation should pass a higher
+ * `minLength` or layer their own checks on top of this one.
  */
-fun validatePassword(password: String, minLength: Int = 6): ValidationResult {
+fun validatePassword(password: String, minLength: Int = 8): ValidationResult {
     val trimmed = password.trim()
     if (trimmed.length < minLength) {
         return ValidationResult.Invalid("Password must be at least $minLength characters")

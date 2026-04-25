@@ -260,17 +260,17 @@ class TranslationConsistencyTest {
     // ── SecurityUtils defaults match UI text claims ──
 
     @Test
-    fun `password minimum length in auth text matches 6`() {
+    fun `password minimum length in auth text matches 8`() {
         val zhTwText = ZhTwUiTexts[UiTextKey.AuthErrorPasswordTooShort]!!
         assertTrue(
-            "zh-TW password error should mention '6' but was: $zhTwText",
-            zhTwText.contains("6")
+            "zh-TW password error should mention '8' but was: $zhTwText",
+            zhTwText.contains("8")
         )
 
         val enText = BaseUiTexts.getOrNull(UiTextKey.AuthRegisterRules.ordinal).orEmpty()
         assertTrue(
-            "English register rules should mention '6' for password length",
-            enText.contains("6")
+            "English register rules should mention '8' for password length",
+            enText.contains("8")
         )
     }
 

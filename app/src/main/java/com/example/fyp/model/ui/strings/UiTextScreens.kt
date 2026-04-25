@@ -277,7 +277,7 @@ val ScreenUiTexts: List<String> = listOf(
             "Caution: You cannot reset password if you use an email that does not exist. \n" +
             "Register rules: \n" +
             "• Email must be a valid format (e.g., name@example.com) \n" +
-            "• Password must be at least 6 characters \n" +
+            "• Password must be at least 8 characters \n" +
             "• Confirm password must match",
 
     // AuthEmailLabel
@@ -305,7 +305,7 @@ val ScreenUiTexts: List<String> = listOf(
     "Passwords do not match.",
 
     // AuthErrorPasswordTooShort
-    "Password must be at least 6 characters.",
+    "Password must be at least 8 characters.",
 
     // AuthRegistrationDisabled
     "Registration is disabled during development.",

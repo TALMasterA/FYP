@@ -207,7 +207,7 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "Đăng ký tạm dừng trong quá trình phát triển.\nLưu ý: Email không hợp lệ sẽ ngăn khôi phục mật khẩu.\n" +
             "Quy tắc đăng ký:\n" +
             "• Định dạng email hợp lệ (vd. ten@vidu.com)\n" +
-            "• Mật khẩu tối thiểu 6 ký tự\n" +
+            "• Mật khẩu tối thiểu 8 ký tự\n" +
             "• Xác nhận phải khớp",
     UiTextKey.AuthEmailLabel to "Email",
     UiTextKey.AuthPasswordLabel to "Mật khẩu",
@@ -217,7 +217,7 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "Chưa có tài khoản? Đăng ký (tạm dừng)",
     UiTextKey.AuthToggleToLogin to "Đã có tài khoản? Đăng nhập",
     UiTextKey.AuthErrorPasswordsMismatch to "Mật khẩu không khớp.",
-    UiTextKey.AuthErrorPasswordTooShort to "Mật khẩu tối thiểu 6 ký tự.",
+    UiTextKey.AuthErrorPasswordTooShort to "Mật khẩu tối thiểu 8 ký tự.",
     UiTextKey.AuthRegistrationDisabled to "Đăng ký tạm dừng trong quá trình phát triển.",
     UiTextKey.AuthResetEmailSent to "Email khôi phục đã gửi (nếu có). Kiểm tra hộp thư.",
 

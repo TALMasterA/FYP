@@ -207,7 +207,7 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "Регистрация приостановлена на время разработки\nВнимание: Пароль нельзя восстановить при неверном email\n" +
             "Правила регистрации:\n" +
             "• Действительный email (напр: имя@пример.com)\n" +
-            "• Пароль от 6 символов\n" +
+            "• Пароль от 8 символов\n" +
             "• Подтверждение пароля должно совпадать",
     UiTextKey.AuthEmailLabel to "Email",
     UiTextKey.AuthPasswordLabel to "Пароль",
@@ -217,7 +217,7 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "Нет аккаунта? Зарегистрируйтесь (Приостановлено)",
     UiTextKey.AuthToggleToLogin to "Уже есть аккаунт? Войти",
     UiTextKey.AuthErrorPasswordsMismatch to "Пароли не совпадают",
-    UiTextKey.AuthErrorPasswordTooShort to "Пароль должен быть не менее 6 символов",
+    UiTextKey.AuthErrorPasswordTooShort to "Пароль должен быть не менее 8 символов",
     UiTextKey.AuthRegistrationDisabled to "Регистрация приостановлена на время разработки",
     UiTextKey.AuthResetEmailSent to "Письмо для сброса отправлено (если аккаунт существует). Проверьте почту",
 

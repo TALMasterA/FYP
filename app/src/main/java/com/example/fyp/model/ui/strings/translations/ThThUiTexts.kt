@@ -207,7 +207,7 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "สมัครสมาชิกหยุดชั่วคราวระหว่างพัฒนา\nหมายเหตุ: อีเมลไม่ถูกต้องจะไม่สามารถกู้รหัสผ่านได้\n" +
             "กฎการสมัคร:\n" +
             "• รูปแบบอีเมลที่ถูกต้อง (เช่น name@example.com)\n" +
-            "• รหัสผ่านอย่างน้อย 6 ตัวอักษร\n" +
+            "• รหัสผ่านอย่างน้อย 8 ตัวอักษร\n" +
             "• ยืนยันรหัสผ่านต้องตรงกัน",
     UiTextKey.AuthEmailLabel to "อีเมล",
     UiTextKey.AuthPasswordLabel to "รหัสผ่าน",
@@ -217,7 +217,7 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "ยังไม่มีบัญชี? สมัคร (หยุดชั่วคราว)",
     UiTextKey.AuthToggleToLogin to "มีบัญชีแล้ว? เข้าสู่ระบบ",
     UiTextKey.AuthErrorPasswordsMismatch to "รหัสผ่านไม่ตรงกัน",
-    UiTextKey.AuthErrorPasswordTooShort to "รหัสผ่านอย่างน้อย 6 ตัวอักษร",
+    UiTextKey.AuthErrorPasswordTooShort to "รหัสผ่านอย่างน้อย 8 ตัวอักษร",
     UiTextKey.AuthRegistrationDisabled to "สมัครสมาชิกหยุดชั่วคราวระหว่างพัฒนา",
     UiTextKey.AuthResetEmailSent to "อีเมลรีเซ็ตถูกส่ง (ถ้ามีบัญชี) ตรวจสอบกล่องจดหมาย",
 

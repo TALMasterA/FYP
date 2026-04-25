@@ -7,13 +7,18 @@ These instructions are mandatory for any prompt that results in repository chang
 Before marking a task complete, the agent must do all items below:
 
 1. Refresh docs/treeOfImportantfiles.txt if files, structure, or key documentation entries changed.
-2. Audit and update documentation for accuracy:
-- docs/ folder files impacted by the change
-- README.md if feature behavior, workflow, commands, test counts, or architecture notes changed
+2. Audit and update documentation for accuracy using the **docs-accuracy-audit** skill (`.github/skills/docs-accuracy-audit/SKILL.md`). This is mandatory for every repository-changing task. At minimum verify:
+   - Test counts in `docs/TEST_COVERAGE.md` and `README.md` match the actual `testDebugUnitTest` XML output exactly.
+   - Security constants (e.g., password minimum length in `SecurityUtils.kt`) match all 17 UI string files (English + 16 locales).
+   - Cloud Functions callable names in `docs/CLOUD_FUNCTIONS_API.md` match actual `exports.*` in `fyp-backend/functions/src/index.ts`.
+   - Symbols named in `docs/ARCHITECTURE_NOTES.md` still exist in the codebase.
+   - No file listed in `docs/treeOfImportantfiles.txt` is absent from the workspace.
+   - Gitignored files (`google-services.json`, `local.properties`, `firebase-sa.json`) do NOT appear in the tree file or in any submission document.
+   - Numeric literals in code comments match the actual constant or default value they describe.
 3. Verify Android quality gates:
 - .\\gradlew.bat :app:testDebugUnitTest
 - .\\gradlew.bat :app:assembleDebug
-4. Report verification outcomes in the final summary.
+4. Report verification outcomes in the final summary. Include the docs-accuracy-audit checklist table with PASS / FAIL / N/A for each applicable check.
 
 ## Tree File Guard
 

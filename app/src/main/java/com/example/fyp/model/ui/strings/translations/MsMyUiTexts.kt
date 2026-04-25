@@ -207,7 +207,7 @@ val MsMyUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "Pendaftaran ditangguhkan semasa pembangunan\nPeringatan: Kata laluan tidak boleh dipulihkan jika emel salah\n" +
             "Peraturan pendaftaran:\n" +
             "• Format emel yang sah (cth. name@example.com)\n" +
-            "• Kata laluan sekurang-kurangnya 6 aksara\n" +
+            "• Kata laluan sekurang-kurangnya 8 aksara\n" +
             "• Pengesahan kata laluan mesti sepadan",
     UiTextKey.AuthEmailLabel to "Emel",
     UiTextKey.AuthPasswordLabel to "Kata laluan",
@@ -217,7 +217,7 @@ val MsMyUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "Tiada akaun? Daftar (Ditangguhkan)",
     UiTextKey.AuthToggleToLogin to "Sudah ada akaun? Log masuk",
     UiTextKey.AuthErrorPasswordsMismatch to "Kata laluan tidak sepadan",
-    UiTextKey.AuthErrorPasswordTooShort to "Kata laluan sekurang-kurangnya 6 aksara",
+    UiTextKey.AuthErrorPasswordTooShort to "Kata laluan sekurang-kurangnya 8 aksara",
     UiTextKey.AuthRegistrationDisabled to "Pendaftaran ditangguhkan semasa pembangunan",
     UiTextKey.AuthResetEmailSent to "Emel tetapan semula dihantar (jika akaun wujud). Semak peti masuk",
 

@@ -207,7 +207,7 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthRegisterRules to "开发阶段已停用注册功能。\n注意：如果使用不存在的邮箱，将无法重置密码。\n" +
             "注册规则：\n" +
             "• 邮箱格式需正确（例如 name@example.com）\n" +
-            "• 密码至少 6 个字符\n" +
+            "• 密码至少 8 个字符\n" +
             "• 确认密码需与密码一致",
     UiTextKey.AuthEmailLabel to "邮箱",
     UiTextKey.AuthPasswordLabel to "密码",
@@ -217,7 +217,7 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AuthToggleToRegister to "没有账号？注册（已停用）",
     UiTextKey.AuthToggleToLogin to "已有账号？登录",
     UiTextKey.AuthErrorPasswordsMismatch to "密码不一致。",
-    UiTextKey.AuthErrorPasswordTooShort to "密码至少需要 6 个字符。",
+    UiTextKey.AuthErrorPasswordTooShort to "密码至少需要 8 个字符。",
     UiTextKey.AuthRegistrationDisabled to "开发阶段已停用注册功能。",
     UiTextKey.AuthResetEmailSent to "重置邮件已发送（如果邮箱真实存在）。请查收您的收件箱。",
 
