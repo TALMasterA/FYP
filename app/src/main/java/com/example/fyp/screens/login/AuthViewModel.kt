@@ -104,6 +104,57 @@ class AuthViewModel @Inject constructor(
         )
     }
 
+    /**
+     * Sign in to Firebase using a Google ID token obtained from the
+     * Google Sign-In flow on the UI layer.
+     */
+    fun signInWithGoogle(idToken: String) {
+        if (idToken.isBlank()) {
+            _uiState.value = _uiState.value.copy(
+                errorRaw = "Google sign-in failed: empty ID token."
+            )
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isLoading = true,
+                errorKey = null,
+                errorRaw = null,
+                messageKey = null,
+                messageRaw = null
+            )
+
+            val result = authRepository.signInWithGoogle(idToken)
+
+            result.onSuccess { user ->
+                AuditLogger.logLoginSuccess(userId = user.email ?: user.uid)
+            }
+            result.onFailure {
+                AuditLogger.logLoginFailed(
+                    email = "google-sign-in",
+                    reason = it.message ?: "unknown"
+                )
+            }
+
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                errorRaw = result.exceptionOrNull()?.let { ErrorMessageMapper.map(it) }
+            )
+        }
+    }
+
+    /**
+     * Surface a Google sign-in error originating from the UI layer
+     * (e.g. user cancelled, no credential available).
+     */
+    fun reportGoogleSignInError(message: String) {
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            errorRaw = message
+        )
+    }
+
     fun resetPassword(email: String) {
         val trimmedEmail = email.trim()
 

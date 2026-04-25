@@ -283,4 +283,53 @@ class AuthViewModelTest {
         assertNull(viewModel.uiState.value.messageKey)
         assertNull(viewModel.uiState.value.messageRaw)
     }
+
+    // ── Google Sign-In ──────────────────────────────────────────────
+
+    @Test
+    fun `signInWithGoogle success clears error and not loading`() = runTest {
+        val token = "valid-id-token"
+        val user = User(uid = "g-uid", email = "g@example.com")
+        whenever(authRepo.signInWithGoogle(token)).thenReturn(Result.success(user))
+
+        viewModel.signInWithGoogle(token)
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertNull(state.errorRaw)
+        assertNull(state.errorKey)
+        verify(authRepo).signInWithGoogle(token)
+    }
+
+    @Test
+    fun `signInWithGoogle failure surfaces error message`() = runTest {
+        val token = "valid-id-token"
+        whenever(authRepo.signInWithGoogle(token))
+            .thenReturn(Result.failure(RuntimeException("network down")))
+
+        viewModel.signInWithGoogle(token)
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertNotNull(state.errorRaw)
+    }
+
+    @Test
+    fun `signInWithGoogle blank token rejected before repo call`() = runTest {
+        viewModel.signInWithGoogle("   ")
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.errorRaw)
+        assertTrue(state.errorRaw!!.contains("empty", ignoreCase = true))
+        verify(authRepo, never()).signInWithGoogle(any())
+    }
+
+    @Test
+    fun `reportGoogleSignInError surfaces message and stops loading`() = runTest {
+        viewModel.reportGoogleSignInError("user cancelled")
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertEquals("user cancelled", state.errorRaw)
+    }
 }

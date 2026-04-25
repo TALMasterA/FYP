@@ -6,6 +6,7 @@ import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -44,6 +45,20 @@ class FirebaseAuthRepository @Inject constructor(
 
     suspend fun register(email: String, password: String): Result<User> = try {
         val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+        val user = result.user
+            ?: return Result.failure(Exception("Authentication failed: No user returned"))
+        Result.success(user.toUser())
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    /**
+     * Sign in to Firebase using a Google ID token obtained from Google Sign-In.
+     * If the user does not yet exist, Firebase will provision a new account.
+     */
+    suspend fun signInWithGoogle(idToken: String): Result<User> = try {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        val result = firebaseAuth.signInWithCredential(credential).await()
         val user = result.user
             ?: return Result.failure(Exception("Authentication failed: No user returned"))
         Result.success(user.toUser())

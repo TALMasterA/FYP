@@ -117,6 +117,7 @@ Please use your gmail to register.
 
 **User Accounts:**
 - Email/password authentication via Firebase
+- Google Sign-In (Firebase Auth Google provider; classic `play-services-auth` flow)
 - Profile management (username, account deletion)
 - Password reset via email
 - Auto sign-out on app version update
@@ -249,7 +250,7 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 187 test files, 2,437 unit tests (from the latest `testDebugUnitTest` report)
+- **Android:** 187 test files, 2,441 unit tests (from the latest `testDebugUnitTest` report)
 - **Backend:** 14 test files, 184 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.
