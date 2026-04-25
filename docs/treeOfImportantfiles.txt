@@ -39,7 +39,8 @@ FYP/
 │   ├── LEAKCANARY_EXPLANATION.md                   ← Memory leak analysis
 │   ├── MCP_SKILLS_PLAYBOOK.md                      ← Team playbook for MCP skills usage
 │   ├── CLOUD_FUNCTIONS_API.md                      ← Backend Cloud Functions API reference
-│   └── SECRETS_ROTATION.md                         ← API key rotation runbook
+│   ├── SECRETS_ROTATION.md                         ← API key rotation runbook
+│   └── APP_SUGGESTIONS.md                          ← Audit-style suggestions (security, QA, performance, features)
 │
 ├── app/
 │   ├── build.gradle.kts
