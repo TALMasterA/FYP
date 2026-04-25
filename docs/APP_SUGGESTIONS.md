@@ -86,7 +86,7 @@ The rest of this document expands each, plus performance, observability, privacy
 >   user's UI-language preference.
 > - **§3.1 drop `unitTests.isReturnDefaultValues`** — flipping to `false`
 >   surfaces dozens of latent Android-framework misuse failures across the
->   2,457-test suite; needs a dedicated mocking pass per failing test.
+>   2,459-test suite; needs a dedicated mocking pass per failing test.
 > - **§3.2 expanded instrumented Compose UI tests** — needs a
 >   `HiltTestActivity` + fake-repository wiring rebuild and an emulator/CI
 >   matrix; the existing `LoginScreenSmokeTest` is the only seed.

@@ -1,8 +1,14 @@
 package com.example.fyp.screens.login
 
+import android.content.Context
+import android.content.res.Resources
 import com.example.fyp.core.UiConstants
+import com.example.fyp.core.security.ValidationResult
+import com.example.fyp.core.security.validatePassword
 import org.junit.Assert.*
 import org.junit.Test
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 /**
  * Unit tests for login screen error display logic and validation.
@@ -75,20 +81,20 @@ class LoginScreenLogicTest {
     fun `password too short detected`() {
         val password = "abc"
 
-        val error = if (password.length < 6) "Password too short" else null
+        val error = if (validatePassword(password) is ValidationResult.Invalid) "Password too short" else null
         assertNotNull(error)
     }
 
     @Test
-    fun `password at boundary length 5 is too short`() {
-        val password = "abcde" // 5 chars
-        assertTrue(password.length < 6)
+    fun `password at boundary length 7 is too short`() {
+        val password = "abcdefg" // 7 chars
+        assertTrue(validatePassword(password) is ValidationResult.Invalid)
     }
 
     @Test
-    fun `password at boundary length 6 is valid`() {
-        val password = "abcdef" // 6 chars
-        assertFalse(password.length < 6)
+    fun `password at boundary length 8 is valid`() {
+        val password = "abcdefgh" // 8 chars
+        assertEquals(ValidationResult.Valid, validatePassword(password))
     }
 
     @Test
@@ -98,7 +104,7 @@ class LoginScreenLogicTest {
 
         val error = when {
             password != confirmPassword -> "Passwords don't match"
-            password.length < 6 -> "Password too short"
+            validatePassword(password) is ValidationResult.Invalid -> "Password too short"
             else -> null
         }
         assertNull(error)
@@ -111,11 +117,40 @@ class LoginScreenLogicTest {
 
         val error = when {
             password != confirmPassword -> "Passwords don't match"
-            password.length < 6 -> "Password too short"
+            validatePassword(password) is ValidationResult.Invalid -> "Password too short"
             else -> null
         }
         // Mismatch takes priority over length
         assertEquals("Passwords don't match", error)
+    }
+
+    @Test
+    fun `resolveGoogleWebClientId returns null when generated resource is missing`() {
+        val resources = mock(Resources::class.java)
+        val context = mock(Context::class.java)
+
+        `when`(context.resources).thenReturn(resources)
+        `when`(context.packageName).thenReturn("com.example.fyp")
+        `when`(
+            resources.getIdentifier("default_web_client_id", "string", "com.example.fyp")
+        ).thenReturn(0)
+
+        assertNull(resolveGoogleWebClientId(context))
+    }
+
+    @Test
+    fun `resolveGoogleWebClientId trims configured client id`() {
+        val resources = mock(Resources::class.java)
+        val context = mock(Context::class.java)
+
+        `when`(context.resources).thenReturn(resources)
+        `when`(context.packageName).thenReturn("com.example.fyp")
+        `when`(
+            resources.getIdentifier("default_web_client_id", "string", "com.example.fyp")
+        ).thenReturn(123)
+        `when`(context.getString(123)).thenReturn("  test-client-id  ")
+
+        assertEquals("test-client-id", resolveGoogleWebClientId(context))
     }
 
     // ── Error auto-dismiss timing (item 7) ─────────────────────────

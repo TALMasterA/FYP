@@ -1,5 +1,7 @@
 package com.example.fyp.screens.login
 
+import com.example.fyp.core.security.ValidationResult
+import com.example.fyp.core.security.validatePassword
 import org.junit.Test
 import org.junit.Assert.*
 
@@ -71,17 +73,17 @@ class LoginScreenRulesTest {
     }
 
     @Test
-    fun `password too short error for less than 6 chars`() {
-        val password = "abc"
-        val error = if (password.length < 6) "Password too short" else null
+    fun `password too short error for less than 8 chars`() {
+        val password = "abcdefg"
+        val error = if (validatePassword(password) is ValidationResult.Invalid) "Password too short" else null
 
         assertNotNull(error)
     }
 
     @Test
-    fun `password at 6 chars passes length check`() {
-        val password = "abcdef"
-        val error = if (password.length < 6) "Password too short" else null
+    fun `password at 8 chars passes length check`() {
+        val password = "abcdefgh"
+        val error = if (validatePassword(password) is ValidationResult.Invalid) "Password too short" else null
 
         assertNull(error)
     }
