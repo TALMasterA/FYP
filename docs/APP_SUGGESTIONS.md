@@ -172,76 +172,32 @@ The rest of this document expands each, plus performance, observability, privacy
 
 ---
 
-## 4. Performance / Efficiency
-
-### 4.1 Use `mutableLongStateOf` / `mutableIntStateOf`
-- `ThrottledLaunchedEffect` in [`PerformanceUtils.kt`](../app/src/main/java/com/example/fyp/core/performance/PerformanceUtils.kt#L40-L57) does `var lastExecutionTime by remember { mutableStateOf(0L) }` — this **boxes** every Long write. Compose has had `mutableLongStateOf` since 1.5.
-- **Action**: replace all `mutableStateOf(0L)` / `mutableStateOf(0)` in `core/performance/**` and any ViewModel local Compose state.
-
-### 4.2 Add a time-based flush to `OperationBatcher`
-- Per repository memory and code, `OperationBatcher` only flushes on size or explicit `flush()`. If size is never reached, items sit forever.
-- **Action**: add an optional `flushIntervalMs: Long? = null` parameter; on first `submit`, schedule `delay(flushIntervalMs); flush()` in the same scope. Cancel on size-flush. Update the consumer in `FavoritesViewModel` to set 1500 ms.
-
-### 4.3 Replace `MutableList<Long>.removeAll { ... }` in `RateLimiter`
-- [`SecurityUtils.kt`](../app/src/main/java/com/example/fyp/core/security/SecurityUtils.kt#L120-L150) uses `record.attempts.removeAll { now - it > windowMillis }` per `isAllowed`. With `maxAttempts = 5`, the cost is trivial; with chat-style 100+ per window it becomes O(n²) over a session.
-- **Action**: switch `attempts` to `kotlin.collections.ArrayDeque<Long>` and `while (deque.isNotEmpty() && now - deque.first() > windowMillis) deque.removeFirst()` for O(amortised 1) per check.
-
-### 4.4 Replace ABI universal APK in `release`
-- [`app/build.gradle.kts`](../app/build.gradle.kts#L75-L86) `splits.abi { isUniversalApk = true }`. Universal APK is ~3× the size of any single-ABI APK and is rarely needed for store distribution.
-- **Action**: keep `isUniversalApk = true` only in `releaseDemo` flavour from §2.9; set to `false` in real `release`.
-
-### 4.5 Cloud Function: collapse `getLanguageHistoryCount` queries
-- `learning.ts` runs three `count()` aggregations sequentially-in-parallel and computes `source + target - same`. Each `count()` is billed at 1 read per 1000 documents.
-- **Action**: maintain a denormalised `users/{uid}/profile/private.languageCounts` map updated by a Firestore trigger on `history` write/delete. Reads become 1 doc-read instead of 3 aggregations.
-
-### 4.6 `pruneStaleTokens` is O(users × subcollection-query)
-- [`maintenance.ts`](../fyp-backend/functions/src/maintenance.ts#L18-L62) iterates every user and runs a `where("updatedAt", "<", cutoff)` on each `fcm_tokens` subcollection.
-- **Action**: switch to `collectionGroup("fcm_tokens").where("updatedAt", "<", cutoff).limit(500)` with cursor pagination. Add any Firestore index the emulator/console requests; simple collection-group filters may be covered by single-field indexes, but test it before deploying.
-
-### 4.7 Keep LazyColumn key stability as a regression check
-- Current scan shows most dynamic `LazyColumn` / `items(...)` calls already supply stable keys (`messageId`, `friendId`, `requestId`, `languageCode`, etc.). The risk is regression, not an obvious current gap.
-- **Action**: add a lightweight static test that scans `screens/**` for `items(` without `key =` except deliberate fixed-count placeholders like `items(3)` skeletons. This preserves the existing good pattern.
-
-### 4.8 Translate-all batching window
-- [`translateTexts`](../fyp-backend/functions/src/translation.ts#L220-L369) already chunks server-side into Azure batches of 100 texts, allows up to 800 texts, enforces 5,000 chars per element, and retries Azure 429s. The client [`TranslateAllMessagesUseCase`](../app/src/main/java/com/example/fyp/domain/friends/TranslateAllMessagesUseCase.kt) still sends all unique friend messages at once and uses a 30-second callable timeout.
-- **Action**: add a client preflight: cap one translate-all request to the newest 800 unique friend messages, disable the button while translating, show progress/cancel, and provide "Translate older messages" for the next page. Consider increasing timeout only if metrics show legitimate 800-message batches exceed 30 seconds.
-
-### 4.9 Cloud Function cold start
-- `setGlobalOptions({maxInstances: 10})` and no `minInstances`. Translate cold-start can be 2–4 s on first message of the day for a user.
-- **Action**: for `translateText` set `minInstances: 1` (cost: 1 instance × 24 h ≈ trivial vs. UX win). Skip for `generateLearningContent` (rare, can tolerate cold start).
-
-### 4.10 Make HTTP cache lifecycle user-aware
-- [`DaggerModule`](../app/src/main/java/com/example/fyp/data/di/DaggerModule.kt#L91-L103) creates a 50 MB OkHttp cache and [`CacheInterceptor`](../app/src/main/java/com/example/fyp/data/network/CacheInterceptor.kt) avoids caching requests with an `Authorization` header. That is a good baseline, but the cache is device-wide and no sign-out path calls `cache.evictAll()`.
-- **Action**: either inject `Cache` into the `SessionDataCleaner` from §2.15 and evict on logout/update-signout, or document why only public unauthenticated assets ever enter it.
-
-### 4.11 Centralize Firestore settings configuration
-- [`FYPApplication`](../app/src/main/java/com/example/fyp/appstate/FYPApplication.kt#L27-L38) configures Firestore persistence with the older `setPersistenceEnabled(true)` API, while [`DaggerModule`](../app/src/main/java/com/example/fyp/data/di/DaggerModule.kt#L74-L87) configures `PersistentCacheSettings` with a 50 MB cap. Whichever runs second catches/logs an exception.
-- **Action**: keep one authoritative Firestore configuration path. Prefer `PersistentCacheSettings` with an explicit cache-size cap, and remove the duplicate app-start configuration after verifying no startup ordering regression.
-
----
-
-## 5. Reliability & Observability
-
-### 5.1 End-to-end correlation ID
-- No `X-Request-ID` header is generated client-side and propagated to Cloud Functions.
-- **Action**: in OkHttp `Interceptor`, attach `X-Request-ID = UUID.randomUUID().toString()`. In every Cloud Function, log `{requestId: req.headers["x-request-id"]}`. Surface the ID in any user-facing error toast for support escalations.
-
-### 5.2 Crashlytics custom keys
-- `AuditLogger` already sets `last_audit_event` / `last_audit_user`. Missing: `current_screen`, `current_locale`, `auth_state`, `quiz_in_progress`.
-- **Action**: in `Navigation` `NavController.OnDestinationChangedListener`, set `FirebaseCrashlytics.getInstance().setCustomKey("current_screen", route)`.
-
-### 5.3 Cloud Function alert policies
-- No `gcloud alpha monitoring policies create ...` documented in `docs/`.
-- **Action**: add `docs/CLOUD_FUNCTIONS_ALERTS.md` with three policies: error-rate > 2 % over 10 min, p95 latency > 5 s over 10 min, function-killed-by-OOM count > 0. Reference Cloud Console links.
-
-### 5.3.1 Add structured log redaction helpers
-- Backend logs currently include raw `uid`, `senderId`, `receiverId`, and chat IDs in several places (`notifications.ts`, `helpers.ts`, `learning.ts`). These are useful for support but risky to spread across logs.
-- **Action**: add `logUser(uid)` / `logChat(chatId)` helper functions that hash IDs with an environment-specific salt for routine info/warn logs. Keep raw IDs only in explicitly marked admin-debug logs with short retention.
-
-### 5.4 `@PropertyName` Firebase JavaBean trap
-- `ARCHITECTURE_NOTES.md` notes the `isDiscoverable` bug fix. Add a static analyser or unit test scanning `model/**/*.kt` for any `val isXxx: Boolean` without `@PropertyName("isXxx")` to prevent regression.
-
----
+> **Note (manual config items deferred from §4 / §5):** The following items
+> require operational decisions or infrastructure changes outside the scope of
+> a code-only sweep and have intentionally been left for the maintainer:
+>
+> - **§4.2 `OperationBatcher` time-based flush** — only consumer
+>   (`FavoritesViewModel.deleteSelected`) calls `flush()` immediately in the
+>   same coroutine; adding a timer would be unreachable in production today.
+> - **§4.4 disable universal APK in `release`** — current single `release`
+>   build is the demo distribution; `package_submission.ps1` and the
+>   demo-lab sideloading workflow rely on the universal APK. Defer until
+>   a separate `releaseStore` flavour is introduced.
+> - **§4.5 denormalised language counts** — requires a Firestore trigger plus
+>   a one-off migration; weigh against current low call volume.
+> - **§4.6 `pruneStaleTokens` collection-group rewrite** — needs a Firestore
+>   composite index deployment plus rewriting `maintenance.test.ts` and
+>   `maintenance-deep.test.ts` mock fixtures.
+> - **§4.8 client-side translate-all batching window** — UX feature; a real
+>   product decision rather than a quality fix.
+> - **§4.9 `translateText` `minInstances: 1`** — has an ongoing cost; product
+>   call.
+> - **§5.3 Cloud Function alert policies** — needs `gcloud monitoring`
+>   commands run against the live project plus a new
+>   `docs/CLOUD_FUNCTIONS_ALERTS.md` document with the chosen thresholds.
+> - **§5.3.1 `LOG_SALT`** — set this env var in the Cloud Functions runtime
+>   config so deployed logs use salted hash tokens. The helpers fall back to
+>   raw IDs locally when the salt is empty.
 
 ## 8. Feature Suggestions (Specific to a Translation-Learning App)
 

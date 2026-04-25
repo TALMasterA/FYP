@@ -96,6 +96,19 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
 
+    // §5.2: surface the current top-level destination on every Crashlytics report
+    // so non-fatal logs and crashes carry the screen the user was looking at.
+    androidx.compose.runtime.DisposableEffect(navController) {
+        val listener = androidx.navigation.NavController.OnDestinationChangedListener { _, destination, _ ->
+            runCatching {
+                com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance()
+                    .setCustomKey("current_screen", destination.route ?: "unknown")
+            }
+        }
+        navController.addOnDestinationChangedListener(listener)
+        onDispose { navController.removeOnDestinationChangedListener(listener) }
+    }
+
     // Async check — avoids blocking the main thread with SharedPreferences I/O
     val isOnboardingDone by produceState(initialValue = true) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {

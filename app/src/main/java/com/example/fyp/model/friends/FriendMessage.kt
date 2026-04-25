@@ -2,6 +2,7 @@ package com.example.fyp.model.friends
 
 import androidx.compose.runtime.Immutable
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.PropertyName
 
 /**
  * Represents a chat message between two friends.
@@ -23,6 +24,8 @@ data class FriendMessage(
      * Firestore chat documents. Not read or written by current code.
      */
     val metadata: Map<String, Any> = emptyMap(),
+    @field:PropertyName("isRead")
+    @get:PropertyName("isRead")
     val isRead: Boolean = false,
     val createdAt: Timestamp = Timestamp.now()
 )

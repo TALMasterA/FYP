@@ -100,6 +100,7 @@ object AppModule {
 
         return OkHttpClient.Builder()
             .cache(cache)
+            .addInterceptor(com.example.fyp.data.network.RequestIdInterceptor()) // §5.1: per-request correlation header
             .addInterceptor(com.example.fyp.data.network.CacheInterceptor()) // Add cache interceptor
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)

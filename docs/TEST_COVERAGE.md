@@ -8,11 +8,11 @@ _Last updated: 2026-04-19_
 |---|---:|
 | Android source files (`app/src/main/java/com/example/fyp`) | 237 |
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 9 |
-| Android unit test files (`app/src/test/java/com/example/fyp`) | 188 |
-| Android test suites in latest `testDebugUnitTest` run | 188 |
-| Android unit tests executed (`testDebugUnitTest`) | 2,443 |
-| Backend test files (`fyp-backend/functions/src/__tests__`) | 14 |
-| Backend Jest tests executed (`npm test`) | 184 |
+| Android unit test files (`app/src/test/java/com/example/fyp`) | 191 |
+| Android test suites in latest `testDebugUnitTest` run | 191 |
+| Android unit tests executed (`testDebugUnitTest`) | 2,448 |
+| Backend test files (`fyp-backend/functions/src/__tests__`) | 15 |
+| Backend Jest tests executed (`npm test`) | 189 |
 
 ## Backend Coverage (from `coverage-summary.json`)
 

@@ -149,7 +149,8 @@ FYP/
 │       │       │   │   ├── QuizGenerationRepositoryImpl.kt
 │       │       │   │   └── QuizParser.kt
 │       │       │   ├── network/
-│       │       │   │   └── CacheInterceptor.kt
+│       │       │   │   ├── CacheInterceptor.kt
+│       │       │   │   └── RequestIdInterceptor.kt
 │       │       │   ├── ocr/
 │       │       │   │   └── MLKitOcrRepository.kt
 │       │       │   ├── repositories/
@@ -431,7 +432,8 @@ FYP/
 │       │   │   │   ├── QuizParserTest.kt
 │       │   │   │   └── QuizRepositoryLogicTest.kt          ← Quiz repository logic tests
 │       │   │   ├── network/
-│       │   │   │   └── CacheInterceptorTest.kt
+│       │   │   │   ├── CacheInterceptorTest.kt
+│       │   │   │   └── RequestIdInterceptorTest.kt
 │       │   │   ├── ocr/
 │       │   │   │   └── OcrRecognizerSelectionTest.kt      ← Language-to-recognizer mapping tests
 │       │   │   ├── repositories/
@@ -537,6 +539,7 @@ FYP/
 │       │   │   ├── HistorySessionExtendedTest.kt          ← Extended history session edge cases
 │       │   │   ├── OcrResultTest.kt
 │       │   │   ├── OcrScriptTest.kt
+│       │   │   ├── PropertyNameAnnotationTest.kt          ← §5.4 static guard for is-Boolean Firestore fields
 │       │   │   ├── QuizModelTest.kt
 │       │   │   ├── SpeechResultTest.kt
 │       │   │   ├── TranslationRecordTest.kt
@@ -548,6 +551,7 @@ FYP/
 │       │   │   ├── NavigationAccessTest.kt
 │       │   │   └── NavigationBarInsetsTest.kt
 │       │   ├── screens/
+│       │   │   ├── LazyListKeyStabilityTest.kt           ← §4.7 static guard for stable LazyColumn keys
 │       │   │   ├── favorites/
 │       │   │   │   └── FavoritesViewModelTest.kt
 │       │   │   ├── feedback/
@@ -636,6 +640,7 @@ FYP/
             ├── health.ts                           ← Healthcheck HTTP endpoint (validates GenAI config)
             └── __tests__/
                 ├── helpers.test.ts                 ← 28 unit tests for validation helpers
+                ├── helpers-redaction.test.ts       ← 5 unit tests for §5.3.1 logUid/logChat hashing
                 ├── logger.test.ts                  ← 6 unit tests for structured logger
                 ├── translation.test.ts             ← 42 unit tests for getSpeechToken, translateText(s), detectLanguage
                 ├── coins.test.ts                   ← 27 unit tests for awardQuizCoins and spendCoins

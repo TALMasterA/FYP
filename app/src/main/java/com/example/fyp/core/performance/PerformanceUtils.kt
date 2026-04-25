@@ -44,14 +44,14 @@ fun ThrottledLaunchedEffect(
     intervalMillis: Long = 1000L,
     block: suspend () -> Unit
 ) {
-    var lastExecutionTime by remember { mutableStateOf(0L) }
+    val lastExecutionTime = remember { mutableLongStateOf(0L) }
 
     LaunchedEffect(key) {
         val currentTime = System.currentTimeMillis()
-        val timeSinceLastExecution = currentTime - lastExecutionTime
+        val timeSinceLastExecution = currentTime - lastExecutionTime.longValue
 
         if (timeSinceLastExecution >= intervalMillis) {
-            lastExecutionTime = currentTime
+            lastExecutionTime.longValue = currentTime
             block()
         }
     }
