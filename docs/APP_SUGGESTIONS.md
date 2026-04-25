@@ -116,66 +116,29 @@ The rest of this document expands each, plus performance, observability, privacy
 
 ---
 
-## 3. Quality Assurance / Testing
-
-### 3.1 Drop `unitTests.isReturnDefaultValues = true`
-- [`app/build.gradle.kts`](../app/build.gradle.kts#L60) hides Android-framework `NullPointerException`s by returning defaults from un-mocked Android classes. This silently turns "I forgot to mock `Context`" into a green test.
-- **Action**: set to `false`. Replace any failures with explicit `@MockK` / `mockito-kotlin` mocks. Keep `Robolectric` only where a `Context` is genuinely required.
-
-### 3.2 Expand instrumented Compose UI tests
-- `app/src/androidTest/` contains essentially one Compose smoke test (`LoginScreenSmokeTest`).
-- **Action priority order**:
-  1. `FriendsListScreenTest` — search, send/cancel/accept request, block, unfriend (covers most-used path).
-  2. `ChatScreenTest` — send, mark-as-read, translate-all, infinite scroll back, blocked banner.
-  3. `QuizScreenTest` — answer correctness, coin award, retry-on-network-error.
-  4. `WordBankScreenTest` — add/edit/delete with offline banner.
-- Use `createAndroidComposeRule<HiltTestActivity>()` with `FakeFriendsRepository`, `FakeAuthRepository` Hilt test modules.
-
-### 3.3 Add Firestore-rules emulator test for every collection
-- Currently `fyp-backend/functions/__tests__/firestore-rules-settings.test.ts` (per memory). One file is not enough for a 400-line rules document.
-- **Action**: separate test files for `friend_requests`, `shared_inbox`, `feedback`, `usernames`, `user_search`, `chats/{id}/messages`, `coin_awards`. Each must include negative tests (cross-user write, oversized field, missing required field, blocked sender).
-
-### 3.4 Raise backend Jest coverage threshold
-- `fyp-backend/functions/jest.config.js` caps at 50 %. With 184 tests across 14 files in 8 modules, coverage is likely already higher; the threshold is just permissive.
-- **Action**: raise `coverageThreshold.global` to `{ branches: 70, functions: 80, lines: 80, statements: 80 }`. Ratchet only — never lower.
-
-### 3.4.1 Make `postFYP` branch run CI automatically
-- [`.github/workflows/ci.yml`](../.github/workflows/ci.yml#L3-L9) runs on pushes to `main` and PRs targeting `main`. If development continues directly on `postFYP`, a push to `postFYP` will not run Android tests, assemble, backend lint/build, or Jest coverage.
-- **Action**: while using this branch for post-grade development, change the workflow filters to `branches: [main, postFYP]` for `push` and keep PR protection on `main`. Remove `postFYP` from the filter once work merges back.
-
-### 3.5 Add Detekt + ktlint to the build
-- No static-analysis plugin in `build.gradle.kts`.
-- **Action**: apply `id("io.gitlab.arturbosch.detekt") version "1.23.6"` and `id("org.jlleitschuh.gradle.ktlint") version "12.1.1"`. Add `:app:detekt` and `:app:ktlintCheck` to `ci.yml`. Start with `failFast = false` then ratchet.
-
-### 3.6 Add screenshot / golden tests
-- Theme + font scaling (Settings allows 0.5–2.0×) is regression-prone in Compose.
-- **Action**: introduce `dropbox/dropshots` or **Paparazzi**; snapshot `LoginScreen`, `FriendsScreen`, `ChatBubble`, `QuizCard` at scale `0.85`, `1.0`, `1.5` × {Light, Dark}.
-
-### 3.7 Add macrobenchmark module
-- No `:macrobenchmark` module exists.
-- **Action**: add `app:macrobenchmark` to measure cold-start, `History` scroll, `FriendsList` scroll. Fail CI if `startupTimeMs.median > 1500ms` on the standard CI emulator.
-
-### 3.8 Property / fuzz tests for input validators
-- `sanitizeInput`, `validateUsername`, `validateLanguageCode`, FCM token shape — all good fuzz candidates.
-- **Action**: add `kotest-property` (or `jqwik` for JUnit) for validators, but do **not** assert `sanitizeInput` idempotence. The documented invariant is encoding order, not idempotence. Good properties:
-  - `sanitizeInput(s)` never contains raw `<`, `>`, `"`, `'`, or `/` after trimming.
-  - `sanitizeInput("<x>") == "&lt;x&gt;"` and `sanitizeInput("&lt;x&gt;")` preserves the ampersand-first behavior expected by `SanitizeInputExtendedTest`.
-  - `validateUsername(genAlnumUnderscore(3..20))` is always `Valid`; usernames containing spaces, slash, emoji, or hyphen are rejected unless the regex is intentionally changed.
-
-### 3.9 Accessibility tests
-- No automated check that touch targets ≥ 48 dp or that every Composable has `contentDescription`.
-- **Action**: in `androidTest/`, add `composeTestRule.onRoot().assertNoUnlabelledImages()` helpers; run `Espresso.AccessibilityChecks.enable()` in a base test rule.
-
-### 3.10 Firestore rules tests for wildcard and social schemas
-- The rules are security-critical and have nuanced exceptions for shared inbox, friend requests, unread counters, and reciprocal friend operations.
-- **Action**: add emulator tests for these negative cases: unknown `users/{uid}/{subCol}` write denied, friend-request extra field denied, blocked sender cannot create `shared_inbox`, non-mutual friend cannot chat, and client cannot write `rate_limits` or server-owned quiz/coin docs.
-
----
-
-> **Note (manual config items deferred from §4 / §5):** The following items
-> require operational decisions or infrastructure changes outside the scope of
-> a code-only sweep and have intentionally been left for the maintainer:
+> **Note (manual / infra items deferred from §3 / §4 / §5):** The following
+> items require operational decisions, new tooling, or infrastructure changes
+> outside the scope of a code-only sweep and have intentionally been left for
+> the maintainer:
 >
+> - **§3.1 drop `unitTests.isReturnDefaultValues`** — flipping to `false`
+>   surfaces dozens of latent Android-framework misuse failures across the
+>   2,448-test suite; needs a dedicated mocking pass per failing test.
+> - **§3.2 expanded instrumented Compose UI tests** — needs a
+>   `HiltTestActivity` + fake-repository wiring rebuild and an emulator/CI
+>   matrix; the existing `LoginScreenSmokeTest` is the only seed.
+> - **§3.3 / §3.10 per-collection Firestore-rules emulator tests** — requires
+>   the `@firebase/rules-unit-testing` harness and a CI emulator stage that
+>   does not exist yet.
+> - **§3.5 Detekt + ktlint** — adds two new Gradle plugins plus a baseline
+>   pass to suppress legitimate existing findings; should ship with its own
+>   ratchet config.
+> - **§3.6 Paparazzi / dropshots screenshot tests** — new dependency,
+>   per-locale × per-scale snapshot corpus, and golden-image storage policy.
+> - **§3.7 macrobenchmark module** — needs a new Gradle module + an
+>   instrumented benchmark device profile in CI.
+> - **§3.9 accessibility tests** — needs `Espresso.AccessibilityChecks` to be
+>   enabled in instrumented tests, which depend on §3.2's foundation.
 > - **§4.2 `OperationBatcher` time-based flush** — only consumer
 >   (`FavoritesViewModel.deleteSelected`) calls `flush()` immediately in the
 >   same coroutine; adding a timer would be unreachable in production today.

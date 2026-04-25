@@ -393,7 +393,8 @@ FYP/
 │       │   │       ├── AuditLoggerTest.kt
 │       │   │       ├── SanitizeInputExtendedTest.kt      ← Extended sanitization edge-case tests
 
-│       │   │       └── SecurityUtilsTest.kt               ← Validation & sanitization tests
+│       │   │       ├── SecurityUtilsTest.kt               ← Validation & sanitization tests
+│       │   │       └── ValidatorPropertyTest.kt           ← §3.8 property/fuzz tests for validators
 │       │   ├── data/
 │       │   │   ├── DataLayerIntegrationTest.kt            ← Cross-repository data layer integration tests
 │       │   │   ├── azure/
