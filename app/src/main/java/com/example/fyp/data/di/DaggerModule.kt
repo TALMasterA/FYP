@@ -112,8 +112,11 @@ object AppModule {
     fun provideFirebaseFunctions(): FirebaseFunctions = FirebaseFunctions.getInstance()
 
     @Provides @Singleton
-    fun provideFirebaseAuthRepository(auth: FirebaseAuth): FirebaseAuthRepository =
-        FirebaseAuthRepository(auth)
+    fun provideFirebaseAuthRepository(
+        auth: FirebaseAuth,
+        secureStorage: SecureStorage
+    ): FirebaseAuthRepository =
+        FirebaseAuthRepository(auth, secureStorage)
 
     @Provides @Singleton
     fun provideCloudSpeechTokenClient(functions: FirebaseFunctions): CloudSpeechTokenClient =

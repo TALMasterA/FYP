@@ -16,7 +16,7 @@ import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.user.User
 import com.example.fyp.model.user.UserSettings
-import com.example.fyp.core.security.RateLimiter
+import com.example.fyp.core.security.FakePersistentRateLimiter
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -69,6 +69,7 @@ class ChatViewModelTest {
     private lateinit var chatRepository: ChatRepository
     private lateinit var friendsRepository: FriendsRepository
     private lateinit var sharedFriendsDataSource: SharedFriendsDataSource
+    private lateinit var rateLimiter: FakePersistentRateLimiter
 
     private val testUser = User(uid = "user1", email = "test@test.com")
     private val friendId = "friend1"
@@ -78,11 +79,7 @@ class ChatViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        // Reset static rate limiter that persists across test instances
-        ChatViewModel::class.java.getDeclaredField("messageRateLimiter").apply {
-            isAccessible = true
-            (get(null) as RateLimiter).clear()
-        }
+        rateLimiter = FakePersistentRateLimiter()
 
         savedStateHandle = SavedStateHandle(mapOf("friendId" to friendId, "friendUsername" to friendUsername))
         context = mock()
@@ -128,7 +125,8 @@ class ChatViewModelTest {
         userSettingsRepository = userSettingsRepository,
         chatRepository = chatRepository,
         friendsRepository = friendsRepository,
-        sharedFriendsDataSource = sharedFriendsDataSource
+        sharedFriendsDataSource = sharedFriendsDataSource,
+        rateLimiter = rateLimiter
     )
 
     // ── Initial state ───────────────────────────────────────────────

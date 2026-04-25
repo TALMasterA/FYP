@@ -17,8 +17,9 @@ import com.example.fyp.model.friends.FriendMessage
 import com.example.fyp.model.friends.PublicUserProfile
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.core.AppLogger
-import com.example.fyp.core.security.RateLimiter
+import com.example.fyp.core.security.PersistentRateLimiter
 import com.example.fyp.core.security.ValidationResult
+import com.example.fyp.core.security.decodeLegacyHtml
 import com.example.fyp.core.security.sanitizeInput
 import com.example.fyp.core.security.validateTextLength
 import com.google.firebase.functions.FirebaseFunctionsException
@@ -76,11 +77,13 @@ class ChatViewModel @Inject constructor(
     private val userSettingsRepository: UserSettingsRepository,
     private val chatRepository: ChatRepository,
     private val friendsRepository: FriendsRepository,
-    private val sharedFriendsDataSource: SharedFriendsDataSource
+    private val sharedFriendsDataSource: SharedFriendsDataSource,
+    private val rateLimiter: PersistentRateLimiter
 ) : ViewModel() {
 
     companion object {
-        private val messageRateLimiter = RateLimiter(maxAttempts = 10, windowMillis = 60_000L)
+        private const val CHAT_MAX = 10
+        private const val CHAT_WINDOW_MS = 60_000L
     }
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -186,7 +189,12 @@ class ChatViewModel @Inject constructor(
         messagesJob = viewModelScope.launch {
             try {
                 observeMessagesUseCase(userId, friendId, _uiState.value.clearedAt).collect { messages ->
-                    updateUiState { it.copy(messages = messages, isLoading = false) }
+                    // §2.7 backward compat: legacy Firestore documents were
+                    // written by the pre-§2.7 sanitizeInput which HTML-encoded
+                    // free-text content. Decode at the read boundary so
+                    // Compose `Text` renders the original characters.
+                    val decoded = messages.map { it.copy(content = decodeLegacyHtml(it.content)) }
+                    updateUiState { it.copy(messages = decoded, isLoading = false) }
                     // Debounce mark-as-read so rapid message updates don't trigger
                     // redundant Firestore writes
                     if (isChatScreenActive) {
@@ -310,7 +318,13 @@ class ChatViewModel @Inject constructor(
         }
 
         // Check rate limiter
-        if (!messageRateLimiter.isAllowed(userId.value)) {
+        if (!rateLimiter.isAllowed(
+                scope = PersistentRateLimiter.SCOPE_CHAT_MESSAGE,
+                key = userId.value,
+                maxAttempts = CHAT_MAX,
+                windowMillis = CHAT_WINDOW_MS
+            )
+        ) {
             updateUiState { it.copy(error = "You are sending messages too quickly. Please wait a moment.") }
             return
         }

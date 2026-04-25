@@ -247,15 +247,19 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ## 13. Input Validation and Sanitization — Security Guards
 
-**Rule:** Validate all user input at entry points using `validateEmail()`, `validateUsername()`, `validateTextLength()`. Sanitize with `sanitizeInput()`. Apply rate limiting (login: 5/min, friend requests: 5/hr, API: 100/min, password reset: 3/hr). Server-side enforcement: friend request notifications (5/hr, Firestore query + delete), chat notifications (10/min, `checkWriteRateLimit`), feedback submissions (3/hr, `checkWriteRateLimit` + delete), learning content generation (10/hr, `enforceRateLimit`).
+**Rule:** Validate all user input at entry points using `validateEmail()`, `validateUsername()`, `validateTextLength()`. Run write-path inputs through `sanitizeInput()` (strips ASCII control chars, collapses whitespace, caps at 5,000 chars). Run UGC through `escapeForDisplay()` only at the moment it is rendered as HTML/markup. Apply rate limiting (login: 5/min, friend requests: 5/hr, API: 100/min, password reset: 3/hr). Server-side enforcement: friend request notifications (5/hr, Firestore query + delete), chat notifications (10/min, `checkWriteRateLimit`), feedback submissions (3/hr, `checkWriteRateLimit` + delete), learning content generation (10/hr, `enforceRateLimit`).
 
 **RateLimiter memory bound:** `RateLimiter` is bounded to 10,000 tracked keys. When the limit is exceeded, stale keys (those with no recent attempts within the window) are pruned automatically.
+
+**Persistent rate limiter (§2.2):** Auth-path rate limits (login, password reset, feedback, chat send) use `PersistentRateLimiter`, a DataStore-backed counter that survives process death. The static in-memory `RateLimiter` remains for non-auth read-side throttles only.
+
+**App Check enforcement (§2.3):** `FYPApplication.onCreate()` installs Firebase App Check before any Firestore/Functions client is built. Release builds use the Play Integrity provider; debug builds (`BuildConfig.DEBUG`) use the Debug provider — register the printed debug token in the Firebase console. All 7 v2 `onCall` Cloud Functions (`translateText`, `translateTexts`, `detectLanguage`, `generateLearningContent`, `addCoinsForReward`, `consumeCoinsForLanguagePackPurchase`, `submitDailyFavorite`) declare `enforceAppCheck: true`.
 
 **Audit logging PII:** `AuditLogger.logLoginFailed()` and `logPasswordResetRequested()` obfuscate email addresses before logging to Crashlytics (first 2 chars + domain only).
 
 **CacheInterceptor safety:** `CacheInterceptor` skips caching for requests carrying an `Authorization` header to avoid persisting sensitive authenticated responses.
 
-**Encoding order in `sanitizeInput()`:** `&` → `&amp;` (FIRST), then `<`, `>`, `"`, `'`, `/`.
+**Encoding order in `escapeForDisplay()`:** `&` → `&amp;` (FIRST), then `<`, `>`, `"`, `'`, `/`. Backward-compatible reader-side `decodeLegacyHtml()` reverses entities in the OPPOSITE order (`&amp;` LAST) to safely unwrap data that was double-encoded by the pre-§2.7 `sanitizeInput`. It is applied at `ChatViewModel.loadMessages` and `CustomWordsViewModel.loadCustomWords`.
 
 ---
 
@@ -516,13 +520,15 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ---
 
-## 23. sanitizeInput() — Encoding Order
+## 23. escapeForDisplay() and decodeLegacyHtml() — Encoding Order
 
-**Invariant:** Ampersand (`&`) replacement MUST be first. If `<` → `&lt;` happens first, then `&` → `&amp;` double-encodes to `&amp;lt;`.
+**Invariant (escape):** Ampersand (`&`) replacement MUST be FIRST. If `<` → `&lt;` happens first, then `&` → `&amp;` double-encodes to `&amp;lt;`.
 
-**Order:** (1) `&` → `&amp;`, (2) `<` → `&lt;`, (3) `>` → `&gt;`, (4) `"` → `&quot;`, (5) `'` → `&#x27;`, (6) `/` → `&#x2F;`.
+**Encode order:** (1) `&` → `&amp;`, (2) `<` → `&lt;`, (3) `>` → `&gt;`, (4) `"` → `&quot;`, (5) `'` → `&#x27;`, (6) `/` → `&#x2F;`.
 
-**Guard:** `SanitizeInputExtendedTest` verifies no double-encoding.
+**Invariant (decode):** `decodeLegacyHtml()` reverses entities in the OPPOSITE order — `&lt;`, `&gt;`, `&quot;`, `&#x27;`, `&#x2F;` first, then `&amp;` LAST. This unwraps data that was double-encoded by the pre-§2.7 `sanitizeInput` without re-introducing the original character early.
+
+**Guards:** `EscapeForDisplayTest` (no double-encoding) and `SecurityUtilsTest` (decoder round-trip + leaves clean modern data unchanged).
 
 ---
 

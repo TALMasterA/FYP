@@ -9,6 +9,7 @@ import com.example.fyp.domain.speech.TranslateTextUseCase
 import com.example.fyp.model.SpeechResult
 import com.example.fyp.model.user.AuthState
 import com.example.fyp.core.security.ValidationResult
+import com.example.fyp.core.security.decodeLegacyHtml
 import com.example.fyp.core.security.sanitizeInput
 import com.example.fyp.core.security.validateTextLength
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -402,12 +403,15 @@ class CustomWordsViewModel @Inject constructor(
             try {
                 val customWords = customWordsRepo.getAllCustomWordsOnce(uid)
                 val customWordItems = customWords.map { cw ->
+                    // §2.7 backward compat: legacy custom words were stored
+                    // with HTML entities by the pre-§2.7 sanitizeInput; decode
+                    // at the read boundary so Compose `Text` shows raw chars.
                     WordBankItem(
                         id = "custom_${cw.id}",
-                        originalWord = cw.originalWord,
-                        translatedWord = cw.translatedWord,
-                        pronunciation = cw.pronunciation,
-                        example = cw.example,
+                        originalWord = decodeLegacyHtml(cw.originalWord),
+                        translatedWord = decodeLegacyHtml(cw.translatedWord),
+                        pronunciation = decodeLegacyHtml(cw.pronunciation),
+                        example = decodeLegacyHtml(cw.example),
                         category = "${cw.sourceLang} → ${cw.targetLang}",
                         difficulty = ""
                     )

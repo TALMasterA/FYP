@@ -20,16 +20,16 @@ class ValidatorPropertyTest {
     private fun rng() = Random(seed)
 
     @Test
-    fun `sanitizeInput never leaves raw dangerous characters in output`() {
+    fun `escapeForDisplay never leaves raw dangerous characters in output`() {
         val rng = rng()
         val raw = "<>\"'/&abcXYZ012 !?"
         repeat(iterations) {
             val len = rng.nextInt(0, 64)
             val sb = StringBuilder()
             repeat(len) { sb.append(raw[rng.nextInt(raw.length)]) }
-            val out = sanitizeInput(sb.toString())
+            val out = escapeForDisplay(sb.toString())
             // Output must never contain the raw dangerous characters that
-            // sanitizeInput is responsible for encoding.
+            // escapeForDisplay is responsible for encoding.
             assertFalse("contains '<' in: $out", out.contains('<'))
             assertFalse("contains '>' in: $out", out.contains('>'))
             assertFalse("contains '\"' in: $out", out.contains('"'))
@@ -39,11 +39,26 @@ class ValidatorPropertyTest {
     }
 
     @Test
-    fun `sanitizeInput preserves ampersand-first encoding for entity-like input`() {
+    fun `escapeForDisplay preserves ampersand-first encoding for entity-like input`() {
         // Documented invariant: ampersands must be encoded first so existing
         // entity-looking text becomes &amp;lt; rather than being decoded.
-        assertEquals("&lt;x&gt;", sanitizeInput("<x>"))
-        assertEquals("&amp;lt;x&amp;gt;", sanitizeInput("&lt;x&gt;"))
+        assertEquals("&lt;x&gt;", escapeForDisplay("<x>"))
+        assertEquals("&amp;lt;x&amp;gt;", escapeForDisplay("&lt;x&gt;"))
+    }
+
+    @Test
+    fun `sanitizeInput never produces output longer than the cap`() {
+        // §2.7: sanitizeInput now strips controls / collapses whitespace /
+        // caps length. Property: output length never exceeds 5000.
+        val rng = rng()
+        val alphabet = "abcdefghijk \t\n<>&\""
+        repeat(iterations) {
+            val len = rng.nextInt(0, 6000)
+            val sb = StringBuilder(len)
+            repeat(len) { sb.append(alphabet[rng.nextInt(alphabet.length)]) }
+            val out = sanitizeInput(sb.toString())
+            assertTrue("Output too long: ${out.length}", out.length <= SANITIZE_INPUT_MAX_LENGTH)
+        }
     }
 
     @Test

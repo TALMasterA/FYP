@@ -16,7 +16,8 @@ import javax.inject.Singleton
 
 @Singleton
 class FirebaseAuthRepository @Inject constructor(
-    private val firebaseAuth: FirebaseAuth
+    private val firebaseAuth: FirebaseAuth,
+    private val secureStorage: com.example.fyp.core.security.SecureStorage
 ) {
     val currentUser: User?
         get() = firebaseAuth.currentUser?.toUser()
@@ -76,6 +77,9 @@ class FirebaseAuthRepository @Inject constructor(
     fun logout() {
         // FIX 5.5: Remove FCM token before signing out so the device
         // stops receiving push notifications for this account.
+        runCatching {
+            secureStorage.remove(com.example.fyp.core.security.SecureStorage.KEY_FCM_TOKEN)
+        }
         com.example.fyp.core.FcmNotificationService.removeTokenOnSignOut()
         firebaseAuth.signOut()
     }

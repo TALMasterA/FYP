@@ -189,6 +189,17 @@ Keep `fyp-backend/functions/package-lock.json` committed. If Firebase backend de
 
 See `docs/SECRETS_ROTATION.md` for rotation runbook.
 
+**Firebase App Check (debug builds):**
+
+Release builds attest with the Play Integrity provider. Debug builds use the
+Firebase Debug provider. The first time you launch a debug build on a new
+device/emulator, locate a logcat line similar to
+`Enter this debug secret into the allow list in the Firebase Console`,
+copy the printed token, and add it under
+**Firebase Console → App Check → Apps → Manage debug tokens**. Without this
+step, all v2 callable functions reject the call with `unauthenticated` /
+App Check failure.
+
 --------------------------------------------------------------
 
 ## 💻 Development Workflow
@@ -250,7 +261,7 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 192 test suites, 2,459 unit tests (from the latest `testDebugUnitTest` report)
+- **Android:** 193 test suites, 2,477 unit tests (from the latest `testDebugUnitTest` report)
 - **Backend:** 15 test files, 189 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.

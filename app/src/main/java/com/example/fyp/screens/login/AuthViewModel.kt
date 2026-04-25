@@ -8,7 +8,7 @@ import com.example.fyp.model.user.AuthState
 import com.example.fyp.model.ui.UiTextKey
 import com.example.fyp.utils.ErrorMessageMapper
 import com.example.fyp.core.security.AuditLogger
-import com.example.fyp.core.security.RateLimiter
+import com.example.fyp.core.security.PersistentRateLimiter
 import com.example.fyp.core.security.ValidationResult
 import com.example.fyp.core.security.validateEmail
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,12 +37,15 @@ data class AuthUiState(
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: FirebaseAuthRepository,
-    private val sessionDataCleaner: SessionDataCleaner
+    private val sessionDataCleaner: SessionDataCleaner,
+    private val rateLimiter: PersistentRateLimiter
 ) : ViewModel() {
 
     companion object {
-        private val loginRateLimiter = RateLimiter(maxAttempts = 5, windowMillis = 60_000L)
-        private val resetPasswordRateLimiter = RateLimiter(maxAttempts = 3, windowMillis = 3_600_000L)
+        private const val LOGIN_MAX = 5
+        private const val LOGIN_WINDOW_MS = 60_000L
+        private const val RESET_MAX = 3
+        private const val RESET_WINDOW_MS = 3_600_000L
     }
 
     val authState: StateFlow<AuthState> = authRepository.currentUserState.stateIn(
@@ -65,8 +68,14 @@ class AuthViewModel @Inject constructor(
             return
         }
 
-        // Check rate limiter
-        if (!loginRateLimiter.isAllowed(trimmedEmail)) {
+        // Check rate limiter (persistent, survives process death)
+        if (!rateLimiter.isAllowed(
+                scope = PersistentRateLimiter.SCOPE_LOGIN,
+                key = trimmedEmail,
+                maxAttempts = LOGIN_MAX,
+                windowMillis = LOGIN_WINDOW_MS
+            )
+        ) {
             AuditLogger.logRateLimitExceeded(userId = trimmedEmail, operation = "login")
             _uiState.value = _uiState.value.copy(
                 errorRaw = "Too many login attempts. Please try again later."
@@ -168,8 +177,14 @@ class AuthViewModel @Inject constructor(
             return
         }
 
-        // Check rate limiter
-        if (!resetPasswordRateLimiter.isAllowed(trimmedEmail)) {
+        // Check rate limiter (persistent, survives process death)
+        if (!rateLimiter.isAllowed(
+                scope = PersistentRateLimiter.SCOPE_PASSWORD_RESET,
+                key = trimmedEmail,
+                maxAttempts = RESET_MAX,
+                windowMillis = RESET_WINDOW_MS
+            )
+        ) {
             AuditLogger.logRateLimitExceeded(userId = trimmedEmail, operation = "resetPassword")
             _uiState.value = _uiState.value.copy(
                 errorRaw = "Too many password reset attempts. Please try again later."

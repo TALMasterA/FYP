@@ -35,43 +35,32 @@ The rest of this document expands each, plus performance, observability, privacy
 > items require operational decisions, new tooling, or infrastructure changes
 > outside the scope of a code-only sweep and have intentionally been left for
 > the maintainer:
+
+Approved: Carefully examine the codespace and implement them.
 >
-> - **§2.1 (extension) password complexity + common-password blocklist** —
->   the trimmed-length minimum was raised from 6 to 8 in the §2 sweep, but
->   character-class complexity and the static `assets/common-passwords.txt`
->   blocklist add a new user-facing error key per failure category and need
->   translations across every supported UI language plus a coordinated
->   Firebase Auth password-policy update in the console.
-> - **§2.2 persistent auth-path rate limiting** — needs a new
+> - **§2.2 persistent auth-path rate limiting** — **IMPLEMENTED.** New
 >   `PersistentRateLimiter` backed by `SecureStorage` plus migration of
->   every static `RateLimiter` call site (`ChatViewModel`, login, reset,
+>   the static `RateLimiter` call sites (`ChatViewModel`, login, reset,
 >   feedback) to the persistent variant.
-> - **§2.3 Firebase App Check** — new dependency + Play Integrity wiring +
->   debug-token bootstrap in CI + redeploying every `onCall` Cloud Function
->   with `enforceAppCheck: true`; breaks local dev until the README setup
->   section is added.
-> - **§2.4 replace `SecureStorage` static singleton** — needs a Hilt
->   `@EntryPoint` plus migration of `FcmNotificationService` and
->   `SeenItemsStorage` away from `forContext()` before the static field can
->   be removed safely.
-> - **§2.5 Firestore subcollection allow-list** — the wildcard rule cannot
->   be tightened safely without rules-emulator tests (§3.3) running first;
->   any missed subcollection silently breaks production writes.
-> - **§2.6 email-verification gate** — UX banner in `SettingsScreen`,
->   feature-disablement copy in 16+ locale strings files, and a Firestore
->   rules tightening that depends on §3.3 emulator coverage.
-> - **§2.7 split sanitization from presentation escaping** — large API
->   change touching every screen that reads user-generated text plus a
->   reader-side compatibility decoder for already-escaped Firestore data.
-> - **§2.9 split demo release from hardened production release** — needs a
->   new `releaseStore` build flavour and a fresh smoke pass with R8 +
->   resource shrinking enabled; demo distribution still relies on the
->   universal APK.
-> - **§2.10 per-function Cloud Function options** — raising
->   `concurrency` / `cpu` / `maxInstances` on `translateText` /
->   `translateTexts` only buys the intended protection together with App
->   Check (§2.3); deferring the two together avoids a window where the
->   raised limits actually amplify abuse.
+> - **§2.3 Firebase App Check** — **IMPLEMENTED.** Play Integrity provider
+>   wired in release builds, debug provider for debug builds (BuildConfig.DEBUG
+>   branch in `FYPApplication`); all 7 v2 `onCall` Cloud Functions deployed
+>   with `enforceAppCheck: true`.
+> - **§2.4 replace `SecureStorage` static singleton** — **IMPLEMENTED.**
+>   Hilt `@EntryPoint` (`SecureStorageEntryPoint`) plus migration of
+>   `FcmNotificationService`, `SeenItemsStorage`, and `FirebaseAuthRepository`
+>   off `forContext()`.
+> - **§2.7 split sanitization from presentation escaping** — **IMPLEMENTED.**
+>   `sanitizeInput` now strips ASCII controls / collapses whitespace / caps
+>   length (5000); `escapeForDisplay` does the HTML entity encoding (ampersand
+>   first); `decodeLegacyHtml` (ampersand last) provides reader-side
+>   compatibility for already-escaped Firestore data and is applied at
+>   `ChatViewModel` and `CustomWordsViewModel` read sites.
+> - **§2.10 per-function Cloud Function options** — **IMPLEMENTED.**
+>   `translateText` and `translateTexts` deployed with
+>   `concurrency: 80, cpu: 1, maxInstances: 50, memory: "512MiB"` together
+>   with App Check enforcement (§2.3).
+
 > - **§2.11 strict field allow-lists on social writes** — high
 >   client-breakage risk without rules-emulator tests; tied to §3.3.
 > - **§2.12 `org.json` test-only + dependency-review CI** — the test-only
@@ -86,7 +75,7 @@ The rest of this document expands each, plus performance, observability, privacy
 >   user's UI-language preference.
 > - **§3.1 drop `unitTests.isReturnDefaultValues`** — flipping to `false`
 >   surfaces dozens of latent Android-framework misuse failures across the
->   2,459-test suite; needs a dedicated mocking pass per failing test.
+>   2,477-test suite; needs a dedicated mocking pass per failing test.
 > - **§3.2 expanded instrumented Compose UI tests** — needs a
 >   `HiltTestActivity` + fake-repository wiring rebuild and an emulator/CI
 >   matrix; the existing `LoginScreenSmokeTest` is the only seed.
@@ -124,6 +113,10 @@ The rest of this document expands each, plus performance, observability, privacy
 > - **§5.3.1 `LOG_SALT`** — set this env var in the Cloud Functions runtime
 >   config so deployed logs use salted hash tokens. The helpers fall back to
 >   raw IDs locally when the salt is empty.
+> - **§2.5 Firestore subcollection allow-list** — the wildcard rule cannot
+>   be tightened safely without rules-emulator tests (§3.3) running first;
+>   any missed subcollection silently breaks production writes.
+>   (Need read firebase-sa.json, and need carefully checking, defer for now)
 
 ## 8. Feature Suggestions (Specific to a Translation-Learning App)
 

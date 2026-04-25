@@ -4,6 +4,21 @@ Callable functions are Firebase Cloud Functions v2 (`onCall`) and currently use 
 The backend also exposes an HTTP readiness endpoint (`onRequest`) for deployment checks.
 Notification triggers and scheduled jobs are explicitly configured to run in `us-central1`.
 
+## App Check (§2.3)
+
+All 7 v2 callable functions declare `enforceAppCheck: true`:
+`getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage`,
+`generateLearningContent`, `awardQuizCoins`, `spendCoins`.
+Requests without a valid App Check token are rejected by the platform
+before the handler runs. Debug builds use the Firebase Debug provider —
+register the printed debug token in the Firebase console.
+
+## Per-function runtime options (§2.10)
+
+`translateText` and `translateTexts` are configured with
+`{ concurrency: 80, cpu: 1, maxInstances: 50, memory: "512MiB" }` to keep
+the high-frequency translate path on warm instances while bounding cost.
+
 ---
 
 ## Translation & Speech

@@ -222,7 +222,7 @@ class FcmNotificationService : FirebaseMessagingService() {
                 .addOnSuccessListener { token ->
                     if (token.isNullOrBlank()) return@addOnSuccessListener
                     // Cache token in encrypted local storage for sign-out cleanup
-                    SecureStorage.forContext(context)
+                    SecureStorage.fromContext(context)
                         .putString(SecureStorage.KEY_FCM_TOKEN, token)
                     FirebaseFirestore.getInstance()
                         .collection("users").document(uid)
@@ -265,8 +265,8 @@ class FcmNotificationService : FirebaseMessagingService() {
          */
         fun removeTokenOnSignOut() {
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-            // Clear locally-cached FCM token from encrypted storage
-            SecureStorage.instance()?.remove(SecureStorage.KEY_FCM_TOKEN)
+            // Locally-cached FCM token cleanup is handled by the caller through
+            // the injected [SecureStorage] (see [FirebaseAuthRepository.logout]).
             com.google.firebase.messaging.FirebaseMessaging.getInstance().token
                 .addOnSuccessListener { token ->
                     if (token.isNullOrBlank()) return@addOnSuccessListener

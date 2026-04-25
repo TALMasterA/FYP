@@ -1,6 +1,7 @@
 package com.example.fyp.screens.feedback
 
 import com.example.fyp.domain.feedback.FeedbackRepository
+import com.example.fyp.core.security.FakePersistentRateLimiter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -37,6 +38,7 @@ import org.mockito.kotlin.verify
 class FeedbackViewModelTest {
 
     private lateinit var feedbackRepo: FeedbackRepository
+    private lateinit var rateLimiter: FakePersistentRateLimiter
     private lateinit var viewModel: FeedbackViewModel
 
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -45,7 +47,8 @@ class FeedbackViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         feedbackRepo = mock()
-        viewModel = FeedbackViewModel(feedbackRepo)
+        rateLimiter = FakePersistentRateLimiter()
+        viewModel = FeedbackViewModel(feedbackRepo, rateLimiter)
     }
 
     @After

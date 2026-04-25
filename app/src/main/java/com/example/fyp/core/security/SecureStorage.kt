@@ -4,7 +4,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -71,8 +75,8 @@ class SecureStorage @Inject constructor(
     }
 
     init {
-        @Suppress("LeakingThis")
-        staticInstance = this
+        // No-op: Hilt manages the singleton lifecycle. Non-Hilt callers must
+        // obtain the instance through [SecureStorageEntryPoint].
     }
 
     companion object {
@@ -82,24 +86,25 @@ class SecureStorage @Inject constructor(
         const val KEY_SESSION_TOKEN_REGION = "session_token_region"
         const val KEY_SESSION_TOKEN_TIME = "session_token_time"
 
-        @Volatile
-        private var staticInstance: SecureStorage? = null
-
         /**
-         * Obtain a [SecureStorage] without Hilt injection.
-         *
-         * Returns the Hilt-managed singleton when available; otherwise creates
-         * a standalone instance backed by the same encrypted preference file.
+         * Resolve the Hilt-managed [SecureStorage] singleton from a [Context]
+         * for callers that cannot use constructor injection (notification
+         * services, top-level [object] singletons).
          */
-        fun forContext(context: Context): SecureStorage {
-            return staticInstance ?: synchronized(this) {
-                staticInstance ?: SecureStorage(context.applicationContext).also {
-                    staticInstance = it
-                }
-            }
-        }
-
-        /** Access the singleton without context; null before first init. */
-        internal fun instance(): SecureStorage? = staticInstance
+        fun fromContext(context: Context): SecureStorage =
+            EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                SecureStorageEntryPoint::class.java
+            ).secureStorage()
     }
+}
+
+/**
+ * Hilt entry-point exposing the [SecureStorage] singleton to non-injected
+ * callers (e.g. [FirebaseMessagingService] subclasses, top-level objects).
+ */
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface SecureStorageEntryPoint {
+    fun secureStorage(): SecureStorage
 }

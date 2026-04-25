@@ -3,6 +3,9 @@ package com.example.fyp
 import android.app.Application
 import android.os.StrictMode
 import com.google.firebase.FirebaseApp
+import com.google.firebase.appcheck.FirebaseAppCheck
+import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
 import com.example.fyp.core.FcmNotificationService
 import dagger.hilt.android.HiltAndroidApp
 
@@ -23,6 +26,21 @@ class FYPApplication : Application() {
             android.util.Log.d("FYPApplication", "Firebase initialized successfully")
         } catch (e: Exception) {
             android.util.Log.e("FYPApplication", "Firebase initialization failed", e)
+        }
+
+        // Install Firebase App Check provider so that callable Cloud Functions
+        // (which enforce App Check) accept requests from this app. Debug builds
+        // use the debug provider so a developer-issued debug token can be
+        // registered in the Firebase console; release builds use Play Integrity.
+        try {
+            val factory = if (BuildConfig.DEBUG) {
+                DebugAppCheckProviderFactory.getInstance()
+            } else {
+                PlayIntegrityAppCheckProviderFactory.getInstance()
+            }
+            FirebaseAppCheck.getInstance().installAppCheckProviderFactory(factory)
+        } catch (e: Exception) {
+            android.util.Log.e("FYPApplication", "App Check initialization failed", e)
         }
 
         // Firestore offline persistence + 50 MB cache cap is configured exclusively in

@@ -126,6 +126,8 @@ dependencies {
     implementation(libs.firebase.perf)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.config)
+    implementation(libs.firebase.appcheck.playintegrity)
+    debugImplementation(libs.firebase.appcheck.debug)
     debugImplementation(libs.firebase.appdistribution)
 
     // Hilt DI

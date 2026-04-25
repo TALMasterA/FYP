@@ -123,6 +123,7 @@ export const generateLearningContent = onCall(
   {
     secrets: [GENAI_BASE_URL, GENAI_API_VERSION, GENAI_API_KEY],
     timeoutSeconds: 300, // 5 minutes timeout for AI generation
+    enforceAppCheck: true,
   },
   async (request) => {
     try {

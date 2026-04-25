@@ -37,7 +37,7 @@ object SeenItemsStorage {
 
     private fun getPrefs(context: Context): SharedPreferences =
         prefsProvider?.invoke(context)
-            ?: SecureStorage.forContext(context).prefs
+            ?: SecureStorage.fromContext(context).prefs
 
     // ── Shared Inbox Items ───────────────────────────────────────────────────
 

@@ -37,7 +37,7 @@ interface QuizAttemptData {
  * 6. Score is capped at MAX_QUIZ_SCORE to prevent tampered clients minting coins
  */
 export const awardQuizCoins = onCall(
-  {},
+  {enforceAppCheck: true},
   async (request) => {
     requireAuth(request.auth);
 
@@ -198,7 +198,7 @@ const VALID_PALETTE_IDS = [
  * paletteId: (required for palette_unlock) one of VALID_PALETTE_IDS
  */
 export const spendCoins = onCall(
-  {},
+  {enforceAppCheck: true},
   async (request) => {
     requireAuth(request.auth);
     const uid = (request.auth as {uid: string}).uid;

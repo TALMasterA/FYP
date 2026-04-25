@@ -110,6 +110,7 @@ FYP/
 │       │       │   ├── security/                        ← Security validation & hardening
 │       │       │   │   ├── SecureStorage.kt             ← Android Keystore-backed EncryptedSharedPreferences wrapper
 │       │       │   │   ├── SecurityUtils.kt             ← Input validation, sanitization, rate limiting
+│       │       │   │   ├── PersistentRateLimiter.kt     ← §2.2 DataStore-backed rate limiter (survives process death)
 │       │       │   │   └── AuditLogger.kt               ← Security event logging (login, rate-limit, friend actions, etc.)
 │       │       │   │
 │       │       │   └── navigation/                      ← Navigation helpers
@@ -396,8 +397,9 @@ FYP/
 │       │   │   │   └── PerformanceUtilsTest.kt            ← Debounce, throttle, cache tests
 │       │   │   └── security/
 │       │   │       ├── AuditLoggerTest.kt
-│       │   │       ├── SanitizeInputExtendedTest.kt      ← Extended sanitization edge-case tests
-
+│       │   │       ├── EscapeForDisplayTest.kt           ← §2.7 HTML-display-encoding tests
+│       │   │       ├── FakePersistentRateLimiter.kt      ← Test double for PersistentRateLimiter
+│       │   │       ├── PersistentRateLimiterTest.kt      ← §2.2 DataStore-backed rate limiter tests
 │       │   │       ├── SecurityUtilsTest.kt               ← Validation & sanitization tests
 │       │   │       └── ValidatorPropertyTest.kt           ← §3.8 property/fuzz tests for validators
 │       │   ├── data/

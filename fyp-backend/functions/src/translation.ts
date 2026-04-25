@@ -129,7 +129,10 @@ function throwTranslationApiError(
 }
 
 export const getSpeechToken = onCall(
-  {secrets: [AZURE_SPEECH_KEY, AZURE_SPEECH_REGION]},
+  {
+    secrets: [AZURE_SPEECH_KEY, AZURE_SPEECH_REGION],
+    enforceAppCheck: true,
+  },
   async (request) => {
     requireAuth(request.auth);
 
@@ -162,7 +165,14 @@ export const getSpeechToken = onCall(
 );
 
 export const translateText = onCall(
-  {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
+  {
+    secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
+    enforceAppCheck: true,
+    concurrency: 80,
+    cpu: 1,
+    maxInstances: 50,
+    memory: "512MiB",
+  },
   async (request) => {
     requireAuth(request.auth);
 
@@ -230,7 +240,14 @@ export const translateText = onCall(
  * language change.
  */
 export const translateTexts = onCall(
-  {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
+  {
+    secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
+    enforceAppCheck: true,
+    concurrency: 80,
+    cpu: 1,
+    maxInstances: 50,
+    memory: "512MiB",
+  },
   async (request) => {
     requireAuth(request.auth);
 
@@ -370,7 +387,10 @@ export const translateTexts = onCall(
 );
 
 export const detectLanguage = onCall(
-  {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
+  {
+    secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
+    enforceAppCheck: true,
+  },
   async (request) => {
     requireAuth(request.auth);
 

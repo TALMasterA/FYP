@@ -74,10 +74,58 @@ fun validatePassword(password: String, minLength: Int = 8): ValidationResult {
 }
 
 /**
- * Sanitizes user input to prevent XSS and injection attacks.
- * Removes potentially dangerous characters and HTML tags.
+ * Maximum allowed length for any user-provided free-text field after
+ * [sanitizeInput] cleanup. Acts as a hard cap that prevents pathological
+ * inputs from inflating Firestore documents or downstream payloads.
+ */
+const val SANITIZE_INPUT_MAX_LENGTH: Int = 5000
+
+/**
+ * Sanitizes user-provided free text for STORAGE.
+ *
+ * This implementation explicitly DOES NOT HTML-encode the input. The earlier
+ * (pre-§2.7) implementation HTML-escaped `&<>"'/` before persisting to
+ * Firestore, which corrupted user content because the app renders all chat,
+ * feedback, and word-bank fields with Jetpack Compose `Text` — Compose does
+ * not auto-decode HTML entities, so users saw literal `&lt;` / `&amp;`
+ * sequences inside their own messages.
+ *
+ * After §2.7 the responsibilities are split:
+ *  - [sanitizeInput] — cleans control characters / collapses whitespace /
+ *    enforces length cap. Use this everywhere user input is persisted.
+ *  - [escapeForDisplay] — HTML-encodes the cleaned text. Use only when the
+ *    output is rendered in an HTML / WebView context.
+ *  - [decodeLegacyHtml] — reverses the legacy HTML encoding so existing
+ *    Firestore documents that were written under the old [sanitizeInput]
+ *    still display correctly.
+ *
+ * Cleanup steps performed here:
+ *  1. Strip ASCII control characters (`U+0000`–`U+001F` excluding `\t`, `\n`,
+ *     `\r`) — these have no legitimate use in chat / feedback / word-bank
+ *     fields and can corrupt Firestore log output.
+ *  2. Collapse runs of whitespace (including newlines) into a single space.
+ *  3. Trim leading / trailing whitespace.
+ *  4. Cap the total length at [SANITIZE_INPUT_MAX_LENGTH].
  */
 fun sanitizeInput(input: String): String {
+    val stripped = input.replace(Regex("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]"), "")
+    val collapsed = stripped.replace(Regex("\\s+"), " ").trim()
+    return if (collapsed.length > SANITIZE_INPUT_MAX_LENGTH) {
+        collapsed.substring(0, SANITIZE_INPUT_MAX_LENGTH)
+    } else {
+        collapsed
+    }
+}
+
+/**
+ * Escapes user content for safe rendering inside an HTML / WebView context.
+ *
+ * This is the same encoding the pre-§2.7 [sanitizeInput] performed
+ * (ampersand-first to avoid double encoding). Use this ONLY at presentation
+ * sites that actually render HTML; the rest of the app uses Compose `Text`
+ * and should use the raw [sanitizeInput] output instead.
+ */
+fun escapeForDisplay(input: String): String {
     return input
         .replace("&", "&amp;")   // Ampersand MUST be first to avoid double-encoding
         .replace("<", "&lt;")
@@ -85,7 +133,29 @@ fun sanitizeInput(input: String): String {
         .replace("\"", "&quot;")
         .replace("'", "&#x27;")
         .replace("/", "&#x2F;")
-        .trim()
+}
+
+/**
+ * Reverses the legacy HTML encoding that pre-§2.7 [sanitizeInput] applied
+ * before persisting user content to Firestore. Newer documents written by
+ * the post-§2.7 sanitizer pass through unchanged because they contain no
+ * entities. Use at READ sites that surface free-text user content (chat
+ * messages, feedback, custom words, friend notes) so legacy data renders
+ * correctly in Compose `Text`.
+ *
+ * The order of replacements is important: the named-character entities
+ * are decoded BEFORE `&amp;` so that `&amp;lt;` (a double-encoded `<`)
+ * decodes to `&lt;` and then to `<` — never to `<` directly via a
+ * single pass that would leave `&amp;` orphaned.
+ */
+fun decodeLegacyHtml(input: String): String {
+    return input
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&#x27;", "'")
+        .replace("&#x2F;", "/")
+        .replace("&amp;", "&")   // Ampersand MUST be last for symmetry with escapeForDisplay
 }
 
 /**

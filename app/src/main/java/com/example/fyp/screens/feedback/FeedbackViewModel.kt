@@ -3,7 +3,7 @@ package com.example.fyp.screens.feedback
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fyp.domain.feedback.FeedbackRepository
-import com.example.fyp.core.security.RateLimiter
+import com.example.fyp.core.security.PersistentRateLimiter
 import com.example.fyp.core.security.ValidationResult
 import com.example.fyp.core.security.sanitizeInput
 import com.example.fyp.core.security.validateTextLength
@@ -23,11 +23,13 @@ data class FeedbackUiState(
 
 @HiltViewModel
 class FeedbackViewModel @Inject constructor(
-    private val feedbackRepository: FeedbackRepository
+    private val feedbackRepository: FeedbackRepository,
+    private val rateLimiter: PersistentRateLimiter
 ) : ViewModel() {
 
     companion object {
-        private val feedbackRateLimiter = RateLimiter(maxAttempts = 3, windowMillis = 3_600_000L)
+        private const val FEEDBACK_MAX = 3
+        private const val FEEDBACK_WINDOW_MS = 3_600_000L
     }
 
     private val _uiState = MutableStateFlow(FeedbackUiState())
@@ -52,8 +54,14 @@ class FeedbackViewModel @Inject constructor(
             return
         }
 
-        // Check rate limiter
-        if (!feedbackRateLimiter.isAllowed("feedback")) {
+        // Check rate limiter (persistent, survives process death)
+        if (!rateLimiter.isAllowed(
+                scope = PersistentRateLimiter.SCOPE_FEEDBACK,
+                key = "device",
+                maxAttempts = FEEDBACK_MAX,
+                windowMillis = FEEDBACK_WINDOW_MS
+            )
+        ) {
             _uiState.value = _uiState.value.copy(
                 errorMessage = "You have submitted too much feedback recently. Please try again later.",
                 showErrorDialog = true

@@ -11,7 +11,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import com.example.fyp.core.security.RateLimiter
+import com.example.fyp.core.security.FakePersistentRateLimiter
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -44,23 +44,18 @@ class AuthViewModelTest {
 
     private lateinit var authRepo: FirebaseAuthRepository
     private lateinit var sessionDataCleaner: SessionDataCleaner
+    private lateinit var rateLimiter: FakePersistentRateLimiter
     private lateinit var viewModel: AuthViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        // Reset static rate limiters that persist across test instances
-        listOf("loginRateLimiter", "resetPasswordRateLimiter").forEach { fieldName ->
-            AuthViewModel::class.java.getDeclaredField(fieldName).apply {
-                isAccessible = true
-                (get(null) as RateLimiter).clear()
-            }
-        }
+        rateLimiter = FakePersistentRateLimiter()
         authRepo = mock {
             on { currentUserState } doReturn authStateFlow
         }
         sessionDataCleaner = mock()
-        viewModel = AuthViewModel(authRepo, sessionDataCleaner)
+        viewModel = AuthViewModel(authRepo, sessionDataCleaner, rateLimiter)
     }
 
     @After

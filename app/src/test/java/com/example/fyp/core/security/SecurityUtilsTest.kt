@@ -138,33 +138,95 @@ class SecurityUtilsTest {
         assertTrue((result as ValidationResult.Invalid).message.contains("10"))
     }
 
-    // ── Sanitization ───────────────────────────────────────────────
+    // ── Sanitization (§2.7 storage-only behaviour) ─────────────────
 
     @Test
-    fun `sanitizeInput - escapes HTML angle brackets`() {
+    fun `sanitizeInput - preserves HTML angle brackets (no encoding)`() {
+        // §2.7: sanitizeInput does NOT HTML-encode any more. Angle brackets
+        // are kept verbatim because Compose Text renders them safely.
         val input = "<script>alert('xss')</script>"
         val sanitized = sanitizeInput(input)
-        assertFalse(sanitized.contains("<"))
-        assertFalse(sanitized.contains(">"))
+        assertTrue(sanitized.contains("<"))
+        assertTrue(sanitized.contains(">"))
+        assertEquals("<script>alert('xss')</script>", sanitized)
     }
 
     @Test
-    fun `sanitizeInput - escapes quotes`() {
+    fun `sanitizeInput - preserves quotes (no encoding)`() {
         val sanitized = sanitizeInput("say \"hello\" and 'bye'")
-        assertFalse(sanitized.contains("\""))
-        assertFalse(sanitized.contains("'"))
+        assertTrue(sanitized.contains("\""))
+        assertTrue(sanitized.contains("'"))
     }
 
     @Test
-    fun `sanitizeInput - trims whitespace`() {
-        val sanitized = sanitizeInput("  hello  ")
-        assertEquals("hello", sanitized)
+    fun `sanitizeInput - trims and collapses whitespace`() {
+        val sanitized = sanitizeInput("  hello   world  ")
+        assertEquals("hello world", sanitized)
     }
 
     @Test
     fun `sanitizeInput - plain text unchanged except trim`() {
         val sanitized = sanitizeInput("Hello World 123")
         assertEquals("Hello World 123", sanitized)
+    }
+
+    @Test
+    fun `sanitizeInput - strips ASCII control characters`() {
+        val withControls = "hello\u0000\u0001\u0008world"
+        val sanitized = sanitizeInput(withControls)
+        assertEquals("helloworld", sanitized)
+    }
+
+    @Test
+    fun `sanitizeInput - caps length at 5000 chars`() {
+        val long = "a".repeat(6000)
+        val sanitized = sanitizeInput(long)
+        assertEquals(5000, sanitized.length)
+    }
+
+    // ── escapeForDisplay (§2.7 HTML/WebView path) ──────────────────
+
+    @Test
+    fun `escapeForDisplay - encodes angle brackets`() {
+        val out = escapeForDisplay("<script>")
+        assertEquals("&lt;script&gt;", out)
+    }
+
+    @Test
+    fun `escapeForDisplay - encodes ampersand first to avoid double-encoding`() {
+        val out = escapeForDisplay("a & b")
+        assertEquals("a &amp; b", out)
+    }
+
+    @Test
+    fun `escapeForDisplay - encodes quotes and slash`() {
+        val out = escapeForDisplay("\"hello\"/'bye'")
+        assertEquals("&quot;hello&quot;&#x2F;&#x27;bye&#x27;", out)
+    }
+
+    // ── decodeLegacyHtml (§2.7 backward-compat reader) ─────────────
+
+    @Test
+    fun `decodeLegacyHtml - reverses escapeForDisplay round trip`() {
+        val original = "<a href=\"x\">it's & 'safe'/done</a>"
+        val encoded = escapeForDisplay(original)
+        val decoded = decodeLegacyHtml(encoded)
+        assertEquals(original, decoded)
+    }
+
+    @Test
+    fun `decodeLegacyHtml - decodes ampersand last so double-encoded data resolves correctly`() {
+        // Double-encoded "<" is "&amp;lt;". Decoding entities first then & last
+        // yields "&lt;" then "<" — verifying ampersand-last ordering.
+        val doubleEncoded = "&amp;lt;"
+        val decoded = decodeLegacyHtml(doubleEncoded)
+        assertEquals("&lt;", decoded)
+    }
+
+    @Test
+    fun `decodeLegacyHtml - leaves clean modern data unchanged`() {
+        val modern = "Hello World 123 <not encoded>"
+        assertEquals(modern, decodeLegacyHtml(modern))
     }
 
     // ── Rate limiter ───────────────────────────────────────────────
