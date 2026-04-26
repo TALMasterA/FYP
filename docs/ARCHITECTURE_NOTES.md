@@ -214,7 +214,7 @@ This keeps common-path mark-read at 1 read + 2 writes, independent of message vo
 
 ## 11. Standard UI Components — Consistency Across Screens
 
-**Rule:** Always use `StandardPrimaryButton`, `StandardTextField`, `StandardDialog` instead of raw Compose components. Use `AppSpacing` and `AppCorners` constants. Use `MaterialTheme.colorScheme` for colors.
+**Rule:** Use shared UI helpers where they exist, such as `ConfirmationDialog`, and keep layout/styling aligned through `AppSpacing`, `AppCorners`, and `MaterialTheme.colorScheme`.
 
 **Benefits:** Consistent styling, easier global updates, better accessibility.
 
@@ -253,7 +253,7 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 **Persistent rate limiter (§2.2):** Auth-path rate limits (login, password reset, feedback, chat send) use `PersistentRateLimiter`, a DataStore-backed counter that survives process death. The static in-memory `RateLimiter` remains for non-auth read-side throttles only.
 
-**App Check enforcement (§2.3):** `FYPApplication.onCreate()` installs Firebase App Check before any Firestore/Functions client is built. Release builds use the Play Integrity provider; debug builds (`BuildConfig.DEBUG`) use the Debug provider — register the printed debug token in the Firebase console. All 7 v2 `onCall` Cloud Functions (`translateText`, `translateTexts`, `detectLanguage`, `generateLearningContent`, `addCoinsForReward`, `consumeCoinsForLanguagePackPurchase`, `submitDailyFavorite`) declare `enforceAppCheck: true`.
+**App Check enforcement (§2.3):** `FYPApplication.onCreate()` installs Firebase App Check before any Firestore/Functions client is built. Release builds use the Play Integrity provider; debug builds (`BuildConfig.DEBUG`) use the Debug provider — register the printed debug token in the Firebase console. All 7 v2 `onCall` Cloud Functions (`getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage`, `generateLearningContent`, `awardQuizCoins`, `spendCoins`) declare `enforceAppCheck: true`.
 
 **Audit logging PII:** `AuditLogger.logLoginFailed()` and `logPasswordResetRequested()` obfuscate email addresses before logging to Crashlytics (first 2 chars + domain only).
 

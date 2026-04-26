@@ -192,6 +192,6 @@ fun HistoryList(
             }
         }
 
-        // No "Load More" button — history shows only recent records (50-100 limit)
+        // No "Load More" button; history shows only the configured recent-record limit.
     }
 }

@@ -415,4 +415,5 @@ Consider later, after the first stable release:
 - [CLOUD_FUNCTIONS_API.md](CLOUD_FUNCTIONS_API.md)
 - [PRIVACY_AND_COMPLIANCE.md](PRIVACY_AND_COMPLIANCE.md)
 - [SECRETS_ROTATION.md](SECRETS_ROTATION.md)
+- [APP_SUGGESTIONS.md](APP_SUGGESTIONS.md)
 - [treeOfImportantfiles.txt](treeOfImportantfiles.txt)

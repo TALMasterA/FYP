@@ -42,7 +42,8 @@ FYP/
 │   ├── MCP_SKILLS_PLAYBOOK.md                      ← Team playbook for MCP skills usage
 │   ├── CLOUD_FUNCTIONS_API.md                      ← Backend Cloud Functions API reference
 │   ├── SECRETS_ROTATION.md                         ← API key rotation runbook
-│   └── PRIVACY_AND_COMPLIANCE.md                   ← Data categories, retention, processors, right-to-erasure procedure
+│   ├── PRIVACY_AND_COMPLIANCE.md                   ← Data categories, retention, processors, right-to-erasure procedure
+│   └── APP_SUGGESTIONS.md                          ← Audit-style suggestions and deferred hardening backlog
 │
 ├── app/
 │   ├── build.gradle.kts
