@@ -80,7 +80,7 @@ The repository contains:
 1. **Create a Firebase project** at [Firebase Console](https://console.firebase.google.com/).
 
 2. **Register an Android app:**
-   - Package name: `com.example.fyp`
+   - Package name: `com.translator.TalknLearn`
 
 3. **Enable Firebase services:**
    - **Authentication:** Enable Email/Password sign-in provider.
@@ -190,7 +190,7 @@ The repository contains:
 ./gradlew testDebugUnitTest
 
 # Run a specific test class
-./gradlew testDebugUnitTest --tests "com.example.fyp.domain.learning.GenerationEligibilityTest"
+./gradlew testDebugUnitTest --tests "com.translator.TalknLearn.domain.learning.GenerationEligibilityTest"
 ```
 
 ### Backend Tests

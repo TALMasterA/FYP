@@ -1,0 +1,188 @@
+package com.translator.TalknLearn.domain.friends
+
+import com.translator.TalknLearn.data.friends.ChatRepository
+import com.translator.TalknLearn.data.friends.FriendsRepository
+import com.translator.TalknLearn.data.friends.SharingRepository
+import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.friends.FriendMessage
+import com.translator.TalknLearn.model.friends.FriendRequest
+import com.translator.TalknLearn.model.friends.SharedItem
+import com.translator.TalknLearn.model.friends.SharedItemType
+import com.google.firebase.Timestamp
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.*
+import org.junit.Before
+import org.junit.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
+
+/**
+ * Unit tests for friends observe and sharing use cases:
+ * - ObserveMessagesUseCase
+ * - ObserveOutgoingRequestsUseCase
+ * - ShareLearningMaterialUseCase
+ */
+class FriendsObserveUseCasesTest {
+
+    private lateinit var friendsRepository: FriendsRepository
+    private lateinit var chatRepository: ChatRepository
+    private lateinit var sharingRepository: SharingRepository
+
+    @Before
+    fun setup() {
+        friendsRepository = mock()
+        chatRepository = mock()
+        sharingRepository = mock()
+    }
+
+    // ── ObserveMessagesUseCase ──────────────────────────────────────
+
+    @Test
+    fun `ObserveMessages generates chatId and returns messages`() = runTest {
+        val messages = listOf(
+            FriendMessage(messageId = "m1", chatId = "u1_u2", senderId = "u1", content = "Hi")
+        )
+        whenever(chatRepository.generateChatId(UserId("u1"), UserId("u2")))
+            .thenReturn("u1_u2")
+        whenever(chatRepository.observeMessages("u1_u2"))
+            .thenReturn(flowOf(messages))
+
+        val useCase = ObserveMessagesUseCase(chatRepository)
+        val result = useCase(UserId("u1"), UserId("u2")).first()
+
+        assertEquals(1, result.size)
+        assertEquals("Hi", result[0].content)
+    }
+
+    @Test
+    fun `ObserveMessages filters by clearedAt timestamp`() = runTest {
+        val oldTimestamp = Timestamp(1000, 0)
+        val newTimestamp = Timestamp(2000, 0)
+        val clearTimestamp = Timestamp(1500, 0)
+
+        val messages = listOf(
+            FriendMessage(messageId = "m1", chatId = "u1_u2", senderId = "u1", content = "old", createdAt = oldTimestamp),
+            FriendMessage(messageId = "m2", chatId = "u1_u2", senderId = "u1", content = "new", createdAt = newTimestamp)
+        )
+        whenever(chatRepository.generateChatId(UserId("u1"), UserId("u2")))
+            .thenReturn("u1_u2")
+        whenever(chatRepository.observeMessages("u1_u2"))
+            .thenReturn(flowOf(messages))
+
+        val useCase = ObserveMessagesUseCase(chatRepository)
+        val result = useCase(UserId("u1"), UserId("u2"), clearedAt = clearTimestamp).first()
+
+        assertEquals(1, result.size)
+        assertEquals("new", result[0].content)
+    }
+
+    @Test
+    fun `ObserveMessages returns all when clearedAt is null`() = runTest {
+        val messages = listOf(
+            FriendMessage(messageId = "m1", content = "A"),
+            FriendMessage(messageId = "m2", content = "B")
+        )
+        whenever(chatRepository.generateChatId(UserId("u1"), UserId("u2")))
+            .thenReturn("u1_u2")
+        whenever(chatRepository.observeMessages("u1_u2"))
+            .thenReturn(flowOf(messages))
+
+        val useCase = ObserveMessagesUseCase(chatRepository)
+        val result = useCase(UserId("u1"), UserId("u2"), clearedAt = null).first()
+
+        assertEquals(2, result.size)
+    }
+
+    // ── ObserveOutgoingRequestsUseCase ──────────────────────────────
+
+    @Test
+    fun `ObserveOutgoingRequests returns flow from repository`() = runTest {
+        val requests = listOf(
+            FriendRequest(requestId = "r1", fromUserId = "user1", toUserId = "target1")
+        )
+        whenever(friendsRepository.observeOutgoingRequests(UserId("user1")))
+            .thenReturn(flowOf(requests))
+
+        val useCase = ObserveOutgoingRequestsUseCase(friendsRepository)
+        val result = useCase(UserId("user1")).first()
+
+        assertEquals(1, result.size)
+        assertEquals("target1", result[0].toUserId)
+    }
+
+    // ── ShareLearningMaterialUseCase ────────────────────────────────
+
+    @Test
+    fun `ShareLearningMaterial delegates to repository with correct data`() = runTest {
+        val sharedItem = SharedItem(
+            itemId = "share1",
+            fromUserId = "user1",
+            toUserId = "friend1",
+            type = SharedItemType.LEARNING_SHEET
+        )
+        val expectedMaterialData = mapOf(
+            "materialId" to "mat1",
+            "title" to "Japanese Basics",
+            "description" to "Learn Japanese",
+            "fullContent" to "Full content here"
+        )
+        whenever(
+            sharingRepository.shareLearningMaterial(
+                UserId("user1"),
+                "myuser",
+                UserId("friend1"),
+                SharedItemType.LEARNING_SHEET,
+                expectedMaterialData
+            )
+        ).thenReturn(Result.success(sharedItem))
+
+        val useCase = ShareLearningMaterialUseCase(sharingRepository)
+        val result = useCase(
+            fromUserId = UserId("user1"),
+            fromUsername = "myuser",
+            toUserId = UserId("friend1"),
+            type = SharedItemType.LEARNING_SHEET,
+            materialId = "mat1",
+            title = "Japanese Basics",
+            description = "Learn Japanese",
+            fullContent = "Full content here"
+        )
+
+        assertTrue(result.isSuccess)
+        assertEquals("share1", result.getOrNull()?.itemId)
+    }
+
+    @Test
+    fun `ShareLearningMaterial handles repository failure`() = runTest {
+        whenever(
+            sharingRepository.shareLearningMaterial(
+                UserId("user1"),
+                "myuser",
+                UserId("friend1"),
+                SharedItemType.LEARNING_SHEET,
+                mapOf(
+                    "materialId" to "sheet1",
+                    "title" to "Sheet",
+                    "description" to "",
+                    "fullContent" to ""
+                )
+            )
+        ).thenReturn(Result.failure(RuntimeException("Network error")))
+
+        val useCase = ShareLearningMaterialUseCase(sharingRepository)
+        val result = useCase(
+            fromUserId = UserId("user1"),
+            fromUsername = "myuser",
+            toUserId = UserId("friend1"),
+            type = SharedItemType.LEARNING_SHEET,
+            materialId = "sheet1",
+            title = "Sheet"
+        )
+
+        assertTrue(result.isFailure)
+        assertEquals("Network error", result.exceptionOrNull()?.message)
+    }
+}

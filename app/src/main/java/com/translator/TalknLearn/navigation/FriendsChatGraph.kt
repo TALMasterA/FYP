@@ -1,0 +1,122 @@
+package com.translator.TalknLearn
+
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import com.translator.TalknLearn.core.composableRequireLogin
+import com.translator.TalknLearn.core.composableRequireLoginWithArgs
+import com.translator.TalknLearn.model.ui.AppLanguageState
+import com.translator.TalknLearn.screens.friends.BlockedUsersScreen
+import com.translator.TalknLearn.screens.friends.ChatScreen
+import com.translator.TalknLearn.screens.friends.FriendsScreen
+import com.translator.TalknLearn.screens.friends.MyProfileScreen
+import com.translator.TalknLearn.screens.friends.SharedInboxScreen
+import com.translator.TalknLearn.screens.friends.SharedMaterialDetailScreen
+
+/**
+ * Navigation sub-graph: Friends list, chat, shared inbox, blocked users, and my profile.
+ */
+internal fun NavGraphBuilder.friendsChatGraph(
+    navController: NavController,
+    navigateToLogin: () -> Unit,
+    appLanguageState: AppLanguageState,
+    hasUnseenSharedItems: Boolean,
+    unseenSharedItemsCount: Int,
+    hasUnreadMessages: Boolean,
+    unseenFriendRequestCount: Int,
+) {
+    composableRequireLogin(
+        route = AppScreen.Friends.route,
+        onNeedLogin = navigateToLogin
+    ) {
+        FriendsScreen(
+            appLanguageState = appLanguageState,
+            onBack = { navController.popBackStack() },
+            onOpenChat = { friendId, friendUsername ->
+                navController.navigate(
+                    AppScreen.Chat.routeFor(friendId, friendUsername)
+                ) { launchSingleTop = true }
+            },
+            onOpenSharedInbox = {
+                navController.navigate(AppScreen.SharedInbox.route) { launchSingleTop = true }
+            },
+            onOpenBlockedUsers = {
+                navController.navigate(AppScreen.BlockedUsers.route) { launchSingleTop = true }
+            },
+            onOpenNotifSettings = {
+                navController.navigate(AppScreen.NotificationSettings.route) { launchSingleTop = true }
+            },
+            onNavigateToProfile = {
+                navController.navigate(AppScreen.Profile.route) { launchSingleTop = true }
+            },
+            hasUnseenSharedItems = hasUnseenSharedItems,
+            unseenSharedItemsCount = unseenSharedItemsCount,
+            hasUnreadMessages = hasUnreadMessages,
+            unseenFriendRequestCount = unseenFriendRequestCount
+        )
+    }
+
+    composableRequireLogin(
+        route = AppScreen.SharedInbox.route,
+        onNeedLogin = navigateToLogin
+    ) {
+        SharedInboxScreen(
+            appLanguageState = appLanguageState,
+            onBack = { navController.popBackStack() },
+            onViewMaterial = { itemId ->
+                navController.navigate(
+                    AppScreen.SharedMaterialDetail.routeFor(itemId)
+                ) { launchSingleTop = true }
+            }
+        )
+    }
+
+    composableRequireLoginWithArgs(
+        route = AppScreen.SharedMaterialDetail.route,
+        argNames = listOf("itemId"),
+        onNeedLogin = navigateToLogin
+    ) { backStackEntry ->
+        val itemId = java.net.URLDecoder.decode(
+            backStackEntry.arguments?.getString("itemId").orEmpty(), Charsets.UTF_8.name()
+        )
+        if (itemId.isBlank()) {
+            navController.popBackStack()
+            return@composableRequireLoginWithArgs
+        }
+        SharedMaterialDetailScreen(
+            itemId = itemId,
+            appLanguageState = appLanguageState,
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composableRequireLogin(
+        route = AppScreen.MyProfile.route,
+        onNeedLogin = navigateToLogin
+    ) {
+        MyProfileScreen(
+            appLanguageState = appLanguageState,
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composableRequireLoginWithArgs(
+        route = AppScreen.Chat.route,
+        argNames = listOf("friendId", "friendUsername"),
+        onNeedLogin = navigateToLogin
+    ) {
+        ChatScreen(
+            appLanguageState = appLanguageState,
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composableRequireLogin(
+        route = AppScreen.BlockedUsers.route,
+        onNeedLogin = navigateToLogin
+    ) {
+        BlockedUsersScreen(
+            appLanguageState = appLanguageState,
+            onBack = { navController.popBackStack() }
+        )
+    }
+}

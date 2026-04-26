@@ -239,7 +239,7 @@ App Check failure.
 ```bash
 ./gradlew compileDebugKotlin
 ./gradlew testDebugUnitTest
-./gradlew testDebugUnitTest --tests "com.example.fyp.domain.learning.GenerationEligibilityTest"
+./gradlew testDebugUnitTest --tests "com.translator.TalknLearn.domain.learning.GenerationEligibilityTest"
 ./gradlew assembleDebug
 ```
 

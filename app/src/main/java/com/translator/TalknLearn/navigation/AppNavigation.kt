@@ -1,0 +1,410 @@
+/**
+ * Root composable navigation graph for the FYP app.
+ *
+ * Sets up the [NavHost] with animated transitions, a persistent bottom
+ * navigation bar (Home · Speech · Learning · Friends · Settings), and
+ * delegates to feature-specific sub-graphs defined in separate files
+ * (e.g. [MainFeatureGraph], [FriendsChatGraph], [LearningWordBankGraph]).
+ *
+ * Also handles cross-cutting concerns: notification-permission prompt,
+ * app-wide UI-language state, and theme/font-size observation.
+ */
+package com.translator.TalknLearn
+
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.translator.TalknLearn.appstate.AppViewModel
+import com.translator.TalknLearn.core.LocalAppLanguageState
+import com.translator.TalknLearn.core.LocalFontSizeScale
+import com.translator.TalknLearn.core.LocalUiLanguages
+import com.translator.TalknLearn.core.LocalUpdateAppLanguage
+import com.translator.TalknLearn.core.OfflineBanner
+import com.translator.TalknLearn.core.createScaledTypography
+import com.translator.TalknLearn.core.rememberConnectivityState
+import com.translator.TalknLearn.core.validateScale
+import com.translator.TalknLearn.data.azure.AzureLanguageConfig
+import com.translator.TalknLearn.data.azure.LanguageDisplayNames
+import com.translator.TalknLearn.data.ui.rememberUiLanguageState
+import com.translator.TalknLearn.screens.learning.LearningViewModel
+import com.translator.TalknLearn.screens.onboarding.isOnboardingComplete
+import com.translator.TalknLearn.screens.settings.SettingsViewModel
+import com.translator.TalknLearn.screens.wordbank.WordBankViewModel
+import com.translator.TalknLearn.ui.theme.FYPTheme
+import com.translator.TalknLearn.ui.theme.ThemeHelper
+import com.translator.TalknLearn.ui.theme.Typography as AppTypography
+
+private data class BottomNavItem(
+    val route: String,
+    val icon: ImageVector,
+    val labelKey: com.translator.TalknLearn.model.ui.UiTextKey,
+    val defaultLabel: String
+)
+
+// AppScreen route destinations are defined in AppScreens.kt
+
+@Composable
+fun AppNavigation() {
+    val navController = rememberNavController()
+    val context = LocalContext.current
+
+    // §5.2: surface the current top-level destination on every Crashlytics report
+    // so non-fatal logs and crashes carry the screen the user was looking at.
+    androidx.compose.runtime.DisposableEffect(navController) {
+        val listener = androidx.navigation.NavController.OnDestinationChangedListener { _, destination, _ ->
+            runCatching {
+                com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance()
+                    .setCustomKey("current_screen", destination.route ?: "unknown")
+            }
+        }
+        navController.addOnDestinationChangedListener(listener)
+        onDispose { navController.removeOnDestinationChangedListener(listener) }
+    }
+
+    // Async check — avoids blocking the main thread with SharedPreferences I/O
+    val isOnboardingDone by produceState(initialValue = true) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            isOnboardingComplete(context)
+        }
+    }
+
+    val supported by produceState(initialValue = listOf("en-US")) {
+        value = AzureLanguageConfig.loadSupportedLanguagesSuspend(context)
+    }
+
+    val uiLanguages = remember(supported) {
+        supported.distinct().map { code ->
+            code to LanguageDisplayNames.displayName(code)
+        }
+    }
+
+    val (appLanguageState, updateAppLanguage) = rememberUiLanguageState(uiLanguages)
+
+    // Application-level ViewModel for cross-cutting concerns (used for side effects)
+    val appViewModel: AppViewModel = hiltViewModel()
+    val pendingFriendRequestCount by appViewModel.pendingFriendRequestCount.collectAsStateWithLifecycle()
+    val hasUnreadMessages by appViewModel.hasUnreadMessages.collectAsStateWithLifecycle()
+    val hasUnseenSharedItems by appViewModel.hasUnseenSharedItems.collectAsStateWithLifecycle()
+    val unreadMessageCount by appViewModel.unreadMessageCount.collectAsStateWithLifecycle()
+    val unseenSharedItemsCount by appViewModel.unseenSharedItemsCount.collectAsStateWithLifecycle()
+
+    // One SettingsViewModel shared across app
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
+    val settingsUiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+
+    // Request POST_NOTIFICATIONS permission on Android 13+ after the user logs in.
+    // Session flag prevents the prompt from refiring every time the uid observable re-emits.
+    val notifPermLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* result handled by the system; no action needed */ }
+    var notifPermAsked by rememberSaveable { mutableStateOf(false) }
+    val settingsUidForPerm = settingsUiState.uid
+    LaunchedEffect(settingsUidForPerm) {
+        if (!notifPermAsked && settingsUidForPerm != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notifPermAsked = true
+            notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    // One LearningViewModel shared for Learning + Sheet
+    val learningViewModel: LearningViewModel = hiltViewModel()
+    val learningUiState by learningViewModel.uiState.collectAsStateWithLifecycle()
+
+    // One WordBankViewModel shared across app (so generation continues when leaving page)
+    val wordBankViewModel: WordBankViewModel = hiltViewModel()
+    val wordBankUiState by wordBankViewModel.uiState.collectAsStateWithLifecycle()
+    val customWordsViewModel: com.translator.TalknLearn.screens.wordbank.CustomWordsViewModel = hiltViewModel()
+
+    val fontSizeScale = validateScale(settingsUiState.settings.fontSizeScale)
+    val scaledTypography = createScaledTypography(AppTypography, fontSizeScale)
+
+    // Use ThemeHelper to determine dark theme based on settings and time
+    val systemDarkTheme = isSystemInDarkTheme()
+    val darkTheme = ThemeHelper.shouldUseDarkTheme(settingsUiState.settings, systemDarkTheme)
+    val colorPaletteId = settingsUiState.settings.colorPaletteId
+
+    // Observe network connectivity for offline indicator
+    val isConnected by rememberConnectivityState()
+
+    // Snackbar state for generation banners
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Observe generation completion events and show banners
+    val sheetDone = learningUiState.sheetGenerationCompleted
+    LaunchedEffect(sheetDone) {
+        if (sheetDone != null) {
+            val result = snackbarHostState.showSnackbar(
+                message = appLanguageState.uiTexts[com.translator.TalknLearn.model.ui.UiTextKey.GenerationBannerSheet]
+                    ?: "Learning sheet ready! Tap to open.",
+                actionLabel = appLanguageState.uiTexts[com.translator.TalknLearn.model.ui.UiTextKey.ActionOpen] ?: "Open",
+                duration = SnackbarDuration.Long
+            )
+            learningViewModel.consumeSheetGenerationCompleted()
+            if (result == SnackbarResult.ActionPerformed) {
+                navController.navigate(
+                    AppScreen.LearningSheet.routeFor(
+                        learningUiState.primaryLanguageCode, sheetDone
+                    )
+                ) { launchSingleTop = true }
+            }
+        }
+    }
+
+    val quizDone = learningUiState.quizGenerationCompleted
+    LaunchedEffect(quizDone) {
+        if (quizDone != null) {
+            val result = snackbarHostState.showSnackbar(
+                message = appLanguageState.uiTexts[com.translator.TalknLearn.model.ui.UiTextKey.GenerationBannerQuiz]
+                    ?: "Quiz ready! Tap to start.",
+                actionLabel = appLanguageState.uiTexts[com.translator.TalknLearn.model.ui.UiTextKey.ActionOpen] ?: "Open",
+                duration = SnackbarDuration.Long
+            )
+            learningViewModel.consumeQuizGenerationCompleted()
+            if (result == SnackbarResult.ActionPerformed) {
+                navController.navigate(
+                    AppScreen.Quiz.routeFor(
+                        learningUiState.primaryLanguageCode, quizDone
+                    )
+                ) { launchSingleTop = true }
+            }
+        }
+    }
+
+    val wordBankDone = wordBankUiState.wordBankGenerationCompleted
+    LaunchedEffect(wordBankDone) {
+        if (wordBankDone != null) {
+            val result = snackbarHostState.showSnackbar(
+                message = appLanguageState.uiTexts[com.translator.TalknLearn.model.ui.UiTextKey.GenerationBannerWordBank]
+                    ?: "Word bank ready! Tap to view.",
+                actionLabel = appLanguageState.uiTexts[com.translator.TalknLearn.model.ui.UiTextKey.ActionOpen] ?: "Open",
+                duration = SnackbarDuration.Long
+            )
+            wordBankViewModel.consumeWordBankGenerationCompleted()
+            if (result == SnackbarResult.ActionPerformed) {
+                navController.navigate(AppScreen.WordBank.route) { launchSingleTop = true }
+            }
+        }
+    }
+
+    val bottomNavItems = listOf(
+        BottomNavItem(AppScreen.Home.route, Icons.Default.Home, com.translator.TalknLearn.model.ui.UiTextKey.NavHome, "Home"),
+        BottomNavItem(AppScreen.Speech.route, Icons.Default.Mic, com.translator.TalknLearn.model.ui.UiTextKey.NavTranslate, "Translate"),
+        BottomNavItem(AppScreen.Learning.route, Icons.AutoMirrored.Filled.MenuBook, com.translator.TalknLearn.model.ui.UiTextKey.NavLearn, "Learn"),
+        BottomNavItem(AppScreen.Friends.route, Icons.Default.People, com.translator.TalknLearn.model.ui.UiTextKey.NavFriends, "Friends"),
+        BottomNavItem(AppScreen.Settings.route, Icons.Default.Settings, com.translator.TalknLearn.model.ui.UiTextKey.NavSettings, "Settings"),
+    )
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        CompositionLocalProvider(
+            LocalFontSizeScale provides fontSizeScale,
+            LocalAppLanguageState provides appLanguageState,
+            LocalUiLanguages provides uiLanguages,
+            LocalUpdateAppLanguage provides updateAppLanguage
+        ) {
+            FYPTheme(darkTheme = darkTheme, colorPaletteId = colorPaletteId, typography = scaledTypography) {
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+                val showBottomNav = currentRoute in setOf(
+                    AppScreen.Home.route,
+                    AppScreen.Speech.route,
+                    AppScreen.Learning.route,
+                    AppScreen.Friends.route,
+                    AppScreen.Settings.route,
+                )
+
+                val navigateToLogin: () -> Unit = {
+                    navController.navigate(AppScreen.Login.route) { launchSingleTop = true }
+                }
+
+                Scaffold(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    contentWindowInsets = WindowInsets(0),
+                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+                    bottomBar = {
+                        if (showBottomNav) {
+                            NavigationBar(
+                                containerColor = MaterialTheme.colorScheme.background,
+                                tonalElevation = 0.dp,
+                                windowInsets = WindowInsets.navigationBars
+                            ) {
+                                // Friends button badge shows ALL three notification types:
+                                // 1. Friend requests (badge ONLY on Friends button)
+                                // 2. Chat messages (badge on Friends button AND individual friend cards)
+                                // 3. Shared inbox items (badge on Friends button AND shared inbox icon)
+                                val friendsBadgeCount = pendingFriendRequestCount +
+                                    unreadMessageCount +
+                                    unseenSharedItemsCount
+
+                                val isUserLoggedIn = settingsUiState.uid != null
+
+                                bottomNavItems.forEach { item ->
+                                    val isSelected = currentRoute == item.route
+                                    val badgeCount = when (item.route) {
+                                        AppScreen.Friends.route -> friendsBadgeCount
+                                        else -> 0
+                                    }
+
+                                    // Disable buttons except Home and Settings when not logged in
+                                    val isDisabled = !isUserLoggedIn && item.route !in listOf(
+                                        AppScreen.Home.route,
+                                        AppScreen.Settings.route
+                                    )
+
+                                    NavigationBarItem(
+                                        icon = {
+                                            BadgedBox(
+                                                badge = {
+                                                    if (badgeCount > 0) {
+                                                        Badge {
+                                                            Text(if (badgeCount > 99) "99+" else "$badgeCount")
+                                                        }
+                                                    }
+                                                }
+                                            ) {
+                                                Icon(item.icon, contentDescription = appLanguageState.uiTexts[item.labelKey] ?: item.defaultLabel)
+                                            }
+                                        },
+                                        label = {
+                                            val label = appLanguageState.uiTexts[item.labelKey] ?: item.defaultLabel
+                                            Text(label, style = MaterialTheme.typography.labelSmall)
+                                        },
+                                        selected = isSelected,
+                                        enabled = !isDisabled,
+                                        onClick = {
+                                            if (isSelected) return@NavigationBarItem
+                                            if (item.route == AppScreen.Home.route) {
+                                                navController.navigate(AppScreen.Home.route) {
+                                                    popUpTo(0) { inclusive = true }
+                                                    launchSingleTop = true
+                                                }
+                                            } else {
+                                                navController.navigate(item.route) {
+                                                    popUpTo(AppScreen.Home.route) {
+                                                        saveState = true
+                                                        inclusive = false
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                ) { scaffoldPadding ->
+                    Column(modifier = Modifier.padding(scaffoldPadding).fillMaxSize()) {
+                        OfflineBanner(isConnected = isConnected)
+
+                        NavHost(
+                            navController = navController,
+                            startDestination = AppScreen.Startup.route,
+                            enterTransition = { fadeIn(animationSpec = tween(300)) },
+                            exitTransition = { fadeOut(animationSpec = tween(300)) },
+                            popEnterTransition = { fadeIn(animationSpec = tween(300)) },
+                            popExitTransition = { fadeOut(animationSpec = tween(300)) },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            startupAuthGraph(
+                                navController = navController,
+                                isOnboardingDone = isOnboardingDone,
+                                appLanguageState = appLanguageState,
+                                updateAppLanguage = updateAppLanguage,
+                                uiLanguages = uiLanguages,
+                            )
+                            mainFeatureGraph(
+                                navController = navController,
+                                navigateToLogin = navigateToLogin,
+                                appLanguageState = appLanguageState,
+                                updateAppLanguage = updateAppLanguage,
+                                uiLanguages = uiLanguages,
+                                pendingFriendRequestCount = pendingFriendRequestCount,
+                                unreadMessageCount = unreadMessageCount,
+                                unseenSharedItemsCount = unseenSharedItemsCount,
+                            )
+                            learningWordBankGraph(
+                                navController = navController,
+                                navigateToLogin = navigateToLogin,
+                                appLanguageState = appLanguageState,
+                                updateAppLanguage = updateAppLanguage,
+                                uiLanguages = uiLanguages,
+                                learningViewModel = learningViewModel,
+                                wordBankViewModel = wordBankViewModel,
+                                customWordsViewModel = customWordsViewModel,
+                            )
+                            friendsChatGraph(
+                                navController = navController,
+                                navigateToLogin = navigateToLogin,
+                                appLanguageState = appLanguageState,
+                                hasUnseenSharedItems = hasUnseenSharedItems,
+                                unseenSharedItemsCount = unseenSharedItemsCount,
+                                hasUnreadMessages = hasUnreadMessages,
+                                unseenFriendRequestCount = pendingFriendRequestCount,
+                            )
+                            settingsProfileGraph(
+                                navController = navController,
+                                navigateToLogin = navigateToLogin,
+                                appLanguageState = appLanguageState,
+                                updateAppLanguage = updateAppLanguage,
+                                uiLanguages = uiLanguages,
+                                settingsViewModel = settingsViewModel,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

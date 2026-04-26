@@ -291,10 +291,10 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 **Model Default:** `PublicUserProfile.isDiscoverable` defaults to `false` (not `true`)
 
 **Code Locations:**
-- Model default: `app/src/main/java/com/example/fyp/model/friends/PublicUserProfile.kt:21`
-- Profile init (merge-safe): `app/src/main/java/com/example/fyp/domain/friends/EnsurePublicProfileExistsUseCase.kt:42-61`
-- Profile update: `app/src/main/java/com/example/fyp/data/friends/FirestoreFriendsRepository.kt:99-147`
-- Search filtering: `app/src/main/java/com/example/fyp/data/friends/FirestoreFriendsRepository.kt:214-230`
+- Model default: `app/src/main/java/com/translator/TalknLearn/model/friends/PublicUserProfile.kt:21`
+- Profile init (merge-safe): `app/src/main/java/com/translator/TalknLearn/domain/friends/EnsurePublicProfileExistsUseCase.kt:42-61`
+- Profile update: `app/src/main/java/com/translator/TalknLearn/data/friends/FirestoreFriendsRepository.kt:99-147`
+- Search filtering: `app/src/main/java/com/translator/TalknLearn/data/friends/FirestoreFriendsRepository.kt:214-230`
   - `.whereEqualTo("isDiscoverable", true)` ensures only public profiles indexed
 
 **@PropertyName Annotation (Bug Fix — April 2026):**

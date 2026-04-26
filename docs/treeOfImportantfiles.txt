@@ -57,7 +57,7 @@ FYP/
 │       │   │   ├── backup_rules.xml                     ← §2.14 explicit excludes (secure_prefs + DataStore caches)
 │       │   │   ├── data_extraction_rules.xml           ← §2.14 cloud-backup + device-transfer excludes
 │       │   │   └── network_security_config.xml         ← §2.8 cleartext disabled, system trust anchors only
-│       │   └── java/com/example/fyp/
+│       │   └── java/com/translator/TalknLearn/
 │       │       ├── navigation/                          ← Navigation routes & composables
 │       │       │   ├── AppNavigation.kt                 ← composable nav graph
 │       │       │   ├── AppScreens.kt                    ← AppScreen sealed class (all route destinations)
@@ -379,10 +379,10 @@ FYP/
 │       │
 │       ├── debug/                                        ← Debug-variant source set (debug builds only)
 │       │   ├── AndroidManifest.xml                      ← Declares HiltTestActivity (no launcher intent)
-│       │   └── java/com/example/fyp/
+│       │   └── java/com/translator/TalknLearn/
 │       │       └── HiltTestActivity.kt                  ← Empty ComponentActivity host for instrumentation tests
 │       │
-│       ├── test/java/com/example/fyp/
+│       ├── test/java/com/translator/TalknLearn/
 │       │   ├── appstate/
 │       │   │   └── AppViewModelTest.kt                   ← App-wide state & notification tests
 │       │   ├── core/
@@ -620,7 +620,7 @@ FYP/
 │       │       ├── ErrorHandlingTest.kt
 │       │       └── ErrorMessageMapperTest.kt
 │       │
-│       └── androidTest/java/com/example/fyp/        ← Instrumented (on-device) UI tests
+│       └── androidTest/java/com/translator/TalknLearn/        ← Instrumented (on-device) UI tests
 │           ├── HiltTestRunner.kt                    ← Custom test runner wiring Hilt into instrumented tests
 │           └── screens/login/
 │               └── LoginScreenSmokeTest.kt          ← Compose UI smoke tests for login screen

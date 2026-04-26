@@ -6,9 +6,9 @@ _Last updated: 2026-04-26_
 
 | Metric | Count |
 |---|---:|
-| Android source files (`app/src/main/java/com/example/fyp`) | 237 |
+| Android source files (`app/src/main/java/com/translator/TalknLearn`) | 237 |
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 9 |
-| Android unit test files (`app/src/test/java/com/example/fyp`) | 194 |
+| Android unit test files (`app/src/test/java/com/translator/TalknLearn`) | 194 |
 | Android test suites in latest `testDebugUnitTest` run | 193 |
 | Android unit tests executed (`testDebugUnitTest`) | 2,477 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 15 |
@@ -46,8 +46,8 @@ CI threshold in `fyp-backend/functions/jest.config.js`:
 
 | File | Reason |
 |---|---|
-| `app/src/main/java/com/example/fyp/data/repositories/AzureSpeechRepository.kt` | Hardware-dependent speech stack |
-| `app/src/main/java/com/example/fyp/model/ui/AppLanguageState.kt` | Simple data holder |
+| `app/src/main/java/com/translator/TalknLearn/data/repositories/AzureSpeechRepository.kt` | Hardware-dependent speech stack |
+| `app/src/main/java/com/translator/TalknLearn/model/ui/AppLanguageState.kt` | Simple data holder |
 
 ## Notes
 

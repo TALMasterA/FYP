@@ -1,6 +1,6 @@
 # KMP Migration Plan — FYP App (Android → Cross-Platform)
 
-> **Scope:** Migrate the Android-only `com.example.fyp` app to Kotlin Multiplatform (KMP), targeting Android + iOS.
+> **Scope:** Migrate the Android-only `com.translator.TalknLearn` app to Kotlin Multiplatform (KMP), targeting Android + iOS.
 > **Goal:** Share ~70% of code (models, domain logic, repositories, Compose UI) across platforms.
 > **Date drafted:** April 2026
 > **Branch:** `postFYP`
@@ -184,9 +184,9 @@ The KMP Gradle plugin is **not compatible with the latest Android Gradle Plugin 
 
 1. Add `kotlin("multiplatform")` plugin to `shared/build.gradle.kts` (new module).
 2. Register `shared` in `settings.gradle.kts`.
-3. Move `app/src/main/java/com/example/fyp/model/` → `shared/src/commonMain/kotlin/com/example/fyp/model/`.
-4. Move `app/src/main/java/com/example/fyp/domain/` → `shared/src/commonMain/kotlin/com/example/fyp/domain/` (after removing `@Inject` annotations).
-5. Move `app/src/main/java/com/example/fyp/model/ui/` (UiTextKey, UiTextScreens, translations) → `shared/src/commonMain/`.
+3. Move `app/src/main/java/com/translator/TalknLearn/model/` → `shared/src/commonMain/kotlin/com/translator/TalknLearn/model/`.
+4. Move `app/src/main/java/com/translator/TalknLearn/domain/` → `shared/src/commonMain/kotlin/com/translator/TalknLearn/domain/` (after removing `@Inject` annotations).
+5. Move `app/src/main/java/com/translator/TalknLearn/model/ui/` (UiTextKey, UiTextScreens, translations) → `shared/src/commonMain/`.
 6. Update `app/build.gradle.kts` to depend on `project(":shared")`.
 7. Run `./gradlew :app:testDebugUnitTest` to confirm nothing regressed.
 
@@ -251,7 +251,7 @@ The KMP Gradle plugin is **not compatible with the latest Android Gradle Plugin 
 
 - [ ] **Register an iOS app in the Firebase Console** ([console.firebase.google.com](https://console.firebase.google.com)):
   1. Go to Project Settings → Add app → iOS.
-  2. Use bundle ID: `com.example.fyp` (match Android, or choose a new iOS bundle ID).
+  2. Use bundle ID: `com.translator.TalknLearn` (match Android, or choose a new iOS bundle ID).
   3. Download the generated `GoogleService-Info.plist`.
   4. Keep this file safe — the agent will place it in `iosApp/` in Phase 5, but you need it now so it exists.
 - [ ] **Do NOT commit `GoogleService-Info.plist` to git** — add it to `.gitignore` just like `google-services.json`.

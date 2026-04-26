@@ -14,17 +14,17 @@ plugins {
 }
 
 android {
-    namespace = "com.example.fyp"
+    namespace = "com.translator.TalknLearn"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.fyp"
+        applicationId = "com.translator.TalknLearn"
         minSdk = 26
         targetSdk = 36
-        versionCode = 55
-        versionName = "2.2.0"
+        versionCode = 56
+        versionName = "2.3.0"
 
-        testInstrumentationRunner = "com.example.fyp.HiltTestRunner"
+        testInstrumentationRunner = "com.translator.TalknLearn.HiltTestRunner"
     }
 
     buildTypes {

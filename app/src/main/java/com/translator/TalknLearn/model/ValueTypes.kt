@@ -1,0 +1,123 @@
+package com.translator.TalknLearn.model
+
+import kotlinx.serialization.Serializable
+
+/**
+ * Value classes for type safety in the FYP Translation & Learning App.
+ *
+ * These inline value classes provide compile-time type safety with zero runtime overhead.
+ * They prevent accidental misuse of string parameters (e.g., swapping userId and languageCode).
+ *
+ * Benefits:
+ * - Compile-time type checking
+ * - Zero runtime cost (inlined to underlying type)
+ * - Self-documenting code
+ * - Validation at construction time
+ *
+ * @see <a href="https://kotlinlang.org/docs/inline-classes.html">Kotlin Inline Classes</a>
+ */
+
+/**
+ * Wraps user ID strings to prevent accidental misuse.
+ * @throws IllegalArgumentException if the value is blank
+ */
+@JvmInline
+@Serializable
+value class UserId(val value: String) {
+    init {
+        require(value.isNotBlank()) { "UserId cannot be blank" }
+    }
+}
+
+/**
+ * Wraps language code strings (e.g., "en-US", "ja-JP").
+ * @throws IllegalArgumentException if the value doesn't match the expected format
+ */
+@JvmInline
+@Serializable
+value class LanguageCode(val value: String) {
+    init {
+        require(value.isNotBlank()) { "LanguageCode cannot be blank" }
+        require(value.matches(Regex("^[a-z]{2}(-[A-Z]{2})?$"))) {
+            "LanguageCode must match format 'xx' or 'xx-XX' (e.g., 'ja' or 'en-US'), got: $value"
+        }
+    }
+}
+
+/**
+ * Wraps document/record ID strings.
+ * @throws IllegalArgumentException if the value is blank
+ */
+@JvmInline
+@Serializable
+value class RecordId(val value: String) {
+    init {
+        require(value.isNotBlank()) { "RecordId cannot be blank" }
+    }
+}
+
+/**
+ * Wraps conversation session ID strings.
+ * @throws IllegalArgumentException if the value is blank
+ */
+@JvmInline
+@Serializable
+value class SessionId(val value: String) {
+    init {
+        require(value.isNotBlank()) { "SessionId cannot be blank" }
+    }
+}
+
+/**
+ * Wraps color palette identifier strings.
+ * @throws IllegalArgumentException if the value is blank
+ */
+@JvmInline
+@Serializable
+value class PaletteId(val value: String) {
+    init {
+        require(value.isNotBlank()) { "PaletteId cannot be blank" }
+    }
+}
+
+/**
+ * Wraps Azure TTS voice identifier strings (e.g., "en-US-JennyNeural").
+ * @throws IllegalArgumentException if the value is blank
+ */
+@JvmInline
+@Serializable
+value class VoiceName(val value: String) {
+    init {
+        require(value.isNotBlank()) { "VoiceName cannot be blank" }
+    }
+}
+
+/**
+ * Wraps AI model deployment name strings (e.g., "gpt-4o").
+ * @throws IllegalArgumentException if the value is blank
+ */
+@JvmInline
+@Serializable
+value class DeploymentName(val value: String) {
+    init {
+        require(value.isNotBlank()) { "DeploymentName cannot be blank" }
+    }
+}
+
+/**
+ * Wraps username strings with validation.
+ * Username must be 3-20 characters and contain only letters, numbers, and underscores.
+ * @throws IllegalArgumentException if the value doesn't meet requirements
+ */
+@JvmInline
+@Serializable
+value class Username(val value: String) {
+    init {
+        require(value.length in 3..20) { 
+            "Username must be 3-20 characters, got: ${value.length}" 
+        }
+        require(value.matches(Regex("^[a-zA-Z0-9_]+$"))) {
+            "Username can only contain letters, numbers, and underscores, got: $value"
+        }
+    }
+}

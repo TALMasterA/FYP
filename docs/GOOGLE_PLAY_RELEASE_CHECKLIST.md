@@ -4,7 +4,7 @@ This is a code-grounded checklist of what must be fixed or prepared before the a
 
 Current verified baseline:
 
-- [app/build.gradle.kts](../app/build.gradle.kts) uses `namespace = "com.example.fyp"` and `applicationId = "com.example.fyp"`.
+- [app/build.gradle.kts](../app/build.gradle.kts) uses `namespace = "com.translator.TalknLearn"` and `applicationId = "com.translator.TalknLearn"`.
 - [app/build.gradle.kts](../app/build.gradle.kts) sets `versionCode = 55`, `versionName = "2.2.0"`, `compileSdk = 36`, `targetSdk = 36`, and `minSdk = 26`.
 - [app/build.gradle.kts](../app/build.gradle.kts) has no `signingConfigs.release` block.
 - [app/build.gradle.kts](../app/build.gradle.kts) disables release minification and resource shrinking: `isMinifyEnabled = false`, `isShrinkResources = false`.
@@ -29,17 +29,17 @@ Priority legend:
 
 ### 1.1 Rename the package before the first Play upload
 
-**Current state:** [app/build.gradle.kts](../app/build.gradle.kts) uses `com.example.fyp` for both `namespace` and `applicationId`.
+**Current state:** ✅ **COMPLETE.** Package renamed to `com.translator.TalknLearn`. [app/build.gradle.kts](../app/build.gradle.kts) uses `com.translator.TalknLearn` for `namespace`, `applicationId`, and `testInstrumentationRunner`.
 
-**Why it matters:** Google Play does not allow package names that start with `com.example`. The package name is permanent after publication, so this has to be fixed before the first internal-track upload.
+**Why it matters:** Google Play does not allow package names that start with `com.example`. The package name is permanent after publication, so this had to be fixed before the first internal-track upload.
 
-**Actions:**
+**Actions (completed):**
 
-1. Choose a final reverse-DNS package name that you control, for example `com.<your-domain>.<product-name>`.
-2. Update `namespace`, `applicationId`, and `testInstrumentationRunner` package references in [app/build.gradle.kts](../app/build.gradle.kts).
-3. Rename all Kotlin package declarations and imports under `app/src/main`, `app/src/test`, and `app/src/androidTest`.
-4. Re-register the Android app in Firebase using the new package name and download a fresh local Firebase Android config JSON.
-5. Re-check Firebase Auth, Crashlytics, Analytics, FCM, Cloud Functions, and App Check because all are tied to the package name and signing fingerprints.
+1. ✅ Package renamed to `com.translator.TalknLearn`.
+2. ✅ Updated `namespace`, `applicationId`, and `testInstrumentationRunner` in [app/build.gradle.kts](../app/build.gradle.kts).
+3. ✅ Renamed all Kotlin package declarations and imports under `app/src/main`, `app/src/test`, `app/src/androidTest`, and `app/src/debug`.
+4. ⚠️ **Pending (manual):** Re-register the Android app in Firebase Console with the new package name, provide SHA-1 from debug/release keystore, and download a fresh `google-services.json`.
+5. ⚠️ **Pending (manual):** Re-check Firebase Auth, Crashlytics, Analytics, FCM, Cloud Functions, and App Check — all are tied to the package name and signing fingerprints.
 
 ### 1.2 Add release signing and enrol in Play App Signing
 

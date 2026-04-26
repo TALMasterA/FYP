@@ -1,0 +1,374 @@
+package com.translator.TalknLearn.screens.learning
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.translator.TalknLearn.domain.learning.GenerationEligibility
+import com.translator.TalknLearn.core.ConfirmationDialog
+import com.translator.TalknLearn.core.StandardScreenScaffold
+import com.translator.TalknLearn.core.rememberUiTextFunctions
+import com.translator.TalknLearn.model.ui.AppLanguageState
+import com.translator.TalknLearn.model.ui.BaseUiTexts
+import com.translator.TalknLearn.model.ui.UiTextKey
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.delay
+import com.translator.TalknLearn.core.UiConstants
+import com.translator.TalknLearn.ui.components.LearningSheetSkeleton
+import com.translator.TalknLearn.ui.components.EmptyStates
+import com.translator.TalknLearn.ui.theme.AppSpacing
+import com.translator.TalknLearn.ui.theme.AppCorners
+
+@Suppress("UNUSED_PARAMETER", "SENSELESS_COMPARISON")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LearningScreen(
+    uiLanguages: List<Pair<String, String>>,
+    appLanguageState: AppLanguageState,
+    onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
+    onBack: () -> Unit,
+    viewModel: LearningViewModel = hiltViewModel(),
+    onOpenSheet: (primaryCode: String, targetCode: String) -> Unit,
+    onOpenWordBank: (() -> Unit)? = null,
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+
+    var pendingGenerateLang by remember { mutableStateOf<String?>(null) }
+    var showRegenInfo by remember { mutableStateOf(false) }
+    var showScreenInfo by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+
+    // Auto-dismiss error after delay
+    LaunchedEffect(uiState.error) {
+        if (uiState.error != null) {
+            // Ensure the error card is visible even when the user has scrolled down.
+            listState.animateScrollToItem(0)
+            delay(UiConstants.ERROR_AUTO_DISMISS_MS)
+            viewModel.clearError()
+        }
+    }
+
+    StandardScreenScaffold(
+        title = t(UiTextKey.LearningTitle),
+        onBack = onBack,
+        backContentDescription = t(UiTextKey.NavBack),
+        hasBottomNav = true,
+        actions = {
+            if (onOpenWordBank != null) {
+                IconButton(onClick = onOpenWordBank) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                        contentDescription = t(UiTextKey.WordBankTitle),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            IconButton(onClick = { viewModel.refreshLanguageCounts() }) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = t(UiTextKey.ErrorRetryButton),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            IconButton(onClick = { showScreenInfo = true }) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = t(UiTextKey.LearningInfoTitle),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    ) { padding ->
+        pendingGenerateLang?.let { langCode ->
+            val langName = uiLanguageNameFor(langCode)
+
+            ConfirmationDialog(
+                title = t(UiTextKey.DialogGenerateOverwriteTitle),
+                message = t(UiTextKey.DialogGenerateOverwriteMessageTemplate)
+                    .replace("{speclanguage}", langName),
+                confirmText = t(UiTextKey.ActionConfirm),
+                cancelText = t(UiTextKey.ActionCancel),
+                onConfirm = {
+                    pendingGenerateLang = null
+                    viewModel.generateFor(langCode)
+                },
+                onDismiss = { pendingGenerateLang = null }
+            )
+        }
+
+        // Info dialog explaining regeneration rules
+        if (showRegenInfo) {
+            AlertDialog(
+                onDismissRequest = { showRegenInfo = false },
+                title = { Text(t(UiTextKey.LearningRegenInfoTitle)) },
+                text = {
+                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                        Text(t(UiTextKey.LearningRegenInfoMessage))
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = { showRegenInfo = false }) {
+                        Text(t(UiTextKey.ActionConfirm))
+                    }
+                }
+            )
+        }
+
+        // Screen info dialog
+        if (showScreenInfo) {
+            AlertDialog(
+                onDismissRequest = { showScreenInfo = false },
+                title = { Text(t(UiTextKey.LearningInfoTitle)) },
+                text = {
+                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                        Text(t(UiTextKey.LearningInfoMessage))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            t(UiTextKey.LearningHintCount),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = { showScreenInfo = false }) {
+                        Text(t(UiTextKey.LearningInfoGotItButton))
+                    }
+                }
+            )
+        }
+
+        var isRefreshing by remember { mutableStateOf(false) }
+
+        LaunchedEffect(isRefreshing) {
+            if (isRefreshing) {
+                kotlinx.coroutines.delay(500)
+                isRefreshing = false
+            }
+        }
+
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                viewModel.refreshLanguageCounts()
+            }
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+
+            if (uiState.isLoading) {
+                items(3) {
+                    LearningSheetSkeleton()
+                }
+            }
+
+            // Empty state when not loading and no language clusters exist
+            if (!uiState.isLoading && uiState.clusters.isEmpty() && uiState.error == null) {
+                item {
+                    EmptyStates.NoLearningSheets(
+                        message = t(UiTextKey.LearningEmptyMessage),
+                        modifier = androidx.compose.ui.Modifier.fillParentMaxSize()
+                    )
+                }
+            }
+
+            uiState.error?.let { errorMsg ->
+                item {
+                    androidx.compose.material3.Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = t(UiTextKey.LearningErrorTemplate).format(errorMsg),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            }
+
+            items(uiState.clusters, key = { it.languageCode }) { c ->
+                    val hasSheet = uiState.sheetExistsByLanguage[c.languageCode] == true
+                    val metaReadyForLanguage =
+                        !uiState.isSheetMetaLoading && uiState.sheetExistsByLanguage.containsKey(c.languageCode)
+                    val isGeneratingThis = uiState.generatingLanguageCode == c.languageCode
+                    val isGeneratingAny = uiState.generatingLanguageCode != null
+
+                    val lastCount = uiState.sheetCountByLanguage[c.languageCode]
+                    val unchanged = lastCount != null && lastCount == c.count
+
+                    // Regeneration constraints: use domain logic for consistency
+                    val isFirstTime = lastCount == null
+                    val hasEnoughNewRecords = isFirstTime || GenerationEligibility.canRegenerateLearningSheet(c.count, lastCount ?: 0)
+                    val countHigherThanPrevious = isFirstTime || c.count > (lastCount ?: 0)
+
+                    // Disable Generate when ANY language is generating, or no history, or unchanged,
+                    // or count not higher than previous, or not enough new records for regen
+                    val generateEnabled = metaReadyForLanguage && !isGeneratingAny && c.count > 0 && !unchanged &&
+                        countHigherThanPrevious && hasEnoughNewRecords
+
+                    val sheetEnabled = metaReadyForLanguage && hasSheet
+
+                    val langLabel = uiLanguageNameFor(c.languageCode)
+
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Language name + count chip
+                            AssistChip(
+                                onClick = { /* no-op */ },
+                                label = {
+                                    Text(
+                                        "$langLabel (${c.count})",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                                )
+                            )
+
+                            // Progress indicator towards generation threshold.
+                            // For first generation: progress = records so far / required minimum.
+                            // For regen: progress = NEW records added since last gen / required minimum.
+                            // This gives a meaningful 0→100% bar in both cases.
+                            val threshold = GenerationEligibility.MIN_RECORDS_FOR_LEARNING_SHEET
+                            val recordsAdded = if (isFirstTime) c.count
+                                               else (c.count - (lastCount ?: 0)).coerceAtLeast(0)
+                            val progress = (recordsAdded.toFloat() / threshold.toFloat()).coerceIn(0f, 1f)
+                            val recordsNeeded = (threshold - recordsAdded).coerceAtLeast(0)
+
+                            if (!generateEnabled && c.count > 0 && recordsNeeded > 0) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    LinearProgressIndicator(
+                                        progress = { progress },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    Text(
+                                        text = t(UiTextKey.LearningProgressNeededTemplate)
+                                            .replace("{needed}", "$recordsNeeded"),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            // Buttons
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(
+                                        onClick = {
+                                            if (generateEnabled) {
+                                                pendingGenerateLang = c.languageCode
+                                            }
+                                        },
+                                        enabled = generateEnabled,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            when {
+                                                isGeneratingThis -> t(UiTextKey.LearningGenerating)
+                                                hasSheet -> t(UiTextKey.LearningRegenerate)
+                                                else -> t(UiTextKey.LearningGenerate)
+                                            }
+                                        )
+                                    }
+
+                                    Button(
+                                        onClick = { viewModel.cancelGenerate() },
+                                        enabled = isGeneratingThis,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(t(UiTextKey.ActionCancel))
+                                    }
+                                }
+
+                                Button(
+                                    onClick = { onOpenSheet(uiState.primaryLanguageCode, c.languageCode) },
+                                    enabled = sheetEnabled,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        t(UiTextKey.LearningOpenSheetTemplate)
+                                            .replace("{speclanguage}", langLabel)
+                                    )
+                                }
+                            }
+                        }
+                    }
+            }
+        }
+        }
+    }
+}

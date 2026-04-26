@@ -1,0 +1,998 @@
+package com.translator.TalknLearn.model.ui
+
+enum class UiTextKey {
+    // --- Basic UI Controls ---
+    AzureRecognizeButton,
+    CopyButton,
+    SpeakScriptButton,
+    TranslateButton,
+    CopyTranslationButton,
+    SpeakTranslationButton,
+
+    // --- Status Messages ---
+    RecognizingStatus,
+    TranslatingStatus,
+    SpeakingOriginalStatus,
+    SpeakingTranslationStatus,
+    SpeakingLabel,
+    FinishedSpeakingOriginal,
+    FinishedSpeakingTranslation,
+    TtsErrorTemplate,
+
+    // --- Dropdowns & Labels ---
+    AppUiLanguageLabel,
+    DetectLanguageLabel,
+    TranslateToLabel,
+
+    // --- Language Names ---
+    LangEnUs,
+    LangZhHk,
+    LangJaJp,
+    LangZhCn,
+    LangFrFr,
+    LangDeDe,
+    LangKoKr,
+    LangEsEs,
+    LangIdId,
+    LangViVn,
+    LangThTh,
+    LangFilPh,
+    LangMsMy,
+    LangPtBr,
+    LangItIt,
+    LangRuRu,
+
+    // --- Navigation & Common Actions ---
+    NavHistory,
+    NavLogin,
+    NavLogout,
+    NavBack,
+    ActionCancel,
+    ActionDelete,
+    ActionOpen,
+    ActionName,
+    ActionSave,
+    ActionConfirm,
+
+    // --- Placeholders & Input ---
+    SpeechInputPlaceholder,
+    SpeechTranslatedPlaceholder,
+    StatusAzureErrorTemplate,
+    StatusTranslationErrorTemplate,
+    StatusLoginRequiredTranslation,
+    StatusRecognizePreparing,
+    StatusRecognizeListening,
+
+    // --- Pagination ---
+    PaginationPrevLabel,
+    PaginationNextLabel,
+    PaginationPageLabelTemplate,
+
+    // --- Toast & Messages ---
+    ToastCopied,
+    DisableText,
+
+    // --- Standard UI Components ---
+    ErrorRetryButton,
+    ErrorGenericMessage,
+
+    // --- Shop ---
+    ShopTitle,
+    ShopCoinBalance,
+    ShopHistoryExpansionTitle,
+    ShopHistoryExpansionDesc,
+    ShopCurrentLimit,
+    ShopMaxLimit,
+    ShopBuyHistoryExpansion,
+    ShopInsufficientCoins,
+    ShopMaxLimitReached,
+    ShopHistoryExpandedTitle,
+    ShopHistoryExpandedMessage,
+    ShopColorPaletteTitle,
+    ShopColorPaletteDesc,
+    ShopEntry,
+
+    // --- Voice Settings Screen ---
+    VoiceSettingsTitle,
+    VoiceSettingsDesc,
+
+    // ========== SCREEN-SPECIFIC KEYS (Start) ==========
+
+    // --- Speech/Home Instructions ---
+    SpeechInstructions,
+    HomeInstructions,
+    ContinuousInstructions,
+
+    // --- Home/Help Screens ---
+    HomeTitle,
+    HelpTitle,
+    SpeechTitle,
+    HomeStartButton,
+    HomeFeaturesTitle,
+    HomeDiscreteDescription,
+    HomeContinuousDescription,
+    HomeLearningDescription,
+    HelpCurrentTitle,
+    HelpCautionTitle,
+    HelpCurrentFeatures,
+    HelpCaution,
+    HelpNotesTitle,
+    HelpNotes,
+
+    // --- Feedback ---
+    FeedbackTitle,
+    FeedbackDesc,
+    FeedbackMessagePlaceholder,
+    FeedbackSubmitButton,
+    FeedbackSubmitting,
+    FeedbackSuccessTitle,
+    FeedbackSuccessMessage,
+    FeedbackErrorTitle,
+    FeedbackErrorMessage,
+    FeedbackMessageRequired,
+
+    // --- Continuous Mode ---
+    ContinuousTitle,
+    ContinuousStartButton,
+    ContinuousStopButton,
+    ContinuousStartScreenButton,
+    ContinuousPersonALabel,
+    ContinuousPersonBLabel,
+    ContinuousCurrentStringLabel,
+    ContinuousSpeakerAName,
+    ContinuousSpeakerBName,
+    ContinuousTranslationSuffix,
+    ContinuousPreparingMicText,
+    ContinuousTranslatingText,
+
+    // --- History Screen ---
+    HistoryTitle,
+    HistoryTabDiscrete,
+    HistoryTabContinuous,
+    HistoryNoContinuousSessions,
+    HistoryNoDiscreteRecords,
+    DialogDeleteRecordTitle,
+    DialogDeleteRecordMessage,
+    DialogDeleteSessionTitle,
+    DialogDeleteSessionMessage,
+    HistoryDeleteSessionButton,
+    HistoryNameSessionTitle,
+    HistorySessionNameLabel,
+    HistorySessionTitleTemplate,
+    HistoryItemsCountTemplate,
+
+    // --- Filter ---
+    FilterDropdownDefault,
+    FilterTitle,
+    FilterLangDrop,
+    FilterKeyword,
+    FilterApply,
+    FilterCancel,
+    FilterClear,
+    FilterHistoryScreenTitle,
+
+    // --- Authentication ---
+    AuthLoginTitle,
+    AuthRegisterTitle,
+    AuthLoginHint,
+    AuthRegisterRules,
+    AuthEmailLabel,
+    AuthPasswordLabel,
+    AuthConfirmPasswordLabel,
+    AuthLoginButton,
+    AuthRegisterButton,
+    AuthToggleToRegister,
+    AuthToggleToLogin,
+    AuthErrorPasswordsMismatch,
+    AuthErrorPasswordTooShort,
+    AuthRegistrationDisabled,
+    AuthResetEmailSent,
+
+    // --- Password Reset ---
+    ForgotPwText,
+    ResetPwTitle,
+    ResetPwText,
+    ResetSendingText,
+    ResetSendText,
+
+    // --- Settings ---
+    SettingsTitle,
+    SettingsPrimaryLanguageTitle,
+    SettingsPrimaryLanguageDesc,
+    SettingsPrimaryLanguageLabel,
+    SettingsFontSizeTitle,
+    SettingsFontSizeDesc,
+    SettingsScaleTemplate,
+    SettingsColorPaletteTitle,
+    SettingsColorPaletteDesc,
+    SettingsColorCostTemplate,
+    SettingsColorUnlockButton,
+    SettingsColorSelectButton,
+    SettingsColorAlreadyUnlocked,
+    SettingsPreviewHeadline,
+    SettingsPreviewBody,
+    SettingsPreviewLabel,
+    SettingsAboutTitle,
+    SettingsAppVersion,
+    SettingsSyncInfo,
+    SettingsThemeTitle,
+    SettingsThemeDesc,
+    SettingsThemeSystem,
+    SettingsThemeLight,
+    SettingsThemeDark,
+    SettingsThemeScheduled,
+    SettingsResetPW,
+    SettingsQuickLinks,
+    SettingsNotLoggedInWarning,
+    SettingsVoiceTitle,
+    SettingsVoiceDesc,
+    SettingsVoiceLanguageLabel,
+    SettingsVoiceSelectLabel,
+    SettingsVoiceDefault,
+
+    // --- Learning ---
+    LearningTitle,
+    LearningHintCount,
+    LearningErrorTemplate,
+    LearningGenerate,
+    LearningRegenerate,
+    LearningGenerating,
+    LearningOpenSheetTemplate,
+    LearningSheetTitleTemplate,
+    LearningSheetPrimaryTemplate,
+    LearningSheetHistoryCountTemplate,
+    LearningSheetNoContent,
+    LearningSheetRegenerate,
+    LearningSheetGenerating,
+    LearningSheetWhatIsThisTitle,
+    LearningSheetWhatIsThisDesc,
+    LearningRegenBlockedTitle,
+    LearningRegenBlockedMessage,
+    LearningRegenNeedMoreRecords,
+    LearningRegenCountNotHigher,
+    LearningRegenInfoTitle,
+    LearningRegenInfoMessage,
+    QuizRegenBlockedSameMaterial,
+
+    // --- Quiz ---
+    QuizTitleTemplate,
+    QuizOpenButton,
+    QuizGenerateButton,
+    QuizGenerating,
+    QuizUpToDate,
+    QuizBlocked,
+    QuizWait,
+    QuizMaterialsQuizTemplate,
+    QuizCanEarnCoins,
+    QuizNeedMoreRecordsTemplate,
+    QuizCancelButton,
+    QuizPreviousButton,
+    QuizNextButton,
+    QuizSubmitButton,
+    QuizRetakeButton,
+    QuizBackButton,
+    QuizLoadingText,
+    QuizGeneratingText,
+    QuizNoMaterialsTitle,
+    QuizNoMaterialsMessage,
+    QuizErrorTitle,
+    QuizErrorSuggestion,
+    QuizCompletedTitle,
+    QuizAnswerReviewTitle,
+    QuizYourAnswerTemplate,
+    QuizCorrectAnswerTemplate,
+    QuizQuestionTemplate,
+    QuizCannotRegenTemplate,
+    QuizAnotherGenInProgress,
+    QuizCoinRulesTitle,
+    QuizCoinRulesHowToEarn,
+    QuizCoinRulesRequirements,
+    QuizCoinRulesCurrentStatus,
+    QuizCoinRulesCanEarn,
+    QuizCoinRulesNeedMoreTemplate,
+    QuizCoinRule1Coin,
+    QuizCoinRuleFirstAttempt,
+    QuizCoinRuleMatchMaterials,
+    QuizCoinRulePlus10,
+    QuizCoinRuleNoDelete,
+    QuizCoinRuleMaterialsTemplate,
+    QuizCoinRuleQuizTemplate,
+    QuizCoinRuleGotIt,
+    QuizRegenConfirmTitle,
+    QuizRegenCanEarnCoins,
+    QuizRegenCannotEarnCoins,
+    QuizRegenNeedMoreTemplate,
+    QuizRegenReminder,
+    QuizRegenGenerateButton,
+    QuizCoinsEarnedTitle,
+    QuizCoinsEarnedMessageTemplate,
+    QuizCoinsRule1,
+    QuizCoinsRule2,
+    QuizCoinsRule3,
+    QuizCoinsRule4,
+    QuizCoinsRule5,
+    QuizCoinsGreatButton,
+    QuizOutdatedMessage,
+    QuizRecordsLabel,
+
+    // --- History Screen Coins ---
+    HistoryCoinsDialogTitle,
+    HistoryCoinRulesTitle,
+    HistoryCoinHowToEarnTitle,
+    HistoryCoinHowToEarnRule1,
+    HistoryCoinHowToEarnRule2,
+    HistoryCoinHowToEarnRule3,
+    HistoryCoinAntiCheatTitle,
+    HistoryCoinAntiCheatRule1,
+    HistoryCoinAntiCheatRule2,
+    HistoryCoinAntiCheatRule3,
+    HistoryCoinAntiCheatRule4,
+    HistoryCoinTipsTitle,
+    HistoryCoinTipsRule1,
+    HistoryCoinTipsRule2,
+    HistoryCoinGotItButton,
+
+    // --- History Info Dialog ---
+    HistoryInfoTitle,
+    HistoryInfoLimitMessage,
+    HistoryInfoOlderRecordsMessage,
+    HistoryInfoFavoritesMessage,
+    HistoryInfoViewFavoritesMessage,
+    HistoryInfoFilterMessage,
+    HistoryInfoGotItButton,
+
+    // --- Word Bank ---
+    WordBankTitle,
+    WordBankSelectLanguage,
+    WordBankNoHistory,
+    WordBankNoHistoryHint,
+    WordBankWordsCount,
+    WordBankGenerating,
+    WordBankGenerate,
+    WordBankRegenerate,
+    WordBankRefresh,
+    WordBankEmpty,
+    WordBankEmptyHint,
+    WordBankExample,
+    WordBankDifficulty,
+    WordBankFilterCategory,
+    WordBankFilterCategoryAll,
+    WordBankFilterDifficultyLabel,
+    WordBankFilterNoResults,
+    WordBankRefreshAvailable,
+    WordBankRecordsNeeded,
+    WordBankRegenInfoTitle,
+    WordBankRegenInfoMessage,
+    WordBankHistoryCountTemplate,
+
+    // --- Dialogs ---
+    DialogLogoutTitle,
+    DialogLogoutMessage,
+    DialogGenerateOverwriteTitle,
+    DialogGenerateOverwriteMessageTemplate,
+
+    // --- Profile Management ---
+    ProfileTitle,
+    ProfileUsernameLabel,
+    ProfileUsernameHint,
+    ProfileUpdateButton,
+    ProfileUpdateSuccess,
+    ProfileUpdateError,
+
+    // --- Account Deletion ---
+    AccountDeleteTitle,
+    AccountDeleteWarning,
+    AccountDeleteConfirmMessage,
+    AccountDeletePasswordLabel,
+    AccountDeleteButton,
+    AccountDeleteSuccess,
+    AccountDeleteError,
+    AccountDeleteReauthRequired,
+
+    // --- Favorites ---
+    FavoritesTitle,
+    FavoritesEmpty,
+    FavoritesAddSuccess,
+    FavoritesRemoveSuccess,
+    FavoritesAddButton,
+    FavoritesRemoveButton,
+    FavoritesNoteLabel,
+    FavoritesNoteHint,
+    FavoritesTabRecords,
+    FavoritesTabSessions,
+    FavoritesSessionsEmpty,
+    FavoritesSessionItemsTemplate,
+    FavoritesLimitTitle,
+    FavoritesLimitMessage,
+    FavoritesLimitGotIt,
+    FavoritesInfoTitle,
+    FavoritesInfoMessage,
+    FavoritesInfoGotIt,
+
+    // --- Custom Words ---
+    CustomWordsTitle,
+    CustomWordsAdd,
+    CustomWordsEdit,
+    CustomWordsDelete,
+    CustomWordsOriginalLabel,
+    CustomWordsTranslatedLabel,
+    CustomWordsPronunciationLabel,
+    CustomWordsExampleLabel,
+    CustomWordsSaveSuccess,
+    CustomWordsDeleteSuccess,
+    CustomWordsAlreadyExists,
+    CustomWordsOriginalLanguageLabel,
+    CustomWordsTranslationLanguageLabel,
+    CustomWordsSaveButton,
+    CustomWordsCancelButton,
+
+    // --- Language Detection ---
+    LanguageDetectAuto,
+    LanguageDetectDetecting,
+    LanguageDetectedTemplate,
+    LanguageDetectFailed,
+
+    // --- Image Recognition (OCR) ---
+    ImageRecognitionButton,
+    ImageRecognitionAccuracyWarning,
+    ImageRecognitionScanning,
+    ImageRecognitionSuccess,
+
+    // --- Cache ---
+    CacheClearButton,
+    CacheClearSuccess,
+    CacheStatsTemplate,
+
+    // --- Auto Theme ---
+    SettingsAutoThemeTitle,
+    SettingsAutoThemeDesc,
+    SettingsAutoThemeEnabled,
+    SettingsAutoThemeDisabled,
+    SettingsAutoThemeDarkStartLabel,
+    SettingsAutoThemeLightStartLabel,
+    SettingsAutoThemePreview,
+
+    // --- Offline Mode ---
+    OfflineModeTitle,
+    OfflineModeMessage,
+    OfflineModeRetry,
+    OfflineDataCached,
+    OfflineSyncPending,
+
+    // --- Image Capture ---
+    ImageSourceTitle,
+    ImageSourceCamera,
+    ImageSourceGallery,
+    ImageSourceCancel,
+    CameraCaptureContentDesc,
+
+    // --- Friends System ---
+    FriendsTitle,
+    FriendsMenuButton,
+    FriendsAddButton,
+    FriendsSearchTitle,
+    FriendsSearchPlaceholder,
+    FriendsSearchMinChars,
+    FriendsSearchNoResults,
+    FriendsListEmpty,
+    FriendsRequestsSection,
+    FriendsSectionTitle,
+    FriendsAcceptButton,
+    FriendsRejectButton,
+    FriendsRemoveButton,
+    FriendsRemoveDialogTitle,
+    FriendsRemoveDialogMessage,
+    FriendsSendRequestButton,
+    FriendsRequestSentSuccess,
+    FriendsRequestAcceptedSuccess,
+    FriendsRequestRejectedSuccess,
+    FriendsRemovedSuccess,
+    FriendsRequestFailed,
+    FriendsCloseButton,
+    FriendsCancelButton,
+    FriendsRemoveConfirm,
+    FriendsNewRequestsTemplate,
+    FriendsSentRequestsSection,
+    FriendsPendingStatus,
+    FriendsCancelRequestButton,
+    FriendsUnreadMessageDesc,
+    FriendsDeleteModeButton,
+    FriendsDeleteSelectedButton,
+    FriendsDeleteMultipleTitle,
+    FriendsDeleteMultipleMessage,
+    FriendsSearchMinChars3,
+    FriendsSearchByUserIdHint,
+    FriendsStatusAlreadyFriends,
+    FriendsStatusRequestSent,
+    FriendsStatusRequestReceived,
+
+    // --- Chat ---
+    ChatTitle,
+    ChatInputPlaceholder,
+    ChatSendButton,
+    ChatEmpty,
+    ChatMessageSent,
+    ChatMessageFailed,
+    ChatMarkingRead,
+    ChatLoadingMessages,
+    ChatToday,
+    ChatYesterday,
+    ChatUnreadBadge,
+    
+    // --- Chat Translation ---
+    ChatTranslateButton,
+    ChatTranslateDialogTitle,
+    ChatTranslateDialogMessage,
+    ChatTranslateConfirm,
+    ChatTranslating,
+    ChatTranslated,
+    ChatShowOriginal,
+    ChatShowTranslation,
+    ChatTranslateFailed,
+    ChatTranslatedLabel,
+
+    // --- Sharing Feature ---
+    ShareTitle,
+    ShareInboxTitle,
+    ShareInboxEmpty,
+    ShareWordButton,
+    ShareMaterialButton,
+    ShareSelectFriendTitle,
+    ShareSelectFriendMessage,
+    ShareSuccess,
+    ShareFailed,
+    ShareWordWith,
+    ShareMaterialWith,
+    ShareAcceptButton,
+    ShareDismissButton,
+    ShareAccepted,
+    ShareDismissed,
+    ShareActionFailed,
+    ShareTypeWord,
+    ShareTypeLearningSheet,
+    ShareReceivedFrom,
+    ShareNewItemsTemplate,
+    ShareViewFullMaterial,
+    ShareDeleteItemTitle,
+    ShareDeleteItemMessage,
+    ShareDeleteButton,
+    ShareViewButton,
+    ShareItemNotFound,
+    ShareNoContent,
+    ShareSaveToSelf,
+    ShareSavedToSelf,
+
+    // --- My Profile ---
+    MyProfileTitle,
+    MyProfileUserId,
+    MyProfileUsername,
+    MyProfileDisplayName,
+    MyProfileCopyUserId,
+    MyProfileCopyUsername,
+    MyProfileShare,
+    MyProfileCopied,
+    MyProfileLanguages,
+    MyProfilePrimaryLanguage,
+    MyProfileLearningLanguages,
+
+    // --- Friends Info Dialog & Empty States ---
+    FriendsInfoTitle,
+    FriendsInfoMessage,
+    FriendsEmptyTitle,
+    FriendsEmptyMessage,
+    FriendsInfoGotItButton,
+
+    // --- Learning Info Dialog & Empty States ---
+    LearningInfoTitle,
+    LearningInfoMessage,
+    LearningEmptyTitle,
+    LearningEmptyMessage,
+    LearningInfoGotItButton,
+
+    // --- Word Bank Info Dialog & Empty States ---
+    WordBankInfoTitle,
+    WordBankInfoMessage,
+    WordBankInfoGotItButton,
+
+    // --- SharedInbox Info Dialog ---
+    ShareInboxInfoTitle,
+    ShareInboxInfoMessage,
+    ShareInboxInfoGotItButton,
+
+    // --- Profile Visibility ---
+    MyProfileVisibilityLabel,
+    MyProfileVisibilityPublic,
+    MyProfileVisibilityPrivate,
+    MyProfileVisibilityDescription,
+
+    // --- Shared Word Dismiss Confirm ---
+    ShareDismissWordTitle,
+    ShareDismissWordMessage,
+
+    // --- Shared Inbox Learning Sheet Language Label ---
+    ShareLearningSheetLanguageLabel,
+
+    // --- Accessibility Strings ---
+    AccessibilityDismiss,
+    AccessibilityAlreadyConnectedOrPending,
+    AccessibilityNewMessages,
+    AccessibilityNewReleasesIcon,
+    AccessibilitySuccessIcon,
+    AccessibilityErrorIcon,
+    AccessibilitySharedItemTypeIcon,
+    AccessibilityAddCustomWords,
+    AccessibilityWordBankExists,
+
+    // --- Settings Hard-coded Strings ---
+    SettingsTesterFeedback,
+
+    // --- Friends Notification Settings ---
+    FriendsNotifSettingsButton,
+    FriendsNotifSettingsTitle,
+    FriendsNotifNewMessages,
+    FriendsNotifFriendRequests,
+    FriendsNotifRequestAccepted,
+    FriendsNotifSharedInbox,
+    FriendsNotifCloseButton,
+
+    // --- In-App Badge Settings ---
+    InAppBadgeSectionTitle,
+    InAppBadgeMessages,
+    InAppBadgeFriendRequests,
+    InAppBadgeSharedInbox,
+
+    // --- Common Error Messages ---
+    ErrorNotLoggedIn,
+    ErrorSaveFailedRetry,
+    ErrorLoadFailedRetry,
+    ErrorNetworkRetry,
+
+    // --- Learning Progress ---
+    LearningProgressNeededTemplate,
+
+    // --- Quick Translate shortcut ---
+    SpeechSwitchToConversation,
+
+    // --- Chat Clear Conversation ---
+    ChatClearConversationButton,
+    ChatClearConversationTitle,
+    ChatClearConversationMessage,
+    ChatClearConversationConfirm,
+    ChatClearConversationSuccess,
+
+    // --- Block User ---
+    BlockUserButton,
+    BlockUserTitle,
+    BlockUserMessage,
+    BlockUserConfirm,
+    BlockUserSuccess,
+    BlockedUsersTitle,
+    BlockedUsersEmpty,
+    UnblockUserButton,
+    UnblockUserTitle,
+    UnblockUserMessage,
+    UnblockUserSuccess,
+    BlockedUsersManageButton,
+
+    // --- Friend Request Note ---
+    FriendsRequestNoteLabel,
+    FriendsRequestNotePlaceholder,
+
+    // --- Generation Completion Banners ---
+    GenerationBannerSheet,
+    GenerationBannerWordBank,
+    GenerationBannerQuiz,
+
+    // --- Notification Settings Quick Link ---
+    NotifSettingsQuickLink,
+
+    // --- Language Name for Traditional Chinese ---
+    LangZhTw,
+
+    // --- Help Screen Extra Sections ---
+    HelpFriendSystemTitle,
+    HelpFriendSystemBody,
+    HelpProfileVisibilityTitle,
+    HelpProfileVisibilityBody,
+    HelpColorPalettesTitle,
+    HelpColorPalettesBody,
+    HelpPrivacyTitle,
+    HelpPrivacyBody,
+    HelpAppVersionTitle,
+    HelpAppVersionNotes,
+
+    // --- Onboarding Screen ---
+    OnboardingPage1Title,
+    OnboardingPage1Desc,
+    OnboardingPage2Title,
+    OnboardingPage2Desc,
+    OnboardingPage3Title,
+    OnboardingPage3Desc,
+    OnboardingSkipButton,
+    OnboardingNextButton,
+    OnboardingGetStartedButton,
+
+    // --- Home Welcome ---
+    HomeWelcomeBack,
+
+    // --- Chat Extra Labels ---
+    ChatUsernameLabel,
+    ChatUserIdLabel,
+    ChatLearningLabel,
+    ChatBlockedMessage,
+
+    // --- Custom Word Bank Extra ---
+    CustomWordsSearchPlaceholder,
+    CustomWordsEmptyState,
+    CustomWordsEmptyHint,
+    CustomWordsNoSearchResults,
+    AddCustomWordHintTemplate,
+
+    // --- Word Bank Records Count ---
+    WordBankRecordsCountTemplate,
+
+    // --- Blocked Users ID ---
+    BlockedUserIdTemplate,
+
+    // --- Profile Extra ---
+    ProfileEmailTemplate,
+    ProfileUsernameHintFull,
+
+    // --- Voice Settings ---
+    VoiceSettingsNoOptions,
+
+    // --- Login ---
+    AuthUpdatedLoginAgain,
+
+    // --- Primary Language Cooldown ---
+    SettingsPrimaryLanguageCooldownTitle,
+    SettingsPrimaryLanguageCooldownMessage,
+    SettingsPrimaryLanguageCooldownMessageHours,
+    SettingsPrimaryLanguageConfirmTitle,
+    SettingsPrimaryLanguageConfirmMessage,
+
+    // --- Bottom Navigation ---
+    NavHome,
+    NavTranslate,
+    NavLearn,
+    NavFriends,
+    NavSettings,
+
+    // --- Permissions ---
+    CameraPermissionTitle,
+    CameraPermissionMessage,
+    CameraPermissionGrant,
+    MicPermissionMessage,
+
+    // --- Delete Confirmations ---
+    FavoritesDeleteConfirm,
+    WordBankDeleteConfirm,
+
+    // --- Friends Extras ---
+    FriendsAcceptAllButton,
+    FriendsRejectAllButton,
+    ChatBlockedCannotSend,
+
+    // --- Shop / Unlock ---
+    ShopUnlockConfirmTitle,
+    ShopUnlockCost,
+    ShopYourCoins,
+    ShopUnlockButton,
+
+    // --- Help: Primary Language Info ---
+    HelpPrimaryLanguageTitle,
+    HelpPrimaryLanguageBody,
+
+    // --- Camera Language Hint ---
+    CameraLanguageHint,
+
+    // --- Username Change Cooldown ---
+    SettingsUsernameCooldownTitle,
+    SettingsUsernameCooldownMessage,
+    SettingsUsernameCooldownMessageHours,
+    SettingsUsernameConfirmTitle,
+    SettingsUsernameConfirmMessage,
+
+    // --- Extended Error Messages (localized) ---
+    ErrorNoInternet,
+    ErrorPermissionDenied,
+    ErrorSessionExpired,
+    ErrorItemNotFound,
+    ErrorAccessDenied,
+    ErrorAlreadyFriends,
+    ErrorUserBlocked,
+    ErrorRequestNotFound,
+    ErrorRequestAlreadyHandled,
+    ErrorNotAuthorized,
+    ErrorRateLimited,
+    ErrorInvalidInput,
+    ErrorOperationNotAllowed,
+    ErrorTimeout,
+    ErrorSendMessageFailed,
+    ErrorFriendRequestSent,
+    ErrorFriendRequestFailed,
+    ErrorFriendRemoved,
+    ErrorFriendRemoveFailed,
+    ErrorBlockSuccess,
+    ErrorBlockFailed,
+    ErrorUnblockSuccess,
+    ErrorUnblockFailed,
+    ErrorAcceptRequestSuccess,
+    ErrorAcceptRequestFailed,
+    ErrorRejectRequestSuccess,
+    ErrorRejectRequestFailed,
+    ErrorOfflineMessage,
+    ErrorChatDeletionFailed,
+    ErrorGenericRetry,
+}
+
+// Core Ui Texts list
+val CoreUiTexts: List<String> = listOf(
+    // --- Basic UI Controls ---
+    // AzureRecognizeButton
+    "Use Microphone",
+    // CopyButton
+    "Copy",
+    // SpeakScriptButton
+    "Speak",
+    // TranslateButton
+    "Translate",
+    // CopyTranslationButton
+    "Copy",
+    // SpeakTranslationButton
+    "Speak",
+
+    // --- Status Messages ---
+    // RecognizingStatus
+    "Recording... Speak now. (Stops automatically after silence)",
+    // TranslatingStatus
+    "Translating, please wait...",
+    // SpeakingOriginalStatus
+    "Speaking original text, please wait...",
+    // SpeakingTranslationStatus
+    "Speaking translation, please wait...",
+    // SpeakingLabel
+    "Speaking...",
+    // FinishedSpeakingOriginal
+    "Finished speaking original text.",
+    // FinishedSpeakingTranslation
+    "Finished speaking translation.",
+    // TtsErrorTemplate
+    "TTS error: %s",
+
+    // --- Dropdowns & Labels ---
+    // AppUiLanguageLabel
+    "App UI language",
+    // DetectLanguageLabel
+    "From",
+    // TranslateToLabel
+    "To",
+
+    // --- Language Names ---
+    // LangEnUs
+    "English",
+    // LangZhHk
+    "Cantonese",
+    // LangJaJp
+    "Japanese",
+    // LangZhCn
+    "Simplified Chinese",
+    // LangFrFr
+    "French",
+    // LangDeDe
+    "German",
+    // LangKoKr
+    "Korean",
+    // LangEsEs
+    "Spanish",
+    // LangIdId
+    "Indonesian",
+    // LangViVn
+    "Vietnamese",
+    // LangThTh
+    "Thai",
+    // LangFilPh
+    "Filipino",
+    // LangMsMy
+    "Malay",
+    // LangPtBr
+    "Portuguese",
+    // LangItIt
+    "Italian",
+    // LangRuRu
+    "Russian",
+
+    // --- Navigation & Common Actions ---
+    // NavHistory
+    "History",
+    // NavLogin
+    "Login",
+    // NavLogout
+    "Logout",
+    // NavBack
+    "Back",
+    // ActionCancel
+    "Cancel",
+    // ActionDelete
+    "Delete",
+    // ActionOpen
+    "Open",
+    // ActionName
+    "Name",
+    // ActionSave
+    "Save",
+    // ActionConfirm
+    "Confirm",
+
+    // --- Placeholders & Input ---
+    // SpeechInputPlaceholder
+    "Type here or use microphone...",
+    // SpeechTranslatedPlaceholder
+    "The translated result will be shown here.",
+    // StatusAzureErrorTemplate
+    "Azure error: %s",
+    // StatusTranslationErrorTemplate
+    "Translation error: %s",
+    // StatusLoginRequiredTranslation
+    "Login is required to use translation.",
+    // StatusRecognizePreparing
+    "Preparing mic... (Do not speak now)",
+    // StatusRecognizeListening
+    "Listening... Please speak now.",
+
+    // --- Pagination ---
+    // PaginationPrevLabel
+    "< Prev",
+    // PaginationNextLabel
+    "Next >",
+    // PaginationPageLabelTemplate
+    "Page {page} / {total}",
+
+    // --- Toast & Messages ---
+    // ToastCopied
+    "Copied to clipboard",
+    // DisableText
+    "Login is required to use translation features & storing translation history.",
+
+    // --- Standard UI Components ---
+    // ErrorRetryButton
+    "Retry",
+    // ErrorGenericMessage
+    "An error occurred. Please try again.",
+
+    // --- Shop ---
+    // ShopTitle
+    "Shop",
+    // ShopCoinBalance
+    "Your Coins",
+    // ShopHistoryExpansionTitle
+    "History View Expansion",
+    // ShopHistoryExpansionDesc
+    "Expand your history view limit to see more recent translation records.",
+    // ShopCurrentLimit
+    "Current limit: {limit} records",
+    // ShopMaxLimit
+    "Max:",
+    // ShopBuyHistoryExpansion
+    "Buy +{increment} records ({cost} coins)",
+    // ShopInsufficientCoins
+    "Not enough coins for this purchase.",
+    // ShopMaxLimitReached
+    "Maximum limit reached!",
+    // ShopHistoryExpandedTitle
+    "History Expand?",
+    // ShopHistoryExpandedMessage
+    "Your history limit has been expanded to {limit} records. You can now view more of your translation history!",
+    // ShopColorPaletteTitle
+    "Color Palettes",
+    // ShopColorPaletteDesc
+    "Unlock new color themes for your app.",
+    // ShopEntry
+    "Shop",
+
+    // --- Voice Settings Screen ---
+    // VoiceSettingsTitle
+    "Voice Settings",
+    // VoiceSettingsDesc
+    "Choose a voice for text-to-speech output per language.",
+)

@@ -1,0 +1,542 @@
+package com.translator.TalknLearn.data.friends
+
+import android.content.Context
+import android.content.SharedPreferences
+import com.translator.TalknLearn.data.friends.SeenItemsStorage
+import com.translator.TalknLearn.model.friends.FriendRelation
+import com.translator.TalknLearn.model.friends.FriendRequest
+import com.translator.TalknLearn.model.friends.SharedItem
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
+
+/**
+ * Unit tests for [SharedFriendsDataSource] focusing on in-memory logic.
+ *
+ * Android-dependent persistence (SeenItemsStorage) is handled by mocking
+ * the Context/SharedPreferences chain so that background IO coroutines
+ * do not crash.  All assertions target the synchronous, in-memory state.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
+class SharedFriendsDataSourceTest {
+
+    private lateinit var ds: SharedFriendsDataSource
+    private lateinit var mockContext: Context
+    private lateinit var mockFriendsRepo: FriendsRepository
+    private lateinit var mockSharingRepo: SharingRepository
+
+    private val testDispatcher = UnconfinedTestDispatcher()
+
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+
+        // Mock SharedPreferences chain so SeenItemsStorage calls don't crash
+        val mockEditor: SharedPreferences.Editor = mock()
+        whenever(mockEditor.putString(any(), any())).thenReturn(mockEditor)
+        whenever(mockEditor.remove(any())).thenReturn(mockEditor)
+
+        val mockPrefs: SharedPreferences = mock()
+        whenever(mockPrefs.getString(any(), anyOrNull())).thenReturn(null)
+        whenever(mockPrefs.edit()).thenReturn(mockEditor)
+
+        // Route SeenItemsStorage through mock prefs (bypasses SecureStorage)
+        SeenItemsStorage.prefsProvider = { mockPrefs }
+
+        mockContext = mock()
+        whenever(mockContext.getSharedPreferences(any(), any<Int>())).thenReturn(mockPrefs)
+
+        mockFriendsRepo = mock()
+        mockSharingRepo = mock()
+
+        ds = SharedFriendsDataSource(mockContext, mockFriendsRepo, mockSharingRepo)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+        SeenItemsStorage.prefsProvider = null
+    }
+
+    // ── Reflection helpers ──────────────────────────────────────────────────
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> getPrivateStateFlow(fieldName: String): MutableStateFlow<T> {
+        val field = SharedFriendsDataSource::class.java.getDeclaredField(fieldName)
+        field.isAccessible = true
+        return field.get(ds) as MutableStateFlow<T>
+    }
+
+    private fun setCurrentUserId(userId: String?) {
+        val field = SharedFriendsDataSource::class.java.getDeclaredField("currentUserId")
+        field.isAccessible = true
+        field.set(ds, userId)
+    }
+
+    private fun getObserveGeneration(): Long {
+        val field = SharedFriendsDataSource::class.java.getDeclaredField("observeGeneration")
+        field.isAccessible = true
+        return field.get(ds) as Long
+    }
+
+    private fun setObserveGeneration(value: Long) {
+        val field = SharedFriendsDataSource::class.java.getDeclaredField("observeGeneration")
+        field.isAccessible = true
+        field.set(ds, value)
+    }
+
+    private fun getStartupJob(): Job? {
+        val field = SharedFriendsDataSource::class.java.getDeclaredField("startupJob")
+        field.isAccessible = true
+        return field.get(ds) as Job?
+    }
+
+    private fun setStartupJob(value: Job?) {
+        val field = SharedFriendsDataSource::class.java.getDeclaredField("startupJob")
+        field.isAccessible = true
+        field.set(ds, value)
+    }
+
+    // ── stopObserving ───────────────────────────────────────────────────────
+
+    @Test
+    fun `stopObserving clears friends list`() {
+        getPrivateStateFlow<List<FriendRelation>>("_friends").value = listOf(
+            FriendRelation(friendId = "f1", friendUsername = "Alice")
+        )
+
+        ds.stopObserving()
+
+        assertTrue(ds.friends.value.isEmpty())
+    }
+
+    @Test
+    fun `stopObserving clears incoming requests`() {
+        getPrivateStateFlow<List<FriendRequest>>("_incomingRequests").value = listOf(
+            FriendRequest(requestId = "r1")
+        )
+
+        ds.stopObserving()
+
+        assertTrue(ds.incomingRequests.value.isEmpty())
+    }
+
+    @Test
+    fun `stopObserving clears shared items`() {
+        getPrivateStateFlow<List<SharedItem>>("_pendingSharedItems").value = listOf(
+            SharedItem(itemId = "item1")
+        )
+
+        ds.stopObserving()
+
+        assertTrue(ds.pendingSharedItems.value.isEmpty())
+    }
+
+    @Test
+    fun `stopObserving clears seen sets`() {
+        getPrivateStateFlow<Set<String>>("_seenSharedItemIds").value = setOf("s1", "s2")
+        getPrivateStateFlow<Set<String>>("_seenFriendRequestIds").value = setOf("r1")
+        getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value = setOf("f1")
+
+        ds.stopObserving()
+
+        assertTrue(getPrivateStateFlow<Set<String>>("_seenSharedItemIds").value.isEmpty())
+        assertTrue(getPrivateStateFlow<Set<String>>("_seenFriendRequestIds").value.isEmpty())
+        assertTrue(getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value.isEmpty())
+    }
+
+    @Test
+    fun `stopObserving clears username cache`() {
+        ds.cacheOwnUsername("user1", "TestUser")
+        assertEquals("TestUser", ds.getCachedUsername("user1"))
+
+        ds.stopObserving()
+
+        assertNull(ds.getCachedUsername("user1"))
+    }
+
+    @Test
+    fun `stopObserving clears rawUnreadPerFriend`() {
+        getPrivateStateFlow<Map<String, Int>>("_rawUnreadPerFriend").value =
+            mapOf("f1" to 3, "f2" to 1)
+
+        ds.stopObserving()
+
+        assertTrue(getPrivateStateFlow<Map<String, Int>>("_rawUnreadPerFriend").value.isEmpty())
+    }
+
+    @Test
+    fun `stopObserving cancels startup restore job and invalidates generation`() {
+        val startup = Job()
+        setObserveGeneration(10)
+        setStartupJob(startup)
+
+        ds.stopObserving()
+
+        assertTrue(startup.isCancelled)
+        assertEquals(11, getObserveGeneration())
+        assertNull(getStartupJob())
+    }
+
+    // ── cacheOwnUsername / getCachedUsername ─────────────────────────────────
+
+    @Test
+    fun `cacheOwnUsername stores username`() {
+        ds.cacheOwnUsername("user1", "Alice")
+
+        assertEquals("Alice", ds.getCachedUsername("user1"))
+    }
+
+    @Test
+    fun `getCachedUsername returns null for unknown user`() {
+        assertNull(ds.getCachedUsername("nonexistent"))
+    }
+
+    @Test
+    fun `getCachedUsername returns cached value after multiple caches`() {
+        ds.cacheOwnUsername("u1", "Bob")
+        ds.cacheOwnUsername("u2", "Carol")
+
+        assertEquals("Bob", ds.getCachedUsername("u1"))
+        assertEquals("Carol", ds.getCachedUsername("u2"))
+    }
+
+    @Test
+    fun `cacheOwnUsername ignores blank username`() {
+        ds.cacheOwnUsername("user1", "   ")
+
+        assertNull(ds.getCachedUsername("user1"))
+    }
+
+    @Test
+    fun `cacheOwnUsername ignores empty username`() {
+        ds.cacheOwnUsername("user1", "")
+
+        assertNull(ds.getCachedUsername("user1"))
+    }
+
+    @Test
+    fun `cacheOwnUsername overwrites previous value`() {
+        ds.cacheOwnUsername("user1", "OldName")
+        ds.cacheOwnUsername("user1", "NewName")
+
+        assertEquals("NewName", ds.getCachedUsername("user1"))
+    }
+
+    // ── applyUsernameUpdates ────────────────────────────────────────────────
+
+    @Test
+    fun `applyUsernameUpdates updates friend display names`() {
+        getPrivateStateFlow<List<FriendRelation>>("_friends").value = listOf(
+            FriendRelation(friendId = "f1", friendUsername = "OldName"),
+            FriendRelation(friendId = "f2", friendUsername = "Unchanged")
+        )
+
+        ds.applyUsernameUpdates(mapOf("f1" to "NewName"))
+
+        val friends = ds.friends.value
+        assertEquals("NewName", friends.find { it.friendId == "f1" }?.friendUsername)
+        assertEquals("Unchanged", friends.find { it.friendId == "f2" }?.friendUsername)
+    }
+
+    @Test
+    fun `applyUsernameUpdates with empty map does nothing`() {
+        val original = listOf(
+            FriendRelation(friendId = "f1", friendUsername = "Alice")
+        )
+        getPrivateStateFlow<List<FriendRelation>>("_friends").value = original
+
+        ds.applyUsernameUpdates(emptyMap())
+
+        assertEquals(original, ds.friends.value)
+    }
+
+    @Test
+    fun `applyUsernameUpdates also updates username cache`() {
+        getPrivateStateFlow<List<FriendRelation>>("_friends").value = listOf(
+            FriendRelation(friendId = "f1", friendUsername = "OldName")
+        )
+
+        ds.applyUsernameUpdates(mapOf("f1" to "NewName"))
+
+        assertEquals("NewName", ds.getCachedUsername("f1"))
+    }
+
+    @Test
+    fun `applyUsernameUpdates skips friend whose name has not changed`() {
+        val original = listOf(
+            FriendRelation(friendId = "f1", friendUsername = "SameName")
+        )
+        getPrivateStateFlow<List<FriendRelation>>("_friends").value = original
+
+        ds.applyUsernameUpdates(mapOf("f1" to "SameName"))
+
+        // The list reference should be unchanged when no actual update occurs
+        assertEquals("SameName", ds.friends.value[0].friendUsername)
+    }
+
+    @Test
+    fun `applyUsernameUpdates ignores updates for non-existent friends`() {
+        getPrivateStateFlow<List<FriendRelation>>("_friends").value = listOf(
+            FriendRelation(friendId = "f1", friendUsername = "Alice")
+        )
+
+        ds.applyUsernameUpdates(mapOf("nonexistent" to "Ghost"))
+
+        assertEquals(1, ds.friends.value.size)
+        assertEquals("Alice", ds.friends.value[0].friendUsername)
+    }
+
+    // ── updateRawUnreadPerFriend ────────────────────────────────────────────
+
+    @Test
+    fun `updateRawUnreadPerFriend stores raw unread map`() {
+        ds.updateRawUnreadPerFriend(mapOf("friend1" to 1))
+
+        val rawMap = getPrivateStateFlow<Map<String, Int>>("_rawUnreadPerFriend").value
+        assertEquals(mapOf("friend1" to 1), rawMap)
+    }
+
+    @Test
+    fun `updateRawUnreadPerFriend first snapshot re-shows unread friend from seen set`() {
+        getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value =
+            setOf("friend1", "friend2")
+
+        ds.updateRawUnreadPerFriend(mapOf("friend1" to 1, "friend2" to 0))
+
+        val seenSet = getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value
+        assertFalse("friend1 should be un-seen when unread appears", seenSet.contains("friend1"))
+        assertTrue("friend2 should stay seen with zero unread", seenSet.contains("friend2"))
+    }
+
+    @Test
+    fun `updateRawUnreadPerFriend removes friends from seen set only on count increase`() {
+        getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value =
+            setOf("friend1", "friend2")
+
+        ds.updateRawUnreadPerFriend(mapOf("friend1" to 1, "friend2" to 0))
+        ds.updateRawUnreadPerFriend(mapOf("friend1" to 2, "friend2" to 0)) // new unread for friend1
+
+        val seenSet = getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value
+        assertFalse("friend1 should be un-seen after unread increase", seenSet.contains("friend1"))
+        assertTrue(seenSet.contains("friend2"))
+    }
+
+    @Test
+    fun `updateRawUnreadPerFriend accepts empty map`() {
+        ds.updateRawUnreadPerFriend(emptyMap())
+
+        val rawMap = getPrivateStateFlow<Map<String, Int>>("_rawUnreadPerFriend").value
+        assertTrue(rawMap.isEmpty())
+    }
+
+    @Test
+    fun `updateRawUnreadPerFriend removes multiple friends with increased unread counts`() {
+        getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value =
+            setOf("f1", "f2", "f3")
+
+        ds.updateRawUnreadPerFriend(mapOf("f1" to 1, "f2" to 1, "f3" to 0))
+        ds.updateRawUnreadPerFriend(mapOf("f1" to 2, "f2" to 5, "f3" to 0))
+
+        val seenSet = getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value
+        assertFalse(seenSet.contains("f1"))
+        assertFalse(seenSet.contains("f2"))
+        assertTrue("f3 has 0 unread, should stay seen", seenSet.contains("f3"))
+    }
+
+    // ── markSharedItemsSeen ─────────────────────────────────────────────────
+
+    @Test
+    fun `markSharedItemsSeen adds current item IDs to seen set`() {
+        setCurrentUserId("testUser")
+        getPrivateStateFlow<List<SharedItem>>("_pendingSharedItems").value = listOf(
+            SharedItem(itemId = "item1"),
+            SharedItem(itemId = "item2")
+        )
+
+        ds.markSharedItemsSeen()
+
+        val seenIds = getPrivateStateFlow<Set<String>>("_seenSharedItemIds").value
+        assertTrue(seenIds.contains("item1"))
+        assertTrue(seenIds.contains("item2"))
+    }
+
+    @Test
+    fun `markSharedItemsSeen does nothing when currentUserId is null`() {
+        // currentUserId is null by default
+        getPrivateStateFlow<List<SharedItem>>("_pendingSharedItems").value = listOf(
+            SharedItem(itemId = "item1")
+        )
+
+        ds.markSharedItemsSeen()
+
+        assertTrue(getPrivateStateFlow<Set<String>>("_seenSharedItemIds").value.isEmpty())
+    }
+
+    // ── markFriendRequestsSeen ──────────────────────────────────────────────
+
+    @Test
+    fun `markFriendRequestsSeen adds current request IDs to seen set`() {
+        setCurrentUserId("testUser")
+        getPrivateStateFlow<List<FriendRequest>>("_incomingRequests").value = listOf(
+            FriendRequest(requestId = "req1"),
+            FriendRequest(requestId = "req2")
+        )
+
+        ds.markFriendRequestsSeen()
+
+        val seenIds = getPrivateStateFlow<Set<String>>("_seenFriendRequestIds").value
+        assertTrue(seenIds.contains("req1"))
+        assertTrue(seenIds.contains("req2"))
+    }
+
+    @Test
+    fun `markFriendRequestsSeen does nothing when currentUserId is null`() {
+        getPrivateStateFlow<List<FriendRequest>>("_incomingRequests").value = listOf(
+            FriendRequest(requestId = "req1")
+        )
+
+        ds.markFriendRequestsSeen()
+
+        assertTrue(getPrivateStateFlow<Set<String>>("_seenFriendRequestIds").value.isEmpty())
+    }
+
+    // ── markMessageFriendSeen ───────────────────────────────────────────────
+
+    @Test
+    fun `markMessageFriendSeen adds friend to seen set`() {
+        setCurrentUserId("testUser")
+
+        ds.markMessageFriendSeen("friend1")
+
+        val seenIds = getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value
+        assertTrue(seenIds.contains("friend1"))
+    }
+
+    @Test
+    fun `markMessageFriendSeen does nothing when currentUserId is null`() {
+        ds.markMessageFriendSeen("friend1")
+
+        assertTrue(getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value.isEmpty())
+    }
+
+    @Test
+    fun `markMessageFriendSeen accumulates multiple friend IDs`() {
+        setCurrentUserId("testUser")
+
+        ds.markMessageFriendSeen("friend1")
+        ds.markMessageFriendSeen("friend2")
+
+        val seenIds = getPrivateStateFlow<Set<String>>("_seenMessageFriendIds").value
+        assertEquals(2, seenIds.size)
+        assertTrue(seenIds.contains("friend1"))
+        assertTrue(seenIds.contains("friend2"))
+    }
+
+    // ── Shared Inbox Username Resolution ───────────────────────────────
+    // Tests for the fix where blank fromUsername is resolved from cache.
+    // This guards against regression where shared inbox items showed blank
+    // sender names even though the sender was a friend with a cached username.
+
+    @Test
+    fun `shared item with blank fromUsername gets resolved from cache`() {
+        // Pre-populate the username cache
+        ds.cacheOwnUsername("sender123", "Alice")
+
+        // Create a shared item with blank fromUsername
+        val itemWithBlankName = SharedItem(
+            itemId = "item1",
+            fromUserId = "sender123",
+            fromUsername = ""  // Blank - should be resolved
+        )
+
+        // Simulate the username resolution logic that happens in inboxJob
+        val resolved = if (itemWithBlankName.fromUsername.isBlank() && itemWithBlankName.fromUserId.isNotBlank()) {
+            val cachedName = ds.getCachedUsername(itemWithBlankName.fromUserId)
+            if (cachedName != null) itemWithBlankName.copy(fromUsername = cachedName) else itemWithBlankName
+        } else {
+            itemWithBlankName
+        }
+
+        assertEquals("Alice", resolved.fromUsername)
+    }
+
+    @Test
+    fun `shared item with existing fromUsername is not overwritten`() {
+        // Pre-populate the username cache with a different name
+        ds.cacheOwnUsername("sender123", "CachedName")
+
+        // Create a shared item with existing fromUsername
+        val itemWithName = SharedItem(
+            itemId = "item1",
+            fromUserId = "sender123",
+            fromUsername = "OriginalName"  // Already has a name
+        )
+
+        // Simulate the username resolution logic
+        val resolved = if (itemWithName.fromUsername.isBlank() && itemWithName.fromUserId.isNotBlank()) {
+            val cachedName = ds.getCachedUsername(itemWithName.fromUserId)
+            if (cachedName != null) itemWithName.copy(fromUsername = cachedName) else itemWithName
+        } else {
+            itemWithName
+        }
+
+        assertEquals("OriginalName", resolved.fromUsername)
+    }
+
+    @Test
+    fun `shared item with blank fromUsername and no cache remains blank`() {
+        // No cache entry for this sender
+
+        val itemWithBlankName = SharedItem(
+            itemId = "item1",
+            fromUserId = "unknown123",
+            fromUsername = ""
+        )
+
+        // Simulate the username resolution logic
+        val resolved = if (itemWithBlankName.fromUsername.isBlank() && itemWithBlankName.fromUserId.isNotBlank()) {
+            val cachedName = ds.getCachedUsername(itemWithBlankName.fromUserId)
+            if (cachedName != null) itemWithBlankName.copy(fromUsername = cachedName) else itemWithBlankName
+        } else {
+            itemWithBlankName
+        }
+
+        assertEquals("", resolved.fromUsername)
+    }
+
+    @Test
+    fun `username cache is populated when friends list loads`() {
+        // Test that friend usernames are properly cached
+        // In the actual implementation, this happens in friendsJob when friends list loads
+        getPrivateStateFlow<List<FriendRelation>>("_friends").value = listOf(
+            FriendRelation(friendId = "friend1", friendUsername = "Alice"),
+            FriendRelation(friendId = "friend2", friendUsername = "Bob")
+        )
+
+        // Cache the usernames manually (simulating what happens in friendsJob)
+        ds.friends.value.forEach { rel ->
+            if (rel.friendUsername.isNotBlank()) {
+                ds.cacheOwnUsername(rel.friendId, rel.friendUsername)
+            }
+        }
+
+        assertEquals("Alice", ds.getCachedUsername("friend1"))
+        assertEquals("Bob", ds.getCachedUsername("friend2"))
+    }
+}

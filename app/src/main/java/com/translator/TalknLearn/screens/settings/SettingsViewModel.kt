@@ -1,0 +1,374 @@
+package com.translator.TalknLearn.screens.settings
+
+import androidx.lifecycle.viewModelScope
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.translator.TalknLearn.core.validateScale
+import com.translator.TalknLearn.data.friends.FriendsRepository
+import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
+import com.translator.TalknLearn.domain.settings.SetFontSizeScaleUseCase
+import com.translator.TalknLearn.domain.settings.SetPrimaryLanguageUseCase
+import com.translator.TalknLearn.domain.settings.SetThemeModeUseCase
+import com.translator.TalknLearn.domain.settings.SetColorPaletteUseCase
+import com.translator.TalknLearn.domain.settings.UnlockColorPaletteWithCoinsUseCase
+import com.translator.TalknLearn.domain.settings.UnlockColorPaletteWithCoinsUseCase.Result as UnlockResult
+import com.translator.TalknLearn.domain.settings.SetVoiceForLanguageUseCase
+import com.translator.TalknLearn.domain.settings.SetAutoThemeEnabledUseCase
+import com.translator.TalknLearn.core.AppLogger
+import com.translator.TalknLearn.core.FcmNotificationService
+import com.translator.TalknLearn.domain.settings.SetNotificationPrefUseCase
+import com.translator.TalknLearn.domain.learning.QuizRepository
+import com.translator.TalknLearn.model.LanguageCode
+import com.translator.TalknLearn.model.PaletteId
+import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.VoiceName
+import com.translator.TalknLearn.model.user.AuthState
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.user.UserSettings
+import com.translator.TalknLearn.model.UserCoinStats
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+data class SettingsUiState(
+    val isLoading: Boolean = true,
+    val errorKey: UiTextKey? = null,
+    val errorRaw: String? = null,
+    val uid: String? = null,
+    val settings: UserSettings = UserSettings(),
+    val coinStats: UserCoinStats = UserCoinStats(),
+    val primaryLanguageCooldownDays: Int? = null,
+    val primaryLanguageCooldownHours: Int? = null,
+)
+
+/**
+ * ViewModel for the Settings screen.
+ *
+ * Exposes user preferences (theme, font size, primary language, voice,
+ * notifications, colour palette) and coin balance. Delegates writes
+ * to individual use-case classes and observes [SharedSettingsDataSource]
+ * for real-time updates. Handles the 30-day primary-language cooldown.
+ */
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+    application: Application,
+    private val authRepo: FirebaseAuthRepository,
+    private val sharedSettings: SharedSettingsDataSource,
+    private val friendsRepo: FriendsRepository,
+    private val setPrimaryLanguage: SetPrimaryLanguageUseCase,
+    private val setFontSizeScale: SetFontSizeScaleUseCase,
+    private val setThemeMode: SetThemeModeUseCase,
+    private val setColorPalette: SetColorPaletteUseCase,
+    private val unlockColorPaletteWithCoins: UnlockColorPaletteWithCoinsUseCase,
+    private val setVoiceForLanguage: SetVoiceForLanguageUseCase,
+    private val setAutoThemeEnabled: SetAutoThemeEnabledUseCase,
+    private val setNotificationPref: SetNotificationPrefUseCase,
+    private val quizRepo: QuizRepository
+) : AndroidViewModel(application) {
+
+    companion object {
+        // Notification preference field name constants — shared with SetNotificationPrefUseCase
+        // and FcmNotificationService. Keeping them here prevents typos at call-sites.
+        const val PREF_NOTIFY_NEW_MESSAGES       = "notifyNewMessages"
+        const val PREF_NOTIFY_FRIEND_REQUESTS    = "notifyFriendRequests"
+        const val PREF_NOTIFY_REQUEST_ACCEPTED   = "notifyRequestAccepted"
+        const val PREF_NOTIFY_SHARED_INBOX       = "notifySharedInbox"
+        const val PREF_BADGE_MESSAGES            = "inAppBadgeMessages"
+        const val PREF_BADGE_FRIEND_REQUESTS     = "inAppBadgeFriendRequests"
+        const val PREF_BADGE_SHARED_INBOX        = "inAppBadgeSharedInbox"
+    }
+
+    private val _uiState = MutableStateFlow(SettingsUiState())
+    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    private var settingsJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            authRepo.currentUserState.collect { auth ->
+                when (auth) {
+                    is AuthState.LoggedIn -> start(auth.user.uid)
+                    AuthState.Loading -> {
+                        settingsJob?.cancel()
+                        _uiState.value = SettingsUiState(isLoading = true)
+                    }
+                    AuthState.LoggedOut -> {
+                        settingsJob?.cancel()
+                        _uiState.value = SettingsUiState(
+                            isLoading = false,
+                            errorKey = UiTextKey.SettingsNotLoggedInWarning
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun start(uid: String) {
+        settingsJob?.cancel()
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            errorKey = null,
+            errorRaw = null,
+            uid = uid
+        )
+
+        // Use shared settings instead of creating new listener
+        sharedSettings.startObserving(uid)
+        settingsJob = viewModelScope.launch {
+            sharedSettings.settings.collect { s ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = sharedSettings.isLoading.value,
+                    settings = s,
+                    errorKey = null,
+                    errorRaw = null
+                )
+                syncNotificationPrefsToCache(s)
+            }
+        }
+
+        // Subscribe to real-time coin stats once per login (avoids re-fetching on every navigation)
+        viewModelScope.launch {
+            try {
+                quizRepo.observeUserCoinStats(UserId(uid)).collect { stats ->
+                    _uiState.value = _uiState.value.copy(coinStats = stats)
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("SettingsViewModel", "Failed to observe coin stats", e)
+            }
+        }
+    }
+
+    fun updatePrimaryLanguage(newCode: String) {
+        val uid = _uiState.value.uid ?: run {
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                when (val result = setPrimaryLanguage(UserId(uid), LanguageCode(newCode))) {
+                    is SetPrimaryLanguageUseCase.Result.Success -> {
+                        // Also update public profile for friends feature
+                        runCatching {
+                            friendsRepo.updatePublicProfile(
+                                UserId(uid),
+                                mapOf("primaryLanguage" to newCode)
+                            )
+                        }
+                        val updatedSettings = _uiState.value.settings.copy(primaryLanguageCode = newCode)
+                        _uiState.value = _uiState.value.copy(
+                            settings = updatedSettings,
+                            errorKey = null,
+                            errorRaw = null
+                        )
+                        // Propagate immediately so WordBankViewModel / LearningViewModel
+                        // react without waiting for the Firestore listener round-trip.
+                        sharedSettings.updateCache(updatedSettings)
+                    }
+                    is SetPrimaryLanguageUseCase.Result.CooldownActive -> {
+                        _uiState.value = _uiState.value.copy(
+                            primaryLanguageCooldownDays = result.remainingDays,
+                            primaryLanguageCooldownHours = result.remainingHours
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorKey = null,
+                    errorRaw = "Failed to save language setting. Please try again."
+                )
+            }
+        }
+    }
+
+    fun dismissCooldownDialog() {
+        _uiState.value = _uiState.value.copy(primaryLanguageCooldownDays = null, primaryLanguageCooldownHours = null)
+    }
+
+    fun updateFontSizeScale(scale: Float) {
+        val uid = _uiState.value.uid ?: run {
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            return
+        }
+
+        val validated = validateScale(scale)
+
+        viewModelScope.launch {
+            runCatching { setFontSizeScale(UserId(uid), validated) }
+                .onSuccess {
+                    val updatedSettings = _uiState.value.settings.copy(fontSizeScale = validated)
+                    _uiState.value = _uiState.value.copy(
+                        settings = updatedSettings,
+                        errorKey = null,
+                        errorRaw = null
+                    )
+                    sharedSettings.updateCache(updatedSettings)
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        errorKey = null,
+                        errorRaw = "Failed to save font size. Please try again."
+                    )
+                }
+        }
+    }
+
+    fun updateThemeMode(newMode: String) {
+        val uid = _uiState.value.uid ?: run {
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            return
+        }
+
+        viewModelScope.launch {
+            // Handle "scheduled" separately
+            if (newMode == "scheduled") {
+                runCatching { setAutoThemeEnabled(UserId(uid), true) }
+                    .onSuccess {
+                        val updatedSettings = _uiState.value.settings.copy(autoThemeEnabled = true)
+                        _uiState.value = _uiState.value.copy(
+                            settings = updatedSettings,
+                            errorKey = null,
+                            errorRaw = null
+                        )
+                        sharedSettings.updateCache(updatedSettings)
+                    }
+                    .onFailure { e ->
+                        _uiState.value = _uiState.value.copy(
+                            errorRaw = "Failed to save theme setting. Please try again."
+                        )
+                    }
+            } else {
+                // For System/Light/Dark, we first disable auto theme, then set the mode
+                // We do this to ensure "scheduled" logic doesn't override the manual selection
+
+                // 1. Disable auto theme if it enabled
+                if (_uiState.value.settings.autoThemeEnabled) {
+                     runCatching { setAutoThemeEnabled(UserId(uid), false) }
+                         .onFailure {
+                             _uiState.value = _uiState.value.copy(
+                                 errorRaw = "Failed to disable auto theme. Please try again."
+                             )
+                             return@launch
+                         }
+                     // Update local state after successful write
+                     _uiState.value = _uiState.value.copy(
+                        settings = _uiState.value.settings.copy(autoThemeEnabled = false)
+                    )
+                }
+
+                // 2. Set the mode
+                runCatching { setThemeMode(UserId(uid), newMode) }
+                    .onSuccess {
+                        val updatedSettings = _uiState.value.settings.copy(themeMode = newMode)
+                        _uiState.value = _uiState.value.copy(
+                            settings = updatedSettings,
+                            errorKey = null,
+                            errorRaw = null
+                        )
+                        sharedSettings.updateCache(updatedSettings)
+                    }
+                    .onFailure { e ->
+                        _uiState.value = _uiState.value.copy(
+                            errorKey = null,
+                            errorRaw = "Failed to save theme setting. Please try again."
+                        )
+                    }
+            }
+        }
+    }
+
+    fun updateVoiceForLanguage(languageCode: String, voiceName: String) {
+        val uid = _uiState.value.uid ?: run {
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            return
+        }
+
+        viewModelScope.launch {
+            runCatching { setVoiceForLanguage(UserId(uid), LanguageCode(languageCode), VoiceName(voiceName)) }
+                .onSuccess {
+                    // Update local state optimistically
+                    val currentSettings = _uiState.value.settings
+                    val updatedVoices = currentSettings.voiceSettings.toMutableMap()
+                    updatedVoices[languageCode] = voiceName
+                    val updatedSettings = currentSettings.copy(voiceSettings = updatedVoices)
+                    _uiState.value = _uiState.value.copy(
+                        settings = updatedSettings,
+                        errorKey = null,
+                        errorRaw = null
+                    )
+                    sharedSettings.updateCache(updatedSettings)
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        errorKey = null,
+                        errorRaw = "Failed to save voice setting. Please try again."
+                    )
+                }
+        }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(errorKey = null, errorRaw = null)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        settingsJob?.cancel()
+    }
+
+    /**
+     * Toggle a specific push-notification type on or off.
+     *
+     * @param field  One of "notifyNewMessages", "notifyFriendRequests",
+     *               "notifyRequestAccepted", "notifySharedInbox".
+     */
+    fun updateNotificationPref(field: String, enabled: Boolean) {
+        val uid = _uiState.value.uid ?: return
+        viewModelScope.launch {
+            runCatching { setNotificationPref(UserId(uid), field, enabled) }
+                .onSuccess {
+                    // Update in-memory state immediately for snappy UI feedback
+                    val updated = when (field) {
+                        PREF_NOTIFY_NEW_MESSAGES     -> _uiState.value.settings.copy(notifyNewMessages = enabled)
+                        PREF_NOTIFY_FRIEND_REQUESTS  -> _uiState.value.settings.copy(notifyFriendRequests = enabled)
+                        PREF_NOTIFY_REQUEST_ACCEPTED -> _uiState.value.settings.copy(notifyRequestAccepted = enabled)
+                        PREF_NOTIFY_SHARED_INBOX     -> _uiState.value.settings.copy(notifySharedInbox = enabled)
+                        PREF_BADGE_MESSAGES          -> _uiState.value.settings.copy(inAppBadgeMessages = enabled)
+                        PREF_BADGE_FRIEND_REQUESTS   -> _uiState.value.settings.copy(inAppBadgeFriendRequests = enabled)
+                        PREF_BADGE_SHARED_INBOX      -> _uiState.value.settings.copy(inAppBadgeSharedInbox = enabled)
+                        else -> _uiState.value.settings
+                    }
+                    _uiState.value = _uiState.value.copy(settings = updated)
+                    sharedSettings.updateCache(updated)
+                    // Mirror to SharedPreferences so FcmNotificationService can read it
+                    // without any Firestore I/O on the FCM worker thread
+                    FcmNotificationService
+                        .saveNotifPrefToCache(getApplication(), field, enabled)
+                }
+                .onFailure { e ->
+                    AppLogger.e(
+                        "SettingsViewModel",
+                        "Failed to save notification preference $field=$enabled",
+                        e
+                    )
+                    _uiState.value = _uiState.value.copy(
+                        errorRaw = "Failed to save notification setting. Please try again."
+                    )
+                }
+        }
+    }
+
+    private fun syncNotificationPrefsToCache(settings: UserSettings) {
+        val app = getApplication<Application>()
+        FcmNotificationService.saveNotifPrefToCache(app, PREF_NOTIFY_NEW_MESSAGES, settings.notifyNewMessages)
+        FcmNotificationService.saveNotifPrefToCache(app, PREF_NOTIFY_FRIEND_REQUESTS, settings.notifyFriendRequests)
+        FcmNotificationService.saveNotifPrefToCache(app, PREF_NOTIFY_REQUEST_ACCEPTED, settings.notifyRequestAccepted)
+        FcmNotificationService.saveNotifPrefToCache(app, PREF_NOTIFY_SHARED_INBOX, settings.notifySharedInbox)
+    }
+}

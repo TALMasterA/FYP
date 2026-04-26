@@ -1,0 +1,197 @@
+package com.translator.TalknLearn.data.friends
+
+import com.translator.TalknLearn.model.Username
+import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.friends.FriendRelation
+import com.translator.TalknLearn.model.friends.FriendRequest
+import com.translator.TalknLearn.model.friends.PublicUserProfile
+import kotlinx.coroutines.flow.Flow
+
+/** A user that has been blocked, with their cached username for display. */
+data class BlockedUser(
+    val userId: String,
+    val username: String,
+    val blockedAt: Long = 0L
+)
+
+/**
+ * Repository for managing friends, friend requests, and user profiles.
+ */
+interface FriendsRepository {
+    
+    // ============================================
+    // Profile Management
+    // ============================================
+    
+    /**
+     * Create or update the public profile for a user.
+     */
+    suspend fun createOrUpdatePublicProfile(userId: UserId, profile: PublicUserProfile): Result<Unit>
+    
+    /**
+     * Get a user's public profile.
+     */
+    suspend fun getPublicProfile(userId: UserId): PublicUserProfile?
+    
+    /**
+     * Update specific fields in the public profile.
+     */
+    suspend fun updatePublicProfile(userId: UserId, updates: Map<String, Any>): Result<Unit>
+    
+    // ============================================
+    // Username Management
+    // ============================================
+    
+    /**
+     * Set or update a username. Ensures uniqueness.
+     * @return Result.success if username is set successfully
+     * @return Result.failure if username is already taken
+     */
+    suspend fun setUsername(userId: UserId, username: Username): Result<Unit>
+    
+    /**
+     * Check if a username is available.
+     */
+    suspend fun isUsernameAvailable(username: Username): Boolean
+    
+    // ============================================
+    // Search
+    // ============================================
+    
+    /**
+     * Search users by username prefix (case-insensitive).
+     * Returns up to [limit] matching users who are discoverable and not blocking [callerUserId].
+     */
+    suspend fun searchByUsername(query: String, limit: Long = 20, callerUserId: UserId? = null): List<PublicUserProfile>
+
+    /**
+     * Search users by username, returning a Result wrapper.
+     */
+    suspend fun searchUsersByUsername(query: String, limit: Long = 20, callerUserId: UserId? = null): Result<List<PublicUserProfile>>
+
+    /**
+     * Find user by exact user ID.
+     * Returns null if user not found, not discoverable, or has blocked [callerUserId].
+     */
+    suspend fun findByUserId(userId: UserId, callerUserId: UserId? = null): PublicUserProfile?
+
+    // ============================================
+    // Friend Requests
+    // ============================================
+    
+    /**
+     * Send a friend request to another user.
+     */
+    suspend fun sendFriendRequest(fromUserId: UserId, toUserId: UserId, note: String = ""): Result<FriendRequest>
+    
+    /**
+     * Accept a friend request.
+     * Creates friendship for both users.
+     */
+    suspend fun acceptFriendRequest(requestId: String, currentUserId: UserId, friendUserId: UserId): Result<Unit>
+
+    /**
+     * Reject a friend request.
+     */
+    suspend fun rejectFriendRequest(requestId: String): Result<Unit>
+    
+    /**
+     * Cancel an outgoing friend request.
+     */
+    suspend fun cancelFriendRequest(requestId: String): Result<Unit>
+    
+    /**
+     * Observe incoming friend requests in real-time.
+     */
+    fun observeIncomingRequests(userId: UserId): Flow<List<FriendRequest>>
+    
+    /**
+     * Observe outgoing friend requests in real-time.
+     */
+    fun observeOutgoingRequests(userId: UserId): Flow<List<FriendRequest>>
+    
+    // ============================================
+    // Friends List
+    // ============================================
+    
+    /**
+     * Observe friends list in real-time.
+     */
+    fun observeFriends(userId: UserId): Flow<List<FriendRelation>>
+    
+    /**
+     * Remove a friend from the friends list.
+     * Removes friendship for both users.
+     */
+    suspend fun removeFriend(userId: UserId, friendId: UserId): Result<Unit>
+    
+    /**
+     * Get friend count for a user.
+     */
+    suspend fun getFriendCount(userId: UserId): Int
+    
+    /**
+     * Check if two users are friends.
+     */
+    suspend fun areFriends(userId: UserId, otherUserId: UserId): Boolean
+
+    /**
+     * Ensure the main user document (/users/{userId}) exists with default
+     * unread counter fields so that update() calls from chat operations
+     * don't fail with NOT_FOUND errors.
+     */
+    suspend fun ensureUserDocumentExists(userId: UserId)
+
+    /**
+     * Propagate a username change to all friends' friend-list entries.
+     *
+     * Each FriendRelation document caches the friend's username at the time the
+     * friendship was created. When a user renames themselves, every friend's copy
+     * of that cached username must be updated so the Friends screen shows the new name.
+     *
+     * Path updated: users/{friendId}/friends/{userId}.friendUsername
+     */
+    suspend fun propagateUsernameChange(userId: UserId, newUsername: String): Result<Unit>
+
+    /**
+     * Fetch each friend's latest public profile username and update any stale
+     * FriendRelation documents.  Called on pull-to-refresh and app start.
+     * Returns a map of friendId -> latestUsername for in-memory update.
+     */
+    suspend fun syncFriendUsernames(userId: UserId): Map<String, String>
+
+    // ============================================
+    // Block / Unblock
+    // ============================================
+
+    /**
+     * Block a user. Also stores the blocked user's username for later display.
+     * Blocked users cannot send friend requests or messages.
+     */
+    suspend fun blockUser(userId: UserId, blockedUserId: UserId, blockedUsername: String = ""): Result<Unit>
+
+    /**
+     * Unblock a previously blocked user.
+     */
+    suspend fun unblockUser(userId: UserId, blockedUserId: UserId): Result<Unit>
+
+    /**
+     * Check if [userId] has blocked [otherUserId].
+     */
+    suspend fun isBlocked(userId: UserId, otherUserId: UserId): Boolean
+
+    /**
+     * Check if [userId] is blocked by [otherUserId].
+     */
+    suspend fun isBlockedBy(userId: UserId, otherUserId: UserId): Boolean
+
+    /**
+     * Get list of user IDs blocked by [userId].
+     */
+    suspend fun getBlockedUserIds(userId: UserId): List<String>
+
+    /**
+     * Get list of blocked users (with cached usernames) for [userId].
+     */
+    suspend fun getBlockedUsers(userId: UserId): List<BlockedUser>
+}
