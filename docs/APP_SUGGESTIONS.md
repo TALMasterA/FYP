@@ -7,7 +7,7 @@
 > **Source of truth read for this audit:** `README.md`, `docs/ARCHITECTURE_NOTES.md`,
 > `docs/CLOUD_FUNCTIONS_API.md`, `docs/TEST_COVERAGE.md`,
 > `docs/PRIVACY_AND_COMPLIANCE.md`, `docs/treeOfImportantfiles.txt`,
-> `fyp-backend/functions/src/`, `app/src/main/java/com/example/fyp/`.
+> `fyp-backend/functions/src/`, `app/src/main/java/com/translator/TalknLearn/`.
 
 ---
 
@@ -53,8 +53,8 @@
 
 8. **Coverage gate for Android.** Backend has a 50% Jest threshold (README
    §CI). Add a JaCoCo (or Kover) report task and start an Android coverage
-   floor — even a low initial gate (e.g., 35% line) prevents drift in the
-   2,477-test suite.
+    floor — even a low initial gate (e.g., 35% line) prevents drift in the
+    2,478-test suite.
 9. **Mutation testing for critical anti-cheat code.** Run Pitest /
    `pitest-gradle` on `domain/learning` and the coin-award guard
    (`QuizCoinEarningGuardTest`). These are the highest-blast-radius pieces of

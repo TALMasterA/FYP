@@ -378,13 +378,17 @@ FYP/
 │       │               └── Type.kt
 │       │
 │       ├── debug/                                        ← Debug-variant source set (debug builds only)
-│       │   ├── AndroidManifest.xml                      ← Declares HiltTestActivity (no launcher intent)
+│       │   ├── AndroidManifest.xml                      ← Declares HiltTestActivity and Firebase App Check debug component registrar
 │       │   └── java/com/translator/TalknLearn/
+│       │       ├── debug/
+│       │       │   └── DebugAppCheckSecretRegistrar.kt  ← Supplies gitignored App Check debug token to Firebase Debug provider
 │       │       └── HiltTestActivity.kt                  ← Empty ComponentActivity host for instrumentation tests
 │       │
 │       ├── test/java/com/translator/TalknLearn/
 │       │   ├── appstate/
 │       │   │   └── AppViewModelTest.kt                   ← App-wide state & notification tests
+│       │   ├── debug/
+│       │   │   └── DebugAppCheckSecretRegistrarWiringTest.kt ← Static guard for App Check debug-token component wiring
 │       │   ├── core/
 │       │   │   ├── ConstantsTest.kt                       ← UI, AI, data, generation constant validation
 │       │   │   ├── ErrorMessagesTest.kt
@@ -433,7 +437,6 @@ FYP/
 │       │   │   │   ├── SharedHistoryDataSourceExtendedLogicTest.kt ← Extended data source logic tests
 │       │   │   │   └── SharedHistoryLogicTest.kt          ← Shared history logic tests
 │       │   │   ├── learning/
-│       │   │   │   ├── ContentCleanerTest.kt
 │       │   │   │   ├── ContentCleanerExtendedTest.kt
 │       │   │   │   ├── LearningContentPromptTest.kt        ← Prompt construction & takeLast(20) tests
 │       │   │   │   ├── LearningSheetsLogicTest.kt          ← Learning sheets logic tests
@@ -532,7 +535,7 @@ FYP/
 │       │   │   │   ├── TranslationConsistencyTest.kt      ← Translation consistency across languages
 │       │   │   │   ├── UiTextAlignmentTest.kt
 │       │   │   │   ├── UiTextCompletenessTest.kt          ← UiTextKey enum completeness tests
-│       │   │   └── UiTextConstantsIntegrationTest.kt  ← UI text constants integration tests
+│       │   │   │   └── UiTextConstantsIntegrationTest.kt  ← UI text constants integration tests
 │       │   │   ├── user/
 │       │   │   │   ├── AuthStateTest.kt                   ← AuthState sealed interface tests
 │       │   │   │   ├── FavoriteLimitTest.kt

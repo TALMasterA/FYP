@@ -1,9 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <application>
         <!-- Debug-only host activity for Compose instrumentation tests -->
         <activity
             android:name=".HiltTestActivity"
             android:exported="true" />
+
+        <!--
+            App Check debug secret is supplied by DebugAppCheckSecretRegistrar.
+            Firebase App Check debug 19.x ignores manifest token metadata and reads
+            InternalDebugSecretProvider from ComponentDiscoveryService instead.
+        -->
+        <service
+            android:name="com.google.firebase.components.ComponentDiscoveryService"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="com.google.firebase.components:com.translator.TalknLearn.debug.DebugAppCheckSecretRegistrar"
+                android:value="com.google.firebase.components.ComponentRegistrar" />
+        </service>
     </application>
 </manifest>

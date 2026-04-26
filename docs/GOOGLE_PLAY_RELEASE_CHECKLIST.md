@@ -5,7 +5,7 @@ This is a code-grounded checklist of what must be fixed or prepared before the a
 Current verified baseline:
 
 - [app/build.gradle.kts](../app/build.gradle.kts) uses `namespace = "com.translator.TalknLearn"` and `applicationId = "com.translator.TalknLearn"`.
-- [app/build.gradle.kts](../app/build.gradle.kts) sets `versionCode = 55`, `versionName = "2.2.0"`, `compileSdk = 36`, `targetSdk = 36`, and `minSdk = 26`.
+- [app/build.gradle.kts](../app/build.gradle.kts) sets `versionCode = 56`, `versionName = "2.3.0"`, `compileSdk = 36`, `targetSdk = 36`, and `minSdk = 26`.
 - [app/build.gradle.kts](../app/build.gradle.kts) has no `signingConfigs.release` block.
 - [app/build.gradle.kts](../app/build.gradle.kts) disables release minification and resource shrinking: `isMinifyEnabled = false`, `isShrinkResources = false`.
 - [app/build.gradle.kts](../app/build.gradle.kts) enables ABI APK splits and a universal APK, but Play uploads must use the AAB from `:app:bundleRelease`.
@@ -13,7 +13,7 @@ Current verified baseline:
 - [app/src/main/AndroidManifest.xml](../app/src/main/AndroidManifest.xml) has `android:allowBackup="false"`, `android:usesCleartextTraffic="false"`, and `android:networkSecurityConfig="@xml/network_security_config"`.
 - [app/src/main/res/values/strings.xml](../app/src/main/res/values/strings.xml) still labels the launcher as `FYP`.
 - Launcher icon resources still appear to be the default Android Studio adaptive icon set.
-- [app/src/main/java/com/example/fyp/appstate/FYPApplication.kt](../app/src/main/java/com/example/fyp/appstate/FYPApplication.kt) installs Firebase App Check with the Debug provider in debug builds and Play Integrity in release builds.
+- [app/src/main/java/com/translator/TalknLearn/appstate/FYPApplication.kt](../app/src/main/java/com/translator/TalknLearn/appstate/FYPApplication.kt) installs Firebase App Check with the Debug provider in debug builds and Play Integrity in release builds.
 - No top-level `LICENSE` file or standalone `PRIVACY_POLICY.md` file currently exists.
 
 Priority legend:
@@ -99,7 +99,7 @@ Priority legend:
 
 ### 1.6 Provide the required account-deletion web URL
 
-**Current state:** In-app account deletion exists in [ProfileViewModel.kt](../app/src/main/java/com/example/fyp/screens/settings/ProfileViewModel.kt) and [FirestoreProfileRepository.kt](../app/src/main/java/com/example/fyp/data/user/FirestoreProfileRepository.kt); it re-authenticates, deletes Firestore user data, and calls Firebase Auth account deletion. A public web deletion request URL is not present.
+**Current state:** In-app account deletion exists in [ProfileViewModel.kt](../app/src/main/java/com/translator/TalknLearn/screens/settings/ProfileViewModel.kt) and [FirestoreProfileRepository.kt](../app/src/main/java/com/translator/TalknLearn/data/user/FirestoreProfileRepository.kt); it re-authenticates, deletes Firestore user data, and calls Firebase Auth account deletion. A public web deletion request URL is not present.
 
 **Why it matters:** Play requires both an in-app deletion path and a web URL users can access after uninstalling.
 
@@ -112,7 +112,7 @@ Priority legend:
 
 ### 1.7 Configure App Check for release signing fingerprints
 
-**Current state:** [FYPApplication.kt](../app/src/main/java/com/example/fyp/appstate/FYPApplication.kt) uses Play Integrity App Check in release builds.
+**Current state:** [FYPApplication.kt](../app/src/main/java/com/translator/TalknLearn/appstate/FYPApplication.kt) uses Play Integrity App Check in release builds.
 
 **Why it matters:** If Firebase does not know the release signing fingerprints, production Firestore/Functions calls can fail with App Check errors. If App Check is not enforced, the app gets less protection than the code suggests.
 
@@ -167,13 +167,13 @@ Priority legend:
 
 ### 2.3 Remove or gate direct `android.util.Log` usage
 
-**Current state:** The app has many direct `android.util.Log` calls. The most sensitive examples are in [AzureSpeechRepository.kt](../app/src/main/java/com/example/fyp/data/repositories/AzureSpeechRepository.kt), which logs recognized speech text and synthesized text. [FYPApplication.kt](../app/src/main/java/com/example/fyp/appstate/FYPApplication.kt) and [FirestoreProfileRepository.kt](../app/src/main/java/com/example/fyp/data/user/FirestoreProfileRepository.kt) also log directly.
+**Current state:** The app has many direct `android.util.Log` calls. The most sensitive examples are in [AzureSpeechRepository.kt](../app/src/main/java/com/translator/TalknLearn/data/repositories/AzureSpeechRepository.kt), which logs recognized speech text and synthesized text. [FYPApplication.kt](../app/src/main/java/com/translator/TalknLearn/appstate/FYPApplication.kt) and [FirestoreProfileRepository.kt](../app/src/main/java/com/translator/TalknLearn/data/user/FirestoreProfileRepository.kt) also log directly.
 
 **Why it matters:** Recognized speech, user IDs, chat IDs, usernames, and backend error messages can be personal data. Existing R8 rules only strip `Log.d`, `Log.v`, and `Log.i`; `Log.w` and `Log.e` remain.
 
 **Actions:**
 
-1. Route logging through [Logger.kt](../app/src/main/java/com/example/fyp/core/foundation/Logger.kt) or a production-safe wrapper.
+1. Route logging through [Logger.kt](../app/src/main/java/com/translator/TalknLearn/core/foundation/Logger.kt) or a production-safe wrapper.
 2. Never log recognized speech text, translated text, chat message content, email addresses, raw UIDs, tokens, or request payloads.
 3. Hash or truncate identifiers where correlation is needed.
 4. Keep production error logs actionable but redacted.
@@ -287,7 +287,7 @@ Required or strongly recommended assets:
 
 ### 4.2 Localize the Play listing
 
-**Current state:** The app has 16 locale translation maps under [app/src/main/java/com/example/fyp/model/ui/strings/translations](../app/src/main/java/com/example/fyp/model/ui/strings/translations), but Play listing text is separate from in-app UI strings.
+**Current state:** The app has 16 locale translation maps under [app/src/main/java/com/translator/TalknLearn/model/ui/strings/translations](../app/src/main/java/com/translator/TalknLearn/model/ui/strings/translations), but Play listing text is separate from in-app UI strings.
 
 **Actions:**
 

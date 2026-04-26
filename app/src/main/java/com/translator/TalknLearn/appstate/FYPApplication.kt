@@ -39,6 +39,24 @@ class FYPApplication : Application() {
                 PlayIntegrityAppCheckProviderFactory.getInstance()
             }
             FirebaseAppCheck.getInstance().installAppCheckProviderFactory(factory)
+
+            // In debug builds: proactively fetch the App Check token so App Check setup
+            // failures appear immediately in Logcat before translation or speech calls.
+            if (BuildConfig.DEBUG) {
+                FirebaseAppCheck.getInstance().getToken(false)
+                    .addOnSuccessListener { _ ->
+                        android.util.Log.d("AppCheckSetup", "✓ App Check token obtained. Translation/Speech should work.")
+                    }
+                    .addOnFailureListener { e ->
+                        android.util.Log.e("AppCheckSetup", "✗ App Check FAILED: ${e.message}")
+                        android.util.Log.e("AppCheckSetup",
+                            "ACTION REQUIRED: confirm local.properties has appCheckDebugToken set " +
+                            "to a Firebase Console debug token for com.translator.TalknLearn. " +
+                            "If no local token is configured, search Logcat for the Firebase SDK " +
+                            "debug-secret message and add that generated UUID in App Check → " +
+                            "Apps → Manage debug tokens.")
+                    }
+            }
         } catch (e: Exception) {
             android.util.Log.e("FYPApplication", "App Check initialization failed", e)
         }

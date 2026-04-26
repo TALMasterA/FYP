@@ -99,6 +99,11 @@ object ErrorMessageMapper {
             errorMessage.contains("429") ->
                 "Service temporarily unavailable. Please try again later."
 
+            errorMessage.contains("unauthenticated", ignoreCase = true) ||
+            errorMessage.contains("unauthorized", ignoreCase = true) ||
+            errorMessage.contains("permission", ignoreCase = true) ->
+                "Translation service unavailable. Please restart the app and try again."
+
             errorMessage.contains("invalid", ignoreCase = true) ->
                 "Invalid input. Please check your text and try again."
 

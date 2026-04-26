@@ -10,8 +10,12 @@ All 7 v2 callable functions declare `enforceAppCheck: true`:
 `getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage`,
 `generateLearningContent`, `awardQuizCoins`, `spendCoins`.
 Requests without a valid App Check token are rejected by the platform
-before the handler runs. Debug builds use the Firebase Debug provider —
-register the printed debug token in the Firebase console.
+before the handler runs. Debug builds use the Firebase Debug provider. Local
+debug APKs read the registered token from gitignored `local.properties`
+(`appCheckDebugToken`) or CI's `APP_CHECK_DEBUG_TOKEN` and supply it through a
+debug-only Firebase Component Discovery registrar. If no token is configured,
+the SDK prints a generated debug secret that must be registered in the Firebase
+console.
 
 ## Per-function runtime options (§2.10)
 

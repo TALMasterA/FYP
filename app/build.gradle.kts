@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -12,6 +14,14 @@ plugins {
     alias(libs.plugins.ksp)
     kotlin("plugin.serialization")
 }
+
+// App Check debug token — read from local.properties (gitignored) or CI env var.
+val localProps = Properties()
+val localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) localPropsFile.inputStream().use(localProps::load)
+val appCheckToken: String = localProps.getProperty("appCheckDebugToken")
+    ?: System.getenv("APP_CHECK_DEBUG_TOKEN") ?: ""
+fun String.asBuildConfigString(): String = "\"" + replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
 android {
     namespace = "com.translator.TalknLearn"
@@ -44,6 +54,8 @@ android {
             isShrinkResources = false
             isDebuggable = true
             versionNameSuffix = "-dev"
+            // App Check debug token — read from local.properties (gitignored) or CI env var.
+            buildConfigField("String", "APP_CHECK_DEBUG_TOKEN", appCheckToken.asBuildConfigString())
         }
     }
 

@@ -56,7 +56,7 @@ grep -r "catch.*Exception" --include="*.kt" | grep -v "ErrorMessages"
 4. **Update existing tests** — If API signatures changed
 
 **Test file locations:**
-- Kotlin unit tests: `app/src/test/java/com/example/fyp/**/*Test.kt`
+- Kotlin unit tests: `app/src/test/java/com/translator/TalknLearn/**/*Test.kt`
 - Backend tests: `fyp-backend/functions/src/__tests__/**/*.test.ts`
 
 **Test patterns:**
