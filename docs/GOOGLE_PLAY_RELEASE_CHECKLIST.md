@@ -392,7 +392,7 @@ Consider later, after the first stable release:
 
 ## 7. Suggested Execution Order
 
-1. Rename package and Firebase app registration.
+1. Rename package and Firebase app registration. (Should be ok)
 2. Add release signing and Play App Signing.
 3. Replace app name and launcher/store artwork.
 4. Publish Privacy Policy and account-deletion web URL.
