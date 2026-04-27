@@ -14,6 +14,7 @@ const mockExports = {
   syncQuizVersionFromLearningSheet: jest.fn(),
   awardQuizCoins: jest.fn(),
   spendCoins: jest.fn(),
+  deleteAccountAndData: jest.fn(),
   sendChatNotification: jest.fn(),
   sendFriendRequestNotification: jest.fn(),
   sendRequestAcceptedNotification: jest.fn(),
@@ -47,6 +48,10 @@ jest.mock("../learning.js", () => ({
 jest.mock("../coins.js", () => ({
   awardQuizCoins: mockExports.awardQuizCoins,
   spendCoins: mockExports.spendCoins,
+}));
+
+jest.mock("../accountDeletion.js", () => ({
+  deleteAccountAndData: mockExports.deleteAccountAndData,
 }));
 
 jest.mock("../notifications.js", () => ({
@@ -92,6 +97,7 @@ describe("functions index entrypoint", () => {
 
     expect(mod.awardQuizCoins).toBe(mockExports.awardQuizCoins);
     expect(mod.spendCoins).toBe(mockExports.spendCoins);
+    expect(mod.deleteAccountAndData).toBe(mockExports.deleteAccountAndData);
 
     expect(mod.sendChatNotification).toBe(mockExports.sendChatNotification);
     expect(mod.sendFriendRequestNotification).toBe(mockExports.sendFriendRequestNotification);

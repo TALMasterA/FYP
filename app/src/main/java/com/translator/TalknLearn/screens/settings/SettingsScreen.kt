@@ -243,12 +243,20 @@ fun SettingsScreen(
                 }
             }
 
-            // Reset Password Button with larger text
-            TextButton(onClick = onOpenResetPassword) {
+            // Reset Password Button with larger text — hidden for Google Sign-In accounts
+            if (!uiState.isGoogleUser) {
+                TextButton(onClick = onOpenResetPassword) {
+                    Text(
+                        text = t(UiTextKey.SettingsResetPW),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    )
+                }
+            } else {
                 Text(
-                    text = t(UiTextKey.SettingsResetPW),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                    text = "Password managed by Google",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 

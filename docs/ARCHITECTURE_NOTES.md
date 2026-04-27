@@ -120,9 +120,9 @@ For document creation fallback: catch `FirebaseFirestoreException`, only fallbac
 
 ## 4. Account Deletion — Complete Cleanup Required
 
-**Invariant:** `deleteAccount()` must clean up ALL 18 subcollections.
+**Invariant:** `deleteAccountAndData` must clean up ALL 18 user subcollections from the backend before deleting the Firebase Auth user.
 
-**Rule:** If adding a new collection, add its cleanup to `deleteAccount()`. Write a test asserting cleanup count stays in sync.
+**Rule:** If adding a new per-user collection, add its cleanup to `fyp-backend/functions/src/accountDeletion.ts` and update `AccountDeletionGuardTest`. The Android client must only re-authenticate and call the protected Cloud Function.
 
 ---
 
@@ -253,7 +253,7 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 **Persistent rate limiter (§2.2):** Auth-path rate limits (login, password reset, feedback, chat send) use `PersistentRateLimiter`, a DataStore-backed counter that survives process death. The static in-memory `RateLimiter` remains for non-auth read-side throttles only.
 
-**App Check enforcement (§2.3):** `FYPApplication.onCreate()` installs Firebase App Check before any Firestore/Functions client is built. Release builds use the Play Integrity provider; debug builds (`BuildConfig.DEBUG`) use the Debug provider. The debug secret is read from gitignored `local.properties` (`appCheckDebugToken`) or CI's `APP_CHECK_DEBUG_TOKEN`, emitted as `BuildConfig.APP_CHECK_DEBUG_TOKEN`, and supplied to Firebase through `DebugAppCheckSecretRegistrar` / `InternalDebugSecretProvider`. If no token is configured, the Firebase SDK falls back to a generated debug secret that must be registered in the Firebase console. All 7 v2 `onCall` Cloud Functions (`getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage`, `generateLearningContent`, `awardQuizCoins`, `spendCoins`) declare `enforceAppCheck: true`.
+**App Check enforcement (§2.3):** `FYPApplication.onCreate()` installs Firebase App Check before any Firestore/Functions client is built. Release builds use the Play Integrity provider; debug builds (`BuildConfig.DEBUG`) use the Debug provider. The debug secret is read from gitignored `local.properties` (`appCheckDebugToken`) or CI's `APP_CHECK_DEBUG_TOKEN`, emitted as `BuildConfig.APP_CHECK_DEBUG_TOKEN`, and supplied to Firebase through `DebugAppCheckSecretRegistrar` / `InternalDebugSecretProvider`. If no token is configured, the Firebase SDK falls back to a generated debug secret that must be registered in the Firebase console. All 8 v2 callable Cloud Functions (`getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage`, `generateLearningContent`, `awardQuizCoins`, `spendCoins`, `deleteAccountAndData`) are created through `onAppCheckCall`, which injects `enforceAppCheck: true`; `app-check-wrapper.test.ts` blocks direct production imports of `onCall` / `onRequest`.
 
 **Audit logging PII:** `AuditLogger.logLoginFailed()` and `logPasswordResetRequested()` obfuscate email addresses before logging to Crashlytics (first 2 chars + domain only).
 

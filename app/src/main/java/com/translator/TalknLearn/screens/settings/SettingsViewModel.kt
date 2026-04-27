@@ -40,6 +40,7 @@ data class SettingsUiState(
     val errorKey: UiTextKey? = null,
     val errorRaw: String? = null,
     val uid: String? = null,
+    val isGoogleUser: Boolean = false,
     val settings: UserSettings = UserSettings(),
     val coinStats: UserCoinStats = UserCoinStats(),
     val primaryLanguageCooldownDays: Int? = null,
@@ -115,7 +116,8 @@ class SettingsViewModel @Inject constructor(
             isLoading = true,
             errorKey = null,
             errorRaw = null,
-            uid = uid
+            uid = uid,
+            isGoogleUser = authRepo.isGoogleUser()
         )
 
         // Use shared settings instead of creating new listener

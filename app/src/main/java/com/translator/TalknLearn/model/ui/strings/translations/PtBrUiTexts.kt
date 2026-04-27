@@ -418,7 +418,7 @@ val PtBrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ Permanente e irreversível!",
     UiTextKey.AccountDeleteConfirmMessage to "Todos os dados serão excluídos permanentemente: histórico, banco de palavras, materiais, configurações. Digite sua senha para confirmar",
     UiTextKey.AccountDeletePasswordLabel to "Senha",
-    UiTextKey.AccountDeleteButton to "Excluir conta",
+        UiTextKey.AccountDeleteButton to "Excluir minha conta e dados",
     UiTextKey.AccountDeleteSuccess to "Conta excluída com sucesso",
     UiTextKey.AccountDeleteError to "Falha ao excluir",
     UiTextKey.AccountDeleteReauthRequired to "Digite sua senha para confirmar a exclusão",

@@ -418,7 +418,7 @@ val ZhTwUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ 此操作永久不可復原！",
     UiTextKey.AccountDeleteConfirmMessage to "您的所有資料，包括歷史紀錄、單字庫、學習教材和設定，將被永久刪除。請輸入密碼確認。",
     UiTextKey.AccountDeletePasswordLabel to "密碼",
-    UiTextKey.AccountDeleteButton to "刪除我的帳號",
+        UiTextKey.AccountDeleteButton to "刪除我的帳號與資料",
     UiTextKey.AccountDeleteSuccess to "帳號刪除成功",
     UiTextKey.AccountDeleteError to "帳號刪除失敗",
     UiTextKey.AccountDeleteReauthRequired to "請重新輸入密碼以確認刪除",

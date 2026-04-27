@@ -418,7 +418,7 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ 此操作永久不可撤销！",
     UiTextKey.AccountDeleteConfirmMessage to "您所有的数据，包括历史记录、词库、学习材料和设置，将被永久删除。请输入密码确认。",
     UiTextKey.AccountDeletePasswordLabel to "密码",
-    UiTextKey.AccountDeleteButton to "删除我的账号",
+        UiTextKey.AccountDeleteButton to "删除我的账号和数据",
     UiTextKey.AccountDeleteSuccess to "账号删除成功",
     UiTextKey.AccountDeleteError to "账号删除失败",
     UiTextKey.AccountDeleteReauthRequired to "请重新输入密码以确认删除",

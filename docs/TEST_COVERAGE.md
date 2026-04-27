@@ -6,22 +6,22 @@ _Last updated: 2026-04-27_
 
 | Metric | Count |
 |---|---:|
-| Android source files (`app/src/main/java/com/translator/TalknLearn`) | 237 |
-| Backend source files (`fyp-backend/functions/src/*.ts`) | 9 |
-| Android unit test files (`app/src/test/java/com/translator/TalknLearn`) | 194 |
-| Android test suites in latest `testDebugUnitTest` run | 194 |
-| Android unit tests executed (`testDebugUnitTest`) | 2,479 |
-| Backend test files (`fyp-backend/functions/src/__tests__`) | 15 |
-| Backend Jest tests executed (`npm test`) | 189 |
+| Android source files (`app/src/main/java/com/translator/TalknLearn`) | 241 |
+| Backend source files (`fyp-backend/functions/src/*.ts`) | 11 |
+| Android unit test files (`app/src/test/java/com/translator/TalknLearn`) | 197 |
+| Android test suites in latest `testDebugUnitTest` run | 196 |
+| Android unit tests executed (`testDebugUnitTest`) | 2,486 |
+| Backend test files (`fyp-backend/functions/src/__tests__`) | 17 |
+| Backend Jest tests executed (`npm run test:coverage`) | 193 |
 
 ## Backend Coverage (from `coverage-summary.json`)
 
 | Metric | Current |
 |---|---:|
-| Statements | 94.69% |
-| Branches | 80.66% |
-| Functions | 93.50% |
-| Lines | 95.62% |
+| Statements | 93.97% |
+| Branches | 79.50% |
+| Functions | 93.40% |
+| Lines | 94.83% |
 
 CI threshold in `fyp-backend/functions/jest.config.js`:
 - statements >= 90%
@@ -40,7 +40,7 @@ CI threshold in `fyp-backend/functions/jest.config.js`:
 - Android guard/invariant suites: `UiTextAlignmentTest`, `AccountDeletionGuardTest`, `PrimaryLanguageCooldownTest`, `UsernameCooldownTest`, `FavoriteLimitTest`, `NavigationBarInsetsTest`, `LanguageValidationTest`, `EnsurePublicProfileExistsUseCaseTest` (visibility-persistence merge-safety).
 - Translation resilience coverage includes `ErrorHandlingTest` assertions for `resource-exhausted` / rate-limit message mapping (content-translation only; UI language translations are now fully hardcoded — no API calls).
 - Android flow/integration suites: `FriendSystemIntegrationTest`, `FriendsFlowIntegrationTest`, `CoinAndGenerationIntegrationTest`, `QuizFlowIntegrationTest`, `DataLayerIntegrationTest`, `CrossLayerIntegrationTest`.
-- Backend contract/security suites: `translation.test.ts`, `learning.test.ts`, `coins.test.ts`, `notifications.test.ts` (includes friend-request, chat, and feedback rate-limit enforcement), `maintenance.test.ts`, `firestore-rules-settings.test.ts`.
+- Backend contract/security suites: `translation.test.ts`, `learning.test.ts`, `coins.test.ts`, `account-deletion.test.ts`, `app-check-wrapper.test.ts`, `notifications.test.ts` (includes friend-request, chat, and feedback rate-limit enforcement), `maintenance.test.ts`, `firestore-rules-settings.test.ts`.
 
 ## Known Low-Risk Gaps
 

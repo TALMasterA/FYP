@@ -84,6 +84,14 @@ class FirebaseAuthRepository @Inject constructor(
         firebaseAuth.signOut()
     }
 
+    /**
+     * Returns true if the currently signed-in user authenticated via Google Sign-In,
+     * false for email/password users or when no user is signed in.
+     */
+    fun isGoogleUser(): Boolean =
+        firebaseAuth.currentUser?.providerData
+            ?.any { it.providerId == GoogleAuthProvider.PROVIDER_ID } == true
+
     private fun FirebaseUser.toUser() = User(
         uid = uid,
         email = email

@@ -2,12 +2,13 @@ package com.translator.TalknLearn.data.user
 
 import org.junit.Test
 import org.junit.Assert.*
+import java.io.File
 
 /**
  * Guards the account deletion cleanup path count.
  *
  * When a new Firestore subcollection is added for a user, you MUST also add
- * its cleanup call to FirestoreProfileRepository.deleteAccount().
+ * its cleanup call to the server-side deleteAccountAndData Cloud Function.
  * This test ensures the deletion code references all expected collections.
  *
  * Current expected subcollections (18):
@@ -62,5 +63,17 @@ class AccountDeletionGuardTest {
         // Guard that we don't accidentally have duplicates in the set
         val list = EXPECTED_SUBCOLLECTIONS.toList()
         assertEquals(list.size, list.distinct().size)
+    }
+
+    @Test
+    fun `server-side deleteAccountAndData references every expected subcollection`() {
+        val source = File("../fyp-backend/functions/src/accountDeletion.ts").readText()
+
+        EXPECTED_SUBCOLLECTIONS.forEach { collectionName ->
+            assertTrue(
+                "deleteAccountAndData must delete users/{uid}/$collectionName",
+                source.contains("\"$collectionName\"")
+            )
+        }
     }
 }

@@ -4,7 +4,7 @@
  * Uses Azure OpenAI to generate language-learning exercises,
  * with per-user rate limiting via Firestore.
  */
-import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {HttpsError} from "firebase-functions/v2/https";
 import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import fetch from "node-fetch";
 import * as admin from "firebase-admin";
@@ -18,6 +18,7 @@ import {
   GENAI_API_VERSION,
   GENAI_API_KEY,
 } from "./helpers.js";
+import {onAppCheckCall} from "./functionWrappers.js";
 import {logger} from "./logger.js";
 
 const LANG_CODE_RE = /^[a-z]{2}(-[A-Z]{2})?$/;
@@ -119,11 +120,10 @@ export const syncQuizVersionFromLearningSheet = onDocumentWritten(
   }
 );
 
-export const generateLearningContent = onCall(
+export const generateLearningContent = onAppCheckCall(
   {
     secrets: [GENAI_BASE_URL, GENAI_API_VERSION, GENAI_API_KEY],
     timeoutSeconds: 300, // 5 minutes timeout for AI generation
-    enforceAppCheck: true,
   },
   async (request) => {
     try {

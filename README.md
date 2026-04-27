@@ -18,8 +18,8 @@ Please use your gmail to register.
 
 ## 🛠️ Tech Stack
 
-**Frontend:** Android Studio, Kotlin, Compose  
-**Backend:** Firebase (Auth, Firestore, Cloud Functions), Azure (Speech, Translation, OpenAI)  
+**Frontend:** Android Studio, Kotlin, Compose
+**Backend:** Firebase (Auth, Firestore, Cloud Functions), Azure (Speech, Translation, OpenAI)
 **Key Libraries:** Hilt (DI), Coroutines & Flow, Serialization, OkHttp, DataStore
 
 --------------------------------------------------------------
@@ -27,10 +27,10 @@ Please use your gmail to register.
 ## 🛠️ CI & Quality Checks
 
 **GitHub Actions workflows:**
-1. **CI (`ci.yml`)**: Android unit tests, debug APK build, backend linting, backend build, and Jest coverage (50% threshold)
+1. **CI (`ci.yml`)**: Android unit tests, debug APK build, backend linting, backend build, and Jest coverage (90/78/90/90 threshold)
 2. **CodeQL (`codeql.yml`)**: Weekly + on-demand semantic analysis for security vulnerabilities
 
-**Status:**  
+**Status:**
 ![CI](https://github.com/TALMasterA/FYP/actions/workflows/ci.yml/badge.svg)
 ![CodeQL](https://github.com/TALMasterA/FYP/actions/workflows/codeql.yml/badge.svg)
 
@@ -118,7 +118,7 @@ Please use your gmail to register.
 **User Accounts:**
 - Email/password authentication via Firebase
 - Google Sign-In (Firebase Auth Google provider; classic `play-services-auth` flow)
-- Profile management (username, account deletion)
+- Profile management (username, server-side account and data deletion)
 - Password reset via email
 - Auto sign-out on app version update
 - First-launch and post-update onboarding (re-shown after each update)
@@ -129,7 +129,7 @@ Please use your gmail to register.
 - Offline banner when connectivity lost
 - Help & Notes screen (Cautions, Features, Tips, Friend System, Privacy)
 - App-wide troubleshooting guidance: if an action stays unavailable after required steps, restart the app and try again
-- Centralized error handling: auto-dismiss (3s), list screens auto-scroll to errors, Crashlytics logging
+- Centralized error handling: auto-dismiss (3s), list screens auto-scroll to errors, Crashlytics logging with hashed message metadata only
 - Edge-to-edge display with proper system insets handling
 
 --------------------------------------------------------------
@@ -202,6 +202,10 @@ copy that generated token into **Firebase Console → App Check → Apps → Man
 debug tokens**. Without a valid debug token, all v2 callable functions reject
 the call with `unauthenticated` / App Check failure.
 
+Backend callables are created through `functionWrappers.ts` so App Check stays
+enforced by default. The backend Jest suite includes a static guard that fails
+CI if a production source file imports `onCall` / `onRequest` directly.
+
 --------------------------------------------------------------
 
 ## 💻 Development Workflow
@@ -263,8 +267,8 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 194 test suites, 2,479 unit tests (from the latest `testDebugUnitTest` report)
-- **Backend:** 15 test files, 189 tests
+- **Android:** 196 test suites, 2,486 unit tests (from the latest `testDebugUnitTest` report)
+- **Backend:** 17 test files, 193 tests
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown.
 

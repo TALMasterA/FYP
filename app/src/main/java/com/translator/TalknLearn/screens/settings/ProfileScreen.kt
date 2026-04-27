@@ -1,5 +1,8 @@
 package com.translator.TalknLearn.screens.settings
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,11 +31,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.translator.TalknLearn.R
 import com.translator.TalknLearn.core.StandardScreenScaffold
 import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.core.rememberUiTextFunctions
@@ -57,6 +65,35 @@ fun ProfileScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var deletePassword by remember { mutableStateOf("") }
     var showUsernameConfirm by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val googleWebClientId = context.getString(R.string.default_web_client_id)
+    val googleSignInClient = remember(context, googleWebClientId) {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(googleWebClientId)
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso)
+    }
+    var googleReauthError by remember { mutableStateOf<String?>(null) }
+    val googleReauthLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            try {
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                val account = task.getResult(ApiException::class.java)
+                val idToken = account?.idToken
+                if (idToken != null) {
+                    viewModel.deleteAccountWithGoogle(idToken)
+                } else {
+                    googleReauthError = "Google sign-in failed: no ID token."
+                }
+            } catch (e: ApiException) {
+                googleReauthError = "Google sign-in failed. Please try again."
+            }
+        }
+    }
 
     LaunchedEffect(uiState.profile) {
         username = uiState.profile.username
@@ -272,6 +309,7 @@ fun ProfileScreen(
             onDismissRequest = {
                 showDeleteDialog = false
                 deletePassword = ""
+                googleReauthError = null
             },
             title = { Text(t(UiTextKey.AccountDeleteTitle)) },
             text = {
@@ -281,16 +319,24 @@ fun ProfileScreen(
                 ) {
                     Text(t(UiTextKey.AccountDeleteConfirmMessage))
 
-                    OutlinedTextField(
-                        value = deletePassword,
-                        onValueChange = { deletePassword = it },
-                        label = { Text(t(UiTextKey.AccountDeletePasswordLabel)) },
-                        visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                    if (uiState.isGoogleUser) {
+                        Text(
+                            text = "Re-authenticate with your Google account to confirm.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        OutlinedTextField(
+                            value = deletePassword,
+                            onValueChange = { deletePassword = it },
+                            label = { Text(t(UiTextKey.AccountDeletePasswordLabel)) },
+                            visualTransformation = PasswordVisualTransformation(),
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                    }
 
-                    uiState.deleteError?.let { error ->
+                    (googleReauthError ?: uiState.deleteError)?.let { error ->
                         Text(
                             text = error,
                             color = MaterialTheme.colorScheme.error,
@@ -301,8 +347,17 @@ fun ProfileScreen(
             },
             confirmButton = {
                 Button(
-                    onClick = { viewModel.deleteAccount(deletePassword) },
-                    enabled = deletePassword.isNotBlank() && !uiState.isDeletingAccount,
+                    onClick = {
+                        if (uiState.isGoogleUser) {
+                            googleReauthError = null
+                            googleSignInClient.signOut().addOnCompleteListener {
+                                googleReauthLauncher.launch(googleSignInClient.signInIntent)
+                            }
+                        } else {
+                            viewModel.deleteAccount(deletePassword)
+                        }
+                    },
+                    enabled = (uiState.isGoogleUser || deletePassword.isNotBlank()) && !uiState.isDeletingAccount,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
                     )
@@ -313,7 +368,7 @@ fun ProfileScreen(
                             color = MaterialTheme.colorScheme.onError
                         )
                     } else {
-                        Text(t(UiTextKey.AccountDeleteButton))
+                        Text(if (uiState.isGoogleUser) "Continue with Google" else t(UiTextKey.AccountDeleteButton))
                     }
                 }
             },
@@ -321,6 +376,7 @@ fun ProfileScreen(
                 TextButton(onClick = {
                     showDeleteDialog = false
                     deletePassword = ""
+                    googleReauthError = null
                 }) {
                     Text(t(UiTextKey.ActionCancel))
                 }

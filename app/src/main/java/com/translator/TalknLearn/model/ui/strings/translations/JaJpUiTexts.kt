@@ -418,7 +418,7 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ この操作は永久に取り消せません！",
     UiTextKey.AccountDeleteConfirmMessage to "履歴、単語帳、学習教材、設定を含むすべてのデータが永久に削除されます。パスワードを入力して確認してください。",
     UiTextKey.AccountDeletePasswordLabel to "パスワード",
-    UiTextKey.AccountDeleteButton to "アカウントを削除",
+        UiTextKey.AccountDeleteButton to "アカウントとデータを削除",
     UiTextKey.AccountDeleteSuccess to "アカウント削除成功",
     UiTextKey.AccountDeleteError to "アカウント削除に失敗",
     UiTextKey.AccountDeleteReauthRequired to "削除を確認するにはパスワードを再入力してください",

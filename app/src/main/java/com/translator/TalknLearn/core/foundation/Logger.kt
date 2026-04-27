@@ -3,6 +3,7 @@ package com.translator.TalknLearn.core
 import android.util.Log
 import com.translator.TalknLearn.BuildConfig
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import java.security.MessageDigest
 
 /**
  * Centralized logger for the FYP application.
@@ -41,13 +42,24 @@ object AppLogger {
         Log.e("FYP:$tag", message, throwable)
         try {
             val crashlytics = FirebaseCrashlytics.getInstance()
-            crashlytics.log("E/$tag: $message")
+            val safeTag = crashlyticsSafeTag(tag)
+            crashlytics.log("E/$safeTag")
+            crashlytics.setCustomKey("last_error_tag", safeTag)
+            crashlytics.setCustomKey("last_error_message_hash", messageHash(message))
             if (throwable != null) {
                 crashlytics.recordException(throwable)
             }
         } catch (_: Exception) {
             // Crashlytics not initialized yet (e.g., during early startup)
         }
+    }
+
+    private fun crashlyticsSafeTag(tag: String): String =
+        tag.replace(Regex("[^A-Za-z0-9_.-]"), "_").take(64).ifBlank { "unknown" }
+
+    private fun messageHash(message: String): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(message.toByteArray(Charsets.UTF_8))
+        return digest.joinToString("") { byte -> "%02x".format(byte) }.take(16)
     }
 }
 

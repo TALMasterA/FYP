@@ -418,7 +418,7 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ Необратимое действие!",
     UiTextKey.AccountDeleteConfirmMessage to "Все данные будут удалены навсегда: история, словарь, материалы, настройки. Введите пароль для подтверждения",
     UiTextKey.AccountDeletePasswordLabel to "Пароль",
-    UiTextKey.AccountDeleteButton to "Удалить аккаунт",
+        UiTextKey.AccountDeleteButton to "Удалить аккаунт и данные",
     UiTextKey.AccountDeleteSuccess to "Аккаунт успешно удалён",
     UiTextKey.AccountDeleteError to "Ошибка удаления",
     UiTextKey.AccountDeleteReauthRequired to "Введите пароль для подтверждения удаления",

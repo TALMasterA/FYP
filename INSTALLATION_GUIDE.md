@@ -132,15 +132,20 @@ The repository contains:
    firebase deploy --only functions
    ```
 
-4. **Verify deployment** in Firebase Console → Functions tab. Key functions include:
+4. **Optional account-deletion confirmation email setup:**
+   - Install Firebase's **Trigger Email** extension (or an equivalent mail processor) for the `mail` collection.
+   - Set Functions environment variable `ACCOUNT_DELETION_EMAIL_ENABLED=true` only after the mail processor is working.
+   - Enable Firestore TTL on the `mail.ttlAt` field so queued confirmation-email documents expire.
+
+5. **Verify deployment** in Firebase Console → Functions tab. Key functions include:
    - `translateText` — Text translation via Azure
+   - `translateTexts` — Batch translation via Azure
+   - `detectLanguage` — Language detection via Azure
    - `getSpeechToken` — Azure Speech token provider
    - `generateLearningContent` — AI-powered learning sheet generation
-   - `generateQuiz` — Quiz generation from learning sheets
-   - `generateWordBank` — Word bank generation
-   - `awardCoins` — Coin system with anti-cheat
-   - `sendFriendRequest`, `acceptFriendRequest` — Friend system
-   - `sendChatMessage` — Real-time chat with auto-translation
+   - `awardQuizCoins`, `spendCoins` — Coin system with anti-cheat
+   - `deleteAccountAndData` — Server-side account and data deletion
+   - `sendChatNotification`, `sendFriendRequestNotification`, `sendSharedInboxNotification` — Notification triggers
 
 ---
 
@@ -186,7 +191,7 @@ The repository contains:
 
 ### Android Unit Tests
 ```bash
-# Run all unit tests (2,437 tests across 187 test files)
+# Run all unit tests (2,486 tests across 197 test files)
 ./gradlew testDebugUnitTest
 
 # Run a specific test class
@@ -197,7 +202,7 @@ The repository contains:
 ```bash
 cd fyp-backend/functions
 
-# Run all tests (184 tests across 14 test files)
+# Run all tests (193 tests across 17 test files)
 npm test
 
 # Run with coverage
@@ -208,7 +213,7 @@ npm run test:coverage
 The project includes GitHub Actions CI (`.github/workflows/ci.yml`) that runs:
 - Android unit tests
 - Debug APK build
-- Backend lint, build, and Jest coverage (50% threshold)
+- Backend lint, build, and Jest coverage (90/78/90/90 threshold)
 
 ---
 

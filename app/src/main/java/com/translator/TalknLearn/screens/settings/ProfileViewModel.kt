@@ -28,6 +28,7 @@ data class ProfileUiState(
     val isLoading: Boolean = false,
     val profile: PublicUserProfile = PublicUserProfile(),
     val email: String? = null,
+    val isGoogleUser: Boolean = false,
     val error: String? = null,
     val successMessage: String? = null,
     val isDeletingAccount: Boolean = false,
@@ -59,7 +60,8 @@ class ProfileViewModel @Inject constructor(
                     is AuthState.LoggedIn -> {
                         currentUserId = auth.user.uid
                         _uiState.value = _uiState.value.copy(
-                            email = auth.user.email
+                            email = auth.user.email,
+                            isGoogleUser = profileRepo.isGoogleUser()
                         )
                         observeProfile(auth.user.uid)
                     }
@@ -246,6 +248,41 @@ class ProfileViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    /** Delete account for a user who authenticated via Google Sign-In. */
+    fun deleteAccountWithGoogle(idToken: String) {
+        val userId = currentUserId ?: return
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isDeletingAccount = true,
+                deleteError = null
+            )
+            profileRepo.reauthenticateWithGoogle(idToken)
+                .onSuccess {
+                    profileRepo.deleteAccount(userId)
+                        .onSuccess {
+                            AuditLogger.logAccountDeleted(userId = userId)
+                            runCatching { sessionDataCleaner.clearSessionData() }
+                            _uiState.value = _uiState.value.copy(
+                                isDeletingAccount = false,
+                                accountDeleted = true
+                            )
+                        }
+                        .onFailure { e ->
+                            _uiState.value = _uiState.value.copy(
+                                isDeletingAccount = false,
+                                deleteError = e.message ?: "Failed to delete account"
+                            )
+                        }
+                }
+                .onFailure { _ ->
+                    _uiState.value = _uiState.value.copy(
+                        isDeletingAccount = false,
+                        deleteError = "Google re-authentication failed. Please try again."
+                    )
+                }
+        }
     }
 
     fun clearSuccessMessage() {

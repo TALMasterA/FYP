@@ -1,7 +1,7 @@
 /**
  * Health and readiness checks.
  */
-import {onRequest} from "firebase-functions/v2/https";
+import {onPublicRequest} from "./functionWrappers.js";
 import {
   GENAI_BASE_URL,
   GENAI_API_KEY,
@@ -10,7 +10,7 @@ import {
 } from "./helpers.js";
 import {logger} from "./logger.js";
 
-export const healthcheck = onRequest(
+export const healthcheck = onPublicRequest(
   {
     secrets: [GENAI_BASE_URL, GENAI_API_VERSION, GENAI_API_KEY],
   },

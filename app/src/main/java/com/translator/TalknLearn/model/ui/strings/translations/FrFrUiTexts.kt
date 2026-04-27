@@ -418,7 +418,7 @@ val FrFrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ Cette action est permanente et irréversible !",
     UiTextKey.AccountDeleteConfirmMessage to "Toutes les données seront supprimées définitivement : historique, banque de mots, matériel d'apprentissage, paramètres. Entrez votre mot de passe pour confirmer.",
     UiTextKey.AccountDeletePasswordLabel to "Mot de passe",
-    UiTextKey.AccountDeleteButton to "Supprimer le compte",
+        UiTextKey.AccountDeleteButton to "Supprimer mon compte et mes données",
     UiTextKey.AccountDeleteSuccess to "Compte supprimé avec succès",
     UiTextKey.AccountDeleteError to "Échec de la suppression",
     UiTextKey.AccountDeleteReauthRequired to "Entrez votre mot de passe pour confirmer la suppression",

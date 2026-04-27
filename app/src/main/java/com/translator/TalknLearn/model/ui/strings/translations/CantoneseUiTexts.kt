@@ -418,7 +418,7 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ 呢個操作永久無法還原！",
     UiTextKey.AccountDeleteConfirmMessage to "你所有嘅資料，包括歷史紀錄、生字庫、學習材料同設定，將會永久刪除。請輸入密碼確認。",
     UiTextKey.AccountDeletePasswordLabel to "密碼",
-    UiTextKey.AccountDeleteButton to "刪除我嘅帳號",
+        UiTextKey.AccountDeleteButton to "刪除我嘅帳號同資料",
     UiTextKey.AccountDeleteSuccess to "帳號刪除成功",
     UiTextKey.AccountDeleteError to "帳號刪除失敗",
     UiTextKey.AccountDeleteReauthRequired to "請重新輸入密碼以確認刪除",

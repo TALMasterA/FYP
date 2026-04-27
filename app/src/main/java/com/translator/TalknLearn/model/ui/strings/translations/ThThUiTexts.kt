@@ -418,7 +418,7 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ การกระทำนี้ถาวรและไม่สามารถย้อนกลับ!",
     UiTextKey.AccountDeleteConfirmMessage to "ข้อมูลทั้งหมดจะถูกลบถาวร: ประวัติ คลังคำ สื่อการเรียน ตั้งค่า กรอกรหัสผ่านเพื่อยืนยัน",
     UiTextKey.AccountDeletePasswordLabel to "รหัสผ่าน",
-    UiTextKey.AccountDeleteButton to "ลบบัญชี",
+        UiTextKey.AccountDeleteButton to "ลบบัญชีและข้อมูลของฉัน",
     UiTextKey.AccountDeleteSuccess to "ลบบัญชีสำเร็จ",
     UiTextKey.AccountDeleteError to "ลบไม่สำเร็จ",
     UiTextKey.AccountDeleteReauthRequired to "กรอกรหัสผ่านเพื่อยืนยันการลบ",

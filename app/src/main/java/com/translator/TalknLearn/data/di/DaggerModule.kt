@@ -37,6 +37,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import com.translator.TalknLearn.data.cloud.CloudGenAiClient
+import com.translator.TalknLearn.data.cloud.CloudAccountDeletionClient
 import com.translator.TalknLearn.data.learning.LearningContentRepositoryImpl
 import com.translator.TalknLearn.data.learning.FirestoreLearningSheetsRepository
 import com.translator.TalknLearn.data.learning.FirestoreQuizRepository
@@ -212,10 +213,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideFirestoreProfileRepository(
-        db: FirebaseFirestore,
-        auth: FirebaseAuth
+        auth: FirebaseAuth,
+        accountDeletionClient: CloudAccountDeletionClient
     ): FirestoreProfileRepository =
-        FirestoreProfileRepository(db, auth)
+        FirestoreProfileRepository(auth, accountDeletionClient)
 
     @Provides
     @Singleton

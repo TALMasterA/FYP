@@ -14,53 +14,34 @@
 ## 1. Security & Privacy
 
 1. **Re-enable account registration with abuse controls.** README §Development
-   Cautions notes registration is disabled project-wide. Before submission /
-   public release, gate registration behind: (a) Firebase App Check enforcement
-   on the registration callable, (b) per-IP and per-device daily caps in the
-   `rate_limits/` collection, (c) email-domain allow/deny list if needed.
-   Document the re-enable runbook alongside `docs/SECRETS_ROTATION.md`.
-2. **App Check enforcement parity.** Debug builds use the Firebase Debug
-   provider (README §Firebase App Check). Add a CI check that fails the build
-   if any new `onCall`/`onRequest` is added without going through the existing
-   App-Check-protected wrapper, so future endpoints can't accidentally ship
-   without attestation.
-3. **Firestore security-rules tests.** Backend has 189 Jest tests, but the
-   repo doesn't expose a `firestore.rules` emulator test suite. Add a
-   `@firebase/rules-unit-testing` suite covering: blocked-user write denial,
-   `friend_requests` rate-limit doc immutability, `coin_awards` insert-only,
-   `quiz_versions` monotonic increments, `users/{uid}/...` cross-user denial.
-4. **Secret-rotation drill.** `docs/SECRETS_ROTATION.md` exists; add a yearly
-   reminder issue template (`.github/ISSUE_TEMPLATE/secret-rotation.md`) and
-   a CI job that warns if any `firebase functions:secrets:*` value has not
-   been rotated in the last 12 months (timestamp tracked in a
-   `meta/secrets_meta` Firestore doc).
-5. **Crashlytics PII review.** Centralized error handling logs to Crashlytics
-   (README §Navigation & UI). Add a unit test that scans
-   `core/foundation` logging helpers to ensure user input strings (translation
-   text, chat messages, usernames) are never passed verbatim to Crashlytics.
-6. **Right-to-erasure automation.** `PRIVACY_AND_COMPLIANCE.md` defines a
-   right-to-erasure procedure; surface a "Delete my account & data" button in
-   Settings that triggers a Cloud Function performing the documented deletion
-   (Firestore subcollections + FCM tokens + Auth user) atomically, with a
-   confirmation email.
-7. **Backup-rule regression test.** `backup_rules.xml` and
-   `data_extraction_rules.xml` explicitly exclude `secure_prefs` and DataStore
-   caches. Add an instrumented test (or a Robolectric XML parse test) that
-   asserts these excludes are present, so future merges can't silently
-   weaken the backup posture.
+    Cautions notes registration is disabled project-wide. Before submission /
+    public release, gate registration behind: (a) Firebase App Check enforcement
+    on the registration callable, (b) per-IP and per-device daily caps in the
+    `rate_limits/` collection, (c) email-domain allow/deny list if needed.
+    Document the re-enable runbook alongside `docs/SECRETS_ROTATION.md`.
+2. **Firestore security-rules tests.** Backend has 193 Jest tests, but the
+    repo doesn't expose a `firestore.rules` emulator test suite. Add a
+    `@firebase/rules-unit-testing` suite covering: blocked-user write denial,
+    `friend_requests` rate-limit doc immutability, `coin_awards` insert-only,
+    `quiz_versions` monotonic increments, `users/{uid}/...` cross-user denial.
+
+Implemented in this sweep: App Check wrapper guard, Crashlytics PII guard,
+server-side right-to-erasure callable, backup-rule regression tests, and a
+yearly secret-rotation issue template. Secret rotation no longer requires live
+Firestore metadata.
 
 ## 2. Testing & Quality
 
-8. **Coverage gate for Android.** Backend has a 50% Jest threshold (README
-   §CI). Add a JaCoCo (or Kover) report task and start an Android coverage
+8. **Coverage gate for Android.** Backend has Jest coverage thresholds of
+    90/78/90/90 (statements/branches/functions/lines). Add a JaCoCo (or Kover) report task and start an Android coverage
     floor — even a low initial gate (e.g., 35% line) prevents drift in the
-    2,478-test suite.
+    2,486-test suite.
 9. **Mutation testing for critical anti-cheat code.** Run Pitest /
    `pitest-gradle` on `domain/learning` and the coin-award guard
    (`QuizCoinEarningGuardTest`). These are the highest-blast-radius pieces of
    business logic; surviving mutants there are the most valuable to fix.
-10. **UI snapshot / Compose tests.** The repo has 240 main Kotlin files and
-    194 test files but appears to be unit-test-heavy. Add Compose UI tests
+10. **UI snapshot / Compose tests.** The repo has 241 main Kotlin files and
+    197 test files but appears to be unit-test-heavy. Add Compose UI tests
     (Paparazzi or `androidx.compose.ui.test`) for: bottom-nav badge states,
     offline banner, error auto-dismiss, empty-state screens for Learning /
     Word Bank when no language pair is eligible.
@@ -257,7 +238,7 @@
 
 | Tier | Theme                                                                                  |
 | ---- | -------------------------------------------------------------------------------------- |
-| P0   | §1.3 Firestore rules tests, §1.6 right-to-erasure, §2.10 Compose UI tests, §6.34 cost guard |
+| P0   | §1.2 Firestore rules tests, §2.10 Compose UI tests, §6.34 cost guard |
 | P1   | §3.14 startup benchmark, §3.15 baseline profile, §4.22 SRS, §5.32 locale completeness CI    |
 | P2   | §7.39 auto-generated tree, §7.42 ADRs, §8.44 module split, §9.50 perf traces                |
 | P3   | Remaining nice-to-haves                                                                 |

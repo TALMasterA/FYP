@@ -418,7 +418,7 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ 이 작업은 영구적으로 되돌릴 수 없습니다!",
     UiTextKey.AccountDeleteConfirmMessage to "기록, 단어장, 학습 자료, 설정을 포함한 모든 데이터가 영구 삭제됩니다. 비밀번호를 입력하여 확인하세요.",
     UiTextKey.AccountDeletePasswordLabel to "비밀번호",
-    UiTextKey.AccountDeleteButton to "계정 삭제",
+        UiTextKey.AccountDeleteButton to "계정 및 데이터 삭제",
     UiTextKey.AccountDeleteSuccess to "계정 삭제 성공",
     UiTextKey.AccountDeleteError to "계정 삭제 실패",
     UiTextKey.AccountDeleteReauthRequired to "삭제를 확인하려면 비밀번호를 다시 입력하세요",

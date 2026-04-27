@@ -418,7 +418,7 @@ val DeDeUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ Diese Aktion ist dauerhaft und nicht rückgängig zu machen!",
     UiTextKey.AccountDeleteConfirmMessage to "Alle Daten werden dauerhaft gelöscht: Verlauf, Wortbank, Lernmaterial, Einstellungen. Geben Sie Ihr Passwort zur Bestätigung ein.",
     UiTextKey.AccountDeletePasswordLabel to "Passwort",
-    UiTextKey.AccountDeleteButton to "Konto löschen",
+        UiTextKey.AccountDeleteButton to "Konto und Daten löschen",
     UiTextKey.AccountDeleteSuccess to "Konto erfolgreich gelöscht",
     UiTextKey.AccountDeleteError to "Löschung fehlgeschlagen",
     UiTextKey.AccountDeleteReauthRequired to "Geben Sie Ihr Passwort zur Bestätigung der Löschung ein",

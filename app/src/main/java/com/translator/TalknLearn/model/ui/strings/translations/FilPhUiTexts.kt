@@ -418,7 +418,7 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ Permanente at hindi na maaaring ibalik!",
     UiTextKey.AccountDeleteConfirmMessage to "Lahat ng data ay permanenteng mabubura: kasaysayan, bangko ng salita, materyal, settings. Ilagay ang password para kumpirmahin",
     UiTextKey.AccountDeletePasswordLabel to "Password",
-    UiTextKey.AccountDeleteButton to "Burahin ang account",
+        UiTextKey.AccountDeleteButton to "Burahin ang aking account at data",
     UiTextKey.AccountDeleteSuccess to "Matagumpay na nabura ang account",
     UiTextKey.AccountDeleteError to "Hindi nabura",
     UiTextKey.AccountDeleteReauthRequired to "Ilagay ang password para kumpirmahin ang pagbura",

@@ -418,7 +418,7 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ Permanente e irreversibile!",
     UiTextKey.AccountDeleteConfirmMessage to "Tutti i dati saranno eliminati permanentemente: cronologia, banca parole, materiali, impostazioni. Inserisci la password per confermare",
     UiTextKey.AccountDeletePasswordLabel to "Password",
-    UiTextKey.AccountDeleteButton to "Elimina account",
+        UiTextKey.AccountDeleteButton to "Elimina account e dati",
     UiTextKey.AccountDeleteSuccess to "Account eliminato con successo",
     UiTextKey.AccountDeleteError to "Eliminazione fallita",
     UiTextKey.AccountDeleteReauthRequired to "Inserisci la password per confermare l'eliminazione",

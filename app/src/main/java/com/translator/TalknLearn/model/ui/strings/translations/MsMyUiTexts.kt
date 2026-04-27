@@ -418,7 +418,7 @@ val MsMyUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ Kekal dan tidak boleh dibatalkan!",
     UiTextKey.AccountDeleteConfirmMessage to "Semua data akan dipadam secara kekal: sejarah, bank perkataan, bahan, tetapan. Masukkan kata laluan untuk mengesahkan",
     UiTextKey.AccountDeletePasswordLabel to "Kata laluan",
-    UiTextKey.AccountDeleteButton to "Padam akaun",
+        UiTextKey.AccountDeleteButton to "Padam akaun dan data saya",
     UiTextKey.AccountDeleteSuccess to "Akaun berjaya dipadam",
     UiTextKey.AccountDeleteError to "Gagal memadam",
     UiTextKey.AccountDeleteReauthRequired to "Masukkan kata laluan untuk mengesahkan pemadaman",

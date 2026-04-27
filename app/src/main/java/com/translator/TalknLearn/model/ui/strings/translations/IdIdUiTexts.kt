@@ -418,7 +418,7 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ Tindakan ini permanen dan tidak dapat dibatalkan!",
     UiTextKey.AccountDeleteConfirmMessage to "Semua data akan dihapus permanen: riwayat, bank kata, materi belajar, pengaturan. Masukkan kata sandi untuk konfirmasi.",
     UiTextKey.AccountDeletePasswordLabel to "Kata sandi",
-    UiTextKey.AccountDeleteButton to "Hapus akun",
+        UiTextKey.AccountDeleteButton to "Hapus akun dan data saya",
     UiTextKey.AccountDeleteSuccess to "Akun berhasil dihapus",
     UiTextKey.AccountDeleteError to "Gagal menghapus",
     UiTextKey.AccountDeleteReauthRequired to "Masukkan kata sandi untuk mengonfirmasi penghapusan",

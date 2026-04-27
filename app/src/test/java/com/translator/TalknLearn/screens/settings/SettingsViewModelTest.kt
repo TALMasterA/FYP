@@ -54,6 +54,8 @@ import org.mockito.kotlin.*
  * 12. clearError clears both errorKey and errorRaw
  * 13. updateNotificationPref success updates correct field
  * 14. updateNotificationPref caches preference to SharedPreferences for FCM
+ * 15. LoggedIn email account sets isGoogleUser false
+ * 16. LoggedIn Google account sets isGoogleUser true
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
@@ -478,6 +480,24 @@ class SettingsViewModelTest {
 
         assertNotNull(vm.uiState.value.errorRaw)
         assertTrue(vm.uiState.value.errorRaw!!.contains("voice"))
+    }
+
+    // ── isGoogleUser ──
+
+    @Test
+    fun `LoggedIn with email account sets isGoogleUser false`() = runTest {
+        whenever(authRepo.isGoogleUser()).thenReturn(false)
+        val vm = buildViewModel()
+
+        assertFalse(vm.uiState.value.isGoogleUser)
+    }
+
+    @Test
+    fun `LoggedIn with Google account sets isGoogleUser true`() = runTest {
+        whenever(authRepo.isGoogleUser()).thenReturn(true)
+        val vm = buildViewModel()
+
+        assertTrue(vm.uiState.value.isGoogleUser)
     }
 
 }

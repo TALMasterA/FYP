@@ -418,7 +418,7 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ Hành động này vĩnh viễn và không thể hoàn tác!",
     UiTextKey.AccountDeleteConfirmMessage to "Tất cả dữ liệu sẽ bị xóa vĩnh viễn: lịch sử, ngân hàng từ, tài liệu học, cài đặt. Nhập mật khẩu để xác nhận.",
     UiTextKey.AccountDeletePasswordLabel to "Mật khẩu",
-    UiTextKey.AccountDeleteButton to "Xóa tài khoản",
+        UiTextKey.AccountDeleteButton to "Xóa tài khoản và dữ liệu",
     UiTextKey.AccountDeleteSuccess to "Tài khoản đã xóa thành công",
     UiTextKey.AccountDeleteError to "Xóa thất bại",
     UiTextKey.AccountDeleteReauthRequired to "Nhập mật khẩu để xác nhận xóa",

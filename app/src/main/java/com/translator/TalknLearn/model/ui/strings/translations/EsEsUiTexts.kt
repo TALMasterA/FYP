@@ -418,7 +418,7 @@ val EsEsUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteWarning to "⚠️ ¡Esta acción es permanente e irreversible!",
     UiTextKey.AccountDeleteConfirmMessage to "Se eliminarán permanentemente todos los datos: historial, banco de palabras, material de aprendizaje, configuración. Ingrese su contraseña para confirmar.",
     UiTextKey.AccountDeletePasswordLabel to "Contraseña",
-    UiTextKey.AccountDeleteButton to "Eliminar cuenta",
+        UiTextKey.AccountDeleteButton to "Eliminar mi cuenta y datos",
     UiTextKey.AccountDeleteSuccess to "Cuenta eliminada exitosamente",
     UiTextKey.AccountDeleteError to "Error al eliminar",
     UiTextKey.AccountDeleteReauthRequired to "Ingrese su contraseña para confirmar la eliminación",

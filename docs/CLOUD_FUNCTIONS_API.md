@@ -6,9 +6,9 @@ Notification triggers and scheduled jobs are explicitly configured to run in `us
 
 ## App Check (§2.3)
 
-All 7 v2 callable functions declare `enforceAppCheck: true`:
+All 8 v2 callable functions are created through `onAppCheckCall`, which injects `enforceAppCheck: true`:
 `getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage`,
-`generateLearningContent`, `awardQuizCoins`, `spendCoins`.
+`generateLearningContent`, `awardQuizCoins`, `spendCoins`, `deleteAccountAndData`.
 Requests without a valid App Check token are rejected by the platform
 before the handler runs. Debug builds use the Firebase Debug provider. Local
 debug APKs read the registered token from gitignored `local.properties`
@@ -16,6 +16,11 @@ debug APKs read the registered token from gitignored `local.properties`
 debug-only Firebase Component Discovery registrar. If no token is configured,
 the SDK prints a generated debug secret that must be registered in the Firebase
 console.
+
+`app-check-wrapper.test.ts` fails backend CI if production source files import
+`onCall` / `onRequest` from `firebase-functions/v2/https` directly instead of
+using `functionWrappers.ts`. HTTP endpoints that are intentionally public must
+go through `onPublicRequest`, making the exception explicit in review.
 
 ## Per-function runtime options (§2.10)
 
@@ -255,6 +260,44 @@ or
 ```json
 { "success": false, "reason": "insufficient_coins" }
 ```
+
+---
+
+## User Account Lifecycle
+
+### `deleteAccountAndData`
+Deletes the authenticated user's app data and Firebase Auth account from the backend.
+
+**Auth:** Required
+**App Check:** Required
+**Manual client guard:** Android re-authenticates email/password users before calling this endpoint.
+
+**Request:** _(no parameters)_
+
+**Response:**
+```json
+{ "success": true, "confirmationEmailQueued": true }
+```
+
+`confirmationEmailQueued` is `true` only when `ACCOUNT_DELETION_EMAIL_ENABLED=true`
+and a Firebase Trigger Email-compatible `mail` collection is configured.
+
+**Deletion scope:**
+- `users/{uid}` subcollections: history, word banks, learning sheets, quiz attempts/stats, generated quizzes, quiz versions, favorites, custom words, sessions, coin awards, last awarded quiz, user stats, friends, shared inbox, favorite sessions, blocked users, and FCM tokens.
+- `users/{uid}/profile/{settings,info,public}`.
+- Top-level lookup docs in `usernames` and `user_search`.
+- Firebase Auth user via Admin SDK.
+
+**Error Codes:**
+- `unauthenticated` — Missing Auth/App Check context
+- `not-found` — Auth user record could not be loaded
+- `internal` — Backend cleanup failed before completion
+
+**Operational email setup:** Install/configure Firebase's Trigger Email extension
+or an equivalent processor for the `mail` collection, set
+`ACCOUNT_DELETION_EMAIL_ENABLED=true` on deployed Functions, and enable Firestore
+TTL on the queued mail document's `ttlAt` field so confirmation-email documents
+do not persist indefinitely.
 
 ---
 

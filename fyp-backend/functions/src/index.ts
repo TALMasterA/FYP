@@ -26,6 +26,9 @@ export {generateLearningContent, syncQuizVersionFromLearningSheet} from "./learn
 // ── Coins & Shop ─────────────────────────────────────────────────────
 export {awardQuizCoins, spendCoins} from "./coins.js";
 
+// ── Account Deletion ─────────────────────────────────────────────────
+export {deleteAccountAndData} from "./accountDeletion.js";
+
 // ── Push Notifications ───────────────────────────────────────────────
 export {
   sendChatNotification,

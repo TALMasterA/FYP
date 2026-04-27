@@ -60,21 +60,31 @@ callable contract.
 ## 5. Right to Erasure (Article 17 / 1-tap delete)
 
 The user can erase their account at any time from
-`Settings → Profile → Delete Account` (`screens/settings/ProfileScreen` →
+`Settings → Profile → Delete My Account & Data`
+(`screens/settings/ProfileScreen` →
 `ProfileViewModel.deleteAccount`).
 
 The deletion path is enforced by **two regression guards**:
 
-1. `AccountDeletionGuardTest` asserts every user subcollection in
-   `FirestoreProfileRepository.deleteAccount` (currently 18 subcollections,
-   3 profile docs, 2 top-level docs) is wiped before Auth deletion.
-2. `SessionDataCleanerRegistrationTest` asserts the on-device cleanup
+1. `AccountDeletionGuardTest` asserts every user subcollection in the
+   server-side `deleteAccountAndData` callable (currently 18 subcollections,
+   3 profile docs, 2 top-level lookup groups) is included before Auth deletion.
+2. `BackupRulesGuardTest` asserts backup and device-transfer XML excludes still
+   cover `secure_prefs.xml`, DataStore caches, and the HTTP cache.
+3. `SessionDataCleanerRegistrationTest` asserts the on-device cleanup
    target list (currently `secureStorage`, `okHttpClient`, `translationCache`,
    `languageDetectionCache`) is complete.
 
 Server-side deletion order is: Firestore subcollections → profile docs →
-top-level lookup docs → Firebase Auth user. Device-side, `SessionDataCleaner`
-runs on logout AND on successful deletion so no stale cache survives.
+top-level lookup docs → `users/{uid}` → Firebase Auth user. Device-side,
+`SessionDataCleaner` runs on logout AND on successful deletion so no stale cache
+survives.
+
+Confirmation email is queued after successful Auth deletion only when the
+deployment explicitly enables it with `ACCOUNT_DELETION_EMAIL_ENABLED=true` and
+has a Firebase Trigger Email-compatible `mail` collection processor configured.
+The queued mail document includes `ttlAt`; enable Firestore TTL on that field so
+email-delivery metadata is short-lived.
 
 WordBank cleanup is performed separately by `AppViewModel` on
 `AuthState.LoggedOut`. The FCM token is revoked by
@@ -94,7 +104,7 @@ DPO contact: <add email here>
 If you add a new per-user Firestore subcollection, on-device cache, or
 remote processor, you must update **all** of:
 
-1. `FirestoreProfileRepository.deleteAccount` (server-side wipe)
+1. `fyp-backend/functions/src/accountDeletion.ts` (`deleteAccountAndData` wipe)
 2. `AccountDeletionGuardTest.EXPECTED_SUBCOLLECTIONS` (server-side guard)
 3. `SessionDataCleaner` constructor + `clearSessionData()` (device wipe)
 4. `SessionDataCleanerRegistrationTest.EXPECTED_CLEANUP_DEPS` (device guard)

@@ -4,7 +4,7 @@
  * Handles single/batch text translation and language detection
  * via the Azure Translator API.
  */
-import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {HttpsError} from "firebase-functions/v2/https";
 import fetch from "node-fetch";
 import {
   requireAuth,
@@ -21,6 +21,7 @@ import {
   API_VERSION,
   MAX_TRANSLATE_TEXT_LENGTH,
 } from "./helpers.js";
+import {onAppCheckCall} from "./functionWrappers.js";
 import {logger} from "./logger.js";
 
 // ── Batch content-translation rate limits ────────────────────────────
@@ -128,10 +129,9 @@ function throwTranslationApiError(
   );
 }
 
-export const getSpeechToken = onCall(
+export const getSpeechToken = onAppCheckCall(
   {
     secrets: [AZURE_SPEECH_KEY, AZURE_SPEECH_REGION],
-    enforceAppCheck: true,
   },
   async (request) => {
     requireAuth(request.auth);
@@ -164,10 +164,9 @@ export const getSpeechToken = onCall(
   }
 );
 
-export const translateText = onCall(
+export const translateText = onAppCheckCall(
   {
     secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
-    enforceAppCheck: true,
     concurrency: 80,
     cpu: 1,
     maxInstances: 50,
@@ -239,10 +238,9 @@ export const translateText = onCall(
  * API calls so the client only needs ONE Cloud Function invocation per
  * language change.
  */
-export const translateTexts = onCall(
+export const translateTexts = onAppCheckCall(
   {
     secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
-    enforceAppCheck: true,
     concurrency: 80,
     cpu: 1,
     maxInstances: 50,
@@ -386,10 +384,9 @@ export const translateTexts = onCall(
   }
 );
 
-export const detectLanguage = onCall(
+export const detectLanguage = onAppCheckCall(
   {
     secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
-    enforceAppCheck: true,
   },
   async (request) => {
     requireAuth(request.auth);

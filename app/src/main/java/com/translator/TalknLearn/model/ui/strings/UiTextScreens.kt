@@ -847,22 +847,22 @@ val ScreenUiTexts: List<String> = listOf(
     "Failed to update profile",
 
     // --- Account Deletion ---
-    // AccountDeleteTitle
-    "Delete Account",
+        // AccountDeleteTitle
+        "Delete Account",
 
-    // AccountDeleteWarning
-    "⚠️ This action is permanent and cannot be undone!",
+        // AccountDeleteWarning
+        "⚠️ This action is permanent and cannot be undone!",
 
-    // AccountDeleteConfirmMessage
-    "All your data including history, word banks, learning materials, and settings will be permanently deleted. Enter your password to confirm.",
+        // AccountDeleteConfirmMessage
+        "All your data including history, word banks, learning materials, and settings will be permanently deleted. Enter your password to confirm.",
 
-    // AccountDeletePasswordLabel
-    "Password",
+        // AccountDeletePasswordLabel
+        "Password",
 
-    // AccountDeleteButton
-    "Delete My Account",
+        // AccountDeleteButton
+        "Delete My Account & Data",
 
-    // AccountDeleteSuccess
+        // AccountDeleteSuccess
     "Account deleted successfully",
 
     // AccountDeleteError
