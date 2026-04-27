@@ -292,6 +292,9 @@ val ScreenUiTexts: List<String> = listOf(
     // AuthLoginButton
     "Login",
 
+        // AuthGoogleSignInButton
+        "Sign in with Google",
+
     // AuthRegisterButton
     "Register",
 

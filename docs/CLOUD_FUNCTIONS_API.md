@@ -258,7 +258,7 @@ or
 
 ---
 
-## Push Notifications (Firestore Triggers)
+## Firestore Triggers
 
 These are not callable functions — they fire automatically on Firestore document events.
 
@@ -269,7 +269,7 @@ These are not callable functions — they fire automatically on Firestore docume
 | `sendRequestAcceptedNotification`  | `friend_requests/{requestId}` updated            | Notifies sender when request accepted |
 | `sendSharedInboxNotification`      | `users/{userId}/shared_inbox/{itemId}` created   | Notifies recipient of new shared item |
 | `enforceFeedbackRateLimit`         | `feedback/{feedbackId}` created                  | Enforces 3/hour feedback rate limit (feedback deleted on exceed) |
-| `syncQuizVersionFromLearningSheet` | `learning_sheets/{sheetId}` created/updated      | Syncs quiz version for anti-cheat validation |
+| `syncQuizVersionFromLearningSheet` | `users/{userId}/learning_sheets/{sheetId}` written | Syncs or deletes quiz version metadata for anti-cheat validation |
 
 ---
 

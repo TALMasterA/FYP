@@ -1,6 +1,6 @@
 # Test Coverage Report
 
-_Last updated: 2026-04-26_
+_Last updated: 2026-04-27_
 
 ## Verified Snapshot (from local audit)
 
@@ -10,7 +10,7 @@ _Last updated: 2026-04-26_
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 9 |
 | Android unit test files (`app/src/test/java/com/translator/TalknLearn`) | 194 |
 | Android test suites in latest `testDebugUnitTest` run | 194 |
-| Android unit tests executed (`testDebugUnitTest`) | 2,478 |
+| Android unit tests executed (`testDebugUnitTest`) | 2,479 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 15 |
 | Backend Jest tests executed (`npm test`) | 189 |
 
@@ -24,10 +24,10 @@ _Last updated: 2026-04-26_
 | Lines | 95.62% |
 
 CI threshold in `fyp-backend/functions/jest.config.js`:
-- statements >= 50%
-- branches >= 45%
-- functions >= 50%
-- lines >= 50%
+- statements >= 90%
+- branches >= 78%
+- functions >= 90%
+- lines >= 90%
 
 ## CI And Security Checks
 

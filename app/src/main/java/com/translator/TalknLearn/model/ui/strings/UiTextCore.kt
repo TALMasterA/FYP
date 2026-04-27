@@ -180,6 +180,7 @@ enum class UiTextKey {
     AuthPasswordLabel,
     AuthConfirmPasswordLabel,
     AuthLoginButton,
+    AuthGoogleSignInButton,
     AuthRegisterButton,
     AuthToggleToRegister,
     AuthToggleToLogin,

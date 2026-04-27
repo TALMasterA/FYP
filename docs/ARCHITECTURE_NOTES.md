@@ -8,8 +8,8 @@
 
 **Invariant:** `UiTextKey` enum ordinals must 1-to-1 map to `BaseUiTexts` list entries.
 
-**Rule:** Add new `UiTextKey` entries and corresponding strings in same commit. Never reorder existing entries.  
-**Guard:** `UiTextAlignmentTest` enforces count equality.
+**Rule:** Add new `UiTextKey` entries and corresponding English + all 16 locale strings in the same commit. Never reorder existing entries.
+**Guard:** `UiTextAlignmentTest` enforces count equality; `UiTextCompletenessTest` enforces non-blank coverage across every locale map.
 
 ---
 

@@ -14,7 +14,8 @@ FYP/
 │   │   ├── comprehensive-quality-workflow/SKILL.md← Full fix+tests+docs+verification workflow skill
 │   │   ├── dead-code-prevention/SKILL.md          ← Verify new files/functions/deps are actually used before finalizing
 │   │   ├── create-reusable-skill/SKILL.md         ← Repo skill for authoring new reusable skills from repeated workflows
-│   │   └── docs-accuracy-audit/SKILL.md           ← Pre-close accuracy gate: verifies test counts, constants, API names, tree file, locale coverage, and code comments match live codebase
+│   │   ├── docs-accuracy-audit/SKILL.md           ← Pre-close accuracy gate: verifies test counts, constants, API names, tree file, locale coverage, and code comments match live codebase
+│   │   └── ui-text-localization/SKILL.md          ← Requires new UI text to be added to English plus all 16 supported locale maps
 │   └── workflows/
 │       ├── ci.yml                                  ← GitHub Actions CI (Android build + backend lint/build/test)
 │       ├── codeql.yml                              ← CodeQL security analysis (Java/Kotlin + JS/TS)

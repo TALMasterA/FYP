@@ -34,6 +34,10 @@ At minimum, review:
 - docs/CLOUD_FUNCTIONS_API.md (if callable API/contract changes)
 - README.md (if user-visible behavior or workflow changed)
 
+## UiText Localization Guard
+
+When adding, renaming, or changing any user-facing `UiTextKey`, hardcoded UI label, or app UI language entry, use the **ui-text-localization** skill (`.github/skills/ui-text-localization/SKILL.md`). Every new UI text must be added to the English base text and all 16 supported locale maps before finalizing. Run the locale completeness tests and do not leave English-only fallback text in a localized UI path.
+
 ## Completion Rule
 
 Do not finalize until code changes, tree maintenance, documentation updates, and verification commands are all completed (or explicitly blocked with a reason).

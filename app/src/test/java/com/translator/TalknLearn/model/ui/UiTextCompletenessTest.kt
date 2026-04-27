@@ -11,6 +11,7 @@ import org.junit.Test
  *  2. BaseUiTexts size matches UiTextKey entries count
  *  3. Every locale translation map covers every UiTextKey with a non-blank value
  *     (catches missing or stale keys after enum renames in any of the 16 locales)
+ *  4. Exact high-risk auth labels are updated in every supported locale
  */
 class UiTextCompletenessTest {
 
@@ -88,6 +89,42 @@ class UiTextCompletenessTest {
                     key in UiTextKey.entries
                 )
             }
+        }
+    }
+
+    @Test
+    fun `Google sign-in button is localized in every supported locale`() {
+        assertEquals(
+            "Sign in with Google",
+            BaseUiTexts[UiTextKey.AuthGoogleSignInButton.ordinal]
+        )
+
+        val expectedTexts = mapOf(
+            "Cantonese" to "用 Google 登入",
+            "DeDe" to "Mit Google anmelden",
+            "EsEs" to "Iniciar sesión con Google",
+            "FilPh" to "Mag-sign in gamit ang Google",
+            "FrFr" to "Se connecter avec Google",
+            "IdId" to "Masuk dengan Google",
+            "ItIt" to "Accedi con Google",
+            "JaJp" to "Google でログイン",
+            "KoKr" to "Google로 로그인",
+            "MsMy" to "Log masuk dengan Google",
+            "PtBr" to "Fazer login com o Google",
+            "RuRu" to "Войти через Google",
+            "ThTh" to "ลงชื่อเข้าใช้ด้วย Google",
+            "ViVn" to "Đăng nhập bằng Google",
+            "ZhCn" to "使用 Google 登录",
+            "ZhTw" to "使用 Google 登入",
+        )
+
+        assertEquals(localeMaps.keys, expectedTexts.keys)
+        for ((localeName, expectedText) in expectedTexts) {
+            assertEquals(
+                "$localeName Google sign-in text must be localized and current",
+                expectedText,
+                localeMaps.getValue(localeName).getValue(UiTextKey.AuthGoogleSignInButton)
+            )
         }
     }
 }

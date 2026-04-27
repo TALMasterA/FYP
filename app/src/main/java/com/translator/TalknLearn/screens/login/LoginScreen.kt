@@ -317,7 +317,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth().testTag("googleSignInButton"),
                 enabled = !uiState.isLoading
             ) {
-                Text("Sign in with Google")
+                Text(t(UiTextKey.AuthGoogleSignInButton))
             }
 
             TextButton(onClick = {
