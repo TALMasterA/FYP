@@ -135,7 +135,8 @@ class FriendsViewModelBadgeSettingsTest {
         acceptFriendRequestUseCase = acceptFriendRequestUseCase,
         rejectFriendRequestUseCase = rejectFriendRequestUseCase,
         cancelFriendRequestUseCase = cancelFriendRequestUseCase,
-        removeFriendUseCase = removeFriendUseCase
+        removeFriendUseCase = removeFriendUseCase,
+        funnelTracker = mock()
     )
 
     // ── hasUnseenSharedItems gated by inAppBadgeSharedInbox ─────────────────

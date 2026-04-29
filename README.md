@@ -267,10 +267,10 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 196 test suites, 2,486 unit tests (from the latest `testDebugUnitTest` report)
+- **Android:** 197 test suites, 2,495 unit tests (from the latest `testDebugUnitTest` report); Kover line coverage 87.09% (35% CI floor, non-blocking)
 - **Backend:** 17 test files, 193 tests
 
-See `docs/TEST_COVERAGE.md` for detailed breakdown.
+See `docs/TEST_COVERAGE.md` for detailed breakdown, including Kover tasks (`koverHtmlReportDebug`, `koverXmlReportDebug`, `koverVerifyDebug`) and the `:macrobenchmark` startup benchmark module (run locally with `:macrobenchmark:connectedBenchmarkAndroidTest`; CI assembles only).
 
 **Key test suites:**
 - `OnboardingLogicTest` — First-launch & version-based re-show

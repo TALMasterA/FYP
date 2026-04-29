@@ -20,6 +20,8 @@ import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.LanguageCode
 import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.core.decodeOrDefault
+import com.translator.TalknLearn.observability.FunnelAnalyticsTracker
+import com.translator.TalknLearn.observability.PerformanceTracer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,6 +72,8 @@ class LearningSheetViewModel @Inject constructor(
     private val quizRepo: QuizRepository,
     private val shareLearningMaterialUseCase: ShareLearningMaterialUseCase,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
+    private val performanceTracer: PerformanceTracer,
+    private val funnelTracker: FunnelAnalyticsTracker,
 ) : ViewModel() {
 
     private val primaryCode: String = savedStateHandle.get<String>("primaryCode").orEmpty()
@@ -172,6 +176,10 @@ class LearningSheetViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
+            // Item 50 (Observability): bracket the Firestore read with a custom
+            // Performance trace so we can spot regressions in sheet load latency.
+            val trace = performanceTracer.start(PerformanceTracer.TraceName.LEARNING_SHEET_GENERATION)
+            try {
             runCatching { sheetsRepo.getSheet(UserId(uidNow), LanguageCode(primaryCode), LanguageCode(targetCode)) }
                 .onSuccess { doc ->
                     val newSheetVersion = doc?.historyCountAtGenerate
@@ -192,6 +200,9 @@ class LearningSheetViewModel @Inject constructor(
                         error = e.message ?: "Load sheet failed"
                     )
                 }
+            } finally {
+                trace.stop()
+            }
         }
     }
 
@@ -205,6 +216,10 @@ class LearningSheetViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(quizLoading = true, quizError = null)
 
+            // Item 50: bracket quiz initialisation with a Performance trace so
+            // "open quiz screen → questions visible" latency is observable.
+            val quizReadyTrace = performanceTracer.start(PerformanceTracer.TraceName.TIME_TO_QUIZ_READY)
+            try {
             try {
                 // Single Firestore read — parse questions from the same doc object.
                 val doc = quizRepo.getGeneratedQuizDoc(
@@ -263,6 +278,9 @@ class LearningSheetViewModel @Inject constructor(
                     quizError = e.message ?: "Failed to load quiz"
                 )
             }
+            } finally {
+                quizReadyTrace.stop()
+            }
         }
     }
 
@@ -281,6 +299,10 @@ class LearningSheetViewModel @Inject constructor(
             try {
                 val completedAttempt = parseAndStoreQuiz.completeAttempt(attempt)
                 val attemptId = parseAndStoreQuiz.saveAttempt(uidNow, completedAttempt)
+
+                // Item 51: emit the first_quiz funnel event (one-shot per install)
+                // after the attempt has successfully been persisted.
+                funnelTracker.logFirstQuiz()
 
                 val finalAttempt = completedAttempt.copy(id = attemptId)
 

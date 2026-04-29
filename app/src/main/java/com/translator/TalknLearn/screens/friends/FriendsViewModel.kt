@@ -92,7 +92,8 @@ class FriendsViewModel @Inject constructor(
     private val acceptFriendRequestUseCase: AcceptFriendRequestUseCase,
     private val rejectFriendRequestUseCase: RejectFriendRequestUseCase,
     private val cancelFriendRequestUseCase: CancelFriendRequestUseCase,
-    private val removeFriendUseCase: RemoveFriendUseCase
+    private val removeFriendUseCase: RemoveFriendUseCase,
+    private val funnelTracker: com.translator.TalknLearn.observability.FunnelAnalyticsTracker,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FriendsUiState())
@@ -486,6 +487,8 @@ class FriendsViewModel @Inject constructor(
             acceptFriendRequestUseCase(requestId, userId, friendUserId).fold(
                 onSuccess = {
                     AuditLogger.logFriendRequestAccepted(userId.value, friendUserId.value)
+                    // Item 51: emit the first_friend_add funnel event (one-shot per install).
+                    funnelTracker.logFirstFriendAdd()
                     _uiState.value = _uiState.value.copy(error = null)
                     showSuccessMessage("Friend request accepted! You are now friends.")
                 },
@@ -599,7 +602,13 @@ class FriendsViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(batchProgress = "${index + 1}/$total")
                     val friendUserId = UserId(request.fromUserId)
                     acceptFriendRequestUseCase(request.requestId, userId, friendUserId).fold(
-                        onSuccess = { successCount++ },
+                        onSuccess = {
+                            // Item 51: idempotent one-shot per install — the first
+                            // accept in a batch fires the event, subsequent calls
+                            // are guarded inside FunnelAnalyticsTracker.
+                            funnelTracker.logFirstFriendAdd()
+                            successCount++
+                        },
                         onFailure = { failCount++ }
                     )
                     processedCount = index + 1

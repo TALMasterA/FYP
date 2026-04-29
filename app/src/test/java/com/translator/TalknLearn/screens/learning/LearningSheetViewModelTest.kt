@@ -21,6 +21,7 @@ import com.translator.TalknLearn.model.friends.SharedItemType
 import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
+import com.translator.TalknLearn.observability.PerformanceTracer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -120,7 +121,9 @@ class LearningSheetViewModelTest {
             parseAndStoreQuiz = parseAndStoreQuiz,
             quizRepo = quizRepo,
             shareLearningMaterialUseCase = shareLearningMaterialUseCase,
-            sharedFriendsDataSource = sharedFriendsDataSource
+            sharedFriendsDataSource = sharedFriendsDataSource,
+            performanceTracer = PerformanceTracer(),
+            funnelTracker = mock()
         )
     }
 
@@ -136,7 +139,8 @@ class LearningSheetViewModelTest {
         authStateFlow.value = AuthState.LoggedOut
         val vm = LearningSheetViewModel(
             buildSavedStateHandle(), authRepo, sheetsRepo, sharedHistoryDataSource,
-            parseAndStoreQuiz, quizRepo, shareLearningMaterialUseCase, sharedFriendsDataSource
+            parseAndStoreQuiz, quizRepo, shareLearningMaterialUseCase, sharedFriendsDataSource,
+            PerformanceTracer(), mock()
         )
 
         assertEquals("Not logged in", vm.uiState.value.error)
@@ -150,7 +154,8 @@ class LearningSheetViewModelTest {
         authStateFlow.value = AuthState.Loading
         val vm = LearningSheetViewModel(
             buildSavedStateHandle(), authRepo, sheetsRepo, sharedHistoryDataSource,
-            parseAndStoreQuiz, quizRepo, shareLearningMaterialUseCase, sharedFriendsDataSource
+            parseAndStoreQuiz, quizRepo, shareLearningMaterialUseCase, sharedFriendsDataSource,
+            PerformanceTracer(), mock()
         )
 
         assertTrue(vm.uiState.value.isLoading)
@@ -202,7 +207,8 @@ class LearningSheetViewModelTest {
         authStateFlow.value = AuthState.LoggedIn(testUser)
         val vm = LearningSheetViewModel(
             blankSavedState, authRepo, sheetsRepo, sharedHistoryDataSource,
-            parseAndStoreQuiz, quizRepo, shareLearningMaterialUseCase, sharedFriendsDataSource
+            parseAndStoreQuiz, quizRepo, shareLearningMaterialUseCase, sharedFriendsDataSource,
+            PerformanceTracer(), mock()
         )
 
         // Sheet content should be null since loadSheet skipped the fetch

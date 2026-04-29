@@ -4,6 +4,23 @@
 
 ---
 
+## 0. High-Level Layering (item 52)
+
+```mermaid
+graph LR
+    UI["UI<br/>(Jetpack Compose<br/>screens)"] --> VM["ViewModel<br/>(Hilt-injected)"]
+    VM --> UC["UseCase<br/>(domain layer)"]
+    UC --> REPO["Repository<br/>(data layer)"]
+    REPO --> FS["Cloud Firestore<br/>+ Cloud Functions<br/>(App Check enforced)"]
+    REPO --> ANALYTICS["Observability<br/>(Crashlytics / Analytics /<br/>Performance traces)"]
+    FS --> AZURE["Azure backends<br/>(Translator / OCR /<br/>OpenAI)"]
+    UI -. composes .-> VM
+```
+
+**Rule:** UI never talks to repositories or Firebase SDKs directly; ViewModels never touch Cloud Function payloads outside repositories. Cross-layer shortcuts must be motivated in the same PR that introduces them.
+
+---
+
 ## 1. UiText System — Enum / List Alignment
 
 **Invariant:** `UiTextKey` enum ordinals must 1-to-1 map to `BaseUiTexts` list entries.

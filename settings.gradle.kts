@@ -20,3 +20,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "FYP"
 include(":app")
+include(":macrobenchmark")

@@ -22,6 +22,8 @@ import com.translator.TalknLearn.model.SpeechResult
 import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.OcrResult
 import com.translator.TalknLearn.data.clients.DetectedLanguage
+import com.translator.TalknLearn.observability.FunnelAnalyticsTracker
+import com.translator.TalknLearn.observability.PerformanceTracer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -55,7 +57,16 @@ class SpeechViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val historyRepo: FirestoreHistoryRepository,
     private val sharedSettings: SharedSettingsDataSource,
+    private val performanceTracer: PerformanceTracer,
+    private val funnelTracker: FunnelAnalyticsTracker,
 ) : ViewModel() {
+
+    /**
+     * Item 50 (Observability): one-shot guard so the
+     * [PerformanceTracer.TraceName.TIME_TO_FIRST_TRANSLATION] custom trace
+     * is started at most once per ViewModel instance.
+     */
+    private var firstTranslationTraceStarted: Boolean = false
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.LoggedOut)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
@@ -264,6 +275,20 @@ class SpeechViewModel @Inject constructor(
 
             speechState = speechState.copy(statusMessage = "Translating...")
 
+            // Item 50: bracket the full translate flow with a custom Performance
+            // trace the first time the user successfully triggers a translation
+            // in this ViewModel instance. The trace is stopped in the try/finally
+            // below so it is closed on every exit path (success, error, early
+            // return on auto-detect failure).
+            val firstTranslationTrace: PerformanceTracer.TraceHandle? =
+                if (!firstTranslationTraceStarted) {
+                    firstTranslationTraceStarted = true
+                    performanceTracer.start(PerformanceTracer.TraceName.TIME_TO_FIRST_TRANSLATION)
+                } else {
+                    null
+                }
+
+            try {
             when (val tr = translateTextUseCase(recognizedText, requestFromLanguage, toLanguage)) {
                 is SpeechResult.Success -> {
                     var actualFromLanguage = fromLanguage
@@ -290,6 +315,10 @@ class SpeechViewModel @Inject constructor(
                         // Keep auto-detect status visible briefly, then clear it.
                         statusMessage = if (isAutoDetect) speechState.statusMessage else "",
                     )
+                    // Item 51: emit the first_translation funnel event
+                    // (one-shot per install). The trace is closed in the
+                    // surrounding try/finally below.
+                    funnelTracker.logFirstTranslation()
                     // Skip saving history when source and target languages are the
                     // same — this happens when auto-detect resolves to the target
                     // language, or when the user manually selects the same language
@@ -312,6 +341,11 @@ class SpeechViewModel @Inject constructor(
                         statusMessage = "Translation error: ${tr.message}",
                     )
                 }
+            }
+            } finally {
+                // Item 50: ensure the trace is stopped on every exit path
+                // (success, terminal Azure error, auto-detect early-return).
+                firstTranslationTrace?.stop()
             }
         }
     }

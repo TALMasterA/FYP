@@ -169,7 +169,8 @@ class UsernameRequirementIntegrationTest {
         acceptFriendRequestUseCase = acceptFriendRequestUseCase,
         rejectFriendRequestUseCase = rejectFriendRequestUseCase,
         cancelFriendRequestUseCase = cancelFriendRequestUseCase,
-        removeFriendUseCase = removeFriendUseCase
+        removeFriendUseCase = removeFriendUseCase,
+        funnelTracker = mock()
     )
 
     @Before

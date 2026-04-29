@@ -30,11 +30,26 @@ the high-frequency translate path on warm instances while bounding cost.
 
 ---
 
+## Stability classification (§10, item 54)
+
+Each callable below carries a **Stability** tag so SDK consumers know which
+contracts are guaranteed across non-major releases.
+
+| Tag | Contract guarantee |
+|-----|---------------------|
+| `stable` | Request and response shapes will not break in a non-major release. Bug-fix changes only. |
+| `experimental` | Shape may change without a deprecation period; integrators should pin a version and watch the changelog. |
+
+All currently shipped callables are `stable`. Future additions (e.g. learning-content tuning helpers) should be introduced as `experimental` first and promoted once the shape stabilises.
+
+---
+
 ## Translation & Speech
 
 ### `getSpeechToken`
 Returns an Azure Speech SDK token for client-side speech recognition.
 
+**Stability:** stable
 **Auth:** Required
 **Request:** _(no parameters)_
 **Response:**
@@ -47,6 +62,7 @@ Returns an Azure Speech SDK token for client-side speech recognition.
 ### `translateText`
 Translates a single text string.
 
+**Stability:** stable
 **Auth:** Required
 **Request:**
 | Field  | Type   | Required | Description                |
@@ -85,6 +101,7 @@ When `from` is omitted (auto-detect mode), the response also includes:
 ### `translateTexts`
 Batch-translates multiple texts in a single API call. Server internally chunks into 100-element Azure API requests with **350 ms inter-chunk throttle** and **per-chunk retry** (up to 3 retries for Azure HTTP 429, honoring Azure `Retry-After` when provided and otherwise using exponential back-off).
 
+**Stability:** stable
 **Auth:** Required
 **Rate Limit:** 20 requests per 10 minutes (per user)
 
@@ -113,6 +130,7 @@ Batch-translates multiple texts in a single API call. Server internally chunks i
 ### `detectLanguage`
 Detects the language of a given text.
 
+**Stability:** stable
 **Auth:** Required
 **Request:**
 | Field  | Type   | Required | Description            |
@@ -141,6 +159,7 @@ Detects the language of a given text.
 ### `generateLearningContent`
 Generates AI-powered learning content via Azure OpenAI.
 
+**Stability:** stable
 **Auth:** Required
 **Rate Limit:** 10 requests per hour per user
 **Timeout:** 300 seconds
@@ -172,6 +191,7 @@ Generates AI-powered learning content via Azure OpenAI.
 ### `healthcheck` (HTTP)
 Readiness endpoint for backend configuration validation.
 
+**Stability:** stable
 **Type:** HTTP function (`onRequest`)
 **Method:** `GET`
 **Auth:** Not required
@@ -214,6 +234,7 @@ Readiness endpoint for backend configuration validation.
 ### `awardQuizCoins`
 Awards coins for a quiz attempt with server-side anti-cheat verification.
 
+**Stability:** stable
 **Auth:** Required
 **Request:**
 | Field                            | Type   | Required | Description                     |
@@ -240,6 +261,7 @@ or
 ### `spendCoins`
 Processes a shop purchase using coins.
 
+**Stability:** stable
 **Auth:** Required
 **Request (history_expansion):**
 | Field          | Type   | Required | Description             |
@@ -268,6 +290,7 @@ or
 ### `deleteAccountAndData`
 Deletes the authenticated user's app data and Firebase Auth account from the backend.
 
+**Stability:** stable
 **Auth:** Required
 **App Check:** Required
 **Manual client guard:** Android re-authenticates email/password users before calling this endpoint.

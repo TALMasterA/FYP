@@ -45,6 +45,74 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest
 
+      - name: Android coverage report (Kover, non-blocking)
+        # Initial 35% line-coverage floor as per docs/APP_SUGGESTIONS.md item 8.
+        # Kept non-blocking until the floor is raised in a follow-up task.
+        continue-on-error: true
+        run: ./gradlew :app:koverXmlReportDebug :app:koverHtmlReportDebug :app:koverVerifyDebug
+
+      - name: Upload Android coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-coverage
+          path: |
+            app/build/reports/kover/reportDebug.xml
+            app/build/reports/kover/htmlDebug
+          if-no-files-found: warn
+
+  code-quality:
+    name: Code Quality (Detekt)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-v2-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.versions.toml') }}
+          restore-keys: gradle-v2-
+
+      - name: Create google-services.json from secret
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "GOOGLE_SERVICES_JSON secret is missing or empty"
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON" > app/google-services.json
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Run Detekt (item 45 from docs/APP_SUGGESTIONS.md)
+        # Detekt + ktlint formatting ruleset. Existing issues are silenced via
+        # app/detekt-baseline.xml (generated locally with `:app:detektBaseline`).
+        # Kept non-blocking until the baseline is committed; flip to
+        # `continue-on-error: false` once `app/detekt-baseline.xml` exists in
+        # the repo, so any NEW violations break the build.
+        continue-on-error: false
+        run: ./gradlew :app:detekt
+
+      - name: Upload Detekt reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detekt-reports
+          path: |
+            app/build/reports/detekt
+          if-no-files-found: warn
+
   build-debug-apk:
     name: Build Debug APK
     needs: [unit-tests]
@@ -82,6 +150,14 @@ jobs:
 
       - name: Build debug APK
         run: ./gradlew assembleDebug
+
+      - name: Macrobenchmark module assemble (non-blocking)
+        # Item 14 from docs/APP_SUGGESTIONS.md. Macrobenchmark tests need a real
+        # device/emulator (no KVM on ubuntu-latest), so CI only verifies the
+        # module compiles. Run benchmarks locally with:
+        #   ./gradlew :macrobenchmark:connectedBenchmarkAndroidTest
+        continue-on-error: true
+        run: ./gradlew :macrobenchmark:assemble
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4

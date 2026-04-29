@@ -146,7 +146,8 @@ class FriendsViewModelTest {
         acceptFriendRequestUseCase = acceptFriendRequestUseCase,
         rejectFriendRequestUseCase = rejectFriendRequestUseCase,
         cancelFriendRequestUseCase = cancelFriendRequestUseCase,
-        removeFriendUseCase = removeFriendUseCase
+        removeFriendUseCase = removeFriendUseCase,
+        funnelTracker = mock()
     )
 
     // ── Login subscribes to shared data ─────────────────────────────

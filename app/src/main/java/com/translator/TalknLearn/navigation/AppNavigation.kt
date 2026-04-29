@@ -96,14 +96,24 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
 
+    // §9 Observability (items 49 & 51): obtain the singleton observability
+    // helpers via Hilt entry point so we can use them from this top-level
+    // Composable without converting it into a ViewModel-driven screen.
+    val observabilityEntry = remember(context) {
+        dagger.hilt.android.EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            com.translator.TalknLearn.observability.ObservabilityEntryPoint::class.java
+        )
+    }
+    val crashlyticsKeysController = remember(observabilityEntry) {
+        observabilityEntry.crashlyticsKeysController()
+    }
+
     // §5.2: surface the current top-level destination on every Crashlytics report
     // so non-fatal logs and crashes carry the screen the user was looking at.
     androidx.compose.runtime.DisposableEffect(navController) {
         val listener = androidx.navigation.NavController.OnDestinationChangedListener { _, destination, _ ->
-            runCatching {
-                com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance()
-                    .setCustomKey("current_screen", destination.route ?: "unknown")
-            }
+            crashlyticsKeysController.setCurrentScreenRoute(destination.route)
         }
         navController.addOnDestinationChangedListener(listener)
         onDispose { navController.removeOnDestinationChangedListener(listener) }
@@ -139,6 +149,26 @@ fun AppNavigation() {
     // One SettingsViewModel shared across app
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val settingsUiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+
+    // §9 Observability (item 49): keep Crashlytics user-context keys in sync
+    // with the active UI language, primary translation language, and account-age
+    // bucket so Crashlytics reports are filterable by these dimensions. The
+    // raw account creation timestamp is *never* sent — only the bucket label.
+    LaunchedEffect(
+        appLanguageState.selectedUiLanguage,
+        settingsUiState.settings.primaryLanguageCode,
+        settingsUiState.uid,
+    ) {
+        val creationTimestamp = runCatching {
+            com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.metadata?.creationTimestamp
+        }.getOrNull()
+        crashlyticsKeysController.setUserContext(
+            appUiLanguage = appLanguageState.selectedUiLanguage,
+            primaryLanguage = settingsUiState.settings.primaryLanguageCode,
+            accountCreationTimestampMillis = creationTimestamp,
+            nowMillis = System.currentTimeMillis(),
+        )
+    }
 
     // Request POST_NOTIFICATIONS permission on Android 13+ after the user logs in.
     // Session flag prevents the prompt from refiring every time the uid observable re-emits.

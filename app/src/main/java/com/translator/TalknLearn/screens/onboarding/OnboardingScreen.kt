@@ -50,6 +50,17 @@ private fun markOnboardingComplete(context: Context) {
         .putBoolean(KEY_ONBOARDING_COMPLETE, true)
         .putString(KEY_ONBOARDING_VERSION, com.translator.TalknLearn.BuildConfig.VERSION_NAME)
         .apply()
+    // Item 51 (Observability): emit the onboarding_complete funnel event
+    // exactly once per install via FunnelAnalyticsTracker, resolved here from
+    // the application Hilt component since this is a top-level helper, not a
+    // ViewModel.
+    runCatching {
+        val entryPoint = dagger.hilt.android.EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            com.translator.TalknLearn.observability.ObservabilityEntryPoint::class.java
+        )
+        entryPoint.funnelAnalyticsTracker().logOnboardingComplete()
+    }
 }
 
 private data class OnboardingPage(

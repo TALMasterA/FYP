@@ -1,0 +1,88 @@
+# Dependabot configuration
+#
+# Item 40, docs/APP_SUGGESTIONS.md — group AndroidX / Compose / Hilt updates
+# so dependency PRs are reviewable instead of flooding the queue.
+#
+# Versioning notes:
+# - Android Gradle dependencies are declared in `gradle/libs.versions.toml`.
+#   Dependabot's `gradle` ecosystem reads version-catalog entries.
+# - Cloud Functions deps live in `fyp-backend/functions/`.
+# - GitHub Actions versions are pinned in `.github/workflows/*.yml`.
+
+version: 2
+updates:
+  # ---------- Android (Gradle / Kotlin) ----------
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "android"
+    groups:
+      androidx:
+        patterns:
+          - "androidx.*"
+        exclude-patterns:
+          - "androidx.compose*"
+          - "androidx.hilt*"
+      compose:
+        patterns:
+          - "androidx.compose*"
+      hilt:
+        patterns:
+          - "com.google.dagger:hilt-*"
+          - "androidx.hilt*"
+      firebase:
+        patterns:
+          - "com.google.firebase:*"
+          - "com.google.gms:google-services"
+          - "com.google.firebase:firebase-crashlytics-gradle"
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "com.google.devtools.ksp*"
+
+  # ---------- Cloud Functions (npm) ----------
+  - package-ecosystem: "npm"
+    directory: "/fyp-backend/functions"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "backend"
+    groups:
+      firebase-functions:
+        patterns:
+          - "firebase-*"
+          - "@firebase/*"
+      typescript-toolchain:
+        patterns:
+          - "typescript"
+          - "ts-*"
+          - "@typescript-eslint/*"
+          - "eslint*"
+      jest:
+        patterns:
+          - "jest"
+          - "@types/jest"
+          - "ts-jest"
+
+  # ---------- GitHub Actions ----------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "ci"
+    groups:
+      actions:
+        patterns:
+          - "*"

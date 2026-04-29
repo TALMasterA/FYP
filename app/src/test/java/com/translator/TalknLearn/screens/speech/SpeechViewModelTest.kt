@@ -100,6 +100,8 @@ class SpeechViewModelTest {
             authRepo = authRepo,
             historyRepo = historyRepo,
             sharedSettings = sharedSettings,
+            performanceTracer = com.translator.TalknLearn.observability.PerformanceTracer(),
+            funnelTracker = mock(),
         )
     }
 

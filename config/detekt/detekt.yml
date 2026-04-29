@@ -1,0 +1,98 @@
+# Detekt configuration — overlays Detekt's default-detekt-config.yml
+# (see https://detekt.dev/docs/rules/overview).
+#
+# Strategy:
+#   * `buildUponDefaultConfig = true` is set in app/build.gradle.kts, so every
+#     rule not listed here keeps its default. This file ONLY records repo-
+#     specific deviations from defaults.
+#   * Existing violations are silenced via `app/detekt-baseline.xml`, which is
+#     generated with `:app:detektBaseline` once and committed.
+#   * Items 45 of docs/APP_SUGGESTIONS.md called out `runBlocking`, `GlobalScope`,
+#     and `!!` as the priority targets — those rules are explicitly enabled below.
+
+build:
+  # Fail on any non-baselined issue. Combined with the baseline, this means
+  # only NEW violations break the build.
+  maxIssues: 0
+  excludeCorrectable: false
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  active: true
+  LongMethod:
+    # @Composable functions in this app are routinely 60–80 LOC; the default
+    # threshold of 60 produces too much noise to baseline cleanly.
+    active: true
+    threshold: 80
+  LongParameterList:
+    # Compose previews and ViewModels constructor-inject many collaborators.
+    active: true
+    functionThreshold: 8
+    constructorThreshold: 10
+  TooManyFunctions:
+    # ViewModels often expose many UI events.
+    active: true
+    thresholdInClasses: 25
+    thresholdInObjects: 25
+    thresholdInInterfaces: 15
+    thresholdInFiles: 25
+
+coroutines:
+  active: true
+  GlobalCoroutineUsage:
+    # Item 45: catch GlobalScope introductions.
+    active: true
+
+potential-bugs:
+  active: true
+  UnsafeCallOnNullableType:
+    # Item 45: catch `!!` in production code.
+    active: true
+  UnsafeCast:
+    active: true
+
+style:
+  active: true
+  MagicNumber:
+    # Too noisy in UI code (paddings, animation durations, color channels).
+    active: false
+  ReturnCount:
+    # Trips on early-exit guard chains in ViewModels and use cases.
+    active: false
+  WildcardImport:
+    active: true
+    excludeImports:
+      - 'java.util.*'
+  ForbiddenComment:
+    # Allow TODO/FIXME during development; the report-truthfulness guard
+    # already enforces discipline at PR time.
+    active: false
+  MaxLineLength:
+    # Compose-friendly line length; matches IDE default for Kotlin.
+    active: true
+    maxLineLength: 140
+    excludeCommentStatements: true
+  ForbiddenMethodCall:
+    # Item 45: catch `runBlocking` introductions.
+    active: true
+    methods:
+      - reason: 'runBlocking blocks a thread; use suspend functions and structured concurrency instead.'
+        value: 'kotlinx.coroutines.runBlocking'
+
+formatting:
+  # Provided by detekt-formatting (wraps ktlint).
+  active: true
+  android: true
+  autoCorrect: false
+  MaximumLineLength:
+    # Match the style/MaxLineLength setting above so the two rulesets agree.
+    active: true
+    maxLineLength: 140
+  ImportOrdering:
+    active: true
+  Indentation:
+    active: true
+    indentSize: 4
