@@ -1,33 +1,33 @@
 package com.translator.TalknLearn.screens.speech
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.data.azure.LanguageDisplayNames
-import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.data.clients.DetectedLanguage
 import com.translator.TalknLearn.data.history.FirestoreHistoryRepository
 import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
-import android.net.Uri
+import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.domain.ocr.RecognizeTextFromImageUseCase
 import com.translator.TalknLearn.domain.speech.DetectLanguageUseCase
 import com.translator.TalknLearn.domain.speech.RecognizeFromMicUseCase
 import com.translator.TalknLearn.domain.speech.RecognizeWithAutoDetectUseCase
 import com.translator.TalknLearn.domain.speech.SpeakTextUseCase
 import com.translator.TalknLearn.domain.speech.StartContinuousConversationUseCase
 import com.translator.TalknLearn.domain.speech.TranslateTextUseCase
-import com.translator.TalknLearn.domain.ocr.RecognizeTextFromImageUseCase
-import com.translator.TalknLearn.model.user.AuthState
+import com.translator.TalknLearn.model.OcrResult
 import com.translator.TalknLearn.model.SpeechResult
 import com.translator.TalknLearn.model.TranslationRecord
-import com.translator.TalknLearn.model.OcrResult
-import com.translator.TalknLearn.data.clients.DetectedLanguage
+import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.observability.FunnelAnalyticsTracker
 import com.translator.TalknLearn.observability.PerformanceTracer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import com.translator.TalknLearn.core.UiConstants
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -289,59 +289,59 @@ class SpeechViewModel @Inject constructor(
                 }
 
             try {
-            when (val tr = translateTextUseCase(recognizedText, requestFromLanguage, toLanguage)) {
-                is SpeechResult.Success -> {
-                    var actualFromLanguage = fromLanguage
-                    var resolvedDetection: DetectedLanguage? = null
+                when (val tr = translateTextUseCase(recognizedText, requestFromLanguage, toLanguage)) {
+                    is SpeechResult.Success -> {
+                        var actualFromLanguage = fromLanguage
+                        var resolvedDetection: DetectedLanguage? = null
 
-                    if (isAutoDetect) {
-                        resolvedDetection = resolveDetectedLanguage(
-                            inlineDetectedLanguage = tr.detectedLanguage,
-                            inlineDetectedScore = tr.detectedScore
-                        )
+                        if (isAutoDetect) {
+                            resolvedDetection = resolveDetectedLanguage(
+                                inlineDetectedLanguage = tr.detectedLanguage,
+                                inlineDetectedScore = tr.detectedScore
+                            )
 
-                        if (resolvedDetection == null) {
-                            speechState = speechState.copy(statusMessage = "Could not detect source language. Please select manually.")
-                            return@launch
+                            if (resolvedDetection == null) {
+                                speechState = speechState.copy(statusMessage = "Could not detect source language. Please select manually.")
+                                return@launch
+                            }
+
+                            actualFromLanguage = LanguageDisplayNames.mapDetectedToSupportedCode(resolvedDetection.language)
+                            onDetectedSourceLanguage?.invoke(actualFromLanguage)
+                            updateDetectedLanguageStatus(actualFromLanguage, resolvedDetection.language, resolvedDetection.score)
                         }
 
-                        actualFromLanguage = LanguageDisplayNames.mapDetectedToSupportedCode(resolvedDetection.language)
-                        onDetectedSourceLanguage?.invoke(actualFromLanguage)
-                        updateDetectedLanguageStatus(actualFromLanguage, resolvedDetection.language, resolvedDetection.score)
+                        speechState = speechState.copy(
+                            translatedText = tr.text,
+                            // Keep auto-detect status visible briefly, then clear it.
+                            statusMessage = if (isAutoDetect) speechState.statusMessage else "",
+                        )
+                        // Item 51: emit the first_translation funnel event
+                        // (one-shot per install). The trace is closed in the
+                        // surrounding try/finally below.
+                        funnelTracker.logFirstTranslation()
+                        // Skip saving history when source and target languages are the
+                        // same — this happens when auto-detect resolves to the target
+                        // language, or when the user manually selects the same language
+                        // for both fields.  Saving such records would create misleading
+                        // language pairs on the learning screen.
+                        if (actualFromLanguage != toLanguage) {
+                            saveHistory(
+                                mode = "discrete",
+                                sourceText = recognizedText,
+                                targetText = tr.text,
+                                sourceLang = actualFromLanguage,
+                                targetLang = toLanguage,
+                                sessionId = "",
+                            )
+                        }
                     }
 
-                    speechState = speechState.copy(
-                        translatedText = tr.text,
-                        // Keep auto-detect status visible briefly, then clear it.
-                        statusMessage = if (isAutoDetect) speechState.statusMessage else "",
-                    )
-                    // Item 51: emit the first_translation funnel event
-                    // (one-shot per install). The trace is closed in the
-                    // surrounding try/finally below.
-                    funnelTracker.logFirstTranslation()
-                    // Skip saving history when source and target languages are the
-                    // same — this happens when auto-detect resolves to the target
-                    // language, or when the user manually selects the same language
-                    // for both fields.  Saving such records would create misleading
-                    // language pairs on the learning screen.
-                    if (actualFromLanguage != toLanguage) {
-                        saveHistory(
-                            mode = "discrete",
-                            sourceText = recognizedText,
-                            targetText = tr.text,
-                            sourceLang = actualFromLanguage,
-                            targetLang = toLanguage,
-                            sessionId = "",
+                    is SpeechResult.Error -> {
+                        speechState = speechState.copy(
+                            statusMessage = "Translation error: ${tr.message}",
                         )
                     }
                 }
-
-                is SpeechResult.Error -> {
-                    speechState = speechState.copy(
-                        statusMessage = "Translation error: ${tr.message}",
-                    )
-                }
-            }
             } finally {
                 // Item 50: ensure the trace is stopped on every exit path
                 // (success, terminal Azure error, auto-detect early-return).

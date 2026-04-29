@@ -3,23 +3,23 @@ package com.translator.TalknLearn.screens.learning
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.core.decodeOrDefault
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.data.history.SharedHistoryDataSource
+import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.friends.ShareLearningMaterialUseCase
 import com.translator.TalknLearn.domain.learning.LearningSheetsRepository
-import com.translator.TalknLearn.domain.learning.QuizRepository
 import com.translator.TalknLearn.domain.learning.ParseAndStoreQuizUseCase
-import com.translator.TalknLearn.model.friends.FriendRelation
-import com.translator.TalknLearn.model.friends.SharedItemType
-import com.translator.TalknLearn.model.user.AuthState
+import com.translator.TalknLearn.domain.learning.QuizRepository
+import com.translator.TalknLearn.model.LanguageCode
 import com.translator.TalknLearn.model.QuizAttempt
 import com.translator.TalknLearn.model.QuizQuestion
 import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.UserId
-import com.translator.TalknLearn.model.LanguageCode
+import com.translator.TalknLearn.model.friends.FriendRelation
+import com.translator.TalknLearn.model.friends.SharedItemType
 import com.translator.TalknLearn.model.ui.UiTextKey
-import com.translator.TalknLearn.core.decodeOrDefault
+import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.observability.FunnelAnalyticsTracker
 import com.translator.TalknLearn.observability.PerformanceTracer
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -180,26 +180,26 @@ class LearningSheetViewModel @Inject constructor(
             // Performance trace so we can spot regressions in sheet load latency.
             val trace = performanceTracer.start(PerformanceTracer.TraceName.LEARNING_SHEET_GENERATION)
             try {
-            runCatching { sheetsRepo.getSheet(UserId(uidNow), LanguageCode(primaryCode), LanguageCode(targetCode)) }
-                .onSuccess { doc ->
-                    val newSheetVersion = doc?.historyCountAtGenerate
-                    val generatedVersion = _uiState.value.generatedQuizHistoryCountAtGenerate
-                    val newOutdated =
-                        (newSheetVersion != null && generatedVersion != null && generatedVersion != newSheetVersion)
+                runCatching { sheetsRepo.getSheet(UserId(uidNow), LanguageCode(primaryCode), LanguageCode(targetCode)) }
+                    .onSuccess { doc ->
+                        val newSheetVersion = doc?.historyCountAtGenerate
+                        val generatedVersion = _uiState.value.generatedQuizHistoryCountAtGenerate
+                        val newOutdated =
+                            (newSheetVersion != null && generatedVersion != null && generatedVersion != newSheetVersion)
 
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        content = doc?.content,
-                        historyCountAtGenerate = newSheetVersion,
-                        isQuizOutdated = newOutdated
-                    )
-                }
-                .onFailure { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "Load sheet failed"
-                    )
-                }
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            content = doc?.content,
+                            historyCountAtGenerate = newSheetVersion,
+                            isQuizOutdated = newOutdated
+                        )
+                    }
+                    .onFailure { e ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            error = e.message ?: "Load sheet failed"
+                        )
+                    }
             } finally {
                 trace.stop()
             }
@@ -219,7 +219,6 @@ class LearningSheetViewModel @Inject constructor(
             // Item 50: bracket quiz initialisation with a Performance trace so
             // "open quiz screen → questions visible" latency is observable.
             val quizReadyTrace = performanceTracer.start(PerformanceTracer.TraceName.TIME_TO_QUIZ_READY)
-            try {
             try {
                 // Single Firestore read — parse questions from the same doc object.
                 val doc = quizRepo.getGeneratedQuizDoc(
@@ -277,7 +276,6 @@ class LearningSheetViewModel @Inject constructor(
                     quizLoading = false,
                     quizError = e.message ?: "Failed to load quiz"
                 )
-            }
             } finally {
                 quizReadyTrace.stop()
             }

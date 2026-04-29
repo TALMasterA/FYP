@@ -29,9 +29,12 @@ complexity:
     threshold: 80
   LongParameterList:
     # Compose previews and ViewModels constructor-inject many collaborators.
+    # Several ViewModels now also inject the observability tracers
+    # (PerformanceTracer + FunnelAnalyticsTracker) on top of repositories and
+    # use cases, which legitimately pushes the count past 10.
     active: true
     functionThreshold: 8
-    constructorThreshold: 10
+    constructorThreshold: 15
   TooManyFunctions:
     # ViewModels often expose many UI events.
     active: true
@@ -45,6 +48,16 @@ coroutines:
   GlobalCoroutineUsage:
     # Item 45: catch GlobalScope introductions.
     active: true
+
+naming:
+  active: true
+  PackageNaming:
+    # The application id is `com.translator.TalknLearn`, so package segments
+    # legitimately contain uppercase letters. Widen the default pattern
+    # (`[a-z]+(\.[a-z][A-Za-z0-9]*)*`) to permit them while still rejecting
+    # leading digits or punctuation.
+    active: true
+    packagePattern: '[a-z]+(\.[A-Za-z][A-Za-z0-9]*)*'
 
 potential-bugs:
   active: true
@@ -87,6 +100,14 @@ formatting:
   active: true
   android: true
   autoCorrect: false
+  PackageName:
+    # ktlint flags any uppercase character in a package segment, but the
+    # entire codebase uses `com.translator.TalknLearn.*` (capital T and L)
+    # because that is the registered Firebase / Play Console application id.
+    # Renaming every package would be a massive churn for zero behavioural
+    # gain, so the rule is disabled here. The detekt `naming.PackageNaming`
+    # rule below applies a widened pattern that still rejects junk names.
+    active: false
   MaximumLineLength:
     # Match the style/MaxLineLength setting above so the two rulesets agree.
     active: true
