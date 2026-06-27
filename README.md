@@ -4,6 +4,8 @@ An Android-based translation and language learning application with AI-powered f
 
 Develop in Android Studio, Android ONLY.
 
+Poster Showcase: [Click here](https://fyp.comp.hkbu.edu.hk/poster/2025/poster.php?id=935)
+
 --------------------------------------------------------------
 
 ## 📱 Try the App
