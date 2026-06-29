@@ -25,3 +25,14 @@ jobs:
           echo "Workspace: $GITHUB_WORKSPACE"
           pwd
           ls -la
+
+      - name: Provide mock google-services.json (sandbox / no secret)
+        run: |
+          # In the Copilot agent sandbox the real firebase secret is not available.
+          # Copy the committed stub so Gradle can compile and run unit tests.
+          if [ ! -f app/google-services.json ]; then
+            cp ci/google-services-mock.json app/google-services.json
+            echo "Mock google-services.json installed for sandbox build."
+          else
+            echo "google-services.json already present, skipping mock."
+          fi
