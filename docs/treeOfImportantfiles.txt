@@ -157,7 +157,11 @@ FYP/
 │       │       │   ├── friends/
 │       │       │   │   ├── ChatRepository.kt
 │       │       │   │   ├── FirestoreChatRepository.kt
-│       │       │   │   ├── FirestoreFriendsRepository.kt
+│       │       │   │   ├── FirestoreBlockHelper.kt         ← Block/unblock operations (extracted from FirestoreFriendsRepository)
+│       │       │   │   ├── FirestoreFriendListHelper.kt    ← Friend-list queries & username sync (extracted)
+│       │       │   │   ├── FirestoreFriendRequestHelper.kt ← Request CRUD & observation (extracted)
+│       │       │   │   ├── FirestoreFriendsRepository.kt   ← Thin facade delegating to 4 helper classes
+│       │       │   │   ├── FirestoreProfileHelper.kt       ← Profile & username management (extracted)
 │       │       │   │   ├── FirestoreSharingRepository.kt
 │       │       │   │   ├── FriendRequestRateLimiter.kt  ← Client-side friend-request limiter backed by secure storage
 │       │       │   │   ├── FriendsRepository.kt
@@ -268,7 +272,17 @@ FYP/
 │       │       │   │   ├── AppLanguageState.kt
 │       │       │   │   ├── strings/                      ← Localized UI text definitions
 │       │       │   │   │   ├── UiTextCore.kt            ← UiTextKey enum + BaseUiTexts list
-│       │       │   │   │   ├── UiTextScreens.kt         ← English base UI strings list
+│       │       │   │   │   ├── UiTextScreens.kt         ← Thin combiner aggregating 10 sub-list files
+│       │       │   │   │   ├── UiTextAuth.kt            ← Authentication/Password Reset strings
+│       │       │   │   │   ├── UiTextSpeech.kt          ← Speech/Home/Feedback/Continuous strings
+│       │       │   │   │   ├── UiTextHistory.kt         ← History/Filter strings
+│       │       │   │   │   ├── UiTextSettings.kt        ← Settings strings
+│       │       │   │   │   ├── UiTextLearning.kt        ← Learning/Quiz/Info strings
+│       │       │   │   │   ├── UiTextWordBank.kt        ← Word Bank/Dialogs/Favorites strings
+│       │       │   │   │   ├── UiTextMiscFeatures.kt    ← Custom Words/OCR/Cache/Theme strings
+│       │       │   │   │   ├── UiTextFriends.kt         ← Friends/Chat/Sharing strings
+│       │       │   │   │   ├── UiTextNotifications.kt   ← Accessibility/Notifications/Errors strings
+│       │       │   │   │   ├── UiTextOnboarding.kt      ← Onboarding/Navigation/Shop strings
 │       │       │   │   │   ├── UiTextHelpers.kt         ← BaseUiTexts aggregate (CoreUiTexts + ScreenUiTexts)
 │       │       │   │   │   └── translations/            ← Hardcoded UI strings for all 17 languages
 │       │       │   │   │       ├── CantoneseUiTexts.kt  ← zh-HK
@@ -317,10 +331,18 @@ FYP/
 │       │       │   │   └── FeedbackViewModel.kt
 │       │       │   ├── friends/
 │       │       │   │   ├── BlockedUsersScreen.kt
+│       │       │   │   ├── BlockUserDelegate.kt           ← Block/unblock logic (extracted from FriendsViewModel)
 │       │       │   │   ├── ChatScreen.kt
 │       │       │   │   ├── ChatViewModel.kt
-│       │       │   │   ├── FriendsScreen.kt
-│       │       │   │   ├── FriendsViewModel.kt
+│       │       │   │   ├── FriendListDelegate.kt          ← Delete mode & friend-list refresh (extracted)
+│       │       │   │   ├── FriendRequestDelegate.kt       ← Friend request send/accept/reject/batch (extracted)
+│       │       │   │   ├── FriendSearchDelegate.kt        ← Search logic (extracted)
+│       │       │   │   ├── FriendsScreen.kt               ← Top-level screen + tab scaffolding
+│       │       │   │   ├── FriendsViewModel.kt            ← Thin ViewModel delegating to 4 delegate classes
+│       │       │   │   ├── components/                    ← Extracted composables
+│       │       │   │   │   ├── FriendCard.kt
+│       │       │   │   │   ├── FriendRequestCards.kt
+│       │       │   │   │   └── SearchUsersDialog.kt
 │       │       │   │   ├── MyProfileScreen.kt
 │       │       │   │   ├── MyProfileViewModel.kt
 │       │       │   │   ├── SharedInboxScreen.kt
@@ -387,7 +409,10 @@ FYP/
 │       │       │       ├── WordBankLanguageSelection.kt
 │       │       │       ├── WordBankModels.kt
 │       │       │       ├── WordBankScreen.kt
-│       │       │       └── WordBankViewModel.kt
+│       │       │       ├── WordBankViewModel.kt           ← Thin ViewModel delegating to 3 delegate classes
+│       │       │       ├── WordBankGenerationDelegate.kt  ← AI generation & parsing (extracted)
+│       │       │       ├── WordBankSpeechDelegate.kt      ← TTS playback (extracted)
+│       │       │       └── WordBankShareDelegate.kt       ← Word sharing (extracted)
 │       │       │
 │       │       └── ui/
 │       │           ├── components/
