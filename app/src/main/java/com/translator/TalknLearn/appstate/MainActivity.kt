@@ -1,13 +1,17 @@
 package com.translator.TalknLearn
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.translator.TalknLearn.ui.theme.FYPTheme
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.auth.FirebaseAuth
+import com.translator.TalknLearn.ui.theme.FYPTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 private const val PREFS_NAME = "app_update_prefs"
 private const val KEY_LAST_VERSION_CODE = "last_version_code"
@@ -35,20 +39,44 @@ class MainActivity : ComponentActivity() {
         val currentVersion = BuildConfig.VERSION_CODE
         val isUpdate = (lastVersion != -1 && lastVersion != currentVersion)
 
-        if (isUpdate) {
-            val auth = FirebaseAuth.getInstance()
-            if (auth.currentUser != null) {
-                auth.signOut()
-                prefs.edit().putString(KEY_LOGOUT_REASON, LOGOUT_REASON_UPDATED).apply()
-            } else {
-                prefs.edit().remove(KEY_LOGOUT_REASON).apply()
-            }
+        // Sign-out decision stays synchronous: it must settle before the nav graph
+        // reads the current user. Disk writes are deferred off the main thread so
+        // they no longer block the first frame.
+        val signedOutForUpdate = isUpdate && FirebaseAuth.getInstance().currentUser != null
+        if (signedOutForUpdate) {
+            FirebaseAuth.getInstance().signOut()
         }
-
-        prefs.edit().putInt(KEY_LAST_VERSION_CODE, currentVersion).apply()
+        if (isUpdate) {
+            persistUpdateBookkeeping(prefs, currentVersion, signedOutForUpdate)
+        } else {
+            persistVersionCode(prefs, currentVersion)
+        }
 
         setContent {
             FYPTheme { AppNavigation() }
+        }
+    }
+
+    private fun persistUpdateBookkeeping(
+        prefs: SharedPreferences,
+        currentVersion: Int,
+        signedOutForUpdate: Boolean,
+    ) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            prefs.edit().apply {
+                if (signedOutForUpdate) {
+                    putString(KEY_LOGOUT_REASON, LOGOUT_REASON_UPDATED)
+                } else {
+                    remove(KEY_LOGOUT_REASON)
+                }
+                putInt(KEY_LAST_VERSION_CODE, currentVersion)
+            }.apply()
+        }
+    }
+
+    private fun persistVersionCode(prefs: SharedPreferences, currentVersion: Int) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            prefs.edit().putInt(KEY_LAST_VERSION_CODE, currentVersion).apply()
         }
     }
 }
