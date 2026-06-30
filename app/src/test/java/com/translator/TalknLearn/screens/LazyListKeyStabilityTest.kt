@@ -4,7 +4,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
-// Static regression guard for docs/APP_SUGGESTIONS.md section 4.7.
+// Static regression guard for stable LazyColumn/LazyRow keys.
 // Every dynamic items(collection, ...) call under
 // app/src/main/java/com/translator/TalknLearn/screens must declare a stable key = lambda
 // for predictable Compose recomposition and animations.

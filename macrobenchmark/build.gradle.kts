@@ -1,4 +1,4 @@
-// Macrobenchmark module — item 14 from docs/APP_SUGGESTIONS.md.
+// Macrobenchmark module — startup + flow benchmarks.
 //
 // Run locally on a connected device or emulator (API 29+):
 //   .\gradlew.bat :macrobenchmark:connectedBenchmarkAndroidTest

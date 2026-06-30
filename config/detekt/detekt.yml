@@ -7,8 +7,8 @@
 #     specific deviations from defaults.
 #   * Existing violations are silenced via `app/detekt-baseline.xml`, which is
 #     generated with `:app:detektBaseline` once and committed.
-#   * Items 45 of docs/APP_SUGGESTIONS.md called out `runBlocking`, `GlobalScope`,
-#     and `!!` as the priority targets — those rules are explicitly enabled below.
+#   * `runBlocking`, `GlobalScope`, and `!!` are the priority targets —
+#     those rules are explicitly enabled below.
 
 build:
   # Fail on any non-baselined issue. Combined with the baseline, this means

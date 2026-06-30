@@ -59,7 +59,7 @@ android {
             // App Check debug token — read from local.properties (gitignored) or CI env var.
             buildConfigField("String", "APP_CHECK_DEBUG_TOKEN", appCheckToken.asBuildConfigString())
         }
-        // Macrobenchmark target build type (item 14 from docs/APP_SUGGESTIONS.md).
+        // Macrobenchmark target build type.
         // Mirrors `release` but is signed with the debug key so the :macrobenchmark
         // module can install + launch it on a developer device without release keys.
         // `profileable` is injected via `app/src/benchmark/AndroidManifest.xml`.
@@ -203,7 +203,7 @@ dependencies {
 }
 
 // ---------------------------------------------------------------------------
-// Kover — Android unit-test coverage gate (item 8 from docs/APP_SUGGESTIONS.md).
+// Kover — Android unit-test coverage gate.
 // Run: .\gradlew.bat :app:koverHtmlReportDebug      (HTML report)
 //      .\gradlew.bat :app:koverXmlReportDebug       (XML, used by CI)
 //      .\gradlew.bat :app:koverVerifyDebug          (enforces the floor below)
@@ -261,7 +261,7 @@ kover {
 }
 
 // ---------------------------------------------------------------------------
-// Detekt — static analysis + ktlint formatting (item 45 from docs/APP_SUGGESTIONS.md).
+// Detekt — static analysis + ktlint formatting.
 // Run: .\gradlew.bat :app:detekt                  (analysis; fails on new issues)
 //      .\gradlew.bat :app:detektBaseline          (regenerate baseline after a major refactor)
 // Reports land under app/build/reports/detekt/ (HTML + XML).

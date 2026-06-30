@@ -14,7 +14,7 @@ import org.junit.runner.RunWith
  * Run on a connected device or emulator (API 29+):
  *   ./gradlew :macrobenchmark:connectedBenchmarkAndroidTest
  *
- * This is the initial baseline for item 14 of docs/APP_SUGGESTIONS.md.
+ * This is the initial startup baseline benchmark.
  * Additional flow-specific benchmarks (Quick Translate first-frame, Friends
  * list scroll jank) can be added as separate @Test methods or files.
  */

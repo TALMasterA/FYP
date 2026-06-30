@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Item 49 (docs/APP_SUGGESTIONS.md §9): unit tests for the privacy-friendly
+ * Unit tests for the privacy-friendly
  * [CrashlyticsKeysController.accountAgeBucket] helper.  We exercise every
  * boundary so future changes to bucket thresholds break the test instead
  * of silently shifting Crashlytics dimension labels.

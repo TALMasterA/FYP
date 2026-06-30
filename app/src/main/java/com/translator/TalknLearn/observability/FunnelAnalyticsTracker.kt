@@ -8,8 +8,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Item 51 (docs/APP_SUGGESTIONS.md §9): emits funnel analytics events
- * for the four key activation points used by the demo dashboards:
+ * Emits funnel analytics events for the four key activation points used
+ * by the demo dashboards:
  *  - onboarding_complete
  *  - first_translation
  *  - first_quiz

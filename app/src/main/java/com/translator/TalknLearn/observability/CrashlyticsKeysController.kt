@@ -5,9 +5,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Item 49 (docs/APP_SUGGESTIONS.md §9): attaches user-context Crashlytics
- * custom keys so non-fatal logs and crashes carry enough context to
- * triage without a repro session.
+ * Attaches user-context Crashlytics custom keys so non-fatal logs and
+ * crashes carry enough context to triage without a repro session.
  *
  * Set keys:
  *  - currentScreenRoute  — top-level NavHost destination (e.g. "speech_screen")

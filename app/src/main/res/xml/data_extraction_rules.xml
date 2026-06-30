@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-    Data Extraction Rules for API 31+ (§2.14 of docs/APP_SUGGESTIONS.md).
+    Data Extraction Rules for API 31+.
 
     Like backup_rules.xml this file is normally inert because the manifest
     sets android:allowBackup="false". The explicit excludes below ensure that

@@ -1,7 +1,6 @@
 <!--
-Item 43, docs/APP_SUGGESTIONS.md — embed the agent-skills checklist
-(.github/copilot-instructions.md) so human contributors follow the same hygiene
-as Copilot agents.
+Embed the agent-skills checklist (.github/copilot-instructions.md) so human
+contributors follow the same hygiene as Copilot agents.
 -->
 
 ## Summary
