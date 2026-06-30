@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Network security policy for the FYP app (§2.8 of docs/APP_SUGGESTIONS.md).
+    Network security policy for the FYP app.
 
     Cleartext HTTP is denied for the entire app surface, on every supported API
     level (the app supports API 26+, so the implicit `targetSdk >= 28` default

@@ -1,7 +1,7 @@
 # Dependabot configuration
 #
-# Item 40, docs/APP_SUGGESTIONS.md — group AndroidX / Compose / Hilt updates
-# so dependency PRs are reviewable instead of flooding the queue.
+# Group AndroidX / Compose / Hilt updates so dependency PRs are reviewable
+# instead of flooding the queue.
 #
 # Versioning notes:
 # - Android Gradle dependencies are declared in `gradle/libs.versions.toml`.

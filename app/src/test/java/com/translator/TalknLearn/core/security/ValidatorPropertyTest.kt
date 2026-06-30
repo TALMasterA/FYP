@@ -7,7 +7,7 @@ import org.junit.Test
 import kotlin.random.Random
 
 /**
- * Lightweight property/fuzz tests for input validators (§3.8 of APP_SUGGESTIONS).
+ * Lightweight property/fuzz tests for input validators.
  *
  * Uses a deterministic seed so failures are reproducible. No new test
  * dependency is introduced; this is plain JUnit + kotlin.random.Random.

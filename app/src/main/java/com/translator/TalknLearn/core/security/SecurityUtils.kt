@@ -57,8 +57,8 @@ fun validateUsername(username: String, minLength: Int = 3, maxLength: Int = 20):
  * Validates password minimum-strength requirements.
  *
  * Enforces a trimmed-length minimum (default 8) so passwords made entirely of
- * whitespace are rejected. The default was raised from 6 to 8 as part of the
- * §2.1 sweep in `docs/APP_SUGGESTIONS.md`; complexity rules (mixed character
+ * whitespace are rejected. The default was raised from 6 to 8 as part of a
+ * password-strength hardening sweep; complexity rules (mixed character
  * classes, common-password blocklist) are intentionally NOT enforced here
  * because they would require new user-facing error strings translated into
  * every supported UI language and a coordinated Firebase Auth password

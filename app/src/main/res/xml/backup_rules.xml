@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-    Auto Backup rules for API 23-30 (§2.14 of docs/APP_SUGGESTIONS.md).
+    Auto Backup rules for API 23-30.
 
     The application sets android:allowBackup="false" in AndroidManifest.xml,
     so on a stock device this file is not consulted in practice. We still

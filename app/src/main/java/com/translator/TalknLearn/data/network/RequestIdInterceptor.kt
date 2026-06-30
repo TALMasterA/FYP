@@ -7,7 +7,7 @@ import java.util.UUID
 /**
  * Adds an `X-Request-ID` header to every outgoing OkHttp request so that
  * client-issued requests can be correlated with backend log entries when
- * triaging incidents (see `docs/APP_SUGGESTIONS.md` §5.1).
+ * triaging incidents.
  *
  * The ID is a fresh random UUID per request. If a caller has already set the
  * header explicitly (e.g. for retries), the existing value is preserved.

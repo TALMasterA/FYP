@@ -6,10 +6,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Item 50 (docs/APP_SUGGESTIONS.md §9): thin wrapper around
- * [FirebasePerformance] custom traces so ViewModels can bracket
- * latency-sensitive flows (first translation, quiz-ready, learning sheet
- * generation) without duplicating boilerplate.
+ * Thin wrapper around [FirebasePerformance] custom traces so ViewModels
+ * can bracket latency-sensitive flows (first translation, quiz-ready,
+ * learning sheet generation) without duplicating boilerplate.
  *
  * All SDK calls are wrapped in [runCatching] so unit tests where
  * Firebase isn't initialised silently no-op (we still return a
