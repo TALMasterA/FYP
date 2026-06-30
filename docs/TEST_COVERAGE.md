@@ -1,18 +1,23 @@
 # Test Coverage Report
 
-_Last updated: 2026-04-27_
+_Last updated: 2026-06-30_
 
 ## Verified Snapshot (from local audit)
 
 | Metric | Count |
 |---|---:|
-| Android source files (`app/src/main/java/com/translator/TalknLearn`) | 241 |
+| Android source files (`app/src/main/java/com/translator/TalknLearn`) | 269 |
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 11 |
-| Android unit test files (`app/src/test/java/com/translator/TalknLearn`) | 197 |
+| Android unit test files (`app/src/test/java/com/translator/TalknLearn`) | 198 |
 | Android test suites in latest `testDebugUnitTest` run | 197 |
 | Android unit tests executed (`testDebugUnitTest`) | 2,495 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 17 |
 | Backend Jest tests executed (`npm run test:coverage`) | 193 |
+
+> The Android unit test **file** count (198) is one higher than the executed **suite**
+> count (197) because `FakePersistentRateLimiter.kt` is a shared test double, not a
+> runnable JUnit suite.
+
 
 ## Backend Coverage (from `coverage-summary.json`)
 
@@ -90,7 +95,7 @@ package (static localization data), and the `di.*` package (Hilt wiring).
 
 ## Performance Benchmarks (Macrobenchmark)
 
-The `:macrobenchmark` Gradle module (item 14 of `docs/APP_SUGGESTIONS.md`) provides a baseline cold/warm startup measurement for the launcher activity (`com.translator.TalknLearn`).
+The `:macrobenchmark` Gradle module provides a baseline cold/warm startup measurement for the launcher activity (`com.translator.TalknLearn`).
 
 - Source: `macrobenchmark/src/main/java/com/translator/TalknLearn/macrobenchmark/StartupBenchmark.kt`
 - Target build type: `:app:benchmark` (release-equivalent, debug-signed, `<profileable shell="true"/>` overlay in `app/src/benchmark/AndroidManifest.xml`)

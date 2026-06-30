@@ -74,14 +74,14 @@ npx jest --passWithNoTests 2>$null | Select-String "Tests:"
 **Source of truth:** `SecurityUtils.kt`
 
 ```powershell
-Select-String -Path "app\src\main\java\com\example\fyp\core\security\SecurityUtils.kt" -Pattern "minLength"
+Select-String -Path "app\src\main\java\com\translator\TalknLearn\core\security\SecurityUtils.kt" -Pattern "minLength"
 ```
 
 **Check all locale strings mention the same number:**
 
 ```powershell
-Select-String -Path "app\src\main\java\com\example\fyp\model\ui\strings\UiTextScreens.kt", `
-  "app\src\main\java\com\example\fyp\model\ui\strings\translations\*.kt" `
+Select-String -Path "app\src\main\java\com\translator\TalknLearn\model\ui\strings\UiTextScreens.kt", `
+  "app\src\main\java\com\translator\TalknLearn\model\ui\strings\translations\*.kt" `
   -Pattern "password|Password|パスワード|비밀번호|密碼|密码|contraseña|mot de passe|Passwort|senha|пароль|رمز" |
   Select-String -Pattern "\d"
 ```
@@ -162,7 +162,7 @@ The above must return **zero matches**.
 **Verify the locale-completeness regression tests are green** (the `UiTextCompletenessTest` suite covers all 16 locales × all enum keys):
 
 ```powershell
-.\gradlew.bat :app:testDebugUnitTest --tests "com.example.fyp.model.ui.UiTextCompletenessTest" --console=plain 2>$null | Select-Object -Last 5
+.\gradlew.bat :app:testDebugUnitTest --tests "com.translator.TalknLearn.model.ui.UiTextCompletenessTest" --console=plain 2>$null | Select-Object -Last 5
 ```
 
 **Rule:** If the test fails, a locale map has either missing keys or keys outside the current enum. Fix the locale map file before closing. Never let a partial locale ship.
