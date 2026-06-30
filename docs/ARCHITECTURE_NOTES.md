@@ -788,7 +788,7 @@ The following components cannot be unit tested due to Android framework dependen
 
 **Bug (fixed 2026-04-13):** `getFavoriteCount()` only counted documents in the `favorites` collection (individual records) and ignored records embedded inside `favorite_sessions` documents. Users could bypass the 20-record limit by favouriting sessions.
 
-**Fix (2026-04-13):** Added `getTotalFavoriteRecordCount()` to `FirestoreFavoritesRepository` which sums individual records + session-embedded records. Both `toggleFavorite()` and `favouriteSession()` now use this method. The old `getFavoriteCount()` is retained for individual-count queries.
+**Fix (2026-04-13):** Added `getTotalFavoriteRecordCount()` to `FirestoreFavoritesRepository` which sums individual records + session-embedded records. Both `toggleFavorite()` and `favouriteSession()` now use this method. The earlier `getFavoriteCount()` helper was removed; `getTotalFavoriteRecordCount()` is the sole count entry point.
 
 ---
 

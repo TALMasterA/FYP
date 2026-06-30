@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Item 42, `docs/APP_SUGGESTIONS.md` — short records of the major architectural
+This directory holds short records of the major architectural
 choices already in place. New contributors and future maintainers can read
 these in order to understand *why* the codebase looks the way it does without
 having to reverse-engineer it from the source.

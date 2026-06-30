@@ -28,7 +28,7 @@ For every new `.kt` file added under `app/src/main/`:
 
 ```powershell
 # Verify at least one other production file imports or references it
-grep -r "import com.example.fyp....NewClass" --include="*.kt" app/src/main/ | grep -v "the-new-file-itself"
+grep -r "import com.translator.TalknLearn....NewClass" --include="*.kt" app/src/main/ | grep -v "the-new-file-itself"
 ```
 
 **Fail condition:** Zero import hits outside the file itself means it is dead code.

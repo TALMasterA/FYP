@@ -46,5 +46,5 @@ metadata).
 
 ### Follow-ups
 
-- Item 28 (`docs/APP_SUGGESTIONS.md`): TalkBack content-description sweep.
-- Item 29: 150 % font-scale screenshot test.
+- TalkBack content-description sweep.
+- 150 % font-scale screenshot test.
