@@ -13,14 +13,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.TranslateButton to "번역",
     UiTextKey.CopyTranslationButton to "번역 복사",
     UiTextKey.SpeakTranslationButton to "번역 읽기",
-    UiTextKey.RecognizingStatus to "녹음 중...말씀해 주세요, 자동 정지를 기다립니다.",
-    UiTextKey.TranslatingStatus to "번역 중...",
-    UiTextKey.SpeakingOriginalStatus to "원문 읽는 중...",
-    UiTextKey.SpeakingTranslationStatus to "번역 읽는 중...",
-    UiTextKey.SpeakingLabel to "읽는 중",
-    UiTextKey.FinishedSpeakingOriginal to "원문 읽기 완료",
-    UiTextKey.FinishedSpeakingTranslation to "번역 읽기 완료",
-    UiTextKey.TtsErrorTemplate to "음성 오류: %s",
 
     // Language labels
     UiTextKey.AppUiLanguageLabel to "표시 언어",
@@ -61,11 +53,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     // Speech
     UiTextKey.SpeechInputPlaceholder to "여기에 입력하거나 마이크 사용...",
     UiTextKey.SpeechTranslatedPlaceholder to "번역 결과가 여기에 표시됩니다...",
-    UiTextKey.StatusAzureErrorTemplate to "Azure 오류: %s",
-    UiTextKey.StatusTranslationErrorTemplate to "번역 오류: %s",
-    UiTextKey.StatusLoginRequiredTranslation to "번역하려면 로그인이 필요합니다",
-    UiTextKey.StatusRecognizePreparing to "마이크 준비 중...(말하지 마세요)",
-    UiTextKey.StatusRecognizeListening to "듣고 있습니다...말씀해 주세요.",
 
     // Pagination
     UiTextKey.PaginationPrevLabel to "이전 페이지",
@@ -73,12 +60,10 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.PaginationPageLabelTemplate to "{page} / {total} 페이지",
 
     // Toast
-    UiTextKey.ToastCopied to "복사됨",
     UiTextKey.DisableText to "번역 기능과 기록 저장을 사용하려면 로그인이 필요합니다.",
 
     // Error
     UiTextKey.ErrorRetryButton to "재시도",
-    UiTextKey.ErrorGenericMessage to "오류가 발생했습니다. 다시 시도해 주세요.",
 
     // Shop
     UiTextKey.ShopTitle to "상점",
@@ -110,10 +95,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.HelpTitle to "도움말",
     UiTextKey.SpeechTitle to "빠른 번역",
     UiTextKey.HomeStartButton to "번역 시작",
-    UiTextKey.HomeFeaturesTitle to "기능 소개",
-    UiTextKey.HomeDiscreteDescription to "짧은 문장 및 음성 번역",
-    UiTextKey.HomeContinuousDescription to "실시간 양방향 대화 번역",
-    UiTextKey.HomeLearningDescription to "번역 기록으로 학습 자료와 퀴즈 생성",
 
     // Help
     UiTextKey.HelpCurrentTitle to "현재 기능",
@@ -237,10 +218,7 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsFontSizeTitle to "글꼴 크기",
     UiTextKey.SettingsFontSizeDesc to "텍스트 크기를 조절하여 가독성을 높입니다 (기기 간 동기화)",
     UiTextKey.SettingsScaleTemplate to "크기: {pct}%",
-    UiTextKey.SettingsColorPaletteTitle to "컬러 테마",
-    UiTextKey.SettingsColorPaletteDesc to "앱의 컬러 테마를 선택, 각 테마 10코인",
     UiTextKey.SettingsColorCostTemplate to "{cost} 코인",
-    UiTextKey.SettingsColorUnlockButton to "잠금 해제",
     UiTextKey.SettingsColorSelectButton to "선택",
     UiTextKey.SettingsColorAlreadyUnlocked to "해제됨",
     UiTextKey.SettingsPreviewHeadline to "제목: 큰 텍스트 미리보기",
@@ -258,8 +236,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsResetPW to "비밀번호 재설정",
     UiTextKey.SettingsQuickLinks to "상세 설정",
     UiTextKey.SettingsNotLoggedInWarning to "계정 설정을 사용하려면 로그인하세요. 앱 언어는 변경 가능합니다.",
-    UiTextKey.SettingsVoiceTitle to "음성 설정",
-    UiTextKey.SettingsVoiceDesc to "각 언어의 텍스트 읽기 음성을 선택합니다.",
     UiTextKey.SettingsVoiceLanguageLabel to "언어",
     UiTextKey.SettingsVoiceSelectLabel to "음성",
     UiTextKey.SettingsVoiceDefault to "기본값",
@@ -282,23 +258,17 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LearningSheetWhatIsThisDesc to "번역 기록을 기반으로 생성된 학습 시트입니다. 어휘, 의미, 예문, 문법 포인트가 포함되어 있습니다. 아래 퀴즈 버튼으로 지식을 테스트하세요!",
     UiTextKey.LearningRegenBlockedTitle to "현재 재생성할 수 없습니다",
     UiTextKey.LearningRegenBlockedMessage to "재생성하려면 이전보다 최소 5건 이상의 기록이 필요합니다. {needed} 건 더 필요합니다.",
-    UiTextKey.LearningRegenNeedMoreRecords to "⚠️ 재생성하려면 {needed} 건 더 필요합니다 (최소 5건)",
-    UiTextKey.LearningRegenCountNotHigher to "⚠️ 기록 수가 이전 생성 시보다 많아야 합니다",
     UiTextKey.LearningRegenInfoTitle to "재생성 규칙",
     UiTextKey.LearningRegenInfoMessage to "학습 자료를 재생성하려면:\n\n• 첫 생성: 언제든 가능\n• 재생성: 이전보다 최소 5건 이상의 번역 기록 필요\n\n충분한 새 기록이 있으면 버튼이 활성화(파란색)됩니다. 회색이면 번역을 계속하세요!\n\n💡 힌트: 번역 후 건수가 업데이트되지 않으면 앱을 재시작하세요.",
-    UiTextKey.QuizRegenBlockedSameMaterial to "❌ 이 자료 버전의 퀴즈가 이미 생성되었습니다. 새 퀴즈를 만들려면 새 학습 시트를 생성하세요.",
 
     // Quiz
     UiTextKey.QuizTitleTemplate to "퀴즈: {language}",
     UiTextKey.QuizOpenButton to "📝 퀴즈",
     UiTextKey.QuizGenerateButton to "🔄 퀴즈 생성",
     UiTextKey.QuizGenerating to "⏳ 생성 중...",
-    UiTextKey.QuizUpToDate to "✓ 최신",
     UiTextKey.QuizBlocked to "🚫 차단됨",
     UiTextKey.QuizWait to "⏳ 잠시만...",
-    UiTextKey.QuizMaterialsQuizTemplate to "자료: {materials} | 퀴즈: {quiz}",
     UiTextKey.QuizCanEarnCoins to "🪙 코인을 획득할 수 있습니다!",
-    UiTextKey.QuizNeedMoreRecordsTemplate to "🪙 코인 획득에 {count} 건 더 필요",
     UiTextKey.QuizCancelButton to "취소",
     UiTextKey.QuizPreviousButton to "이전 문제",
     UiTextKey.QuizNextButton to "다음 문제",
@@ -316,7 +286,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizYourAnswerTemplate to "내 답: {Answer}",
     UiTextKey.QuizCorrectAnswerTemplate to "정답: {Answer}",
     UiTextKey.QuizQuestionTemplate to "문제 {current} / {total}",
-    UiTextKey.QuizCannotRegenTemplate to "⚠️ 재생성 불가: 자료({materials}) < 퀴즈({quiz}), 번역을 더 추가하세요.",
     UiTextKey.QuizAnotherGenInProgress to "⏳ 다른 생성이 진행 중입니다. 잠시 기다려 주세요.",
     UiTextKey.QuizCoinRulesTitle to "🪙 코인 획득 규칙",
     UiTextKey.QuizCoinRulesHowToEarn to "✅ 획득 방법:",
@@ -346,25 +315,9 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizCoinsRule4 to "• 퀴즈는 현재 자료 버전과 일치해야 함",
     UiTextKey.QuizCoinsRule5 to "• 총 코인은 기록 페이지에서 확인",
     UiTextKey.QuizCoinsGreatButton to "좋아요!",
-    UiTextKey.QuizOutdatedMessage to "이 퀴즈는 이전 학습 시트를 기반으로 합니다.",
     UiTextKey.QuizRecordsLabel to "건의 기록",
 
     // History coins
-    UiTextKey.HistoryCoinsDialogTitle to "🪙 내 코인",
-    UiTextKey.HistoryCoinRulesTitle to "코인 획득 규칙:",
-    UiTextKey.HistoryCoinHowToEarnTitle to "획득 방법:",
-    UiTextKey.HistoryCoinHowToEarnRule1 to "• 정답당 1코인",
-    UiTextKey.HistoryCoinHowToEarnRule2 to "• 각 퀴즈 버전의 첫 시도만",
-    UiTextKey.HistoryCoinHowToEarnRule3 to "• 퀴즈는 현재 학습 자료와 일치해야 함",
-    UiTextKey.HistoryCoinAntiCheatTitle to "🔒 부정 방지 규칙:",
-    UiTextKey.HistoryCoinAntiCheatRule1 to "• 이전 코인 획득보다 10건 이상의 새 번역 필요",
-    UiTextKey.HistoryCoinAntiCheatRule2 to "• 퀴즈 버전은 자료 버전과 동일해야 함",
-    UiTextKey.HistoryCoinAntiCheatRule3 to "• 기록 삭제 시 퀴즈 재생성 차단 (건수가 이전보다 많은 경우 제외)",
-    UiTextKey.HistoryCoinAntiCheatRule4 to "• 같은 퀴즈의 재시도에는 코인 없음",
-    UiTextKey.HistoryCoinTipsTitle to "💡 팁:",
-    UiTextKey.HistoryCoinTipsRule1 to "• 정기적으로 번역을 추가하세요",
-    UiTextKey.HistoryCoinTipsRule2 to "• 첫 시도 전에 열심히 공부하세요!",
-    UiTextKey.HistoryCoinGotItButton to "확인!",
 
     // History info
     UiTextKey.HistoryInfoTitle to "기록 정보",
@@ -383,7 +336,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankWordsCount to "어",
     UiTextKey.WordBankGenerating to "생성 중...",
     UiTextKey.WordBankGenerate to "단어장 생성",
-    UiTextKey.WordBankRegenerate to "단어장 재생성",
     UiTextKey.WordBankRefresh to "🔄 단어장 업데이트",
     UiTextKey.WordBankEmpty to "단어장 없음",
     UiTextKey.WordBankEmptyHint to "위의 버튼을 탭하여 번역 기록에서 단어장을 생성하세요.",
@@ -393,11 +345,8 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankFilterCategoryAll to "모든 카테고리",
     UiTextKey.WordBankFilterDifficultyLabel to "난이도:",
     UiTextKey.WordBankFilterNoResults to "필터 조건에 맞는 단어가 없습니다",
-    UiTextKey.WordBankRefreshAvailable to "✅ 업데이트 가능!",
-    UiTextKey.WordBankRecordsNeeded to "건 (업데이트에 20건 필요)",
     UiTextKey.WordBankRegenInfoTitle to "업데이트 규칙",
     UiTextKey.WordBankRegenInfoMessage to "단어장을 업데이트하려면:\n\n• 첫 생성: 언제든 가능\n• 업데이트: 이전보다 최소 20건 이상의 번역 기록 필요\n\n충분한 새 기록이 있으면 버튼이 활성화(파란색)됩니다. 회색이면 번역을 계속하세요!\n\n💡 힌트: 번역 후 건수가 업데이트되지 않으면 앱을 재시작하세요.",
-    UiTextKey.WordBankHistoryCountTemplate to "현재 기록 수: {nowCount} (생성 시: {savedCount})",
 
     // Dialogs
     UiTextKey.DialogLogoutTitle to "로그아웃하시겠습니까?",
@@ -410,8 +359,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ProfileUsernameLabel to "사용자명",
     UiTextKey.ProfileUsernameHint to "사용자명 입력",
     UiTextKey.ProfileUpdateButton to "프로필 업데이트",
-    UiTextKey.ProfileUpdateSuccess to "프로필 업데이트 성공",
-    UiTextKey.ProfileUpdateError to "프로필 업데이트 실패",
 
     // Account deletion
     UiTextKey.AccountDeleteTitle to "계정 삭제",
@@ -419,19 +366,10 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteConfirmMessage to "기록, 단어장, 학습 자료, 설정을 포함한 모든 데이터가 영구 삭제됩니다. 비밀번호를 입력하여 확인하세요.",
     UiTextKey.AccountDeletePasswordLabel to "비밀번호",
         UiTextKey.AccountDeleteButton to "계정 및 데이터 삭제",
-    UiTextKey.AccountDeleteSuccess to "계정 삭제 성공",
-    UiTextKey.AccountDeleteError to "계정 삭제 실패",
-    UiTextKey.AccountDeleteReauthRequired to "삭제를 확인하려면 비밀번호를 다시 입력하세요",
 
     // Favorites
     UiTextKey.FavoritesTitle to "즐겨찾기",
     UiTextKey.FavoritesEmpty to "즐겨찾기 없음",
-    UiTextKey.FavoritesAddSuccess to "즐겨찾기에 추가했습니다",
-    UiTextKey.FavoritesRemoveSuccess to "즐겨찾기에서 삭제했습니다",
-    UiTextKey.FavoritesAddButton to "즐겨찾기에 추가",
-    UiTextKey.FavoritesRemoveButton to "즐겨찾기에서 삭제",
-    UiTextKey.FavoritesNoteLabel to "메모",
-    UiTextKey.FavoritesNoteHint to "메모 추가 (선택)",
     UiTextKey.FavoritesTabRecords to "기록",
     UiTextKey.FavoritesTabSessions to "대화",
     UiTextKey.FavoritesSessionsEmpty to "저장된 대화 없음",
@@ -446,9 +384,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsTranslatedLabel to "번역",
     UiTextKey.CustomWordsPronunciationLabel to "발음 (선택)",
     UiTextKey.CustomWordsExampleLabel to "예문 (선택)",
-    UiTextKey.CustomWordsSaveSuccess to "단어를 저장했습니다",
-    UiTextKey.CustomWordsDeleteSuccess to "단어를 삭제했습니다",
-    UiTextKey.CustomWordsAlreadyExists to "이 단어는 이미 존재합니다",
     UiTextKey.CustomWordsOriginalLanguageLabel to "원어 언어",
     UiTextKey.CustomWordsTranslationLanguageLabel to "번역 언어",
     UiTextKey.CustomWordsSaveButton to "저장",
@@ -456,36 +391,18 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Language detection
     UiTextKey.LanguageDetectAuto to "자동 감지",
-    UiTextKey.LanguageDetectDetecting to "감지 중...",
-    UiTextKey.LanguageDetectedTemplate to "감지됨: {language}",
-    UiTextKey.LanguageDetectFailed to "감지 실패",
 
     // Image recognition
     UiTextKey.ImageRecognitionButton to "이미지에서 텍스트 스캔",
     UiTextKey.ImageRecognitionAccuracyWarning to "⚠️ 주의: 이미지 텍스트 인식은 완전히 정확하지 않을 수 있습니다. 추출된 텍스트를 확인하세요." +
             "라틴 문자 (영어 등), 중국어, 일본어, 한국어를 지원합니다.",
-    UiTextKey.ImageRecognitionScanning to "이미지 텍스트 스캔 중...",
-    UiTextKey.ImageRecognitionSuccess to "텍스트 추출 성공",
 
     // Cache
-    UiTextKey.CacheClearButton to "캐시 지우기",
-    UiTextKey.CacheClearSuccess to "캐시를 지웠습니다",
-    UiTextKey.CacheStatsTemplate to "캐시: {count} 건의 번역 저장",
 
     // Auto theme
-    UiTextKey.SettingsAutoThemeTitle to "테마 자동 전환",
-    UiTextKey.SettingsAutoThemeDesc to "시간대에 따라 라이트와 다크 테마를 자동 전환",
-    UiTextKey.SettingsAutoThemeEnabled to "활성화",
-    UiTextKey.SettingsAutoThemeDisabled to "비활성화",
-    UiTextKey.SettingsAutoThemeDarkStartLabel to "다크 모드 시작 시간:",
-    UiTextKey.SettingsAutoThemeLightStartLabel to "라이트 모드 시작 시간:",
     UiTextKey.SettingsAutoThemePreview to "테마는 설정한 시간에 자동으로 전환됩니다",
 
     // Offline mode
-    UiTextKey.OfflineModeTitle to "오프라인 모드",
-    UiTextKey.OfflineModeMessage to "현재 오프라인입니다. 캐시 데이터를 보고 있습니다.",
-    UiTextKey.OfflineModeRetry to "연결 재시도",
-    UiTextKey.OfflineDataCached to "캐시 데이터 사용 가능",
     UiTextKey.OfflineSyncPending to "온라인 시 변경사항을 동기화합니다",
 
     // Image capture
@@ -497,26 +414,15 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Friends
     UiTextKey.FriendsTitle to "친구",
-    UiTextKey.FriendsMenuButton to "친구",
     UiTextKey.FriendsAddButton to "친구 추가",
     UiTextKey.FriendsSearchTitle to "사용자 검색",
     UiTextKey.FriendsSearchPlaceholder to "사용자명 또는 사용자 ID 입력...",
-    UiTextKey.FriendsSearchMinChars to "검색에 2자 이상 입력하세요",
     UiTextKey.FriendsSearchNoResults to "사용자를 찾을 수 없습니다",
-    UiTextKey.FriendsListEmpty to "친구를 추가하여 교류하고 학습 자료를 공유하세요.",
     UiTextKey.FriendsRequestsSection to "친구 요청 ({count})",
     UiTextKey.FriendsSectionTitle to "친구 ({count})",
     UiTextKey.FriendsAcceptButton to "수락",
     UiTextKey.FriendsRejectButton to "거절",
-    UiTextKey.FriendsRemoveButton to "삭제",
-    UiTextKey.FriendsRemoveDialogTitle to "친구 삭제",
-    UiTextKey.FriendsRemoveDialogMessage to "{username}을(를) 친구 목록에서 삭제하시겠습니까?",
     UiTextKey.FriendsSendRequestButton to "추가",
-    UiTextKey.FriendsRequestSentSuccess to "친구 요청을 보냈습니다!",
-    UiTextKey.FriendsRequestAcceptedSuccess to "친구 요청을 수락했습니다!",
-    UiTextKey.FriendsRequestRejectedSuccess to "요청을 거절했습니다",
-    UiTextKey.FriendsRemovedSuccess to "친구를 삭제했습니다",
-    UiTextKey.FriendsRequestFailed to "요청 전송 실패",
     UiTextKey.FriendsCloseButton to "닫기",
     UiTextKey.FriendsCancelButton to "취소",
     UiTextKey.FriendsRemoveConfirm to "삭제",
@@ -526,7 +432,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsCancelRequestButton to "요청 취소",
     UiTextKey.FriendsUnreadMessageDesc to "메시지 보내기",
     UiTextKey.FriendsDeleteModeButton to "친구 삭제",
-    UiTextKey.FriendsDeleteSelectedButton to "선택 삭제",
     UiTextKey.FriendsDeleteMultipleTitle to "친구 삭제",
     UiTextKey.FriendsDeleteMultipleMessage to "선택한 {count} 명의 친구를 삭제하시겠습니까?",
     UiTextKey.FriendsSearchMinChars3 to "사용자명 검색에 3자 이상 입력하세요",
@@ -540,26 +445,16 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ChatInputPlaceholder to "메시지 입력...",
     UiTextKey.ChatSendButton to "보내기",
     UiTextKey.ChatEmpty to "메시지가 없습니다. 채팅을 시작하세요!",
-    UiTextKey.ChatMessageSent to "메시지 전송됨",
-    UiTextKey.ChatMessageFailed to "메시지 전송 실패",
-    UiTextKey.ChatMarkingRead to "읽음 처리 중...",
-    UiTextKey.ChatLoadingMessages to "메시지 로딩 중...",
-    UiTextKey.ChatToday to "오늘",
-    UiTextKey.ChatYesterday to "어제",
     UiTextKey.ChatUnreadBadge to "{count} 건 읽지 않음",
     UiTextKey.ChatTranslateButton to "번역",
     UiTextKey.ChatTranslateDialogTitle to "대화 번역",
     UiTextKey.ChatTranslateDialogMessage to "친구의 메시지를 내 언어로 번역하시겠습니까? 각 메시지의 언어를 감지하여 번역합니다.",
     UiTextKey.ChatTranslateConfirm to "모두 번역",
-    UiTextKey.ChatTranslating to "메시지 번역 중...",
-    UiTextKey.ChatTranslated to "메시지를 번역했습니다",
     UiTextKey.ChatShowOriginal to "원문 보기",
     UiTextKey.ChatShowTranslation to "번역 보기",
-    UiTextKey.ChatTranslateFailed to "번역 실패",
     UiTextKey.ChatTranslatedLabel to "번역됨",
 
     // Sharing
-    UiTextKey.ShareTitle to "공유",
     UiTextKey.ShareInboxTitle to "공유 받은편지함",
     UiTextKey.ShareInboxEmpty to "공유 항목이 없습니다. 친구가 단어와 자료를 공유할 수 있습니다!",
     UiTextKey.ShareWordButton to "단어 공유",
@@ -567,14 +462,8 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareSelectFriendTitle to "친구 선택",
     UiTextKey.ShareSelectFriendMessage to "공유할 친구를 선택하세요:",
     UiTextKey.ShareSuccess to "공유 성공!",
-    UiTextKey.ShareFailed to "공유 실패",
-    UiTextKey.ShareWordWith to "{username}와(과) 단어 공유",
-    UiTextKey.ShareMaterialWith to "{username}와(과) 자료 공유",
     UiTextKey.ShareAcceptButton to "수락",
     UiTextKey.ShareDismissButton to "무시",
-    UiTextKey.ShareAccepted to "컬렉션에 추가했습니다",
-    UiTextKey.ShareDismissed to "항목을 무시했습니다",
-    UiTextKey.ShareActionFailed to "작업 실패",
     UiTextKey.ShareTypeWord to "단어",
     UiTextKey.ShareTypeLearningSheet to "학습 시트",
     UiTextKey.ShareReceivedFrom to "보낸이: {username}",
@@ -593,12 +482,10 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.MyProfileTitle to "내 프로필",
     UiTextKey.MyProfileUserId to "사용자 ID",
     UiTextKey.MyProfileUsername to "사용자명",
-    UiTextKey.MyProfileDisplayName to "표시 이름",
     UiTextKey.MyProfileCopyUserId to "사용자 ID 복사",
     UiTextKey.MyProfileCopyUsername to "사용자명 복사",
     UiTextKey.MyProfileShare to "프로필 공유",
     UiTextKey.MyProfileCopied to "클립보드에 복사했습니다!",
-    UiTextKey.MyProfileLanguages to "언어",
     UiTextKey.MyProfilePrimaryLanguage to "주요 언어",
     UiTextKey.MyProfileLearningLanguages to "학습 중인 언어",
 
@@ -626,7 +513,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
             "• 재생성에는 이전보다 최소 5건 이상의 기록 필요.\n" +
             "• 학습 시트 버튼으로 생성된 자료를 열어 학습.\n" +
             "• 학습 시트 생성 후 퀴즈도 풀 수 있습니다.",
-    UiTextKey.LearningEmptyTitle to "번역 기록 없음",
     UiTextKey.LearningEmptyMessage to "번역을 시작하여 기록을 만드세요.\n" +
             "학습 시트는 번역 기록에서 생성됩니다.\n" +
             "번역 후 아래로 스와이프하여 업데이트.",
@@ -663,17 +549,14 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareDismissWordMessage to "이 공유 단어를 무시하시겠습니까? 되돌릴 수 없습니다.",
 
     // Shared inbox sheet label
-    UiTextKey.ShareLearningSheetLanguageLabel to "언어: {language}",
 
     // Accessibility
     UiTextKey.AccessibilityDismiss to "닫기",
-    UiTextKey.AccessibilityAlreadyConnectedOrPending to "연결됨 또는 대기 중",
     UiTextKey.AccessibilityNewMessages to "새 메시지",
     UiTextKey.AccessibilityNewReleasesIcon to "새 항목 표시",
     UiTextKey.AccessibilitySuccessIcon to "성공",
     UiTextKey.AccessibilityErrorIcon to "오류",
     UiTextKey.AccessibilitySharedItemTypeIcon to "공유 항목 유형",
-    UiTextKey.AccessibilityAddCustomWords to "맞춤 단어 추가",
     UiTextKey.AccessibilityWordBankExists to "단어장 존재",
 
     // Settings hardcoded
@@ -686,7 +569,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsNotifFriendRequests to "친구 요청 수신",
     UiTextKey.FriendsNotifRequestAccepted to "친구 요청 수락됨",
     UiTextKey.FriendsNotifSharedInbox to "새 공유 항목",
-    UiTextKey.FriendsNotifCloseButton to "완료",
 
     // In-app badge settings
     UiTextKey.InAppBadgeSectionTitle to "앱 내 배지 (빨간 점)",
@@ -695,10 +577,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.InAppBadgeSharedInbox to "읽지 않은 공유 받은편지함 배지",
 
     // Error messages
-    UiTextKey.ErrorNotLoggedIn to "계속하려면 로그인하세요.",
-    UiTextKey.ErrorSaveFailedRetry to "저장에 실패했습니다. 다시 시도하세요.",
-    UiTextKey.ErrorLoadFailedRetry to "로딩에 실패했습니다. 다시 시도하세요.",
-    UiTextKey.ErrorNetworkRetry to "네트워크 오류입니다. 연결을 확인하세요.",
 
     // Learning progress
     UiTextKey.LearningProgressNeededTemplate to "자료 생성에 {needed} 건의 번역이 더 필요합니다",
@@ -707,7 +585,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SpeechSwitchToConversation to "실시간 대화로 전환 →",
 
     // Chat clear
-    UiTextKey.ChatClearConversationButton to "채팅 지우기",
     UiTextKey.ChatClearConversationTitle to "대화 지우기",
     UiTextKey.ChatClearConversationMessage to "이 대화의 모든 메시지를 숨기시겠습니까? 나가고 돌아와도 숨겨진 상태입니다. 상대방에게는 영향 없습니다.",
     UiTextKey.ChatClearConversationConfirm to "모두 지우기",
@@ -718,13 +595,11 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.BlockUserTitle to "사용자를 차단하시겠습니까?",
     UiTextKey.BlockUserMessage to "{username}을(를) 차단하시겠습니까? 친구 목록에서 삭제되고 연락할 수 없게 됩니다.",
     UiTextKey.BlockUserConfirm to "차단",
-    UiTextKey.BlockUserSuccess to "사용자를 차단하고 친구에서 삭제했습니다.",
     UiTextKey.BlockedUsersTitle to "차단한 사용자",
     UiTextKey.BlockedUsersEmpty to "차단한 사용자가 없습니다.",
     UiTextKey.UnblockUserButton to "차단 해제",
     UiTextKey.UnblockUserTitle to "차단 해제하시겠습니까?",
     UiTextKey.UnblockUserMessage to "{username}의 차단을 해제하시겠습니까? 다시 친구 요청을 보낼 수 있습니다.",
-    UiTextKey.UnblockUserSuccess to "사용자의 차단을 해제했습니다.",
     UiTextKey.BlockedUsersManageButton to "차단 사용자 관리",
 
     // Friend request note
@@ -737,7 +612,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.GenerationBannerQuiz to "퀴즈가 완성되었습니다! 탭하여 시작.",
 
     // Notification settings quick link
-    UiTextKey.NotifSettingsQuickLink to "알림",
 
     // Language name for Traditional Chinese
     UiTextKey.LangZhTw to "중국어(번체)",
@@ -799,7 +673,6 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsEmptyState to "맞춤 단어 없음",
     UiTextKey.CustomWordsEmptyHint to "+를 탭하여 단어 추가",
     UiTextKey.CustomWordsNoSearchResults to "검색에 일치하는 단어 없음",
-    UiTextKey.AddCustomWordHintTemplate to "{from}에 단어를 입력하고 {to}에 번역을 입력",
 
     // Word bank records count
     UiTextKey.WordBankRecordsCountTemplate to "{count} 건의 기록",
@@ -878,34 +751,4 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmMessage to "사용자명을 변경하면 30일간 변경할 수 없습니다. 계속하시겠습니까?",
 
     // Extended Error Messages
-    UiTextKey.ErrorNoInternet to "인터넷 연결이 없습니다. 연결을 확인하세요.",
-    UiTextKey.ErrorPermissionDenied to "이 작업을 수행할 권한이 없습니다.",
-    UiTextKey.ErrorSessionExpired to "세션이 만료되었습니다. 다시 로그인하세요.",
-    UiTextKey.ErrorItemNotFound to "요청한 항목을 찾을 수 없습니다. 삭제되었을 수 있습니다.",
-    UiTextKey.ErrorAccessDenied to "액세스가 거부되었습니다.",
-    UiTextKey.ErrorAlreadyFriends to "이 사용자와 이미 친구입니다.",
-    UiTextKey.ErrorUserBlocked to "이 작업을 완료할 수 없습니다. 사용자가 차단되었을 수 있습니다.",
-    UiTextKey.ErrorRequestNotFound to "이 친구 요청은 더 이상 존재하지 않습니다.",
-    UiTextKey.ErrorRequestAlreadyHandled to "이 요청은 이미 처리되었습니다.",
-    UiTextKey.ErrorNotAuthorized to "이 작업을 수행할 권한이 없습니다.",
-    UiTextKey.ErrorRateLimited to "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
-    UiTextKey.ErrorInvalidInput to "입력이 유효하지 않습니다. 확인 후 다시 시도하세요.",
-    UiTextKey.ErrorOperationNotAllowed to "현재 이 작업은 허용되지 않습니다.",
-    UiTextKey.ErrorTimeout to "작업이 시간 초과되었습니다. 다시 시도하세요.",
-    UiTextKey.ErrorSendMessageFailed to "메시지 전송에 실패했습니다. 다시 시도하세요.",
-    UiTextKey.ErrorFriendRequestSent to "친구 요청을 보냈습니다!",
-    UiTextKey.ErrorFriendRequestFailed to "친구 요청 전송에 실패했습니다.",
-    UiTextKey.ErrorFriendRemoved to "친구를 삭제했습니다.",
-    UiTextKey.ErrorFriendRemoveFailed to "친구 삭제에 실패했습니다. 연결을 확인하세요.",
-    UiTextKey.ErrorBlockSuccess to "사용자를 차단했습니다.",
-    UiTextKey.ErrorBlockFailed to "차단에 실패했습니다. 다시 시도하세요.",
-    UiTextKey.ErrorUnblockSuccess to "차단을 해제했습니다.",
-    UiTextKey.ErrorUnblockFailed to "차단 해제에 실패했습니다. 다시 시도하세요.",
-    UiTextKey.ErrorAcceptRequestSuccess to "친구 요청을 수락했습니다!",
-    UiTextKey.ErrorAcceptRequestFailed to "수락에 실패했습니다. 다시 시도하세요.",
-    UiTextKey.ErrorRejectRequestSuccess to "친구 요청을 거절했습니다.",
-    UiTextKey.ErrorRejectRequestFailed to "거절에 실패했습니다. 다시 시도하세요.",
-    UiTextKey.ErrorOfflineMessage to "오프라인입니다. 일부 기능을 사용하지 못할 수 있습니다.",
-    UiTextKey.ErrorChatDeletionFailed to "대화 삭제에 실패했습니다. 다시 시도하세요.",
-    UiTextKey.ErrorGenericRetry to "오류가 발생했습니다. 다시 시도하세요.",
 )

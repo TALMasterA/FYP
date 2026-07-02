@@ -5,8 +5,6 @@ val NotificationsExtrasScreenTexts: List<String> = listOf(
     // --- Accessibility Strings ---
     // AccessibilityDismiss
     "Dismiss",
-    // AccessibilityAlreadyConnectedOrPending
-    "Already connected or pending",
     // AccessibilityNewMessages
     "New messages",
     // AccessibilityNewReleasesIcon
@@ -17,8 +15,6 @@ val NotificationsExtrasScreenTexts: List<String> = listOf(
     "Error",
     // AccessibilitySharedItemTypeIcon
     "Shared item type",
-    // AccessibilityAddCustomWords
-    "Add custom words",
     // AccessibilityWordBankExists
     "Word bank exists",
 
@@ -39,8 +35,6 @@ val NotificationsExtrasScreenTexts: List<String> = listOf(
     "Friend request accepted",
     // FriendsNotifSharedInbox
     "New shared-inbox items",
-    // FriendsNotifCloseButton
-    "Done",
 
     // --- In-App Badge Settings ---
     // InAppBadgeSectionTitle
@@ -53,14 +47,6 @@ val NotificationsExtrasScreenTexts: List<String> = listOf(
     "Unseen shared-inbox badge",
 
     // --- Common Error Messages ---
-    // ErrorNotLoggedIn
-    "Please log in to continue.",
-    // ErrorSaveFailedRetry
-    "Save failed. Please try again.",
-    // ErrorLoadFailedRetry
-    "Load failed. Please try again.",
-    // ErrorNetworkRetry
-    "Network error. Please check your connection and try again.",
 
     // --- Learning Progress ---
     // LearningProgressNeededTemplate
@@ -71,8 +57,6 @@ val NotificationsExtrasScreenTexts: List<String> = listOf(
     "Switch to Live Conversation →",
 
     // --- Chat Clear Conversation ---
-    // ChatClearConversationButton
-    "Clear Chat",
     // ChatClearConversationTitle
     "Clear Conversation",
     // ChatClearConversationMessage
@@ -91,8 +75,6 @@ val NotificationsExtrasScreenTexts: List<String> = listOf(
     "Block {username}? They will be removed from your friends list and will no longer be able to contact you.",
     // BlockUserConfirm
     "Block",
-    // BlockUserSuccess
-    "User blocked and removed from friends.",
     // BlockedUsersTitle
     "Blocked Users",
     // BlockedUsersEmpty
@@ -103,8 +85,6 @@ val NotificationsExtrasScreenTexts: List<String> = listOf(
     "Unblock User?",
     // UnblockUserMessage
     "Unblock {username}? They will be able to send you friend requests again.",
-    // UnblockUserSuccess
-    "User unblocked.",
     // BlockedUsersManageButton
     "Manage Blocked Users",
 
@@ -123,8 +103,6 @@ val NotificationsExtrasScreenTexts: List<String> = listOf(
     "Quiz ready! Tap to start.",
 
     // --- Notification Settings Quick Link ---
-    // NotifSettingsQuickLink
-    "Notifications",
 
     // --- Language Name for Traditional Chinese ---
     // LangZhTw

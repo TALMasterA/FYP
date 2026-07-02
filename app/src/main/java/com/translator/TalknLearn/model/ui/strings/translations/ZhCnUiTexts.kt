@@ -13,14 +13,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.TranslateButton to "翻译",
     UiTextKey.CopyTranslationButton to "复制翻译",
     UiTextKey.SpeakTranslationButton to "朗读翻译",
-    UiTextKey.RecognizingStatus to "录音中...请讲话，等待自动停止。",
-    UiTextKey.TranslatingStatus to "翻译中...",
-    UiTextKey.SpeakingOriginalStatus to "正在朗读原文...",
-    UiTextKey.SpeakingTranslationStatus to "正在朗读翻译...",
-    UiTextKey.SpeakingLabel to "朗读中",
-    UiTextKey.FinishedSpeakingOriginal to "原文朗读完毕",
-    UiTextKey.FinishedSpeakingTranslation to "翻译朗读完毕",
-    UiTextKey.TtsErrorTemplate to "语音错误：%s",
 
     // Language labels
     UiTextKey.AppUiLanguageLabel to "界面语言",
@@ -61,11 +53,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     // Speech
     UiTextKey.SpeechInputPlaceholder to "在此输入或使用麦克风...",
     UiTextKey.SpeechTranslatedPlaceholder to "翻译结果将在此显示...",
-    UiTextKey.StatusAzureErrorTemplate to "Azure 错误：%s",
-    UiTextKey.StatusTranslationErrorTemplate to "翻译错误：%s",
-    UiTextKey.StatusLoginRequiredTranslation to "请登录后使用翻译功能",
-    UiTextKey.StatusRecognizePreparing to "正在准备麦克风...（请勿讲话）",
-    UiTextKey.StatusRecognizeListening to "正在聆听...请讲话。",
 
     // Pagination
     UiTextKey.PaginationPrevLabel to "上一页",
@@ -73,12 +60,10 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.PaginationPageLabelTemplate to "第 {page} / {total} 页",
 
     // Toast
-    UiTextKey.ToastCopied to "已复制",
     UiTextKey.DisableText to "需要登录后才能使用翻译功能和保存翻译记录。",
 
     // Error
     UiTextKey.ErrorRetryButton to "重试",
-    UiTextKey.ErrorGenericMessage to "出了问题，请重试。",
 
     // Shop
     UiTextKey.ShopTitle to "商店",
@@ -110,10 +95,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.HelpTitle to "帮助",
     UiTextKey.SpeechTitle to "快速翻译",
     UiTextKey.HomeStartButton to "开始翻译",
-    UiTextKey.HomeFeaturesTitle to "功能介绍",
-    UiTextKey.HomeDiscreteDescription to "短句和语音翻译",
-    UiTextKey.HomeContinuousDescription to "实时双向对话翻译",
-    UiTextKey.HomeLearningDescription to "从翻译记录生成学习材料和测验",
 
     // Help
     UiTextKey.HelpCurrentTitle to "当前功能",
@@ -237,10 +218,7 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsFontSizeTitle to "字体大小",
     UiTextKey.SettingsFontSizeDesc to "调整文字大小以提升阅读体验（跨设备同步）",
     UiTextKey.SettingsScaleTemplate to "缩放：{pct}%",
-    UiTextKey.SettingsColorPaletteTitle to "颜色主题",
-    UiTextKey.SettingsColorPaletteDesc to "选择应用颜色主题，每个新主题 10 枚金币",
     UiTextKey.SettingsColorCostTemplate to "{cost} 枚金币",
-    UiTextKey.SettingsColorUnlockButton to "解锁",
     UiTextKey.SettingsColorSelectButton to "选择",
     UiTextKey.SettingsColorAlreadyUnlocked to "已解锁",
     UiTextKey.SettingsPreviewHeadline to "标题：大字预览",
@@ -258,8 +236,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsResetPW to "点此重置密码",
     UiTextKey.SettingsQuickLinks to "详细设置",
     UiTextKey.SettingsNotLoggedInWarning to "请先登录以使用账号设置。您仍然可以更改应用语言。",
-    UiTextKey.SettingsVoiceTitle to "语音设置",
-    UiTextKey.SettingsVoiceDesc to "为每种语言选择文字转语音的声音。",
     UiTextKey.SettingsVoiceLanguageLabel to "语言",
     UiTextKey.SettingsVoiceSelectLabel to "声音",
     UiTextKey.SettingsVoiceDefault to "默认",
@@ -282,23 +258,17 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LearningSheetWhatIsThisDesc to "这是根据您的翻译记录量身生成的学习表，包含词汇、含义、例句和语法要点，帮助您学习。点击下方的测验按钮来测试您的知识！",
     UiTextKey.LearningRegenBlockedTitle to "目前无法重新生成",
     UiTextKey.LearningRegenBlockedMessage to "重新生成需要比上次生成多至少 5 条记录，您还需要 {needed} 条。",
-    UiTextKey.LearningRegenNeedMoreRecords to "⚠️ 还需 {needed} 条记录才能重新生成（至少 5 条）",
-    UiTextKey.LearningRegenCountNotHigher to "⚠️ 记录数需高于上次生成时的数量",
     UiTextKey.LearningRegenInfoTitle to "重新生成规则",
     UiTextKey.LearningRegenInfoMessage to "要重新生成学习材料：\n\n• 首次生成：随时可以\n• 重新生成：需比上次多至少 5 条翻译记录\n\n当您有足够的新记录时，按钮会启用（蓝色）。若按钮为灰色，请继续翻译以解锁重新生成！\n\n💡 提示：翻译后如果数量未更新，请重启应用刷新。",
-    UiTextKey.QuizRegenBlockedSameMaterial to "❌ 此版本材料已生成测验，请生成新的学习表以创建新测验。",
 
     // Quiz
     UiTextKey.QuizTitleTemplate to "测验：{language}",
     UiTextKey.QuizOpenButton to "📝 测验",
     UiTextKey.QuizGenerateButton to "🔄 生成测验",
     UiTextKey.QuizGenerating to "⏳ 生成中...",
-    UiTextKey.QuizUpToDate to "✓ 最新版本",
     UiTextKey.QuizBlocked to "🚫 已阻止",
     UiTextKey.QuizWait to "⏳ 请等待...",
-    UiTextKey.QuizMaterialsQuizTemplate to "材料：{materials} | 测验：{quiz}",
     UiTextKey.QuizCanEarnCoins to "🪙 可以获得金币！",
-    UiTextKey.QuizNeedMoreRecordsTemplate to "🪙 还需 {count} 条记录才能获得金币",
     UiTextKey.QuizCancelButton to "取消",
     UiTextKey.QuizPreviousButton to "上一题",
     UiTextKey.QuizNextButton to "下一题",
@@ -316,7 +286,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizYourAnswerTemplate to "您的答案：{Answer}",
     UiTextKey.QuizCorrectAnswerTemplate to "正确答案：{Answer}",
     UiTextKey.QuizQuestionTemplate to "第 {current} 题，共 {total} 题",
-    UiTextKey.QuizCannotRegenTemplate to "⚠️ 无法重新生成：材料（{materials}）< 测验（{quiz}），请添加更多翻译。",
     UiTextKey.QuizAnotherGenInProgress to "⏳ 另一个生成任务进行中，请稍等。",
     UiTextKey.QuizCoinRulesTitle to "🪙 金币获取规则",
     UiTextKey.QuizCoinRulesHowToEarn to "✅ 如何获取：",
@@ -346,25 +315,9 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizCoinsRule4 to "• 测验需与当前材料版本匹配",
     UiTextKey.QuizCoinsRule5 to "• 在历史记录页面查看总金币数",
     UiTextKey.QuizCoinsGreatButton to "太好了！",
-    UiTextKey.QuizOutdatedMessage to "此测验基于旧版学习表。",
     UiTextKey.QuizRecordsLabel to "条记录",
 
     // History coins
-    UiTextKey.HistoryCoinsDialogTitle to "🪙 您的金币",
-    UiTextKey.HistoryCoinRulesTitle to "金币获取规则：",
-    UiTextKey.HistoryCoinHowToEarnTitle to "如何获取：",
-    UiTextKey.HistoryCoinHowToEarnRule1 to "• 每题答对获得 1 枚金币",
-    UiTextKey.HistoryCoinHowToEarnRule2 to "• 仅每个测验版本的首次作答有效",
-    UiTextKey.HistoryCoinHowToEarnRule3 to "• 测验需与当前学习材料匹配",
-    UiTextKey.HistoryCoinAntiCheatTitle to "🔒 防作弊规则：",
-    UiTextKey.HistoryCoinAntiCheatRule1 to "• 比上次获得金币的测验需多 10 条以上新翻译才能再次获取",
-    UiTextKey.HistoryCoinAntiCheatRule2 to "• 测验版本需与材料版本相同",
-    UiTextKey.HistoryCoinAntiCheatRule3 to "• 删除历史记录会阻止测验重新生成（除非数量高于上次记录）",
-    UiTextKey.HistoryCoinAntiCheatRule4 to "• 重做相同测验不获得金币",
-    UiTextKey.HistoryCoinTipsTitle to "💡 提示：",
-    UiTextKey.HistoryCoinTipsRule1 to "• 定期添加更多翻译",
-    UiTextKey.HistoryCoinTipsRule2 to "• 首次作答前好好学习！",
-    UiTextKey.HistoryCoinGotItButton to "明白了！",
 
     // History info
     UiTextKey.HistoryInfoTitle to "历史记录说明",
@@ -383,7 +336,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankWordsCount to "个单词",
     UiTextKey.WordBankGenerating to "生成中...",
     UiTextKey.WordBankGenerate to "生成词库",
-    UiTextKey.WordBankRegenerate to "重新生成词库",
     UiTextKey.WordBankRefresh to "🔄 刷新词库",
     UiTextKey.WordBankEmpty to "暂无词库",
     UiTextKey.WordBankEmptyHint to "点击上方按钮，从翻译历史生成词库。",
@@ -393,11 +345,8 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankFilterCategoryAll to "所有类别",
     UiTextKey.WordBankFilterDifficultyLabel to "难度等级：",
     UiTextKey.WordBankFilterNoResults to "没有符合筛选条件的单词",
-    UiTextKey.WordBankRefreshAvailable to "✅ 可以刷新！",
-    UiTextKey.WordBankRecordsNeeded to "条记录（需 20 条才能刷新）",
     UiTextKey.WordBankRegenInfoTitle to "刷新规则",
     UiTextKey.WordBankRegenInfoMessage to "要刷新您的词库：\n\n• 首次生成：随时可以\n• 刷新：需比上次生成多至少 20 条翻译记录\n\n当您有足够的新记录时，刷新按钮会启用（蓝色）。若按钮为灰色，请继续翻译以解锁刷新！\n\n💡 提示：翻译后如果数量未更新，请重启应用刷新。",
-    UiTextKey.WordBankHistoryCountTemplate to "当前记录数：{nowCount}（生成时：{savedCount}）",
 
     // Dialogs
     UiTextKey.DialogLogoutTitle to "退出登录？",
@@ -410,8 +359,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ProfileUsernameLabel to "用户名",
     UiTextKey.ProfileUsernameHint to "输入您的用户名",
     UiTextKey.ProfileUpdateButton to "更新个人资料",
-    UiTextKey.ProfileUpdateSuccess to "个人资料更新成功",
-    UiTextKey.ProfileUpdateError to "个人资料更新失败",
 
     // Account deletion
     UiTextKey.AccountDeleteTitle to "删除账号",
@@ -419,19 +366,10 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteConfirmMessage to "您所有的数据，包括历史记录、词库、学习材料和设置，将被永久删除。请输入密码确认。",
     UiTextKey.AccountDeletePasswordLabel to "密码",
         UiTextKey.AccountDeleteButton to "删除我的账号和数据",
-    UiTextKey.AccountDeleteSuccess to "账号删除成功",
-    UiTextKey.AccountDeleteError to "账号删除失败",
-    UiTextKey.AccountDeleteReauthRequired to "请重新输入密码以确认删除",
 
     // Favorites
     UiTextKey.FavoritesTitle to "收藏夹",
     UiTextKey.FavoritesEmpty to "暂无收藏",
-    UiTextKey.FavoritesAddSuccess to "已添加到收藏夹",
-    UiTextKey.FavoritesRemoveSuccess to "已从收藏夹移除",
-    UiTextKey.FavoritesAddButton to "添加到收藏夹",
-    UiTextKey.FavoritesRemoveButton to "从收藏夹移除",
-    UiTextKey.FavoritesNoteLabel to "备注",
-    UiTextKey.FavoritesNoteHint to "添加备注（可选）",
     UiTextKey.FavoritesTabRecords to "记录",
     UiTextKey.FavoritesTabSessions to "对话",
     UiTextKey.FavoritesSessionsEmpty to "暂无已保存的对话",
@@ -446,9 +384,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsTranslatedLabel to "翻译",
     UiTextKey.CustomWordsPronunciationLabel to "发音（可选）",
     UiTextKey.CustomWordsExampleLabel to "例句（可选）",
-    UiTextKey.CustomWordsSaveSuccess to "单词保存成功",
-    UiTextKey.CustomWordsDeleteSuccess to "单词删除成功",
-    UiTextKey.CustomWordsAlreadyExists to "该单词已存在",
     UiTextKey.CustomWordsOriginalLanguageLabel to "原语言",
     UiTextKey.CustomWordsTranslationLanguageLabel to "翻译语言",
     UiTextKey.CustomWordsSaveButton to "保存",
@@ -456,36 +391,18 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Language detection
     UiTextKey.LanguageDetectAuto to "自动检测",
-    UiTextKey.LanguageDetectDetecting to "检测中...",
-    UiTextKey.LanguageDetectedTemplate to "检测到：{language}",
-    UiTextKey.LanguageDetectFailed to "检测失败",
 
     // Image recognition
     UiTextKey.ImageRecognitionButton to "从图片扫描文字",
     UiTextKey.ImageRecognitionAccuracyWarning to "⚠️ 注意：图片文字识别可能不完全准确，请检查提取的文字。" +
             "支持拉丁字符（英语等）、中文、日文和韩文。",
-    UiTextKey.ImageRecognitionScanning to "正在扫描图片文字...",
-    UiTextKey.ImageRecognitionSuccess to "文字提取成功",
 
     // Cache
-    UiTextKey.CacheClearButton to "清除缓存",
-    UiTextKey.CacheClearSuccess to "缓存已成功清除",
-    UiTextKey.CacheStatsTemplate to "缓存：已存储 {count} 条翻译",
 
     // Auto theme
-    UiTextKey.SettingsAutoThemeTitle to "自动切换主题",
-    UiTextKey.SettingsAutoThemeDesc to "根据时间自动在浅色和深色主题之间切换",
-    UiTextKey.SettingsAutoThemeEnabled to "已启用",
-    UiTextKey.SettingsAutoThemeDisabled to "已停用",
-    UiTextKey.SettingsAutoThemeDarkStartLabel to "深色模式开始时间：",
-    UiTextKey.SettingsAutoThemeLightStartLabel to "浅色模式开始时间：",
     UiTextKey.SettingsAutoThemePreview to "主题将在预定时间自动切换",
 
     // Offline mode
-    UiTextKey.OfflineModeTitle to "离线模式",
-    UiTextKey.OfflineModeMessage to "您当前处于离线状态，正在浏览缓存数据。",
-    UiTextKey.OfflineModeRetry to "重试连接",
-    UiTextKey.OfflineDataCached to "缓存数据可用",
     UiTextKey.OfflineSyncPending to "联网后将同步更改",
 
     // Image capture
@@ -497,26 +414,15 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Friends
     UiTextKey.FriendsTitle to "好友",
-    UiTextKey.FriendsMenuButton to "好友",
     UiTextKey.FriendsAddButton to "添加好友",
     UiTextKey.FriendsSearchTitle to "搜索用户",
     UiTextKey.FriendsSearchPlaceholder to "输入用户名或用户 ID...",
-    UiTextKey.FriendsSearchMinChars to "请输入至少 2 个字符以搜索",
     UiTextKey.FriendsSearchNoResults to "未找到用户",
-    UiTextKey.FriendsListEmpty to "添加好友以联系和分享学习材料。",
     UiTextKey.FriendsRequestsSection to "好友请求（{count}）",
     UiTextKey.FriendsSectionTitle to "好友（{count}）",
     UiTextKey.FriendsAcceptButton to "接受",
     UiTextKey.FriendsRejectButton to "拒绝",
-    UiTextKey.FriendsRemoveButton to "移除",
-    UiTextKey.FriendsRemoveDialogTitle to "移除好友",
-    UiTextKey.FriendsRemoveDialogMessage to "确定要将 {username} 从好友列表中移除？",
     UiTextKey.FriendsSendRequestButton to "添加",
-    UiTextKey.FriendsRequestSentSuccess to "好友请求已发送！",
-    UiTextKey.FriendsRequestAcceptedSuccess to "好友请求已接受！",
-    UiTextKey.FriendsRequestRejectedSuccess to "请求已拒绝",
-    UiTextKey.FriendsRemovedSuccess to "好友已移除",
-    UiTextKey.FriendsRequestFailed to "请求发送失败",
     UiTextKey.FriendsCloseButton to "关闭",
     UiTextKey.FriendsCancelButton to "取消",
     UiTextKey.FriendsRemoveConfirm to "移除",
@@ -526,7 +432,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsCancelRequestButton to "取消请求",
     UiTextKey.FriendsUnreadMessageDesc to "发送消息",
     UiTextKey.FriendsDeleteModeButton to "删除好友",
-    UiTextKey.FriendsDeleteSelectedButton to "删除所选",
     UiTextKey.FriendsDeleteMultipleTitle to "移除好友",
     UiTextKey.FriendsDeleteMultipleMessage to "移除所选 {count} 位好友？",
     UiTextKey.FriendsSearchMinChars3 to "请输入至少 3 个字符以按用户名搜索",
@@ -540,26 +445,16 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ChatInputPlaceholder to "输入消息...",
     UiTextKey.ChatSendButton to "发送",
     UiTextKey.ChatEmpty to "暂无消息，开始聊天吧！",
-    UiTextKey.ChatMessageSent to "消息已发送",
-    UiTextKey.ChatMessageFailed to "消息发送失败",
-    UiTextKey.ChatMarkingRead to "标记为已读...",
-    UiTextKey.ChatLoadingMessages to "加载消息中...",
-    UiTextKey.ChatToday to "今天",
-    UiTextKey.ChatYesterday to "昨天",
     UiTextKey.ChatUnreadBadge to "{count} 条未读",
     UiTextKey.ChatTranslateButton to "翻译",
     UiTextKey.ChatTranslateDialogTitle to "翻译对话",
     UiTextKey.ChatTranslateDialogMessage to "将好友的消息翻译成您的偏好语言？系统会检测每条消息的语言并进行翻译。",
     UiTextKey.ChatTranslateConfirm to "全部翻译",
-    UiTextKey.ChatTranslating to "翻译消息中...",
-    UiTextKey.ChatTranslated to "消息已翻译",
     UiTextKey.ChatShowOriginal to "显示原文",
     UiTextKey.ChatShowTranslation to "显示翻译",
-    UiTextKey.ChatTranslateFailed to "翻译失败",
     UiTextKey.ChatTranslatedLabel to "已翻译",
 
     // Sharing
-    UiTextKey.ShareTitle to "分享",
     UiTextKey.ShareInboxTitle to "共享收件箱",
     UiTextKey.ShareInboxEmpty to "暂无共享项目，好友可以与您分享单词和学习材料！",
     UiTextKey.ShareWordButton to "分享单词",
@@ -567,14 +462,8 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareSelectFriendTitle to "选择好友",
     UiTextKey.ShareSelectFriendMessage to "选择要分享的好友：",
     UiTextKey.ShareSuccess to "分享成功！",
-    UiTextKey.ShareFailed to "分享失败",
-    UiTextKey.ShareWordWith to "与 {username} 分享单词",
-    UiTextKey.ShareMaterialWith to "与 {username} 分享材料",
     UiTextKey.ShareAcceptButton to "接受",
     UiTextKey.ShareDismissButton to "忽略",
-    UiTextKey.ShareAccepted to "已添加到您的收藏",
-    UiTextKey.ShareDismissed to "项目已忽略",
-    UiTextKey.ShareActionFailed to "操作失败",
     UiTextKey.ShareTypeWord to "单词",
     UiTextKey.ShareTypeLearningSheet to "学习表",
     UiTextKey.ShareReceivedFrom to "来自：{username}",
@@ -593,12 +482,10 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.MyProfileTitle to "我的个人资料",
     UiTextKey.MyProfileUserId to "用户 ID",
     UiTextKey.MyProfileUsername to "用户名",
-    UiTextKey.MyProfileDisplayName to "显示名称",
     UiTextKey.MyProfileCopyUserId to "复制用户 ID",
     UiTextKey.MyProfileCopyUsername to "复制用户名",
     UiTextKey.MyProfileShare to "分享个人资料",
     UiTextKey.MyProfileCopied to "已复制到剪贴板！",
-    UiTextKey.MyProfileLanguages to "语言",
     UiTextKey.MyProfilePrimaryLanguage to "主要语言",
     UiTextKey.MyProfileLearningLanguages to "学习语言",
 
@@ -626,7 +513,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
             "• 重新生成需要比上次多至少 5 条记录。\n" +
             "• 点击学习表按钮以打开和学习您生成的材料。\n" +
             "• 生成学习表后可以进行测验。",
-    UiTextKey.LearningEmptyTitle to "无翻译记录",
     UiTextKey.LearningEmptyMessage to "开始翻译以建立历史记录。\n" +
             "学习表从您的翻译历史生成。\n" +
             "翻译后下拉刷新。",
@@ -663,17 +549,14 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareDismissWordMessage to "确定要忽略此共享单词？操作无法撤销。",
 
     // Shared inbox sheet label
-    UiTextKey.ShareLearningSheetLanguageLabel to "语言：{language}",
 
     // Accessibility
     UiTextKey.AccessibilityDismiss to "忽略",
-    UiTextKey.AccessibilityAlreadyConnectedOrPending to "已连接或等待中",
     UiTextKey.AccessibilityNewMessages to "新消息",
     UiTextKey.AccessibilityNewReleasesIcon to "新项目指示",
     UiTextKey.AccessibilitySuccessIcon to "成功",
     UiTextKey.AccessibilityErrorIcon to "错误",
     UiTextKey.AccessibilitySharedItemTypeIcon to "共享项目类型",
-    UiTextKey.AccessibilityAddCustomWords to "添加自定义单词",
     UiTextKey.AccessibilityWordBankExists to "词库已存在",
 
     // Settings hardcoded
@@ -686,7 +569,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsNotifFriendRequests to "收到好友请求",
     UiTextKey.FriendsNotifRequestAccepted to "好友请求已接受",
     UiTextKey.FriendsNotifSharedInbox to "新共享收件箱项目",
-    UiTextKey.FriendsNotifCloseButton to "完成",
 
     // In-app badge settings
     UiTextKey.InAppBadgeSectionTitle to "应用内徽章（红点）",
@@ -695,10 +577,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.InAppBadgeSharedInbox to "未读共享收件箱徽章",
 
     // Error messages
-    UiTextKey.ErrorNotLoggedIn to "请登录后继续。",
-    UiTextKey.ErrorSaveFailedRetry to "保存失败，请重试。",
-    UiTextKey.ErrorLoadFailedRetry to "加载失败，请重试。",
-    UiTextKey.ErrorNetworkRetry to "网络错误，请检查连接后重试。",
 
     // Learning progress
     UiTextKey.LearningProgressNeededTemplate to "还需 {needed} 条翻译才能生成材料",
@@ -707,7 +585,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SpeechSwitchToConversation to "切换到实时对话 →",
 
     // Chat clear
-    UiTextKey.ChatClearConversationButton to "清除聊天",
     UiTextKey.ChatClearConversationTitle to "清除对话",
     UiTextKey.ChatClearConversationMessage to "隐藏此对话中所有消息？即使您离开再返回，消息仍将对您永久隐藏。对方不受影响。",
     UiTextKey.ChatClearConversationConfirm to "全部清除",
@@ -718,13 +595,11 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.BlockUserTitle to "拉黑用户？",
     UiTextKey.BlockUserMessage to "拉黑 {username}？对方将从您的好友列表中移除，且无法再联系您。",
     UiTextKey.BlockUserConfirm to "拉黑",
-    UiTextKey.BlockUserSuccess to "用户已拉黑并从好友中移除。",
     UiTextKey.BlockedUsersTitle to "已拉黑用户",
     UiTextKey.BlockedUsersEmpty to "没有已拉黑的用户。",
     UiTextKey.UnblockUserButton to "取消拉黑",
     UiTextKey.UnblockUserTitle to "取消拉黑？",
     UiTextKey.UnblockUserMessage to "取消拉黑 {username}？对方将可以再次发送好友请求。",
-    UiTextKey.UnblockUserSuccess to "用户已取消拉黑。",
     UiTextKey.BlockedUsersManageButton to "管理已拉黑用户",
 
     // Friend request note
@@ -737,7 +612,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.GenerationBannerQuiz to "测验已就绪！点击开始。",
 
     // Notification settings quick link
-    UiTextKey.NotifSettingsQuickLink to "通知",
 
     // Language name for Traditional Chinese
     UiTextKey.LangZhTw to "繁体中文",
@@ -799,7 +673,6 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsEmptyState to "暂无自定义单词",
     UiTextKey.CustomWordsEmptyHint to "点击 + 添加您的单词",
     UiTextKey.CustomWordsNoSearchResults to "没有匹配搜索的单词",
-    UiTextKey.AddCustomWordHintTemplate to "在 {from} 输入单词，在 {to} 输入翻译",
 
     // Word bank records count
     UiTextKey.WordBankRecordsCountTemplate to "{count} 条记录",
@@ -878,34 +751,4 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmMessage to "更改用户名后，需要等 30 天才能再次更改。继续？",
 
     // Extended Error Messages
-    UiTextKey.ErrorNoInternet to "没有网络连接。请检查网络后重试。",
-    UiTextKey.ErrorPermissionDenied to "您没有权限执行此操作。",
-    UiTextKey.ErrorSessionExpired to "您的会话已过期，请重新登录。",
-    UiTextKey.ErrorItemNotFound to "未找到请求的项目，可能已被删除。",
-    UiTextKey.ErrorAccessDenied to "拒绝访问。",
-    UiTextKey.ErrorAlreadyFriends to "您已经与此用户是好友了。",
-    UiTextKey.ErrorUserBlocked to "无法完成此操作，该用户可能已被拉黑。",
-    UiTextKey.ErrorRequestNotFound to "此好友请求已不存在。",
-    UiTextKey.ErrorRequestAlreadyHandled to "此请求已被其他人处理。",
-    UiTextKey.ErrorNotAuthorized to "您无权执行此操作。",
-    UiTextKey.ErrorRateLimited to "请求过于频繁，请稍后再试。",
-    UiTextKey.ErrorInvalidInput to "输入无效，请检查后重试。",
-    UiTextKey.ErrorOperationNotAllowed to "当前无法完成此操作。",
-    UiTextKey.ErrorTimeout to "操作超时，请重试。",
-    UiTextKey.ErrorSendMessageFailed to "发送消息失败，请重试。",
-    UiTextKey.ErrorFriendRequestSent to "好友请求已发送！",
-    UiTextKey.ErrorFriendRequestFailed to "发送好友请求失败，请重试。",
-    UiTextKey.ErrorFriendRemoved to "好友已成功移除。",
-    UiTextKey.ErrorFriendRemoveFailed to "无法移除好友，请检查网络连接后重试。",
-    UiTextKey.ErrorBlockSuccess to "已成功拉黑用户。",
-    UiTextKey.ErrorBlockFailed to "拉黑用户失败，请重试。",
-    UiTextKey.ErrorUnblockSuccess to "已取消拉黑用户。",
-    UiTextKey.ErrorUnblockFailed to "取消拉黑失败，请重试。",
-    UiTextKey.ErrorAcceptRequestSuccess to "已接受好友请求！",
-    UiTextKey.ErrorAcceptRequestFailed to "接受好友请求失败，请重试。",
-    UiTextKey.ErrorRejectRequestSuccess to "已拒绝好友请求。",
-    UiTextKey.ErrorRejectRequestFailed to "拒绝好友请求失败，请重试。",
-    UiTextKey.ErrorOfflineMessage to "您当前处于离线状态，部分功能可能无法使用。",
-    UiTextKey.ErrorChatDeletionFailed to "无法删除对话，请重试。",
-    UiTextKey.ErrorGenericRetry to "出了问题，请重试。",
 )

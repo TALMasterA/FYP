@@ -24,9 +24,6 @@ val WordBankFavoritesScreenTexts: List<String> = listOf(
     // WordBankGenerate
     "Generate Word Bank",
 
-    // WordBankRegenerate
-    "Regenerate Word Bank",
-
     // WordBankRefresh
     "🔄 Refresh Word Bank",
 
@@ -54,20 +51,11 @@ val WordBankFavoritesScreenTexts: List<String> = listOf(
     // WordBankFilterNoResults
     "No words match your filter",
 
-    // WordBankRefreshAvailable
-    "✅ Refresh available!",
-
-    // WordBankRecordsNeeded
-    "records (need 20 to refresh)",
-
     // WordBankRegenInfoTitle
     "Refresh Rules",
 
     // WordBankRegenInfoMessage
     "To refresh your word bank:\n\n• First generation: Always allowed\n• Refresh: Requires at least 20 MORE translation records than the previous generation\n\nThe refresh button will be enabled (blue) when you have enough new records. If it's disabled (gray), keep translating to unlock refresh!\n\n💡 Note: If the count doesn't update after translating, please restart the app to refresh.",
-
-    // WordBankHistoryCountTemplate
-    "History count now: {nowCount} (saved at gen: {savedCount})",
 
     // --- Dialogs ---
     // DialogLogoutTitle
@@ -96,12 +84,6 @@ val WordBankFavoritesScreenTexts: List<String> = listOf(
     // ProfileUpdateButton
     "Update Profile",
 
-    // ProfileUpdateSuccess
-    "Profile updated successfully",
-
-    // ProfileUpdateError
-    "Failed to update profile",
-
     // --- Account Deletion ---
         // AccountDeleteTitle
         "Delete Account",
@@ -118,39 +100,12 @@ val WordBankFavoritesScreenTexts: List<String> = listOf(
         // AccountDeleteButton
         "Delete My Account & Data",
 
-        // AccountDeleteSuccess
-    "Account deleted successfully",
-
-    // AccountDeleteError
-    "Failed to delete account",
-
-    // AccountDeleteReauthRequired
-    "Please re-enter your password to confirm deletion",
-
     // --- Favorites ---
     // FavoritesTitle
     "Favorites",
 
     // FavoritesEmpty
     "No favorites yet",
-
-    // FavoritesAddSuccess
-    "Added to favorites",
-
-    // FavoritesRemoveSuccess
-    "Removed from favorites",
-
-    // FavoritesAddButton
-    "Add to Favorites",
-
-    // FavoritesRemoveButton
-    "Remove from Favorites",
-
-    // FavoritesNoteLabel
-    "Note",
-
-    // FavoritesNoteHint
-    "Add a note (optional)",
 
     // FavoritesTabRecords
     "Records",

@@ -30,18 +30,6 @@ val SpeechHomeScreenTexts: List<String> = listOf(
     // HomeStartButton
     "Quick Translate",
 
-    // HomeFeaturesTitle
-    "Features",
-
-    // HomeDiscreteDescription
-    "Short phrases & voice translation",
-
-    // HomeContinuousDescription
-    "Multi-turn live conversation",
-
-    // HomeLearningDescription
-    "Study vocabulary and take quizzes",
-
     // HelpCurrentTitle
     "Current features",
 

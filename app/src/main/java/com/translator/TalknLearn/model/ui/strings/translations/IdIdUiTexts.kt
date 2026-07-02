@@ -13,14 +13,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.TranslateButton to "Terjemahkan",
     UiTextKey.CopyTranslationButton to "Salin terjemahan",
     UiTextKey.SpeakTranslationButton to "Baca terjemahan",
-    UiTextKey.RecognizingStatus to "Merekam...Bicara sekarang, berhenti otomatis.",
-    UiTextKey.TranslatingStatus to "Menerjemahkan...",
-    UiTextKey.SpeakingOriginalStatus to "Membaca asli...",
-    UiTextKey.SpeakingTranslationStatus to "Membaca terjemahan...",
-    UiTextKey.SpeakingLabel to "Membaca",
-    UiTextKey.FinishedSpeakingOriginal to "Selesai membaca asli",
-    UiTextKey.FinishedSpeakingTranslation to "Selesai membaca terjemahan",
-    UiTextKey.TtsErrorTemplate to "Kesalahan suara: %s",
 
     // Language labels
     UiTextKey.AppUiLanguageLabel to "Bahasa aplikasi",
@@ -61,11 +53,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     // Speech
     UiTextKey.SpeechInputPlaceholder to "Ketik di sini atau gunakan mikrofon...",
     UiTextKey.SpeechTranslatedPlaceholder to "Terjemahan akan muncul di sini...",
-    UiTextKey.StatusAzureErrorTemplate to "Kesalahan Azure: %s",
-    UiTextKey.StatusTranslationErrorTemplate to "Kesalahan terjemahan: %s",
-    UiTextKey.StatusLoginRequiredTranslation to "Masuk untuk menerjemahkan",
-    UiTextKey.StatusRecognizePreparing to "Menyiapkan mikrofon...(jangan bicara)",
-    UiTextKey.StatusRecognizeListening to "Mendengarkan...Bicara sekarang.",
 
     // Pagination
     UiTextKey.PaginationPrevLabel to "Halaman sebelumnya",
@@ -73,12 +60,10 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.PaginationPageLabelTemplate to "Halaman {page} dari {total}",
 
     // Toast
-    UiTextKey.ToastCopied to "Disalin",
     UiTextKey.DisableText to "Masuk untuk menerjemahkan dan menyimpan riwayat.",
 
     // Error
     UiTextKey.ErrorRetryButton to "Coba lagi",
-    UiTextKey.ErrorGenericMessage to "Terjadi kesalahan. Silakan coba lagi.",
 
     // Shop
     UiTextKey.ShopTitle to "Toko",
@@ -110,10 +95,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.HelpTitle to "Bantuan",
     UiTextKey.SpeechTitle to "Terjemahan Cepat",
     UiTextKey.HomeStartButton to "Mulai terjemahan",
-    UiTextKey.HomeFeaturesTitle to "Fitur",
-    UiTextKey.HomeDiscreteDescription to "Terjemahan teks dan suara singkat",
-    UiTextKey.HomeContinuousDescription to "Terjemahan dua arah secara langsung",
-    UiTextKey.HomeLearningDescription to "Buat materi belajar dan kuis dari riwayat",
 
     // Help
     UiTextKey.HelpCurrentTitle to "Fitur saat ini",
@@ -237,10 +218,7 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsFontSizeTitle to "Ukuran font",
     UiTextKey.SettingsFontSizeDesc to "Sesuaikan ukuran teks untuk kenyamanan membaca (sinkronisasi antar perangkat)",
     UiTextKey.SettingsScaleTemplate to "Ukuran: {pct}%",
-    UiTextKey.SettingsColorPaletteTitle to "Tema warna",
-    UiTextKey.SettingsColorPaletteDesc to "Pilih tema warna Anda, 10 koin per tema",
     UiTextKey.SettingsColorCostTemplate to "{cost} koin",
-    UiTextKey.SettingsColorUnlockButton to "Buka kunci",
     UiTextKey.SettingsColorSelectButton to "Pilih",
     UiTextKey.SettingsColorAlreadyUnlocked to "Sudah dibuka",
     UiTextKey.SettingsPreviewHeadline to "Judul: Pratinjau teks besar",
@@ -258,8 +236,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsResetPW to "Pulihkan kata sandi",
     UiTextKey.SettingsQuickLinks to "Pengaturan detail",
     UiTextKey.SettingsNotLoggedInWarning to "Masuk untuk melihat pengaturan akun. Bahasa aplikasi dapat diganti tanpa masuk.",
-    UiTextKey.SettingsVoiceTitle to "Pengaturan suara",
-    UiTextKey.SettingsVoiceDesc to "Pilih suara pembacaan untuk setiap bahasa.",
     UiTextKey.SettingsVoiceLanguageLabel to "Bahasa",
     UiTextKey.SettingsVoiceSelectLabel to "Suara",
     UiTextKey.SettingsVoiceDefault to "Default",
@@ -282,23 +258,17 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LearningSheetWhatIsThisDesc to "Lembar belajar yang dibuat dari riwayat terjemahan Anda. Berisi kosakata, definisi, contoh, dan catatan tata bahasa. Uji pengetahuan Anda dengan kuis!",
     UiTextKey.LearningRegenBlockedTitle to "Tidak dapat membuat ulang",
     UiTextKey.LearningRegenBlockedMessage to "Diperlukan minimal 5 catatan tambahan untuk membuat ulang. Kurang {needed}.",
-    UiTextKey.LearningRegenNeedMoreRecords to "⚠️ Kurang {needed} catatan untuk membuat ulang (min. 5)",
-    UiTextKey.LearningRegenCountNotHigher to "⚠️ Jumlah harus melebihi pembuatan terakhir",
     UiTextKey.LearningRegenInfoTitle to "Aturan pembuatan ulang",
     UiTextKey.LearningRegenInfoMessage to "Membuat ulang materi belajar:\n\n• Pembuatan pertama: kapan saja\n• Pembuatan ulang: minimal 5 catatan tambahan\n\nTombol menjadi biru saat cukup. Jika abu-abu, terus terjemahkan!\n\n💡 Tips: Jika jumlah tidak diperbarui, mulai ulang aplikasi.",
-    UiTextKey.QuizRegenBlockedSameMaterial to "❌ Kuis sudah dibuat untuk versi ini. Buat lembar baru untuk kuis baru.",
 
     // Quiz
     UiTextKey.QuizTitleTemplate to "Kuis: {language}",
     UiTextKey.QuizOpenButton to "📝 Kuis",
     UiTextKey.QuizGenerateButton to "🔄 Buat kuis",
     UiTextKey.QuizGenerating to "⏳ Membuat...",
-    UiTextKey.QuizUpToDate to "✓ Terbaru",
     UiTextKey.QuizBlocked to "🚫 Diblokir",
     UiTextKey.QuizWait to "⏳ Tunggu...",
-    UiTextKey.QuizMaterialsQuizTemplate to "Materi: {materials} | Kuis: {quiz}",
     UiTextKey.QuizCanEarnCoins to "🪙 Bisa mendapat koin!",
-    UiTextKey.QuizNeedMoreRecordsTemplate to "🪙 {count} lagi untuk koin",
     UiTextKey.QuizCancelButton to "Batal",
     UiTextKey.QuizPreviousButton to "Pertanyaan sebelumnya",
     UiTextKey.QuizNextButton to "Pertanyaan berikutnya",
@@ -316,7 +286,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizYourAnswerTemplate to "Jawaban Anda: {Answer}",
     UiTextKey.QuizCorrectAnswerTemplate to "Jawaban benar: {Answer}",
     UiTextKey.QuizQuestionTemplate to "Pertanyaan {current} / {total}",
-    UiTextKey.QuizCannotRegenTemplate to "⚠️ Tidak dapat membuat ulang: Materi({materials}) < Kuis({quiz}), tambah terjemahan.",
     UiTextKey.QuizAnotherGenInProgress to "⏳ Pembuatan lain sedang berlangsung. Tunggu.",
     UiTextKey.QuizCoinRulesTitle to "🪙 Aturan koin",
     UiTextKey.QuizCoinRulesHowToEarn to "✅ Cara mendapat:",
@@ -346,25 +315,9 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizCoinsRule4 to "• Kuis harus sesuai versi materi",
     UiTextKey.QuizCoinsRule5 to "• Total koin terlihat di riwayat",
     UiTextKey.QuizCoinsGreatButton to "Hebat!",
-    UiTextKey.QuizOutdatedMessage to "Kuis ini berdasarkan lembar sebelumnya.",
     UiTextKey.QuizRecordsLabel to "Catatan",
 
     // History coins
-    UiTextKey.HistoryCoinsDialogTitle to "🪙 Koin saya",
-    UiTextKey.HistoryCoinRulesTitle to "Aturan koin:",
-    UiTextKey.HistoryCoinHowToEarnTitle to "Cara mendapat:",
-    UiTextKey.HistoryCoinHowToEarnRule1 to "• 1 koin per jawaban benar",
-    UiTextKey.HistoryCoinHowToEarnRule2 to "• Hanya percobaan pertama per versi",
-    UiTextKey.HistoryCoinHowToEarnRule3 to "• Kuis harus sesuai materi saat ini",
-    UiTextKey.HistoryCoinAntiCheatTitle to "🔒 Aturan anti-curang:",
-    UiTextKey.HistoryCoinAntiCheatRule1 to "• Minimal 10 terjemahan baru sejak perolehan terakhir",
-    UiTextKey.HistoryCoinAntiCheatRule2 to "• Versi kuis harus sesuai materi",
-    UiTextKey.HistoryCoinAntiCheatRule3 to "• Menghapus catatan memblokir pembuatan ulang (kecuali jumlah melebihi sebelumnya)",
-    UiTextKey.HistoryCoinAntiCheatRule4 to "• Tidak ada koin di percobaan selanjutnya",
-    UiTextKey.HistoryCoinTipsTitle to "💡 Tips:",
-    UiTextKey.HistoryCoinTipsRule1 to "• Tambahkan terjemahan secara teratur",
-    UiTextKey.HistoryCoinTipsRule2 to "• Belajar dengan baik sebelum percobaan pertama!",
-    UiTextKey.HistoryCoinGotItButton to "Mengerti!",
 
     // History info
     UiTextKey.HistoryInfoTitle to "Info riwayat",
@@ -383,7 +336,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankWordsCount to "Kata",
     UiTextKey.WordBankGenerating to "Membuat...",
     UiTextKey.WordBankGenerate to "Buat bank kata",
-    UiTextKey.WordBankRegenerate to "Buat ulang bank kata",
     UiTextKey.WordBankRefresh to "🔄 Segarkan bank",
     UiTextKey.WordBankEmpty to "Bank kata kosong",
     UiTextKey.WordBankEmptyHint to "Ketuk di atas untuk membuat dari riwayat Anda.",
@@ -393,11 +345,8 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankFilterCategoryAll to "Semua kategori",
     UiTextKey.WordBankFilterDifficultyLabel to "Kesulitan:",
     UiTextKey.WordBankFilterNoResults to "Tidak ada kata yang cocok dengan filter",
-    UiTextKey.WordBankRefreshAvailable to "✅ Pembaruan tersedia!",
-    UiTextKey.WordBankRecordsNeeded to "Catatan (20 diperlukan untuk pembaruan)",
     UiTextKey.WordBankRegenInfoTitle to "Aturan pembaruan",
     UiTextKey.WordBankRegenInfoMessage to "Memperbarui bank kata:\n\n• Pembuatan pertama: kapan saja\n• Pembaruan: minimal 20 catatan tambahan\n\nTombol menjadi biru saat cukup. Jika abu-abu, terus terjemahkan!\n\n💡 Tips: Jika jumlah tidak diperbarui, mulai ulang aplikasi.",
-    UiTextKey.WordBankHistoryCountTemplate to "Catatan saat ini: {nowCount} (saat dibuat: {savedCount})",
 
     // Dialogs
     UiTextKey.DialogLogoutTitle to "Keluar?",
@@ -410,8 +359,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ProfileUsernameLabel to "Nama pengguna",
     UiTextKey.ProfileUsernameHint to "Masukkan nama pengguna",
     UiTextKey.ProfileUpdateButton to "Perbarui profil",
-    UiTextKey.ProfileUpdateSuccess to "Profil diperbarui",
-    UiTextKey.ProfileUpdateError to "Gagal memperbarui",
 
     // Account deletion
     UiTextKey.AccountDeleteTitle to "Hapus akun",
@@ -419,19 +366,10 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteConfirmMessage to "Semua data akan dihapus permanen: riwayat, bank kata, materi belajar, pengaturan. Masukkan kata sandi untuk konfirmasi.",
     UiTextKey.AccountDeletePasswordLabel to "Kata sandi",
         UiTextKey.AccountDeleteButton to "Hapus akun dan data saya",
-    UiTextKey.AccountDeleteSuccess to "Akun berhasil dihapus",
-    UiTextKey.AccountDeleteError to "Gagal menghapus",
-    UiTextKey.AccountDeleteReauthRequired to "Masukkan kata sandi untuk mengonfirmasi penghapusan",
 
     // Favorites
     UiTextKey.FavoritesTitle to "Favorit",
     UiTextKey.FavoritesEmpty to "Tidak ada favorit",
-    UiTextKey.FavoritesAddSuccess to "Ditambahkan ke favorit",
-    UiTextKey.FavoritesRemoveSuccess to "Dihapus dari favorit",
-    UiTextKey.FavoritesAddButton to "Tambah ke favorit",
-    UiTextKey.FavoritesRemoveButton to "Hapus dari favorit",
-    UiTextKey.FavoritesNoteLabel to "Catatan",
-    UiTextKey.FavoritesNoteHint to "Tambah catatan (opsional)",
     UiTextKey.FavoritesTabRecords to "Catatan",
     UiTextKey.FavoritesTabSessions to "Percakapan",
     UiTextKey.FavoritesSessionsEmpty to "Tidak ada percakapan tersimpan",
@@ -446,9 +384,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsTranslatedLabel to "Terjemahan",
     UiTextKey.CustomWordsPronunciationLabel to "Pelafalan (opsional)",
     UiTextKey.CustomWordsExampleLabel to "Contoh (opsional)",
-    UiTextKey.CustomWordsSaveSuccess to "Kata tersimpan",
-    UiTextKey.CustomWordsDeleteSuccess to "Kata dihapus",
-    UiTextKey.CustomWordsAlreadyExists to "Kata ini sudah ada",
     UiTextKey.CustomWordsOriginalLanguageLabel to "Bahasa asli",
     UiTextKey.CustomWordsTranslationLanguageLabel to "Bahasa terjemahan",
     UiTextKey.CustomWordsSaveButton to "Simpan",
@@ -456,36 +391,18 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Language detection
     UiTextKey.LanguageDetectAuto to "Deteksi otomatis",
-    UiTextKey.LanguageDetectDetecting to "Mendeteksi...",
-    UiTextKey.LanguageDetectedTemplate to "Terdeteksi: {language}",
-    UiTextKey.LanguageDetectFailed to "Deteksi gagal",
 
     // Image recognition
     UiTextKey.ImageRecognitionButton to "Pindai teks dari gambar",
     UiTextKey.ImageRecognitionAccuracyWarning to "⚠️ Peringatan: Pengenalan teks mungkin tidak sepenuhnya akurat. Verifikasi teks yang dikenali." +
             "Mendukung Latin (Inggris, dll.), Tionghoa, Jepang, dan Korea.",
-    UiTextKey.ImageRecognitionScanning to "Memindai teks...",
-    UiTextKey.ImageRecognitionSuccess to "Teks berhasil dikenali",
 
     // Cache
-    UiTextKey.CacheClearButton to "Hapus cache",
-    UiTextKey.CacheClearSuccess to "Cache dihapus",
-    UiTextKey.CacheStatsTemplate to "Cache: {count} terjemahan tersimpan",
 
     // Auto theme
-    UiTextKey.SettingsAutoThemeTitle to "Tema otomatis",
-    UiTextKey.SettingsAutoThemeDesc to "Beralih otomatis antara terang dan gelap berdasarkan waktu",
-    UiTextKey.SettingsAutoThemeEnabled to "Aktif",
-    UiTextKey.SettingsAutoThemeDisabled to "Nonaktif",
-    UiTextKey.SettingsAutoThemeDarkStartLabel to "Mode gelap mulai:",
-    UiTextKey.SettingsAutoThemeLightStartLabel to "Mode terang mulai:",
     UiTextKey.SettingsAutoThemePreview to "Tema akan berubah otomatis pada waktu yang dikonfigurasi",
 
     // Offline mode
-    UiTextKey.OfflineModeTitle to "Mode offline",
-    UiTextKey.OfflineModeMessage to "Anda sedang offline. Data tersimpan ditampilkan.",
-    UiTextKey.OfflineModeRetry to "Coba sambungkan lagi",
-    UiTextKey.OfflineDataCached to "Data tersimpan tersedia",
     UiTextKey.OfflineSyncPending to "Perubahan akan disinkronkan saat online",
 
     // Image capture
@@ -497,26 +414,15 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Friends
     UiTextKey.FriendsTitle to "Teman",
-    UiTextKey.FriendsMenuButton to "Teman",
     UiTextKey.FriendsAddButton to "Tambah teman",
     UiTextKey.FriendsSearchTitle to "Cari pengguna",
     UiTextKey.FriendsSearchPlaceholder to "Nama pengguna atau ID...",
-    UiTextKey.FriendsSearchMinChars to "Masukkan minimal 2 karakter",
     UiTextKey.FriendsSearchNoResults to "Pengguna tidak ditemukan",
-    UiTextKey.FriendsListEmpty to "Tambah teman untuk mengobrol dan berbagi materi belajar.",
     UiTextKey.FriendsRequestsSection to "Permintaan pertemanan ({count})",
     UiTextKey.FriendsSectionTitle to "Teman ({count})",
     UiTextKey.FriendsAcceptButton to "Terima",
     UiTextKey.FriendsRejectButton to "Tolak",
-    UiTextKey.FriendsRemoveButton to "Hapus",
-    UiTextKey.FriendsRemoveDialogTitle to "Hapus teman",
-    UiTextKey.FriendsRemoveDialogMessage to "Hapus {username} dari daftar teman Anda?",
     UiTextKey.FriendsSendRequestButton to "Tambah",
-    UiTextKey.FriendsRequestSentSuccess to "Permintaan pertemanan terkirim!",
-    UiTextKey.FriendsRequestAcceptedSuccess to "Permintaan diterima!",
-    UiTextKey.FriendsRequestRejectedSuccess to "Permintaan ditolak",
-    UiTextKey.FriendsRemovedSuccess to "Teman dihapus",
-    UiTextKey.FriendsRequestFailed to "Gagal mengirim",
     UiTextKey.FriendsCloseButton to "Tutup",
     UiTextKey.FriendsCancelButton to "Batal",
     UiTextKey.FriendsRemoveConfirm to "Hapus",
@@ -526,7 +432,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsCancelRequestButton to "Batalkan permintaan",
     UiTextKey.FriendsUnreadMessageDesc to "Kirim pesan",
     UiTextKey.FriendsDeleteModeButton to "Hapus teman",
-    UiTextKey.FriendsDeleteSelectedButton to "Hapus yang dipilih",
     UiTextKey.FriendsDeleteMultipleTitle to "Hapus teman",
     UiTextKey.FriendsDeleteMultipleMessage to "Hapus {count} teman yang dipilih?",
     UiTextKey.FriendsSearchMinChars3 to "Masukkan minimal 3 karakter untuk nama",
@@ -540,26 +445,16 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ChatInputPlaceholder to "Tulis pesan...",
     UiTextKey.ChatSendButton to "Kirim",
     UiTextKey.ChatEmpty to "Tidak ada pesan. Mulai percakapan!",
-    UiTextKey.ChatMessageSent to "Pesan terkirim",
-    UiTextKey.ChatMessageFailed to "Gagal mengirim",
-    UiTextKey.ChatMarkingRead to "Menandai...",
-    UiTextKey.ChatLoadingMessages to "Memuat pesan...",
-    UiTextKey.ChatToday to "Hari ini",
-    UiTextKey.ChatYesterday to "Kemarin",
     UiTextKey.ChatUnreadBadge to "{count} belum dibaca",
     UiTextKey.ChatTranslateButton to "Terjemahkan",
     UiTextKey.ChatTranslateDialogTitle to "Terjemahkan percakapan",
     UiTextKey.ChatTranslateDialogMessage to "Terjemahkan pesan teman ke bahasa Anda? Bahasa setiap pesan akan dideteksi dan diterjemahkan.",
     UiTextKey.ChatTranslateConfirm to "Terjemahkan semua",
-    UiTextKey.ChatTranslating to "Menerjemahkan pesan...",
-    UiTextKey.ChatTranslated to "Pesan diterjemahkan",
     UiTextKey.ChatShowOriginal to "Tampilkan asli",
     UiTextKey.ChatShowTranslation to "Tampilkan terjemahan",
-    UiTextKey.ChatTranslateFailed to "Gagal menerjemahkan",
     UiTextKey.ChatTranslatedLabel to "Diterjemahkan",
 
     // Sharing
-    UiTextKey.ShareTitle to "Berbagi",
     UiTextKey.ShareInboxTitle to "Kotak berbagi",
     UiTextKey.ShareInboxEmpty to "Tidak ada konten berbagi. Teman Anda bisa berbagi kata dan materi!",
     UiTextKey.ShareWordButton to "Bagikan kata",
@@ -567,14 +462,8 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareSelectFriendTitle to "Pilih teman",
     UiTextKey.ShareSelectFriendMessage to "Pilih teman untuk berbagi:",
     UiTextKey.ShareSuccess to "Berhasil dibagikan!",
-    UiTextKey.ShareFailed to "Gagal membagikan",
-    UiTextKey.ShareWordWith to "Bagikan kata dengan {username}",
-    UiTextKey.ShareMaterialWith to "Bagikan materi dengan {username}",
     UiTextKey.ShareAcceptButton to "Terima",
     UiTextKey.ShareDismissButton to "Abaikan",
-    UiTextKey.ShareAccepted to "Ditambahkan ke koleksi Anda",
-    UiTextKey.ShareDismissed to "Item diabaikan",
-    UiTextKey.ShareActionFailed to "Gagal melakukan tindakan",
     UiTextKey.ShareTypeWord to "Kata",
     UiTextKey.ShareTypeLearningSheet to "Lembar belajar",
     UiTextKey.ShareReceivedFrom to "Dari: {username}",
@@ -593,12 +482,10 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.MyProfileTitle to "Profil saya",
     UiTextKey.MyProfileUserId to "ID pengguna",
     UiTextKey.MyProfileUsername to "Nama pengguna",
-    UiTextKey.MyProfileDisplayName to "Nama tampilan",
     UiTextKey.MyProfileCopyUserId to "Salin ID",
     UiTextKey.MyProfileCopyUsername to "Salin nama",
     UiTextKey.MyProfileShare to "Bagikan profil",
     UiTextKey.MyProfileCopied to "Disalin ke clipboard!",
-    UiTextKey.MyProfileLanguages to "Bahasa",
     UiTextKey.MyProfilePrimaryLanguage to "Bahasa utama",
     UiTextKey.MyProfileLearningLanguages to "Bahasa yang dipelajari",
 
@@ -626,7 +513,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
             "• Pembuatan ulang memerlukan min. 5 catatan tambahan.\n" +
             "• Tombol lembar membuka materi yang dibuat.\n" +
             "• Setelah lembar, Anda bisa mengikuti kuis.",
-    UiTextKey.LearningEmptyTitle to "Belum ada riwayat terjemahan",
     UiTextKey.LearningEmptyMessage to "Mulai menerjemahkan untuk membuat catatan.\n" +
             "Lembar dibuat dari riwayat.\n" +
             "Setelah menerjemahkan, geser untuk menyegarkan.",
@@ -663,17 +549,14 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareDismissWordMessage to "Abaikan kata yang dibagikan ini? Tidak dapat dibatalkan.",
 
     // Shared inbox sheet label
-    UiTextKey.ShareLearningSheetLanguageLabel to "Bahasa: {language}",
 
     // Accessibility
     UiTextKey.AccessibilityDismiss to "Tutup",
-    UiTextKey.AccessibilityAlreadyConnectedOrPending to "Terhubung atau menunggu",
     UiTextKey.AccessibilityNewMessages to "Pesan baru",
     UiTextKey.AccessibilityNewReleasesIcon to "Indikator item baru",
     UiTextKey.AccessibilitySuccessIcon to "Berhasil",
     UiTextKey.AccessibilityErrorIcon to "Kesalahan",
     UiTextKey.AccessibilitySharedItemTypeIcon to "Jenis item berbagi",
-    UiTextKey.AccessibilityAddCustomWords to "Tambah kata kustom",
     UiTextKey.AccessibilityWordBankExists to "Bank kata ada",
 
     // Settings hardcoded
@@ -686,7 +569,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsNotifFriendRequests to "Permintaan pertemanan diterima",
     UiTextKey.FriendsNotifRequestAccepted to "Permintaan pertemanan diterima",
     UiTextKey.FriendsNotifSharedInbox to "Item berbagi baru",
-    UiTextKey.FriendsNotifCloseButton to "Selesai",
 
     // In-app badge settings
     UiTextKey.InAppBadgeSectionTitle to "Lencana dalam aplikasi (titik merah)",
@@ -695,10 +577,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.InAppBadgeSharedInbox to "Lencana kotak berbagi belum dibaca",
 
     // Error messages
-    UiTextKey.ErrorNotLoggedIn to "Masuk untuk melanjutkan.",
-    UiTextKey.ErrorSaveFailedRetry to "Gagal menyimpan. Coba lagi.",
-    UiTextKey.ErrorLoadFailedRetry to "Gagal memuat. Coba lagi.",
-    UiTextKey.ErrorNetworkRetry to "Kesalahan jaringan. Periksa koneksi Anda.",
 
     // Learning progress
     UiTextKey.LearningProgressNeededTemplate to "Perlu {needed} terjemahan lagi untuk membuat materi",
@@ -707,7 +585,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SpeechSwitchToConversation to "Beralih ke percakapan langsung →",
 
     // Chat clear
-    UiTextKey.ChatClearConversationButton to "Hapus chat",
     UiTextKey.ChatClearConversationTitle to "Hapus percakapan",
     UiTextKey.ChatClearConversationMessage to "Sembunyikan semua pesan dari percakapan ini? Akan tetap tersembunyi saat dibuka kembali. Orang lain tidak terpengaruh.",
     UiTextKey.ChatClearConversationConfirm to "Hapus semua",
@@ -718,13 +595,11 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.BlockUserTitle to "Blokir pengguna ini?",
     UiTextKey.BlockUserMessage to "Blokir {username}? Akan dihapus dari daftar Anda dan tidak bisa menghubungi Anda.",
     UiTextKey.BlockUserConfirm to "Blokir",
-    UiTextKey.BlockUserSuccess to "Pengguna diblokir dan dihapus dari daftar.",
     UiTextKey.BlockedUsersTitle to "Pengguna diblokir",
     UiTextKey.BlockedUsersEmpty to "Tidak ada pengguna diblokir.",
     UiTextKey.UnblockUserButton to "Buka blokir",
     UiTextKey.UnblockUserTitle to "Buka blokir?",
     UiTextKey.UnblockUserMessage to "Buka blokir {username}? Dapat mengirim permintaan kembali.",
-    UiTextKey.UnblockUserSuccess to "Pengguna tidak diblokir.",
     UiTextKey.BlockedUsersManageButton to "Kelola blokir",
 
     // Friend request note
@@ -737,7 +612,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.GenerationBannerQuiz to "Kuis siap! Ketuk untuk memulai.",
 
     // Notification settings quick link
-    UiTextKey.NotifSettingsQuickLink to "Notifikasi",
 
     // Language name for Traditional Chinese
     UiTextKey.LangZhTw to "Tionghoa (Tradisional)",
@@ -799,7 +673,6 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsEmptyState to "Belum ada kata kustom",
     UiTextKey.CustomWordsEmptyHint to "Ketuk + untuk menambahkan kata",
     UiTextKey.CustomWordsNoSearchResults to "Tidak ada kata yang cocok",
-    UiTextKey.AddCustomWordHintTemplate to "Masukkan kata dalam {from} dan terjemahan dalam {to}",
 
     // Word bank records count
     UiTextKey.WordBankRecordsCountTemplate to "{count} catatan",
@@ -878,34 +751,4 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmMessage to "Mengubah nama pengguna akan mencegah perubahan selama 30 hari. Lanjutkan?",
 
     // Extended Error Messages
-    UiTextKey.ErrorNoInternet to "Tidak ada koneksi internet. Periksa koneksi Anda.",
-    UiTextKey.ErrorPermissionDenied to "Anda tidak memiliki izin untuk tindakan ini.",
-    UiTextKey.ErrorSessionExpired to "Sesi berakhir. Silakan masuk kembali.",
-    UiTextKey.ErrorItemNotFound to "Item tidak ditemukan. Mungkin sudah dihapus.",
-    UiTextKey.ErrorAccessDenied to "Akses ditolak.",
-    UiTextKey.ErrorAlreadyFriends to "Sudah berteman dengan pengguna ini.",
-    UiTextKey.ErrorUserBlocked to "Tindakan tidak diizinkan. Pengguna mungkin diblokir.",
-    UiTextKey.ErrorRequestNotFound to "Permintaan ini tidak lagi ada.",
-    UiTextKey.ErrorRequestAlreadyHandled to "Permintaan ini sudah diproses.",
-    UiTextKey.ErrorNotAuthorized to "Anda tidak berwenang untuk melakukan tindakan ini.",
-    UiTextKey.ErrorRateLimited to "Terlalu banyak permintaan. Coba lagi nanti.",
-    UiTextKey.ErrorInvalidInput to "Input tidak valid. Periksa dan coba lagi.",
-    UiTextKey.ErrorOperationNotAllowed to "Operasi ini tidak diizinkan saat ini.",
-    UiTextKey.ErrorTimeout to "Waktu habis. Coba lagi.",
-    UiTextKey.ErrorSendMessageFailed to "Gagal mengirim pesan. Coba lagi.",
-    UiTextKey.ErrorFriendRequestSent to "Permintaan pertemanan terkirim!",
-    UiTextKey.ErrorFriendRequestFailed to "Gagal mengirim permintaan.",
-    UiTextKey.ErrorFriendRemoved to "Teman dihapus.",
-    UiTextKey.ErrorFriendRemoveFailed to "Gagal menghapus. Periksa koneksi Anda.",
-    UiTextKey.ErrorBlockSuccess to "Pengguna diblokir.",
-    UiTextKey.ErrorBlockFailed to "Gagal memblokir. Coba lagi.",
-    UiTextKey.ErrorUnblockSuccess to "Pengguna tidak diblokir.",
-    UiTextKey.ErrorUnblockFailed to "Gagal membuka blokir. Coba lagi.",
-    UiTextKey.ErrorAcceptRequestSuccess to "Permintaan pertemanan diterima!",
-    UiTextKey.ErrorAcceptRequestFailed to "Gagal menerima. Coba lagi.",
-    UiTextKey.ErrorRejectRequestSuccess to "Permintaan pertemanan ditolak.",
-    UiTextKey.ErrorRejectRequestFailed to "Gagal menolak. Coba lagi.",
-    UiTextKey.ErrorOfflineMessage to "Anda sedang offline. Beberapa fitur mungkin tidak tersedia.",
-    UiTextKey.ErrorChatDeletionFailed to "Gagal menghapus chat. Coba lagi.",
-    UiTextKey.ErrorGenericRetry to "Terjadi kesalahan. Coba lagi.",
 )

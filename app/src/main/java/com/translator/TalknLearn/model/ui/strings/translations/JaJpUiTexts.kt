@@ -13,14 +13,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.TranslateButton to "翻訳",
     UiTextKey.CopyTranslationButton to "翻訳をコピー",
     UiTextKey.SpeakTranslationButton to "翻訳を読み上げ",
-    UiTextKey.RecognizingStatus to "録音中...話してください、自動停止を待ちます。",
-    UiTextKey.TranslatingStatus to "翻訳中...",
-    UiTextKey.SpeakingOriginalStatus to "原文を読み上げ中...",
-    UiTextKey.SpeakingTranslationStatus to "翻訳を読み上げ中...",
-    UiTextKey.SpeakingLabel to "読み上げ中",
-    UiTextKey.FinishedSpeakingOriginal to "原文の読み上げ完了",
-    UiTextKey.FinishedSpeakingTranslation to "翻訳の読み上げ完了",
-    UiTextKey.TtsErrorTemplate to "音声エラー：%s",
 
     // Language labels
     UiTextKey.AppUiLanguageLabel to "表示言語",
@@ -61,11 +53,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     // Speech
     UiTextKey.SpeechInputPlaceholder to "ここに入力またはマイクを使用...",
     UiTextKey.SpeechTranslatedPlaceholder to "翻訳結果がここに表示されます...",
-    UiTextKey.StatusAzureErrorTemplate to "Azureエラー：%s",
-    UiTextKey.StatusTranslationErrorTemplate to "翻訳エラー：%s",
-    UiTextKey.StatusLoginRequiredTranslation to "翻訳にはログインが必要です",
-    UiTextKey.StatusRecognizePreparing to "マイク準備中...（話さないでください）",
-    UiTextKey.StatusRecognizeListening to "聞いています...話してください。",
 
     // Pagination
     UiTextKey.PaginationPrevLabel to "前のページ",
@@ -73,12 +60,10 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.PaginationPageLabelTemplate to "{page} / {total} ページ",
 
     // Toast
-    UiTextKey.ToastCopied to "コピーしました",
     UiTextKey.DisableText to "翻訳機能や履歴の保存にはログインが必要です。",
 
     // Error
     UiTextKey.ErrorRetryButton to "再試行",
-    UiTextKey.ErrorGenericMessage to "エラーが発生しました。もう一度お試しください。",
 
     // Shop
     UiTextKey.ShopTitle to "ショップ",
@@ -110,10 +95,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.HelpTitle to "ヘルプ",
     UiTextKey.SpeechTitle to "クイック翻訳",
     UiTextKey.HomeStartButton to "翻訳を開始",
-    UiTextKey.HomeFeaturesTitle to "機能紹介",
-    UiTextKey.HomeDiscreteDescription to "短文と音声翻訳",
-    UiTextKey.HomeContinuousDescription to "リアルタイム双方向会話翻訳",
-    UiTextKey.HomeLearningDescription to "翻訳履歴から学習教材とクイズを生成",
 
     // Help
     UiTextKey.HelpCurrentTitle to "現在の機能",
@@ -237,10 +218,7 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsFontSizeTitle to "フォントサイズ",
     UiTextKey.SettingsFontSizeDesc to "テキストサイズを調整して読みやすくします（デバイス間で同期）",
     UiTextKey.SettingsScaleTemplate to "スケール：{pct}%",
-    UiTextKey.SettingsColorPaletteTitle to "カラーテーマ",
-    UiTextKey.SettingsColorPaletteDesc to "アプリのカラーテーマを選択、各テーマ10コイン",
     UiTextKey.SettingsColorCostTemplate to "{cost} コイン",
-    UiTextKey.SettingsColorUnlockButton to "ロック解除",
     UiTextKey.SettingsColorSelectButton to "選択",
     UiTextKey.SettingsColorAlreadyUnlocked to "解除済み",
     UiTextKey.SettingsPreviewHeadline to "見出し：大きなテキストプレビュー",
@@ -258,8 +236,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsResetPW to "パスワードをリセット",
     UiTextKey.SettingsQuickLinks to "詳細設定",
     UiTextKey.SettingsNotLoggedInWarning to "アカウント設定を使用するにはログインしてください。アプリ言語は変更可能です。",
-    UiTextKey.SettingsVoiceTitle to "音声設定",
-    UiTextKey.SettingsVoiceDesc to "各言語のテキスト読み上げ音声を選択します。",
     UiTextKey.SettingsVoiceLanguageLabel to "言語",
     UiTextKey.SettingsVoiceSelectLabel to "音声",
     UiTextKey.SettingsVoiceDefault to "デフォルト",
@@ -282,23 +258,17 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LearningSheetWhatIsThisDesc to "翻訳履歴に基づいて生成された学習シートです。語彙、意味、例文、文法ポイントが含まれています。下のクイズボタンで知識をテストしましょう！",
     UiTextKey.LearningRegenBlockedTitle to "現在再生成できません",
     UiTextKey.LearningRegenBlockedMessage to "再生成には前回より少なくとも5件多い記録が必要です。あと {needed} 件必要です。",
-    UiTextKey.LearningRegenNeedMoreRecords to "⚠️ 再生成にはあと {needed} 件の記録が必要（最低5件）",
-    UiTextKey.LearningRegenCountNotHigher to "⚠️ 記録数は前回の生成時より多い必要があります",
     UiTextKey.LearningRegenInfoTitle to "再生成のルール",
     UiTextKey.LearningRegenInfoMessage to "学習教材を再生成するには：\n\n• 初回生成：いつでも可能\n• 再生成：前回より少なくとも5件多い翻訳記録が必要\n\n十分な新しい記録があるとボタンが有効（青色）になります。グレーの場合は翻訳を続けてください！\n\n💡 ヒント：翻訳後に件数が更新されない場合はアプリを再起動してください。",
-    UiTextKey.QuizRegenBlockedSameMaterial to "❌ この教材バージョンのクイズは生成済みです。新しいクイズを作成するには新しい学習シートを生成してください。",
 
     // Quiz
     UiTextKey.QuizTitleTemplate to "クイズ：{language}",
     UiTextKey.QuizOpenButton to "📝 クイズ",
     UiTextKey.QuizGenerateButton to "🔄 クイズを生成",
     UiTextKey.QuizGenerating to "⏳ 生成中...",
-    UiTextKey.QuizUpToDate to "✓ 最新版",
     UiTextKey.QuizBlocked to "🚫 ブロック",
     UiTextKey.QuizWait to "⏳ お待ちください...",
-    UiTextKey.QuizMaterialsQuizTemplate to "教材：{materials} | クイズ：{quiz}",
     UiTextKey.QuizCanEarnCoins to "🪙 コインを獲得できます！",
-    UiTextKey.QuizNeedMoreRecordsTemplate to "🪙 コイン獲得にはあと {count} 件必要",
     UiTextKey.QuizCancelButton to "キャンセル",
     UiTextKey.QuizPreviousButton to "前の問題",
     UiTextKey.QuizNextButton to "次の問題",
@@ -316,7 +286,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizYourAnswerTemplate to "あなたの回答：{Answer}",
     UiTextKey.QuizCorrectAnswerTemplate to "正解：{Answer}",
     UiTextKey.QuizQuestionTemplate to "問題 {current} / {total}",
-    UiTextKey.QuizCannotRegenTemplate to "⚠️ 再生成不可：教材（{materials}）< クイズ（{quiz}）、翻訳を追加してください。",
     UiTextKey.QuizAnotherGenInProgress to "⏳ 別の生成が進行中です。お待ちください。",
     UiTextKey.QuizCoinRulesTitle to "🪙 コイン獲得ルール",
     UiTextKey.QuizCoinRulesHowToEarn to "✅ 獲得方法：",
@@ -346,25 +315,9 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizCoinsRule4 to "• クイズは現在の教材バージョンと一致が必要",
     UiTextKey.QuizCoinsRule5 to "• 合計コインは履歴ページで確認",
     UiTextKey.QuizCoinsGreatButton to "素晴らしい！",
-    UiTextKey.QuizOutdatedMessage to "このクイズは古い学習シートに基づいています。",
     UiTextKey.QuizRecordsLabel to "件の記録",
 
     // History coins
-    UiTextKey.HistoryCoinsDialogTitle to "🪙 あなたのコイン",
-    UiTextKey.HistoryCoinRulesTitle to "コイン獲得ルール：",
-    UiTextKey.HistoryCoinHowToEarnTitle to "獲得方法：",
-    UiTextKey.HistoryCoinHowToEarnRule1 to "• 正解ごとに1コイン",
-    UiTextKey.HistoryCoinHowToEarnRule2 to "• 各クイズバージョンの初回のみ",
-    UiTextKey.HistoryCoinHowToEarnRule3 to "• クイズは現在の学習教材と一致が必要",
-    UiTextKey.HistoryCoinAntiCheatTitle to "🔒 不正防止ルール：",
-    UiTextKey.HistoryCoinAntiCheatRule1 to "• 前回のコイン獲得より10件以上の新翻訳が必要",
-    UiTextKey.HistoryCoinAntiCheatRule2 to "• クイズバージョンは教材バージョンと同じが必要",
-    UiTextKey.HistoryCoinAntiCheatRule3 to "• 履歴削除はクイズ再生成をブロック（件数が前回より多い場合を除く）",
-    UiTextKey.HistoryCoinAntiCheatRule4 to "• 同じクイズの再受験ではコインなし",
-    UiTextKey.HistoryCoinTipsTitle to "💡 ヒント：",
-    UiTextKey.HistoryCoinTipsRule1 to "• 定期的に翻訳を追加",
-    UiTextKey.HistoryCoinTipsRule2 to "• 初回受験前にしっかり学習！",
-    UiTextKey.HistoryCoinGotItButton to "了解！",
 
     // History info
     UiTextKey.HistoryInfoTitle to "履歴について",
@@ -383,7 +336,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankWordsCount to "語",
     UiTextKey.WordBankGenerating to "生成中...",
     UiTextKey.WordBankGenerate to "単語帳を生成",
-    UiTextKey.WordBankRegenerate to "単語帳を再生成",
     UiTextKey.WordBankRefresh to "🔄 単語帳を更新",
     UiTextKey.WordBankEmpty to "単語帳なし",
     UiTextKey.WordBankEmptyHint to "上のボタンをタップして翻訳履歴から単語帳を生成。",
@@ -393,11 +345,8 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankFilterCategoryAll to "すべてのカテゴリー",
     UiTextKey.WordBankFilterDifficultyLabel to "難易度レベル：",
     UiTextKey.WordBankFilterNoResults to "フィルター条件に一致する単語がありません",
-    UiTextKey.WordBankRefreshAvailable to "✅ 更新可能！",
-    UiTextKey.WordBankRecordsNeeded to "件（更新には20件必要）",
     UiTextKey.WordBankRegenInfoTitle to "更新ルール",
     UiTextKey.WordBankRegenInfoMessage to "単語帳を更新するには：\n\n• 初回生成：いつでも可能\n• 更新：前回より少なくとも20件多い翻訳記録が必要\n\n十分な新しい記録があるとボタンが有効（青色）になります。グレーの場合は翻訳を続けてください！\n\n💡 ヒント：翻訳後に件数が更新されない場合はアプリを再起動してください。",
-    UiTextKey.WordBankHistoryCountTemplate to "現在の記録数：{nowCount}（生成時：{savedCount}）",
 
     // Dialogs
     UiTextKey.DialogLogoutTitle to "ログアウトしますか？",
@@ -410,8 +359,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ProfileUsernameLabel to "ユーザー名",
     UiTextKey.ProfileUsernameHint to "ユーザー名を入力",
     UiTextKey.ProfileUpdateButton to "プロフィールを更新",
-    UiTextKey.ProfileUpdateSuccess to "プロフィール更新成功",
-    UiTextKey.ProfileUpdateError to "プロフィール更新に失敗",
 
     // Account deletion
     UiTextKey.AccountDeleteTitle to "アカウント削除",
@@ -419,19 +366,10 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteConfirmMessage to "履歴、単語帳、学習教材、設定を含むすべてのデータが永久に削除されます。パスワードを入力して確認してください。",
     UiTextKey.AccountDeletePasswordLabel to "パスワード",
         UiTextKey.AccountDeleteButton to "アカウントとデータを削除",
-    UiTextKey.AccountDeleteSuccess to "アカウント削除成功",
-    UiTextKey.AccountDeleteError to "アカウント削除に失敗",
-    UiTextKey.AccountDeleteReauthRequired to "削除を確認するにはパスワードを再入力してください",
 
     // Favorites
     UiTextKey.FavoritesTitle to "お気に入り",
     UiTextKey.FavoritesEmpty to "お気に入りなし",
-    UiTextKey.FavoritesAddSuccess to "お気に入りに追加しました",
-    UiTextKey.FavoritesRemoveSuccess to "お気に入りから削除しました",
-    UiTextKey.FavoritesAddButton to "お気に入りに追加",
-    UiTextKey.FavoritesRemoveButton to "お気に入りから削除",
-    UiTextKey.FavoritesNoteLabel to "メモ",
-    UiTextKey.FavoritesNoteHint to "メモを追加（任意）",
     UiTextKey.FavoritesTabRecords to "記録",
     UiTextKey.FavoritesTabSessions to "会話",
     UiTextKey.FavoritesSessionsEmpty to "保存された会話なし",
@@ -446,9 +384,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsTranslatedLabel to "翻訳",
     UiTextKey.CustomWordsPronunciationLabel to "発音（任意）",
     UiTextKey.CustomWordsExampleLabel to "例文（任意）",
-    UiTextKey.CustomWordsSaveSuccess to "単語を保存しました",
-    UiTextKey.CustomWordsDeleteSuccess to "単語を削除しました",
-    UiTextKey.CustomWordsAlreadyExists to "この単語はすでに存在します",
     UiTextKey.CustomWordsOriginalLanguageLabel to "原語言語",
     UiTextKey.CustomWordsTranslationLanguageLabel to "翻訳言語",
     UiTextKey.CustomWordsSaveButton to "保存",
@@ -456,36 +391,18 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Language detection
     UiTextKey.LanguageDetectAuto to "自動検出",
-    UiTextKey.LanguageDetectDetecting to "検出中...",
-    UiTextKey.LanguageDetectedTemplate to "検出：{language}",
-    UiTextKey.LanguageDetectFailed to "検出失敗",
 
     // Image recognition
     UiTextKey.ImageRecognitionButton to "画像からテキストをスキャン",
     UiTextKey.ImageRecognitionAccuracyWarning to "⚠️ 注意：画像テキスト認識は完全に正確ではない場合があります。抽出されたテキストを確認してください。" +
             "ラテン文字（英語等）、中国語、日本語、韓国語に対応。",
-    UiTextKey.ImageRecognitionScanning to "画像テキストをスキャン中...",
-    UiTextKey.ImageRecognitionSuccess to "テキスト抽出成功",
 
     // Cache
-    UiTextKey.CacheClearButton to "キャッシュをクリア",
-    UiTextKey.CacheClearSuccess to "キャッシュをクリアしました",
-    UiTextKey.CacheStatsTemplate to "キャッシュ：{count} 件の翻訳を保存",
 
     // Auto theme
-    UiTextKey.SettingsAutoThemeTitle to "テーマ自動切り替え",
-    UiTextKey.SettingsAutoThemeDesc to "時間帯に応じてライトとダークテーマを自動切り替え",
-    UiTextKey.SettingsAutoThemeEnabled to "有効",
-    UiTextKey.SettingsAutoThemeDisabled to "無効",
-    UiTextKey.SettingsAutoThemeDarkStartLabel to "ダークモード開始時間：",
-    UiTextKey.SettingsAutoThemeLightStartLabel to "ライトモード開始時間：",
     UiTextKey.SettingsAutoThemePreview to "テーマは設定した時間に自動で切り替わります",
 
     // Offline mode
-    UiTextKey.OfflineModeTitle to "オフラインモード",
-    UiTextKey.OfflineModeMessage to "現在オフラインです。キャッシュデータを閲覧しています。",
-    UiTextKey.OfflineModeRetry to "接続を再試行",
-    UiTextKey.OfflineDataCached to "キャッシュデータ利用可能",
     UiTextKey.OfflineSyncPending to "オンライン時に変更を同期",
 
     // Image capture
@@ -497,26 +414,15 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Friends
     UiTextKey.FriendsTitle to "フレンド",
-    UiTextKey.FriendsMenuButton to "フレンド",
     UiTextKey.FriendsAddButton to "フレンドを追加",
     UiTextKey.FriendsSearchTitle to "ユーザーを検索",
     UiTextKey.FriendsSearchPlaceholder to "ユーザー名またはユーザーIDを入力...",
-    UiTextKey.FriendsSearchMinChars to "検索には2文字以上入力してください",
     UiTextKey.FriendsSearchNoResults to "ユーザーが見つかりません",
-    UiTextKey.FriendsListEmpty to "フレンドを追加して交流や学習教材を共有しましょう。",
     UiTextKey.FriendsRequestsSection to "フレンドリクエスト（{count}）",
     UiTextKey.FriendsSectionTitle to "フレンド（{count}）",
     UiTextKey.FriendsAcceptButton to "承認",
     UiTextKey.FriendsRejectButton to "拒否",
-    UiTextKey.FriendsRemoveButton to "削除",
-    UiTextKey.FriendsRemoveDialogTitle to "フレンドを削除",
-    UiTextKey.FriendsRemoveDialogMessage to "{username} をフレンドリストから削除しますか？",
     UiTextKey.FriendsSendRequestButton to "追加",
-    UiTextKey.FriendsRequestSentSuccess to "フレンドリクエストを送信しました！",
-    UiTextKey.FriendsRequestAcceptedSuccess to "フレンドリクエストを承認しました！",
-    UiTextKey.FriendsRequestRejectedSuccess to "リクエストを拒否しました",
-    UiTextKey.FriendsRemovedSuccess to "フレンドを削除しました",
-    UiTextKey.FriendsRequestFailed to "リクエスト送信に失敗",
     UiTextKey.FriendsCloseButton to "閉じる",
     UiTextKey.FriendsCancelButton to "キャンセル",
     UiTextKey.FriendsRemoveConfirm to "削除",
@@ -526,7 +432,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsCancelRequestButton to "リクエストをキャンセル",
     UiTextKey.FriendsUnreadMessageDesc to "メッセージを送信",
     UiTextKey.FriendsDeleteModeButton to "フレンドを削除",
-    UiTextKey.FriendsDeleteSelectedButton to "選択を削除",
     UiTextKey.FriendsDeleteMultipleTitle to "フレンドを削除",
     UiTextKey.FriendsDeleteMultipleMessage to "選択した {count} 人のフレンドを削除しますか？",
     UiTextKey.FriendsSearchMinChars3 to "ユーザー名検索には3文字以上入力してください",
@@ -540,26 +445,16 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ChatInputPlaceholder to "メッセージを入力...",
     UiTextKey.ChatSendButton to "送信",
     UiTextKey.ChatEmpty to "メッセージがありません。チャットを始めましょう！",
-    UiTextKey.ChatMessageSent to "メッセージ送信済み",
-    UiTextKey.ChatMessageFailed to "メッセージ送信に失敗",
-    UiTextKey.ChatMarkingRead to "既読にしています...",
-    UiTextKey.ChatLoadingMessages to "メッセージを読み込み中...",
-    UiTextKey.ChatToday to "今日",
-    UiTextKey.ChatYesterday to "昨日",
     UiTextKey.ChatUnreadBadge to "{count} 件の未読",
     UiTextKey.ChatTranslateButton to "翻訳",
     UiTextKey.ChatTranslateDialogTitle to "会話を翻訳",
     UiTextKey.ChatTranslateDialogMessage to "フレンドのメッセージをあなたの言語に翻訳しますか？各メッセージの言語を検出して翻訳します。",
     UiTextKey.ChatTranslateConfirm to "すべて翻訳",
-    UiTextKey.ChatTranslating to "メッセージを翻訳中...",
-    UiTextKey.ChatTranslated to "メッセージを翻訳しました",
     UiTextKey.ChatShowOriginal to "原文を表示",
     UiTextKey.ChatShowTranslation to "翻訳を表示",
-    UiTextKey.ChatTranslateFailed to "翻訳に失敗",
     UiTextKey.ChatTranslatedLabel to "翻訳済み",
 
     // Sharing
-    UiTextKey.ShareTitle to "共有",
     UiTextKey.ShareInboxTitle to "共有受信箱",
     UiTextKey.ShareInboxEmpty to "共有アイテムはありません。フレンドが単語や教材を共有できます！",
     UiTextKey.ShareWordButton to "単語を共有",
@@ -567,14 +462,8 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareSelectFriendTitle to "フレンドを選択",
     UiTextKey.ShareSelectFriendMessage to "共有するフレンドを選択：",
     UiTextKey.ShareSuccess to "共有成功！",
-    UiTextKey.ShareFailed to "共有に失敗",
-    UiTextKey.ShareWordWith to "{username} と単語を共有",
-    UiTextKey.ShareMaterialWith to "{username} と教材を共有",
     UiTextKey.ShareAcceptButton to "承認",
     UiTextKey.ShareDismissButton to "無視",
-    UiTextKey.ShareAccepted to "コレクションに追加しました",
-    UiTextKey.ShareDismissed to "アイテムを無視しました",
-    UiTextKey.ShareActionFailed to "操作に失敗",
     UiTextKey.ShareTypeWord to "単語",
     UiTextKey.ShareTypeLearningSheet to "学習シート",
     UiTextKey.ShareReceivedFrom to "送信者：{username}",
@@ -593,12 +482,10 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.MyProfileTitle to "マイプロフィール",
     UiTextKey.MyProfileUserId to "ユーザーID",
     UiTextKey.MyProfileUsername to "ユーザー名",
-    UiTextKey.MyProfileDisplayName to "表示名",
     UiTextKey.MyProfileCopyUserId to "ユーザーIDをコピー",
     UiTextKey.MyProfileCopyUsername to "ユーザー名をコピー",
     UiTextKey.MyProfileShare to "プロフィールを共有",
     UiTextKey.MyProfileCopied to "クリップボードにコピーしました！",
-    UiTextKey.MyProfileLanguages to "言語",
     UiTextKey.MyProfilePrimaryLanguage to "主要言語",
     UiTextKey.MyProfileLearningLanguages to "学習中の言語",
 
@@ -626,7 +513,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
             "• 再生成には前回より少なくとも5件多い記録が必要。\n" +
             "• 学習シートボタンで生成した教材を開いて学習。\n" +
             "• 学習シート生成後にクイズも受けられます。",
-    UiTextKey.LearningEmptyTitle to "翻訳記録なし",
     UiTextKey.LearningEmptyMessage to "翻訳を始めて履歴を作りましょう。\n" +
             "学習シートは翻訳履歴から生成されます。\n" +
             "翻訳後に下にスワイプして更新。",
@@ -663,17 +549,14 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareDismissWordMessage to "この共有単語を無視しますか？元に戻せません。",
 
     // Shared inbox sheet label
-    UiTextKey.ShareLearningSheetLanguageLabel to "言語：{language}",
 
     // Accessibility
     UiTextKey.AccessibilityDismiss to "閉じる",
-    UiTextKey.AccessibilityAlreadyConnectedOrPending to "接続済みまたは保留中",
     UiTextKey.AccessibilityNewMessages to "新しいメッセージ",
     UiTextKey.AccessibilityNewReleasesIcon to "新しいアイテムの表示",
     UiTextKey.AccessibilitySuccessIcon to "成功",
     UiTextKey.AccessibilityErrorIcon to "エラー",
     UiTextKey.AccessibilitySharedItemTypeIcon to "共有アイテムの種類",
-    UiTextKey.AccessibilityAddCustomWords to "カスタム単語を追加",
     UiTextKey.AccessibilityWordBankExists to "単語帳が存在します",
 
     // Settings hardcoded
@@ -686,7 +569,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsNotifFriendRequests to "フレンドリクエスト受信",
     UiTextKey.FriendsNotifRequestAccepted to "フレンドリクエスト承認",
     UiTextKey.FriendsNotifSharedInbox to "新しい共有アイテム",
-    UiTextKey.FriendsNotifCloseButton to "完了",
 
     // In-app badge settings
     UiTextKey.InAppBadgeSectionTitle to "アプリ内バッジ（赤い点）",
@@ -695,10 +577,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.InAppBadgeSharedInbox to "未読共有受信箱バッジ",
 
     // Error messages
-    UiTextKey.ErrorNotLoggedIn to "続行するにはログインしてください。",
-    UiTextKey.ErrorSaveFailedRetry to "保存に失敗しました。再試行してください。",
-    UiTextKey.ErrorLoadFailedRetry to "読み込みに失敗しました。再試行してください。",
-    UiTextKey.ErrorNetworkRetry to "ネットワークエラーです。接続を確認してください。",
 
     // Learning progress
     UiTextKey.LearningProgressNeededTemplate to "教材生成にはあと {needed} 件の翻訳が必要",
@@ -707,7 +585,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SpeechSwitchToConversation to "リアルタイム会話に切り替え →",
 
     // Chat clear
-    UiTextKey.ChatClearConversationButton to "チャットをクリア",
     UiTextKey.ChatClearConversationTitle to "会話をクリア",
     UiTextKey.ChatClearConversationMessage to "この会話のすべてのメッセージを非表示にしますか？退出して戻っても非表示のままです。相手には影響しません。",
     UiTextKey.ChatClearConversationConfirm to "すべてクリア",
@@ -718,13 +595,11 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.BlockUserTitle to "ユーザーをブロックしますか？",
     UiTextKey.BlockUserMessage to "{username} をブロックしますか？フレンドリストから削除され、連絡できなくなります。",
     UiTextKey.BlockUserConfirm to "ブロック",
-    UiTextKey.BlockUserSuccess to "ユーザーをブロックし、フレンドから削除しました。",
     UiTextKey.BlockedUsersTitle to "ブロックしたユーザー",
     UiTextKey.BlockedUsersEmpty to "ブロックしたユーザーはいません。",
     UiTextKey.UnblockUserButton to "ブロック解除",
     UiTextKey.UnblockUserTitle to "ブロック解除しますか？",
     UiTextKey.UnblockUserMessage to "{username} のブロックを解除しますか？再びフレンドリクエストを送れるようになります。",
-    UiTextKey.UnblockUserSuccess to "ユーザーのブロックを解除しました。",
     UiTextKey.BlockedUsersManageButton to "ブロックユーザー管理",
 
     // Friend request note
@@ -737,7 +612,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.GenerationBannerQuiz to "クイズが完成しました！タップして開始。",
 
     // Notification settings quick link
-    UiTextKey.NotifSettingsQuickLink to "通知",
 
     // Language name for Traditional Chinese
     UiTextKey.LangZhTw to "繁体字中国語",
@@ -799,7 +673,6 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsEmptyState to "カスタム単語はありません",
     UiTextKey.CustomWordsEmptyHint to "+ をタップして単語を追加",
     UiTextKey.CustomWordsNoSearchResults to "検索に一致する単語がありません",
-    UiTextKey.AddCustomWordHintTemplate to "{from} に単語を入力し、{to} に翻訳を入力",
 
     // Word bank records count
     UiTextKey.WordBankRecordsCountTemplate to "{count} 件の記録",
@@ -878,34 +751,4 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmMessage to "ユーザー名を変更すると、30日間変更できなくなります。続行しますか？",
 
     // Extended Error Messages
-    UiTextKey.ErrorNoInternet to "インターネット接続がありません。接続を確認してください。",
-    UiTextKey.ErrorPermissionDenied to "この操作を行う権限がありません。",
-    UiTextKey.ErrorSessionExpired to "セッションが期限切れです。再度ログインしてください。",
-    UiTextKey.ErrorItemNotFound to "リクエストされたアイテムが見つかりません。削除された可能性があります。",
-    UiTextKey.ErrorAccessDenied to "アクセスが拒否されました。",
-    UiTextKey.ErrorAlreadyFriends to "このユーザーとはすでにフレンドです。",
-    UiTextKey.ErrorUserBlocked to "この操作を完了できません。ユーザーがブロックされている可能性があります。",
-    UiTextKey.ErrorRequestNotFound to "このフレンドリクエストは存在しなくなりました。",
-    UiTextKey.ErrorRequestAlreadyHandled to "このリクエストは既に処理されています。",
-    UiTextKey.ErrorNotAuthorized to "この操作を行う権限がありません。",
-    UiTextKey.ErrorRateLimited to "リクエストが多すぎます。しばらくしてから再試行してください。",
-    UiTextKey.ErrorInvalidInput to "入力が無効です。確認して再試行してください。",
-    UiTextKey.ErrorOperationNotAllowed to "現在この操作は許可されていません。",
-    UiTextKey.ErrorTimeout to "操作がタイムアウトしました。再試行してください。",
-    UiTextKey.ErrorSendMessageFailed to "メッセージの送信に失敗しました。再試行してください。",
-    UiTextKey.ErrorFriendRequestSent to "フレンドリクエストを送信しました！",
-    UiTextKey.ErrorFriendRequestFailed to "フレンドリクエストの送信に失敗しました。",
-    UiTextKey.ErrorFriendRemoved to "フレンドを削除しました。",
-    UiTextKey.ErrorFriendRemoveFailed to "フレンドの削除に失敗しました。接続を確認してください。",
-    UiTextKey.ErrorBlockSuccess to "ユーザーをブロックしました。",
-    UiTextKey.ErrorBlockFailed to "ブロックに失敗しました。再試行してください。",
-    UiTextKey.ErrorUnblockSuccess to "ブロックを解除しました。",
-    UiTextKey.ErrorUnblockFailed to "ブロック解除に失敗しました。再試行してください。",
-    UiTextKey.ErrorAcceptRequestSuccess to "フレンドリクエストを承認しました！",
-    UiTextKey.ErrorAcceptRequestFailed to "承認に失敗しました。再試行してください。",
-    UiTextKey.ErrorRejectRequestSuccess to "フレンドリクエストを拒否しました。",
-    UiTextKey.ErrorRejectRequestFailed to "拒否に失敗しました。再試行してください。",
-    UiTextKey.ErrorOfflineMessage to "オフラインです。一部の機能が利用できない場合があります。",
-    UiTextKey.ErrorChatDeletionFailed to "会話の削除に失敗しました。再試行してください。",
-    UiTextKey.ErrorGenericRetry to "エラーが発生しました。再試行してください。",
 )
