@@ -12,7 +12,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.mock
 
 /**
  * Fake UserSettingsRepository that records calls to all settings methods.
@@ -23,8 +22,6 @@ private class RecordingSettingsRepository : UserSettingsRepository {
     val fontSizeCalls = mutableListOf<Pair<UserId, Float>>()
     val primaryLanguageCalls = mutableListOf<Pair<UserId, LanguageCode>>()
     val themeModeCalls = mutableListOf<Pair<UserId, String>>()
-    val colorPaletteCalls = mutableListOf<Pair<UserId, PaletteId>>()
-    val unlockPaletteCalls = mutableListOf<Pair<UserId, PaletteId>>()
     val voiceCalls = mutableListOf<Triple<UserId, LanguageCode, VoiceName>>()
     val autoThemeCalls = mutableListOf<Pair<UserId, Boolean>>()
     val notifPrefCalls = mutableListOf<Triple<UserId, String, Boolean>>()
@@ -40,12 +37,8 @@ private class RecordingSettingsRepository : UserSettingsRepository {
     override suspend fun setThemeMode(userId: UserId, themeMode: String) {
         themeModeCalls.add(userId to themeMode)
     }
-    override suspend fun setColorPalette(userId: UserId, paletteId: PaletteId) {
-        colorPaletteCalls.add(userId to paletteId)
-    }
-    override suspend fun unlockColorPalette(userId: UserId, paletteId: PaletteId) {
-        unlockPaletteCalls.add(userId to paletteId)
-    }
+    override suspend fun setColorPalette(userId: UserId, paletteId: PaletteId) {}
+    override suspend fun unlockColorPalette(userId: UserId, paletteId: PaletteId) {}
     override suspend fun setVoiceForLanguage(userId: UserId, languageCode: LanguageCode, voiceName: VoiceName) {
         voiceCalls.add(Triple(userId, languageCode, voiceName))
     }
@@ -143,32 +136,6 @@ class SettingsUseCasesTest {
         useCase(testUserId, "light")
 
         assertEquals("light", repo.themeModeCalls[0].second)
-    }
-
-    // ── SetColorPaletteUseCase ──────────────────────────────────────
-
-    @Test
-    fun `SetColorPalette delegates to repository`() = runBlocking {
-        val useCase = SetColorPaletteUseCase(repo)
-        val paletteId = PaletteId("ocean")
-        useCase(testUserId, paletteId)
-
-        assertEquals(1, repo.colorPaletteCalls.size)
-        assertEquals(testUserId, repo.colorPaletteCalls[0].first)
-        assertEquals(paletteId, repo.colorPaletteCalls[0].second)
-    }
-
-    // ── UnlockColorPaletteWithCoinsUseCase ──────────────────────────
-
-    @Test
-    fun `UnlockColorPaletteWithCoins delegates to repository for free palette`() = runBlocking {
-        val useCase = UnlockColorPaletteWithCoinsUseCase(repo, mock())
-        val paletteId = PaletteId("premium")
-        useCase(testUserId, paletteId, 0)
-
-        assertEquals(1, repo.unlockPaletteCalls.size)
-        assertEquals(testUserId, repo.unlockPaletteCalls[0].first)
-        assertEquals(paletteId, repo.unlockPaletteCalls[0].second)
     }
 
     // ── SetVoiceForLanguageUseCase ──────────────────────────────────

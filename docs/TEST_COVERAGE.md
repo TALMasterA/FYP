@@ -1,21 +1,21 @@
 # Test Coverage Report
 
-_Last updated: 2026-06-30_
+_Last updated: 2026-07-02_
 
 ## Verified Snapshot (from local audit)
 
 | Metric | Count |
 |---|---:|
-| Android source files (`app/src/main/java/com/translator/TalknLearn`) | 269 |
+| Android source files (`app/src/main/java/com/translator/TalknLearn`) | 267 |
 | Backend source files (`fyp-backend/functions/src/*.ts`) | 11 |
-| Android unit test files (`app/src/test/java/com/translator/TalknLearn`) | 198 |
-| Android test suites in latest `testDebugUnitTest` run | 197 |
-| Android unit tests executed (`testDebugUnitTest`) | 2,495 |
+| Android unit test files (`app/src/test/java/com/translator/TalknLearn`) | 197 |
+| Android test suites in latest `testDebugUnitTest` run | 196 |
+| Android unit tests executed (`testDebugUnitTest`) | 2,484 |
 | Backend test files (`fyp-backend/functions/src/__tests__`) | 17 |
 | Backend Jest tests executed (`npm run test:coverage`) | 193 |
 
-> The Android unit test **file** count (198) is one higher than the executed **suite**
-> count (197) because `FakePersistentRateLimiter.kt` is a shared test double, not a
+> The Android unit test **file** count (197) is one higher than the executed **suite**
+> count (196) because `FakePersistentRateLimiter.kt` is a shared test double, not a
 > runnable JUnit suite.
 
 
