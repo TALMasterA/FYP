@@ -12,7 +12,6 @@ import com.translator.TalknLearn.domain.learning.ParseAndStoreQuizUseCase
 import com.translator.TalknLearn.domain.learning.QuizRepository
 import com.translator.TalknLearn.model.LanguageCode
 import com.translator.TalknLearn.model.QuizAttempt
-import com.translator.TalknLearn.model.QuizQuestion
 import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.FriendRelation

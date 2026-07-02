@@ -2,7 +2,6 @@ package com.translator.TalknLearn.data.friends
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.translator.TalknLearn.data.friends.SeenItemsStorage
 import com.translator.TalknLearn.model.friends.FriendRelation
 import com.translator.TalknLearn.model.friends.FriendRequest
 import com.translator.TalknLearn.model.friends.SharedItem

@@ -3,7 +3,6 @@ package com.translator.TalknLearn.screens.speech
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import com.translator.TalknLearn.domain.speech.SpeakTextUseCase
 import com.translator.TalknLearn.model.SpeechResult
 import kotlinx.coroutines.delay

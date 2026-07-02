@@ -1,6 +1,5 @@
 package com.translator.TalknLearn.navigation
 
-import com.translator.TalknLearn.model.user.UserSettings
 import org.junit.Assert.*
 import org.junit.Test
 

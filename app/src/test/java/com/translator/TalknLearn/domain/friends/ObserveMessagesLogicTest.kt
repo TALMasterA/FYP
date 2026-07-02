@@ -1,7 +1,6 @@
 package com.translator.TalknLearn.domain.friends
 
 import com.translator.TalknLearn.model.friends.FriendMessage
-import com.translator.TalknLearn.model.friends.MessageType
 import com.google.firebase.Timestamp
 import org.junit.Assert.*
 import org.junit.Test

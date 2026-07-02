@@ -1,7 +1,5 @@
 package com.translator.TalknLearn.data.friends
 
-import com.translator.TalknLearn.model.friends.FriendRequest
-import com.translator.TalknLearn.model.friends.RequestStatus
 import com.google.firebase.Timestamp
 import org.junit.Assert.*
 import org.junit.Test

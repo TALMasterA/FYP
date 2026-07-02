@@ -1,6 +1,5 @@
 package com.translator.TalknLearn.screens.friends
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -29,7 +28,6 @@ import com.translator.TalknLearn.model.friends.FriendMessage
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
-import com.translator.TalknLearn.ui.components.EmptyStates
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*

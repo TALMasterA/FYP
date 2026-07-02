@@ -1,9 +1,6 @@
 package com.translator.TalknLearn.data.friends
 
 import com.translator.TalknLearn.model.friends.FriendRelation
-import com.translator.TalknLearn.model.friends.FriendRequest
-import com.translator.TalknLearn.model.friends.SharedItem
-import com.translator.TalknLearn.model.friends.SharedItemType
 import org.junit.Assert.*
 import org.junit.Test
 

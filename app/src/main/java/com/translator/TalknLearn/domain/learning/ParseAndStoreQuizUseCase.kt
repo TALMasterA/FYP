@@ -1,7 +1,6 @@
 package com.translator.TalknLearn.domain.learning
 
 import com.translator.TalknLearn.data.learning.FirestoreQuizRepository
-import com.translator.TalknLearn.data.learning.QuizParser
 import com.translator.TalknLearn.model.QuizAnswer
 import com.translator.TalknLearn.model.QuizAttempt
 import com.translator.TalknLearn.model.QuizQuestion
