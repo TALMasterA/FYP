@@ -71,7 +71,6 @@ fun QuizTakingScreen(
     val haptic = rememberHapticFeedback()
 
     var currentQuestionIndex by remember { mutableStateOf(0) }
-    val currentQuestion = attempt.questions.getOrNull(currentQuestionIndex)
 
     Box(
         modifier = modifier.fillMaxSize()

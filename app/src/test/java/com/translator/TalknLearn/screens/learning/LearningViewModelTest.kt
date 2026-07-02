@@ -3,7 +3,6 @@ package com.translator.TalknLearn.screens.learning
 import android.content.Context
 import com.translator.TalknLearn.data.history.SharedHistoryDataSource
 import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
-import com.translator.TalknLearn.data.settings.UserSettingsRepository
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.learning.*
 import com.translator.TalknLearn.model.LanguageCode
@@ -59,7 +58,6 @@ class LearningViewModelTest {
     private lateinit var sharedHistoryDataSource: SharedHistoryDataSource
     private lateinit var sharedSettings: SharedSettingsDataSource
     private lateinit var generateLearningMaterials: GenerateLearningMaterialsUseCase
-    private lateinit var userSettingsRepo: UserSettingsRepository
     private lateinit var generateQuizUseCase: GenerateQuizUseCase
     private lateinit var quizRepo: QuizRepository
 
@@ -83,7 +81,6 @@ class LearningViewModelTest {
         }
         sharedSettings = mock { on { settings } doReturn settingsFlow }
         generateLearningMaterials = mock()
-        userSettingsRepo = mock()
         generateQuizUseCase = mock()
         quizRepo = mock()
     }
@@ -101,7 +98,6 @@ class LearningViewModelTest {
         sharedHistoryDataSource = sharedHistoryDataSource,
         sharedSettings = sharedSettings,
         generateLearningMaterials = generateLearningMaterials,
-        userSettingsRepo = userSettingsRepo,
         generateQuizUseCase = generateQuizUseCase,
         quizRepo = quizRepo,
     )

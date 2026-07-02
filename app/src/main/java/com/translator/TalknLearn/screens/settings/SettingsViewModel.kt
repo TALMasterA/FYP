@@ -10,8 +10,6 @@ import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
 import com.translator.TalknLearn.domain.settings.SetFontSizeScaleUseCase
 import com.translator.TalknLearn.domain.settings.SetPrimaryLanguageUseCase
 import com.translator.TalknLearn.domain.settings.SetThemeModeUseCase
-import com.translator.TalknLearn.domain.settings.SetColorPaletteUseCase
-import com.translator.TalknLearn.domain.settings.UnlockColorPaletteWithCoinsUseCase
 import com.translator.TalknLearn.domain.settings.SetVoiceForLanguageUseCase
 import com.translator.TalknLearn.domain.settings.SetAutoThemeEnabledUseCase
 import com.translator.TalknLearn.core.AppLogger
@@ -62,8 +60,6 @@ class SettingsViewModel @Inject constructor(
     private val setPrimaryLanguage: SetPrimaryLanguageUseCase,
     private val setFontSizeScale: SetFontSizeScaleUseCase,
     private val setThemeMode: SetThemeModeUseCase,
-    private val setColorPalette: SetColorPaletteUseCase,
-    private val unlockColorPaletteWithCoins: UnlockColorPaletteWithCoinsUseCase,
     private val setVoiceForLanguage: SetVoiceForLanguageUseCase,
     private val setAutoThemeEnabled: SetAutoThemeEnabledUseCase,
     private val setNotificationPref: SetNotificationPrefUseCase,

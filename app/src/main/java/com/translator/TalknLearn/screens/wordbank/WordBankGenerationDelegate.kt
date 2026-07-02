@@ -4,7 +4,6 @@ import com.translator.TalknLearn.core.AiConfig
 import com.translator.TalknLearn.core.AppLogger
 import com.translator.TalknLearn.data.history.SharedHistoryDataSource
 import com.translator.TalknLearn.data.wordbank.FirestoreWordBankRepository
-import com.translator.TalknLearn.data.wordbank.WordBankCacheDataStore
 import com.translator.TalknLearn.data.wordbank.WordBankGenerationRepository
 import com.translator.TalknLearn.domain.learning.GenerationEligibility
 import com.translator.TalknLearn.model.TranslationRecord
@@ -34,7 +33,6 @@ internal class WordBankGenerationDelegate(
     private val scope: CoroutineScope,
     private val wordBankRepo: FirestoreWordBankRepository,
     private val wordBankGenRepo: WordBankGenerationRepository,
-    private val wordBankCacheDataStore: WordBankCacheDataStore,
     private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val getCurrentUserId: () -> String?,
     private val getPrimaryLanguageCode: () -> String,

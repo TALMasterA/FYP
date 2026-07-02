@@ -2,7 +2,6 @@ package com.translator.TalknLearn.screens.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.translator.TalknLearn.data.friends.ChatRepository
 import com.translator.TalknLearn.data.friends.FriendRequestRateLimiter
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
@@ -59,7 +58,7 @@ enum class RequestStatus {
  * OPTIMIZED: Friends list and incoming requests are read from [SharedFriendsDataSource]
  * (shared single-listener data source) instead of creating new Firestore listeners.
  * Outgoing requests still have their own listener (only needed on this screen).
- * Per-friend unread counts are observed via ChatRepository.observeChatMetadata().
+ * Per-friend unread counts are observed via [SharedFriendsDataSource.unseenUnreadPerFriend].
  *
  * Heavy logic is delegated to:
  * - [FriendSearchDelegate] — search / combined-search
@@ -72,7 +71,6 @@ class FriendsViewModel @Inject constructor(
     private val authRepo: FirebaseAuthRepository,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
     private val sharedSettingsDataSource: SharedSettingsDataSource,
-    private val chatRepository: ChatRepository,
     private val friendsRepository: com.translator.TalknLearn.data.friends.FriendsRepository,
     private val friendRequestRateLimiter: FriendRequestRateLimiter,
     private val observeOutgoingRequestsUseCase: ObserveOutgoingRequestsUseCase,

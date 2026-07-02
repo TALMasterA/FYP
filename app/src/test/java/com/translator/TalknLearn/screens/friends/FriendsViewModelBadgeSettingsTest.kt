@@ -1,6 +1,5 @@
 package com.translator.TalknLearn.screens.friends
 
-import com.translator.TalknLearn.data.friends.ChatRepository
 import com.translator.TalknLearn.data.friends.FriendRequestRateLimitStatus
 import com.translator.TalknLearn.data.friends.FriendRequestRateLimiter
 import com.translator.TalknLearn.data.friends.FriendsRepository
@@ -63,7 +62,6 @@ class FriendsViewModelBadgeSettingsTest {
     private lateinit var authRepo: FirebaseAuthRepository
     private lateinit var sharedFriendsDataSource: SharedFriendsDataSource
     private lateinit var sharedSettingsDataSource: SharedSettingsDataSource
-    private lateinit var chatRepository: ChatRepository
     private lateinit var friendsRepository: FriendsRepository
     private lateinit var friendRequestRateLimiter: FriendRequestRateLimiter
     private lateinit var observeOutgoingRequestsUseCase: ObserveOutgoingRequestsUseCase
@@ -94,7 +92,6 @@ class FriendsViewModelBadgeSettingsTest {
             on { settings } doReturn settingsFlow
             on { isLoading } doReturn isLoadingFlow
         }
-        chatRepository = mock()
         friendsRepository = mock()
         friendRequestRateLimiter = mock {
             on { canSend(eq("user1"), any()) } doReturn FriendRequestRateLimitStatus(allowed = true)
@@ -126,7 +123,6 @@ class FriendsViewModelBadgeSettingsTest {
         authRepo = authRepo,
         sharedFriendsDataSource = sharedFriendsDataSource,
         sharedSettingsDataSource = sharedSettingsDataSource,
-        chatRepository = chatRepository,
         friendsRepository = friendsRepository,
         friendRequestRateLimiter = friendRequestRateLimiter,
         observeOutgoingRequestsUseCase = observeOutgoingRequestsUseCase,
