@@ -89,7 +89,6 @@ class FriendSystemRulesTest {
     @Test
     fun `search shows removed but not blocked friends`() {
         val userId = "user1"
-        val isRemoved = true
         val isBlocked = false
         val isPublic = true
 

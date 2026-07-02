@@ -3,7 +3,6 @@ package com.translator.TalknLearn.screens.friends
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
-import com.translator.TalknLearn.data.friends.SharingRepository
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.friends.AcceptSharedItemUseCase
 import com.translator.TalknLearn.domain.friends.DismissSharedItemUseCase
@@ -38,7 +37,6 @@ data class SharedInboxUiState(
 class SharedInboxViewModel @Inject constructor(
     private val authRepository: FirebaseAuthRepository,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
-    private val sharingRepository: SharingRepository,
     private val acceptSharedItemUseCase: AcceptSharedItemUseCase,
     private val dismissSharedItemUseCase: DismissSharedItemUseCase
 ) : ViewModel() {

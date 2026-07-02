@@ -8,8 +8,6 @@ import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
 import com.translator.TalknLearn.domain.settings.SetFontSizeScaleUseCase
 import com.translator.TalknLearn.domain.settings.SetPrimaryLanguageUseCase
 import com.translator.TalknLearn.domain.settings.SetThemeModeUseCase
-import com.translator.TalknLearn.domain.settings.SetColorPaletteUseCase
-import com.translator.TalknLearn.domain.settings.UnlockColorPaletteWithCoinsUseCase
 import com.translator.TalknLearn.domain.settings.SetVoiceForLanguageUseCase
 import com.translator.TalknLearn.domain.settings.SetAutoThemeEnabledUseCase
 import com.translator.TalknLearn.domain.settings.SetNotificationPrefUseCase
@@ -74,8 +72,6 @@ class SettingsViewModelTest {
     private lateinit var setPrimaryLanguage: SetPrimaryLanguageUseCase
     private lateinit var setFontSizeScale: SetFontSizeScaleUseCase
     private lateinit var setThemeMode: SetThemeModeUseCase
-    private lateinit var setColorPalette: SetColorPaletteUseCase
-    private lateinit var unlockColorPaletteWithCoins: UnlockColorPaletteWithCoinsUseCase
     private lateinit var setVoiceForLanguage: SetVoiceForLanguageUseCase
     private lateinit var setAutoThemeEnabled: SetAutoThemeEnabledUseCase
     private lateinit var setNotificationPref: SetNotificationPrefUseCase
@@ -108,8 +104,6 @@ class SettingsViewModelTest {
         setPrimaryLanguage = mock()
         setFontSizeScale = mock()
         setThemeMode = mock()
-        setColorPalette = mock()
-        unlockColorPaletteWithCoins = mock()
         setVoiceForLanguage = mock()
         setAutoThemeEnabled = mock()
         setNotificationPref = mock()
@@ -130,8 +124,6 @@ class SettingsViewModelTest {
             setPrimaryLanguage = setPrimaryLanguage,
             setFontSizeScale = setFontSizeScale,
             setThemeMode = setThemeMode,
-            setColorPalette = setColorPalette,
-            unlockColorPaletteWithCoins = unlockColorPaletteWithCoins,
             setVoiceForLanguage = setVoiceForLanguage,
             setAutoThemeEnabled = setAutoThemeEnabled,
             setNotificationPref = setNotificationPref,
@@ -151,7 +143,7 @@ class SettingsViewModelTest {
         authStateFlow.value = AuthState.LoggedOut
         val vm = SettingsViewModel(
             app, authRepo, sharedSettings, friendsRepo, setPrimaryLanguage,
-            setFontSizeScale, setThemeMode, setColorPalette, unlockColorPaletteWithCoins,
+            setFontSizeScale, setThemeMode,
             setVoiceForLanguage, setAutoThemeEnabled, setNotificationPref, quizRepo
         )
 
@@ -201,7 +193,7 @@ class SettingsViewModelTest {
         authStateFlow.value = AuthState.LoggedOut
         val vm = SettingsViewModel(
             app, authRepo, sharedSettings, friendsRepo, setPrimaryLanguage,
-            setFontSizeScale, setThemeMode, setColorPalette, unlockColorPaletteWithCoins,
+            setFontSizeScale, setThemeMode,
             setVoiceForLanguage, setAutoThemeEnabled, setNotificationPref, quizRepo
         )
 
@@ -358,7 +350,7 @@ class SettingsViewModelTest {
         authStateFlow.value = AuthState.LoggedOut
         val vm = SettingsViewModel(
             app, authRepo, sharedSettings, friendsRepo, setPrimaryLanguage,
-            setFontSizeScale, setThemeMode, setColorPalette, unlockColorPaletteWithCoins,
+            setFontSizeScale, setThemeMode,
             setVoiceForLanguage, setAutoThemeEnabled, setNotificationPref, quizRepo
         )
 
@@ -457,7 +449,7 @@ class SettingsViewModelTest {
         authStateFlow.value = AuthState.LoggedOut
         val vm = SettingsViewModel(
             app, authRepo, sharedSettings, friendsRepo, setPrimaryLanguage,
-            setFontSizeScale, setThemeMode, setColorPalette, unlockColorPaletteWithCoins,
+            setFontSizeScale, setThemeMode,
             setVoiceForLanguage, setAutoThemeEnabled, setNotificationPref, quizRepo
         )
 

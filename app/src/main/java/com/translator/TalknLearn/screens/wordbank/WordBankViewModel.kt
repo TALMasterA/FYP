@@ -15,7 +15,6 @@ import com.translator.TalknLearn.data.wordbank.WordBankCacheDataStore
 import com.translator.TalknLearn.data.wordbank.WordBankGenerationRepository
 import com.translator.TalknLearn.domain.friends.ShareWordUseCase
 import com.translator.TalknLearn.domain.speech.SpeakTextUseCase
-import com.translator.TalknLearn.domain.speech.TranslateTextUseCase
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.user.AuthState
@@ -54,7 +53,6 @@ class WordBankViewModel @Inject constructor(
     private val wordBankGenRepo: WordBankGenerationRepository,
     private val speakTextUseCase: SpeakTextUseCase,
     private val customWordsRepo: FirestoreCustomWordsRepository,
-    private val translateTextUseCase: TranslateTextUseCase,
     private val sharedSettings: SharedSettingsDataSource,
     private val wordBankCacheDataStore: WordBankCacheDataStore,
     private val sharedFriendsDataSource: SharedFriendsDataSource,
@@ -89,7 +87,6 @@ class WordBankViewModel @Inject constructor(
         scope = viewModelScope,
         wordBankRepo = wordBankRepo,
         wordBankGenRepo = wordBankGenRepo,
-        wordBankCacheDataStore = wordBankCacheDataStore,
         sharedHistoryDataSource = sharedHistoryDataSource,
         getCurrentUserId = { currentUserId },
         getPrimaryLanguageCode = { primaryLanguageCode },

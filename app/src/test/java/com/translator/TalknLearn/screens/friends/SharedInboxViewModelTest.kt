@@ -1,7 +1,6 @@
 package com.translator.TalknLearn.screens.friends
 
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
-import com.translator.TalknLearn.data.friends.SharingRepository
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.friends.AcceptSharedItemUseCase
 import com.translator.TalknLearn.domain.friends.DismissSharedItemUseCase
@@ -32,7 +31,6 @@ class SharedInboxViewModelTest {
     private lateinit var sharedFriendsDataSource: SharedFriendsDataSource
     private lateinit var acceptSharedItemUseCase: AcceptSharedItemUseCase
     private lateinit var dismissSharedItemUseCase: DismissSharedItemUseCase
-    private lateinit var sharingRepository: SharingRepository
 
     private val authStateFlow = MutableStateFlow<AuthState>(AuthState.Loading)
     private val pendingItemsFlow = MutableStateFlow<List<SharedItem>>(emptyList())
@@ -53,7 +51,6 @@ class SharedInboxViewModelTest {
 
         acceptSharedItemUseCase = mock()
         dismissSharedItemUseCase = mock()
-        sharingRepository = mock()
     }
 
     @After
@@ -64,7 +61,6 @@ class SharedInboxViewModelTest {
     private fun createViewModel() = SharedInboxViewModel(
         authRepository = authRepository,
         sharedFriendsDataSource = sharedFriendsDataSource,
-        sharingRepository = sharingRepository,
         acceptSharedItemUseCase = acceptSharedItemUseCase,
         dismissSharedItemUseCase = dismissSharedItemUseCase
     )

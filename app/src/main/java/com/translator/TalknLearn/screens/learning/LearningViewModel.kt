@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.translator.TalknLearn.data.settings.UserSettingsRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.encodeToString
@@ -77,7 +76,6 @@ class LearningViewModel @Inject constructor(
     private val sharedHistoryDataSource: SharedHistoryDataSource,
     private val sharedSettings: SharedSettingsDataSource,
     private val generateLearningMaterials: GenerateLearningMaterialsUseCase,
-    private val userSettingsRepo: UserSettingsRepository,
     private val generateQuizUseCase: GenerateQuizUseCase,
     private val quizRepo: QuizRepository,
 ) : ViewModel() {

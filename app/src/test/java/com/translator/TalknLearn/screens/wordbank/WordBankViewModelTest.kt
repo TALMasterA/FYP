@@ -11,7 +11,6 @@ import com.translator.TalknLearn.data.wordbank.WordBankCacheDataStore
 import com.translator.TalknLearn.data.wordbank.WordBankGenerationRepository
 import com.translator.TalknLearn.domain.friends.ShareWordUseCase
 import com.translator.TalknLearn.domain.speech.SpeakTextUseCase
-import com.translator.TalknLearn.domain.speech.TranslateTextUseCase
 import com.translator.TalknLearn.model.SpeechResult
 import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.UserId
@@ -70,7 +69,6 @@ class WordBankViewModelTest {
     private lateinit var wordBankGenRepo: WordBankGenerationRepository
     private lateinit var speakTextUseCase: SpeakTextUseCase
     private lateinit var customWordsRepo: FirestoreCustomWordsRepository
-    private lateinit var translateTextUseCase: TranslateTextUseCase
     private lateinit var sharedSettings: SharedSettingsDataSource
     private lateinit var wordBankCacheDataStore: WordBankCacheDataStore
     private lateinit var sharedFriendsDataSource: SharedFriendsDataSource
@@ -95,7 +93,6 @@ class WordBankViewModelTest {
         wordBankGenRepo = mock()
         speakTextUseCase = mock()
         customWordsRepo = mock()
-        translateTextUseCase = mock()
         sharedSettings = mock { on { settings } doReturn settingsFlow }
         wordBankCacheDataStore = mock()
         sharedFriendsDataSource = mock {
@@ -121,7 +118,6 @@ class WordBankViewModelTest {
         wordBankGenRepo = wordBankGenRepo,
         speakTextUseCase = speakTextUseCase,
         customWordsRepo = customWordsRepo,
-        translateTextUseCase = translateTextUseCase,
         sharedSettings = sharedSettings,
         wordBankCacheDataStore = wordBankCacheDataStore,
         sharedFriendsDataSource = sharedFriendsDataSource,

@@ -102,9 +102,6 @@ class FirestoreLearningSheetsRepository @Inject constructor(
 
         val p = norm(primary.value)
         val normalizedTargets = targets.map { norm(it) }
-        
-        // Build document IDs to query
-        val docIds = normalizedTargets.map { docId(p, it) }
 
         // Firestore 'in' query is limited to 10 items (or 30 in some cases), but getting by ID is faster via getAll
         // However, we can't use getAll on a collection reference easily.
