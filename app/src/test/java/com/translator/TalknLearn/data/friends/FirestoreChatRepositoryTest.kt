@@ -1,7 +1,6 @@
 package com.translator.TalknLearn.data.friends
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.translator.TalknLearn.data.friends.FriendsRepository
 import com.translator.TalknLearn.model.friends.FriendMessage
 import com.translator.TalknLearn.model.UserId
 import junit.framework.TestCase.assertEquals

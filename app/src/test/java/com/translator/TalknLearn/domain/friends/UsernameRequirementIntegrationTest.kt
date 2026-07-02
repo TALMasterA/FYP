@@ -14,7 +14,6 @@ import com.translator.TalknLearn.model.friends.PublicUserProfile
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings
-import com.translator.TalknLearn.screens.friends.FriendsUiState
 import com.translator.TalknLearn.screens.friends.FriendsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

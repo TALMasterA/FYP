@@ -29,8 +29,6 @@ import javax.inject.Inject
 import com.translator.TalknLearn.data.settings.UserSettingsRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.Collections

@@ -9,7 +9,6 @@ import com.translator.TalknLearn.data.friends.BlockedUser
 import com.translator.TalknLearn.model.friends.FriendMessage
 import com.translator.TalknLearn.model.friends.MessageType
 import com.translator.TalknLearn.model.friends.ChatMetadata
-import com.google.firebase.Timestamp
 import org.junit.Assert.*
 import org.junit.Test
 

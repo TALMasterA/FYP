@@ -15,7 +15,6 @@ import com.translator.TalknLearn.model.friends.FriendRequest
 import com.translator.TalknLearn.model.friends.PublicUserProfile
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

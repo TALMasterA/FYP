@@ -3,7 +3,6 @@ package com.translator.TalknLearn.data.ocr
 import android.content.Context
 import android.net.Uri
 import com.translator.TalknLearn.model.OcrResult
-import com.translator.TalknLearn.model.OcrScript
 import com.translator.TalknLearn.model.TextBlock
 import com.translator.TalknLearn.utils.ErrorMessageMapper
 import com.google.mlkit.vision.common.InputImage

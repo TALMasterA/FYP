@@ -2,8 +2,6 @@ package com.translator.TalknLearn.data.friends
 
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.ChatMetadata
-import com.translator.TalknLearn.model.friends.FriendMessage
-import com.translator.TalknLearn.model.friends.MessageType
 import com.google.firebase.firestore.FirebaseFirestore
 import org.junit.Assert.*
 import org.junit.Before

@@ -12,7 +12,6 @@ import com.translator.TalknLearn.model.friends.PublicUserProfile
 import com.translator.TalknLearn.core.SessionDataCleaner
 import com.translator.TalknLearn.core.security.AuditLogger
 import com.translator.TalknLearn.core.security.ValidationResult
-import com.translator.TalknLearn.core.security.sanitizeInput
 import com.translator.TalknLearn.core.security.validateUsername
 import com.translator.TalknLearn.data.settings.FirestoreUserSettingsRepository
 import com.translator.TalknLearn.model.user.UserSettings

@@ -1,12 +1,8 @@
 package com.translator.TalknLearn.domain.learning
 
 import com.translator.TalknLearn.data.learning.FirestoreQuizRepository
-import com.translator.TalknLearn.model.LanguageCode
-import com.translator.TalknLearn.model.QuizAnswer
-import com.translator.TalknLearn.model.QuizAttempt
 import com.translator.TalknLearn.model.QuizQuestion
 import com.translator.TalknLearn.model.UserId
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before

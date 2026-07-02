@@ -17,7 +17,6 @@ import com.translator.TalknLearn.domain.learning.QuizRepository
 import com.translator.TalknLearn.model.UserCoinStats
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.LanguageCode
-import com.translator.TalknLearn.model.PaletteId
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings

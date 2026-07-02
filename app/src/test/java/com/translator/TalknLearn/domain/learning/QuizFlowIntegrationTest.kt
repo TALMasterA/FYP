@@ -1,8 +1,6 @@
 package com.translator.TalknLearn.domain.learning
 
 import com.translator.TalknLearn.data.learning.QuizParser
-import com.translator.TalknLearn.model.QuizAttempt
-import com.translator.TalknLearn.model.QuizQuestion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher

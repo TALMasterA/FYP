@@ -11,13 +11,10 @@ import com.translator.TalknLearn.domain.friends.ObserveMessagesUseCase
 import com.translator.TalknLearn.domain.friends.SendMessageUseCase
 import com.translator.TalknLearn.domain.friends.TranslateAllMessagesUseCase
 import com.translator.TalknLearn.model.UserId
-import com.translator.TalknLearn.model.friends.FriendMessage
 import com.translator.TalknLearn.model.friends.PublicUserProfile
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
-import com.translator.TalknLearn.model.user.UserSettings
 import com.translator.TalknLearn.core.security.FakePersistentRateLimiter
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

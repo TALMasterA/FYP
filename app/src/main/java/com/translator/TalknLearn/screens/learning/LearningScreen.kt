@@ -53,8 +53,6 @@ import kotlinx.coroutines.delay
 import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.ui.components.LearningSheetSkeleton
 import com.translator.TalknLearn.ui.components.EmptyStates
-import com.translator.TalknLearn.ui.theme.AppSpacing
-import com.translator.TalknLearn.ui.theme.AppCorners
 
 @Suppress("UNUSED_PARAMETER", "SENSELESS_COMPARISON")
 @OptIn(ExperimentalMaterial3Api::class)

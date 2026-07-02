@@ -12,7 +12,6 @@ import com.translator.TalknLearn.domain.settings.SetPrimaryLanguageUseCase
 import com.translator.TalknLearn.domain.settings.SetThemeModeUseCase
 import com.translator.TalknLearn.domain.settings.SetColorPaletteUseCase
 import com.translator.TalknLearn.domain.settings.UnlockColorPaletteWithCoinsUseCase
-import com.translator.TalknLearn.domain.settings.UnlockColorPaletteWithCoinsUseCase.Result as UnlockResult
 import com.translator.TalknLearn.domain.settings.SetVoiceForLanguageUseCase
 import com.translator.TalknLearn.domain.settings.SetAutoThemeEnabledUseCase
 import com.translator.TalknLearn.core.AppLogger
@@ -20,7 +19,6 @@ import com.translator.TalknLearn.core.FcmNotificationService
 import com.translator.TalknLearn.domain.settings.SetNotificationPrefUseCase
 import com.translator.TalknLearn.domain.learning.QuizRepository
 import com.translator.TalknLearn.model.LanguageCode
-import com.translator.TalknLearn.model.PaletteId
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.VoiceName
 import com.translator.TalknLearn.model.user.AuthState

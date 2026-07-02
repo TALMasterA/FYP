@@ -1,9 +1,7 @@
 package com.translator.TalknLearn.data.history
 
 import com.translator.TalknLearn.model.TranslationRecord
-import com.google.firebase.Timestamp
 import org.junit.Assert.*
-import org.junit.Before
 import org.junit.Test
 
 /**

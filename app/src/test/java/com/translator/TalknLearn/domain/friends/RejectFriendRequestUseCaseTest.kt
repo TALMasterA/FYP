@@ -1,7 +1,6 @@
 package com.translator.TalknLearn.domain.friends
 
 import com.translator.TalknLearn.data.friends.FriendsRepository
-import com.translator.TalknLearn.model.UserId
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test

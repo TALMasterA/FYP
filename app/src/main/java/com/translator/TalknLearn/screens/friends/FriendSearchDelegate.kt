@@ -2,7 +2,6 @@ package com.translator.TalknLearn.screens.friends
 
 import com.translator.TalknLearn.domain.friends.SearchUsersUseCase
 import com.translator.TalknLearn.model.UserId
-import com.translator.TalknLearn.model.friends.PublicUserProfile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
