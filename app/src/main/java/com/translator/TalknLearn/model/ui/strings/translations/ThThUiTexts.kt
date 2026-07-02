@@ -13,14 +13,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.TranslateButton to "แปล",
     UiTextKey.CopyTranslationButton to "คัดลอกคำแปล",
     UiTextKey.SpeakTranslationButton to "อ่านคำแปล",
-    UiTextKey.RecognizingStatus to "กำลังบันทึก...พูดเลย จะหยุดเอง",
-    UiTextKey.TranslatingStatus to "กำลังแปล...",
-    UiTextKey.SpeakingOriginalStatus to "กำลังอ่านข้อความต้นฉบับ...",
-    UiTextKey.SpeakingTranslationStatus to "กำลังอ่านคำแปล...",
-    UiTextKey.SpeakingLabel to "กำลังอ่าน",
-    UiTextKey.FinishedSpeakingOriginal to "อ่านข้อความต้นฉบับเสร็จแล้ว",
-    UiTextKey.FinishedSpeakingTranslation to "อ่านคำแปลเสร็จแล้ว",
-    UiTextKey.TtsErrorTemplate to "ข้อผิดพลาดเสียง: %s",
 
     // Language labels
     UiTextKey.AppUiLanguageLabel to "ภาษาแอป",
@@ -61,11 +53,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     // Speech
     UiTextKey.SpeechInputPlaceholder to "พิมพ์ที่นี่หรือใช้ไมโครโฟน...",
     UiTextKey.SpeechTranslatedPlaceholder to "คำแปลจะแสดงที่นี่...",
-    UiTextKey.StatusAzureErrorTemplate to "ข้อผิดพลาด Azure: %s",
-    UiTextKey.StatusTranslationErrorTemplate to "ข้อผิดพลาดการแปล: %s",
-    UiTextKey.StatusLoginRequiredTranslation to "เข้าสู่ระบบเพื่อแปล",
-    UiTextKey.StatusRecognizePreparing to "กำลังเตรียมไมค์...(ยังไม่ต้องพูด)",
-    UiTextKey.StatusRecognizeListening to "กำลังฟัง...พูดเลย",
 
     // Pagination
     UiTextKey.PaginationPrevLabel to "หน้าก่อน",
@@ -73,12 +60,10 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.PaginationPageLabelTemplate to "หน้า {page} / {total}",
 
     // Toast
-    UiTextKey.ToastCopied to "คัดลอกแล้ว",
     UiTextKey.DisableText to "เข้าสู่ระบบเพื่อแปลและบันทึกประวัติ",
 
     // Error
     UiTextKey.ErrorRetryButton to "ลองใหม่",
-    UiTextKey.ErrorGenericMessage to "เกิดข้อผิดพลาด กรุณาลองใหม่",
 
     // Shop
     UiTextKey.ShopTitle to "ร้านค้า",
@@ -110,10 +95,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.HelpTitle to "ช่วยเหลือ",
     UiTextKey.SpeechTitle to "แปลด่วน",
     UiTextKey.HomeStartButton to "เริ่มแปล",
-    UiTextKey.HomeFeaturesTitle to "ฟีเจอร์",
-    UiTextKey.HomeDiscreteDescription to "แปลข้อความและเสียงสั้นๆ",
-    UiTextKey.HomeContinuousDescription to "แปลสนทนาสองทางแบบเรียลไทม์",
-    UiTextKey.HomeLearningDescription to "สร้างสื่อการเรียนและแบบทดสอบจากประวัติ",
 
     // Help
     UiTextKey.HelpCurrentTitle to "ฟีเจอร์ปัจจุบัน",
@@ -237,10 +218,7 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsFontSizeTitle to "ขนาดตัวอักษร",
     UiTextKey.SettingsFontSizeDesc to "ปรับขนาดตัวอักษร (ซิงค์ข้ามอุปกรณ์)",
     UiTextKey.SettingsScaleTemplate to "สเกล: {pct}%",
-    UiTextKey.SettingsColorPaletteTitle to "ธีมสี",
-    UiTextKey.SettingsColorPaletteDesc to "เลือกธีมสี 10 เหรียญต่อธีม",
     UiTextKey.SettingsColorCostTemplate to "{cost} เหรียญ",
-    UiTextKey.SettingsColorUnlockButton to "ปลดล็อก",
     UiTextKey.SettingsColorSelectButton to "เลือก",
     UiTextKey.SettingsColorAlreadyUnlocked to "ปลดล็อกแล้ว",
     UiTextKey.SettingsPreviewHeadline to "หัวข้อ: ตัวอย่างตัวอักษรใหญ่",
@@ -258,8 +236,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsResetPW to "รีเซ็ตรหัสผ่าน",
     UiTextKey.SettingsQuickLinks to "ตั้งค่าเพิ่มเติม",
     UiTextKey.SettingsNotLoggedInWarning to "เข้าสู่ระบบเพื่อดูตั้งค่าบัญชี ภาษาแอปเปลี่ยนได้โดยไม่ต้องเข้าสู่ระบบ",
-    UiTextKey.SettingsVoiceTitle to "ตั้งค่าเสียง",
-    UiTextKey.SettingsVoiceDesc to "เลือกเสียงอ่านสำหรับแต่ละภาษา",
     UiTextKey.SettingsVoiceLanguageLabel to "ภาษา",
     UiTextKey.SettingsVoiceSelectLabel to "เสียง",
     UiTextKey.SettingsVoiceDefault to "ค่าเริ่มต้น",
@@ -282,23 +258,17 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LearningSheetWhatIsThisDesc to "สื่อการเรียนสร้างจากประวัติแปล ประกอบด้วยคำศัพท์ คำจำกัดความ ตัวอย่าง และหมายเหตุไวยากรณ์ ทดสอบความรู้ด้วยแบบทดสอบ!",
     UiTextKey.LearningRegenBlockedTitle to "ไม่สามารถสร้างใหม่",
     UiTextKey.LearningRegenBlockedMessage to "ต้องมีอย่างน้อย 5 รายการเพิ่มเพื่อสร้างใหม่ ยังขาดอีก {needed}",
-    UiTextKey.LearningRegenNeedMoreRecords to "⚠️ ยังขาดอีก {needed} รายการเพื่อสร้างใหม่ (ต้องการ 5 เพิ่ม)",
-    UiTextKey.LearningRegenCountNotHigher to "⚠️ จำนวนต้องมากกว่าตอนสร้างครั้งก่อน",
     UiTextKey.LearningRegenInfoTitle to "กฎการสร้างใหม่",
     UiTextKey.LearningRegenInfoMessage to "สร้างสื่อการเรียนใหม่:\n\n• ครั้งแรก: เมื่อไหร่ก็ได้\n• สร้างใหม่: ต้องมี 5 รายการเพิ่ม\n\nปุ่มจะเปลี่ยนเขียวเมื่อพร้อม ถ้าเทา แปลเพิ่มอีก!\n\n💡 เคล็ดลับ: หากจำนวนไม่อัพเดท เปิดแอปใหม่",
-    UiTextKey.QuizRegenBlockedSameMaterial to "❌ แบบทดสอบสร้างแล้วสำหรับเวอร์ชันนี้ สร้างสื่อใหม่เพื่อทำแบบทดสอบใหม่",
 
     // Quiz
     UiTextKey.QuizTitleTemplate to "แบบทดสอบ: {language}",
     UiTextKey.QuizOpenButton to "📝 แบบทดสอบ",
     UiTextKey.QuizGenerateButton to "🔄 สร้างแบบทดสอบ",
     UiTextKey.QuizGenerating to "⏳ กำลังสร้าง...",
-    UiTextKey.QuizUpToDate to "✓ ล่าสุด",
     UiTextKey.QuizBlocked to "🚫 ถูกบล็อก",
     UiTextKey.QuizWait to "⏳ รอ...",
-    UiTextKey.QuizMaterialsQuizTemplate to "สื่อ: {materials} | แบบทดสอบ: {quiz}",
     UiTextKey.QuizCanEarnCoins to "🪙 สามารถรับเหรียญ!",
-    UiTextKey.QuizNeedMoreRecordsTemplate to "🪙 ยังขาดอีก {count} สำหรับเหรียญ",
     UiTextKey.QuizCancelButton to "ยกเลิก",
     UiTextKey.QuizPreviousButton to "ข้อก่อน",
     UiTextKey.QuizNextButton to "ข้อถัดไป",
@@ -316,7 +286,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizYourAnswerTemplate to "คำตอบของคุณ: {Answer}",
     UiTextKey.QuizCorrectAnswerTemplate to "คำตอบที่ถูก: {Answer}",
     UiTextKey.QuizQuestionTemplate to "ข้อ {current} / {total}",
-    UiTextKey.QuizCannotRegenTemplate to "⚠️ ไม่สามารถสร้างใหม่: สื่อ({materials}) < แบบทดสอบ({quiz}), แปลเพิ่ม",
     UiTextKey.QuizAnotherGenInProgress to "⏳ กำลังสร้างอื่น กรุณารอ",
     UiTextKey.QuizCoinRulesTitle to "🪙 กฎเหรียญ",
     UiTextKey.QuizCoinRulesHowToEarn to "✅ วิธีรับ:",
@@ -346,25 +315,9 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizCoinsRule4 to "• แบบทดสอบต้องตรงกับสื่อ",
     UiTextKey.QuizCoinsRule5 to "• เหรียญรวมอยู่ในประวัติ",
     UiTextKey.QuizCoinsGreatButton to "เยี่ยม!",
-    UiTextKey.QuizOutdatedMessage to "แบบทดสอบนี้ใช้สื่อเก่า",
     UiTextKey.QuizRecordsLabel to "รายการ",
 
     // History coins
-    UiTextKey.HistoryCoinsDialogTitle to "🪙 เหรียญของฉัน",
-    UiTextKey.HistoryCoinRulesTitle to "กฎเหรียญ:",
-    UiTextKey.HistoryCoinHowToEarnTitle to "วิธีรับ:",
-    UiTextKey.HistoryCoinHowToEarnRule1 to "• 1 เหรียญต่อคำตอบถูก",
-    UiTextKey.HistoryCoinHowToEarnRule2 to "• เฉพาะครั้งแรกต่อเวอร์ชัน",
-    UiTextKey.HistoryCoinHowToEarnRule3 to "• แบบทดสอบต้องตรงกับสื่อปัจจุบัน",
-    UiTextKey.HistoryCoinAntiCheatTitle to "🔒 กฎป้องกันโกง:",
-    UiTextKey.HistoryCoinAntiCheatRule1 to "• ต้องมี 10 คำแปลใหม่จากครั้งรับสุดท้าย",
-    UiTextKey.HistoryCoinAntiCheatRule2 to "• เวอร์ชันแบบทดสอบต้องตรงกับสื่อ",
-    UiTextKey.HistoryCoinAntiCheatRule3 to "• ลบรายการบล็อกการสร้างใหม่ (เว้นแต่จำนวนมากกว่า)",
-    UiTextKey.HistoryCoinAntiCheatRule4 to "• ไม่มีเหรียญสำหรับครั้งต่อไป",
-    UiTextKey.HistoryCoinTipsTitle to "💡 เคล็ดลับ:",
-    UiTextKey.HistoryCoinTipsRule1 to "• เพิ่มคำแปลอย่างสม่ำเสมอ",
-    UiTextKey.HistoryCoinTipsRule2 to "• เรียนให้ดีก่อนลองครั้งแรก!",
-    UiTextKey.HistoryCoinGotItButton to "เข้าใจ!",
 
     // History info
     UiTextKey.HistoryInfoTitle to "ข้อมูลประวัติ",
@@ -383,7 +336,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankWordsCount to "คำ",
     UiTextKey.WordBankGenerating to "กำลังสร้าง...",
     UiTextKey.WordBankGenerate to "สร้างคลังคำ",
-    UiTextKey.WordBankRegenerate to "สร้างคลังคำใหม่",
     UiTextKey.WordBankRefresh to "🔄 รีเฟรชคลัง",
     UiTextKey.WordBankEmpty to "คลังคำว่าง",
     UiTextKey.WordBankEmptyHint to "กดด้านบนเพื่อสร้างจากประวัติ",
@@ -393,11 +345,8 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankFilterCategoryAll to "ทุกหมวดหมู่",
     UiTextKey.WordBankFilterDifficultyLabel to "ระดับ:",
     UiTextKey.WordBankFilterNoResults to "ไม่มีคำที่ตรงกับตัวกรอง",
-    UiTextKey.WordBankRefreshAvailable to "✅ มีอัพเดทพร้อม!",
-    UiTextKey.WordBankRecordsNeeded to "รายการ (ต้องการ 20 เพื่ออัพเดท)",
     UiTextKey.WordBankRegenInfoTitle to "กฎการอัพเดท",
     UiTextKey.WordBankRegenInfoMessage to "อัพเดทคลังคำ:\n\n• ครั้งแรก: เมื่อไหร่ก็ได้\n• อัพเดท: ต้องมี 20 รายการเพิ่ม\n\nปุ่มจะเขียวเมื่อพร้อม ถ้าเทา แปลเพิ่ม!\n\n💡 เคล็ดลับ: หากจำนวนไม่อัพเดท เปิดแอปใหม่",
-    UiTextKey.WordBankHistoryCountTemplate to "รายการปัจจุบัน: {nowCount} (ตอนสร้าง: {savedCount})",
 
     // Dialogs
     UiTextKey.DialogLogoutTitle to "ออกจากระบบ?",
@@ -410,8 +359,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ProfileUsernameLabel to "ชื่อผู้ใช้",
     UiTextKey.ProfileUsernameHint to "กรอกชื่อผู้ใช้",
     UiTextKey.ProfileUpdateButton to "อัพเดทโปรไฟล์",
-    UiTextKey.ProfileUpdateSuccess to "อัพเดทโปรไฟล์แล้ว",
-    UiTextKey.ProfileUpdateError to "อัพเดทไม่สำเร็จ",
 
     // Account deletion
     UiTextKey.AccountDeleteTitle to "ลบบัญชี",
@@ -419,19 +366,10 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteConfirmMessage to "ข้อมูลทั้งหมดจะถูกลบถาวร: ประวัติ คลังคำ สื่อการเรียน ตั้งค่า กรอกรหัสผ่านเพื่อยืนยัน",
     UiTextKey.AccountDeletePasswordLabel to "รหัสผ่าน",
         UiTextKey.AccountDeleteButton to "ลบบัญชีและข้อมูลของฉัน",
-    UiTextKey.AccountDeleteSuccess to "ลบบัญชีสำเร็จ",
-    UiTextKey.AccountDeleteError to "ลบไม่สำเร็จ",
-    UiTextKey.AccountDeleteReauthRequired to "กรอกรหัสผ่านเพื่อยืนยันการลบ",
 
     // Favorites
     UiTextKey.FavoritesTitle to "รายการโปรด",
     UiTextKey.FavoritesEmpty to "ยังไม่มีรายการโปรด",
-    UiTextKey.FavoritesAddSuccess to "เพิ่มในรายการโปรดแล้ว",
-    UiTextKey.FavoritesRemoveSuccess to "ลบจากรายการโปรดแล้ว",
-    UiTextKey.FavoritesAddButton to "เพิ่มในรายการโปรด",
-    UiTextKey.FavoritesRemoveButton to "ลบจากรายการโปรด",
-    UiTextKey.FavoritesNoteLabel to "บันทึก",
-    UiTextKey.FavoritesNoteHint to "เพิ่มบันทึก (ไม่บังคับ)",
     UiTextKey.FavoritesTabRecords to "รายการ",
     UiTextKey.FavoritesTabSessions to "เซสชัน",
     UiTextKey.FavoritesSessionsEmpty to "ยังไม่มีเซสชันโปรด",
@@ -446,9 +384,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsTranslatedLabel to "คำแปล",
     UiTextKey.CustomWordsPronunciationLabel to "คำอ่าน (ไม่บังคับ)",
     UiTextKey.CustomWordsExampleLabel to "ตัวอย่าง (ไม่บังคับ)",
-    UiTextKey.CustomWordsSaveSuccess to "บันทึกคำแล้ว",
-    UiTextKey.CustomWordsDeleteSuccess to "ลบคำแล้ว",
-    UiTextKey.CustomWordsAlreadyExists to "คำนี้มีอยู่แล้ว",
     UiTextKey.CustomWordsOriginalLanguageLabel to "ภาษาต้นฉบับ",
     UiTextKey.CustomWordsTranslationLanguageLabel to "ภาษาแปล",
     UiTextKey.CustomWordsSaveButton to "บันทึก",
@@ -456,36 +391,18 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Language detection
     UiTextKey.LanguageDetectAuto to "ตรวจจับอัตโนมัติ",
-    UiTextKey.LanguageDetectDetecting to "กำลังตรวจจับ...",
-    UiTextKey.LanguageDetectedTemplate to "ตรวจจับได้: {language}",
-    UiTextKey.LanguageDetectFailed to "ตรวจจับไม่สำเร็จ",
 
     // Image recognition
     UiTextKey.ImageRecognitionButton to "สแกนข้อความจากรูป",
     UiTextKey.ImageRecognitionAccuracyWarning to "⚠️ คำเตือน: การรู้จำตัวอักษรอาจไม่สมบูรณ์ ตรวจสอบข้อความที่รู้จำอีกครั้ง" +
             "รองรับ Latin (อังกฤษ ฯลฯ), จีน, ญี่ปุ่น, และเกาหลี",
-    UiTextKey.ImageRecognitionScanning to "กำลังสแกนข้อความ...",
-    UiTextKey.ImageRecognitionSuccess to "รู้จำข้อความสำเร็จ",
 
     // Cache
-    UiTextKey.CacheClearButton to "ล้างแคช",
-    UiTextKey.CacheClearSuccess to "ล้างแคชแล้ว",
-    UiTextKey.CacheStatsTemplate to "แคช: {count} คำแปลที่บันทึก",
 
     // Auto theme
-    UiTextKey.SettingsAutoThemeTitle to "ธีมอัตโนมัติ",
-    UiTextKey.SettingsAutoThemeDesc to "สลับสว่าง/มืดตามเวลาอัตโนมัติ",
-    UiTextKey.SettingsAutoThemeEnabled to "เปิด",
-    UiTextKey.SettingsAutoThemeDisabled to "ปิด",
-    UiTextKey.SettingsAutoThemeDarkStartLabel to "โหมดมืดเริ่ม:",
-    UiTextKey.SettingsAutoThemeLightStartLabel to "โหมดสว่างเริ่ม:",
     UiTextKey.SettingsAutoThemePreview to "ธีมจะสลับอัตโนมัติตามเวลาที่ตั้งไว้",
 
     // Offline mode
-    UiTextKey.OfflineModeTitle to "โหมดออฟไลน์",
-    UiTextKey.OfflineModeMessage to "คุณออฟไลน์อยู่ ข้อมูลที่บันทึกจะแสดง",
-    UiTextKey.OfflineModeRetry to "ลองเชื่อมต่อใหม่",
-    UiTextKey.OfflineDataCached to "ข้อมูลที่บันทึกพร้อมใช้",
     UiTextKey.OfflineSyncPending to "การเปลี่ยนแปลงจะซิงค์เมื่อออนไลน์",
 
     // Image capture
@@ -497,26 +414,15 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Friends
     UiTextKey.FriendsTitle to "เพื่อน",
-    UiTextKey.FriendsMenuButton to "เพื่อน",
     UiTextKey.FriendsAddButton to "เพิ่มเพื่อน",
     UiTextKey.FriendsSearchTitle to "ค้นหาผู้ใช้",
     UiTextKey.FriendsSearchPlaceholder to "ชื่อผู้ใช้หรือ ID...",
-    UiTextKey.FriendsSearchMinChars to "กรอกอย่างน้อย 2 ตัวอักษร",
     UiTextKey.FriendsSearchNoResults to "ไม่พบผู้ใช้",
-    UiTextKey.FriendsListEmpty to "เพิ่มเพื่อนเพื่อแชทและแชร์สื่อ",
     UiTextKey.FriendsRequestsSection to "คำขอเป็นเพื่อน ({count})",
     UiTextKey.FriendsSectionTitle to "เพื่อน ({count})",
     UiTextKey.FriendsAcceptButton to "รับ",
     UiTextKey.FriendsRejectButton to "ปฏิเสธ",
-    UiTextKey.FriendsRemoveButton to "ลบ",
-    UiTextKey.FriendsRemoveDialogTitle to "ลบเพื่อน",
-    UiTextKey.FriendsRemoveDialogMessage to "ลบ {username} ออกจากรายชื่อเพื่อน?",
     UiTextKey.FriendsSendRequestButton to "เพิ่ม",
-    UiTextKey.FriendsRequestSentSuccess to "ส่งคำขอเป็นเพื่อนแล้ว!",
-    UiTextKey.FriendsRequestAcceptedSuccess to "รับคำขอแล้ว!",
-    UiTextKey.FriendsRequestRejectedSuccess to "ปฏิเสธคำขอแล้ว",
-    UiTextKey.FriendsRemovedSuccess to "ลบเพื่อนแล้ว",
-    UiTextKey.FriendsRequestFailed to "ส่งไม่สำเร็จ",
     UiTextKey.FriendsCloseButton to "ปิด",
     UiTextKey.FriendsCancelButton to "ยกเลิก",
     UiTextKey.FriendsRemoveConfirm to "ลบ",
@@ -526,7 +432,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsCancelRequestButton to "ยกเลิกคำขอ",
     UiTextKey.FriendsUnreadMessageDesc to "ส่งข้อความ",
     UiTextKey.FriendsDeleteModeButton to "ลบเพื่อน",
-    UiTextKey.FriendsDeleteSelectedButton to "ลบที่เลือก",
     UiTextKey.FriendsDeleteMultipleTitle to "ลบเพื่อน",
     UiTextKey.FriendsDeleteMultipleMessage to "ลบ {count} เพื่อนที่เลือก?",
     UiTextKey.FriendsSearchMinChars3 to "กรอกอย่างน้อย 3 ตัวอักษรสำหรับชื่อ",
@@ -540,26 +445,16 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ChatInputPlaceholder to "พิมพ์ข้อความ...",
     UiTextKey.ChatSendButton to "ส่ง",
     UiTextKey.ChatEmpty to "ยังไม่มีข้อความ เริ่มสนทนาเลย!",
-    UiTextKey.ChatMessageSent to "ส่งข้อความแล้ว",
-    UiTextKey.ChatMessageFailed to "ส่งไม่สำเร็จ",
-    UiTextKey.ChatMarkingRead to "กำลังอ่าน...",
-    UiTextKey.ChatLoadingMessages to "กำลังโหลดข้อความ...",
-    UiTextKey.ChatToday to "วันนี้",
-    UiTextKey.ChatYesterday to "เมื่อวาน",
     UiTextKey.ChatUnreadBadge to "{count} ยังไม่อ่าน",
     UiTextKey.ChatTranslateButton to "แปล",
     UiTextKey.ChatTranslateDialogTitle to "แปลแชท",
     UiTextKey.ChatTranslateDialogMessage to "แปลข้อความเพื่อนเป็นภาษาของคุณ? ภาษาแต่ละข้อความจะถูกตรวจจับและแปล",
     UiTextKey.ChatTranslateConfirm to "แปลทั้งหมด",
-    UiTextKey.ChatTranslating to "กำลังแปลข้อความ...",
-    UiTextKey.ChatTranslated to "แปลข้อความแล้ว",
     UiTextKey.ChatShowOriginal to "แสดงต้นฉบับ",
     UiTextKey.ChatShowTranslation to "แสดงคำแปล",
-    UiTextKey.ChatTranslateFailed to "แปลไม่สำเร็จ",
     UiTextKey.ChatTranslatedLabel to "แปลแล้ว",
 
     // Sharing
-    UiTextKey.ShareTitle to "แชร์",
     UiTextKey.ShareInboxTitle to "กล่องแชร์",
     UiTextKey.ShareInboxEmpty to "ยังไม่มีการแชร์ เพื่อนสามารถแชร์คำและสื่อ!",
     UiTextKey.ShareWordButton to "แชร์คำ",
@@ -567,14 +462,8 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareSelectFriendTitle to "เลือกเพื่อน",
     UiTextKey.ShareSelectFriendMessage to "เลือกเพื่อนเพื่อแชร์:",
     UiTextKey.ShareSuccess to "แชร์สำเร็จ!",
-    UiTextKey.ShareFailed to "แชร์ไม่สำเร็จ",
-    UiTextKey.ShareWordWith to "แชร์คำกับ {username}",
-    UiTextKey.ShareMaterialWith to "แชร์สื่อกับ {username}",
     UiTextKey.ShareAcceptButton to "รับ",
     UiTextKey.ShareDismissButton to "ข้าม",
-    UiTextKey.ShareAccepted to "เพิ่มในคอลเลกชันแล้ว",
-    UiTextKey.ShareDismissed to "ข้ามรายการแล้ว",
-    UiTextKey.ShareActionFailed to "ดำเนินการไม่สำเร็จ",
     UiTextKey.ShareTypeWord to "คำ",
     UiTextKey.ShareTypeLearningSheet to "สื่อการเรียน",
     UiTextKey.ShareReceivedFrom to "จาก: {username}",
@@ -593,12 +482,10 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.MyProfileTitle to "โปรไฟล์ของฉัน",
     UiTextKey.MyProfileUserId to "ID ผู้ใช้",
     UiTextKey.MyProfileUsername to "ชื่อผู้ใช้",
-    UiTextKey.MyProfileDisplayName to "ชื่อที่แสดง",
     UiTextKey.MyProfileCopyUserId to "คัดลอก ID",
     UiTextKey.MyProfileCopyUsername to "คัดลอกชื่อ",
     UiTextKey.MyProfileShare to "แชร์โปรไฟล์",
     UiTextKey.MyProfileCopied to "คัดลอกแล้ว!",
-    UiTextKey.MyProfileLanguages to "ภาษา",
     UiTextKey.MyProfilePrimaryLanguage to "ภาษาหลัก",
     UiTextKey.MyProfileLearningLanguages to "ภาษาที่กำลังเรียน",
 
@@ -626,7 +513,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
             "• สร้างใหม่ต้องการ 5 รายการเพิ่ม\n" +
             "• ปุ่มสื่อเปิดเนื้อหาที่สร้าง\n" +
             "• หลังสร้างสื่อ ทำแบบทดสอบได้",
-    UiTextKey.LearningEmptyTitle to "ยังไม่มีประวัติแปล",
     UiTextKey.LearningEmptyMessage to "เริ่มแปลเพื่อสร้างรายการ\n" +
             "สื่อสร้างจากประวัติ\n" +
             "หลังแปล ดึงเพื่อรีเฟรช",
@@ -663,17 +549,14 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareDismissWordMessage to "ข้ามคำแชร์นี้? ไม่สามารถย้อนกลับ",
 
     // Shared inbox sheet label
-    UiTextKey.ShareLearningSheetLanguageLabel to "ภาษา: {language}",
 
     // Accessibility
     UiTextKey.AccessibilityDismiss to "ปิด",
-    UiTextKey.AccessibilityAlreadyConnectedOrPending to "เชื่อมต่อหรือรอดำเนินการแล้ว",
     UiTextKey.AccessibilityNewMessages to "ข้อความใหม่",
     UiTextKey.AccessibilityNewReleasesIcon to "ตัวบ่งชี้รายการใหม่",
     UiTextKey.AccessibilitySuccessIcon to "สำเร็จ",
     UiTextKey.AccessibilityErrorIcon to "ข้อผิดพลาด",
     UiTextKey.AccessibilitySharedItemTypeIcon to "ประเภทรายการแชร์",
-    UiTextKey.AccessibilityAddCustomWords to "เพิ่มคำกำหนดเอง",
     UiTextKey.AccessibilityWordBankExists to "คลังคำมีอยู่",
 
     // Settings hardcoded
@@ -686,7 +569,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsNotifFriendRequests to "คำขอเป็นเพื่อนที่ได้รับ",
     UiTextKey.FriendsNotifRequestAccepted to "คำขอเป็นเพื่อนที่ตอบรับ",
     UiTextKey.FriendsNotifSharedInbox to "รายการแชร์ใหม่",
-    UiTextKey.FriendsNotifCloseButton to "เสร็จ",
 
     // In-app badge settings
     UiTextKey.InAppBadgeSectionTitle to "ป้ายในแอป (จุดแดง)",
@@ -695,10 +577,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.InAppBadgeSharedInbox to "ป้ายกล่องแชร์ยังไม่อ่าน",
 
     // Error messages
-    UiTextKey.ErrorNotLoggedIn to "เข้าสู่ระบบเพื่อดำเนินการต่อ",
-    UiTextKey.ErrorSaveFailedRetry to "บันทึกไม่สำเร็จ ลองใหม่",
-    UiTextKey.ErrorLoadFailedRetry to "โหลดไม่สำเร็จ ลองใหม่",
-    UiTextKey.ErrorNetworkRetry to "ข้อผิดพลาดเครือข่าย ตรวจสอบการเชื่อมต่อ",
 
     // Learning progress
     UiTextKey.LearningProgressNeededTemplate to "ต้องการอีก {needed} คำแปลเพื่อสร้างสื่อ",
@@ -707,7 +585,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SpeechSwitchToConversation to "สลับไปสนทนาต่อเนื่อง →",
 
     // Chat clear
-    UiTextKey.ChatClearConversationButton to "ล้างแชท",
     UiTextKey.ChatClearConversationTitle to "ล้างแชท",
     UiTextKey.ChatClearConversationMessage to "ซ่อนข้อความทั้งหมด? จะยังซ่อนเมื่อเปิดใหม่ คนอื่นไม่ได้รับผลกระทบ",
     UiTextKey.ChatClearConversationConfirm to "ล้างทั้งหมด",
@@ -718,13 +595,11 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.BlockUserTitle to "บล็อกผู้ใช้นี้?",
     UiTextKey.BlockUserMessage to "บล็อก {username}? จะถูกลบจากรายชื่อและไม่สามารถติดต่อ",
     UiTextKey.BlockUserConfirm to "บล็อก",
-    UiTextKey.BlockUserSuccess to "บล็อกและลบจากรายชื่อแล้ว",
     UiTextKey.BlockedUsersTitle to "ผู้ใช้ที่ถูกบล็อก",
     UiTextKey.BlockedUsersEmpty to "ไม่มีผู้ใช้ที่ถูกบล็อก",
     UiTextKey.UnblockUserButton to "เลิกบล็อก",
     UiTextKey.UnblockUserTitle to "เลิกบล็อก?",
     UiTextKey.UnblockUserMessage to "เลิกบล็อก {username}? สามารถส่งคำขอได้อีกครั้ง",
-    UiTextKey.UnblockUserSuccess to "เลิกบล็อกแล้ว",
     UiTextKey.BlockedUsersManageButton to "จัดการบล็อก",
 
     // Friend request note
@@ -737,7 +612,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.GenerationBannerQuiz to "แบบทดสอบพร้อม! กดเพื่อเริ่ม",
 
     // Notification settings quick link
-    UiTextKey.NotifSettingsQuickLink to "แจ้งเตือน",
 
     // Language name for Traditional Chinese
     UiTextKey.LangZhTw to "จีน (ตัวเต็ม)",
@@ -799,7 +673,6 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsEmptyState to "ยังไม่มีคำกำหนดเอง",
     UiTextKey.CustomWordsEmptyHint to "กด + เพื่อเพิ่มคำ",
     UiTextKey.CustomWordsNoSearchResults to "ไม่มีคำที่ตรงกัน",
-    UiTextKey.AddCustomWordHintTemplate to "กรอกคำใน {from} และคำแปลใน {to}",
 
     // Word bank records count
     UiTextKey.WordBankRecordsCountTemplate to "{count} รายการ",
@@ -878,34 +751,4 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmMessage to "เปลี่ยนชื่อผู้ใช้จะไม่สามารถเปลี่ยนได้ใน 30 วัน ดำเนินการต่อ?",
 
     // Extended Error Messages
-    UiTextKey.ErrorNoInternet to "ไม่มีการเชื่อมต่ออินเทอร์เน็ต ตรวจสอบการเชื่อมต่อ",
-    UiTextKey.ErrorPermissionDenied to "คุณไม่มีสิทธิ์สำหรับการกระทำนี้",
-    UiTextKey.ErrorSessionExpired to "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่",
-    UiTextKey.ErrorItemNotFound to "ไม่พบรายการ อาจถูกลบไปแล้ว",
-    UiTextKey.ErrorAccessDenied to "ปฏิเสธการเข้าถึง",
-    UiTextKey.ErrorAlreadyFriends to "เป็นเพื่อนกันแล้ว",
-    UiTextKey.ErrorUserBlocked to "ไม่อนุญาต ผู้ใช้อาจถูกบล็อก",
-    UiTextKey.ErrorRequestNotFound to "คำขอนี้ไม่มีอยู่แล้ว",
-    UiTextKey.ErrorRequestAlreadyHandled to "คำขอนี้ถูกจัดการแล้ว",
-    UiTextKey.ErrorNotAuthorized to "คุณไม่ได้รับอนุญาตให้ดำเนินการนี้",
-    UiTextKey.ErrorRateLimited to "คำขอมากเกินไป ลองใหม่ภายหลัง",
-    UiTextKey.ErrorInvalidInput to "ข้อมูลไม่ถูกต้อง ตรวจสอบแล้วลองใหม่",
-    UiTextKey.ErrorOperationNotAllowed to "การดำเนินการนี้ไม่ได้รับอนุญาตขณะนี้",
-    UiTextKey.ErrorTimeout to "หมดเวลา ลองใหม่",
-    UiTextKey.ErrorSendMessageFailed to "ส่งข้อความไม่สำเร็จ ลองใหม่",
-    UiTextKey.ErrorFriendRequestSent to "ส่งคำขอเป็นเพื่อนแล้ว!",
-    UiTextKey.ErrorFriendRequestFailed to "ส่งคำขอไม่สำเร็จ",
-    UiTextKey.ErrorFriendRemoved to "ลบเพื่อนแล้ว",
-    UiTextKey.ErrorFriendRemoveFailed to "ลบไม่สำเร็จ ตรวจสอบการเชื่อมต่อ",
-    UiTextKey.ErrorBlockSuccess to "บล็อกผู้ใช้แล้ว",
-    UiTextKey.ErrorBlockFailed to "บล็อกไม่สำเร็จ ลองใหม่",
-    UiTextKey.ErrorUnblockSuccess to "เลิกบล็อกแล้ว",
-    UiTextKey.ErrorUnblockFailed to "เลิกบล็อกไม่สำเร็จ ลองใหม่",
-    UiTextKey.ErrorAcceptRequestSuccess to "รับคำขอแล้ว!",
-    UiTextKey.ErrorAcceptRequestFailed to "รับคำขอไม่สำเร็จ ลองใหม่",
-    UiTextKey.ErrorRejectRequestSuccess to "ปฏิเสธคำขอแล้ว",
-    UiTextKey.ErrorRejectRequestFailed to "ปฏิเสธไม่สำเร็จ ลองใหม่",
-    UiTextKey.ErrorOfflineMessage to "คุณออฟไลน์อยู่ บางฟีเจอร์อาจไม่พร้อมใช้",
-    UiTextKey.ErrorChatDeletionFailed to "ล้างแชทไม่สำเร็จ ลองใหม่",
-    UiTextKey.ErrorGenericRetry to "เกิดข้อผิดพลาด ลองใหม่",
 )

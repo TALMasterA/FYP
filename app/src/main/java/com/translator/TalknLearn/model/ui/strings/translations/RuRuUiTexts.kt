@@ -13,14 +13,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.TranslateButton to "Перевести",
     UiTextKey.CopyTranslationButton to "Копировать перевод",
     UiTextKey.SpeakTranslationButton to "Озвучить перевод",
-    UiTextKey.RecognizingStatus to "Запись...говорите, остановится автоматически",
-    UiTextKey.TranslatingStatus to "Перевод...",
-    UiTextKey.SpeakingOriginalStatus to "Озвучивание оригинала...",
-    UiTextKey.SpeakingTranslationStatus to "Озвучивание перевода...",
-    UiTextKey.SpeakingLabel to "Воспроизведение",
-    UiTextKey.FinishedSpeakingOriginal to "Озвучивание оригинала завершено",
-    UiTextKey.FinishedSpeakingTranslation to "Озвучивание перевода завершено",
-    UiTextKey.TtsErrorTemplate to "Ошибка голоса: %s",
 
     // Language labels
     UiTextKey.AppUiLanguageLabel to "Язык приложения",
@@ -61,11 +53,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     // Speech
     UiTextKey.SpeechInputPlaceholder to "Введите здесь или используйте микрофон...",
     UiTextKey.SpeechTranslatedPlaceholder to "Перевод появится здесь...",
-    UiTextKey.StatusAzureErrorTemplate to "Ошибка Azure: %s",
-    UiTextKey.StatusTranslationErrorTemplate to "Ошибка перевода: %s",
-    UiTextKey.StatusLoginRequiredTranslation to "Войдите для перевода",
-    UiTextKey.StatusRecognizePreparing to "Подготовка микрофона...(не говорите пока)",
-    UiTextKey.StatusRecognizeListening to "Слушаю...говорите",
 
     // Pagination
     UiTextKey.PaginationPrevLabel to "Назад",
@@ -73,12 +60,10 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.PaginationPageLabelTemplate to "Страница {page} / {total}",
 
     // Toast
-    UiTextKey.ToastCopied to "Скопировано",
     UiTextKey.DisableText to "Войдите для перевода и сохранения истории",
 
     // Error
     UiTextKey.ErrorRetryButton to "Повторить",
-    UiTextKey.ErrorGenericMessage to "Произошла ошибка. Повторите попытку",
 
     // Shop
     UiTextKey.ShopTitle to "Магазин",
@@ -110,10 +95,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.HelpTitle to "Справка",
     UiTextKey.SpeechTitle to "Быстрый перевод",
     UiTextKey.HomeStartButton to "Начать перевод",
-    UiTextKey.HomeFeaturesTitle to "Функции",
-    UiTextKey.HomeDiscreteDescription to "Перевод коротких текстов и аудио",
-    UiTextKey.HomeContinuousDescription to "Двусторонний перевод в реальном времени",
-    UiTextKey.HomeLearningDescription to "Создание материалов и тестов из истории",
 
     // Help
     UiTextKey.HelpCurrentTitle to "Текущие функции",
@@ -237,10 +218,7 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsFontSizeTitle to "Размер шрифта",
     UiTextKey.SettingsFontSizeDesc to "Настройка размера шрифта (синхронизируется между устройствами)",
     UiTextKey.SettingsScaleTemplate to "Масштаб: {pct}%",
-    UiTextKey.SettingsColorPaletteTitle to "Цветовые темы",
-    UiTextKey.SettingsColorPaletteDesc to "Выберите цветовую тему. 10 монет каждая",
     UiTextKey.SettingsColorCostTemplate to "{cost} монет",
-    UiTextKey.SettingsColorUnlockButton to "Разблокировать",
     UiTextKey.SettingsColorSelectButton to "Выбрать",
     UiTextKey.SettingsColorAlreadyUnlocked to "Уже разблокировано",
     UiTextKey.SettingsPreviewHeadline to "Заголовок: Крупный текст",
@@ -258,8 +236,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsResetPW to "Сбросить пароль",
     UiTextKey.SettingsQuickLinks to "Другие настройки",
     UiTextKey.SettingsNotLoggedInWarning to "Войдите для доступа к настройкам аккаунта. Язык приложения можно менять без входа",
-    UiTextKey.SettingsVoiceTitle to "Настройки голоса",
-    UiTextKey.SettingsVoiceDesc to "Выберите голос для каждого языка",
     UiTextKey.SettingsVoiceLanguageLabel to "Язык",
     UiTextKey.SettingsVoiceSelectLabel to "Голос",
     UiTextKey.SettingsVoiceDefault to "По умолчанию",
@@ -282,23 +258,17 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LearningSheetWhatIsThisDesc to "Учебные материалы создаются из истории переводов. Включают словарь, определения, примеры и грамматику. Проверьте знания в тестах!",
     UiTextKey.LearningRegenBlockedTitle to "Невозможно пересоздать",
     UiTextKey.LearningRegenBlockedMessage to "Нужно минимум 5 дополнительных записей. Нужно ещё {needed}",
-    UiTextKey.LearningRegenNeedMoreRecords to "⚠️ Нужно ещё {needed} записей для пересоздания (требуется 5 дополнительных)",
-    UiTextKey.LearningRegenCountNotHigher to "⚠️ Счётчик должен быть выше, чем при последнем создании",
     UiTextKey.LearningRegenInfoTitle to "Правила пересоздания",
     UiTextKey.LearningRegenInfoMessage to "Пересоздание материалов:\n\n• Первый раз: в любой момент\n• Пересоздание: нужно 5 дополнительных записей\n\nКнопка станет зелёной, когда будет готово. Если серая, делайте больше переводов!\n\n💡 Совет: Если счётчик не обновляется, перезапустите приложение",
-    UiTextKey.QuizRegenBlockedSameMaterial to "❌ Тест уже создан для этой версии. Пересоздайте материалы для нового теста",
 
     // Quiz
     UiTextKey.QuizTitleTemplate to "Тест: {language}",
     UiTextKey.QuizOpenButton to "📝 Тест",
     UiTextKey.QuizGenerateButton to "🔄 Создать тест",
     UiTextKey.QuizGenerating to "⏳ Создание...",
-    UiTextKey.QuizUpToDate to "✓ Актуально",
     UiTextKey.QuizBlocked to "🚫 Заблокировано",
     UiTextKey.QuizWait to "⏳ Подождите...",
-    UiTextKey.QuizMaterialsQuizTemplate to "Материал: {materials} | Тест: {quiz}",
     UiTextKey.QuizCanEarnCoins to "🪙 Можно заработать монеты!",
-    UiTextKey.QuizNeedMoreRecordsTemplate to "🪙 Нужно ещё {count} для монет",
     UiTextKey.QuizCancelButton to "Отмена",
     UiTextKey.QuizPreviousButton to "Назад",
     UiTextKey.QuizNextButton to "Далее",
@@ -316,7 +286,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizYourAnswerTemplate to "Ваш ответ: {Answer}",
     UiTextKey.QuizCorrectAnswerTemplate to "Правильный ответ: {Answer}",
     UiTextKey.QuizQuestionTemplate to "Вопрос {current} / {total}",
-    UiTextKey.QuizCannotRegenTemplate to "⚠️ Невозможно пересоздать: материал({materials}) < тест({quiz}), делайте больше переводов",
     UiTextKey.QuizAnotherGenInProgress to "⏳ Другое создание в процессе. Подождите",
     UiTextKey.QuizCoinRulesTitle to "🪙 Правила монет",
     UiTextKey.QuizCoinRulesHowToEarn to "✅ Как заработать:",
@@ -346,25 +315,9 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizCoinsRule4 to "• Тест должен соответствовать материалам",
     UiTextKey.QuizCoinsRule5 to "• Монеты являются частью истории",
     UiTextKey.QuizCoinsGreatButton to "Отлично!",
-    UiTextKey.QuizOutdatedMessage to "Этот тест использует устаревшие материалы",
     UiTextKey.QuizRecordsLabel to "Записи",
 
     // History coins
-    UiTextKey.HistoryCoinsDialogTitle to "🪙 Мои монеты",
-    UiTextKey.HistoryCoinRulesTitle to "Правила монет:",
-    UiTextKey.HistoryCoinHowToEarnTitle to "Как заработать:",
-    UiTextKey.HistoryCoinHowToEarnRule1 to "• 1 монета за правильный ответ",
-    UiTextKey.HistoryCoinHowToEarnRule2 to "• Только первая попытка за версию",
-    UiTextKey.HistoryCoinHowToEarnRule3 to "• Тест должен соответствовать текущему материалу",
-    UiTextKey.HistoryCoinAntiCheatTitle to "🔒 Правила защиты:",
-    UiTextKey.HistoryCoinAntiCheatRule1 to "• Нужно 10 новых переводов с последней награды",
-    UiTextKey.HistoryCoinAntiCheatRule2 to "• Версия теста должна совпадать с материалом",
-    UiTextKey.HistoryCoinAntiCheatRule3 to "• Удаление записей блокирует пересоздание (кроме случаев, когда счётчик выше)",
-    UiTextKey.HistoryCoinAntiCheatRule4 to "• Нет монет при повторных попытках",
-    UiTextKey.HistoryCoinTipsTitle to "💡 Советы:",
-    UiTextKey.HistoryCoinTipsRule1 to "• Регулярно добавляйте переводы",
-    UiTextKey.HistoryCoinTipsRule2 to "• Хорошо подготовьтесь к первой попытке!",
-    UiTextKey.HistoryCoinGotItButton to "Понятно!",
 
     // History info
     UiTextKey.HistoryInfoTitle to "Информация об истории",
@@ -383,7 +336,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankWordsCount to "Слова",
     UiTextKey.WordBankGenerating to "Создание...",
     UiTextKey.WordBankGenerate to "Создать словарь",
-    UiTextKey.WordBankRegenerate to "Пересоздать словарь",
     UiTextKey.WordBankRefresh to "🔄 Обновить словарь",
     UiTextKey.WordBankEmpty to "Словарь пуст",
     UiTextKey.WordBankEmptyHint to "Нажмите выше для создания из истории",
@@ -393,11 +345,8 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankFilterCategoryAll to "Все категории",
     UiTextKey.WordBankFilterDifficultyLabel to "Уровень:",
     UiTextKey.WordBankFilterNoResults to "Нет слов по фильтру",
-    UiTextKey.WordBankRefreshAvailable to "✅ Доступно обновление!",
-    UiTextKey.WordBankRecordsNeeded to "Записи (нужно 20 для обновления)",
     UiTextKey.WordBankRegenInfoTitle to "Правила обновления",
     UiTextKey.WordBankRegenInfoMessage to "Обновление словаря:\n\n• Первый раз: в любой момент\n• Обновление: нужно 20 дополнительных записей\n\nКнопка станет зелёной, когда будет готово. Если серая, делайте больше переводов!\n\n💡 Совет: Если счётчик не обновляется, перезапустите приложение",
-    UiTextKey.WordBankHistoryCountTemplate to "Текущий счётчик: {nowCount} (при создании: {savedCount})",
 
     // Dialogs
     UiTextKey.DialogLogoutTitle to "Выйти?",
@@ -410,8 +359,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ProfileUsernameLabel to "Имя пользователя",
     UiTextKey.ProfileUsernameHint to "Введите имя пользователя",
     UiTextKey.ProfileUpdateButton to "Обновить профиль",
-    UiTextKey.ProfileUpdateSuccess to "Профиль обновлён",
-    UiTextKey.ProfileUpdateError to "Ошибка обновления",
 
     // Account deletion
     UiTextKey.AccountDeleteTitle to "Удалить аккаунт",
@@ -419,19 +366,10 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteConfirmMessage to "Все данные будут удалены навсегда: история, словарь, материалы, настройки. Введите пароль для подтверждения",
     UiTextKey.AccountDeletePasswordLabel to "Пароль",
         UiTextKey.AccountDeleteButton to "Удалить аккаунт и данные",
-    UiTextKey.AccountDeleteSuccess to "Аккаунт успешно удалён",
-    UiTextKey.AccountDeleteError to "Ошибка удаления",
-    UiTextKey.AccountDeleteReauthRequired to "Введите пароль для подтверждения удаления",
 
     // Favorites
     UiTextKey.FavoritesTitle to "Избранное",
     UiTextKey.FavoritesEmpty to "Избранного пока нет",
-    UiTextKey.FavoritesAddSuccess to "Добавлено в избранное",
-    UiTextKey.FavoritesRemoveSuccess to "Удалено из избранного",
-    UiTextKey.FavoritesAddButton to "В избранное",
-    UiTextKey.FavoritesRemoveButton to "Из избранного",
-    UiTextKey.FavoritesNoteLabel to "Заметка",
-    UiTextKey.FavoritesNoteHint to "Добавить заметку (необязательно)",
     UiTextKey.FavoritesTabRecords to "Записи",
     UiTextKey.FavoritesTabSessions to "Сеансы",
     UiTextKey.FavoritesSessionsEmpty to "Нет избранных сеансов",
@@ -446,9 +384,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsTranslatedLabel to "Перевод",
     UiTextKey.CustomWordsPronunciationLabel to "Произношение (необязательно)",
     UiTextKey.CustomWordsExampleLabel to "Пример (необязательно)",
-    UiTextKey.CustomWordsSaveSuccess to "Слово сохранено",
-    UiTextKey.CustomWordsDeleteSuccess to "Слово удалено",
-    UiTextKey.CustomWordsAlreadyExists to "Слово уже существует",
     UiTextKey.CustomWordsOriginalLanguageLabel to "Язык оригинала",
     UiTextKey.CustomWordsTranslationLanguageLabel to "Язык перевода",
     UiTextKey.CustomWordsSaveButton to "Сохранить",
@@ -456,36 +391,18 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Language detection
     UiTextKey.LanguageDetectAuto to "Автоопределение",
-    UiTextKey.LanguageDetectDetecting to "Определение...",
-    UiTextKey.LanguageDetectedTemplate to "Определено: {language}",
-    UiTextKey.LanguageDetectFailed to "Не удалось определить",
 
     // Image recognition
     UiTextKey.ImageRecognitionButton to "Сканировать текст с изображения",
     UiTextKey.ImageRecognitionAccuracyWarning to "⚠️ Внимание: Распознавание может быть неточным. Проверьте текст. " +
             "Поддержка: Латиница (Английский и др.), Китайский, Японский и Корейский",
-    UiTextKey.ImageRecognitionScanning to "Сканирование текста...",
-    UiTextKey.ImageRecognitionSuccess to "Текст успешно распознан",
 
     // Cache
-    UiTextKey.CacheClearButton to "Очистить кэш",
-    UiTextKey.CacheClearSuccess to "Кэш очищен",
-    UiTextKey.CacheStatsTemplate to "Кэш: {count} сохранённых переводов",
 
     // Auto theme
-    UiTextKey.SettingsAutoThemeTitle to "Автоматическая тема",
-    UiTextKey.SettingsAutoThemeDesc to "Автоматическое переключение между светлой и тёмной темой по расписанию",
-    UiTextKey.SettingsAutoThemeEnabled to "Включено",
-    UiTextKey.SettingsAutoThemeDisabled to "Выключено",
-    UiTextKey.SettingsAutoThemeDarkStartLabel to "Начало тёмной:",
-    UiTextKey.SettingsAutoThemeLightStartLabel to "Начало светлой:",
     UiTextKey.SettingsAutoThemePreview to "Тема будет автоматически меняться по установленному расписанию",
 
     // Offline mode
-    UiTextKey.OfflineModeTitle to "Офлайн-режим",
-    UiTextKey.OfflineModeMessage to "Вы офлайн. Будут показаны кэшированные данные",
-    UiTextKey.OfflineModeRetry to "Повторить подключение",
-    UiTextKey.OfflineDataCached to "Кэшированные данные доступны",
     UiTextKey.OfflineSyncPending to "Изменения будут синхронизированы при подключении",
 
     // Image capture
@@ -497,26 +414,15 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Friends
     UiTextKey.FriendsTitle to "Друзья",
-    UiTextKey.FriendsMenuButton to "Друзья",
     UiTextKey.FriendsAddButton to "Добавить друга",
     UiTextKey.FriendsSearchTitle to "Поиск пользователя",
     UiTextKey.FriendsSearchPlaceholder to "Имя пользователя или ID...",
-    UiTextKey.FriendsSearchMinChars to "Введите минимум 2 символа",
     UiTextKey.FriendsSearchNoResults to "Пользователь не найден",
-    UiTextKey.FriendsListEmpty to "Добавьте друзей для чата и обмена материалами",
     UiTextKey.FriendsRequestsSection to "Запросы ({count})",
     UiTextKey.FriendsSectionTitle to "Друзья ({count})",
     UiTextKey.FriendsAcceptButton to "Принять",
     UiTextKey.FriendsRejectButton to "Отклонить",
-    UiTextKey.FriendsRemoveButton to "Удалить",
-    UiTextKey.FriendsRemoveDialogTitle to "Удалить друга",
-    UiTextKey.FriendsRemoveDialogMessage to "Удалить {username} из списка друзей?",
     UiTextKey.FriendsSendRequestButton to "Добавить",
-    UiTextKey.FriendsRequestSentSuccess to "Запрос отправлен!",
-    UiTextKey.FriendsRequestAcceptedSuccess to "Запрос принят!",
-    UiTextKey.FriendsRequestRejectedSuccess to "Запрос отклонён",
-    UiTextKey.FriendsRemovedSuccess to "Друг удалён",
-    UiTextKey.FriendsRequestFailed to "Ошибка отправки",
     UiTextKey.FriendsCloseButton to "Закрыть",
     UiTextKey.FriendsCancelButton to "Отмена",
     UiTextKey.FriendsRemoveConfirm to "Удалить",
@@ -526,7 +432,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsCancelRequestButton to "Отменить запрос",
     UiTextKey.FriendsUnreadMessageDesc to "Отправить сообщение",
     UiTextKey.FriendsDeleteModeButton to "Удаление друзей",
-    UiTextKey.FriendsDeleteSelectedButton to "Удалить выбранных",
     UiTextKey.FriendsDeleteMultipleTitle to "Удалить друзей",
     UiTextKey.FriendsDeleteMultipleMessage to "Удалить {count} выбранных друзей?",
     UiTextKey.FriendsSearchMinChars3 to "Введите минимум 3 символа для имени",
@@ -540,26 +445,16 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ChatInputPlaceholder to "Введите сообщение...",
     UiTextKey.ChatSendButton to "Отправить",
     UiTextKey.ChatEmpty to "Сообщений пока нет. Начните разговор!",
-    UiTextKey.ChatMessageSent to "Сообщение отправлено",
-    UiTextKey.ChatMessageFailed to "Ошибка отправки",
-    UiTextKey.ChatMarkingRead to "Чтение...",
-    UiTextKey.ChatLoadingMessages to "Загрузка сообщений...",
-    UiTextKey.ChatToday to "Сегодня",
-    UiTextKey.ChatYesterday to "Вчера",
     UiTextKey.ChatUnreadBadge to "{count} непрочитанных",
     UiTextKey.ChatTranslateButton to "Перевести",
     UiTextKey.ChatTranslateDialogTitle to "Перевести чат",
     UiTextKey.ChatTranslateDialogMessage to "Перевести сообщения друга на ваш язык? Каждое сообщение будет определено и переведено автоматически",
     UiTextKey.ChatTranslateConfirm to "Перевести всё",
-    UiTextKey.ChatTranslating to "Перевод сообщений...",
-    UiTextKey.ChatTranslated to "Сообщения переведены",
     UiTextKey.ChatShowOriginal to "Показать оригинал",
     UiTextKey.ChatShowTranslation to "Показать перевод",
-    UiTextKey.ChatTranslateFailed to "Ошибка перевода",
     UiTextKey.ChatTranslatedLabel to "Переведено",
 
     // Sharing
-    UiTextKey.ShareTitle to "Поделиться",
     UiTextKey.ShareInboxTitle to "Входящие",
     UiTextKey.ShareInboxEmpty to "Пока пусто. Друзья могут делиться словами и материалами!",
     UiTextKey.ShareWordButton to "Поделиться словом",
@@ -567,14 +462,8 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareSelectFriendTitle to "Выберите друга",
     UiTextKey.ShareSelectFriendMessage to "Выберите друга для отправки:",
     UiTextKey.ShareSuccess to "Отправлено успешно!",
-    UiTextKey.ShareFailed to "Ошибка отправки",
-    UiTextKey.ShareWordWith to "Поделиться словом с {username}",
-    UiTextKey.ShareMaterialWith to "Поделиться материалом с {username}",
     UiTextKey.ShareAcceptButton to "Принять",
     UiTextKey.ShareDismissButton to "Отклонить",
-    UiTextKey.ShareAccepted to "Добавлено в коллекцию",
-    UiTextKey.ShareDismissed to "Элемент отклонён",
-    UiTextKey.ShareActionFailed to "Ошибка действия",
     UiTextKey.ShareTypeWord to "Слово",
     UiTextKey.ShareTypeLearningSheet to "Учебный материал",
     UiTextKey.ShareReceivedFrom to "От: {username}",
@@ -593,12 +482,10 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.MyProfileTitle to "Мой профиль",
     UiTextKey.MyProfileUserId to "User ID",
     UiTextKey.MyProfileUsername to "Имя пользователя",
-    UiTextKey.MyProfileDisplayName to "Отображаемое имя",
     UiTextKey.MyProfileCopyUserId to "Копировать ID",
     UiTextKey.MyProfileCopyUsername to "Копировать имя",
     UiTextKey.MyProfileShare to "Поделиться профилем",
     UiTextKey.MyProfileCopied to "Скопировано!",
-    UiTextKey.MyProfileLanguages to "Языки",
     UiTextKey.MyProfilePrimaryLanguage to "Основной язык",
     UiTextKey.MyProfileLearningLanguages to "Изучаемые языки",
 
@@ -626,7 +513,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
             "• Пересоздание требует 5 дополнительных записей\n" +
             "• Кнопка материала для открытия созданного\n" +
             "• После создания материала можно пройти тест",
-    UiTextKey.LearningEmptyTitle to "Нет истории переводов",
     UiTextKey.LearningEmptyMessage to "Начните переводить для создания записей\n" +
             "Материалы создаются из истории\n" +
             "После перевода потяните вниз для обновления",
@@ -663,17 +549,14 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareDismissWordMessage to "Отклонить общее слово? Это необратимо",
 
     // Shared inbox sheet label
-    UiTextKey.ShareLearningSheetLanguageLabel to "Язык: {language}",
 
     // Accessibility
     UiTextKey.AccessibilityDismiss to "Закрыть",
-    UiTextKey.AccessibilityAlreadyConnectedOrPending to "Подключено или ожидание",
     UiTextKey.AccessibilityNewMessages to "Новые сообщения",
     UiTextKey.AccessibilityNewReleasesIcon to "Индикатор новых элементов",
     UiTextKey.AccessibilitySuccessIcon to "Успех",
     UiTextKey.AccessibilityErrorIcon to "Ошибка",
     UiTextKey.AccessibilitySharedItemTypeIcon to "Тип общего элемента",
-    UiTextKey.AccessibilityAddCustomWords to "Добавить свои слова",
     UiTextKey.AccessibilityWordBankExists to "Словарь существует",
 
     // Settings hardcoded
@@ -686,7 +569,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsNotifFriendRequests to "Принятые запросы",
     UiTextKey.FriendsNotifRequestAccepted to "Одобренные запросы",
     UiTextKey.FriendsNotifSharedInbox to "Новые общие элементы",
-    UiTextKey.FriendsNotifCloseButton to "Готово",
 
     // In-app badge settings
     UiTextKey.InAppBadgeSectionTitle to "Значки в приложении (красные точки)",
@@ -695,10 +577,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.InAppBadgeSharedInbox to "Значок входящих",
 
     // Error messages
-    UiTextKey.ErrorNotLoggedIn to "Войдите для продолжения",
-    UiTextKey.ErrorSaveFailedRetry to "Ошибка сохранения. Повторите",
-    UiTextKey.ErrorLoadFailedRetry to "Ошибка загрузки. Повторите",
-    UiTextKey.ErrorNetworkRetry to "Ошибка сети. Проверьте соединение",
 
     // Learning progress
     UiTextKey.LearningProgressNeededTemplate to "Нужно ещё {needed} переводов для создания материала",
@@ -707,7 +585,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SpeechSwitchToConversation to "Перейти к непрерывному разговору →",
 
     // Chat clear
-    UiTextKey.ChatClearConversationButton to "Очистить разговор",
     UiTextKey.ChatClearConversationTitle to "Очистить разговор",
     UiTextKey.ChatClearConversationMessage to "Скрыть все сообщения? Они останутся скрытыми при повторном открытии. Не влияет на другого собеседника",
     UiTextKey.ChatClearConversationConfirm to "Очистить всё",
@@ -718,13 +595,11 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.BlockUserTitle to "Заблокировать пользователя?",
     UiTextKey.BlockUserMessage to "Заблокировать {username}? Будет удалён из списка и заблокирован",
     UiTextKey.BlockUserConfirm to "Заблокировать",
-    UiTextKey.BlockUserSuccess to "Заблокирован и удалён из списка",
     UiTextKey.BlockedUsersTitle to "Заблокированные",
     UiTextKey.BlockedUsersEmpty to "Нет заблокированных",
     UiTextKey.UnblockUserButton to "Разблокировать",
     UiTextKey.UnblockUserTitle to "Разблокировать?",
     UiTextKey.UnblockUserMessage to "Разблокировать {username}? Сможет снова отправлять запросы",
-    UiTextKey.UnblockUserSuccess to "Разблокирован",
     UiTextKey.BlockedUsersManageButton to "Управление блокировками",
 
     // Friend request note
@@ -737,7 +612,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.GenerationBannerQuiz to "Тест готов! Нажмите для начала",
 
     // Notification settings quick link
-    UiTextKey.NotifSettingsQuickLink to "Уведомления",
 
     // Language name for Traditional Chinese
     UiTextKey.LangZhTw to "Китайский (Традиционный)",
@@ -799,7 +673,6 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsEmptyState to "Своих слов пока нет",
     UiTextKey.CustomWordsEmptyHint to "Нажмите + для добавления слова",
     UiTextKey.CustomWordsNoSearchResults to "Слова не найдены",
-    UiTextKey.AddCustomWordHintTemplate to "Введите слово на {from} и перевод на {to}",
 
     // Word bank records count
     UiTextKey.WordBankRecordsCountTemplate to "{count} записей",
@@ -878,34 +751,4 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmMessage to "Смена имени пользователя необратима в течение 30 дней. Продолжить?",
 
     // Extended Error Messages
-    UiTextKey.ErrorNoInternet to "Нет подключения к интернету. Проверьте соединение",
-    UiTextKey.ErrorPermissionDenied to "Разрешение отклонено для этого действия",
-    UiTextKey.ErrorSessionExpired to "Сеанс истёк. Войдите снова",
-    UiTextKey.ErrorItemNotFound to "Элемент не найден. Возможно, он был удалён",
-    UiTextKey.ErrorAccessDenied to "Доступ запрещён",
-    UiTextKey.ErrorAlreadyFriends to "Уже друзья",
-    UiTextKey.ErrorUserBlocked to "Не разрешено. Пользователь может быть заблокирован",
-    UiTextKey.ErrorRequestNotFound to "Запрос больше не существует",
-    UiTextKey.ErrorRequestAlreadyHandled to "Запрос уже обработан",
-    UiTextKey.ErrorNotAuthorized to "У вас нет прав для этого действия",
-    UiTextKey.ErrorRateLimited to "Слишком много запросов. Повторите позже",
-    UiTextKey.ErrorInvalidInput to "Неверный ввод. Проверьте и повторите",
-    UiTextKey.ErrorOperationNotAllowed to "Эта операция сейчас не разрешена",
-    UiTextKey.ErrorTimeout to "Время истекло. Повторите попытку",
-    UiTextKey.ErrorSendMessageFailed to "Ошибка отправки сообщения. Повторите",
-    UiTextKey.ErrorFriendRequestSent to "Запрос уже отправлен!",
-    UiTextKey.ErrorFriendRequestFailed to "Ошибка отправки запроса",
-    UiTextKey.ErrorFriendRemoved to "Друг удалён",
-    UiTextKey.ErrorFriendRemoveFailed to "Ошибка удаления. Проверьте соединение",
-    UiTextKey.ErrorBlockSuccess to "Пользователь заблокирован",
-    UiTextKey.ErrorBlockFailed to "Ошибка блокировки. Повторите",
-    UiTextKey.ErrorUnblockSuccess to "Разблокирован",
-    UiTextKey.ErrorUnblockFailed to "Ошибка разблокировки. Повторите",
-    UiTextKey.ErrorAcceptRequestSuccess to "Запрос принят!",
-    UiTextKey.ErrorAcceptRequestFailed to "Ошибка принятия. Повторите",
-    UiTextKey.ErrorRejectRequestSuccess to "Запрос отклонён",
-    UiTextKey.ErrorRejectRequestFailed to "Ошибка отклонения. Повторите",
-    UiTextKey.ErrorOfflineMessage to "Вы офлайн. Некоторые функции могут быть недоступны",
-    UiTextKey.ErrorChatDeletionFailed to "Ошибка очистки. Повторите",
-    UiTextKey.ErrorGenericRetry to "Произошла ошибка. Повторите попытку",
 )

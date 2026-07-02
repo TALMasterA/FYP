@@ -24,17 +24,8 @@ val SettingsScreenTexts: List<String> = listOf(
     // SettingsScaleTemplate
     "Scale: {pct}%",
 
-    // SettingsColorPaletteTitle
-    "Color Palette",
-
-    // SettingsColorPaletteDesc
-    "Choose your app's color theme. Unlock new palettes for 10 coins each!",
-
     // SettingsColorCostTemplate
     "{cost} coins",
-
-    // SettingsColorUnlockButton
-    "Unlock",
 
     // SettingsColorSelectButton
     "Select",
@@ -86,12 +77,6 @@ val SettingsScreenTexts: List<String> = listOf(
 
     // SettingsNotLoggedInWarning
     "Sign in to access account settings. You can still change the app language.",
-
-    // SettingsVoiceTitle
-    "Voice Settings",
-
-    // SettingsVoiceDesc
-    "Choose a voice for text-to-speech output per language.",
 
     // SettingsVoiceLanguageLabel
     "Language",

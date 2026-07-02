@@ -13,14 +13,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.TranslateButton to "Dịch",
     UiTextKey.CopyTranslationButton to "Sao chép bản dịch",
     UiTextKey.SpeakTranslationButton to "Đọc bản dịch",
-    UiTextKey.RecognizingStatus to "Đang ghi âm...Hãy nói, sẽ tự dừng.",
-    UiTextKey.TranslatingStatus to "Đang dịch...",
-    UiTextKey.SpeakingOriginalStatus to "Đang đọc văn bản gốc...",
-    UiTextKey.SpeakingTranslationStatus to "Đang đọc bản dịch...",
-    UiTextKey.SpeakingLabel to "Đang đọc",
-    UiTextKey.FinishedSpeakingOriginal to "Đã đọc xong văn bản gốc",
-    UiTextKey.FinishedSpeakingTranslation to "Đã đọc xong bản dịch",
-    UiTextKey.TtsErrorTemplate to "Lỗi giọng nói: %s",
 
     // Language labels
     UiTextKey.AppUiLanguageLabel to "Ngôn ngữ ứng dụng",
@@ -61,11 +53,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     // Speech
     UiTextKey.SpeechInputPlaceholder to "Nhập tại đây hoặc sử dụng micro...",
     UiTextKey.SpeechTranslatedPlaceholder to "Bản dịch sẽ hiện tại đây...",
-    UiTextKey.StatusAzureErrorTemplate to "Lỗi Azure: %s",
-    UiTextKey.StatusTranslationErrorTemplate to "Lỗi dịch: %s",
-    UiTextKey.StatusLoginRequiredTranslation to "Đăng nhập để dịch",
-    UiTextKey.StatusRecognizePreparing to "Đang chuẩn bị micro...(chưa nói)",
-    UiTextKey.StatusRecognizeListening to "Đang nghe...Hãy nói.",
 
     // Pagination
     UiTextKey.PaginationPrevLabel to "Trang trước",
@@ -73,12 +60,10 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.PaginationPageLabelTemplate to "Trang {page} / {total}",
 
     // Toast
-    UiTextKey.ToastCopied to "Đã sao chép",
     UiTextKey.DisableText to "Đăng nhập để dịch và lưu lịch sử.",
 
     // Error
     UiTextKey.ErrorRetryButton to "Thử lại",
-    UiTextKey.ErrorGenericMessage to "Đã xảy ra lỗi. Vui lòng thử lại.",
 
     // Shop
     UiTextKey.ShopTitle to "Cửa hàng",
@@ -110,10 +95,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.HelpTitle to "Trợ giúp",
     UiTextKey.SpeechTitle to "Dịch nhanh",
     UiTextKey.HomeStartButton to "Bắt đầu dịch",
-    UiTextKey.HomeFeaturesTitle to "Tính năng",
-    UiTextKey.HomeDiscreteDescription to "Dịch văn bản và giọng nói ngắn",
-    UiTextKey.HomeContinuousDescription to "Dịch hai chiều trực tiếp",
-    UiTextKey.HomeLearningDescription to "Tạo tài liệu học và câu đố từ lịch sử",
 
     // Help
     UiTextKey.HelpCurrentTitle to "Tính năng hiện tại",
@@ -237,10 +218,7 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsFontSizeTitle to "Cỡ chữ",
     UiTextKey.SettingsFontSizeDesc to "Điều chỉnh cỡ chữ (đồng bộ giữa các thiết bị)",
     UiTextKey.SettingsScaleTemplate to "Tỷ lệ: {pct}%",
-    UiTextKey.SettingsColorPaletteTitle to "Chủ đề màu",
-    UiTextKey.SettingsColorPaletteDesc to "Chọn chủ đề màu, 10 xu mỗi chủ đề",
     UiTextKey.SettingsColorCostTemplate to "{cost} xu",
-    UiTextKey.SettingsColorUnlockButton to "Mở khóa",
     UiTextKey.SettingsColorSelectButton to "Chọn",
     UiTextKey.SettingsColorAlreadyUnlocked to "Đã mở khóa",
     UiTextKey.SettingsPreviewHeadline to "Tiêu đề: Xem trước chữ lớn",
@@ -258,8 +236,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsResetPW to "Khôi phục mật khẩu",
     UiTextKey.SettingsQuickLinks to "Cài đặt chi tiết",
     UiTextKey.SettingsNotLoggedInWarning to "Đăng nhập để xem cài đặt tài khoản. Ngôn ngữ ứng dụng có thể đổi mà không cần đăng nhập.",
-    UiTextKey.SettingsVoiceTitle to "Cài đặt giọng nói",
-    UiTextKey.SettingsVoiceDesc to "Chọn giọng đọc cho từng ngôn ngữ.",
     UiTextKey.SettingsVoiceLanguageLabel to "Ngôn ngữ",
     UiTextKey.SettingsVoiceSelectLabel to "Giọng nói",
     UiTextKey.SettingsVoiceDefault to "Mặc định",
@@ -282,23 +258,17 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LearningSheetWhatIsThisDesc to "Tài liệu học được tạo từ lịch sử dịch. Bao gồm từ vựng, định nghĩa, ví dụ, và ghi chú ngữ pháp. Kiểm tra kiến thức với câu đố!",
     UiTextKey.LearningRegenBlockedTitle to "Không thể tạo lại",
     UiTextKey.LearningRegenBlockedMessage to "Cần tối thiểu 5 bản ghi thêm để tạo lại. Còn thiếu {needed}.",
-    UiTextKey.LearningRegenNeedMoreRecords to "⚠️ Còn thiếu {needed} bản ghi để tạo lại (tối thiểu 5)",
-    UiTextKey.LearningRegenCountNotHigher to "⚠️ Số lượng phải vượt lần tạo trước",
     UiTextKey.LearningRegenInfoTitle to "Quy tắc tạo lại",
     UiTextKey.LearningRegenInfoMessage to "Tạo lại tài liệu học:\n\n• Lần đầu: bất kỳ lúc nào\n• Tạo lại: tối thiểu 5 bản ghi thêm\n\nNút chuyển xanh khi đủ. Nếu xám, hãy dịch thêm!\n\n💡 Mẹo: Nếu số lượng không cập nhật, khởi động lại ứng dụng.",
-    UiTextKey.QuizRegenBlockedSameMaterial to "❌ Câu đố đã tạo cho phiên bản này. Tạo tài liệu mới cho câu đố mới.",
 
     // Quiz
     UiTextKey.QuizTitleTemplate to "Câu đố: {language}",
     UiTextKey.QuizOpenButton to "📝 Câu đố",
     UiTextKey.QuizGenerateButton to "🔄 Tạo câu đố",
     UiTextKey.QuizGenerating to "⏳ Đang tạo...",
-    UiTextKey.QuizUpToDate to "✓ Mới nhất",
     UiTextKey.QuizBlocked to "🚫 Bị khóa",
     UiTextKey.QuizWait to "⏳ Chờ...",
-    UiTextKey.QuizMaterialsQuizTemplate to "Tài liệu: {materials} | Câu đố: {quiz}",
     UiTextKey.QuizCanEarnCoins to "🪙 Có thể nhận xu!",
-    UiTextKey.QuizNeedMoreRecordsTemplate to "🪙 Còn {count} nữa cho xu",
     UiTextKey.QuizCancelButton to "Hủy",
     UiTextKey.QuizPreviousButton to "Câu trước",
     UiTextKey.QuizNextButton to "Câu sau",
@@ -316,7 +286,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizYourAnswerTemplate to "Đáp án của bạn: {Answer}",
     UiTextKey.QuizCorrectAnswerTemplate to "Đáp án đúng: {Answer}",
     UiTextKey.QuizQuestionTemplate to "Câu {current} / {total}",
-    UiTextKey.QuizCannotRegenTemplate to "⚠️ Không thể tạo lại: Tài liệu({materials}) < Câu đố({quiz}), dịch thêm.",
     UiTextKey.QuizAnotherGenInProgress to "⏳ Đang tạo khác. Vui lòng chờ.",
     UiTextKey.QuizCoinRulesTitle to "🪙 Quy tắc xu",
     UiTextKey.QuizCoinRulesHowToEarn to "✅ Cách nhận:",
@@ -346,25 +315,9 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizCoinsRule4 to "• Câu đố phải khớp phiên bản tài liệu",
     UiTextKey.QuizCoinsRule5 to "• Tổng xu hiện ở lịch sử",
     UiTextKey.QuizCoinsGreatButton to "Tuyệt!",
-    UiTextKey.QuizOutdatedMessage to "Câu đố này dựa trên tài liệu cũ.",
     UiTextKey.QuizRecordsLabel to "Bản ghi",
 
     // History coins
-    UiTextKey.HistoryCoinsDialogTitle to "🪙 Xu của tôi",
-    UiTextKey.HistoryCoinRulesTitle to "Quy tắc xu:",
-    UiTextKey.HistoryCoinHowToEarnTitle to "Cách nhận:",
-    UiTextKey.HistoryCoinHowToEarnRule1 to "• 1 xu cho mỗi câu đúng",
-    UiTextKey.HistoryCoinHowToEarnRule2 to "• Chỉ lần thử đầu mỗi phiên bản",
-    UiTextKey.HistoryCoinHowToEarnRule3 to "• Câu đố phải khớp tài liệu hiện tại",
-    UiTextKey.HistoryCoinAntiCheatTitle to "🔒 Quy tắc chống gian lận:",
-    UiTextKey.HistoryCoinAntiCheatRule1 to "• Tối thiểu 10 bản dịch mới kể từ lần nhận cuối",
-    UiTextKey.HistoryCoinAntiCheatRule2 to "• Phiên bản câu đố phải khớp tài liệu",
-    UiTextKey.HistoryCoinAntiCheatRule3 to "• Xóa bản ghi chặn tạo lại (trừ khi số lượng vượt trước)",
-    UiTextKey.HistoryCoinAntiCheatRule4 to "• Không có xu cho các lần thử sau",
-    UiTextKey.HistoryCoinTipsTitle to "💡 Mẹo:",
-    UiTextKey.HistoryCoinTipsRule1 to "• Thêm bản dịch đều đặn",
-    UiTextKey.HistoryCoinTipsRule2 to "• Học kỹ trước lần thử đầu!",
-    UiTextKey.HistoryCoinGotItButton to "Đã hiểu!",
 
     // History info
     UiTextKey.HistoryInfoTitle to "Thông tin lịch sử",
@@ -383,7 +336,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankWordsCount to "Từ",
     UiTextKey.WordBankGenerating to "Đang tạo...",
     UiTextKey.WordBankGenerate to "Tạo ngân hàng từ",
-    UiTextKey.WordBankRegenerate to "Tạo lại ngân hàng từ",
     UiTextKey.WordBankRefresh to "🔄 Làm mới ngân hàng",
     UiTextKey.WordBankEmpty to "Ngân hàng từ trống",
     UiTextKey.WordBankEmptyHint to "Nhấn ở trên để tạo từ lịch sử.",
@@ -393,11 +345,8 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankFilterCategoryAll to "Tất cả danh mục",
     UiTextKey.WordBankFilterDifficultyLabel to "Độ khó:",
     UiTextKey.WordBankFilterNoResults to "Không có từ phù hợp với bộ lọc",
-    UiTextKey.WordBankRefreshAvailable to "✅ Có bản cập nhật!",
-    UiTextKey.WordBankRecordsNeeded to "Bản ghi (cần 20 để cập nhật)",
     UiTextKey.WordBankRegenInfoTitle to "Quy tắc cập nhật",
     UiTextKey.WordBankRegenInfoMessage to "Cập nhật ngân hàng từ:\n\n• Lần đầu: bất kỳ lúc nào\n• Cập nhật: tối thiểu 20 bản ghi thêm\n\nNút chuyển xanh khi đủ. Nếu xám, hãy dịch thêm!\n\n💡 Mẹo: Nếu số lượng không cập nhật, khởi động lại ứng dụng.",
-    UiTextKey.WordBankHistoryCountTemplate to "Bản ghi hiện tại: {nowCount} (khi tạo: {savedCount})",
 
     // Dialogs
     UiTextKey.DialogLogoutTitle to "Đăng xuất?",
@@ -410,8 +359,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ProfileUsernameLabel to "Tên người dùng",
     UiTextKey.ProfileUsernameHint to "Nhập tên người dùng",
     UiTextKey.ProfileUpdateButton to "Cập nhật hồ sơ",
-    UiTextKey.ProfileUpdateSuccess to "Hồ sơ đã cập nhật",
-    UiTextKey.ProfileUpdateError to "Cập nhật thất bại",
 
     // Account deletion
     UiTextKey.AccountDeleteTitle to "Xóa tài khoản",
@@ -419,19 +366,10 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteConfirmMessage to "Tất cả dữ liệu sẽ bị xóa vĩnh viễn: lịch sử, ngân hàng từ, tài liệu học, cài đặt. Nhập mật khẩu để xác nhận.",
     UiTextKey.AccountDeletePasswordLabel to "Mật khẩu",
         UiTextKey.AccountDeleteButton to "Xóa tài khoản và dữ liệu",
-    UiTextKey.AccountDeleteSuccess to "Tài khoản đã xóa thành công",
-    UiTextKey.AccountDeleteError to "Xóa thất bại",
-    UiTextKey.AccountDeleteReauthRequired to "Nhập mật khẩu để xác nhận xóa",
 
     // Favorites
     UiTextKey.FavoritesTitle to "Yêu thích",
     UiTextKey.FavoritesEmpty to "Chưa có mục yêu thích",
-    UiTextKey.FavoritesAddSuccess to "Đã thêm vào yêu thích",
-    UiTextKey.FavoritesRemoveSuccess to "Đã xóa khỏi yêu thích",
-    UiTextKey.FavoritesAddButton to "Thêm vào yêu thích",
-    UiTextKey.FavoritesRemoveButton to "Xóa khỏi yêu thích",
-    UiTextKey.FavoritesNoteLabel to "Ghi chú",
-    UiTextKey.FavoritesNoteHint to "Thêm ghi chú (tùy chọn)",
     UiTextKey.FavoritesTabRecords to "Bản ghi",
     UiTextKey.FavoritesTabSessions to "Hội thoại",
     UiTextKey.FavoritesSessionsEmpty to "Chưa có hội thoại yêu thích",
@@ -446,9 +384,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsTranslatedLabel to "Bản dịch",
     UiTextKey.CustomWordsPronunciationLabel to "Phát âm (tùy chọn)",
     UiTextKey.CustomWordsExampleLabel to "Ví dụ (tùy chọn)",
-    UiTextKey.CustomWordsSaveSuccess to "Đã lưu từ",
-    UiTextKey.CustomWordsDeleteSuccess to "Đã xóa từ",
-    UiTextKey.CustomWordsAlreadyExists to "Từ này đã tồn tại",
     UiTextKey.CustomWordsOriginalLanguageLabel to "Ngôn ngữ gốc",
     UiTextKey.CustomWordsTranslationLanguageLabel to "Ngôn ngữ dịch",
     UiTextKey.CustomWordsSaveButton to "Lưu",
@@ -456,36 +391,18 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Language detection
     UiTextKey.LanguageDetectAuto to "Tự động phát hiện",
-    UiTextKey.LanguageDetectDetecting to "Đang phát hiện...",
-    UiTextKey.LanguageDetectedTemplate to "Đã phát hiện: {language}",
-    UiTextKey.LanguageDetectFailed to "Phát hiện thất bại",
 
     // Image recognition
     UiTextKey.ImageRecognitionButton to "Quét chữ từ ảnh",
     UiTextKey.ImageRecognitionAccuracyWarning to "⚠️ Cảnh báo: Nhận diện chữ có thể không hoàn toàn chính xác. Xác minh lại chữ đã nhận diện." +
             "Hỗ trợ Latin (Tiếng Anh, v.v.), Trung Quốc, Nhật, và Hàn.",
-    UiTextKey.ImageRecognitionScanning to "Đang quét chữ...",
-    UiTextKey.ImageRecognitionSuccess to "Nhận diện chữ thành công",
 
     // Cache
-    UiTextKey.CacheClearButton to "Xóa bộ nhớ đệm",
-    UiTextKey.CacheClearSuccess to "Đã xóa bộ nhớ đệm",
-    UiTextKey.CacheStatsTemplate to "Bộ nhớ đệm: {count} bản dịch đã lưu",
 
     // Auto theme
-    UiTextKey.SettingsAutoThemeTitle to "Giao diện tự động",
-    UiTextKey.SettingsAutoThemeDesc to "Tự chuyển sáng/tối theo thời gian",
-    UiTextKey.SettingsAutoThemeEnabled to "Bật",
-    UiTextKey.SettingsAutoThemeDisabled to "Tắt",
-    UiTextKey.SettingsAutoThemeDarkStartLabel to "Chế độ tối bắt đầu:",
-    UiTextKey.SettingsAutoThemeLightStartLabel to "Chế độ sáng bắt đầu:",
     UiTextKey.SettingsAutoThemePreview to "Giao diện sẽ tự chuyển vào thời gian đã cài đặt",
 
     // Offline mode
-    UiTextKey.OfflineModeTitle to "Chế độ ngoại tuyến",
-    UiTextKey.OfflineModeMessage to "Bạn đang ngoại tuyến. Dữ liệu đã lưu được hiển thị.",
-    UiTextKey.OfflineModeRetry to "Thử kết nối lại",
-    UiTextKey.OfflineDataCached to "Dữ liệu đã lưu có sẵn",
     UiTextKey.OfflineSyncPending to "Thay đổi sẽ được đồng bộ khi trực tuyến",
 
     // Image capture
@@ -497,26 +414,15 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Friends
     UiTextKey.FriendsTitle to "Bạn bè",
-    UiTextKey.FriendsMenuButton to "Bạn bè",
     UiTextKey.FriendsAddButton to "Thêm bạn",
     UiTextKey.FriendsSearchTitle to "Tìm người dùng",
     UiTextKey.FriendsSearchPlaceholder to "Tên người dùng hoặc ID...",
-    UiTextKey.FriendsSearchMinChars to "Nhập tối thiểu 2 ký tự",
     UiTextKey.FriendsSearchNoResults to "Không tìm thấy người dùng",
-    UiTextKey.FriendsListEmpty to "Thêm bạn để trò chuyện và chia sẻ tài liệu.",
     UiTextKey.FriendsRequestsSection to "Lời mời kết bạn ({count})",
     UiTextKey.FriendsSectionTitle to "Bạn bè ({count})",
     UiTextKey.FriendsAcceptButton to "Chấp nhận",
     UiTextKey.FriendsRejectButton to "Từ chối",
-    UiTextKey.FriendsRemoveButton to "Xóa",
-    UiTextKey.FriendsRemoveDialogTitle to "Xóa bạn",
-    UiTextKey.FriendsRemoveDialogMessage to "Xóa {username} khỏi danh sách bạn bè?",
     UiTextKey.FriendsSendRequestButton to "Thêm",
-    UiTextKey.FriendsRequestSentSuccess to "Đã gửi lời mời kết bạn!",
-    UiTextKey.FriendsRequestAcceptedSuccess to "Đã chấp nhận lời mời!",
-    UiTextKey.FriendsRequestRejectedSuccess to "Đã từ chối lời mời",
-    UiTextKey.FriendsRemovedSuccess to "Đã xóa bạn",
-    UiTextKey.FriendsRequestFailed to "Gửi thất bại",
     UiTextKey.FriendsCloseButton to "Đóng",
     UiTextKey.FriendsCancelButton to "Hủy",
     UiTextKey.FriendsRemoveConfirm to "Xóa",
@@ -526,7 +432,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsCancelRequestButton to "Hủy lời mời",
     UiTextKey.FriendsUnreadMessageDesc to "Gửi tin nhắn",
     UiTextKey.FriendsDeleteModeButton to "Xóa bạn",
-    UiTextKey.FriendsDeleteSelectedButton to "Xóa đã chọn",
     UiTextKey.FriendsDeleteMultipleTitle to "Xóa bạn bè",
     UiTextKey.FriendsDeleteMultipleMessage to "Xóa {count} bạn đã chọn?",
     UiTextKey.FriendsSearchMinChars3 to "Nhập tối thiểu 3 ký tự cho tên",
@@ -540,26 +445,16 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ChatInputPlaceholder to "Nhập tin nhắn...",
     UiTextKey.ChatSendButton to "Gửi",
     UiTextKey.ChatEmpty to "Chưa có tin nhắn. Bắt đầu trò chuyện!",
-    UiTextKey.ChatMessageSent to "Tin nhắn đã gửi",
-    UiTextKey.ChatMessageFailed to "Gửi thất bại",
-    UiTextKey.ChatMarkingRead to "Đang đánh dấu...",
-    UiTextKey.ChatLoadingMessages to "Đang tải tin nhắn...",
-    UiTextKey.ChatToday to "Hôm nay",
-    UiTextKey.ChatYesterday to "Hôm qua",
     UiTextKey.ChatUnreadBadge to "{count} chưa đọc",
     UiTextKey.ChatTranslateButton to "Dịch",
     UiTextKey.ChatTranslateDialogTitle to "Dịch cuộc trò chuyện",
     UiTextKey.ChatTranslateDialogMessage to "Dịch tin nhắn bạn bè sang ngôn ngữ của bạn? Ngôn ngữ mỗi tin nhắn sẽ được phát hiện và dịch.",
     UiTextKey.ChatTranslateConfirm to "Dịch tất cả",
-    UiTextKey.ChatTranslating to "Đang dịch tin nhắn...",
-    UiTextKey.ChatTranslated to "Đã dịch tin nhắn",
     UiTextKey.ChatShowOriginal to "Hiện bản gốc",
     UiTextKey.ChatShowTranslation to "Hiện bản dịch",
-    UiTextKey.ChatTranslateFailed to "Dịch thất bại",
     UiTextKey.ChatTranslatedLabel to "Đã dịch",
 
     // Sharing
-    UiTextKey.ShareTitle to "Chia sẻ",
     UiTextKey.ShareInboxTitle to "Hộp chia sẻ",
     UiTextKey.ShareInboxEmpty to "Chưa có nội dung chia sẻ. Bạn bè có thể chia sẻ từ và tài liệu!",
     UiTextKey.ShareWordButton to "Chia sẻ từ",
@@ -567,14 +462,8 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareSelectFriendTitle to "Chọn bạn",
     UiTextKey.ShareSelectFriendMessage to "Chọn bạn để chia sẻ:",
     UiTextKey.ShareSuccess to "Chia sẻ thành công!",
-    UiTextKey.ShareFailed to "Chia sẻ thất bại",
-    UiTextKey.ShareWordWith to "Chia sẻ từ với {username}",
-    UiTextKey.ShareMaterialWith to "Chia sẻ tài liệu với {username}",
     UiTextKey.ShareAcceptButton to "Chấp nhận",
     UiTextKey.ShareDismissButton to "Bỏ qua",
-    UiTextKey.ShareAccepted to "Đã thêm vào bộ sưu tập",
-    UiTextKey.ShareDismissed to "Mục đã bỏ qua",
-    UiTextKey.ShareActionFailed to "Thao tác thất bại",
     UiTextKey.ShareTypeWord to "Từ",
     UiTextKey.ShareTypeLearningSheet to "Tài liệu học",
     UiTextKey.ShareReceivedFrom to "Từ: {username}",
@@ -593,12 +482,10 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.MyProfileTitle to "Hồ sơ của tôi",
     UiTextKey.MyProfileUserId to "ID người dùng",
     UiTextKey.MyProfileUsername to "Tên người dùng",
-    UiTextKey.MyProfileDisplayName to "Tên hiển thị",
     UiTextKey.MyProfileCopyUserId to "Sao chép ID",
     UiTextKey.MyProfileCopyUsername to "Sao chép tên",
     UiTextKey.MyProfileShare to "Chia sẻ hồ sơ",
     UiTextKey.MyProfileCopied to "Đã sao chép!",
-    UiTextKey.MyProfileLanguages to "Ngôn ngữ",
     UiTextKey.MyProfilePrimaryLanguage to "Ngôn ngữ chính",
     UiTextKey.MyProfileLearningLanguages to "Ngôn ngữ đang học",
 
@@ -626,7 +513,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
             "• Tạo lại cần tối thiểu 5 bản ghi thêm.\n" +
             "• Nút tài liệu mở nội dung đã tạo.\n" +
             "• Sau tài liệu, bạn có thể làm câu đố.",
-    UiTextKey.LearningEmptyTitle to "Chưa có lịch sử dịch",
     UiTextKey.LearningEmptyMessage to "Bắt đầu dịch để tạo bản ghi.\n" +
             "Tài liệu được tạo từ lịch sử.\n" +
             "Sau khi dịch, vuốt để làm mới.",
@@ -663,17 +549,14 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareDismissWordMessage to "Bỏ qua từ chia sẻ này? Không thể hoàn tác.",
 
     // Shared inbox sheet label
-    UiTextKey.ShareLearningSheetLanguageLabel to "Ngôn ngữ: {language}",
 
     // Accessibility
     UiTextKey.AccessibilityDismiss to "Đóng",
-    UiTextKey.AccessibilityAlreadyConnectedOrPending to "Đã kết nối hoặc đang chờ",
     UiTextKey.AccessibilityNewMessages to "Tin nhắn mới",
     UiTextKey.AccessibilityNewReleasesIcon to "Chỉ báo mục mới",
     UiTextKey.AccessibilitySuccessIcon to "Thành công",
     UiTextKey.AccessibilityErrorIcon to "Lỗi",
     UiTextKey.AccessibilitySharedItemTypeIcon to "Loại mục chia sẻ",
-    UiTextKey.AccessibilityAddCustomWords to "Thêm từ tùy chỉnh",
     UiTextKey.AccessibilityWordBankExists to "Ngân hàng từ tồn tại",
 
     // Settings hardcoded
@@ -686,7 +569,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsNotifFriendRequests to "Lời mời kết bạn đã nhận",
     UiTextKey.FriendsNotifRequestAccepted to "Lời mời kết bạn được chấp nhận",
     UiTextKey.FriendsNotifSharedInbox to "Mục chia sẻ mới",
-    UiTextKey.FriendsNotifCloseButton to "Xong",
 
     // In-app badge settings
     UiTextKey.InAppBadgeSectionTitle to "Huy hiệu trong ứng dụng (chấm đỏ)",
@@ -695,10 +577,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.InAppBadgeSharedInbox to "Huy hiệu hộp chia sẻ chưa đọc",
 
     // Error messages
-    UiTextKey.ErrorNotLoggedIn to "Đăng nhập để tiếp tục.",
-    UiTextKey.ErrorSaveFailedRetry to "Lưu thất bại. Thử lại.",
-    UiTextKey.ErrorLoadFailedRetry to "Tải thất bại. Thử lại.",
-    UiTextKey.ErrorNetworkRetry to "Lỗi mạng. Kiểm tra kết nối.",
 
     // Learning progress
     UiTextKey.LearningProgressNeededTemplate to "Cần thêm {needed} bản dịch để tạo tài liệu",
@@ -707,7 +585,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SpeechSwitchToConversation to "Chuyển sang hội thoại trực tiếp →",
 
     // Chat clear
-    UiTextKey.ChatClearConversationButton to "Xóa chat",
     UiTextKey.ChatClearConversationTitle to "Xóa cuộc trò chuyện",
     UiTextKey.ChatClearConversationMessage to "Ẩn tất cả tin nhắn? Sẽ vẫn ẩn khi mở lại. Người khác không bị ảnh hưởng.",
     UiTextKey.ChatClearConversationConfirm to "Xóa tất cả",
@@ -718,13 +595,11 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.BlockUserTitle to "Chặn người dùng này?",
     UiTextKey.BlockUserMessage to "Chặn {username}? Sẽ bị xóa khỏi danh sách và không thể liên lạc.",
     UiTextKey.BlockUserConfirm to "Chặn",
-    UiTextKey.BlockUserSuccess to "Đã chặn và xóa khỏi danh sách.",
     UiTextKey.BlockedUsersTitle to "Người dùng bị chặn",
     UiTextKey.BlockedUsersEmpty to "Không có người dùng bị chặn.",
     UiTextKey.UnblockUserButton to "Bỏ chặn",
     UiTextKey.UnblockUserTitle to "Bỏ chặn?",
     UiTextKey.UnblockUserMessage to "Bỏ chặn {username}? Có thể gửi lời mời lại.",
-    UiTextKey.UnblockUserSuccess to "Đã bỏ chặn.",
     UiTextKey.BlockedUsersManageButton to "Quản lý chặn",
 
     // Friend request note
@@ -737,7 +612,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.GenerationBannerQuiz to "Câu đố sẵn sàng! Nhấn để bắt đầu.",
 
     // Notification settings quick link
-    UiTextKey.NotifSettingsQuickLink to "Thông báo",
 
     // Language name for Traditional Chinese
     UiTextKey.LangZhTw to "Tiếng Trung (Phồn thể)",
@@ -799,7 +673,6 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsEmptyState to "Chưa có từ tùy chỉnh",
     UiTextKey.CustomWordsEmptyHint to "Nhấn + để thêm từ",
     UiTextKey.CustomWordsNoSearchResults to "Không có từ phù hợp",
-    UiTextKey.AddCustomWordHintTemplate to "Nhập từ bằng {from} và bản dịch bằng {to}",
 
     // Word bank records count
     UiTextKey.WordBankRecordsCountTemplate to "{count} bản ghi",
@@ -878,34 +751,4 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmMessage to "Đổi tên người dùng sẽ ngăn thay đổi trong 30 ngày. Tiếp tục?",
 
     // Extended Error Messages
-    UiTextKey.ErrorNoInternet to "Không có kết nối internet. Kiểm tra kết nối.",
-    UiTextKey.ErrorPermissionDenied to "Bạn không có quyền cho hành động này.",
-    UiTextKey.ErrorSessionExpired to "Phiên đã hết. Vui lòng đăng nhập lại.",
-    UiTextKey.ErrorItemNotFound to "Không tìm thấy mục. Có thể đã bị xóa.",
-    UiTextKey.ErrorAccessDenied to "Truy cập bị từ chối.",
-    UiTextKey.ErrorAlreadyFriends to "Đã là bạn bè.",
-    UiTextKey.ErrorUserBlocked to "Hành động không được phép. Người dùng có thể bị chặn.",
-    UiTextKey.ErrorRequestNotFound to "Lời mời này không còn tồn tại.",
-    UiTextKey.ErrorRequestAlreadyHandled to "Lời mời này đã được xử lý.",
-    UiTextKey.ErrorNotAuthorized to "Bạn không được phép thực hiện hành động này.",
-    UiTextKey.ErrorRateLimited to "Quá nhiều yêu cầu. Thử lại sau.",
-    UiTextKey.ErrorInvalidInput to "Đầu vào không hợp lệ. Kiểm tra và thử lại.",
-    UiTextKey.ErrorOperationNotAllowed to "Thao tác này hiện không được phép.",
-    UiTextKey.ErrorTimeout to "Hết thời gian. Thử lại.",
-    UiTextKey.ErrorSendMessageFailed to "Gửi tin nhắn thất bại. Thử lại.",
-    UiTextKey.ErrorFriendRequestSent to "Đã gửi lời mời kết bạn!",
-    UiTextKey.ErrorFriendRequestFailed to "Gửi lời mời thất bại.",
-    UiTextKey.ErrorFriendRemoved to "Đã xóa bạn.",
-    UiTextKey.ErrorFriendRemoveFailed to "Xóa thất bại. Kiểm tra kết nối.",
-    UiTextKey.ErrorBlockSuccess to "Đã chặn người dùng.",
-    UiTextKey.ErrorBlockFailed to "Chặn thất bại. Thử lại.",
-    UiTextKey.ErrorUnblockSuccess to "Đã bỏ chặn.",
-    UiTextKey.ErrorUnblockFailed to "Bỏ chặn thất bại. Thử lại.",
-    UiTextKey.ErrorAcceptRequestSuccess to "Đã chấp nhận lời mời!",
-    UiTextKey.ErrorAcceptRequestFailed to "Chấp nhận thất bại. Thử lại.",
-    UiTextKey.ErrorRejectRequestSuccess to "Đã từ chối lời mời.",
-    UiTextKey.ErrorRejectRequestFailed to "Từ chối thất bại. Thử lại.",
-    UiTextKey.ErrorOfflineMessage to "Bạn đang ngoại tuyến. Một số tính năng có thể không khả dụng.",
-    UiTextKey.ErrorChatDeletionFailed to "Xóa chat thất bại. Thử lại.",
-    UiTextKey.ErrorGenericRetry to "Đã xảy ra lỗi. Thử lại.",
 )

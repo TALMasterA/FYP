@@ -10,14 +10,6 @@ enum class UiTextKey {
     SpeakTranslationButton,
 
     // --- Status Messages ---
-    RecognizingStatus,
-    TranslatingStatus,
-    SpeakingOriginalStatus,
-    SpeakingTranslationStatus,
-    SpeakingLabel,
-    FinishedSpeakingOriginal,
-    FinishedSpeakingTranslation,
-    TtsErrorTemplate,
 
     // --- Dropdowns & Labels ---
     AppUiLanguageLabel,
@@ -57,11 +49,6 @@ enum class UiTextKey {
     // --- Placeholders & Input ---
     SpeechInputPlaceholder,
     SpeechTranslatedPlaceholder,
-    StatusAzureErrorTemplate,
-    StatusTranslationErrorTemplate,
-    StatusLoginRequiredTranslation,
-    StatusRecognizePreparing,
-    StatusRecognizeListening,
 
     // --- Pagination ---
     PaginationPrevLabel,
@@ -69,12 +56,10 @@ enum class UiTextKey {
     PaginationPageLabelTemplate,
 
     // --- Toast & Messages ---
-    ToastCopied,
     DisableText,
 
     // --- Standard UI Components ---
     ErrorRetryButton,
-    ErrorGenericMessage,
 
     // --- Shop ---
     ShopTitle,
@@ -108,10 +93,6 @@ enum class UiTextKey {
     HelpTitle,
     SpeechTitle,
     HomeStartButton,
-    HomeFeaturesTitle,
-    HomeDiscreteDescription,
-    HomeContinuousDescription,
-    HomeLearningDescription,
     HelpCurrentTitle,
     HelpCautionTitle,
     HelpCurrentFeatures,
@@ -204,10 +185,7 @@ enum class UiTextKey {
     SettingsFontSizeTitle,
     SettingsFontSizeDesc,
     SettingsScaleTemplate,
-    SettingsColorPaletteTitle,
-    SettingsColorPaletteDesc,
     SettingsColorCostTemplate,
-    SettingsColorUnlockButton,
     SettingsColorSelectButton,
     SettingsColorAlreadyUnlocked,
     SettingsPreviewHeadline,
@@ -225,8 +203,6 @@ enum class UiTextKey {
     SettingsResetPW,
     SettingsQuickLinks,
     SettingsNotLoggedInWarning,
-    SettingsVoiceTitle,
-    SettingsVoiceDesc,
     SettingsVoiceLanguageLabel,
     SettingsVoiceSelectLabel,
     SettingsVoiceDefault,
@@ -249,23 +225,17 @@ enum class UiTextKey {
     LearningSheetWhatIsThisDesc,
     LearningRegenBlockedTitle,
     LearningRegenBlockedMessage,
-    LearningRegenNeedMoreRecords,
-    LearningRegenCountNotHigher,
     LearningRegenInfoTitle,
     LearningRegenInfoMessage,
-    QuizRegenBlockedSameMaterial,
 
     // --- Quiz ---
     QuizTitleTemplate,
     QuizOpenButton,
     QuizGenerateButton,
     QuizGenerating,
-    QuizUpToDate,
     QuizBlocked,
     QuizWait,
-    QuizMaterialsQuizTemplate,
     QuizCanEarnCoins,
-    QuizNeedMoreRecordsTemplate,
     QuizCancelButton,
     QuizPreviousButton,
     QuizNextButton,
@@ -283,7 +253,6 @@ enum class UiTextKey {
     QuizYourAnswerTemplate,
     QuizCorrectAnswerTemplate,
     QuizQuestionTemplate,
-    QuizCannotRegenTemplate,
     QuizAnotherGenInProgress,
     QuizCoinRulesTitle,
     QuizCoinRulesHowToEarn,
@@ -313,25 +282,9 @@ enum class UiTextKey {
     QuizCoinsRule4,
     QuizCoinsRule5,
     QuizCoinsGreatButton,
-    QuizOutdatedMessage,
     QuizRecordsLabel,
 
     // --- History Screen Coins ---
-    HistoryCoinsDialogTitle,
-    HistoryCoinRulesTitle,
-    HistoryCoinHowToEarnTitle,
-    HistoryCoinHowToEarnRule1,
-    HistoryCoinHowToEarnRule2,
-    HistoryCoinHowToEarnRule3,
-    HistoryCoinAntiCheatTitle,
-    HistoryCoinAntiCheatRule1,
-    HistoryCoinAntiCheatRule2,
-    HistoryCoinAntiCheatRule3,
-    HistoryCoinAntiCheatRule4,
-    HistoryCoinTipsTitle,
-    HistoryCoinTipsRule1,
-    HistoryCoinTipsRule2,
-    HistoryCoinGotItButton,
 
     // --- History Info Dialog ---
     HistoryInfoTitle,
@@ -350,7 +303,6 @@ enum class UiTextKey {
     WordBankWordsCount,
     WordBankGenerating,
     WordBankGenerate,
-    WordBankRegenerate,
     WordBankRefresh,
     WordBankEmpty,
     WordBankEmptyHint,
@@ -360,11 +312,8 @@ enum class UiTextKey {
     WordBankFilterCategoryAll,
     WordBankFilterDifficultyLabel,
     WordBankFilterNoResults,
-    WordBankRefreshAvailable,
-    WordBankRecordsNeeded,
     WordBankRegenInfoTitle,
     WordBankRegenInfoMessage,
-    WordBankHistoryCountTemplate,
 
     // --- Dialogs ---
     DialogLogoutTitle,
@@ -377,8 +326,6 @@ enum class UiTextKey {
     ProfileUsernameLabel,
     ProfileUsernameHint,
     ProfileUpdateButton,
-    ProfileUpdateSuccess,
-    ProfileUpdateError,
 
     // --- Account Deletion ---
     AccountDeleteTitle,
@@ -386,19 +333,10 @@ enum class UiTextKey {
     AccountDeleteConfirmMessage,
     AccountDeletePasswordLabel,
     AccountDeleteButton,
-    AccountDeleteSuccess,
-    AccountDeleteError,
-    AccountDeleteReauthRequired,
 
     // --- Favorites ---
     FavoritesTitle,
     FavoritesEmpty,
-    FavoritesAddSuccess,
-    FavoritesRemoveSuccess,
-    FavoritesAddButton,
-    FavoritesRemoveButton,
-    FavoritesNoteLabel,
-    FavoritesNoteHint,
     FavoritesTabRecords,
     FavoritesTabSessions,
     FavoritesSessionsEmpty,
@@ -419,9 +357,6 @@ enum class UiTextKey {
     CustomWordsTranslatedLabel,
     CustomWordsPronunciationLabel,
     CustomWordsExampleLabel,
-    CustomWordsSaveSuccess,
-    CustomWordsDeleteSuccess,
-    CustomWordsAlreadyExists,
     CustomWordsOriginalLanguageLabel,
     CustomWordsTranslationLanguageLabel,
     CustomWordsSaveButton,
@@ -429,35 +364,17 @@ enum class UiTextKey {
 
     // --- Language Detection ---
     LanguageDetectAuto,
-    LanguageDetectDetecting,
-    LanguageDetectedTemplate,
-    LanguageDetectFailed,
 
     // --- Image Recognition (OCR) ---
     ImageRecognitionButton,
     ImageRecognitionAccuracyWarning,
-    ImageRecognitionScanning,
-    ImageRecognitionSuccess,
 
     // --- Cache ---
-    CacheClearButton,
-    CacheClearSuccess,
-    CacheStatsTemplate,
 
     // --- Auto Theme ---
-    SettingsAutoThemeTitle,
-    SettingsAutoThemeDesc,
-    SettingsAutoThemeEnabled,
-    SettingsAutoThemeDisabled,
-    SettingsAutoThemeDarkStartLabel,
-    SettingsAutoThemeLightStartLabel,
     SettingsAutoThemePreview,
 
     // --- Offline Mode ---
-    OfflineModeTitle,
-    OfflineModeMessage,
-    OfflineModeRetry,
-    OfflineDataCached,
     OfflineSyncPending,
 
     // --- Image Capture ---
@@ -469,26 +386,15 @@ enum class UiTextKey {
 
     // --- Friends System ---
     FriendsTitle,
-    FriendsMenuButton,
     FriendsAddButton,
     FriendsSearchTitle,
     FriendsSearchPlaceholder,
-    FriendsSearchMinChars,
     FriendsSearchNoResults,
-    FriendsListEmpty,
     FriendsRequestsSection,
     FriendsSectionTitle,
     FriendsAcceptButton,
     FriendsRejectButton,
-    FriendsRemoveButton,
-    FriendsRemoveDialogTitle,
-    FriendsRemoveDialogMessage,
     FriendsSendRequestButton,
-    FriendsRequestSentSuccess,
-    FriendsRequestAcceptedSuccess,
-    FriendsRequestRejectedSuccess,
-    FriendsRemovedSuccess,
-    FriendsRequestFailed,
     FriendsCloseButton,
     FriendsCancelButton,
     FriendsRemoveConfirm,
@@ -498,7 +404,6 @@ enum class UiTextKey {
     FriendsCancelRequestButton,
     FriendsUnreadMessageDesc,
     FriendsDeleteModeButton,
-    FriendsDeleteSelectedButton,
     FriendsDeleteMultipleTitle,
     FriendsDeleteMultipleMessage,
     FriendsSearchMinChars3,
@@ -512,12 +417,6 @@ enum class UiTextKey {
     ChatInputPlaceholder,
     ChatSendButton,
     ChatEmpty,
-    ChatMessageSent,
-    ChatMessageFailed,
-    ChatMarkingRead,
-    ChatLoadingMessages,
-    ChatToday,
-    ChatYesterday,
     ChatUnreadBadge,
     
     // --- Chat Translation ---
@@ -525,15 +424,11 @@ enum class UiTextKey {
     ChatTranslateDialogTitle,
     ChatTranslateDialogMessage,
     ChatTranslateConfirm,
-    ChatTranslating,
-    ChatTranslated,
     ChatShowOriginal,
     ChatShowTranslation,
-    ChatTranslateFailed,
     ChatTranslatedLabel,
 
     // --- Sharing Feature ---
-    ShareTitle,
     ShareInboxTitle,
     ShareInboxEmpty,
     ShareWordButton,
@@ -541,14 +436,8 @@ enum class UiTextKey {
     ShareSelectFriendTitle,
     ShareSelectFriendMessage,
     ShareSuccess,
-    ShareFailed,
-    ShareWordWith,
-    ShareMaterialWith,
     ShareAcceptButton,
     ShareDismissButton,
-    ShareAccepted,
-    ShareDismissed,
-    ShareActionFailed,
     ShareTypeWord,
     ShareTypeLearningSheet,
     ShareReceivedFrom,
@@ -567,12 +456,10 @@ enum class UiTextKey {
     MyProfileTitle,
     MyProfileUserId,
     MyProfileUsername,
-    MyProfileDisplayName,
     MyProfileCopyUserId,
     MyProfileCopyUsername,
     MyProfileShare,
     MyProfileCopied,
-    MyProfileLanguages,
     MyProfilePrimaryLanguage,
     MyProfileLearningLanguages,
 
@@ -586,7 +473,6 @@ enum class UiTextKey {
     // --- Learning Info Dialog & Empty States ---
     LearningInfoTitle,
     LearningInfoMessage,
-    LearningEmptyTitle,
     LearningEmptyMessage,
     LearningInfoGotItButton,
 
@@ -611,17 +497,14 @@ enum class UiTextKey {
     ShareDismissWordMessage,
 
     // --- Shared Inbox Learning Sheet Language Label ---
-    ShareLearningSheetLanguageLabel,
 
     // --- Accessibility Strings ---
     AccessibilityDismiss,
-    AccessibilityAlreadyConnectedOrPending,
     AccessibilityNewMessages,
     AccessibilityNewReleasesIcon,
     AccessibilitySuccessIcon,
     AccessibilityErrorIcon,
     AccessibilitySharedItemTypeIcon,
-    AccessibilityAddCustomWords,
     AccessibilityWordBankExists,
 
     // --- Settings Hard-coded Strings ---
@@ -634,7 +517,6 @@ enum class UiTextKey {
     FriendsNotifFriendRequests,
     FriendsNotifRequestAccepted,
     FriendsNotifSharedInbox,
-    FriendsNotifCloseButton,
 
     // --- In-App Badge Settings ---
     InAppBadgeSectionTitle,
@@ -643,10 +525,6 @@ enum class UiTextKey {
     InAppBadgeSharedInbox,
 
     // --- Common Error Messages ---
-    ErrorNotLoggedIn,
-    ErrorSaveFailedRetry,
-    ErrorLoadFailedRetry,
-    ErrorNetworkRetry,
 
     // --- Learning Progress ---
     LearningProgressNeededTemplate,
@@ -655,7 +533,6 @@ enum class UiTextKey {
     SpeechSwitchToConversation,
 
     // --- Chat Clear Conversation ---
-    ChatClearConversationButton,
     ChatClearConversationTitle,
     ChatClearConversationMessage,
     ChatClearConversationConfirm,
@@ -666,13 +543,11 @@ enum class UiTextKey {
     BlockUserTitle,
     BlockUserMessage,
     BlockUserConfirm,
-    BlockUserSuccess,
     BlockedUsersTitle,
     BlockedUsersEmpty,
     UnblockUserButton,
     UnblockUserTitle,
     UnblockUserMessage,
-    UnblockUserSuccess,
     BlockedUsersManageButton,
 
     // --- Friend Request Note ---
@@ -685,7 +560,6 @@ enum class UiTextKey {
     GenerationBannerQuiz,
 
     // --- Notification Settings Quick Link ---
-    NotifSettingsQuickLink,
 
     // --- Language Name for Traditional Chinese ---
     LangZhTw,
@@ -727,7 +601,6 @@ enum class UiTextKey {
     CustomWordsEmptyState,
     CustomWordsEmptyHint,
     CustomWordsNoSearchResults,
-    AddCustomWordHintTemplate,
 
     // --- Word Bank Records Count ---
     WordBankRecordsCountTemplate,
@@ -795,36 +668,6 @@ enum class UiTextKey {
     SettingsUsernameConfirmMessage,
 
     // --- Extended Error Messages (localized) ---
-    ErrorNoInternet,
-    ErrorPermissionDenied,
-    ErrorSessionExpired,
-    ErrorItemNotFound,
-    ErrorAccessDenied,
-    ErrorAlreadyFriends,
-    ErrorUserBlocked,
-    ErrorRequestNotFound,
-    ErrorRequestAlreadyHandled,
-    ErrorNotAuthorized,
-    ErrorRateLimited,
-    ErrorInvalidInput,
-    ErrorOperationNotAllowed,
-    ErrorTimeout,
-    ErrorSendMessageFailed,
-    ErrorFriendRequestSent,
-    ErrorFriendRequestFailed,
-    ErrorFriendRemoved,
-    ErrorFriendRemoveFailed,
-    ErrorBlockSuccess,
-    ErrorBlockFailed,
-    ErrorUnblockSuccess,
-    ErrorUnblockFailed,
-    ErrorAcceptRequestSuccess,
-    ErrorAcceptRequestFailed,
-    ErrorRejectRequestSuccess,
-    ErrorRejectRequestFailed,
-    ErrorOfflineMessage,
-    ErrorChatDeletionFailed,
-    ErrorGenericRetry,
 }
 
 // Core Ui Texts list
@@ -844,22 +687,6 @@ val CoreUiTexts: List<String> = listOf(
     "Speak",
 
     // --- Status Messages ---
-    // RecognizingStatus
-    "Recording... Speak now. (Stops automatically after silence)",
-    // TranslatingStatus
-    "Translating, please wait...",
-    // SpeakingOriginalStatus
-    "Speaking original text, please wait...",
-    // SpeakingTranslationStatus
-    "Speaking translation, please wait...",
-    // SpeakingLabel
-    "Speaking...",
-    // FinishedSpeakingOriginal
-    "Finished speaking original text.",
-    // FinishedSpeakingTranslation
-    "Finished speaking translation.",
-    // TtsErrorTemplate
-    "TTS error: %s",
 
     // --- Dropdowns & Labels ---
     // AppUiLanguageLabel
@@ -930,16 +757,6 @@ val CoreUiTexts: List<String> = listOf(
     "Type here or use microphone...",
     // SpeechTranslatedPlaceholder
     "The translated result will be shown here.",
-    // StatusAzureErrorTemplate
-    "Azure error: %s",
-    // StatusTranslationErrorTemplate
-    "Translation error: %s",
-    // StatusLoginRequiredTranslation
-    "Login is required to use translation.",
-    // StatusRecognizePreparing
-    "Preparing mic... (Do not speak now)",
-    // StatusRecognizeListening
-    "Listening... Please speak now.",
 
     // --- Pagination ---
     // PaginationPrevLabel
@@ -950,16 +767,12 @@ val CoreUiTexts: List<String> = listOf(
     "Page {page} / {total}",
 
     // --- Toast & Messages ---
-    // ToastCopied
-    "Copied to clipboard",
     // DisableText
     "Login is required to use translation features & storing translation history.",
 
     // --- Standard UI Components ---
     // ErrorRetryButton
     "Retry",
-    // ErrorGenericMessage
-    "An error occurred. Please try again.",
 
     // --- Shop ---
     // ShopTitle

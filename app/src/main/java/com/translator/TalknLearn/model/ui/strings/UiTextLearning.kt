@@ -54,20 +54,11 @@ val LearningQuizScreenTexts: List<String> = listOf(
     // LearningRegenBlockedMessage
     "Regeneration requires at least 5 more records than the previous generation. You currently need {needed} more records.",
 
-    // LearningRegenNeedMoreRecords
-    "⚠️ Need {needed} more records to regenerate (minimum 5)",
-
-    // LearningRegenCountNotHigher
-    "⚠️ Record count must be higher than the previous generation",
-
     // LearningRegenInfoTitle
     "Regeneration Rules",
 
     // LearningRegenInfoMessage
     "To regenerate learning materials:\n\n• First generation: Always allowed\n• Regeneration: Requires at least 5 MORE translation records than the previous generation\n\nThe button will be enabled (blue) when you have enough new records. If it's disabled (gray), keep translating to unlock regeneration!\n\n💡 Note: If the count doesn't update after translating, please restart the app to refresh.",
-
-    // QuizRegenBlockedSameMaterial
-    "❌ Quiz already generated for this material version. Generate a new learning sheet to create a new quiz.",
 
     // --- Quiz ---
     // QuizTitleTemplate
@@ -82,23 +73,14 @@ val LearningQuizScreenTexts: List<String> = listOf(
     // QuizGenerating
     "⏳ Generating...",
 
-    // QuizUpToDate
-    "✓ Up-to-date",
-
     // QuizBlocked
     "🚫 Blocked",
 
     // QuizWait
     "⏳ Wait...",
 
-    // QuizMaterialsQuizTemplate
-    "Materials: {materials} | Quiz: {quiz}",
-
     // QuizCanEarnCoins
     "🪙 Can earn coins!",
-
-    // QuizNeedMoreRecordsTemplate
-    "🪙 Need {count} more records for coins",
 
     // QuizCancelButton
     "Cancel",
@@ -150,9 +132,6 @@ val LearningQuizScreenTexts: List<String> = listOf(
 
     // QuizQuestionTemplate
     "Question {current} of {total}",
-
-    // QuizCannotRegenTemplate
-    "⚠️ Cannot regenerate: Materials ({materials}) < Quiz ({quiz}). Add more translations.",
 
     // QuizAnotherGenInProgress
     "⏳ Another generation is in progress. Please wait.",
@@ -241,57 +220,10 @@ val LearningQuizScreenTexts: List<String> = listOf(
     // QuizCoinsGreatButton
     "Great!",
 
-    // QuizOutdatedMessage
-    "This quiz is based on an old sheet version.",
-
     // QuizRecordsLabel
     "records",
 
     // --- History Screen Coins ---
-    // HistoryCoinsDialogTitle
-    "🪙 Your Coins",
-
-    // HistoryCoinRulesTitle
-    "Coin Earning Rules:",
-
-    // HistoryCoinHowToEarnTitle
-    "How to Earn:",
-
-    // HistoryCoinHowToEarnRule1
-    "• 1 coin per correct answer",
-
-    // HistoryCoinHowToEarnRule2
-    "• Only first attempt of each quiz version counts",
-
-    // HistoryCoinHowToEarnRule3
-    "• Quiz must match current learning materials",
-
-    // HistoryCoinAntiCheatTitle
-    "🔒 Anti Cheat/Farming Rules:",
-
-    // HistoryCoinAntiCheatRule1
-    "• Need 10+ new translations compare to previous earned coin quiz to earn again",
-
-    // HistoryCoinAntiCheatRule2
-    "• Quiz version must equal materials version",
-
-    // HistoryCoinAntiCheatRule3
-    "• Deleting history blocks quiz regenerate (unless the count is higher than previous record)",
-
-    // HistoryCoinAntiCheatRule4
-    "• Retaking same quiz earns no coins",
-
-    // HistoryCoinTipsTitle
-    "💡 Tips:",
-
-    // HistoryCoinTipsRule1
-    "• Add more translations regularly",
-
-    // HistoryCoinTipsRule2
-    "• Study well before first attempt!",
-
-    // HistoryCoinGotItButton
-    "Got it!",
 
     // --- History Info Dialog ---
     // HistoryInfoTitle

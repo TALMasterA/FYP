@@ -13,14 +13,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.TranslateButton to "Isalin",
     UiTextKey.CopyTranslationButton to "Kopyahin ang salin",
     UiTextKey.SpeakTranslationButton to "Basahin ang salin",
-    UiTextKey.RecognizingStatus to "Nagre-record...magsalita na, awtomatikong titigil",
-    UiTextKey.TranslatingStatus to "Nagsasalin...",
-    UiTextKey.SpeakingOriginalStatus to "Binabasa ang orihinal...",
-    UiTextKey.SpeakingTranslationStatus to "Binabasa ang salin...",
-    UiTextKey.SpeakingLabel to "Nagsasalita",
-    UiTextKey.FinishedSpeakingOriginal to "Tapos na basahin ang orihinal",
-    UiTextKey.FinishedSpeakingTranslation to "Tapos na basahin ang salin",
-    UiTextKey.TtsErrorTemplate to "Error sa boses: %s",
 
     // Language labels
     UiTextKey.AppUiLanguageLabel to "Wika ng app",
@@ -61,11 +53,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     // Speech
     UiTextKey.SpeechInputPlaceholder to "Mag-type dito o gamitin ang mikropono...",
     UiTextKey.SpeechTranslatedPlaceholder to "Dito lalabas ang salin...",
-    UiTextKey.StatusAzureErrorTemplate to "Azure error: %s",
-    UiTextKey.StatusTranslationErrorTemplate to "Error sa pagsasalin: %s",
-    UiTextKey.StatusLoginRequiredTranslation to "Mag-log in para makapagsalin",
-    UiTextKey.StatusRecognizePreparing to "Inihahanda ang mikropono...(huwag munang magsalita)",
-    UiTextKey.StatusRecognizeListening to "Nakikinig...magsalita na",
 
     // Pagination
     UiTextKey.PaginationPrevLabel to "Nakaraan",
@@ -73,12 +60,10 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.PaginationPageLabelTemplate to "Pahina {page} / {total}",
 
     // Toast
-    UiTextKey.ToastCopied to "Nakopya na",
     UiTextKey.DisableText to "Mag-log in para magsalin at mag-save ng kasaysayan",
 
     // Error
     UiTextKey.ErrorRetryButton to "Subukang muli",
-    UiTextKey.ErrorGenericMessage to "May nangyaring error. Subukan ulit",
 
     // Shop
     UiTextKey.ShopTitle to "Tindahan",
@@ -110,10 +95,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.HelpTitle to "Tulong",
     UiTextKey.SpeechTitle to "Mabilisang Salin",
     UiTextKey.HomeStartButton to "Simulan ang pagsasalin",
-    UiTextKey.HomeFeaturesTitle to "Mga Feature",
-    UiTextKey.HomeDiscreteDescription to "Isalin ang teksto at maikling audio",
-    UiTextKey.HomeContinuousDescription to "Real-time na dalawang-daang usapan",
-    UiTextKey.HomeLearningDescription to "Lumikha ng mga materyal at pagsusulit mula sa kasaysayan",
 
     // Help
     UiTextKey.HelpCurrentTitle to "Kasalukuyang mga feature",
@@ -237,10 +218,7 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsFontSizeTitle to "Laki ng font",
     UiTextKey.SettingsFontSizeDesc to "I-adjust ang laki ng font (naka-sync sa mga device)",
     UiTextKey.SettingsScaleTemplate to "Scale: {pct}%",
-    UiTextKey.SettingsColorPaletteTitle to "Mga tema ng kulay",
-    UiTextKey.SettingsColorPaletteDesc to "Pumili ng tema ng kulay. 10 barya bawat tema",
     UiTextKey.SettingsColorCostTemplate to "{cost} barya",
-    UiTextKey.SettingsColorUnlockButton to "I-unlock",
     UiTextKey.SettingsColorSelectButton to "Piliin",
     UiTextKey.SettingsColorAlreadyUnlocked to "Naka-unlock na",
     UiTextKey.SettingsPreviewHeadline to "Headline: Malaking teksto",
@@ -258,8 +236,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsResetPW to "I-reset ang password",
     UiTextKey.SettingsQuickLinks to "Iba pang settings",
     UiTextKey.SettingsNotLoggedInWarning to "Mag-log in para makita ang account settings. Maaaring baguhin ang wika ng app nang hindi naka-log in",
-    UiTextKey.SettingsVoiceTitle to "Setting ng boses",
-    UiTextKey.SettingsVoiceDesc to "Pumili ng boses para sa bawat wika",
     UiTextKey.SettingsVoiceLanguageLabel to "Wika",
     UiTextKey.SettingsVoiceSelectLabel to "Boses",
     UiTextKey.SettingsVoiceDefault to "Default",
@@ -282,23 +258,17 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LearningSheetWhatIsThisDesc to "Ang mga materyal sa pag-aaral ay nalilikha mula sa kasaysayan ng pagsasalin. May mga bokabularyo, depinisyon, halimbawa, at tala sa grammar. Subukan ang iyong kaalaman sa pagsusulit!",
     UiTextKey.LearningRegenBlockedTitle to "Hindi maaaring muling lumikha",
     UiTextKey.LearningRegenBlockedMessage to "Kailangan ng hindi bababa sa 5 na karagdagang talaan para muling lumikha. Kailangan pa ng {needed}",
-    UiTextKey.LearningRegenNeedMoreRecords to "⚠️ Kailangan pa ng {needed} na talaan para muling lumikha (kailangan 5 pa)",
-    UiTextKey.LearningRegenCountNotHigher to "⚠️ Ang bilang ay kailangang higit pa sa noong huling paglikha",
     UiTextKey.LearningRegenInfoTitle to "Mga patakaran sa muling paglikha",
     UiTextKey.LearningRegenInfoMessage to "Muling lumikha ng materyal:\n\n• Unang beses: kahit kailan\n• Muling lumikha: kailangan ng 5 pa na talaan\n\nMagiging berde ang button kapag handa na. Kung kulay abo, magsalin pa!\n\n💡 Tip: Kung hindi nag-update ang bilang, i-restart ang app",
-    UiTextKey.QuizRegenBlockedSameMaterial to "❌ Nalikha na ang pagsusulit para sa bersyong ito. Muling lumikha ng materyal para sa bagong pagsusulit",
 
     // Quiz
     UiTextKey.QuizTitleTemplate to "Pagsusulit: {language}",
     UiTextKey.QuizOpenButton to "📝 Pagsusulit",
     UiTextKey.QuizGenerateButton to "🔄 Lumikha ng pagsusulit",
     UiTextKey.QuizGenerating to "⏳ Lumilikha...",
-    UiTextKey.QuizUpToDate to "✓ Pinakabago",
     UiTextKey.QuizBlocked to "🚫 Na-block",
     UiTextKey.QuizWait to "⏳ Maghintay...",
-    UiTextKey.QuizMaterialsQuizTemplate to "Materyal: {materials} | Pagsusulit: {quiz}",
     UiTextKey.QuizCanEarnCoins to "🪙 Maaaring kumita ng barya!",
-    UiTextKey.QuizNeedMoreRecordsTemplate to "🪙 Kailangan pa ng {count} para sa barya",
     UiTextKey.QuizCancelButton to "Kanselahin",
     UiTextKey.QuizPreviousButton to "Nakaraan",
     UiTextKey.QuizNextButton to "Susunod",
@@ -316,7 +286,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizYourAnswerTemplate to "Sagot mo: {Answer}",
     UiTextKey.QuizCorrectAnswerTemplate to "Tamang sagot: {Answer}",
     UiTextKey.QuizQuestionTemplate to "Tanong {current} / {total}",
-    UiTextKey.QuizCannotRegenTemplate to "⚠️ Hindi maaaring muling lumikha: materyal({materials}) < pagsusulit({quiz}), magsalin pa",
     UiTextKey.QuizAnotherGenInProgress to "⏳ May ibang paglikha na nagaganap. Maghintay",
     UiTextKey.QuizCoinRulesTitle to "🪙 Mga patakaran sa barya",
     UiTextKey.QuizCoinRulesHowToEarn to "✅ Paano kumita:",
@@ -346,25 +315,9 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizCoinsRule4 to "• Dapat tumugma ang pagsusulit sa materyal",
     UiTextKey.QuizCoinsRule5 to "• Ang mga barya ay bahagi ng kasaysayan",
     UiTextKey.QuizCoinsGreatButton to "Mahusay!",
-    UiTextKey.QuizOutdatedMessage to "Ang pagsusulit na ito ay gumagamit ng lumang materyal",
     UiTextKey.QuizRecordsLabel to "Mga talaan",
 
     // History coins
-    UiTextKey.HistoryCoinsDialogTitle to "🪙 Mga barya ko",
-    UiTextKey.HistoryCoinRulesTitle to "Mga patakaran sa barya:",
-    UiTextKey.HistoryCoinHowToEarnTitle to "Paano kumita:",
-    UiTextKey.HistoryCoinHowToEarnRule1 to "• 1 barya bawat tamang sagot",
-    UiTextKey.HistoryCoinHowToEarnRule2 to "• Unang pagsubok lamang bawat bersyon",
-    UiTextKey.HistoryCoinHowToEarnRule3 to "• Dapat tumugma ang pagsusulit sa kasalukuyang materyal",
-    UiTextKey.HistoryCoinAntiCheatTitle to "🔒 Mga patakaran laban sa pandaraya:",
-    UiTextKey.HistoryCoinAntiCheatRule1 to "• Kailangan ng 10 bagong salin mula sa huling gantimpala",
-    UiTextKey.HistoryCoinAntiCheatRule2 to "• Bersyon ng pagsusulit dapat tumugma sa materyal",
-    UiTextKey.HistoryCoinAntiCheatRule3 to "• Ang pagbura ng talaan ay nagba-block ng muling paglikha (maliban kung mas mataas ang bilang)",
-    UiTextKey.HistoryCoinAntiCheatRule4 to "• Walang barya sa mga susunod na pagsubok",
-    UiTextKey.HistoryCoinTipsTitle to "💡 Mga tip:",
-    UiTextKey.HistoryCoinTipsRule1 to "• Regular na magdagdag ng salin",
-    UiTextKey.HistoryCoinTipsRule2 to "• Mag-aral mabuti bago ang unang pagsubok!",
-    UiTextKey.HistoryCoinGotItButton to "Naintindihan ko!",
 
     // History info
     UiTextKey.HistoryInfoTitle to "Impormasyon ng kasaysayan",
@@ -383,7 +336,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankWordsCount to "Mga salita",
     UiTextKey.WordBankGenerating to "Lumilikha...",
     UiTextKey.WordBankGenerate to "Lumikha ng bangko ng salita",
-    UiTextKey.WordBankRegenerate to "Muling lumikha ng bangko ng salita",
     UiTextKey.WordBankRefresh to "🔄 I-refresh ang bangko",
     UiTextKey.WordBankEmpty to "Walang laman ang bangko ng salita",
     UiTextKey.WordBankEmptyHint to "Pindutin sa itaas para lumikha mula sa kasaysayan",
@@ -393,11 +345,8 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankFilterCategoryAll to "Lahat ng kategorya",
     UiTextKey.WordBankFilterDifficultyLabel to "Antas:",
     UiTextKey.WordBankFilterNoResults to "Walang salitang tumutugma sa filter",
-    UiTextKey.WordBankRefreshAvailable to "✅ May update na!",
-    UiTextKey.WordBankRecordsNeeded to "Mga talaan (kailangan 20 para mag-update)",
     UiTextKey.WordBankRegenInfoTitle to "Mga patakaran sa pag-update",
     UiTextKey.WordBankRegenInfoMessage to "I-update ang bangko ng salita:\n\n• Unang beses: kahit kailan\n• Update: kailangan ng 20 karagdagang talaan\n\nMagiging berde ang button kapag handa na. Kung kulay abo, magsalin pa!\n\n💡 Tip: Kung hindi nag-update ang bilang, i-restart ang app",
-    UiTextKey.WordBankHistoryCountTemplate to "Kasalukuyang bilang: {nowCount} (noong lumikha: {savedCount})",
 
     // Dialogs
     UiTextKey.DialogLogoutTitle to "Mag-log out?",
@@ -410,8 +359,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ProfileUsernameLabel to "Username",
     UiTextKey.ProfileUsernameHint to "Ilagay ang username",
     UiTextKey.ProfileUpdateButton to "I-update ang profile",
-    UiTextKey.ProfileUpdateSuccess to "Na-update na ang profile",
-    UiTextKey.ProfileUpdateError to "Hindi na-update",
 
     // Account deletion
     UiTextKey.AccountDeleteTitle to "Burahin ang account",
@@ -419,19 +366,10 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteConfirmMessage to "Lahat ng data ay permanenteng mabubura: kasaysayan, bangko ng salita, materyal, settings. Ilagay ang password para kumpirmahin",
     UiTextKey.AccountDeletePasswordLabel to "Password",
         UiTextKey.AccountDeleteButton to "Burahin ang aking account at data",
-    UiTextKey.AccountDeleteSuccess to "Matagumpay na nabura ang account",
-    UiTextKey.AccountDeleteError to "Hindi nabura",
-    UiTextKey.AccountDeleteReauthRequired to "Ilagay ang password para kumpirmahin ang pagbura",
 
     // Favorites
     UiTextKey.FavoritesTitle to "Mga Paborito",
     UiTextKey.FavoritesEmpty to "Wala pang paborito",
-    UiTextKey.FavoritesAddSuccess to "Naidagdag sa mga paborito",
-    UiTextKey.FavoritesRemoveSuccess to "Naalis sa mga paborito",
-    UiTextKey.FavoritesAddButton to "Idagdag sa paborito",
-    UiTextKey.FavoritesRemoveButton to "Alisin sa paborito",
-    UiTextKey.FavoritesNoteLabel to "Tala",
-    UiTextKey.FavoritesNoteHint to "Magdagdag ng tala (opsyonal)",
     UiTextKey.FavoritesTabRecords to "Mga talaan",
     UiTextKey.FavoritesTabSessions to "Mga session",
     UiTextKey.FavoritesSessionsEmpty to "Wala pang paboritong session",
@@ -446,9 +384,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsTranslatedLabel to "Salin",
     UiTextKey.CustomWordsPronunciationLabel to "Pagbigkas (opsyonal)",
     UiTextKey.CustomWordsExampleLabel to "Halimbawa (opsyonal)",
-    UiTextKey.CustomWordsSaveSuccess to "Na-save na ang salita",
-    UiTextKey.CustomWordsDeleteSuccess to "Nabura na ang salita",
-    UiTextKey.CustomWordsAlreadyExists to "May ganitong salita na",
     UiTextKey.CustomWordsOriginalLanguageLabel to "Wikang pinagmulan",
     UiTextKey.CustomWordsTranslationLanguageLabel to "Wikang pagsasalin",
     UiTextKey.CustomWordsSaveButton to "I-save",
@@ -456,36 +391,18 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Language detection
     UiTextKey.LanguageDetectAuto to "Auto-detect",
-    UiTextKey.LanguageDetectDetecting to "Tinutukoy...",
-    UiTextKey.LanguageDetectedTemplate to "Natukoy: {language}",
-    UiTextKey.LanguageDetectFailed to "Hindi natukoy",
 
     // Image recognition
     UiTextKey.ImageRecognitionButton to "I-scan ang teksto mula sa larawan",
     UiTextKey.ImageRecognitionAccuracyWarning to "⚠️ Babala: Ang pagkilala ng teksto ay maaaring hindi ganap na tumpak. Suriin ulit ang nakilalang teksto. " +
             "Sinusuportahan ang Latin (Ingles, atbp.), Tsino, Hapon, at Koreano",
-    UiTextKey.ImageRecognitionScanning to "Ini-scan ang teksto...",
-    UiTextKey.ImageRecognitionSuccess to "Matagumpay na nakilala ang teksto",
 
     // Cache
-    UiTextKey.CacheClearButton to "I-clear ang cache",
-    UiTextKey.CacheClearSuccess to "Na-clear na ang cache",
-    UiTextKey.CacheStatsTemplate to "Cache: {count} na naka-save na salin",
 
     // Auto theme
-    UiTextKey.SettingsAutoThemeTitle to "Awtomatikong tema",
-    UiTextKey.SettingsAutoThemeDesc to "Awtomatikong magpalit ng maliwanag/madilim batay sa oras",
-    UiTextKey.SettingsAutoThemeEnabled to "Naka-on",
-    UiTextKey.SettingsAutoThemeDisabled to "Naka-off",
-    UiTextKey.SettingsAutoThemeDarkStartLabel to "Simula ng madilim:",
-    UiTextKey.SettingsAutoThemeLightStartLabel to "Simula ng maliwanag:",
     UiTextKey.SettingsAutoThemePreview to "Awtomatikong magpapalit ng tema batay sa oras na itinakda",
 
     // Offline mode
-    UiTextKey.OfflineModeTitle to "Offline mode",
-    UiTextKey.OfflineModeMessage to "Offline ka. Ipapakita ang naka-cache na data",
-    UiTextKey.OfflineModeRetry to "Subukang kumonekta ulit",
-    UiTextKey.OfflineDataCached to "Available ang naka-cache na data",
     UiTextKey.OfflineSyncPending to "Ang mga pagbabago ay isi-sync kapag online na",
 
     // Image capture
@@ -497,26 +414,15 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Friends
     UiTextKey.FriendsTitle to "Mga Kaibigan",
-    UiTextKey.FriendsMenuButton to "Mga Kaibigan",
     UiTextKey.FriendsAddButton to "Magdagdag ng kaibigan",
     UiTextKey.FriendsSearchTitle to "Maghanap ng gumagamit",
     UiTextKey.FriendsSearchPlaceholder to "Username o ID...",
-    UiTextKey.FriendsSearchMinChars to "Maglagay ng hindi bababa sa 2 karakter",
     UiTextKey.FriendsSearchNoResults to "Walang nahanap na gumagamit",
-    UiTextKey.FriendsListEmpty to "Magdagdag ng kaibigan para mag-chat at magbahagi ng materyal",
     UiTextKey.FriendsRequestsSection to "Mga kahilingan ({count})",
     UiTextKey.FriendsSectionTitle to "Mga Kaibigan ({count})",
     UiTextKey.FriendsAcceptButton to "Tanggapin",
     UiTextKey.FriendsRejectButton to "Tanggihan",
-    UiTextKey.FriendsRemoveButton to "Alisin",
-    UiTextKey.FriendsRemoveDialogTitle to "Alisin ang kaibigan",
-    UiTextKey.FriendsRemoveDialogMessage to "Alisin si {username} sa listahan ng kaibigan?",
     UiTextKey.FriendsSendRequestButton to "Idagdag",
-    UiTextKey.FriendsRequestSentSuccess to "Naipadala na ang kahilingan!",
-    UiTextKey.FriendsRequestAcceptedSuccess to "Tinanggap na ang kahilingan!",
-    UiTextKey.FriendsRequestRejectedSuccess to "Tinanggihan ang kahilingan",
-    UiTextKey.FriendsRemovedSuccess to "Naalis na ang kaibigan",
-    UiTextKey.FriendsRequestFailed to "Hindi naipadala",
     UiTextKey.FriendsCloseButton to "Isara",
     UiTextKey.FriendsCancelButton to "Kanselahin",
     UiTextKey.FriendsRemoveConfirm to "Alisin",
@@ -526,7 +432,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsCancelRequestButton to "Kanselahin ang kahilingan",
     UiTextKey.FriendsUnreadMessageDesc to "Magpadala ng mensahe",
     UiTextKey.FriendsDeleteModeButton to "Burahin ang kaibigan",
-    UiTextKey.FriendsDeleteSelectedButton to "Burahin ang napili",
     UiTextKey.FriendsDeleteMultipleTitle to "Burahin ang kaibigan",
     UiTextKey.FriendsDeleteMultipleMessage to "Burahin ang {count} na napiling kaibigan?",
     UiTextKey.FriendsSearchMinChars3 to "Maglagay ng hindi bababa sa 3 karakter para sa pangalan",
@@ -540,26 +445,16 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ChatInputPlaceholder to "Mag-type ng mensahe...",
     UiTextKey.ChatSendButton to "Ipadala",
     UiTextKey.ChatEmpty to "Wala pang mensahe. Magsimula na ng usapan!",
-    UiTextKey.ChatMessageSent to "Naipadala na ang mensahe",
-    UiTextKey.ChatMessageFailed to "Hindi naipadala",
-    UiTextKey.ChatMarkingRead to "Binabasa...",
-    UiTextKey.ChatLoadingMessages to "Naglo-load ng mga mensahe...",
-    UiTextKey.ChatToday to "Ngayong araw",
-    UiTextKey.ChatYesterday to "Kahapon",
     UiTextKey.ChatUnreadBadge to "{count} hindi pa nabasa",
     UiTextKey.ChatTranslateButton to "Isalin",
     UiTextKey.ChatTranslateDialogTitle to "Isalin ang chat",
     UiTextKey.ChatTranslateDialogMessage to "Isalin ang mga mensahe ng kaibigan sa wika mo? Awtomatikong matutukoy at maisasalin ang bawat mensahe",
     UiTextKey.ChatTranslateConfirm to "Isalin lahat",
-    UiTextKey.ChatTranslating to "Isinasalin ang mga mensahe...",
-    UiTextKey.ChatTranslated to "Naisalin na ang mga mensahe",
     UiTextKey.ChatShowOriginal to "Ipakita ang orihinal",
     UiTextKey.ChatShowTranslation to "Ipakita ang salin",
-    UiTextKey.ChatTranslateFailed to "Hindi naisalin",
     UiTextKey.ChatTranslatedLabel to "Naisalin",
 
     // Sharing
-    UiTextKey.ShareTitle to "Ibahagi",
     UiTextKey.ShareInboxTitle to "Inbox ng ibinahagi",
     UiTextKey.ShareInboxEmpty to "Wala pang ibinahagi. Maaaring magbahagi ng salita at materyal ang mga kaibigan!",
     UiTextKey.ShareWordButton to "Ibahagi ang salita",
@@ -567,14 +462,8 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareSelectFriendTitle to "Pumili ng kaibigan",
     UiTextKey.ShareSelectFriendMessage to "Pumili ng kaibigan na pagbabahagian:",
     UiTextKey.ShareSuccess to "Matagumpay na naibahagi!",
-    UiTextKey.ShareFailed to "Hindi naibahagi",
-    UiTextKey.ShareWordWith to "Ibahagi ang salita kay {username}",
-    UiTextKey.ShareMaterialWith to "Ibahagi ang materyal kay {username}",
     UiTextKey.ShareAcceptButton to "Tanggapin",
     UiTextKey.ShareDismissButton to "I-dismiss",
-    UiTextKey.ShareAccepted to "Naidagdag sa koleksyon",
-    UiTextKey.ShareDismissed to "Na-dismiss ang item",
-    UiTextKey.ShareActionFailed to "Hindi nagawa",
     UiTextKey.ShareTypeWord to "Salita",
     UiTextKey.ShareTypeLearningSheet to "Materyal sa pag-aaral",
     UiTextKey.ShareReceivedFrom to "Mula kay: {username}",
@@ -593,12 +482,10 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.MyProfileTitle to "Profile ko",
     UiTextKey.MyProfileUserId to "User ID",
     UiTextKey.MyProfileUsername to "Username",
-    UiTextKey.MyProfileDisplayName to "Display name",
     UiTextKey.MyProfileCopyUserId to "Kopyahin ang ID",
     UiTextKey.MyProfileCopyUsername to "Kopyahin ang username",
     UiTextKey.MyProfileShare to "Ibahagi ang profile",
     UiTextKey.MyProfileCopied to "Nakopya na!",
-    UiTextKey.MyProfileLanguages to "Mga wika",
     UiTextKey.MyProfilePrimaryLanguage to "Pangunahing wika",
     UiTextKey.MyProfileLearningLanguages to "Mga wikang pinag-aaralan",
 
@@ -626,7 +513,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
             "• Muling lumikha kailangan ng 5 karagdagang talaan\n" +
             "• Button ng materyal para buksan ang nilikha\n" +
             "• Matapos lumikha ng materyal, maaari nang mag-pagsusulit",
-    UiTextKey.LearningEmptyTitle to "Wala pang kasaysayan ng pagsasalin",
     UiTextKey.LearningEmptyMessage to "Magsimulang magsalin para lumikha ng talaan\n" +
             "Ang materyal ay gawa mula sa kasaysayan\n" +
             "Pagkatapos magsalin, mag-pull para i-refresh",
@@ -663,17 +549,14 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareDismissWordMessage to "I-dismiss ang ibinahaging salita? Hindi na maibabalik",
 
     // Shared inbox sheet label
-    UiTextKey.ShareLearningSheetLanguageLabel to "Wika: {language}",
 
     // Accessibility
     UiTextKey.AccessibilityDismiss to "I-dismiss",
-    UiTextKey.AccessibilityAlreadyConnectedOrPending to "Konektado o naghihintay na",
     UiTextKey.AccessibilityNewMessages to "Bagong mga mensahe",
     UiTextKey.AccessibilityNewReleasesIcon to "Indicator ng bagong item",
     UiTextKey.AccessibilitySuccessIcon to "Tagumpay",
     UiTextKey.AccessibilityErrorIcon to "Error",
     UiTextKey.AccessibilitySharedItemTypeIcon to "Uri ng ibinahaging item",
-    UiTextKey.AccessibilityAddCustomWords to "Magdagdag ng custom na salita",
     UiTextKey.AccessibilityWordBankExists to "May bangko na ng salita",
 
     // Settings hardcoded
@@ -686,7 +569,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsNotifFriendRequests to "Mga natanggap na kahilingan",
     UiTextKey.FriendsNotifRequestAccepted to "Mga tinanggap na kahilingan",
     UiTextKey.FriendsNotifSharedInbox to "Bagong ibinahaging item",
-    UiTextKey.FriendsNotifCloseButton to "Tapos na",
 
     // In-app badge settings
     UiTextKey.InAppBadgeSectionTitle to "In-app badge (pulang tuldok)",
@@ -695,10 +577,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.InAppBadgeSharedInbox to "Badge ng inbox na hindi pa nababasa",
 
     // Error messages
-    UiTextKey.ErrorNotLoggedIn to "Mag-log in para magpatuloy",
-    UiTextKey.ErrorSaveFailedRetry to "Hindi na-save. Subukan ulit",
-    UiTextKey.ErrorLoadFailedRetry to "Hindi na-load. Subukan ulit",
-    UiTextKey.ErrorNetworkRetry to "Error sa network. Suriin ang koneksyon",
 
     // Learning progress
     UiTextKey.LearningProgressNeededTemplate to "Kailangan pa ng {needed} na salin para lumikha ng materyal",
@@ -707,7 +585,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SpeechSwitchToConversation to "Lumipat sa tuloy-tuloy na usapan →",
 
     // Chat clear
-    UiTextKey.ChatClearConversationButton to "I-clear ang chat",
     UiTextKey.ChatClearConversationTitle to "I-clear ang chat",
     UiTextKey.ChatClearConversationMessage to "Itago ang lahat ng mensahe? Mananatiling nakatago kapag binuksan ulit. Hindi apektado ang iba",
     UiTextKey.ChatClearConversationConfirm to "I-clear lahat",
@@ -718,13 +595,11 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.BlockUserTitle to "I-block ang gumagamit na ito?",
     UiTextKey.BlockUserMessage to "I-block si {username}? Maaalis sa listahan at hindi na maaaring makipag-ugnayan",
     UiTextKey.BlockUserConfirm to "I-block",
-    UiTextKey.BlockUserSuccess to "Na-block at naalis na sa listahan",
     UiTextKey.BlockedUsersTitle to "Mga na-block na gumagamit",
     UiTextKey.BlockedUsersEmpty to "Walang na-block na gumagamit",
     UiTextKey.UnblockUserButton to "I-unblock",
     UiTextKey.UnblockUserTitle to "I-unblock?",
     UiTextKey.UnblockUserMessage to "I-unblock si {username}? Maaari na silang magpadala ng kahilingan ulit",
-    UiTextKey.UnblockUserSuccess to "Na-unblock na",
     UiTextKey.BlockedUsersManageButton to "Pamahalaan ang mga na-block",
 
     // Friend request note
@@ -737,7 +612,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.GenerationBannerQuiz to "Handa na ang pagsusulit! Pindutin para simulan",
 
     // Notification settings quick link
-    UiTextKey.NotifSettingsQuickLink to "Mga notipikasyon",
 
     // Language name for Traditional Chinese
     UiTextKey.LangZhTw to "Tsino (Traditional)",
@@ -799,7 +673,6 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsEmptyState to "Wala pang custom na salita",
     UiTextKey.CustomWordsEmptyHint to "Pindutin ang + para magdagdag ng salita",
     UiTextKey.CustomWordsNoSearchResults to "Walang tumutugmang salita",
-    UiTextKey.AddCustomWordHintTemplate to "Ilagay ang salita sa {from} at salin sa {to}",
 
     // Word bank records count
     UiTextKey.WordBankRecordsCountTemplate to "{count} na talaan",
@@ -878,34 +751,4 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmMessage to "Ang pagpapalit ng username ay hindi na mababago sa loob ng 30 araw. Magpatuloy?",
 
     // Extended Error Messages
-    UiTextKey.ErrorNoInternet to "Walang koneksyon sa internet. Suriin ang koneksyon",
-    UiTextKey.ErrorPermissionDenied to "Walang pahintulot para sa aksyon na ito",
-    UiTextKey.ErrorSessionExpired to "Nag-expire na ang session. Mag-log in ulit",
-    UiTextKey.ErrorItemNotFound to "Hindi nahanap ang item. Maaaring nabura na",
-    UiTextKey.ErrorAccessDenied to "Tinanggihan ang access",
-    UiTextKey.ErrorAlreadyFriends to "Magkaibigan na",
-    UiTextKey.ErrorUserBlocked to "Hindi pinapayagan. Maaaring na-block ang gumagamit",
-    UiTextKey.ErrorRequestNotFound to "Hindi na umiiral ang kahilingan na ito",
-    UiTextKey.ErrorRequestAlreadyHandled to "Nahawakan na ang kahilingan na ito",
-    UiTextKey.ErrorNotAuthorized to "Walang pahintulot para gawin ito",
-    UiTextKey.ErrorRateLimited to "Masyadong maraming kahilingan. Subukan ulit mamaya",
-    UiTextKey.ErrorInvalidInput to "Hindi tamang input. Suriin at subukan ulit",
-    UiTextKey.ErrorOperationNotAllowed to "Hindi pinapayagan ang operasyong ito sa ngayon",
-    UiTextKey.ErrorTimeout to "Nag-timeout. Subukan ulit",
-    UiTextKey.ErrorSendMessageFailed to "Hindi naipadala ang mensahe. Subukan ulit",
-    UiTextKey.ErrorFriendRequestSent to "Naipadala na ang kahilingan!",
-    UiTextKey.ErrorFriendRequestFailed to "Hindi naipadala ang kahilingan",
-    UiTextKey.ErrorFriendRemoved to "Naalis na ang kaibigan",
-    UiTextKey.ErrorFriendRemoveFailed to "Hindi naalis. Suriin ang koneksyon",
-    UiTextKey.ErrorBlockSuccess to "Na-block na ang gumagamit",
-    UiTextKey.ErrorBlockFailed to "Hindi na-block. Subukan ulit",
-    UiTextKey.ErrorUnblockSuccess to "Na-unblock na",
-    UiTextKey.ErrorUnblockFailed to "Hindi na-unblock. Subukan ulit",
-    UiTextKey.ErrorAcceptRequestSuccess to "Tinanggap na ang kahilingan!",
-    UiTextKey.ErrorAcceptRequestFailed to "Hindi natanggap. Subukan ulit",
-    UiTextKey.ErrorRejectRequestSuccess to "Tinanggihan na ang kahilingan",
-    UiTextKey.ErrorRejectRequestFailed to "Hindi natanggihan. Subukan ulit",
-    UiTextKey.ErrorOfflineMessage to "Offline ka. Maaaring hindi available ang ilang feature",
-    UiTextKey.ErrorChatDeletionFailed to "Hindi na-clear ang chat. Subukan ulit",
-    UiTextKey.ErrorGenericRetry to "May error na nangyari. Subukan ulit",
 )

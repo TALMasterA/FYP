@@ -13,14 +13,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.TranslateButton to "Traduci",
     UiTextKey.CopyTranslationButton to "Copia traduzione",
     UiTextKey.SpeakTranslationButton to "Leggi traduzione",
-    UiTextKey.RecognizingStatus to "Registrando...parla pure, si fermerà automaticamente",
-    UiTextKey.TranslatingStatus to "Traducendo...",
-    UiTextKey.SpeakingOriginalStatus to "Lettura testo originale...",
-    UiTextKey.SpeakingTranslationStatus to "Lettura traduzione...",
-    UiTextKey.SpeakingLabel to "In riproduzione",
-    UiTextKey.FinishedSpeakingOriginal to "Lettura testo originale completata",
-    UiTextKey.FinishedSpeakingTranslation to "Lettura traduzione completata",
-    UiTextKey.TtsErrorTemplate to "Errore vocale: %s",
 
     // Language labels
     UiTextKey.AppUiLanguageLabel to "Lingua dell'app",
@@ -61,11 +53,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     // Speech
     UiTextKey.SpeechInputPlaceholder to "Digita qui o usa il microfono...",
     UiTextKey.SpeechTranslatedPlaceholder to "La traduzione apparirà qui...",
-    UiTextKey.StatusAzureErrorTemplate to "Errore Azure: %s",
-    UiTextKey.StatusTranslationErrorTemplate to "Errore traduzione: %s",
-    UiTextKey.StatusLoginRequiredTranslation to "Accedi per tradurre",
-    UiTextKey.StatusRecognizePreparing to "Preparazione microfono...(non parlare ancora)",
-    UiTextKey.StatusRecognizeListening to "Ascolto...parla pure",
 
     // Pagination
     UiTextKey.PaginationPrevLabel to "Precedente",
@@ -73,12 +60,10 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.PaginationPageLabelTemplate to "Pagina {page} / {total}",
 
     // Toast
-    UiTextKey.ToastCopied to "Copiato",
     UiTextKey.DisableText to "Accedi per tradurre e salvare la cronologia",
 
     // Error
     UiTextKey.ErrorRetryButton to "Riprova",
-    UiTextKey.ErrorGenericMessage to "Si è verificato un errore. Riprova",
 
     // Shop
     UiTextKey.ShopTitle to "Negozio",
@@ -110,10 +95,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.HelpTitle to "Guida",
     UiTextKey.SpeechTitle to "Traduzione rapida",
     UiTextKey.HomeStartButton to "Inizia a tradurre",
-    UiTextKey.HomeFeaturesTitle to "Funzionalità",
-    UiTextKey.HomeDiscreteDescription to "Traduci testi e audio brevi",
-    UiTextKey.HomeContinuousDescription to "Conversazione bilingue in tempo reale",
-    UiTextKey.HomeLearningDescription to "Crea materiali e quiz dalla cronologia",
 
     // Help
     UiTextKey.HelpCurrentTitle to "Funzionalità attuali",
@@ -237,10 +218,7 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsFontSizeTitle to "Dimensione carattere",
     UiTextKey.SettingsFontSizeDesc to "Regola la dimensione del carattere (sincronizzata tra dispositivi)",
     UiTextKey.SettingsScaleTemplate to "Scala: {pct}%",
-    UiTextKey.SettingsColorPaletteTitle to "Temi colore",
-    UiTextKey.SettingsColorPaletteDesc to "Scegli un tema colore. 10 monete ciascuno",
     UiTextKey.SettingsColorCostTemplate to "{cost} monete",
-    UiTextKey.SettingsColorUnlockButton to "Sblocca",
     UiTextKey.SettingsColorSelectButton to "Seleziona",
     UiTextKey.SettingsColorAlreadyUnlocked to "Già sbloccato",
     UiTextKey.SettingsPreviewHeadline to "Titolo: Testo grande",
@@ -258,8 +236,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsResetPW to "Reimposta password",
     UiTextKey.SettingsQuickLinks to "Altre impostazioni",
     UiTextKey.SettingsNotLoggedInWarning to "Accedi per vedere le impostazioni account. La lingua dell'app può essere cambiata senza accesso",
-    UiTextKey.SettingsVoiceTitle to "Impostazioni voce",
-    UiTextKey.SettingsVoiceDesc to "Scegli la voce per ogni lingua",
     UiTextKey.SettingsVoiceLanguageLabel to "Lingua",
     UiTextKey.SettingsVoiceSelectLabel to "Voce",
     UiTextKey.SettingsVoiceDefault to "Predefinita",
@@ -282,23 +258,17 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.LearningSheetWhatIsThisDesc to "I materiali di apprendimento sono generati dalla cronologia delle traduzioni. Includono vocabolario, definizioni, esempi e note grammaticali. Metti alla prova le tue conoscenze con i quiz!",
     UiTextKey.LearningRegenBlockedTitle to "Impossibile rigenerare",
     UiTextKey.LearningRegenBlockedMessage to "Servono almeno 5 voci aggiuntive per rigenerare. Ne servono ancora {needed}",
-    UiTextKey.LearningRegenNeedMoreRecords to "⚠️ Servono ancora {needed} voci per rigenerare (necessarie 5 in più)",
-    UiTextKey.LearningRegenCountNotHigher to "⚠️ Il conteggio deve essere superiore all'ultima generazione",
     UiTextKey.LearningRegenInfoTitle to "Regole di rigenerazione",
     UiTextKey.LearningRegenInfoMessage to "Rigenerare materiali:\n\n• Prima volta: in qualsiasi momento\n• Rigenerare: servono 5 voci in più\n\nIl pulsante diventerà verde quando pronto. Se grigio, fai più traduzioni!\n\n💡 Suggerimento: Se il conteggio non si aggiorna, riavvia l'app",
-    UiTextKey.QuizRegenBlockedSameMaterial to "❌ Quiz già generato per questa versione. Rigenera i materiali per un nuovo quiz",
 
     // Quiz
     UiTextKey.QuizTitleTemplate to "Quiz: {language}",
     UiTextKey.QuizOpenButton to "📝 Quiz",
     UiTextKey.QuizGenerateButton to "🔄 Genera quiz",
     UiTextKey.QuizGenerating to "⏳ Generazione...",
-    UiTextKey.QuizUpToDate to "✓ Aggiornato",
     UiTextKey.QuizBlocked to "🚫 Bloccato",
     UiTextKey.QuizWait to "⏳ Attendi...",
-    UiTextKey.QuizMaterialsQuizTemplate to "Materiale: {materials} | Quiz: {quiz}",
     UiTextKey.QuizCanEarnCoins to "🪙 Puoi guadagnare monete!",
-    UiTextKey.QuizNeedMoreRecordsTemplate to "🪙 Servono ancora {count} per le monete",
     UiTextKey.QuizCancelButton to "Annulla",
     UiTextKey.QuizPreviousButton to "Precedente",
     UiTextKey.QuizNextButton to "Successivo",
@@ -316,7 +286,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizYourAnswerTemplate to "La tua risposta: {Answer}",
     UiTextKey.QuizCorrectAnswerTemplate to "Risposta corretta: {Answer}",
     UiTextKey.QuizQuestionTemplate to "Domanda {current} / {total}",
-    UiTextKey.QuizCannotRegenTemplate to "⚠️ Impossibile rigenerare: materiale({materials}) < quiz({quiz}), fai più traduzioni",
     UiTextKey.QuizAnotherGenInProgress to "⏳ Un'altra generazione in corso. Attendi",
     UiTextKey.QuizCoinRulesTitle to "🪙 Regole monete",
     UiTextKey.QuizCoinRulesHowToEarn to "✅ Come guadagnare:",
@@ -346,25 +315,9 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.QuizCoinsRule4 to "• Il quiz deve corrispondere ai materiali",
     UiTextKey.QuizCoinsRule5 to "• Le monete fanno parte della cronologia",
     UiTextKey.QuizCoinsGreatButton to "Fantastico!",
-    UiTextKey.QuizOutdatedMessage to "Questo quiz usa materiali obsoleti",
     UiTextKey.QuizRecordsLabel to "Voci",
 
     // History coins
-    UiTextKey.HistoryCoinsDialogTitle to "🪙 Le mie monete",
-    UiTextKey.HistoryCoinRulesTitle to "Regole monete:",
-    UiTextKey.HistoryCoinHowToEarnTitle to "Come guadagnare:",
-    UiTextKey.HistoryCoinHowToEarnRule1 to "• 1 moneta per risposta corretta",
-    UiTextKey.HistoryCoinHowToEarnRule2 to "• Solo il primo tentativo per versione",
-    UiTextKey.HistoryCoinHowToEarnRule3 to "• Il quiz deve corrispondere al materiale attuale",
-    UiTextKey.HistoryCoinAntiCheatTitle to "🔒 Regole anti-frode:",
-    UiTextKey.HistoryCoinAntiCheatRule1 to "• Servono 10 nuove traduzioni dall'ultimo premio",
-    UiTextKey.HistoryCoinAntiCheatRule2 to "• La versione del quiz deve corrispondere al materiale",
-    UiTextKey.HistoryCoinAntiCheatRule3 to "• Eliminare voci blocca la rigenerazione (tranne se il conteggio è superiore)",
-    UiTextKey.HistoryCoinAntiCheatRule4 to "• Nessuna moneta nei tentativi successivi",
-    UiTextKey.HistoryCoinTipsTitle to "💡 Suggerimenti:",
-    UiTextKey.HistoryCoinTipsRule1 to "• Aggiungi traduzioni regolarmente",
-    UiTextKey.HistoryCoinTipsRule2 to "• Studia bene prima del primo tentativo!",
-    UiTextKey.HistoryCoinGotItButton to "Ho capito!",
 
     // History info
     UiTextKey.HistoryInfoTitle to "Info cronologia",
@@ -383,7 +336,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankWordsCount to "Parole",
     UiTextKey.WordBankGenerating to "Generazione...",
     UiTextKey.WordBankGenerate to "Genera banca parole",
-    UiTextKey.WordBankRegenerate to "Rigenera banca parole",
     UiTextKey.WordBankRefresh to "🔄 Aggiorna banca",
     UiTextKey.WordBankEmpty to "Banca parole vuota",
     UiTextKey.WordBankEmptyHint to "Tocca sopra per generare dalla cronologia",
@@ -393,11 +345,8 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.WordBankFilterCategoryAll to "Tutte le categorie",
     UiTextKey.WordBankFilterDifficultyLabel to "Livello:",
     UiTextKey.WordBankFilterNoResults to "Nessuna parola corrisponde al filtro",
-    UiTextKey.WordBankRefreshAvailable to "✅ Aggiornamento disponibile!",
-    UiTextKey.WordBankRecordsNeeded to "Voci (servono 20 per aggiornare)",
     UiTextKey.WordBankRegenInfoTitle to "Regole di aggiornamento",
     UiTextKey.WordBankRegenInfoMessage to "Aggiornare la banca parole:\n\n• Prima volta: in qualsiasi momento\n• Aggiornare: servono 20 voci in più\n\nIl pulsante diventerà verde quando pronto. Se grigio, fai più traduzioni!\n\n💡 Suggerimento: Se il conteggio non si aggiorna, riavvia l'app",
-    UiTextKey.WordBankHistoryCountTemplate to "Conteggio attuale: {nowCount} (alla generazione: {savedCount})",
 
     // Dialogs
     UiTextKey.DialogLogoutTitle to "Uscire?",
@@ -410,8 +359,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ProfileUsernameLabel to "Nome utente",
     UiTextKey.ProfileUsernameHint to "Inserisci nome utente",
     UiTextKey.ProfileUpdateButton to "Aggiorna profilo",
-    UiTextKey.ProfileUpdateSuccess to "Profilo aggiornato",
-    UiTextKey.ProfileUpdateError to "Aggiornamento fallito",
 
     // Account deletion
     UiTextKey.AccountDeleteTitle to "Elimina account",
@@ -419,19 +366,10 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.AccountDeleteConfirmMessage to "Tutti i dati saranno eliminati permanentemente: cronologia, banca parole, materiali, impostazioni. Inserisci la password per confermare",
     UiTextKey.AccountDeletePasswordLabel to "Password",
         UiTextKey.AccountDeleteButton to "Elimina account e dati",
-    UiTextKey.AccountDeleteSuccess to "Account eliminato con successo",
-    UiTextKey.AccountDeleteError to "Eliminazione fallita",
-    UiTextKey.AccountDeleteReauthRequired to "Inserisci la password per confermare l'eliminazione",
 
     // Favorites
     UiTextKey.FavoritesTitle to "Preferiti",
     UiTextKey.FavoritesEmpty to "Nessun preferito ancora",
-    UiTextKey.FavoritesAddSuccess to "Aggiunto ai preferiti",
-    UiTextKey.FavoritesRemoveSuccess to "Rimosso dai preferiti",
-    UiTextKey.FavoritesAddButton to "Aggiungi ai preferiti",
-    UiTextKey.FavoritesRemoveButton to "Rimuovi dai preferiti",
-    UiTextKey.FavoritesNoteLabel to "Nota",
-    UiTextKey.FavoritesNoteHint to "Aggiungi nota (opzionale)",
     UiTextKey.FavoritesTabRecords to "Voci",
     UiTextKey.FavoritesTabSessions to "Sessioni",
     UiTextKey.FavoritesSessionsEmpty to "Nessuna sessione preferita",
@@ -446,9 +384,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsTranslatedLabel to "Traduzione",
     UiTextKey.CustomWordsPronunciationLabel to "Pronuncia (opzionale)",
     UiTextKey.CustomWordsExampleLabel to "Esempio (opzionale)",
-    UiTextKey.CustomWordsSaveSuccess to "Parola salvata",
-    UiTextKey.CustomWordsDeleteSuccess to "Parola eliminata",
-    UiTextKey.CustomWordsAlreadyExists to "Parola già esistente",
     UiTextKey.CustomWordsOriginalLanguageLabel to "Lingua originale",
     UiTextKey.CustomWordsTranslationLanguageLabel to "Lingua traduzione",
     UiTextKey.CustomWordsSaveButton to "Salva",
@@ -456,36 +391,18 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Language detection
     UiTextKey.LanguageDetectAuto to "Rilevamento automatico",
-    UiTextKey.LanguageDetectDetecting to "Rilevamento...",
-    UiTextKey.LanguageDetectedTemplate to "Rilevato: {language}",
-    UiTextKey.LanguageDetectFailed to "Rilevamento fallito",
 
     // Image recognition
     UiTextKey.ImageRecognitionButton to "Scansiona testo dall'immagine",
     UiTextKey.ImageRecognitionAccuracyWarning to "⚠️ Avviso: Il riconoscimento testo potrebbe non essere completamente preciso. Rivedi il testo rilevato. " +
             "Supporta Latino (Inglese ecc.), Cinese, Giapponese e Coreano",
-    UiTextKey.ImageRecognitionScanning to "Scansione testo...",
-    UiTextKey.ImageRecognitionSuccess to "Testo rilevato con successo",
 
     // Cache
-    UiTextKey.CacheClearButton to "Svuota cache",
-    UiTextKey.CacheClearSuccess to "Cache svuotata",
-    UiTextKey.CacheStatsTemplate to "Cache: {count} traduzioni salvate",
 
     // Auto theme
-    UiTextKey.SettingsAutoThemeTitle to "Tema automatico",
-    UiTextKey.SettingsAutoThemeDesc to "Alterna chiaro/scuro automaticamente per orario",
-    UiTextKey.SettingsAutoThemeEnabled to "Attivato",
-    UiTextKey.SettingsAutoThemeDisabled to "Disattivato",
-    UiTextKey.SettingsAutoThemeDarkStartLabel to "Inizio scuro:",
-    UiTextKey.SettingsAutoThemeLightStartLabel to "Inizio chiaro:",
     UiTextKey.SettingsAutoThemePreview to "Il tema cambierà automaticamente secondo l'orario impostato",
 
     // Offline mode
-    UiTextKey.OfflineModeTitle to "Modalità offline",
-    UiTextKey.OfflineModeMessage to "Sei offline. Verranno mostrati i dati in cache",
-    UiTextKey.OfflineModeRetry to "Riprova connessione",
-    UiTextKey.OfflineDataCached to "Dati in cache disponibili",
     UiTextKey.OfflineSyncPending to "Le modifiche saranno sincronizzate quando online",
 
     // Image capture
@@ -497,26 +414,15 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
 
     // Friends
     UiTextKey.FriendsTitle to "Amici",
-    UiTextKey.FriendsMenuButton to "Amici",
     UiTextKey.FriendsAddButton to "Aggiungi amico",
     UiTextKey.FriendsSearchTitle to "Cerca utente",
     UiTextKey.FriendsSearchPlaceholder to "Nome utente o ID...",
-    UiTextKey.FriendsSearchMinChars to "Inserisci almeno 2 caratteri",
     UiTextKey.FriendsSearchNoResults to "Nessun utente trovato",
-    UiTextKey.FriendsListEmpty to "Aggiungi amici per chattare e condividere materiali",
     UiTextKey.FriendsRequestsSection to "Richieste ({count})",
     UiTextKey.FriendsSectionTitle to "Amici ({count})",
     UiTextKey.FriendsAcceptButton to "Accetta",
     UiTextKey.FriendsRejectButton to "Rifiuta",
-    UiTextKey.FriendsRemoveButton to "Rimuovi",
-    UiTextKey.FriendsRemoveDialogTitle to "Rimuovere amico",
-    UiTextKey.FriendsRemoveDialogMessage to "Rimuovere {username} dalla lista amici?",
     UiTextKey.FriendsSendRequestButton to "Aggiungi",
-    UiTextKey.FriendsRequestSentSuccess to "Richiesta inviata!",
-    UiTextKey.FriendsRequestAcceptedSuccess to "Richiesta accettata!",
-    UiTextKey.FriendsRequestRejectedSuccess to "Richiesta rifiutata",
-    UiTextKey.FriendsRemovedSuccess to "Amico rimosso",
-    UiTextKey.FriendsRequestFailed to "Invio fallito",
     UiTextKey.FriendsCloseButton to "Chiudi",
     UiTextKey.FriendsCancelButton to "Annulla",
     UiTextKey.FriendsRemoveConfirm to "Rimuovi",
@@ -526,7 +432,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsCancelRequestButton to "Annulla richiesta",
     UiTextKey.FriendsUnreadMessageDesc to "Invia messaggio",
     UiTextKey.FriendsDeleteModeButton to "Elimina amici",
-    UiTextKey.FriendsDeleteSelectedButton to "Elimina selezionati",
     UiTextKey.FriendsDeleteMultipleTitle to "Eliminare amici",
     UiTextKey.FriendsDeleteMultipleMessage to "Eliminare {count} amici selezionati?",
     UiTextKey.FriendsSearchMinChars3 to "Inserisci almeno 3 caratteri per nome",
@@ -540,26 +445,16 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ChatInputPlaceholder to "Scrivi un messaggio...",
     UiTextKey.ChatSendButton to "Invia",
     UiTextKey.ChatEmpty to "Nessun messaggio ancora. Inizia la conversazione!",
-    UiTextKey.ChatMessageSent to "Messaggio inviato",
-    UiTextKey.ChatMessageFailed to "Invio fallito",
-    UiTextKey.ChatMarkingRead to "Lettura...",
-    UiTextKey.ChatLoadingMessages to "Caricamento messaggi...",
-    UiTextKey.ChatToday to "Oggi",
-    UiTextKey.ChatYesterday to "Ieri",
     UiTextKey.ChatUnreadBadge to "{count} non letti",
     UiTextKey.ChatTranslateButton to "Traduci",
     UiTextKey.ChatTranslateDialogTitle to "Traduci chat",
     UiTextKey.ChatTranslateDialogMessage to "Tradurre i messaggi dell'amico nella tua lingua? Ogni messaggio sarà rilevato e tradotto automaticamente",
     UiTextKey.ChatTranslateConfirm to "Traduci tutto",
-    UiTextKey.ChatTranslating to "Traduzione messaggi...",
-    UiTextKey.ChatTranslated to "Messaggi tradotti",
     UiTextKey.ChatShowOriginal to "Mostra originale",
     UiTextKey.ChatShowTranslation to "Mostra traduzione",
-    UiTextKey.ChatTranslateFailed to "Traduzione fallita",
     UiTextKey.ChatTranslatedLabel to "Tradotto",
 
     // Sharing
-    UiTextKey.ShareTitle to "Condividi",
     UiTextKey.ShareInboxTitle to "Posta condivisioni",
     UiTextKey.ShareInboxEmpty to "Nessuna condivisione ancora. Gli amici possono condividere parole e materiali!",
     UiTextKey.ShareWordButton to "Condividi parola",
@@ -567,14 +462,8 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareSelectFriendTitle to "Seleziona amico",
     UiTextKey.ShareSelectFriendMessage to "Seleziona un amico per condividere:",
     UiTextKey.ShareSuccess to "Condiviso con successo!",
-    UiTextKey.ShareFailed to "Condivisione fallita",
-    UiTextKey.ShareWordWith to "Condividi parola con {username}",
-    UiTextKey.ShareMaterialWith to "Condividi materiale con {username}",
     UiTextKey.ShareAcceptButton to "Accetta",
     UiTextKey.ShareDismissButton to "Rifiuta",
-    UiTextKey.ShareAccepted to "Aggiunto alla collezione",
-    UiTextKey.ShareDismissed to "Elemento rifiutato",
-    UiTextKey.ShareActionFailed to "Azione fallita",
     UiTextKey.ShareTypeWord to "Parola",
     UiTextKey.ShareTypeLearningSheet to "Materiale di apprendimento",
     UiTextKey.ShareReceivedFrom to "Da: {username}",
@@ -593,12 +482,10 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.MyProfileTitle to "Il mio profilo",
     UiTextKey.MyProfileUserId to "User ID",
     UiTextKey.MyProfileUsername to "Nome utente",
-    UiTextKey.MyProfileDisplayName to "Nome visualizzato",
     UiTextKey.MyProfileCopyUserId to "Copia ID",
     UiTextKey.MyProfileCopyUsername to "Copia nome utente",
     UiTextKey.MyProfileShare to "Condividi profilo",
     UiTextKey.MyProfileCopied to "Copiato!",
-    UiTextKey.MyProfileLanguages to "Lingue",
     UiTextKey.MyProfilePrimaryLanguage to "Lingua principale",
     UiTextKey.MyProfileLearningLanguages to "Lingue in apprendimento",
 
@@ -626,7 +513,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
             "• Rigenerare richiede 5 voci aggiuntive\n" +
             "• Pulsante materiale per aprire il generato\n" +
             "• Dopo aver generato il materiale, puoi fare il quiz",
-    UiTextKey.LearningEmptyTitle to "Nessuna cronologia di traduzione",
     UiTextKey.LearningEmptyMessage to "Inizia a tradurre per creare voci\n" +
             "I materiali vengono generati dalla cronologia\n" +
             "Dopo aver tradotto, scorri per aggiornare",
@@ -663,17 +549,14 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.ShareDismissWordMessage to "Rifiutare la parola condivisa? Non è reversibile",
 
     // Shared inbox sheet label
-    UiTextKey.ShareLearningSheetLanguageLabel to "Lingua: {language}",
 
     // Accessibility
     UiTextKey.AccessibilityDismiss to "Chiudi",
-    UiTextKey.AccessibilityAlreadyConnectedOrPending to "Connesso o in attesa",
     UiTextKey.AccessibilityNewMessages to "Nuovi messaggi",
     UiTextKey.AccessibilityNewReleasesIcon to "Indicatore nuovi elementi",
     UiTextKey.AccessibilitySuccessIcon to "Successo",
     UiTextKey.AccessibilityErrorIcon to "Errore",
     UiTextKey.AccessibilitySharedItemTypeIcon to "Tipo elemento condiviso",
-    UiTextKey.AccessibilityAddCustomWords to "Aggiungi parole personalizzate",
     UiTextKey.AccessibilityWordBankExists to "Banca parole esistente",
 
     // Settings hardcoded
@@ -686,7 +569,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.FriendsNotifFriendRequests to "Richieste accettate",
     UiTextKey.FriendsNotifRequestAccepted to "Richieste approvate",
     UiTextKey.FriendsNotifSharedInbox to "Nuovi elementi condivisi",
-    UiTextKey.FriendsNotifCloseButton to "Fatto",
 
     // In-app badge settings
     UiTextKey.InAppBadgeSectionTitle to "Badge nell'app (punti rossi)",
@@ -695,10 +577,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.InAppBadgeSharedInbox to "Badge posta condivisioni",
 
     // Error messages
-    UiTextKey.ErrorNotLoggedIn to "Accedi per continuare",
-    UiTextKey.ErrorSaveFailedRetry to "Salvataggio fallito. Riprova",
-    UiTextKey.ErrorLoadFailedRetry to "Caricamento fallito. Riprova",
-    UiTextKey.ErrorNetworkRetry to "Errore di rete. Controlla la connessione",
 
     // Learning progress
     UiTextKey.LearningProgressNeededTemplate to "Servono ancora {needed} traduzioni per generare il materiale",
@@ -707,7 +585,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SpeechSwitchToConversation to "Passa alla conversazione continua →",
 
     // Chat clear
-    UiTextKey.ChatClearConversationButton to "Cancella conversazione",
     UiTextKey.ChatClearConversationTitle to "Cancellare conversazione",
     UiTextKey.ChatClearConversationMessage to "Nascondere tutti i messaggi? Rimarranno nascosti alla riapertura. Non influisce sull'altra persona",
     UiTextKey.ChatClearConversationConfirm to "Cancella tutto",
@@ -718,13 +595,11 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.BlockUserTitle to "Bloccare questo utente?",
     UiTextKey.BlockUserMessage to "Bloccare {username}? Verrà rimosso dalla lista e bloccato dalle interazioni",
     UiTextKey.BlockUserConfirm to "Blocca",
-    UiTextKey.BlockUserSuccess to "Bloccato e rimosso dalla lista",
     UiTextKey.BlockedUsersTitle to "Utenti bloccati",
     UiTextKey.BlockedUsersEmpty to "Nessun utente bloccato",
     UiTextKey.UnblockUserButton to "Sblocca",
     UiTextKey.UnblockUserTitle to "Sbloccare?",
     UiTextKey.UnblockUserMessage to "Sbloccare {username}? Potranno inviare richieste di nuovo",
-    UiTextKey.UnblockUserSuccess to "Sbloccato",
     UiTextKey.BlockedUsersManageButton to "Gestisci bloccati",
 
     // Friend request note
@@ -737,7 +612,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.GenerationBannerQuiz to "Quiz pronto! Tocca per iniziare",
 
     // Notification settings quick link
-    UiTextKey.NotifSettingsQuickLink to "Notifiche",
 
     // Language name for Traditional Chinese
     UiTextKey.LangZhTw to "Cinese (Tradizionale)",
@@ -799,7 +673,6 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.CustomWordsEmptyState to "Nessuna parola personalizzata ancora",
     UiTextKey.CustomWordsEmptyHint to "Tocca + per aggiungere una parola",
     UiTextKey.CustomWordsNoSearchResults to "Nessuna parola trovata",
-    UiTextKey.AddCustomWordHintTemplate to "Inserisci la parola in {from} e la traduzione in {to}",
 
     // Word bank records count
     UiTextKey.WordBankRecordsCountTemplate to "{count} voci",
@@ -878,34 +751,4 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmMessage to "Cambiare il nome utente non può essere annullato per 30 giorni. Continuare?",
 
     // Extended Error Messages
-    UiTextKey.ErrorNoInternet to "Nessuna connessione internet. Controlla la connessione",
-    UiTextKey.ErrorPermissionDenied to "Permesso negato per questa azione",
-    UiTextKey.ErrorSessionExpired to "Sessione scaduta. Accedi di nuovo",
-    UiTextKey.ErrorItemNotFound to "Elemento non trovato. Potrebbe essere stato eliminato",
-    UiTextKey.ErrorAccessDenied to "Accesso negato",
-    UiTextKey.ErrorAlreadyFriends to "Già amici",
-    UiTextKey.ErrorUserBlocked to "Non consentito. L'utente potrebbe essere bloccato",
-    UiTextKey.ErrorRequestNotFound to "La richiesta non esiste più",
-    UiTextKey.ErrorRequestAlreadyHandled to "La richiesta è già stata gestita",
-    UiTextKey.ErrorNotAuthorized to "Non hai i permessi per farlo",
-    UiTextKey.ErrorRateLimited to "Troppe richieste. Riprova dopo",
-    UiTextKey.ErrorInvalidInput to "Input non valido. Controlla e riprova",
-    UiTextKey.ErrorOperationNotAllowed to "Questa operazione non è consentita al momento",
-    UiTextKey.ErrorTimeout to "Tempo scaduto. Riprova",
-    UiTextKey.ErrorSendMessageFailed to "Invio messaggio fallito. Riprova",
-    UiTextKey.ErrorFriendRequestSent to "Richiesta già inviata!",
-    UiTextKey.ErrorFriendRequestFailed to "Invio richiesta fallito",
-    UiTextKey.ErrorFriendRemoved to "Amico rimosso",
-    UiTextKey.ErrorFriendRemoveFailed to "Rimozione fallita. Controlla la connessione",
-    UiTextKey.ErrorBlockSuccess to "Utente bloccato",
-    UiTextKey.ErrorBlockFailed to "Blocco fallito. Riprova",
-    UiTextKey.ErrorUnblockSuccess to "Sbloccato",
-    UiTextKey.ErrorUnblockFailed to "Sblocco fallito. Riprova",
-    UiTextKey.ErrorAcceptRequestSuccess to "Richiesta accettata!",
-    UiTextKey.ErrorAcceptRequestFailed to "Accettazione fallita. Riprova",
-    UiTextKey.ErrorRejectRequestSuccess to "Richiesta rifiutata",
-    UiTextKey.ErrorRejectRequestFailed to "Rifiuto fallito. Riprova",
-    UiTextKey.ErrorOfflineMessage to "Sei offline. Alcune funzionalità potrebbero non essere disponibili",
-    UiTextKey.ErrorChatDeletionFailed to "Cancellazione conversazione fallita. Riprova",
-    UiTextKey.ErrorGenericRetry to "Si è verificato un errore. Riprova",
 )

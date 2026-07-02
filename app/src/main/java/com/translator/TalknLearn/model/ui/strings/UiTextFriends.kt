@@ -5,20 +5,14 @@ val FriendsScreenTexts: List<String> = listOf(
     // --- Friends System ---
     // FriendsTitle
     "Friends",
-    // FriendsMenuButton
-    "Friends",
     // FriendsAddButton
     "Add Friends",
     // FriendsSearchTitle
     "Search Users",
     // FriendsSearchPlaceholder
     "Enter username or user ID...",
-    // FriendsSearchMinChars
-    "Enter at least 2 characters to search",
     // FriendsSearchNoResults
     "No users found",
-    // FriendsListEmpty
-    "Add friends to connect and share learning materials.",
     // FriendsRequestsSection
     "Friend Requests ({count})",
     // FriendsSectionTitle
@@ -27,24 +21,8 @@ val FriendsScreenTexts: List<String> = listOf(
     "Accept",
     // FriendsRejectButton
     "Reject",
-    // FriendsRemoveButton
-    "Remove",
-    // FriendsRemoveDialogTitle
-    "Remove Friend",
-    // FriendsRemoveDialogMessage
-    "Are you sure you want to remove {username} from your friends list?",
     // FriendsSendRequestButton
     "Add",
-    // FriendsRequestSentSuccess
-    "Friend request sent!",
-    // FriendsRequestAcceptedSuccess
-    "Friend request accepted!",
-    // FriendsRequestRejectedSuccess
-    "Request rejected",
-    // FriendsRemovedSuccess
-    "Friend removed",
-    // FriendsRequestFailed
-    "Failed to send request",
     // FriendsCloseButton
     "Close",
     // FriendsCancelButton
@@ -64,8 +42,6 @@ val FriendsScreenTexts: List<String> = listOf(
     "Send message",
     // FriendsDeleteModeButton
     "Delete friends",
-    // FriendsDeleteSelectedButton
-    "Delete selected",
     // FriendsDeleteMultipleTitle
     "Remove Friends",
     // FriendsDeleteMultipleMessage
@@ -90,18 +66,6 @@ val FriendsScreenTexts: List<String> = listOf(
     "Send",
     // ChatEmpty
     "No messages yet. Start the conversation!",
-    // ChatMessageSent
-    "Message sent",
-    // ChatMessageFailed
-    "Failed to send message",
-    // ChatMarkingRead
-    "Marking as read...",
-    // ChatLoadingMessages
-    "Loading messages...",
-    // ChatToday
-    "Today",
-    // ChatYesterday
-    "Yesterday",
     // ChatUnreadBadge
     "{count} unread",
 
@@ -114,23 +78,15 @@ val FriendsScreenTexts: List<String> = listOf(
     "Translate your friend's messages to your preferred language? This will detect the language of each message and translate them.",
     // ChatTranslateConfirm
     "Translate All",
-    // ChatTranslating
-    "Translating messages...",
-    // ChatTranslated
-    "Messages translated",
     // ChatShowOriginal
     "Show Original",
     // ChatShowTranslation
     "Show Translation",
-    // ChatTranslateFailed
-    "Translation failed",
 
     // ChatTranslatedLabel
     "Translated",
 
     // --- Sharing Feature ---
-    // ShareTitle
-    "Share",
     // ShareInboxTitle
     "Shared Inbox",
     // ShareInboxEmpty
@@ -145,22 +101,10 @@ val FriendsScreenTexts: List<String> = listOf(
     "Choose a friend to share with:",
     // ShareSuccess
     "Successfully shared!",
-    // ShareFailed
-    "Failed to share",
-    // ShareWordWith
-    "Share word with {username}",
-    // ShareMaterialWith
-    "Share material with {username}",
     // ShareAcceptButton
     "Accept",
     // ShareDismissButton
     "Dismiss",
-    // ShareAccepted
-    "Added to your collection",
-    // ShareDismissed
-    "Item dismissed",
-    // ShareActionFailed
-    "Action failed",
     // ShareTypeWord
     "Word",
     // ShareTypeLearningSheet
@@ -196,8 +140,6 @@ val FriendsScreenTexts: List<String> = listOf(
     "User ID",
     // MyProfileUsername
     "Username",
-    // MyProfileDisplayName
-    "Display Name",
     // MyProfileCopyUserId
     "Copy User ID",
     // MyProfileCopyUsername
@@ -206,8 +148,6 @@ val FriendsScreenTexts: List<String> = listOf(
     "Share Profile",
     // MyProfileCopied
     "Copied to clipboard!",
-    // MyProfileLanguages
-    "Languages",
     // MyProfilePrimaryLanguage
     "Primary Language",
     // MyProfileLearningLanguages
@@ -244,8 +184,6 @@ val FriendsScreenTexts: List<String> = listOf(
     "• Regeneration requires at least 5 more records than the last generation.\n" +
     "• Press the sheet button to open and study your generated materials.\n" +
     "• Quiz is available after generating a learning sheet.",
-    // LearningEmptyTitle
-    "No Translation Records",
     // LearningEmptyMessage
     "Start translating to build up history records.\n" +
     "Learning sheets are generated from your translation history.\n" +
@@ -296,6 +234,4 @@ val FriendsScreenTexts: List<String> = listOf(
     "Are you sure you want to dismiss this shared word? This action cannot be undone.",
 
     // --- Shared Inbox Learning Sheet Language Label ---
-    // ShareLearningSheetLanguageLabel
-    "Language: {language}",
 )
