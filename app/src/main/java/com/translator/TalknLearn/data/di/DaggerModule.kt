@@ -168,9 +168,14 @@ object AppModule {
     fun provideTranslationRepository(
         client: CloudTranslatorClient,
         cache: TranslationCache,
-        detectionCache: LanguageDetectionCache
+        detectionCache: LanguageDetectionCache,
+        onDeviceTranslator: com.translator.TalknLearn.data.ondevice.OnDeviceTranslator
     ): TranslationRepository =
-        FirebaseTranslationRepository(client, cache, detectionCache)
+        FirebaseTranslationRepository(client, cache, detectionCache, onDeviceTranslator)
+
+    @Provides @Singleton
+    fun provideOnDeviceTranslator(): com.translator.TalknLearn.data.ondevice.OnDeviceTranslator =
+        com.translator.TalknLearn.data.ondevice.MlKitOnDeviceTranslator()
 
     @Provides
     @Singleton

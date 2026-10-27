@@ -9,6 +9,11 @@ import com.translator.TalknLearn.data.clients.DetectedLanguage
 import com.translator.TalknLearn.model.SpeechResult
 import com.translator.TalknLearn.utils.ErrorMessageMapper
 import com.google.firebase.functions.FirebaseFunctionsException
+import com.translator.TalknLearn.data.ondevice.OnDeviceTranslator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -26,8 +31,24 @@ import javax.inject.Inject
 class FirebaseTranslationRepository @Inject constructor(
     private val cloudTranslatorClient: CloudTranslatorClient,
     private val translationCache: TranslationCache,
-    private val languageDetectionCache: LanguageDetectionCache
+    private val languageDetectionCache: LanguageDetectionCache,
+    private val onDeviceTranslator: OnDeviceTranslator? = null
 ) : TranslationRepository {
+
+    private val prefetchScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Downloads on-device models for this pair (Wi-Fi only) so it works offline later. */
+    private fun prefetchOnDevice(from: String, to: String) {
+        val translator = onDeviceTranslator ?: return
+        if (from.isEmpty() || !translator.isSupported(from, to)) return
+        prefetchScope.launch { translator.prefetch(from, to) }
+    }
+
+    private suspend fun offlineFallback(text: String, from: String, to: String): String? {
+        val translator = onDeviceTranslator ?: return null
+        if (from.isEmpty() || !translator.isSupported(from, to)) return null
+        return translator.translate(text, from, to)
+    }
 
     private fun canonicalLanguageCode(code: String): String {
         val normalized = code.trim().replace('_', '-')
@@ -110,6 +131,7 @@ class FirebaseTranslationRepository @Inject constructor(
 
             // Cache the result (fire-and-forget to avoid blocking the caller)
             translationCache.cache(sourceText, result.translatedText, requestFromLanguage, requestToLanguage)
+            prefetchOnDevice(requestFromLanguage, requestToLanguage)
 
             SpeechResult.Success(
                 text = result.translatedText,
@@ -117,7 +139,13 @@ class FirebaseTranslationRepository @Inject constructor(
                 detectedScore = result.detectedScore
             )
         } catch (e: Exception) {
-            SpeechResult.Error(ErrorMessageMapper.mapTranslationError(e.message ?: "Translation failed"))
+            val offline = if (isExpectedTranslationFailure(e) && e is FirebaseFunctionsException) null
+            else offlineFallback(sourceText, requestFromLanguage, requestToLanguage)
+            if (offline != null) {
+                SpeechResult.Success(offline)
+            } else {
+                SpeechResult.Error(ErrorMessageMapper.mapTranslationError(e.message ?: "Translation failed"))
+            }
         }
     }
 
@@ -135,6 +163,10 @@ class FirebaseTranslationRepository @Inject constructor(
         fromLanguage: String,
         toLanguage: String
     ): Result<Map<String, String>> {
+        var batchFound: Map<String, String> = emptyMap()
+        var pendingBatch: List<String> = emptyList()
+        var batchFrom = ""
+        var batchTo = ""
         return try {
             if (texts.isEmpty()) {
                 return Result.success(emptyMap())
@@ -165,6 +197,11 @@ class FirebaseTranslationRepository @Inject constructor(
 
             AppLogger.d("BatchTranslate", "Cache: ${cacheResult.found.size} hits, ${cacheResult.notFound.size} misses")
 
+            batchFound = result.toMap()
+            pendingBatch = cacheResult.notFound
+            batchFrom = requestFromLanguage
+            batchTo = requestToLanguage
+
             // Call API for texts not in cache
             val apiTranslations = cloudTranslatorClient.translateTexts(
                 texts = cacheResult.notFound,
@@ -182,9 +219,21 @@ class FirebaseTranslationRepository @Inject constructor(
 
             // Cache new translations in batch
             translationCache.cacheBatch(newTranslations, requestFromLanguage, requestToLanguage)
+            prefetchOnDevice(requestFromLanguage, requestToLanguage)
 
             Result.success(result)
         } catch (e: Exception) {
+            val missing = pendingBatch
+            if (missing.isNotEmpty() && !(e is FirebaseFunctionsException && isExpectedTranslationFailure(e))) {
+                val partial = batchFound.toMutableMap()
+                var allOk = true
+                for (t in missing) {
+                    val o = offlineFallback(t, batchFrom, batchTo)
+                    if (o == null) { allOk = false; break }
+                    partial[t] = o
+                }
+                if (allOk) return Result.success(partial)
+            }
             if (isExpectedTranslationFailure(e)) {
                 AppLogger.w("BatchTranslate", "Batch translation rejected by upstream validation/auth", e)
             } else {

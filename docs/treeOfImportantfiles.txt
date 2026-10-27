@@ -181,6 +181,8 @@ FYP/
 │       │       │   │   └── RequestIdInterceptor.kt
 │       │       │   ├── ocr/
 │       │       │   │   └── MLKitOcrRepository.kt
+│       │       │   ├── ondevice/
+│       │       │   │   └── OnDeviceTranslator.kt ← ML Kit offline translation fallback
 │       │       │   ├── repositories/
 │       │       │   │   ├── AzureSpeechRepository.kt
 │       │       │   │   ├── FirebaseTranslationRepository.kt
