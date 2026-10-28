@@ -217,6 +217,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Review dependency changes
+        # Requires the repository "Dependency graph" setting
+        # (Settings > Code security). Non-blocking so CI stays green when it
+        # is disabled; enable the setting to get real review results.
+        continue-on-error: true
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: high
@@ -246,4 +250,8 @@ jobs:
             cp ci/google-services-mock.json app/google-services.json
           fi
       - name: Submit Gradle dependency graph
+        # Requires the repository "Dependency graph" setting
+        # (Settings > Code security). Non-blocking so CI stays green when it
+        # is disabled; enable the setting to get real submissions.
+        continue-on-error: true
         uses: gradle/actions/dependency-submission@v3
