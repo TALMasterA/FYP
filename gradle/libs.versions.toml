@@ -24,7 +24,7 @@ azureSpeechSdk = "1.47.0"
 accompanistPermissions = "0.34.0"
 navigationCompose = "2.8.3"
 lifecycleVersion = "2.8.6"
-firebaseBom = "34.7.0"
+firebaseBom = "35.1.0"
 coroutinesPlayServices = "1.8.1"
 hiltVersion = "2.52"
 hiltNavigationCompose = "1.2.0"
@@ -73,7 +73,7 @@ firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashly
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-functions = { group = "com.google.firebase", name = "firebase-functions" }
 firebase-perf = { group = "com.google.firebase", name = "firebase-perf" }
-firebase-appdistribution = { group = "com.google.firebase", name = "firebase-appdistribution", version = "16.0.0-beta14" }
+firebase-appdistribution = { group = "com.google.firebase", name = "firebase-appdistribution", version = "16.0.0-beta21" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 firebase-config = { group = "com.google.firebase", name = "firebase-config" }
 firebase-appcheck-playintegrity = { group = "com.google.firebase", name = "firebase-appcheck-playintegrity" }
