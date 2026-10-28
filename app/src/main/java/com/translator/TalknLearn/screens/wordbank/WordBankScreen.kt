@@ -1,0 +1,283 @@
+package com.translator.TalknLearn.screens.wordbank
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.translator.TalknLearn.core.UiConstants
+import com.translator.TalknLearn.core.StandardScreenScaffold
+import com.translator.TalknLearn.core.rememberUiTextFunctions
+import com.translator.TalknLearn.domain.learning.GenerationEligibility
+import com.translator.TalknLearn.model.ui.AppLanguageState
+import com.translator.TalknLearn.model.ui.BaseUiTexts
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.ui.components.FriendSelectorDialog
+import com.translator.TalknLearn.ui.components.WordBankItemSkeleton
+import kotlinx.coroutines.delay
+
+// Word Bank Screen - Main entry point for word bank feature
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WordBankScreen(
+    viewModel: WordBankViewModel,
+    customWordsViewModel: CustomWordsViewModel,
+    appLanguageState: AppLanguageState,
+    onBack: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val customWordsState by customWordsViewModel.uiState.collectAsStateWithLifecycle()
+
+    val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+
+    // Use cached languages from ViewModel instead of loading on composition
+    val supportedLanguages = viewModel.supportedLanguages
+
+
+    // Info dialog state
+    var showInfoDialog by remember { mutableStateOf(false) }
+
+
+    LaunchedEffect(uiState.error) {
+        if (!uiState.error.isNullOrBlank()) {
+            delay(UiConstants.ERROR_AUTO_DISMISS_MS)
+            viewModel.clearError()
+        }
+    }
+
+    val selectedLanguage = uiState.selectedLanguageCode
+    val currentWordBank = uiState.currentWordBank
+
+    // Info dialog
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text(t(UiTextKey.WordBankInfoTitle)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(t(UiTextKey.WordBankInfoMessage))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text(t(UiTextKey.WordBankInfoGotItButton))
+                }
+            }
+        )
+    }
+
+    StandardScreenScaffold(
+        title = t(UiTextKey.WordBankTitle),
+        onBack = {
+            if (selectedLanguage != null || uiState.isCustomWordBankSelected) {
+                viewModel.clearSelection()
+                customWordsViewModel.clearSelection()
+            } else {
+                onBack()
+            }
+        },
+        backContentDescription = t(UiTextKey.NavBack),
+        actions = {
+            IconButton(onClick = { viewModel.refreshLanguageCounts() }) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = t(UiTextKey.ErrorRetryButton),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            IconButton(onClick = { showInfoDialog = true }) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = t(UiTextKey.WordBankInfoTitle),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            when {
+                uiState.isLoading && !uiState.isGenerating -> {
+                    // Show loading skeletons
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        repeat(5) {
+                            WordBankItemSkeleton()
+                        }
+                    }
+                }
+                uiState.error != null && selectedLanguage == null && !uiState.isCustomWordBankSelected && !uiState.isGenerating -> {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = null,
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = uiState.error ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+                uiState.isCustomWordBankSelected -> {
+                    // Show custom word bank view (data from CustomWordsViewModel)
+                    CustomWordBankView(
+                        customWords = customWordsState.customWords,
+                        isSpeaking = uiState.isSpeaking,
+                        speakingItemId = uiState.speakingItemId,
+                        speakingType = uiState.speakingType,
+                        isTranslating = customWordsState.isTranslatingCustomWord,
+                        onSpeakWord = { word, type -> viewModel.speakWord(word, type) },
+                        onDeleteWord = { word ->
+                            val realId = word.id.removePrefix("custom_")
+                            customWordsViewModel.deleteCustomWord(realId)
+                            viewModel.invalidateCustomWordsCount()
+                        },
+                        onUpdateWordLanguage = { word, targetLang ->
+                            customWordsViewModel.updateCustomWordTargetLanguage(word, targetLang)
+                            viewModel.invalidateCustomWordsCount()
+                        },
+                        onAddWord = { original, translated, pronunciation, example, sourceLang, targetLang ->
+                            customWordsViewModel.addCustomWord(
+                                originalWord = original,
+                                translatedWord = translated,
+                                pronunciation = pronunciation,
+                                example = example,
+                                sourceLang = sourceLang,
+                                targetLang = targetLang
+                            )
+                            viewModel.invalidateCustomWordsCount()
+                        },
+                        onTranslate = { text, sourceLang, targetLang, onResult ->
+                            customWordsViewModel.translateForCustomWord(text, sourceLang, targetLang, onResult)
+                        },
+                        supportedLanguages = supportedLanguages,
+                        uiLanguageNameFor = uiLanguageNameFor,
+                        t = t
+                    )
+                }
+                selectedLanguage != null -> {
+                    val canRegen = viewModel.canRegenerate(selectedLanguage)
+                    val newRecordCount = viewModel.getNewRecordCount(selectedLanguage)
+                    val currentHistoryCount = viewModel.getCurrentHistoryCount(selectedLanguage)
+
+                    // Filter and pagination state
+                    var filterKeyword by remember { mutableStateOf("") }
+                    var filterCategory by remember { mutableStateOf("") }
+                    var filterDifficulty by remember { mutableStateOf("") }
+                    var wordBankPage by remember { mutableIntStateOf(0) }
+                    val pageSize = 10
+
+                    // Share: show friend selector when a word is pending share
+                    if (uiState.pendingShareWord != null) {
+                        FriendSelectorDialog(
+                            friends = uiState.friends,
+                            isLoading = uiState.isSharing,
+                            t = t,
+                            onFriendSelected = { friendId ->
+                                viewModel.shareWord(uiState.pendingShareWord!!, friendId)
+                            },
+                            onDismiss = { viewModel.setPendingShareWord(null) }
+                        )
+                    }
+
+                    // Share feedback
+                    uiState.shareSuccess?.let { msg ->
+                        LaunchedEffect(msg) {
+                            kotlinx.coroutines.delay(3000)
+                            viewModel.clearShareMessages()
+                        }
+                        Snackbar(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(16.dp)
+                        ) { Text(msg) }
+                    }
+                    uiState.shareError?.let { err ->
+                        LaunchedEffect(err) {
+                            kotlinx.coroutines.delay(3000)
+                            viewModel.clearShareMessages()
+                        }
+                        Snackbar(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(16.dp),
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        ) { Text(err) }
+                    }
+
+                    WordBankDetailView(
+                        languageName = uiLanguageNameFor(selectedLanguage),
+                        wordBank = currentWordBank,
+                        isGenerating = uiState.isGenerating,
+                        canRegenerate = canRegen,
+                        newRecordCount = newRecordCount,
+                        minRecordsForRegen = GenerationEligibility.MIN_RECORDS_FOR_REGEN,
+                        currentHistoryCount = currentHistoryCount,
+                        isSpeaking = uiState.isSpeaking,
+                        speakingItemId = uiState.speakingItemId,
+                        speakingType = uiState.speakingType,
+                        error = uiState.error,
+                        onGenerate = { viewModel.generateWordBank(selectedLanguage) },
+                        onCancel = { viewModel.cancelGeneration() },
+                        onSpeakWord = { word, type -> viewModel.speakWord(word, type) },
+                        onSpeakExample = { word -> viewModel.speakExample(word) },
+                        onDeleteWord = { word ->
+                            viewModel.deleteWordFromBank(word.id, selectedLanguage)
+                        },
+                        onShareWord = { word -> viewModel.setPendingShareWord(word) },
+                        t = t,
+                        filterKeyword = filterKeyword,
+                        onFilterKeywordChange = { filterKeyword = it },
+                        filterCategory = filterCategory,
+                        onFilterCategoryChange = { filterCategory = it },
+                        filterDifficulty = filterDifficulty,
+                        onFilterDifficultyChange = { filterDifficulty = it },
+                        currentPage = wordBankPage,
+                        onPageChange = { wordBankPage = it },
+                        pageSize = pageSize
+                    )
+                }
+                else -> {
+                    LanguageSelectionView(
+                        clusters = uiState.languageClusters,
+                        uiLanguageNameFor = uiLanguageNameFor,
+                        onSelectLanguage = { viewModel.selectLanguage(it) },
+                        customWordsCount = uiState.customWordsCount,
+                        onSelectCustomWordBank = {
+                            viewModel.setCustomWordBankSelected(true)
+                            customWordsViewModel.selectCustomWordBank()
+                        },
+                        onRefresh = { viewModel.refreshLanguageCounts() },
+                        t = t
+                    )
+                }
+            }
+        }
+    }
+}

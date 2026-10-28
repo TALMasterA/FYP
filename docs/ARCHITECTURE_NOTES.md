@@ -4,12 +4,29 @@
 
 ---
 
+## 0. High-Level Layering (item 52)
+
+```mermaid
+graph LR
+    UI["UI<br/>(Jetpack Compose<br/>screens)"] --> VM["ViewModel<br/>(Hilt-injected)"]
+    VM --> UC["UseCase<br/>(domain layer)"]
+    UC --> REPO["Repository<br/>(data layer)"]
+    REPO --> FS["Cloud Firestore<br/>+ Cloud Functions<br/>(App Check enforced)"]
+    REPO --> ANALYTICS["Observability<br/>(Crashlytics / Analytics /<br/>Performance traces)"]
+    FS --> AZURE["Azure backends<br/>(Translator / OCR /<br/>OpenAI)"]
+    UI -. composes .-> VM
+```
+
+**Rule:** UI never talks to repositories or Firebase SDKs directly; ViewModels never touch Cloud Function payloads outside repositories. Cross-layer shortcuts must be motivated in the same PR that introduces them.
+
+---
+
 ## 1. UiText System — Enum / List Alignment
 
 **Invariant:** `UiTextKey` enum ordinals must 1-to-1 map to `BaseUiTexts` list entries.
 
-**Rule:** Add new `UiTextKey` entries and corresponding strings in same commit. Never reorder existing entries.  
-**Guard:** `UiTextAlignmentTest` enforces count equality.
+**Rule:** Add new `UiTextKey` entries and corresponding English + all 16 locale strings in the same commit. Never reorder existing entries.
+**Guard:** `UiTextAlignmentTest` enforces count equality; `UiTextCompletenessTest` enforces non-blank coverage across every locale map.
 
 ---
 
@@ -120,9 +137,9 @@ For document creation fallback: catch `FirebaseFirestoreException`, only fallbac
 
 ## 4. Account Deletion — Complete Cleanup Required
 
-**Invariant:** `deleteAccount()` must clean up ALL 18 subcollections.
+**Invariant:** `deleteAccountAndData` must clean up ALL 18 user subcollections from the backend before deleting the Firebase Auth user.
 
-**Rule:** If adding a new collection, add its cleanup to `deleteAccount()`. Write a test asserting cleanup count stays in sync.
+**Rule:** If adding a new per-user collection, add its cleanup to `fyp-backend/functions/src/accountDeletion.ts` and update `AccountDeletionGuardTest`. The Android client must only re-authenticate and call the protected Cloud Function.
 
 ---
 
@@ -214,7 +231,7 @@ This keeps common-path mark-read at 1 read + 2 writes, independent of message vo
 
 ## 11. Standard UI Components — Consistency Across Screens
 
-**Rule:** Always use `StandardPrimaryButton`, `StandardTextField`, `StandardDialog` instead of raw Compose components. Use `AppSpacing` and `AppCorners` constants. Use `MaterialTheme.colorScheme` for colors.
+**Rule:** Use shared UI helpers where they exist, such as `ConfirmationDialog`, and keep layout/styling aligned through `AppSpacing`, `AppCorners`, and `MaterialTheme.colorScheme`.
 
 **Benefits:** Consistent styling, easier global updates, better accessibility.
 
@@ -247,15 +264,19 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ## 13. Input Validation and Sanitization — Security Guards
 
-**Rule:** Validate all user input at entry points using `validateEmail()`, `validateUsername()`, `validateTextLength()`. Sanitize with `sanitizeInput()`. Apply rate limiting (login: 5/min, friend requests: 5/hr, API: 100/min, password reset: 3/hr). Server-side enforcement: friend request notifications (5/hr, Firestore query + delete), chat notifications (10/min, `checkWriteRateLimit`), feedback submissions (3/hr, `checkWriteRateLimit` + delete), learning content generation (10/hr, `enforceRateLimit`).
+**Rule:** Validate all user input at entry points using `validateEmail()`, `validateUsername()`, `validateTextLength()`. Run write-path inputs through `sanitizeInput()` (strips ASCII control chars, collapses whitespace, caps at 5,000 chars). Run UGC through `escapeForDisplay()` only at the moment it is rendered as HTML/markup. Apply rate limiting (login: 5/min, friend requests: 5/hr, API: 100/min, password reset: 3/hr). Server-side enforcement: friend request notifications (5/hr, Firestore query + delete), chat notifications (10/min, `checkWriteRateLimit`), feedback submissions (3/hr, `checkWriteRateLimit` + delete), learning content generation (10/hr, `enforceRateLimit`).
 
 **RateLimiter memory bound:** `RateLimiter` is bounded to 10,000 tracked keys. When the limit is exceeded, stale keys (those with no recent attempts within the window) are pruned automatically.
+
+**Persistent rate limiter (§2.2):** Auth-path rate limits (login, password reset, feedback, chat send) use `PersistentRateLimiter`, a DataStore-backed counter that survives process death. The static in-memory `RateLimiter` remains for non-auth read-side throttles only.
+
+**App Check enforcement (§2.3):** `FYPApplication.onCreate()` installs Firebase App Check before any Firestore/Functions client is built. Release builds use the Play Integrity provider; debug builds (`BuildConfig.DEBUG`) use the Debug provider. The debug secret is read from gitignored `local.properties` (`appCheckDebugToken`) or CI's `APP_CHECK_DEBUG_TOKEN`, emitted as `BuildConfig.APP_CHECK_DEBUG_TOKEN`, and supplied to Firebase through `DebugAppCheckSecretRegistrar` / `InternalDebugSecretProvider`. If no token is configured, the Firebase SDK falls back to a generated debug secret that must be registered in the Firebase console. All 8 v2 callable Cloud Functions (`getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage`, `generateLearningContent`, `awardQuizCoins`, `spendCoins`, `deleteAccountAndData`) are created through `onAppCheckCall`, which injects `enforceAppCheck: true`; `app-check-wrapper.test.ts` blocks direct production imports of `onCall` / `onRequest`.
 
 **Audit logging PII:** `AuditLogger.logLoginFailed()` and `logPasswordResetRequested()` obfuscate email addresses before logging to Crashlytics (first 2 chars + domain only).
 
 **CacheInterceptor safety:** `CacheInterceptor` skips caching for requests carrying an `Authorization` header to avoid persisting sensitive authenticated responses.
 
-**Encoding order in `sanitizeInput()`:** `&` → `&amp;` (FIRST), then `<`, `>`, `"`, `'`, `/`.
+**Encoding order in `escapeForDisplay()`:** `&` → `&amp;` (FIRST), then `<`, `>`, `"`, `'`, `/`. Backward-compatible reader-side `decodeLegacyHtml()` reverses entities in the OPPOSITE order (`&amp;` LAST) to safely unwrap data that was double-encoded by the pre-§2.7 `sanitizeInput`. It is applied at `ChatViewModel.loadMessages` and `CustomWordsViewModel.loadCustomWords`.
 
 ---
 
@@ -287,10 +308,10 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 **Model Default:** `PublicUserProfile.isDiscoverable` defaults to `false` (not `true`)
 
 **Code Locations:**
-- Model default: `app/src/main/java/com/example/fyp/model/friends/PublicUserProfile.kt:21`
-- Profile init (merge-safe): `app/src/main/java/com/example/fyp/domain/friends/EnsurePublicProfileExistsUseCase.kt:42-61`
-- Profile update: `app/src/main/java/com/example/fyp/data/friends/FirestoreFriendsRepository.kt:99-147`
-- Search filtering: `app/src/main/java/com/example/fyp/data/friends/FirestoreFriendsRepository.kt:214-230`
+- Model default: `app/src/main/java/com/translator/TalknLearn/model/friends/PublicUserProfile.kt:21`
+- Profile init (merge-safe): `app/src/main/java/com/translator/TalknLearn/domain/friends/EnsurePublicProfileExistsUseCase.kt:42-61`
+- Profile update: `app/src/main/java/com/translator/TalknLearn/data/friends/FirestoreFriendsRepository.kt:99-147`
+- Search filtering: `app/src/main/java/com/translator/TalknLearn/data/friends/FirestoreFriendsRepository.kt:214-230`
   - `.whereEqualTo("isDiscoverable", true)` ensures only public profiles indexed
 
 **@PropertyName Annotation (Bug Fix — April 2026):**
@@ -516,13 +537,15 @@ ThrottledLaunchedEffect(key = refreshTrigger, intervalMillis = 1000L) { refreshD
 
 ---
 
-## 23. sanitizeInput() — Encoding Order
+## 23. escapeForDisplay() and decodeLegacyHtml() — Encoding Order
 
-**Invariant:** Ampersand (`&`) replacement MUST be first. If `<` → `&lt;` happens first, then `&` → `&amp;` double-encodes to `&amp;lt;`.
+**Invariant (escape):** Ampersand (`&`) replacement MUST be FIRST. If `<` → `&lt;` happens first, then `&` → `&amp;` double-encodes to `&amp;lt;`.
 
-**Order:** (1) `&` → `&amp;`, (2) `<` → `&lt;`, (3) `>` → `&gt;`, (4) `"` → `&quot;`, (5) `'` → `&#x27;`, (6) `/` → `&#x2F;`.
+**Encode order:** (1) `&` → `&amp;`, (2) `<` → `&lt;`, (3) `>` → `&gt;`, (4) `"` → `&quot;`, (5) `'` → `&#x27;`, (6) `/` → `&#x2F;`.
 
-**Guard:** `SanitizeInputExtendedTest` verifies no double-encoding.
+**Invariant (decode):** `decodeLegacyHtml()` reverses entities in the OPPOSITE order — `&lt;`, `&gt;`, `&quot;`, `&#x27;`, `&#x2F;` first, then `&amp;` LAST. This unwraps data that was double-encoded by the pre-§2.7 `sanitizeInput` without re-introducing the original character early.
+
+**Guards:** `EscapeForDisplayTest` (no double-encoding) and `SecurityUtilsTest` (decoder round-trip + leaves clean modern data unchanged).
 
 ---
 
@@ -765,7 +788,7 @@ The following components cannot be unit tested due to Android framework dependen
 
 **Bug (fixed 2026-04-13):** `getFavoriteCount()` only counted documents in the `favorites` collection (individual records) and ignored records embedded inside `favorite_sessions` documents. Users could bypass the 20-record limit by favouriting sessions.
 
-**Fix (2026-04-13):** Added `getTotalFavoriteRecordCount()` to `FirestoreFavoritesRepository` which sums individual records + session-embedded records. Both `toggleFavorite()` and `favouriteSession()` now use this method. The old `getFavoriteCount()` is retained for individual-count queries.
+**Fix (2026-04-13):** Added `getTotalFavoriteRecordCount()` to `FirestoreFavoritesRepository` which sums individual records + session-embedded records. Both `toggleFavorite()` and `favouriteSession()` now use this method. The earlier `getFavoriteCount()` helper was removed; `getTotalFavoriteRecordCount()` is the sole count entry point.
 
 ---
 

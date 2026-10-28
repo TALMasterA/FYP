@@ -6,7 +6,7 @@
  */
 import {onDocumentCreated, onDocumentUpdated} from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
-import {getFirestore, checkWriteRateLimit} from "./helpers.js";
+import {getFirestore, checkWriteRateLimit, logUid, logChat} from "./helpers.js";
 import {logger} from "./logger.js";
 
 const MAX_MESSAGE_PREVIEW_LENGTH = 100;
@@ -32,7 +32,7 @@ async function isSpamMessage(
   // Check 1: Link flooding — too many URLs in a single message
   const links = content.match(LINK_PATTERN);
   if (links && links.length >= SPAM_LINK_FLOOD_THRESHOLD) {
-    logger.warn("Spam detected: link flooding", {chatId, senderId, linkCount: links.length});
+    logger.warn("Spam detected: link flooding", {chatId: logChat(chatId), senderId: logUid(senderId), linkCount: links.length});
     return true;
   }
 
@@ -50,7 +50,7 @@ async function isSpamMessage(
         .filter((doc) => doc.data().content === content)
         .length;
       if (duplicateCount >= SPAM_DUPLICATE_THRESHOLD) {
-        logger.warn("Spam detected: repeated messages", {chatId, senderId, duplicateCount});
+        logger.warn("Spam detected: repeated messages", {chatId: logChat(chatId), senderId: logUid(senderId), duplicateCount});
         return true;
       }
     }

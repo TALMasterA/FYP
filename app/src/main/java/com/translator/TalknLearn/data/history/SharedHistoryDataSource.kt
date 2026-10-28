@@ -1,0 +1,186 @@
+package com.translator.TalknLearn.data.history
+
+import android.util.Log
+import com.translator.TalknLearn.core.performance.TimedCache
+import com.translator.TalknLearn.model.LanguageCode
+import com.translator.TalknLearn.model.TranslationRecord
+import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.user.UserSettings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * Shared data source for history records.
+ * This prevents multiple ViewModels from creating separate Firestore listeners
+ * for the same data, reducing database reads significantly.
+ *
+ * Instead of each ViewModel observing Firestore directly:
+ * - HistoryViewModel
+ * - LearningViewModel
+ * - WordBankViewModel
+ *
+ * All now share this single data source.
+ */
+@Singleton
+class SharedHistoryDataSource @Inject constructor(
+    private val historyRepo: FirestoreHistoryRepository
+) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    private var currentUserId: String? = null
+    private var currentLimit: Long = UserSettings.BASE_HISTORY_LIMIT.toLong()
+    private var historyJob: kotlinx.coroutines.Job? = null
+
+    // Cached history records - shared across all subscribers
+    private val _historyRecords = MutableStateFlow<List<TranslationRecord>>(emptyList())
+    val historyRecords: StateFlow<List<TranslationRecord>> = _historyRecords.asStateFlow()
+
+    // Loading and error states
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    // Track history count separately (for learning/quiz generation eligibility)
+    private val _historyCount = MutableStateFlow(0)
+    val historyCount: StateFlow<Int> = _historyCount.asStateFlow()
+
+    // Total language counts (ALL records, not limited) - used for generation eligibility
+    private val _languageCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val languageCounts: StateFlow<Map<String, Int>> = _languageCounts.asStateFlow()
+
+    // Cache for filtered language records (Priority 2 #8: Cache Filtered History Results)
+    // Uses TimedCache with 30-second TTL to avoid stale data while reducing repeated O(n) filtering
+    private val _languageRecordsCache = TimedCache<String, List<TranslationRecord>>(ttlMillis = 30_000L)
+
+    /**
+     * Start observing history for a user with optional limit.
+     * If already observing the same user with the same limit, does nothing (reuses existing listener).
+     */
+    fun startObserving(userId: String, limit: Long = UserSettings.BASE_HISTORY_LIMIT.toLong()) {
+        if (userId == currentUserId && limit == currentLimit && historyJob?.isActive == true) {
+            // Already observing this user with same limit, no need to create new listener
+            return
+        }
+
+        // Cancel previous listener if any
+        historyJob?.cancel()
+        currentUserId = userId
+        currentLimit = limit
+        _isLoading.value = true
+        _error.value = null
+
+        historyJob = scope.launch {
+            historyRepo.getHistory(UserId(userId), limit)
+                .catch { e ->
+                    _isLoading.value = false
+                    _error.value = e.message
+                    _historyRecords.value = emptyList()
+                    _historyCount.value = 0
+                }
+                .collect { records ->
+                    _isLoading.value = false
+                    _error.value = null
+                    _historyRecords.value = records
+                    _historyCount.value = records.size
+                    // Clear language records cache when history updates
+                    _languageRecordsCache.clear()
+                }
+        }
+    }
+
+    // Debounce cache to prevent excessive Firestore reads when multiple ViewModels trigger refresh
+    @Volatile
+    private var lastCountRefreshTime: Long = 0
+
+    companion object {
+        private const val COUNT_REFRESH_DEBOUNCE_MS = 5_000L // 5-second debounce
+    }
+
+    /**
+     * Refresh total language counts (for generation eligibility).
+     * This fetches counts from ALL records, not just the limited display records.
+     * Debounced to prevent excessive reads when multiple ViewModels trigger refreshes.
+     */
+    suspend fun refreshLanguageCounts(primaryLanguageCode: String) {
+        val uid = currentUserId ?: return
+        val now = System.currentTimeMillis()
+        // Skip if refreshed recently (multiple ViewModels may trigger this simultaneously)
+        if (lastCountRefreshTime != 0L && now - lastCountRefreshTime < COUNT_REFRESH_DEBOUNCE_MS) return
+        // Update timestamp immediately to prevent retry storms on transient failures
+        lastCountRefreshTime = now
+        try {
+            val counts = historyRepo.getLanguageCounts(UserId(uid), LanguageCode(primaryLanguageCode))
+            _languageCounts.value = counts
+        } catch (e: Exception) {
+            // Keep existing counts on error, but log for debugging
+            Log.w("SharedHistoryDataSource", "Failed to refresh language counts", e)
+        }
+    }
+
+    /**
+     * Force refresh language counts, bypassing the debounce.
+     * Use when the user explicitly changes primary language.
+     */
+    suspend fun forceRefreshLanguageCounts(primaryLanguageCode: String) {
+        lastCountRefreshTime = 0
+        refreshLanguageCounts(primaryLanguageCode)
+    }
+
+    /**
+     * Update the limit and restart observing if needed
+     */
+    fun updateLimit(newLimit: Long) {
+        val uid = currentUserId ?: return
+        if (newLimit != currentLimit) {
+            startObserving(uid, newLimit)
+        }
+    }
+
+    /**
+     * Stop observing and clear data (e.g., on logout).
+     */
+    fun stopObserving() {
+        historyJob?.cancel()
+        historyJob = null
+        currentUserId = null
+        _historyRecords.value = emptyList()
+        _historyCount.value = 0
+        _isLoading.value = false
+        _error.value = null
+        // Clear language records cache
+        _languageRecordsCache.clear()
+    }
+
+    /**
+     * Get records filtered by language code.
+     * Useful for learning/word bank screens that only need records for specific languages.
+     * Cached to avoid repeated O(n) filtering operations.
+     */
+    fun getRecordsForLanguage(languageCode: String): List<TranslationRecord> {
+        // Check cache first
+        _languageRecordsCache.get(languageCode)?.let { return it }
+        
+        // Cache miss - compute and store
+        val filtered = _historyRecords.value.filter {
+            it.sourceLang == languageCode || it.targetLang == languageCode
+        }
+        _languageRecordsCache.put(languageCode, filtered)
+        return filtered
+    }
+
+    /**
+     * Get count of records for a specific language.
+     * Uses languageCounts which fetches ALL records, not just limited display records.
+     * This ensures consistency with generation count saved in database.
+     */
+    fun getCountForLanguage(languageCode: String): Int {
+        return _languageCounts.value[languageCode] ?: 0
+    }
+}

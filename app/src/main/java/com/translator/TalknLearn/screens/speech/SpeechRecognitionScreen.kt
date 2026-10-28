@@ -1,0 +1,455 @@
+package com.translator.TalknLearn.screens.speech
+
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.translator.TalknLearn.core.RecordAudioPermissionRequest
+import com.translator.TalknLearn.core.RequestCameraPermission
+import com.translator.TalknLearn.core.StandardScreenScaffold
+import com.translator.TalknLearn.core.rememberUiTextFunctions
+import com.translator.TalknLearn.data.azure.AzureLanguageConfig
+import com.translator.TalknLearn.model.ui.AppLanguageState
+import com.translator.TalknLearn.model.user.AuthState
+import com.translator.TalknLearn.model.ui.BaseUiTexts
+import com.translator.TalknLearn.model.ui.UiTextKey
+import kotlinx.coroutines.delay
+import com.translator.TalknLearn.core.UiConstants
+import com.translator.TalknLearn.core.rememberHapticFeedback
+import com.translator.TalknLearn.ui.theme.AppSpacing
+
+/** Maximum number of candidate languages for auto-detection (Azure SDK limit) */
+private const val MAX_AUTO_DETECT_LANGUAGES = 4
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun SpeechRecognitionScreen(
+    uiLanguages: List<Pair<String, String>>,
+    appLanguageState: AppLanguageState,
+    onUpdateAppLanguage: (String, Map<UiTextKey, String>) -> Unit,
+    onBack: () -> Unit,
+    onOpenConversation: (() -> Unit)? = null,
+) {
+    val viewModel: SpeechViewModel = hiltViewModel()
+
+    val (uiText, uiLanguageNameFor) = rememberUiTextFunctions(appLanguageState)
+    val t: (UiTextKey) -> String = { key -> uiText(key, BaseUiTexts[key.ordinal]) }
+    val haptic = rememberHapticFeedback()
+
+    val recognizedText = viewModel.recognizedText
+    val translatedText = viewModel.translatedText
+
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+
+    LaunchedEffect(translatedText) {
+        // Only scroll when translation becomes available
+        if (translatedText.isNotBlank()) {
+            // small delay helps after recomposition/layout
+            delay(UiConstants.SPEECH_LISTENING_DEBOUNCE_MS.toLong())
+            bringIntoViewRequester.bringIntoView()
+        }
+    }
+
+    val ttsStatus = viewModel.ttsStatus
+    val statusMessage = viewModel.statusMessage
+    val recognizePhase = viewModel.recognizePhase
+    val isTtsRunning = viewModel.isTtsRunning
+
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+
+    val supportedLanguages by remember {
+        mutableStateOf(AzureLanguageConfig.loadSupportedLanguages(context))
+    }
+
+    // Add "auto" option only for source language detection
+    val sourceLanguageOptions = remember(supportedLanguages) {
+        listOf("auto") + supportedLanguages
+    }
+
+    var selectedLanguage by remember {
+        mutableStateOf("auto") // Default to auto-detect
+    }
+
+    var selectedTargetLanguage by remember {
+        mutableStateOf(supportedLanguages.getOrNull(1) ?: "zh-HK")
+    }
+
+    // Track detected source language for history
+    var detectedSourceLanguage by remember { mutableStateOf<String?>(null) }
+
+    // Custom name function that handles "auto"
+    val sourceLanguageNameFor: (String) -> String = { code ->
+        when {
+            code == "auto" -> t(UiTextKey.LanguageDetectAuto)
+            else -> uiLanguageNameFor(code)
+        }
+    }
+
+    val authState by viewModel.authState.collectAsStateWithLifecycle()
+    val isLoggedIn = authState is AuthState.LoggedIn
+
+    // Image capture state
+    var showImageSourceDialog by remember { mutableStateOf(false) }
+    var showCamera by remember { mutableStateOf(false) }
+    var requestCameraPermission by remember { mutableStateOf(false) }
+    var cameraErrorMessage by remember { mutableStateOf<String?>(null) }
+    
+    // Image picker launcher
+    val launchImagePicker = rememberImagePickerLauncher { uri ->
+        uri?.let { viewModel.recognizeTextFromImage(it, selectedLanguage) }
+    }
+
+    // Handle camera permission
+    if (requestCameraPermission) {
+        RequestCameraPermission(
+            onPermissionGranted = {
+                requestCameraPermission = false
+                showCamera = true
+            },
+            onPermissionDenied = {
+                requestCameraPermission = false
+            }
+        )
+    }
+
+    // Show image source selection dialog
+    if (showImageSourceDialog) {
+        ImageSourceDialog(
+            onCamera = {
+                requestCameraPermission = true
+            },
+            onGallery = {
+                launchImagePicker()
+            },
+            onDismiss = {
+                showImageSourceDialog = false
+            },
+            accuracyWarning = t(UiTextKey.ImageRecognitionAccuracyWarning),
+            languageHint = t(UiTextKey.CameraLanguageHint),
+            title = t(UiTextKey.ImageSourceTitle),
+            cameraLabel = t(UiTextKey.ImageSourceCamera),
+            galleryLabel = t(UiTextKey.ImageSourceGallery),
+            cancelLabel = t(UiTextKey.ImageSourceCancel)
+        )
+    }
+
+    // Show camera capture screen
+    if (showCamera) {
+        CameraCaptureScreen(
+            onImageCaptured = { uri ->
+                showCamera = false
+                viewModel.recognizeTextFromImage(uri, selectedLanguage)
+            },
+            onError = { error ->
+                showCamera = false
+                cameraErrorMessage = error.message ?: "Image recognition failed. Please try again."
+            },
+            onCancel = {
+                showCamera = false
+            },
+            captureContentDesc = t(UiTextKey.CameraCaptureContentDesc),
+            cancelLabel = t(UiTextKey.ImageSourceCancel)
+        )
+        return // Don't show the regular UI when camera is active
+    }
+
+    LaunchedEffect(cameraErrorMessage) {
+        if (cameraErrorMessage != null) {
+            delay(UiConstants.ERROR_AUTO_DISMISS_MS)
+            cameraErrorMessage = null
+        }
+    }
+
+    // Info dialog state
+    var showInfoDialog by remember { mutableStateOf(false) }
+
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text(t(UiTextKey.SpeechTitle)) },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 300.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(t(UiTextKey.SpeechInstructions))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text(t(UiTextKey.ActionConfirm))
+                }
+            }
+        )
+    }
+
+    StandardScreenScaffold(
+        title = t(UiTextKey.SpeechTitle),
+        onBack = onBack,
+        backContentDescription = t(UiTextKey.NavBack),
+        hasBottomNav = true,
+        actions = {
+            // Language swap button (circle button with ⇄)
+            IconButton(
+                onClick = {
+                    // Only swap if source is not auto
+                    if (selectedLanguage != "auto") {
+                        detectedSourceLanguage = null
+                        val tmp = selectedLanguage
+                        selectedLanguage = selectedTargetLanguage
+                        selectedTargetLanguage = tmp
+                        viewModel.swapTexts()
+                    }
+                },
+                enabled = selectedLanguage != "auto"
+            ) {
+                Text(
+                    text = "⇄",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+
+            IconButton(onClick = {
+                detectedSourceLanguage = null
+                viewModel.refreshQuickTranslateState()
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = "Refresh auto-detect"
+                )
+            }
+            
+            IconButton(onClick = { showInfoDialog = true }) {
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = "Instructions"
+                )
+            }
+        }
+    ) { innerPadding ->
+        RecordAudioPermissionRequest {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(AppSpacing.large),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.medium),
+            ) {
+                // Scrollable main content
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium),
+                ) {
+                    SpeechLanguagePickers(
+                        detectLabel = t(UiTextKey.DetectLanguageLabel),
+                        translateToLabel = t(UiTextKey.TranslateToLabel),
+                        selectedLanguage = selectedLanguage,
+                        selectedTargetLanguage = selectedTargetLanguage,
+                        sourceLanguageOptions = sourceLanguageOptions,
+                        targetLanguageOptions = supportedLanguages,
+                        sourceLanguageNameFor = sourceLanguageNameFor,
+                        targetLanguageNameFor = uiLanguageNameFor,
+                        onSelectedLanguage = {
+                            selectedLanguage = it
+                            if (it != "auto") detectedSourceLanguage = null
+                        },
+                        onSelectedTargetLanguage = { selectedTargetLanguage = it },
+                    )
+
+                    val isRecognizing = recognizePhase != RecognizePhase.Idle
+
+                    // Default candidate languages for auto-detect (Azure supports max 4)
+                    // Include the target language and common languages
+                    val autoDetectCandidates = remember(selectedTargetLanguage, supportedLanguages) {
+                        // Build candidates: target language + common languages (English, Chinese, Japanese, Spanish)
+                        val commonLanguages = listOf("en-US", "zh-CN", "ja-JP", "ko-KR")
+                        val candidates = mutableListOf<String>()
+
+                        // Add languages that differ from target (to detect what user is speaking)
+                        commonLanguages.forEach { lang ->
+                            if (candidates.size < MAX_AUTO_DETECT_LANGUAGES && lang != selectedTargetLanguage) {
+                                candidates.add(lang)
+                            }
+                        }
+
+                        candidates.take(MAX_AUTO_DETECT_LANGUAGES)
+                    }
+
+                    // Mic + Camera icon buttons in one row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
+                    ) {
+                        // Microphone button (icon-only)
+                        Button(
+                            onClick = {
+                                haptic.click()
+                                if (selectedLanguage == "auto") {
+                                    viewModel.recognizeWithAutoDetect(
+                                        candidateLanguages = autoDetectCandidates,
+                                        onDetectedLanguage = { detected ->
+                                            detectedSourceLanguage = detected
+                                        }
+                                    )
+                                } else {
+                                    viewModel.recognize(selectedLanguage)
+                                }
+                            },
+                            enabled = !isRecognizing,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(vertical = 14.dp),
+                            colors = if (recognizePhase == RecognizePhase.Listening)
+                                ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            else ButtonDefaults.buttonColors(),
+                        ) {
+                            Icon(
+                                imageVector = if (recognizePhase == RecognizePhase.Listening)
+                                    Icons.Filled.Stop else Icons.Filled.Mic,
+                                contentDescription = t(UiTextKey.AzureRecognizeButton),
+                            )
+                        }
+
+                        // Camera / OCR button (icon-only)
+                        OutlinedButton(
+                            onClick = { showImageSourceDialog = true },
+                            enabled = !isRecognizing,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(vertical = 14.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = t(UiTextKey.ImageRecognitionButton),
+                            )
+                        }
+                    }
+
+
+                    SourceTextEditor(
+                        value = recognizedText,
+                        onValueChange = { newText ->
+                            if (selectedLanguage == "auto") {
+                                detectedSourceLanguage = null
+                            }
+                            viewModel.updateSourceText(newText)
+                        },
+                        placeholder = uiText(UiTextKey.SpeechInputPlaceholder, BaseUiTexts[UiTextKey.SpeechInputPlaceholder.ordinal]),
+                        copyLabel = t(UiTextKey.CopyButton),
+                        speakLabel = t(UiTextKey.SpeakScriptButton),
+                        isTtsRunning = isTtsRunning,
+                        enableCopy = recognizedText.isNotBlank(),
+                        enableSpeak = recognizedText.isNotBlank() && !isTtsRunning,
+                        onCopy = { clipboardManager.setText(AnnotatedString(recognizedText)) },
+                        onSpeak = {
+                            val speakLang = detectedSourceLanguage ?: selectedLanguage
+                            viewModel.speakOriginal(speakLang) { detected ->
+                                detectedSourceLanguage = detected
+                            }
+                        },
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TranslateButton(
+                        label = t(UiTextKey.TranslateButton),
+                        enabled = isLoggedIn && recognizedText.isNotBlank(),
+                        onClick = {
+                            haptic.click()
+                            viewModel.translate(
+                                fromLanguage = selectedLanguage,
+                                toLanguage = selectedTargetLanguage,
+                                onDetectedSourceLanguage = { detected ->
+                                    detectedSourceLanguage = detected
+                                }
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    if (translatedText.isNotBlank()) {
+                        Column(
+                            modifier = Modifier.bringIntoViewRequester(bringIntoViewRequester)
+                        ) {
+                            TranslatedResultBox(
+                                text = translatedText,
+                                placeholder = t(UiTextKey.SpeechTranslatedPlaceholder),
+                                modifier = Modifier.bringIntoViewRequester(bringIntoViewRequester),
+                            )
+
+                            TranslationActionsRow(
+                                copyLabel = t(UiTextKey.CopyTranslationButton),
+                                speakLabel = t(UiTextKey.SpeakTranslationButton),
+                                isTtsRunning = isTtsRunning,
+                                enableCopy = true,
+                                enableSpeak = isLoggedIn && !isTtsRunning,
+                                onCopy = { clipboardManager.setText(AnnotatedString(translatedText)) },
+                                onSpeak = { viewModel.speakTranslation(selectedTargetLanguage) },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+                }
+
+                // Shortcut to Live Conversation mode
+                if (onOpenConversation != null) {
+                    OutlinedButton(
+                        onClick = onOpenConversation,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(t(UiTextKey.SpeechSwitchToConversation))
+                    }
+                }
+
+                BottomStatusText(
+                    statusMessage = listOfNotNull(cameraErrorMessage, statusMessage)
+                        .filter { it.isNotBlank() }
+                        .joinToString(separator = "\n"),
+                    ttsStatus = ttsStatus,
+                )
+            }
+        }
+    }
+}

@@ -102,6 +102,8 @@ jest.mock("firebase-admin", () => ({
 jest.mock("../helpers.js", () => ({
   getFirestore: jest.fn(() => mockFirestore),
   checkWriteRateLimit: jest.fn().mockResolvedValue(true),
+  logUid: jest.fn((uid: string) => uid),
+  logChat: jest.fn((chatId: string) => chatId),
 }));
 
 jest.mock("../logger.js", () => ({

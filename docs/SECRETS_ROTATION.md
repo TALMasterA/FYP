@@ -54,6 +54,11 @@ Functions automatically pick up the latest secret version on next cold start.
 
 Once verified, go back to Azure Portal and regenerate Key 1 (which was the old active key). This invalidates the old key.
 
+### 6. Record the Rotation
+
+Add an entry to the rotation log below after each completed drill. Use
+`.github/ISSUE_TEMPLATE/secret-rotation.md` for the yearly reminder issue.
+
 ## Emergency: Secret Compromised
 
 1. **Immediately** regenerate both keys in Azure Portal.
@@ -63,7 +68,7 @@ Once verified, go back to Azure Portal and regenerate Key 1 (which was the old a
 
 ## Rotation Log
 
-- 2026-04-18 — Rotated: `GENAI_API_KEY` (rotated by operator)
+- 2026-05-01 — Rotated: `GENAI_API_KEY` (rotated by operator)
 - 2026-03-20 — Rotated: `AZURE_SPEECH_KEY`, `AZURE_TRANSLATOR_KEY`, `GENAI_API_KEY` (rotated by operator)
 
 ## Notes

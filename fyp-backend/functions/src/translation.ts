@@ -4,7 +4,7 @@
  * Handles single/batch text translation and language detection
  * via the Azure Translator API.
  */
-import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {HttpsError} from "firebase-functions/v2/https";
 import fetch from "node-fetch";
 import {
   requireAuth,
@@ -21,6 +21,7 @@ import {
   API_VERSION,
   MAX_TRANSLATE_TEXT_LENGTH,
 } from "./helpers.js";
+import {onAppCheckCall} from "./functionWrappers.js";
 import {logger} from "./logger.js";
 
 // ── Batch content-translation rate limits ────────────────────────────
@@ -128,8 +129,10 @@ function throwTranslationApiError(
   );
 }
 
-export const getSpeechToken = onCall(
-  {secrets: [AZURE_SPEECH_KEY, AZURE_SPEECH_REGION]},
+export const getSpeechToken = onAppCheckCall(
+  {
+    secrets: [AZURE_SPEECH_KEY, AZURE_SPEECH_REGION],
+  },
   async (request) => {
     requireAuth(request.auth);
 
@@ -161,8 +164,14 @@ export const getSpeechToken = onCall(
   }
 );
 
-export const translateText = onCall(
-  {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
+export const translateText = onAppCheckCall(
+  {
+    secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
+    concurrency: 80,
+    cpu: 1,
+    maxInstances: 50,
+    memory: "512MiB",
+  },
   async (request) => {
     requireAuth(request.auth);
 
@@ -229,8 +238,14 @@ export const translateText = onCall(
  * API calls so the client only needs ONE Cloud Function invocation per
  * language change.
  */
-export const translateTexts = onCall(
-  {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
+export const translateTexts = onAppCheckCall(
+  {
+    secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
+    concurrency: 80,
+    cpu: 1,
+    maxInstances: 50,
+    memory: "512MiB",
+  },
   async (request) => {
     requireAuth(request.auth);
 
@@ -369,8 +384,10 @@ export const translateTexts = onCall(
   }
 );
 
-export const detectLanguage = onCall(
-  {secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION]},
+export const detectLanguage = onAppCheckCall(
+  {
+    secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
+  },
   async (request) => {
     requireAuth(request.auth);
 

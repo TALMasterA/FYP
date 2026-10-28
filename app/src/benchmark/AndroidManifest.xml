@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Source-set manifest applied to the :app `benchmark` build type only.
+  Adds <profileable shell="true"/> so Macrobenchmark (:macrobenchmark module)
+  can collect ART traces against a non-debuggable build.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <profileable
+            android:shell="true"
+            tools:targetApi="29" />
+    </application>
+</manifest>

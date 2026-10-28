@@ -1,0 +1,120 @@
+package com.translator.TalknLearn.data.friends
+
+import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.friends.ChatMetadata
+import com.translator.TalknLearn.model.friends.FriendMessage
+import kotlinx.coroutines.flow.Flow
+
+/**
+ * Repository for managing chat messages between friends.
+ */
+interface ChatRepository {
+    
+    /**
+     * Generate a chat ID from two user IDs.
+     * Chat ID is deterministic: smaller_uid + "_" + larger_uid
+     */
+    fun generateChatId(userId1: UserId, userId2: UserId): String
+    
+    /**
+     * Send a text message to a friend.
+     */
+    suspend fun sendTextMessage(
+        fromUserId: UserId,
+        toUserId: UserId,
+        content: String,
+        senderUsername: String = ""
+    ): Result<FriendMessage>
+
+    /**
+     * Send a text message using an explicit chatId.
+     */
+    suspend fun sendMessage(
+        chatId: String,
+        fromUserId: UserId,
+        toUserId: UserId,
+        content: String,
+        senderUsername: String = ""
+    ): Result<Unit>
+    
+    /**
+     * Mark a message as read.
+     */
+    suspend fun markMessageAsRead(chatId: String, messageId: String): Result<Unit>
+    
+    /**
+     * Mark all messages in a chat as read for the current user.
+     */
+    suspend fun markAllMessagesAsRead(chatId: String, userId: UserId): Result<Unit>
+    
+    /**
+     * Observe messages in a chat in real-time.
+     * Returns messages ordered by creation time (newest last).
+     * @param limit Maximum number of messages to load
+     */
+    fun observeMessages(chatId: String, limit: Long = 50): Flow<List<FriendMessage>>
+    
+    /**
+     * Load older messages for pagination.
+     * Returns messages older than the provided timestamp.
+     * @param chatId The chat ID
+     * @param beforeTimestamp Load messages created before this timestamp
+     * @param limit Maximum number of messages to load
+     */
+    suspend fun loadOlderMessages(
+        chatId: String,
+        beforeTimestamp: com.google.firebase.Timestamp,
+        limit: Long = 50
+    ): List<FriendMessage>
+    
+    /**
+     * Get chat metadata.
+     */
+    suspend fun getChatMetadata(chatId: String): ChatMetadata?
+    
+    /**
+     * Observe chat metadata in real-time.
+     */
+    fun observeChatMetadata(chatId: String): Flow<ChatMetadata?>
+    
+    /**
+     * Get unread message count for a user in a specific chat.
+     */
+    suspend fun getUnreadCount(chatId: String, userId: UserId): Int
+    
+    /**
+     * Get total unread message count across all chats for a user.
+     */
+    suspend fun getTotalUnreadCount(userId: UserId): Int
+
+    /**
+     * Observe total unread message count across all chats for a user in real-time.
+     * Emits a new value whenever messages are sent or read.
+     */
+    fun observeTotalUnreadCount(userId: UserId): Flow<Int>
+
+    /**
+     * Observe per-friend unread counts as a single-document listener.
+     * Returns a map of friendId -> unread count, updated in real-time.
+     * This is more efficient than observing N per-chat metadata documents.
+     */
+    fun observeUnreadPerFriend(userId: UserId): Flow<Map<String, Int>>
+
+    /**
+     * Delete an entire chat conversation including all messages and metadata.
+     * Used when removing a friend.
+     */
+    suspend fun deleteChatConversation(chatId: String): Result<Unit>
+
+    /**
+     * Persist a "cleared at" timestamp for this user in this chat.
+     * Messages with createdAt <= clearedAt will be hidden from this user's view.
+     */
+    suspend fun clearConversationForUser(chatId: String, userId: UserId): Result<Unit>
+
+    /**
+     * Retrieve the timestamp at which the user cleared this conversation.
+     * Returns null if the user has never cleared it.
+     */
+    suspend fun getClearedAt(chatId: String, userId: UserId): com.google.firebase.Timestamp?
+}

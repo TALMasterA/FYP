@@ -1,0 +1,119 @@
+# Detekt configuration — overlays Detekt's default-detekt-config.yml
+# (see https://detekt.dev/docs/rules/overview).
+#
+# Strategy:
+#   * `buildUponDefaultConfig = true` is set in app/build.gradle.kts, so every
+#     rule not listed here keeps its default. This file ONLY records repo-
+#     specific deviations from defaults.
+#   * Existing violations are silenced via `app/detekt-baseline.xml`, which is
+#     generated with `:app:detektBaseline` once and committed.
+#   * `runBlocking`, `GlobalScope`, and `!!` are the priority targets —
+#     those rules are explicitly enabled below.
+
+build:
+  # Fail on any non-baselined issue. Combined with the baseline, this means
+  # only NEW violations break the build.
+  maxIssues: 0
+  excludeCorrectable: false
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  active: true
+  LongMethod:
+    # @Composable functions in this app are routinely 60–80 LOC; the default
+    # threshold of 60 produces too much noise to baseline cleanly.
+    active: true
+    threshold: 80
+  LongParameterList:
+    # Compose previews and ViewModels constructor-inject many collaborators.
+    # Several ViewModels now also inject the observability tracers
+    # (PerformanceTracer + FunnelAnalyticsTracker) on top of repositories and
+    # use cases, which legitimately pushes the count past 10.
+    active: true
+    functionThreshold: 8
+    constructorThreshold: 15
+  TooManyFunctions:
+    # ViewModels often expose many UI events.
+    active: true
+    thresholdInClasses: 25
+    thresholdInObjects: 25
+    thresholdInInterfaces: 15
+    thresholdInFiles: 25
+
+coroutines:
+  active: true
+  GlobalCoroutineUsage:
+    # Item 45: catch GlobalScope introductions.
+    active: true
+
+naming:
+  active: true
+  PackageNaming:
+    # The application id is `com.translator.TalknLearn`, so package segments
+    # legitimately contain uppercase letters. Widen the default pattern
+    # (`[a-z]+(\.[a-z][A-Za-z0-9]*)*`) to permit them while still rejecting
+    # leading digits or punctuation.
+    active: true
+    packagePattern: '[a-z]+(\.[A-Za-z][A-Za-z0-9]*)*'
+
+potential-bugs:
+  active: true
+  UnsafeCallOnNullableType:
+    # Item 45: catch `!!` in production code.
+    active: true
+  UnsafeCast:
+    active: true
+
+style:
+  active: true
+  MagicNumber:
+    # Too noisy in UI code (paddings, animation durations, color channels).
+    active: false
+  ReturnCount:
+    # Trips on early-exit guard chains in ViewModels and use cases.
+    active: false
+  WildcardImport:
+    active: true
+    excludeImports:
+      - 'java.util.*'
+  ForbiddenComment:
+    # Allow TODO/FIXME during development; the report-truthfulness guard
+    # already enforces discipline at PR time.
+    active: false
+  MaxLineLength:
+    # Compose-friendly line length; matches IDE default for Kotlin.
+    active: true
+    maxLineLength: 140
+    excludeCommentStatements: true
+  ForbiddenMethodCall:
+    # Item 45: catch `runBlocking` introductions.
+    active: true
+    methods:
+      - reason: 'runBlocking blocks a thread; use suspend functions and structured concurrency instead.'
+        value: 'kotlinx.coroutines.runBlocking'
+
+formatting:
+  # Provided by detekt-formatting (wraps ktlint).
+  active: true
+  android: true
+  autoCorrect: false
+  PackageName:
+    # ktlint flags any uppercase character in a package segment, but the
+    # entire codebase uses `com.translator.TalknLearn.*` (capital T and L)
+    # because that is the registered Firebase / Play Console application id.
+    # Renaming every package would be a massive churn for zero behavioural
+    # gain, so the rule is disabled here. The detekt `naming.PackageNaming`
+    # rule below applies a widened pattern that still rejects junk names.
+    active: false
+  MaximumLineLength:
+    # Match the style/MaxLineLength setting above so the two rulesets agree.
+    active: true
+    maxLineLength: 140
+  ImportOrdering:
+    active: true
+  Indentation:
+    active: true
+    indentSize: 4

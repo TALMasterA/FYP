@@ -4,13 +4,14 @@
  * Server-side anti-cheat for quiz coins via Firestore transactions,
  * and server-side shop purchases (history expansion, palette unlock).
  */
-import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import {
   requireAuth,
   requireString,
   getFirestore,
 } from "./helpers.js";
+import {onAppCheckCall} from "./functionWrappers.js";
 
 // ============ Quiz Coin Award (Server-Side Anti-Cheat) ============
 
@@ -36,7 +37,7 @@ interface QuizAttemptData {
  * 5. Each quiz version can only be awarded once
  * 6. Score is capped at MAX_QUIZ_SCORE to prevent tampered clients minting coins
  */
-export const awardQuizCoins = onCall(
+export const awardQuizCoins = onAppCheckCall(
   {},
   async (request) => {
     requireAuth(request.auth);
@@ -197,7 +198,7 @@ const VALID_PALETTE_IDS = [
  * purchaseType: "history_expansion" | "palette_unlock"
  * paletteId: (required for palette_unlock) one of VALID_PALETTE_IDS
  */
-export const spendCoins = onCall(
+export const spendCoins = onAppCheckCall(
   {},
   async (request) => {
     requireAuth(request.auth);

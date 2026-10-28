@@ -4,6 +4,44 @@ Callable functions are Firebase Cloud Functions v2 (`onCall`) and currently use 
 The backend also exposes an HTTP readiness endpoint (`onRequest`) for deployment checks.
 Notification triggers and scheduled jobs are explicitly configured to run in `us-central1`.
 
+## App Check (§2.3)
+
+All 8 v2 callable functions are created through `onAppCheckCall`, which injects `enforceAppCheck: true`:
+`getSpeechToken`, `translateText`, `translateTexts`, `detectLanguage`,
+`generateLearningContent`, `awardQuizCoins`, `spendCoins`, `deleteAccountAndData`.
+Requests without a valid App Check token are rejected by the platform
+before the handler runs. Debug builds use the Firebase Debug provider. Local
+debug APKs read the registered token from gitignored `local.properties`
+(`appCheckDebugToken`) or CI's `APP_CHECK_DEBUG_TOKEN` and supply it through a
+debug-only Firebase Component Discovery registrar. If no token is configured,
+the SDK prints a generated debug secret that must be registered in the Firebase
+console.
+
+`app-check-wrapper.test.ts` fails backend CI if production source files import
+`onCall` / `onRequest` from `firebase-functions/v2/https` directly instead of
+using `functionWrappers.ts`. HTTP endpoints that are intentionally public must
+go through `onPublicRequest`, making the exception explicit in review.
+
+## Per-function runtime options (§2.10)
+
+`translateText` and `translateTexts` are configured with
+`{ concurrency: 80, cpu: 1, maxInstances: 50, memory: "512MiB" }` to keep
+the high-frequency translate path on warm instances while bounding cost.
+
+---
+
+## Stability classification (§10, item 54)
+
+Each callable below carries a **Stability** tag so SDK consumers know which
+contracts are guaranteed across non-major releases.
+
+| Tag | Contract guarantee |
+|-----|---------------------|
+| `stable` | Request and response shapes will not break in a non-major release. Bug-fix changes only. |
+| `experimental` | Shape may change without a deprecation period; integrators should pin a version and watch the changelog. |
+
+All currently shipped callables are `stable`. Future additions (e.g. learning-content tuning helpers) should be introduced as `experimental` first and promoted once the shape stabilises.
+
 ---
 
 ## Translation & Speech
@@ -11,6 +49,7 @@ Notification triggers and scheduled jobs are explicitly configured to run in `us
 ### `getSpeechToken`
 Returns an Azure Speech SDK token for client-side speech recognition.
 
+**Stability:** stable
 **Auth:** Required
 **Request:** _(no parameters)_
 **Response:**
@@ -23,6 +62,7 @@ Returns an Azure Speech SDK token for client-side speech recognition.
 ### `translateText`
 Translates a single text string.
 
+**Stability:** stable
 **Auth:** Required
 **Request:**
 | Field  | Type   | Required | Description                |
@@ -61,6 +101,7 @@ When `from` is omitted (auto-detect mode), the response also includes:
 ### `translateTexts`
 Batch-translates multiple texts in a single API call. Server internally chunks into 100-element Azure API requests with **350 ms inter-chunk throttle** and **per-chunk retry** (up to 3 retries for Azure HTTP 429, honoring Azure `Retry-After` when provided and otherwise using exponential back-off).
 
+**Stability:** stable
 **Auth:** Required
 **Rate Limit:** 20 requests per 10 minutes (per user)
 
@@ -89,6 +130,7 @@ Batch-translates multiple texts in a single API call. Server internally chunks i
 ### `detectLanguage`
 Detects the language of a given text.
 
+**Stability:** stable
 **Auth:** Required
 **Request:**
 | Field  | Type   | Required | Description            |
@@ -117,6 +159,7 @@ Detects the language of a given text.
 ### `generateLearningContent`
 Generates AI-powered learning content via Azure OpenAI.
 
+**Stability:** stable
 **Auth:** Required
 **Rate Limit:** 10 requests per hour per user
 **Timeout:** 300 seconds
@@ -148,6 +191,7 @@ Generates AI-powered learning content via Azure OpenAI.
 ### `healthcheck` (HTTP)
 Readiness endpoint for backend configuration validation.
 
+**Stability:** stable
 **Type:** HTTP function (`onRequest`)
 **Method:** `GET`
 **Auth:** Not required
@@ -190,6 +234,7 @@ Readiness endpoint for backend configuration validation.
 ### `awardQuizCoins`
 Awards coins for a quiz attempt with server-side anti-cheat verification.
 
+**Stability:** stable
 **Auth:** Required
 **Request:**
 | Field                            | Type   | Required | Description                     |
@@ -216,6 +261,7 @@ or
 ### `spendCoins`
 Processes a shop purchase using coins.
 
+**Stability:** stable
 **Auth:** Required
 **Request (history_expansion):**
 | Field          | Type   | Required | Description             |
@@ -239,7 +285,46 @@ or
 
 ---
 
-## Push Notifications (Firestore Triggers)
+## User Account Lifecycle
+
+### `deleteAccountAndData`
+Deletes the authenticated user's app data and Firebase Auth account from the backend.
+
+**Stability:** stable
+**Auth:** Required
+**App Check:** Required
+**Manual client guard:** Android re-authenticates email/password users before calling this endpoint.
+
+**Request:** _(no parameters)_
+
+**Response:**
+```json
+{ "success": true, "confirmationEmailQueued": true }
+```
+
+`confirmationEmailQueued` is `true` only when `ACCOUNT_DELETION_EMAIL_ENABLED=true`
+and a Firebase Trigger Email-compatible `mail` collection is configured.
+
+**Deletion scope:**
+- `users/{uid}` subcollections: history, word banks, learning sheets, quiz attempts/stats, generated quizzes, quiz versions, favorites, custom words, sessions, coin awards, last awarded quiz, user stats, friends, shared inbox, favorite sessions, blocked users, and FCM tokens.
+- `users/{uid}/profile/{settings,info,public}`.
+- Top-level lookup docs in `usernames` and `user_search`.
+- Firebase Auth user via Admin SDK.
+
+**Error Codes:**
+- `unauthenticated` — Missing Auth/App Check context
+- `not-found` — Auth user record could not be loaded
+- `internal` — Backend cleanup failed before completion
+
+**Operational email setup:** Install/configure Firebase's Trigger Email extension
+or an equivalent processor for the `mail` collection, set
+`ACCOUNT_DELETION_EMAIL_ENABLED=true` on deployed Functions, and enable Firestore
+TTL on the queued mail document's `ttlAt` field so confirmation-email documents
+do not persist indefinitely.
+
+---
+
+## Firestore Triggers
 
 These are not callable functions — they fire automatically on Firestore document events.
 
@@ -250,7 +335,7 @@ These are not callable functions — they fire automatically on Firestore docume
 | `sendRequestAcceptedNotification`  | `friend_requests/{requestId}` updated            | Notifies sender when request accepted |
 | `sendSharedInboxNotification`      | `users/{userId}/shared_inbox/{itemId}` created   | Notifies recipient of new shared item |
 | `enforceFeedbackRateLimit`         | `feedback/{feedbackId}` created                  | Enforces 3/hour feedback rate limit (feedback deleted on exceed) |
-| `syncQuizVersionFromLearningSheet` | `learning_sheets/{sheetId}` created/updated      | Syncs quiz version for anti-cheat validation |
+| `syncQuizVersionFromLearningSheet` | `users/{userId}/learning_sheets/{sheetId}` written | Syncs or deletes quiz version metadata for anti-cheat validation |
 
 ---
 

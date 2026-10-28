@@ -4,6 +4,7 @@
 import {HttpsError} from "firebase-functions/v2/https";
 import {defineSecret} from "firebase-functions/params";
 import * as admin from "firebase-admin";
+import * as crypto from "crypto";
 import {logger} from "./logger.js";
 
 // ============ Firebase Initialisation ============
@@ -213,6 +214,36 @@ export function validateGenAiConfig(config: {
   }
 
   return {baseUrl, apiVersion, apiKey};
+}
+
+// ============ Log Redaction (§5.3.1) ============
+
+// Optional salt — when set, logs hash IDs into stable but environment-specific
+// tokens so two log lines for the same user/chat correlate without exposing
+// the raw identifier. When unset (e.g. local dev), a no-op constant is used so
+// the helpers never throw or leak.
+const LOG_SALT = process.env.LOG_SALT ?? "";
+
+/**
+ * Hash a user ID for logging. Returns the original UID when LOG_SALT is empty
+ * (local dev) so log readability is preserved; in deployed environments where
+ * LOG_SALT is set this returns `u_<10-char hex>`.
+ */
+export function logUid(uid: string): string {
+  if (!uid) return "<empty>";
+  if (!LOG_SALT) return uid;
+  const h = crypto.createHash("sha256").update(LOG_SALT + ":u:" + uid).digest("hex");
+  return "u_" + h.slice(0, 10);
+}
+
+/**
+ * Hash a chat ID for logging using the same salt scheme as {@link logUid}.
+ */
+export function logChat(chatId: string): string {
+  if (!chatId) return "<empty>";
+  if (!LOG_SALT) return chatId;
+  const h = crypto.createHash("sha256").update(LOG_SALT + ":c:" + chatId).digest("hex");
+  return "c_" + h.slice(0, 10);
 }
 
 // ============ Rate Limiting ============
