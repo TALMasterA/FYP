@@ -5,11 +5,13 @@ import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.data.history.SharedHistoryDataSource
 import com.translator.TalknLearn.data.learning.LearningSheetDoc
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.domain.friends.LearningMaterialToShare
 import com.translator.TalknLearn.domain.friends.ShareLearningMaterialUseCase
 import com.translator.TalknLearn.domain.learning.GeneratedQuizDoc
 import com.translator.TalknLearn.domain.learning.LearningSheetsRepository
 import com.translator.TalknLearn.domain.learning.ParseAndStoreQuizUseCase
 import com.translator.TalknLearn.domain.learning.QuizRepository
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.LanguageCode
 import com.translator.TalknLearn.model.QuizAttempt
 import com.translator.TalknLearn.model.TranslationRecord
@@ -175,8 +177,12 @@ class LearningSheetViewModelTest {
     // ── loadSheet ──
 
     @Test
-    fun `loadSheet success sets content and historyCountAtGenerate`() = runTest {
-        val doc = LearningSheetDoc(content = "Lesson content here", historyCountAtGenerate = 15)
+    fun `loadSheet success sets content and generation metadata`() = runTest {
+        val doc = LearningSheetDoc(
+            content = "Lesson content here",
+            historyCountAtGenerate = 15,
+            generatedModel = "gpt-6-luna"
+        )
         sheetsRepo.stub {
             onBlocking { getSheet(uid, primary, target) } doReturn doc
         }
@@ -185,6 +191,7 @@ class LearningSheetViewModelTest {
 
         assertEquals("Lesson content here", vm.uiState.value.content)
         assertEquals(15, vm.uiState.value.historyCountAtGenerate)
+        assertEquals("gpt-6-luna", vm.uiState.value.generatedModel)
         assertFalse(vm.uiState.value.isLoading)
     }
 
@@ -246,11 +253,15 @@ class LearningSheetViewModelTest {
     }
 
     @Test
-    fun `initializeQuiz success sets questions and attempt`() = runTest {
+    fun `initializeQuiz success sets questions and attempt with the saved model`() = runTest {
         sheetsRepo.stub { onBlocking { getSheet(uid, primary, target) } doReturn null }
 
         val questionsJson = """[{"id":"q1","question":"What?","options":["A","B","C","D"],"correctOptionIndex":0}]"""
-        val doc = GeneratedQuizDoc(questionsJson = questionsJson, historyCountAtGenerate = 5)
+        val doc = GeneratedQuizDoc(
+            questionsJson = questionsJson,
+            historyCountAtGenerate = 5,
+            generatedModel = "gpt-6-luna-2026-09-22"
+        )
         quizRepo.stub {
             onBlocking { getGeneratedQuizDoc(uid, primary, target) } doReturn doc
         }
@@ -269,6 +280,7 @@ class LearningSheetViewModelTest {
 
         assertFalse(vm.uiState.value.quizLoading)
         assertNotNull(vm.uiState.value.currentAttempt)
+        assertEquals(doc.generatedModel, vm.uiState.value.currentAttempt?.generatedModel)
         assertFalse(vm.uiState.value.isQuizTaken)
         assertNull(vm.uiState.value.quizError)
     }
@@ -352,7 +364,11 @@ class LearningSheetViewModelTest {
 
     @Test
     fun `shareSheet success sets shareSuccessKey`() = runTest {
-        val doc = LearningSheetDoc(content = "Full content", historyCountAtGenerate = 5)
+        val doc = LearningSheetDoc(
+            content = "Full content",
+            historyCountAtGenerate = 5,
+            generatedModel = "gpt-6-luna"
+        )
         sheetsRepo.stub { onBlocking { getSheet(uid, primary, target) } doReturn doc }
         val sharedItem = SharedItem(itemId = "shared1", fromUserId = testUserId)
 
@@ -364,10 +380,12 @@ class LearningSheetViewModelTest {
                     fromUsername = "",
                     toUserId = UserId("friend1"),
                     type = SharedItemType.LEARNING_SHEET,
-                    materialId = "${primaryCode}_${targetCode}",
-                    title = "Learning Sheet: $primaryCode \u2192 $targetCode",
-                    description = "Full content",
-                    fullContent = "Full content"
+                    material = LearningMaterialToShare(
+                        materialId = "${primaryCode}_${targetCode}",
+                        title = "Learning Sheet: $primaryCode \u2192 $targetCode",
+                        description = "Full content",
+                        fullContent = GeneratedLearningContent("Full content", "gpt-6-luna")
+                    )
                 )
             } doReturn Result.success(sharedItem)
         }
@@ -391,10 +409,12 @@ class LearningSheetViewModelTest {
                     fromUsername = "",
                     toUserId = UserId("friend1"),
                     type = SharedItemType.LEARNING_SHEET,
-                    materialId = "${primaryCode}_${targetCode}",
-                    title = "Learning Sheet: $primaryCode \u2192 $targetCode",
-                    description = "Content",
-                    fullContent = "Content"
+                    material = LearningMaterialToShare(
+                        materialId = "${primaryCode}_${targetCode}",
+                        title = "Learning Sheet: $primaryCode \u2192 $targetCode",
+                        description = "Content",
+                        fullContent = GeneratedLearningContent("Content", null)
+                    )
                 )
             } doReturn Result.failure(RuntimeException("Share failed"))
         }
@@ -441,10 +461,12 @@ class LearningSheetViewModelTest {
                     fromUsername = "",
                     toUserId = uid,
                     type = SharedItemType.LEARNING_SHEET,
-                    materialId = "${primaryCode}_${targetCode}",
-                    title = "Learning Sheet: $primaryCode \u2192 $targetCode",
-                    description = "My content",
-                    fullContent = "My content"
+                    material = LearningMaterialToShare(
+                        materialId = "${primaryCode}_${targetCode}",
+                        title = "Learning Sheet: $primaryCode \u2192 $targetCode",
+                        description = "My content",
+                        fullContent = GeneratedLearningContent("My content", null)
+                    )
                 )
             } doReturn Result.success(sharedItem)
         }

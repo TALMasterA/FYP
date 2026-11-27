@@ -45,7 +45,8 @@ class FirestoreWordBankRepository @Inject constructor(
                 pronunciation = map["pronunciation"] as? String ?: "",
                 example = map["example"] as? String ?: "",
                 category = map["category"] as? String ?: "",
-                difficulty = map["difficulty"] as? String ?: ""
+                difficulty = map["difficulty"] as? String ?: "",
+                generationModel = map["generationModel"] as? String
             )
         }
 
@@ -54,7 +55,8 @@ class FirestoreWordBankRepository @Inject constructor(
             targetLanguageCode = doc.getString("targetLanguageCode") ?: target,
             words = words,
             generatedAt = doc.getTimestamp("generatedAt"),
-            historyCountAtGenerate = (doc.getLong("historyCountAtGenerate") ?: 0).toInt()
+            historyCountAtGenerate = (doc.getLong("historyCountAtGenerate") ?: 0).toInt(),
+            lastGenerationModel = doc.get("lastGenerationModel") as? String
         )
     }
 
@@ -63,7 +65,8 @@ class FirestoreWordBankRepository @Inject constructor(
         primary: String,
         target: String,
         words: List<WordBankItem>,
-        historyCount: Int
+        historyCount: Int,
+        lastGenerationModel: String? = null
     ) {
         val wordsData = words.map { word ->
             mapOf(
@@ -73,7 +76,8 @@ class FirestoreWordBankRepository @Inject constructor(
                 "pronunciation" to word.pronunciation,
                 "example" to word.example,
                 "category" to word.category,
-                "difficulty" to word.difficulty
+                "difficulty" to word.difficulty,
+                "generationModel" to word.generationModel
             )
         }
 
@@ -82,7 +86,8 @@ class FirestoreWordBankRepository @Inject constructor(
             "targetLanguageCode" to norm(target),
             "words" to wordsData,
             "generatedAt" to Timestamp.now(),
-            "historyCountAtGenerate" to historyCount
+            "historyCountAtGenerate" to historyCount,
+            "lastGenerationModel" to lastGenerationModel
         )
 
         NetworkRetry.withRetry(shouldRetry = NetworkRetry::isRetryableFirebaseException) {
@@ -98,7 +103,8 @@ class FirestoreWordBankRepository @Inject constructor(
         primary: String,
         target: String,
         newWords: List<WordBankItem>,
-        historyCount: Int
+        historyCount: Int,
+        lastGenerationModel: String? = null
     ) {
         val existingWordBank = getWordBank(uid, primary, target)
         val existingWords = existingWordBank?.words ?: emptyList()
@@ -115,7 +121,7 @@ class FirestoreWordBankRepository @Inject constructor(
         val mergedWords = existingWords + uniqueNewWords
 
         // Save the merged word bank
-        saveWordBank(uid, primary, target, mergedWords, historyCount)
+        saveWordBank(uid, primary, target, mergedWords, historyCount, lastGenerationModel)
     }
 
     suspend fun wordBankExists(uid: String, primary: String, target: String): Boolean {

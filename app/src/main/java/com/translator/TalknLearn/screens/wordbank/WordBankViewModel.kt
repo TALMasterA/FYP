@@ -202,7 +202,8 @@ class WordBankViewModel @Inject constructor(
                     primary = primaryLanguageCode,
                     target = targetLanguageCode,
                     words = updatedWords,
-                    historyCount = currentWordBank.historyCountAtGenerate
+                    historyCount = currentWordBank.historyCountAtGenerate,
+                    lastGenerationModel = currentWordBank.lastGenerationModel
                 )
                 _uiState.value = _uiState.value.copy(
                     currentWordBank = currentWordBank.copy(words = updatedWords)

@@ -22,6 +22,7 @@ import {onAppCheckCall} from "./functionWrappers.js";
 import {logger} from "./logger.js";
 
 const LANG_CODE_RE = /^[a-z]{2}(-[A-Z]{2})?$/;
+const DEFAULT_DEPLOYMENT = "gpt-6-luna";
 
 async function getLanguageHistoryCount(uid: string, languageCode: string): Promise<number> {
   const historyRef = getFirestore()
@@ -133,7 +134,10 @@ export const generateLearningContent = onAppCheckCall(
       const uid = (request.auth as {uid: string}).uid;
       await enforceRateLimit(uid);
 
-      const deployment = requireString(request.data?.deployment, "deployment");
+      const requestedDeployment = requireString(request.data?.deployment, "deployment");
+      // Existing Android builds use this ID for sheets, quizzes, and Word Bank.
+      const deployment = requestedDeployment === "gpt-5-mini" ?
+        process.env.GENAI_DEFAULT_DEPLOYMENT?.trim() || DEFAULT_DEPLOYMENT : requestedDeployment;
       const prompt = requireString(request.data?.prompt, "prompt");
 
       // No max-length restriction needed — the prompt is system-generated.
@@ -283,7 +287,8 @@ export const generateLearningContent = onAppCheckCall(
         );
       }
 
-      return {content};
+      const model = typeof json?.model === "string" ? json.model.trim() : "";
+      return model && model.length <= 128 ? {content, model} : {content};
     } catch (e: any) {
       // Re-throw HttpsErrors as-is (they already have code + message)
       if (e instanceof HttpsError) throw e;

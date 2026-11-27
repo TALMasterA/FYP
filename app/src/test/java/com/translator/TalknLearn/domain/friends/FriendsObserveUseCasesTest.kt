@@ -1,14 +1,15 @@
 package com.translator.TalknLearn.domain.friends
 
+import com.google.firebase.Timestamp
 import com.translator.TalknLearn.data.friends.ChatRepository
 import com.translator.TalknLearn.data.friends.FriendsRepository
 import com.translator.TalknLearn.data.friends.SharingRepository
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.FriendMessage
 import com.translator.TalknLearn.model.friends.FriendRequest
 import com.translator.TalknLearn.model.friends.SharedItem
 import com.translator.TalknLearn.model.friends.SharedItemType
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -144,10 +145,12 @@ class FriendsObserveUseCasesTest {
             fromUsername = "myuser",
             toUserId = UserId("friend1"),
             type = SharedItemType.LEARNING_SHEET,
-            materialId = "mat1",
-            title = "Japanese Basics",
-            description = "Learn Japanese",
-            fullContent = "Full content here"
+            material = LearningMaterialToShare(
+                materialId = "mat1",
+                title = "Japanese Basics",
+                description = "Learn Japanese",
+                fullContent = GeneratedLearningContent("Full content here", null)
+            )
         )
 
         assertTrue(result.isSuccess)
@@ -177,8 +180,10 @@ class FriendsObserveUseCasesTest {
             fromUsername = "myuser",
             toUserId = UserId("friend1"),
             type = SharedItemType.LEARNING_SHEET,
-            materialId = "sheet1",
-            title = "Sheet"
+            material = LearningMaterialToShare(
+                materialId = "sheet1",
+                title = "Sheet"
+            )
         )
 
         assertTrue(result.isFailure)

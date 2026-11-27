@@ -12,7 +12,8 @@ data class GeneratedQuizDoc(
     val targetLanguageCode: String = "",
     val questionsJson: String = "",
     val generatedAt: Timestamp = Timestamp.now(),
-    val historyCountAtGenerate: Int = 0
+    val historyCountAtGenerate: Int = 0,
+    val generatedModel: String? = null
 )
 
 /**
@@ -94,7 +95,8 @@ interface QuizRepository {
         primaryCode: LanguageCode,
         targetCode: LanguageCode,
         quizData: String,
-        historyCountAtGenerate: Int
+        historyCountAtGenerate: Int,
+        generatedModel: String? = null
     )
 
     /**

@@ -1,6 +1,7 @@
 package com.translator.TalknLearn.domain.learning
 
 import com.translator.TalknLearn.model.DeploymentName
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.LanguageCode
 import com.translator.TalknLearn.model.TranslationRecord
 import kotlinx.coroutines.test.runTest
@@ -17,7 +18,7 @@ private class FakeLearningContentRepository : LearningContentRepository {
     var lastPrimaryCode: LanguageCode? = null
     var lastTargetCode: LanguageCode? = null
     var lastRecords: List<TranslationRecord>? = null
-    var resultToReturn: String = ""
+    var resultToReturn = GeneratedLearningContent("", null)
     var exceptionToThrow: Exception? = null
 
     override suspend fun generateForLanguage(
@@ -25,7 +26,7 @@ private class FakeLearningContentRepository : LearningContentRepository {
         primaryLanguageCode: LanguageCode,
         targetLanguageCode: LanguageCode,
         records: List<TranslationRecord>
-    ): String {
+    ): GeneratedLearningContent {
         exceptionToThrow?.let { throw it }
         lastDeployment = deployment
         lastPrimaryCode = primaryLanguageCode
@@ -40,7 +41,7 @@ private class FakeLearningContentRepository : LearningContentRepository {
  *
  * Tests:
  * 1. Delegates to repository with correct parameters (wrapped as value types)
- * 2. Returns generated content string
+ * 2. Returns generated content and model information
  * 3. Propagates repository exceptions
  */
 class GenerateLearningMaterialsUseCaseTest {
@@ -59,11 +60,11 @@ class GenerateLearningMaterialsUseCaseTest {
         val records = listOf(
             TranslationRecord(sourceText = "hello", targetText = "hola")
         )
-        repo.resultToReturn = "Generated content"
+        repo.resultToReturn = GeneratedLearningContent("Generated content", null)
 
         val result = useCase("gpt-4o", "en-US", "es-ES", records)
 
-        assertEquals("Generated content", result)
+        assertEquals("Generated content", result.content)
         assertEquals(DeploymentName("gpt-4o"), repo.lastDeployment)
         assertEquals(LanguageCode("en-US"), repo.lastPrimaryCode)
         assertEquals(LanguageCode("es-ES"), repo.lastTargetCode)
@@ -71,15 +72,15 @@ class GenerateLearningMaterialsUseCaseTest {
     }
 
     @Test
-    fun `invoke returns content from repository`() = runTest {
+    fun `invoke returns content and model from repository`() = runTest {
         val records = listOf(
             TranslationRecord(sourceText = "cat", targetText = "gato")
         )
-        repo.resultToReturn = "Learning sheet content here"
+        repo.resultToReturn = GeneratedLearningContent("Learning sheet content here", "gpt-6-luna")
 
         val result = useCase("gpt-4o", "en-US", "ja-JP", records)
 
-        assertEquals("Learning sheet content here", result)
+        assertEquals(repo.resultToReturn, result)
     }
 
     @Test(expected = RuntimeException::class)

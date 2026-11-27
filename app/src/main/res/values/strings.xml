@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">FYP</string>
     <string name="feedback_additional_info">Please describe any issues, suggestions, or feedback about the app.</string>
+    <string name="ai_model_attribution">Generated with %1$s</string>
+    <string name="ai_latest_generation_model">Latest generation used %1$s</string>
+    <string name="ai_model_gpt_6_luna" translatable="false">GPT-6 Luna</string>
+    <string name="ai_model_with_version">%1$s (%2$s)</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.translator.TalknLearn.domain.learning
 
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.TranslationRecord
 import javax.inject.Inject
 
@@ -12,7 +13,7 @@ class GenerateQuizUseCase @Inject constructor(
         targetLanguageCode: String,
         records: List<TranslationRecord>,
         learningMaterial: String
-    ): String {
+    ): GeneratedLearningContent {
         return repo.generateQuiz(
             deployment = deployment,
             primaryLanguageCode = primaryLanguageCode,

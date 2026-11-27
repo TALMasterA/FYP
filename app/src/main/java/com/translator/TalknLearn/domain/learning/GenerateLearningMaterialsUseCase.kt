@@ -1,6 +1,7 @@
 package com.translator.TalknLearn.domain.learning
 
 import com.translator.TalknLearn.model.DeploymentName // Added
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.LanguageCode // Added
 import com.translator.TalknLearn.model.TranslationRecord
 import javax.inject.Inject
@@ -13,7 +14,7 @@ class GenerateLearningMaterialsUseCase @Inject constructor(
         primaryLanguageCode: String,
         targetLanguageCode: String,
         records: List<TranslationRecord>
-    ): String {
+    ): GeneratedLearningContent {
         return repo.generateForLanguage(
             deployment = DeploymentName(deployment),
             primaryLanguageCode = LanguageCode(primaryLanguageCode),

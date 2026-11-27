@@ -411,7 +411,7 @@ class LearningViewModel @Inject constructor(
             _uiState.value = uiState.value.copy(generatingLanguageCode = languageCode, error = null)
 
             try {
-                val raw = generateLearningMaterials(
+                val generated = generateLearningMaterials(
                     deployment = AiConfig.DEFAULT_DEPLOYMENT,
                     primaryLanguageCode = primary,
                     targetLanguageCode = languageCode,
@@ -420,14 +420,16 @@ class LearningViewModel @Inject constructor(
 
                 ensureActive()
 
-                val materialOnly = com.translator.TalknLearn.data.learning.ContentCleaner.removeQuizFromContent(raw)
+                val materialOnly = com.translator.TalknLearn.data.learning.ContentCleaner
+                    .removeQuizFromContent(generated.content)
 
                 sheetsRepo.upsertSheet(
                     uid = UserId(uid),
                     primary = LanguageCode(primary),
                     target = LanguageCode(languageCode),
                     content = materialOnly,
-                    historyCountAtGenerate = countNow
+                    historyCountAtGenerate = countNow,
+                    model = generated.model
                 )
 
                 // Invalidate cache so next refresh fetches fresh data
@@ -493,7 +495,7 @@ class LearningViewModel @Inject constructor(
             _uiState.value = uiState.value.copy(generatingQuizLanguageCode = languageCode, error = null)
 
             try {
-                val quizText = generateQuizUseCase(
+                val generatedQuiz = generateQuizUseCase(
                     deployment = AiConfig.DEFAULT_DEPLOYMENT,
                     primaryLanguageCode = primary,
                     targetLanguageCode = languageCode,
@@ -503,7 +505,7 @@ class LearningViewModel @Inject constructor(
 
                 ensureActive()
 
-                val questions = QuizParser.parseQuizFromContent(quizText)
+                val questions = QuizParser.parseQuizFromContent(generatedQuiz.content)
                 if (questions.size < QUIZ_QUESTIONS_COUNT) {
                     _uiState.value = uiState.value.copy(
                         generatingQuizLanguageCode = null,
@@ -517,7 +519,8 @@ class LearningViewModel @Inject constructor(
                     primaryCode = LanguageCode(primary),
                     targetCode = LanguageCode(languageCode),
                     quizData = json.encodeToString(questions.take(QUIZ_QUESTIONS_COUNT)),
-                    historyCountAtGenerate = sheetHistoryCount
+                    historyCountAtGenerate = sheetHistoryCount,
+                    generatedModel = generatedQuiz.model
                 )
 
                 _uiState.value = uiState.value.copy(

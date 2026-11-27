@@ -2,9 +2,10 @@ package com.translator.TalknLearn.data.learning
 
 import com.translator.TalknLearn.data.cloud.CloudGenAiClient
 import com.translator.TalknLearn.domain.learning.LearningContentRepository
-import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.DeploymentName
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.LanguageCode
+import com.translator.TalknLearn.model.TranslationRecord
 import javax.inject.Inject
 
 private const val MAX_VOCABULARY_ITEMS = 8
@@ -18,7 +19,7 @@ class LearningContentRepositoryImpl @Inject constructor(
         primaryLanguageCode: LanguageCode,
         targetLanguageCode: LanguageCode,
         records: List<TranslationRecord>
-    ): String {
+    ): GeneratedLearningContent {
         val recent = records.takeLast(20).joinToString("\n") { r ->
             "- [${r.sourceLang}→${r.targetLang}] ${r.sourceText} => ${r.targetText}"
         }

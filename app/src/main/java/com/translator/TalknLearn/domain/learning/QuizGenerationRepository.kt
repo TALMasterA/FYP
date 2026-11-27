@@ -1,5 +1,6 @@
 package com.translator.TalknLearn.domain.learning
 
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.TranslationRecord
 
 interface QuizGenerationRepository {
@@ -9,5 +10,5 @@ interface QuizGenerationRepository {
         targetLanguageCode: String,
         records: List<TranslationRecord>,
         learningMaterial: String
-    ): String
+    ): GeneratedLearningContent
 }

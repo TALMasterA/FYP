@@ -1,6 +1,7 @@
 package com.translator.TalknLearn.data.wordbank
 
 import com.translator.TalknLearn.data.cloud.CloudGenAiClient
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.TranslationRecord
 import javax.inject.Inject
 
@@ -12,7 +13,7 @@ class WordBankGenerationRepository @Inject constructor(
         primaryLanguageCode: String,
         targetLanguageCode: String,
         records: List<TranslationRecord>
-    ): String {
+    ): GeneratedLearningContent {
         val recent = records.takeLast(30).joinToString("\n") { r ->
             "- [${r.sourceLang}→${r.targetLang}] ${r.sourceText} => ${r.targetText}"
         }

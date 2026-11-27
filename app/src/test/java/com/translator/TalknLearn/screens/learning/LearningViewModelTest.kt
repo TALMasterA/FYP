@@ -5,12 +5,13 @@ import com.translator.TalknLearn.data.history.SharedHistoryDataSource
 import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.learning.*
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.LanguageCode
 import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.UserId
-import com.translator.TalknLearn.model.user.UserSettings
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
+import com.translator.TalknLearn.model.user.UserSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -173,7 +174,7 @@ class LearningViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         whenever(generateLearningMaterials.invoke(any(), any(), any(), any()))
-            .thenReturn("# Learning Material\nSome content here")
+            .thenReturn(GeneratedLearningContent("# Learning Material\nSome content here", "gpt-6-luna"))
         vm.generateFor("ja")
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -223,7 +224,7 @@ class LearningViewModelTest {
             .thenReturn(emptyMap())
 
         whenever(generateLearningMaterials.invoke(any(), any(), any(), any()))
-            .thenReturn("# Learning Material\nSome content here")
+            .thenReturn(GeneratedLearningContent("# Learning Material\nSome content here", "gpt-6-luna"))
 
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedIn(testUser)
@@ -235,6 +236,14 @@ class LearningViewModelTest {
         // After generation, generatingLanguageCode should be null
         assertNull(vm.uiState.value.generatingLanguageCode)
         assertEquals("ja", vm.uiState.value.sheetGenerationCompleted)
+        verify(sheetsRepo).upsertSheet(
+            uid = UserId("u1"),
+            primary = LanguageCode("en-US"),
+            target = LanguageCode("ja"),
+            content = "# Learning Material\nSome content here",
+            historyCountAtGenerate = 25,
+            model = "gpt-6-luna"
+        )
     }
 
     // ── generateFor failure ─────────────────────────────────────────

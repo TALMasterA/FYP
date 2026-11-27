@@ -330,4 +330,34 @@ describe("generateLearningContent", () => {
     expect(url).toContain("/openai/deployments/gpt-4o/chat/completions");
     expect(url).toContain("api-version=2023-05-15");
   });
+
+  it.each([
+    ["", "gpt-6-luna"],
+    ["gpt-5-mini", "gpt-5-mini"],
+  ])("routes the installed Android default with config '%s' to %s", async (config, expected) => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue(JSON.stringify({
+        model: `${expected}-2026-09-22`,
+        choices: [{message: {content: "content"}}],
+      })),
+    });
+
+    const env = jest.replaceProperty(process, "env", {
+      ...process.env,
+      GENAI_DEFAULT_DEPLOYMENT: config,
+    });
+    try {
+      const result = await (generateLearningContent as any)({
+        auth: {uid: "u1"},
+        data: {...validData, deployment: "gpt-5-mini"},
+      });
+
+      expect(result).toEqual({content: "content", model: `${expected}-2026-09-22`});
+      const url = new URL(mockFetch.mock.calls[0][0]);
+      expect(url.pathname).toBe(`/openai/deployments/${expected}/chat/completions`);
+    } finally {
+      env.restore();
+    }
+  });
 });

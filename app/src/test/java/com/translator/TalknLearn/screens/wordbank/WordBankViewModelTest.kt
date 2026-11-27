@@ -220,14 +220,23 @@ class WordBankViewModelTest {
     // ── deleteWordFromBank ──────────────────────────────────────────
 
     @Test
-    fun `deleteWordFromBank removes word from list`() = runTest {
+    fun `deleting a legacy word preserves attribution for remaining words`() = runTest {
+        val model = "gpt-6-luna-2026-09-22"
         val words = listOf(
-            WordBankItem(id = "w1", originalWord = "hello", translatedWord = "こんにちは",
-                pronunciation = "", example = "", category = "", difficulty = ""),
-            WordBankItem(id = "w2", originalWord = "goodbye", translatedWord = "さようなら",
-                pronunciation = "", example = "", category = "", difficulty = "")
+            WordBankItem(id = "w1", originalWord = "hello", translatedWord = "こんにちは"),
+            WordBankItem(
+                id = "w2",
+                originalWord = "goodbye",
+                translatedWord = "さようなら",
+                generationModel = model
+            )
         )
-        val wordBank = WordBank(primaryLanguageCode = "en-US", targetLanguageCode = "ja", words = words)
+        val wordBank = WordBank(
+            primaryLanguageCode = "en-US",
+            targetLanguageCode = "ja",
+            words = words,
+            lastGenerationModel = model
+        )
 
         whenever(wordBankRepo.getWordBank(any(), any(), any())).thenReturn(wordBank)
         whenever(customWordsRepo.getCustomWordsOnce(any(), any(), any())).thenReturn(emptyList())
@@ -241,6 +250,9 @@ class WordBankViewModelTest {
         val remaining = vm.uiState.value.currentWordBank?.words ?: emptyList()
         assertEquals(1, remaining.size)
         assertEquals("w2", remaining[0].id)
+        assertEquals(model, remaining[0].generationModel)
+        assertEquals(model, vm.uiState.value.currentWordBank?.lastGenerationModel)
+        verify(wordBankRepo).saveWordBank(eq("u1"), any(), eq("ja"), eq(remaining), eq(0), eq(model))
     }
 
     // ── cancelGeneration ────────────────────────────────────────────

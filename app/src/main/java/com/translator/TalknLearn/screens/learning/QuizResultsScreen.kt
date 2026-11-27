@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.translator.TalknLearn.core.rememberTranslator
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.ui.components.AiModelAttribution
 
 @Composable
 fun QuizResultsScreen(
@@ -49,6 +50,7 @@ fun QuizResultsScreen(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
+        AiModelAttribution(model = attempt.generatedModel)
 
         // Score card
         ElevatedCard(

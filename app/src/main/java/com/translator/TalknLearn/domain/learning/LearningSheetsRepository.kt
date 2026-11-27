@@ -47,12 +47,14 @@ interface LearningSheetsRepository {
      * @param target Target language code
      * @param content The learning content
      * @param historyCountAtGenerate Number of history records when generated
+     * @param model Model reported for the content, if known
      */
     suspend fun upsertSheet(
         uid: UserId,
         primary: LanguageCode,
         target: LanguageCode,
         content: String,
-        historyCountAtGenerate: Int
+        historyCountAtGenerate: Int,
+        model: String? = null
     )
 }

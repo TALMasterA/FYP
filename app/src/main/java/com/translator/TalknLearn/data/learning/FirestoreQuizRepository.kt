@@ -68,7 +68,8 @@ class FirestoreQuizRepository @Inject constructor(
             totalScore = attempt.totalScore,
             maxScore = attempt.maxScore,
             percentage = attempt.percentage,
-            generatedHistoryCountAtGenerate = attempt.generatedHistoryCountAtGenerate
+            generatedHistoryCountAtGenerate = attempt.generatedHistoryCountAtGenerate,
+            generatedModel = attempt.generatedModel
         )
 
         docRef(uid.value, attemptId).set(doc).await()
@@ -93,7 +94,8 @@ class FirestoreQuizRepository @Inject constructor(
             totalScore = doc.totalScore,
             maxScore = doc.maxScore,
             percentage = doc.percentage,
-            generatedHistoryCountAtGenerate = doc.generatedHistoryCountAtGenerate
+            generatedHistoryCountAtGenerate = doc.generatedHistoryCountAtGenerate,
+            generatedModel = doc.generatedModel
         )
     }
 
@@ -125,7 +127,8 @@ class FirestoreQuizRepository @Inject constructor(
                 totalScore = data.totalScore,
                 maxScore = data.maxScore,
                 percentage = data.percentage,
-                generatedHistoryCountAtGenerate = data.generatedHistoryCountAtGenerate
+                generatedHistoryCountAtGenerate = data.generatedHistoryCountAtGenerate,
+                generatedModel = data.generatedModel
             )
         }
     }
@@ -160,7 +163,8 @@ class FirestoreQuizRepository @Inject constructor(
                 totalScore = data.totalScore,
                 maxScore = data.maxScore,
                 percentage = data.percentage,
-                generatedHistoryCountAtGenerate = data.generatedHistoryCountAtGenerate
+                generatedHistoryCountAtGenerate = data.generatedHistoryCountAtGenerate,
+                generatedModel = data.generatedModel
             )
         }
     }
@@ -225,7 +229,8 @@ class FirestoreQuizRepository @Inject constructor(
         primaryCode: LanguageCode,
         targetCode: LanguageCode,
         quizData: String,
-        historyCountAtGenerate: Int
+        historyCountAtGenerate: Int,
+        generatedModel: String?
     ) {
         val questions = try {
             json.decodeFromString<List<QuizQuestion>>(quizData)
@@ -238,7 +243,8 @@ class FirestoreQuizRepository @Inject constructor(
             targetLanguageCode = targetCode.value,
             questionsJson = quizData,
             generatedAt = Timestamp.now(),
-            historyCountAtGenerate = historyCountAtGenerate
+            historyCountAtGenerate = historyCountAtGenerate,
+            generatedModel = generatedModel
         )
         generatedQuizDocRef(uid.value, primaryCode.value, targetCode.value).set(doc).await()
     }

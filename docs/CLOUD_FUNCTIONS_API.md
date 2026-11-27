@@ -157,7 +157,7 @@ Detects the language of a given text.
 ## AI Learning Content
 
 ### `generateLearningContent`
-Generates AI-powered learning content via Azure OpenAI.
+Generates learning content through an Azure OpenAI-compatible endpoint.
 
 **Stability:** stable
 **Auth:** Required
@@ -166,13 +166,15 @@ Generates AI-powered learning content via Azure OpenAI.
 **Request:**
 | Field        | Type   | Required | Description                 |
 |--------------|--------|----------|-----------------------------|
-| `deployment` | string | yes      | Azure OpenAI deployment name |
+| `deployment` | string | yes      | Provider deployment name. The installed Android default `gpt-5-mini` is routed by the server. |
 | `prompt`     | string | yes      | The generation prompt        |
 
 **Response:**
 ```json
-{ "content": "string" }
+{ "content": "string", "model": "gpt-6-luna-2026-09-22" }
 ```
+
+The optional `model` field contains the model ID reported by the provider.
 
 **Error Codes:**
 - `resource-exhausted` — Rate limit exceeded
@@ -181,6 +183,7 @@ Generates AI-powered learning content via Azure OpenAI.
 - `unavailable` — Service temporarily unavailable
 
 **Operational Notes:**
+- The Android default route uses `gpt-6-luna`. Set `GENAI_DEFAULT_DEPLOYMENT` in the Functions environment and redeploy `generateLearningContent` to change that route.
 - GenAI config is validated before request execution (required values, HTTPS base URL, and API version format).
 - Rate-limit checks are fail-closed for Firestore read errors and malformed stored rate-limit payloads.
 

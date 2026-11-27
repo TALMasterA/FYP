@@ -1,5 +1,6 @@
 package com.translator.TalknLearn.domain.learning
 
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.TranslationRecord
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
@@ -15,7 +16,7 @@ private class FakeQuizGenerationRepository : QuizGenerationRepository {
     var lastTargetCode: String? = null
     var lastRecords: List<TranslationRecord>? = null
     var lastLearningMaterial: String? = null
-    var resultToReturn: String = ""
+    var resultToReturn = GeneratedLearningContent(content = "", model = null)
     var exceptionToThrow: Exception? = null
 
     override suspend fun generateQuiz(
@@ -24,7 +25,7 @@ private class FakeQuizGenerationRepository : QuizGenerationRepository {
         targetLanguageCode: String,
         records: List<TranslationRecord>,
         learningMaterial: String
-    ): String {
+    ): GeneratedLearningContent {
         exceptionToThrow?.let { throw it }
         lastDeployment = deployment
         lastPrimaryCode = primaryLanguageCode
@@ -40,7 +41,7 @@ private class FakeQuizGenerationRepository : QuizGenerationRepository {
  *
  * Tests:
  * 1. Delegates to repository with correct parameters
- * 2. Returns raw quiz content string
+ * 2. Returns quiz content and its model
  * 3. Propagates repository exceptions
  */
 class GenerateQuizUseCaseTest {
@@ -58,11 +59,11 @@ class GenerateQuizUseCaseTest {
     fun `invoke delegates to repository with correct parameters`() = runTest {
         val records = listOf(TranslationRecord(sourceText = "hello", targetText = "hola"))
         val learningMaterial = "Some learning content"
-        repo.resultToReturn = "{\"questions\": []}"
+        repo.resultToReturn = GeneratedLearningContent(content = "{\"questions\": []}", model = null)
 
         val result = useCase("gpt-4o", "en-US", "es-ES", records, learningMaterial)
 
-        assertEquals("{\"questions\": []}", result)
+        assertEquals("{\"questions\": []}", result.content)
         assertEquals("gpt-4o", repo.lastDeployment)
         assertEquals("en-US", repo.lastPrimaryCode)
         assertEquals("es-ES", repo.lastTargetCode)
@@ -71,12 +72,16 @@ class GenerateQuizUseCaseTest {
     }
 
     @Test
-    fun `invoke returns content from repository`() = runTest {
-        repo.resultToReturn = "[{\"question\":\"What is hello?\"}]"
+    fun `invoke returns content and model from repository`() = runTest {
+        repo.resultToReturn = GeneratedLearningContent(
+            content = "[{\"question\":\"What is hello?\"}]",
+            model = "gpt-6-luna-2026-09-22"
+        )
 
         val result = useCase("gpt-4o", "en-US", "ja-JP", emptyList(), "material")
 
-        assertTrue(result.contains("question"))
+        assertTrue(result.content.contains("question"))
+        assertEquals("gpt-6-luna-2026-09-22", result.model)
     }
 
     @Test(expected = RuntimeException::class)

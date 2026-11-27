@@ -20,7 +20,8 @@ data class LearningSheetDoc(
     val targetLanguageCode: String = "",
     val content: String = "",
     val historyCountAtGenerate: Int = 0,
-    val updatedAt: Timestamp? = null
+    val updatedAt: Timestamp? = null,
+    val generatedModel: String? = null
 )
 
 data class QuizVersionDoc(
@@ -190,17 +191,19 @@ class FirestoreLearningSheetsRepository @Inject constructor(
         primary: LanguageCode,
         target: LanguageCode,
         content: String,
-        historyCountAtGenerate: Int
+        historyCountAtGenerate: Int,
+        model: String?
     ) {
         val p = norm(primary.value)
         val t = norm(target.value)
-        val data = mapOf(
-            "primaryLanguageCode" to p,
-            "targetLanguageCode" to t,
-            "content" to content,
-            "historyCountAtGenerate" to historyCountAtGenerate,
-            "updatedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
-        )
+        val data = buildMap<String, Any> {
+            put("primaryLanguageCode", p)
+            put("targetLanguageCode", t)
+            put("content", content)
+            put("historyCountAtGenerate", historyCountAtGenerate)
+            put("updatedAt", com.google.firebase.firestore.FieldValue.serverTimestamp())
+            model?.let { put("generatedModel", it) }
+        }
         NetworkRetry.withRetry(shouldRetry = NetworkRetry::isRetryableFirebaseException) {
             docRef(uid.value, p, t).set(data).await()
         }

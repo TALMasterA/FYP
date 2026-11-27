@@ -15,9 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.translator.TalknLearn.R
 import com.translator.TalknLearn.core.PaginationRow
 import com.translator.TalknLearn.core.pageCount
 import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.ui.components.AiModelAttribution
 
 /**
  * Dialog state for WordBankDetailView - consolidated for better recomposition efficiency
@@ -248,6 +250,12 @@ private fun WordBankHeader(
                     }
                 }
             }
+
+            AiModelAttribution(
+                model = wordBank?.lastGenerationModel,
+                modifier = Modifier.padding(bottom = 8.dp),
+                labelRes = R.string.ai_latest_generation_model
+            )
 
             // Expanded content
             if (isExpanded) {

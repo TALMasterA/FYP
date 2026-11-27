@@ -13,7 +13,8 @@ data class WordBankItem(
     val pronunciation: String = "", // Optional pronunciation guide
     val example: String = "",       // Example sentence
     val category: String = "",      // e.g., "noun", "verb", "phrase"
-    val difficulty: String = ""     // e.g., "beginner", "intermediate", "advanced"
+    val difficulty: String = "",    // e.g., "beginner", "intermediate", "advanced"
+    val generationModel: String? = null
 )
 
 /**
@@ -24,7 +25,8 @@ data class WordBank(
     val targetLanguageCode: String = "",
     val words: List<WordBankItem> = emptyList(),
     val generatedAt: Timestamp? = null,
-    val historyCountAtGenerate: Int = 0
+    val historyCountAtGenerate: Int = 0,
+    val lastGenerationModel: String? = null
 )
 
 /**

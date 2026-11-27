@@ -2,6 +2,7 @@ package com.translator.TalknLearn.data.learning
 
 import com.translator.TalknLearn.data.cloud.CloudGenAiClient
 import com.translator.TalknLearn.domain.learning.QuizGenerationRepository
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.TranslationRecord
 import javax.inject.Inject
 
@@ -85,7 +86,7 @@ class QuizGenerationRepositoryImpl @Inject constructor(
         targetLanguageCode: String,
         records: List<TranslationRecord>,
         learningMaterial: String
-    ): String {
+    ): GeneratedLearningContent {
         // Use optimized context selection instead of just takeLast(20)
         val selectedRecords = selectOptimalContext(records, targetSize = 20)
 

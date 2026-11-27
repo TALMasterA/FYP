@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.ui.components.AiModelAttribution
 
 @Composable
 fun WordBankItemCard(
@@ -272,6 +273,10 @@ fun WordBankItemCard(
                         }
                     }
 
+                    AiModelAttribution(
+                        model = word.generationModel,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
                 }
             }
 

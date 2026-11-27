@@ -18,13 +18,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -32,7 +36,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,16 +46,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import com.translator.TalknLearn.core.rememberHapticFeedback
 import com.translator.TalknLearn.core.rememberTranslator
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.UiTextKey
-import com.translator.TalknLearn.ui.theme.AppSpacing
+import com.translator.TalknLearn.ui.components.AiModelAttribution
 import com.translator.TalknLearn.ui.theme.AppCorners
 import com.translator.TalknLearn.ui.theme.AppElevation
+import com.translator.TalknLearn.ui.theme.AppSpacing
 
 @Composable
 fun QuizTakingScreen(
@@ -131,6 +132,7 @@ fun QuizTakingScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
+                    AiModelAttribution(model = attempt.generatedModel)
                 }
             }
 

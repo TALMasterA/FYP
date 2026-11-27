@@ -30,6 +30,7 @@ import com.translator.TalknLearn.model.friends.SharedItemType
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.ui.components.AiModelAttribution
 
 /**
  * Full-screen view of a shared learning material or quiz.
@@ -221,6 +222,7 @@ fun SharedMaterialDetailScreen(
                             }
                         }
                         bodyText.isNotBlank() -> {
+                            AiModelAttribution(content["generatedModel"] as? String)
                             Text(
                                 text = bodyText,
                                 style = MaterialTheme.typography.bodyLarge,

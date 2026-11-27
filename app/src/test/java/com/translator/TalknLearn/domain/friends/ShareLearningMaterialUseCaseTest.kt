@@ -1,6 +1,7 @@
 package com.translator.TalknLearn.domain.friends
 
 import com.translator.TalknLearn.data.friends.SharingRepository
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.SharedItem
 import com.translator.TalknLearn.model.friends.SharedItemType
@@ -84,10 +85,12 @@ class ShareLearningMaterialUseCaseTest {
             fromUsername = "sender",
             toUserId = toUserId,
             type = SharedItemType.LEARNING_SHEET,
-            materialId = "sheet_en-US_es-ES",
-            title = "English to Spanish",
-            description = "A learning sheet...",
-            fullContent = "Full content here"
+            material = LearningMaterialToShare(
+                materialId = "sheet_en-US_es-ES",
+                title = "English to Spanish",
+                description = "A learning sheet...",
+                fullContent = GeneratedLearningContent("Full content here", null)
+            )
         )
 
         assertTrue(result.isSuccess)
@@ -107,8 +110,10 @@ class ShareLearningMaterialUseCaseTest {
             fromUsername = "sender",
             toUserId = UserId("user2"),
             type = SharedItemType.LEARNING_SHEET,
-            materialId = "sheet1",
-            title = "Sheet"
+            material = LearningMaterialToShare(
+                materialId = "sheet1",
+                title = "Sheet"
+            )
         )
 
         assertTrue(result.isFailure)
@@ -124,10 +129,12 @@ class ShareLearningMaterialUseCaseTest {
             fromUsername = "sender",
             toUserId = UserId("user2"),
             type = SharedItemType.LEARNING_SHEET,
-            materialId = "sheet1",
-            title = "Test Title",
-            description = "Test Desc",
-            fullContent = "Full content"
+            material = LearningMaterialToShare(
+                materialId = "sheet1",
+                title = "Test Title",
+                description = "Test Desc",
+                fullContent = GeneratedLearningContent("Full content", "gpt-6-luna")
+            )
         )
 
         val data = repo.lastMaterialData!!
@@ -135,6 +142,7 @@ class ShareLearningMaterialUseCaseTest {
         assertEquals("Test Title", data["title"])
         assertEquals("Test Desc", data["description"])
         assertEquals("Full content", data["fullContent"])
+        assertEquals("gpt-6-luna", data["generatedModel"])
     }
 
     @Test
@@ -146,8 +154,10 @@ class ShareLearningMaterialUseCaseTest {
             fromUsername = "sender",
             toUserId = UserId("user2"),
             type = SharedItemType.LEARNING_SHEET,
-            materialId = "sheet1",
-            title = "Title"
+            material = LearningMaterialToShare(
+                materialId = "sheet1",
+                title = "Title"
+            )
         )
 
         val data = repo.lastMaterialData!!
@@ -170,10 +180,12 @@ class ShareLearningMaterialUseCaseTest {
             fromUsername = "sender",
             toUserId = UserId("user2"),
             type = SharedItemType.LEARNING_SHEET,
-            materialId = "sheet1",
-            title = "Title",
-            description = longContent.take(200),
-            fullContent = longContent
+            material = LearningMaterialToShare(
+                materialId = "sheet1",
+                title = "Title",
+                description = longContent.take(200),
+                fullContent = GeneratedLearningContent(longContent, null)
+            )
         )
 
         val data = repo.lastMaterialData!!
@@ -197,9 +209,11 @@ class ShareLearningMaterialUseCaseTest {
             fromUsername = "sender",
             toUserId = UserId("user2"),
             type = SharedItemType.LEARNING_SHEET,
-            materialId = "sheet1",
-            title = "Title",
-            fullContent = ""
+            material = LearningMaterialToShare(
+                materialId = "sheet1",
+                title = "Title",
+                fullContent = GeneratedLearningContent("", null)
+            )
         )
 
         val data = repo.lastMaterialData!!
@@ -220,9 +234,11 @@ class ShareLearningMaterialUseCaseTest {
             fromUsername = "myself",
             toUserId = UserId("user1"),
             type = SharedItemType.LEARNING_SHEET,
-            materialId = "sheet1",
-            title = "My Sheet",
-            fullContent = "Full content for self"
+            material = LearningMaterialToShare(
+                materialId = "sheet1",
+                title = "My Sheet",
+                fullContent = GeneratedLearningContent("Full content for self", null)
+            )
         )
 
         assertTrue(result.isSuccess)

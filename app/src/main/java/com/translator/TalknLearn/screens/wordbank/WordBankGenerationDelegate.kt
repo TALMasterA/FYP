@@ -112,7 +112,7 @@ internal class WordBankGenerationDelegate(
 
                 val primaryLang = getPrimaryLanguageCode()
                 val deployment = AiConfig.DEFAULT_DEPLOYMENT
-                val rawContent = wordBankGenRepo.generateWordBank(
+                val generated = wordBankGenRepo.generateWordBank(
                     deployment = deployment,
                     primaryLanguageCode = primaryLang,
                     targetLanguageCode = targetLanguageCode,
@@ -121,7 +121,9 @@ internal class WordBankGenerationDelegate(
 
                 ensureActive()
 
-                val words = parseWordBankResponse(rawContent)
+                val words = parseWordBankResponse(generated.content).map { word ->
+                    word.copy(generationModel = generated.model)
+                }
 
                 if (words.isEmpty()) {
                     uiState.value = uiState.value.copy(
@@ -140,7 +142,8 @@ internal class WordBankGenerationDelegate(
                     primary = primaryLang,
                     target = targetLanguageCode,
                     newWords = words,
-                    historyCount = unifiedCount
+                    historyCount = unifiedCount,
+                    lastGenerationModel = generated.model
                 )
 
                 val existingWords = uiState.value.currentWordBank?.words ?: emptyList()
@@ -152,7 +155,8 @@ internal class WordBankGenerationDelegate(
                     primaryLanguageCode = primaryLang,
                     targetLanguageCode = targetLanguageCode,
                     words = mergedWords,
-                    historyCountAtGenerate = unifiedCount
+                    historyCountAtGenerate = unifiedCount,
+                    lastGenerationModel = generated.model
                 )
 
                 invalidateWordBankCache(targetLanguageCode)

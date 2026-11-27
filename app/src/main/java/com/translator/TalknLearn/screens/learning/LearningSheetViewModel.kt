@@ -7,10 +7,12 @@ import com.translator.TalknLearn.core.decodeOrDefault
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.data.history.SharedHistoryDataSource
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.domain.friends.LearningMaterialToShare
 import com.translator.TalknLearn.domain.friends.ShareLearningMaterialUseCase
 import com.translator.TalknLearn.domain.learning.LearningSheetsRepository
 import com.translator.TalknLearn.domain.learning.ParseAndStoreQuizUseCase
 import com.translator.TalknLearn.domain.learning.QuizRepository
+import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.LanguageCode
 import com.translator.TalknLearn.model.QuizAttempt
 import com.translator.TalknLearn.model.QuizQuestion
@@ -37,6 +39,7 @@ data class LearningSheetUiState(
     val primaryLanguageCode: String = "en-US",
     val targetLanguageCode: String = "",
     val content: String? = null,
+    val generatedModel: String? = null,
 
     // Sheet regeneration marker (version)
     val historyCountAtGenerate: Int? = null,
@@ -190,6 +193,7 @@ class LearningSheetViewModel @Inject constructor(
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             content = doc?.content,
+                            generatedModel = doc?.generatedModel,
                             historyCountAtGenerate = newSheetVersion,
                             isQuizOutdated = newOutdated
                         )
@@ -260,7 +264,7 @@ class LearningSheetViewModel @Inject constructor(
                     targetLanguageCode = targetCode,
                     questions = questions,
                     generatedHistoryCountAtGenerate = doc.historyCountAtGenerate
-                )
+                ).copy(generatedModel = doc.generatedModel)
 
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,
@@ -393,10 +397,12 @@ class LearningSheetViewModel @Inject constructor(
                 fromUsername = fromUsername,
                 toUserId = toUserId,
                 type = SharedItemType.LEARNING_SHEET,
-                materialId = materialId,
-                title = title,
-                description = state.content.take(200),
-                fullContent = state.content
+                material = LearningMaterialToShare(
+                    materialId = materialId,
+                    title = title,
+                    description = state.content.take(200),
+                    fullContent = GeneratedLearningContent(state.content, state.generatedModel)
+                )
             ).onSuccess {
                 _uiState.value = _uiState.value.copy(isSharing = false, shareSuccessKey = successKey)
             }.onFailure { e ->
