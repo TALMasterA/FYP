@@ -8,6 +8,7 @@ import com.translator.TalknLearn.data.user.FirestoreProfileRepository
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.Username
 import com.translator.TalknLearn.model.friends.PublicUserProfile
+import com.translator.TalknLearn.model.ui.english
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings
@@ -77,7 +78,7 @@ class ProfileViewModelTest {
 
         assertEquals(
             "Username can only contain letters, numbers, and underscores",
-            viewModel.uiState.value.error
+            viewModel.uiState.value.error.english()
         )
     }
 
@@ -91,7 +92,7 @@ class ProfileViewModelTest {
 
         assertEquals(
             "Username can only contain letters, numbers, and underscores",
-            viewModel.uiState.value.error
+            viewModel.uiState.value.error.english()
         )
     }
 
@@ -105,7 +106,7 @@ class ProfileViewModelTest {
 
         viewModel.updateUsername("ab")
 
-        assertEquals("Username must be at least 3 characters", viewModel.uiState.value.error)
+        assertEquals("Username must be at least 3 characters", viewModel.uiState.value.error.english())
     }
 
     @Test
@@ -116,7 +117,7 @@ class ProfileViewModelTest {
 
         viewModel.updateUsername("a".repeat(21))
 
-        assertEquals("Username must not exceed 20 characters", viewModel.uiState.value.error)
+        assertEquals("Username must not exceed 20 characters", viewModel.uiState.value.error.english())
     }
 
     // ── updateUsername: already taken ─────────────────────────────────────────
@@ -133,7 +134,7 @@ class ProfileViewModelTest {
         viewModel.updateUsername("taken_u")
         testDispatcher.scheduler.advanceUntilIdle()
 
-        assertEquals("Username already taken", viewModel.uiState.value.error)
+        assertEquals("Username already taken", viewModel.uiState.value.error.english())
     }
 
     // ── updateUsername: keeping same username is a no-op ──────────────────────
@@ -167,7 +168,7 @@ class ProfileViewModelTest {
         viewModel.deleteAccount("")
         testDispatcher.scheduler.advanceUntilIdle()
 
-        assertEquals("Invalid password. Please try again.", viewModel.uiState.value.deleteError)
+        assertEquals("Invalid password. Please try again.", viewModel.uiState.value.deleteError.english())
         assertFalse(viewModel.uiState.value.isDeletingAccount)
     }
 
@@ -249,7 +250,7 @@ class ProfileViewModelTest {
 
         assertEquals(
             "Unable to verify account status. Please try again.",
-            viewModel.uiState.value.error
+            viewModel.uiState.value.error.english()
         )
         assertFalse(viewModel.uiState.value.isLoading)
     }

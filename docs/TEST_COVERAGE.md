@@ -21,7 +21,9 @@ Measured on 2026-11-28 HKT. Baseline `13d37d3d4c84590fc56429782d159ec890f92df6`.
 | Backend lines | 94.85% | 95.61% |
 | Firestore emulator | No executed suite | 5 passed |
 
-**Latest count (Phase 1 part 3, 2026-11-28):** after adding 7 `statusFromException` / `StatusText.raw` tests to `ErrorMessagesTest`, `testDebugUnitTest` reports **200 suites and 2,515 tests**, with 0 failures, 0 errors and 0 skipped. Social ViewModel tests now resolve messages with the `StatusText?.english()` helper (`model/ui/StatusTextEnglish.kt` in the test sources) or compare keys. The Kover numbers above were not re-measured.
+**Latest count (Phase 1 part 4, 2026-11-28):** after adding `ErrorMessageMapperKeyTest` (3 tests) and 3 Feedback tests (too short, too long, unknown error fallback), `testDebugUnitTest` reports **201 suites and 2,521 tests**, with 0 failures, 0 errors and 0 skipped. Settings, Shop, Profile, Login and Feedback ViewModel tests now compare keys or resolve messages with `StatusText?.english()`. The Kover numbers above were not re-measured.
+
+**Phase 1 part 3 count:** after adding 7 `statusFromException` / `StatusText.raw` tests to `ErrorMessagesTest`, `testDebugUnitTest` reports **200 suites and 2,515 tests**, with 0 failures, 0 errors and 0 skipped. Social ViewModel tests now resolve messages with the `StatusText?.english()` helper (`model/ui/StatusTextEnglish.kt` in the test sources) or compare keys. The Kover numbers above were not re-measured.
 
 **Phase 1 part 2 count:** after adding `StatusTextTest` (4 tests), **200 suites and 2,508 tests**.
 

@@ -47,8 +47,8 @@ import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
-import com.translator.TalknLearn.ui.theme.AppSpacing
 import com.translator.TalknLearn.ui.theme.AppCorners
+import com.translator.TalknLearn.ui.theme.AppSpacing
 
 @Composable
 fun ProfileScreen(
@@ -75,7 +75,7 @@ fun ProfileScreen(
             .build()
         GoogleSignIn.getClient(context, gso)
     }
-    var googleReauthError by remember { mutableStateOf<String?>(null) }
+    var googleReauthError by remember { mutableStateOf<UiTextKey?>(null) }
     val googleReauthLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -87,10 +87,10 @@ fun ProfileScreen(
                 if (idToken != null) {
                     viewModel.deleteAccountWithGoogle(idToken)
                 } else {
-                    googleReauthError = "Google sign-in failed: no ID token."
+                    googleReauthError = UiTextKey.ProfileMsgGoogleNoToken
                 }
             } catch (e: ApiException) {
-                googleReauthError = "Google sign-in failed. Please try again."
+                googleReauthError = UiTextKey.ProfileMsgGoogleSignInFailed
             }
         }
     }
@@ -248,7 +248,7 @@ fun ProfileScreen(
                     // Success/Error messages
                     uiState.successMessage?.let { msg ->
                         Text(
-                            text = msg,
+                            text = msg.resolve(t),
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -256,7 +256,7 @@ fun ProfileScreen(
 
                     uiState.error?.let { error ->
                         Text(
-                            text = error,
+                            text = error.resolve(t),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -321,7 +321,7 @@ fun ProfileScreen(
 
                     if (uiState.isGoogleUser) {
                         Text(
-                            text = "Re-authenticate with your Google account to confirm.",
+                            text = t(UiTextKey.ProfileGoogleReauthHint),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -336,7 +336,7 @@ fun ProfileScreen(
                         )
                     }
 
-                    (googleReauthError ?: uiState.deleteError)?.let { error ->
+                    (googleReauthError?.let { t(it) } ?: uiState.deleteError?.resolve(t))?.let { error ->
                         Text(
                             text = error,
                             color = MaterialTheme.colorScheme.error,
@@ -368,7 +368,13 @@ fun ProfileScreen(
                             color = MaterialTheme.colorScheme.onError
                         )
                     } else {
-                        Text(if (uiState.isGoogleUser) "Continue with Google" else t(UiTextKey.AccountDeleteButton))
+                        Text(
+                            if (uiState.isGoogleUser) {
+                                t(UiTextKey.ProfileContinueWithGoogle)
+                            } else {
+                                t(UiTextKey.AccountDeleteButton)
+                            }
+                        )
                     }
                 }
             },

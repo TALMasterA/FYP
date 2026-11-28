@@ -2,46 +2,47 @@
 
 package com.translator.TalknLearn.screens.login
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.translator.TalknLearn.core.AppLanguageDropdown
-import com.translator.TalknLearn.core.StandardScreenBody
-import com.translator.TalknLearn.core.StandardScreenScaffold
-import com.translator.TalknLearn.core.rememberUiTextFunctions
-import com.translator.TalknLearn.model.ui.AppLanguageState
-import com.translator.TalknLearn.model.user.AuthState
-import com.translator.TalknLearn.model.ui.BaseUiTexts
-import com.translator.TalknLearn.model.ui.UiTextKey
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.ui.text.input.VisualTransformation
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import kotlinx.coroutines.delay
+import com.translator.TalknLearn.core.AppLanguageDropdown
+import com.translator.TalknLearn.core.StandardScreenBody
+import com.translator.TalknLearn.core.StandardScreenScaffold
 import com.translator.TalknLearn.core.UiConstants
+import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.core.security.ValidationResult
 import com.translator.TalknLearn.core.security.validatePassword
-import com.translator.TalknLearn.ui.theme.AppSpacing
+import com.translator.TalknLearn.model.ui.AppLanguageState
+import com.translator.TalknLearn.model.ui.BaseUiTexts
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.ui.theme.AppCorners
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.translator.TalknLearn.ui.theme.AppSpacing
+import kotlinx.coroutines.delay
 
 internal fun resolveGoogleWebClientId(context: Context): String? {
     val resourceId = context.resources.getIdentifier(
@@ -109,13 +110,13 @@ fun LoginScreen(
             val account = task.getResult(ApiException::class.java)
             val idToken = account?.idToken
             if (idToken.isNullOrBlank()) {
-                viewModel.reportGoogleSignInError("Google sign-in failed: no ID token returned.")
+                viewModel.reportGoogleSignInError(StatusText(UiTextKey.AuthMsgGoogleNoToken))
             } else {
                 viewModel.signInWithGoogle(idToken)
             }
         } catch (e: ApiException) {
             viewModel.reportGoogleSignInError(
-                "Google sign-in failed (code ${e.statusCode})."
+                StatusText(UiTextKey.AuthMsgGoogleFailedCode, mapOf("code" to e.statusCode.toString()))
             )
         }
     }
@@ -130,7 +131,7 @@ fun LoginScreen(
     }
 
     // Auto-dismiss error after delay
-    val vmErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+    val vmErrorText = uiState.error?.resolve(t)
     LaunchedEffect(vmErrorText) {
         if (vmErrorText != null) {
             delay(UiConstants.ERROR_AUTO_DISMISS_MS)
@@ -180,7 +181,7 @@ fun LoginScreen(
             )
 
             // Error message displayed ABOVE input fields so it's visible when keyboard is open
-            val vmErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+            val vmErrorText = uiState.error?.resolve(t)
             (localError ?: vmErrorText)?.let { errorMsg ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -302,9 +303,7 @@ fun LoginScreen(
                     localError = null
                     val client = googleSignInClient
                     if (client == null) {
-                        viewModel.reportGoogleSignInError(
-                            "Google sign-in is not configured for this build."
-                        )
+                        viewModel.reportGoogleSignInError(StatusText(UiTextKey.AuthMsgGoogleNotConfigured))
                         return@OutlinedButton
                     }
                     // Sign out of any cached Google account so the chooser

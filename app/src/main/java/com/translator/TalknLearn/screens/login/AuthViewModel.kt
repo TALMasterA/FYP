@@ -3,14 +3,15 @@ package com.translator.TalknLearn.screens.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.translator.TalknLearn.core.SessionDataCleaner
-import com.translator.TalknLearn.data.user.FirebaseAuthRepository
-import com.translator.TalknLearn.model.user.AuthState
-import com.translator.TalknLearn.model.ui.UiTextKey
-import com.translator.TalknLearn.utils.ErrorMessageMapper
 import com.translator.TalknLearn.core.security.AuditLogger
 import com.translator.TalknLearn.core.security.PersistentRateLimiter
 import com.translator.TalknLearn.core.security.ValidationResult
 import com.translator.TalknLearn.core.security.validateEmail
+import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.user.AuthState
+import com.translator.TalknLearn.utils.ErrorMessageMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,10 +21,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class AuthUiState(
-    val errorKey: UiTextKey? = null,
-    val errorRaw: String? = null,
+    val error: StatusText? = null,
     val messageKey: UiTextKey? = null,
-    val messageRaw: String? = null,
     val isLoading: Boolean = false
 )
 
@@ -64,7 +63,7 @@ class AuthViewModel @Inject constructor(
         val emailValidation = validateEmail(trimmedEmail)
         if (emailValidation is ValidationResult.Invalid) {
             AuditLogger.logInvalidInput(field = "email", reason = emailValidation.message)
-            _uiState.value = _uiState.value.copy(errorRaw = emailValidation.message)
+            _uiState.value = _uiState.value.copy(error = emailError(trimmedEmail))
             return
         }
 
@@ -78,7 +77,7 @@ class AuthViewModel @Inject constructor(
         ) {
             AuditLogger.logRateLimitExceeded(userId = trimmedEmail, operation = "login")
             _uiState.value = _uiState.value.copy(
-                errorRaw = "Too many login attempts. Please try again later."
+                error = StatusText(UiTextKey.AuthMsgTooManyLogins)
             )
             return
         }
@@ -86,10 +85,8 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
-                errorKey = null,
-                errorRaw = null,
-                messageKey = null,
-                messageRaw = null
+                error = null,
+                messageKey = null
             )
 
             val result = authRepository.login(trimmedEmail, password)
@@ -103,14 +100,14 @@ class AuthViewModel @Inject constructor(
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                errorRaw = result.exceptionOrNull()?.let { ErrorMessageMapper.map(it) }
+                error = result.exceptionOrNull()?.let { StatusText(ErrorMessageMapper.mapKey(it)) }
             )
         }
     }
 
     fun register(email: String, password: String) {
         _uiState.value = AuthUiState(
-            errorKey = UiTextKey.AuthRegistrationDisabled,
+            error = StatusText(UiTextKey.AuthRegistrationDisabled),
             isLoading = false
         )
     }
@@ -122,7 +119,7 @@ class AuthViewModel @Inject constructor(
     fun signInWithGoogle(idToken: String) {
         if (idToken.isBlank()) {
             _uiState.value = _uiState.value.copy(
-                errorRaw = "Google sign-in failed: empty ID token."
+                error = StatusText(UiTextKey.AuthMsgGoogleEmptyToken)
             )
             return
         }
@@ -130,10 +127,8 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
-                errorKey = null,
-                errorRaw = null,
-                messageKey = null,
-                messageRaw = null
+                error = null,
+                messageKey = null
             )
 
             val result = authRepository.signInWithGoogle(idToken)
@@ -150,7 +145,7 @@ class AuthViewModel @Inject constructor(
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                errorRaw = result.exceptionOrNull()?.let { ErrorMessageMapper.map(it) }
+                error = result.exceptionOrNull()?.let { StatusText(ErrorMessageMapper.mapKey(it)) }
             )
         }
     }
@@ -159,10 +154,10 @@ class AuthViewModel @Inject constructor(
      * Surface a Google sign-in error originating from the UI layer
      * (e.g. user cancelled, no credential available).
      */
-    fun reportGoogleSignInError(message: String) {
+    fun reportGoogleSignInError(status: StatusText) {
         _uiState.value = _uiState.value.copy(
             isLoading = false,
-            errorRaw = message
+            error = status
         )
     }
 
@@ -173,7 +168,7 @@ class AuthViewModel @Inject constructor(
         val emailValidation = validateEmail(trimmedEmail)
         if (emailValidation is ValidationResult.Invalid) {
             AuditLogger.logInvalidInput(field = "email", reason = emailValidation.message)
-            _uiState.value = _uiState.value.copy(errorRaw = emailValidation.message)
+            _uiState.value = _uiState.value.copy(error = emailError(trimmedEmail))
             return
         }
 
@@ -187,7 +182,7 @@ class AuthViewModel @Inject constructor(
         ) {
             AuditLogger.logRateLimitExceeded(userId = trimmedEmail, operation = "resetPassword")
             _uiState.value = _uiState.value.copy(
-                errorRaw = "Too many password reset attempts. Please try again later."
+                error = StatusText(UiTextKey.AuthMsgTooManyResets)
             )
             return
         }
@@ -197,21 +192,24 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isLoading = true,
-                errorKey = null,
-                errorRaw = null,
-                messageKey = null,
-                messageRaw = null
+                error = null,
+                messageKey = null
             )
 
             val result = authRepository.sendPasswordResetEmail(trimmedEmail)
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                errorRaw = result.exceptionOrNull()?.let { ErrorMessageMapper.map(it) },
+                error = result.exceptionOrNull()?.let { StatusText(ErrorMessageMapper.mapKey(it)) },
                 messageKey = if (result.isSuccess) UiTextKey.AuthResetEmailSent else null
             )
         }
     }
+
+    /** Picks the message for an email that failed [validateEmail]. */
+    private fun emailError(email: String): StatusText = StatusText(
+        if (email.isBlank()) UiTextKey.AuthMsgEmailEmpty else UiTextKey.AuthMsgEmailInvalid
+    )
 
     fun logout() {
         // Wipe session-scoped local caches BEFORE Firebase signOut so we still hold
@@ -225,10 +223,10 @@ class AuthViewModel @Inject constructor(
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(errorKey = null, errorRaw = null)
+        _uiState.value = _uiState.value.copy(error = null)
     }
 
     fun clearMessage() {
-        _uiState.value = _uiState.value.copy(messageKey = null, messageRaw = null)
+        _uiState.value = _uiState.value.copy(messageKey = null)
     }
 }

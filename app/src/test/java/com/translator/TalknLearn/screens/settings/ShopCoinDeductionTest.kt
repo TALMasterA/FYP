@@ -2,12 +2,14 @@ package com.translator.TalknLearn.screens.settings
 
 import com.translator.TalknLearn.data.cloud.CloudQuizClient
 import com.translator.TalknLearn.data.cloud.SpendCoinsResult
+import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
+import com.translator.TalknLearn.data.settings.UserSettingsRepository
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.learning.QuizRepository
-import com.translator.TalknLearn.data.settings.UserSettingsRepository
-import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
-import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.UserCoinStats
+import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.ui.english
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings
@@ -156,7 +158,7 @@ class ShopCoinDeductionTest {
         viewModel.expandHistoryLimit()
 
         assertNotNull(viewModel.uiState.value.purchaseSuccess)
-        assertTrue(viewModel.uiState.value.purchaseSuccess!!.contains("expanded"))
+        assertTrue(viewModel.uiState.value.purchaseSuccess.english()!!.contains("expanded"))
     }
 
     @Test
@@ -168,7 +170,7 @@ class ShopCoinDeductionTest {
 
         viewModel.expandHistoryLimit()
 
-        assertEquals("Insufficient coins", viewModel.uiState.value.purchaseError)
+        assertEquals(UiTextKey.ShopInsufficientCoins, viewModel.uiState.value.purchaseError?.key)
         verifyNoInteractions(cloudClient)
     }
 
@@ -199,7 +201,7 @@ class ShopCoinDeductionTest {
 
         viewModel.expandHistoryLimit()
 
-        assertEquals("Insufficient coins", viewModel.uiState.value.purchaseError)
+        assertEquals(UiTextKey.ShopInsufficientCoins, viewModel.uiState.value.purchaseError?.key)
     }
 
     // ── Palette Unlock ──────────────────────────────────────────────
@@ -247,7 +249,7 @@ class ShopCoinDeductionTest {
         viewModel.unlockPalette("ocean", 10)
 
         assertNotNull(viewModel.uiState.value.purchaseSuccess)
-        assertTrue(viewModel.uiState.value.purchaseSuccess!!.contains("unlocked"))
+        assertTrue(viewModel.uiState.value.purchaseSuccess.english()!!.contains("unlocked"))
     }
 
     @Test
@@ -259,7 +261,7 @@ class ShopCoinDeductionTest {
 
         viewModel.unlockPalette("premium", 10)
 
-        assertEquals("Insufficient coins", viewModel.uiState.value.unlockError)
+        assertEquals(UiTextKey.ShopInsufficientCoins, viewModel.uiState.value.unlockError?.key)
         verifyNoInteractions(cloudClient)
     }
 
@@ -275,7 +277,7 @@ class ShopCoinDeductionTest {
 
         viewModel.unlockPalette("premium", 10)
 
-        assertEquals("Insufficient coins", viewModel.uiState.value.unlockError)
+        assertEquals(UiTextKey.ShopInsufficientCoins, viewModel.uiState.value.unlockError?.key)
     }
 
     // ── Select Palette ────────────────────────────────────────────

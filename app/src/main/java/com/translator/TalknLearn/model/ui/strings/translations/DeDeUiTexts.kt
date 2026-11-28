@@ -891,5 +891,74 @@ val DeDeUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SharedMsgNoItemId to "Keine Element-ID",
     UiTextKey.SharedMsgLoadFailed to "Geteiltes Material konnte nicht geladen werden. Bitte erneut versuchen.",
 
+    // Phase 1 part 4: settings, shop, profile, login and feedback messages
+    UiTextKey.FeedbackMsgEmpty to "Die Nachricht darf nicht leer sein",
+    UiTextKey.FeedbackMsgTooShort to "Das Feedback muss mindestens {min} Zeichen lang sein",
+    UiTextKey.FeedbackMsgTooLong to "Das Feedback darf höchstens {max} Zeichen lang sein",
+    UiTextKey.FeedbackMsgRateLimited to
+        "Du hast in letzter Zeit zu viel Feedback gesendet. Bitte versuche es später erneut.",
+    UiTextKey.FeedbackMsgSubmitFailed to "Feedback konnte nicht gesendet werden. Bitte prüfe deine Internetverbindung.",
+    UiTextKey.ShopMsgLoadFailed to "Shop-Daten konnten nicht geladen werden",
+    UiTextKey.ShopMsgPurchaseFailed to "Kauf fehlgeschlagen",
+    UiTextKey.ShopMsgHistoryExpanded to "Verlaufslimit auf {limit} Einträge erweitert!",
+    UiTextKey.ShopMsgPaletteAlreadyUnlocked to "Palette bereits freigeschaltet",
+    UiTextKey.ShopMsgUnlockFailed to "Palette konnte nicht freigeschaltet werden",
+    UiTextKey.ShopMsgPaletteUnlocked to "Palette freigeschaltet!",
+    UiTextKey.ShopMsgPaletteSelectFailed to "Farbpalette konnte nicht geändert werden. Bitte versuche es erneut.",
+    UiTextKey.ProfileMsgLoadFailed to "Profil konnte nicht geladen werden",
+    UiTextKey.ProfileMsgUsernameTooShort to "Der Benutzername muss mindestens {min} Zeichen lang sein",
+    UiTextKey.ProfileMsgUsernameTooLong to "Der Benutzername darf höchstens {max} Zeichen lang sein",
+    UiTextKey.ProfileMsgUsernameInvalidChars to
+        "Der Benutzername darf nur Buchstaben, Zahlen und Unterstriche enthalten",
+    UiTextKey.ProfileMsgVerifyFailed to "Kontostatus konnte nicht geprüft werden. Bitte versuche es erneut.",
+    UiTextKey.ProfileMsgUsernameTaken to "Benutzername ist bereits vergeben",
+    UiTextKey.ProfileMsgUsernameUpdatedSyncing to
+        "Benutzername aktualisiert. Deine Freundesliste kann einen Moment brauchen, bis sie aktualisiert ist.",
+    UiTextKey.ProfileMsgUsernameUpdated to "Benutzername erfolgreich aktualisiert",
+    UiTextKey.ProfileMsgUpdateFailed to "Profil konnte nicht aktualisiert werden",
+    UiTextKey.ProfileMsgSetUsernameFailed to "Benutzername konnte nicht festgelegt werden",
+    UiTextKey.ProfileMsgDeleteFailed to "Konto konnte nicht gelöscht werden",
+    UiTextKey.ProfileMsgInvalidPassword to "Falsches Passwort. Bitte versuche es erneut.",
+    UiTextKey.ProfileMsgGoogleReauthFailed to "Erneute Google-Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+    UiTextKey.ProfileMsgGoogleNoToken to "Google-Anmeldung fehlgeschlagen: kein ID-Token.",
+    UiTextKey.ProfileMsgGoogleSignInFailed to "Google-Anmeldung fehlgeschlagen. Bitte versuche es erneut.",
+    UiTextKey.ProfileGoogleReauthHint to "Melde dich zur Bestätigung erneut mit deinem Google-Konto an.",
+    UiTextKey.ProfileContinueWithGoogle to "Weiter mit Google",
+    UiTextKey.SettingsMsgLanguageSaveFailed to
+        "Spracheinstellung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    UiTextKey.SettingsMsgFontSaveFailed to "Schriftgröße konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    UiTextKey.SettingsMsgThemeSaveFailed to
+        "Design-Einstellung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    UiTextKey.SettingsMsgAutoThemeFailed to
+        "Automatisches Design konnte nicht deaktiviert werden. Bitte versuche es erneut.",
+    UiTextKey.SettingsMsgVoiceSaveFailed to
+        "Stimmeinstellung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    UiTextKey.SettingsMsgNotificationSaveFailed to
+        "Benachrichtigungseinstellung konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    UiTextKey.AuthMsgEmailEmpty to "E-Mail darf nicht leer sein",
+    UiTextKey.AuthMsgEmailInvalid to "Ungültiges E-Mail-Format",
+    UiTextKey.AuthMsgTooManyLogins to "Zu viele Anmeldeversuche. Bitte versuche es später erneut.",
+    UiTextKey.AuthMsgTooManyResets to
+        "Zu viele Versuche zum Zurücksetzen des Passworts. Bitte versuche es später erneut.",
+    UiTextKey.AuthMsgGoogleEmptyToken to "Google-Anmeldung fehlgeschlagen: leeres ID-Token.",
+    UiTextKey.AuthMsgGoogleNoToken to "Google-Anmeldung fehlgeschlagen: kein ID-Token erhalten.",
+    UiTextKey.AuthMsgGoogleFailedCode to "Google-Anmeldung fehlgeschlagen (Code {code}).",
+    UiTextKey.AuthMsgGoogleNotConfigured to "Google-Anmeldung ist für diesen Build nicht eingerichtet.",
+    UiTextKey.ErrUnknown to "Ein unbekannter Fehler ist aufgetreten.",
+    UiTextKey.ErrNetworkFailed to "Netzwerkverbindung fehlgeschlagen. Bitte prüfe deine Internetverbindung.",
+    UiTextKey.ErrOperationTimedOut to "Zeitüberschreitung bei der Aktion. Bitte versuche es erneut.",
+    UiTextKey.ErrCancelled to "Die Aktion wurde abgebrochen.",
+    UiTextKey.ErrUnexpected to "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.",
+    UiTextKey.ErrAuthInvalidEmail to "Die E-Mail-Adresse hat ein ungültiges Format.",
+    UiTextKey.ErrAuthWrongPassword to "Falsches Passwort.",
+    UiTextKey.ErrAuthUserNotFound to "Kein Konto mit dieser E-Mail gefunden.",
+    UiTextKey.ErrAuthUserDisabled to "Dieses Konto wurde deaktiviert.",
+    UiTextKey.ErrAuthTooManyRequests to "Zu viele Anfragen. Bitte versuche es später erneut.",
+    UiTextKey.ErrAuthEmailInUse to "Diese E-Mail-Adresse wird bereits von einem anderen Konto verwendet.",
+    UiTextKey.ErrAuthFailed to "Authentifizierung fehlgeschlagen. Bitte versuche es erneut.",
+    UiTextKey.ErrDbPermission to "Du hast keine Berechtigung, auf diese Daten zuzugreifen.",
+    UiTextKey.ErrDbUnavailable to "Dienst derzeit nicht verfügbar. Bitte versuche es später erneut.",
+    UiTextKey.ErrDbGeneric to "Datenbankfehler. Bitte versuche es erneut.",
+
     // Extended Error Messages
 )

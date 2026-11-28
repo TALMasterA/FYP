@@ -2,15 +2,18 @@ package com.translator.TalknLearn.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.core.ErrorMessages
 import com.translator.TalknLearn.data.cloud.CloudQuizClient
-import com.translator.TalknLearn.domain.learning.QuizRepository
-import com.translator.TalknLearn.data.settings.UserSettingsRepository
 import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
+import com.translator.TalknLearn.data.settings.UserSettingsRepository
+import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.domain.learning.QuizRepository
+import com.translator.TalknLearn.model.PaletteId
+import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.UserSettings
-import com.translator.TalknLearn.model.UserId
-import com.translator.TalknLearn.model.PaletteId
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,9 +28,9 @@ data class ShopUiState(
     val currentPaletteId: String = "default",
     val unlockedPalettes: List<String> = listOf("default"),
     val isPurchasing: Boolean = false,
-    val purchaseError: String? = null,
-    val purchaseSuccess: String? = null,
-    val unlockError: String? = null
+    val purchaseError: StatusText? = null,
+    val purchaseSuccess: StatusText? = null,
+    val unlockError: StatusText? = null
 )
 
 @HiltViewModel
@@ -81,7 +84,7 @@ class ShopViewModel @Inject constructor(
                 android.util.Log.e("ShopViewModel", "Failed to load shop data", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    purchaseError = com.translator.TalknLearn.core.ErrorMessages.fromException(e, "Failed to load shop data")
+                    purchaseError = ErrorMessages.statusFromException(e, UiTextKey.ShopMsgLoadFailed)
                 )
             }
         }
@@ -93,7 +96,7 @@ class ShopViewModel @Inject constructor(
 
         if (current.currentHistoryLimit >= UserSettings.MAX_HISTORY_LIMIT) return
         if (current.coinBalance < UserSettings.HISTORY_EXPANSION_COST) {
-            _uiState.value = current.copy(purchaseError = "Insufficient coins")
+            _uiState.value = current.copy(purchaseError = StatusText(UiTextKey.ShopInsufficientCoins))
             return
         }
 
@@ -110,11 +113,13 @@ class ShopViewModel @Inject constructor(
                 if (!result.success) {
                     _uiState.value = _uiState.value.copy(
                         isPurchasing = false,
-                        purchaseError = when (result.reason) {
-                            "max_limit_reached" -> "Maximum limit reached!"
-                            "insufficient_coins" -> "Insufficient coins"
-                            else -> result.reason ?: "Purchase failed"
-                        }
+                        purchaseError = StatusText(
+                            when (result.reason) {
+                                "max_limit_reached" -> UiTextKey.ShopMaxLimitReached
+                                "insufficient_coins" -> UiTextKey.ShopInsufficientCoins
+                                else -> UiTextKey.ShopMsgPurchaseFailed
+                            }
+                        )
                     )
                     return@launch
                 }
@@ -123,7 +128,10 @@ class ShopViewModel @Inject constructor(
                     isPurchasing = false,
                     coinBalance = result.newBalance,
                     currentHistoryLimit = result.newLimit ?: _uiState.value.currentHistoryLimit,
-                    purchaseSuccess = "History limit expanded to ${result.newLimit} records!",
+                    purchaseSuccess = StatusText(
+                        UiTextKey.ShopMsgHistoryExpanded,
+                        mapOf("limit" to result.newLimit.toString())
+                    ),
                     purchaseError = null
                 )
                 // Propagate new limit immediately so HistoryViewModel can show
@@ -134,7 +142,7 @@ class ShopViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isPurchasing = false,
-                    purchaseError = e.message ?: "Purchase failed"
+                    purchaseError = ErrorMessages.statusFromException(e, UiTextKey.ShopMsgPurchaseFailed)
                 )
             }
         }
@@ -148,7 +156,9 @@ class ShopViewModel @Inject constructor(
                 settingsRepo.setColorPalette(UserId(uid), PaletteId(paletteId))
                 _uiState.value = _uiState.value.copy(currentPaletteId = paletteId)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(purchaseError = e.message)
+                _uiState.value = _uiState.value.copy(
+                    purchaseError = ErrorMessages.statusFromException(e, UiTextKey.ShopMsgPaletteSelectFailed)
+                )
             }
         }
     }
@@ -158,7 +168,7 @@ class ShopViewModel @Inject constructor(
         val current = _uiState.value
 
         if (current.coinBalance < cost) {
-            _uiState.value = current.copy(unlockError = "Insufficient coins")
+            _uiState.value = current.copy(unlockError = StatusText(UiTextKey.ShopInsufficientCoins))
             return
         }
 
@@ -171,11 +181,13 @@ class ShopViewModel @Inject constructor(
                 if (!result.success) {
                     _uiState.value = _uiState.value.copy(
                         isPurchasing = false,
-                        unlockError = when (result.reason) {
-                            "already_unlocked" -> "Palette already unlocked"
-                            "insufficient_coins" -> "Insufficient coins"
-                            else -> result.reason ?: "Failed to unlock palette"
-                        }
+                        unlockError = StatusText(
+                            when (result.reason) {
+                                "already_unlocked" -> UiTextKey.ShopMsgPaletteAlreadyUnlocked
+                                "insufficient_coins" -> UiTextKey.ShopInsufficientCoins
+                                else -> UiTextKey.ShopMsgUnlockFailed
+                            }
+                        )
                     )
                     return@launch
                 }
@@ -184,7 +196,7 @@ class ShopViewModel @Inject constructor(
                     isPurchasing = false,
                     coinBalance = result.newBalance,
                     unlockedPalettes = _uiState.value.unlockedPalettes + paletteId,
-                    purchaseSuccess = "Palette unlocked!",
+                    purchaseSuccess = StatusText(UiTextKey.ShopMsgPaletteUnlocked),
                     unlockError = null
                 )
                 // Propagate unlocked palette immediately so other screens
@@ -196,7 +208,7 @@ class ShopViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isPurchasing = false,
-                    unlockError = e.message ?: "Failed to unlock palette"
+                    unlockError = ErrorMessages.statusFromException(e, UiTextKey.ShopMsgUnlockFailed)
                 )
             }
         }

@@ -3,22 +3,22 @@ package com.translator.TalknLearn.screens.settings
 import android.app.Application
 import android.content.SharedPreferences
 import com.translator.TalknLearn.data.friends.FriendsRepository
-import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
+import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.domain.learning.QuizRepository
+import com.translator.TalknLearn.domain.settings.SetAutoThemeEnabledUseCase
 import com.translator.TalknLearn.domain.settings.SetFontSizeScaleUseCase
+import com.translator.TalknLearn.domain.settings.SetNotificationPrefUseCase
 import com.translator.TalknLearn.domain.settings.SetPrimaryLanguageUseCase
 import com.translator.TalknLearn.domain.settings.SetThemeModeUseCase
 import com.translator.TalknLearn.domain.settings.SetVoiceForLanguageUseCase
-import com.translator.TalknLearn.domain.settings.SetAutoThemeEnabledUseCase
-import com.translator.TalknLearn.domain.settings.SetNotificationPrefUseCase
-import com.translator.TalknLearn.domain.learning.QuizRepository
+import com.translator.TalknLearn.model.LanguageCode
 import com.translator.TalknLearn.model.UserCoinStats
 import com.translator.TalknLearn.model.UserId
-import com.translator.TalknLearn.model.LanguageCode
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings
-import com.translator.TalknLearn.model.ui.UiTextKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,13 +42,13 @@ import org.mockito.kotlin.*
  *  3. updatePrimaryLanguage success updates settings
  *  4. updatePrimaryLanguage cooldown active shows dialog
  *  5. updatePrimaryLanguage when no uid sets error
- *  6. updatePrimaryLanguage exception sets errorRaw
+ *  6. updatePrimaryLanguage exception sets errorKey
  *  7. dismissCooldownDialog clears cooldownDays
  *  8. updateFontSizeScale success updates settings
- *  9. updateFontSizeScale failure sets errorRaw
+ *  9. updateFontSizeScale failure sets errorKey
  * 10. updateThemeMode scheduled enables auto theme
  * 11. updateThemeMode system disables auto theme first
- * 12. clearError clears both errorKey and errorRaw
+ * 12. clearError clears errorKey
  * 13. updateNotificationPref success updates correct field
  * 14. updateNotificationPref caches preference to SharedPreferences for FCM
  * 15. LoggedIn email account sets isGoogleUser false
@@ -203,7 +203,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `updatePrimaryLanguage exception sets errorRaw`() = runTest {
+    fun `updatePrimaryLanguage exception sets errorKey`() = runTest {
         setPrimaryLanguage.stub {
             onBlocking { invoke(UserId(testUserId), LanguageCode("ja-JP")) } doThrow RuntimeException("Network error")
         }
@@ -211,8 +211,7 @@ class SettingsViewModelTest {
         val vm = buildViewModel()
         vm.updatePrimaryLanguage("ja-JP")
 
-        assertNotNull(vm.uiState.value.errorRaw)
-        assertTrue(vm.uiState.value.errorRaw!!.contains("Failed to save"))
+        assertEquals(UiTextKey.SettingsMsgLanguageSaveFailed, vm.uiState.value.errorKey)
     }
 
     // ── dismissCooldownDialog ──
@@ -241,11 +240,11 @@ class SettingsViewModelTest {
         vm.updateFontSizeScale(1.25f)
 
         // Verify via state - no error means it succeeded
-        assertNull(vm.uiState.value.errorRaw)
+        assertNull(vm.uiState.value.errorKey)
     }
 
     @Test
-    fun `updateFontSizeScale failure sets errorRaw`() = runTest {
+    fun `updateFontSizeScale failure sets errorKey`() = runTest {
         setFontSizeScale.stub {
             onBlocking { invoke(UserId(testUserId), 1.5f) } doThrow RuntimeException("fail")
         }
@@ -253,8 +252,7 @@ class SettingsViewModelTest {
         val vm = buildViewModel()
         vm.updateFontSizeScale(1.5f)
 
-        assertNotNull(vm.uiState.value.errorRaw)
-        assertTrue(vm.uiState.value.errorRaw!!.contains("font size"))
+        assertEquals(UiTextKey.SettingsMsgFontSaveFailed, vm.uiState.value.errorKey)
     }
 
     // ── updateThemeMode ──
@@ -265,7 +263,7 @@ class SettingsViewModelTest {
         vm.updateThemeMode("scheduled")
 
         // Verify via state - no error means it was called successfully
-        assertNull(vm.uiState.value.errorRaw)
+        assertNull(vm.uiState.value.errorKey)
     }
 
     @Test
@@ -275,13 +273,13 @@ class SettingsViewModelTest {
         vm.updateThemeMode("system")
 
         // Verify the mode was set via state
-        assertNull(vm.uiState.value.errorRaw)
+        assertNull(vm.uiState.value.errorKey)
     }
 
     // ── clearError ──
 
     @Test
-    fun `clearError clears both errorKey and errorRaw`() = runTest {
+    fun `clearError clears errorKey`() = runTest {
         val vm = buildViewModel()
         setPrimaryLanguage.stub {
             onBlocking { invoke(UserId(testUserId), LanguageCode("xx")) } doThrow RuntimeException("fail")
@@ -291,7 +289,6 @@ class SettingsViewModelTest {
         vm.clearError()
 
         assertNull(vm.uiState.value.errorKey)
-        assertNull(vm.uiState.value.errorRaw)
     }
 
     // ── updateNotificationPref ──
@@ -319,7 +316,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `updateNotificationPref failure sets errorRaw`() = runTest {
+    fun `updateNotificationPref failure sets errorKey`() = runTest {
         setNotificationPref.stub {
             onBlocking { invoke(UserId(testUserId), SettingsViewModel.PREF_NOTIFY_NEW_MESSAGES, true) } doThrow RuntimeException("fail")
         }
@@ -327,8 +324,7 @@ class SettingsViewModelTest {
         val vm = buildViewModel()
         vm.updateNotificationPref(SettingsViewModel.PREF_NOTIFY_NEW_MESSAGES, true)
 
-        assertNotNull(vm.uiState.value.errorRaw)
-        assertTrue(vm.uiState.value.errorRaw!!.contains("notification"))
+        assertEquals(UiTextKey.SettingsMsgNotificationSaveFailed, vm.uiState.value.errorKey)
     }
 
     @Test
@@ -441,7 +437,6 @@ class SettingsViewModelTest {
 
         assertEquals("en-US-AriaNeural", vm.uiState.value.settings.voiceSettings["en-US"])
         assertNull(vm.uiState.value.errorKey)
-        assertNull(vm.uiState.value.errorRaw)
     }
 
     @Test
@@ -459,7 +454,7 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun `updateVoiceForLanguage failure sets errorRaw`() = runTest {
+    fun `updateVoiceForLanguage failure sets errorKey`() = runTest {
         setVoiceForLanguage.stub {
             onBlocking {
                 invoke(UserId(testUserId), LanguageCode("en-US"), com.translator.TalknLearn.model.VoiceName("en-US-AriaNeural"))
@@ -469,8 +464,7 @@ class SettingsViewModelTest {
         val vm = buildViewModel()
         vm.updateVoiceForLanguage("en-US", "en-US-AriaNeural")
 
-        assertNotNull(vm.uiState.value.errorRaw)
-        assertTrue(vm.uiState.value.errorRaw!!.contains("voice"))
+        assertEquals(UiTextKey.SettingsMsgVoiceSaveFailed, vm.uiState.value.errorKey)
     }
 
     // ── isGoogleUser ──

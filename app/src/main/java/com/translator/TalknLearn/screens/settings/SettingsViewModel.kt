@@ -1,28 +1,28 @@
 package com.translator.TalknLearn.screens.settings
 
-import androidx.lifecycle.viewModelScope
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.translator.TalknLearn.core.AppLogger
+import com.translator.TalknLearn.core.FcmNotificationService
 import com.translator.TalknLearn.core.validateScale
 import com.translator.TalknLearn.data.friends.FriendsRepository
-import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
+import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.domain.learning.QuizRepository
+import com.translator.TalknLearn.domain.settings.SetAutoThemeEnabledUseCase
 import com.translator.TalknLearn.domain.settings.SetFontSizeScaleUseCase
+import com.translator.TalknLearn.domain.settings.SetNotificationPrefUseCase
 import com.translator.TalknLearn.domain.settings.SetPrimaryLanguageUseCase
 import com.translator.TalknLearn.domain.settings.SetThemeModeUseCase
 import com.translator.TalknLearn.domain.settings.SetVoiceForLanguageUseCase
-import com.translator.TalknLearn.domain.settings.SetAutoThemeEnabledUseCase
-import com.translator.TalknLearn.core.AppLogger
-import com.translator.TalknLearn.core.FcmNotificationService
-import com.translator.TalknLearn.domain.settings.SetNotificationPrefUseCase
-import com.translator.TalknLearn.domain.learning.QuizRepository
 import com.translator.TalknLearn.model.LanguageCode
+import com.translator.TalknLearn.model.UserCoinStats
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.VoiceName
-import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.UserSettings
-import com.translator.TalknLearn.model.UserCoinStats
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +34,6 @@ import javax.inject.Inject
 data class SettingsUiState(
     val isLoading: Boolean = true,
     val errorKey: UiTextKey? = null,
-    val errorRaw: String? = null,
     val uid: String? = null,
     val isGoogleUser: Boolean = false,
     val settings: UserSettings = UserSettings(),
@@ -109,7 +108,6 @@ class SettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             isLoading = true,
             errorKey = null,
-            errorRaw = null,
             uid = uid,
             isGoogleUser = authRepo.isGoogleUser()
         )
@@ -121,8 +119,7 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(
                     isLoading = sharedSettings.isLoading.value,
                     settings = s,
-                    errorKey = null,
-                    errorRaw = null
+                    errorKey = null
                 )
                 syncNotificationPrefsToCache(s)
             }
@@ -142,7 +139,7 @@ class SettingsViewModel @Inject constructor(
 
     fun updatePrimaryLanguage(newCode: String) {
         val uid = _uiState.value.uid ?: run {
-            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning)
             return
         }
 
@@ -160,8 +157,7 @@ class SettingsViewModel @Inject constructor(
                         val updatedSettings = _uiState.value.settings.copy(primaryLanguageCode = newCode)
                         _uiState.value = _uiState.value.copy(
                             settings = updatedSettings,
-                            errorKey = null,
-                            errorRaw = null
+                            errorKey = null
                         )
                         // Propagate immediately so WordBankViewModel / LearningViewModel
                         // react without waiting for the Firestore listener round-trip.
@@ -176,8 +172,7 @@ class SettingsViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    errorKey = null,
-                    errorRaw = "Failed to save language setting. Please try again."
+                    errorKey = UiTextKey.SettingsMsgLanguageSaveFailed
                 )
             }
         }
@@ -189,7 +184,7 @@ class SettingsViewModel @Inject constructor(
 
     fun updateFontSizeScale(scale: Float) {
         val uid = _uiState.value.uid ?: run {
-            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning)
             return
         }
 
@@ -201,15 +196,13 @@ class SettingsViewModel @Inject constructor(
                     val updatedSettings = _uiState.value.settings.copy(fontSizeScale = validated)
                     _uiState.value = _uiState.value.copy(
                         settings = updatedSettings,
-                        errorKey = null,
-                        errorRaw = null
+                        errorKey = null
                     )
                     sharedSettings.updateCache(updatedSettings)
                 }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
-                        errorKey = null,
-                        errorRaw = "Failed to save font size. Please try again."
+                        errorKey = UiTextKey.SettingsMsgFontSaveFailed
                     )
                 }
         }
@@ -217,7 +210,7 @@ class SettingsViewModel @Inject constructor(
 
     fun updateThemeMode(newMode: String) {
         val uid = _uiState.value.uid ?: run {
-            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning)
             return
         }
 
@@ -229,14 +222,13 @@ class SettingsViewModel @Inject constructor(
                         val updatedSettings = _uiState.value.settings.copy(autoThemeEnabled = true)
                         _uiState.value = _uiState.value.copy(
                             settings = updatedSettings,
-                            errorKey = null,
-                            errorRaw = null
+                            errorKey = null
                         )
                         sharedSettings.updateCache(updatedSettings)
                     }
                     .onFailure { e ->
                         _uiState.value = _uiState.value.copy(
-                            errorRaw = "Failed to save theme setting. Please try again."
+                            errorKey = UiTextKey.SettingsMsgThemeSaveFailed
                         )
                     }
             } else {
@@ -248,7 +240,7 @@ class SettingsViewModel @Inject constructor(
                      runCatching { setAutoThemeEnabled(UserId(uid), false) }
                          .onFailure {
                              _uiState.value = _uiState.value.copy(
-                                 errorRaw = "Failed to disable auto theme. Please try again."
+                                 errorKey = UiTextKey.SettingsMsgAutoThemeFailed
                              )
                              return@launch
                          }
@@ -264,15 +256,13 @@ class SettingsViewModel @Inject constructor(
                         val updatedSettings = _uiState.value.settings.copy(themeMode = newMode)
                         _uiState.value = _uiState.value.copy(
                             settings = updatedSettings,
-                            errorKey = null,
-                            errorRaw = null
+                            errorKey = null
                         )
                         sharedSettings.updateCache(updatedSettings)
                     }
                     .onFailure { e ->
                         _uiState.value = _uiState.value.copy(
-                            errorKey = null,
-                            errorRaw = "Failed to save theme setting. Please try again."
+                            errorKey = UiTextKey.SettingsMsgThemeSaveFailed
                         )
                     }
             }
@@ -281,7 +271,7 @@ class SettingsViewModel @Inject constructor(
 
     fun updateVoiceForLanguage(languageCode: String, voiceName: String) {
         val uid = _uiState.value.uid ?: run {
-            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning, errorRaw = null)
+            _uiState.value = _uiState.value.copy(errorKey = UiTextKey.SettingsNotLoggedInWarning)
             return
         }
 
@@ -295,22 +285,20 @@ class SettingsViewModel @Inject constructor(
                     val updatedSettings = currentSettings.copy(voiceSettings = updatedVoices)
                     _uiState.value = _uiState.value.copy(
                         settings = updatedSettings,
-                        errorKey = null,
-                        errorRaw = null
+                        errorKey = null
                     )
                     sharedSettings.updateCache(updatedSettings)
                 }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
-                        errorKey = null,
-                        errorRaw = "Failed to save voice setting. Please try again."
+                        errorKey = UiTextKey.SettingsMsgVoiceSaveFailed
                     )
                 }
         }
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(errorKey = null, errorRaw = null)
+        _uiState.value = _uiState.value.copy(errorKey = null)
     }
 
     override fun onCleared() {
@@ -354,7 +342,7 @@ class SettingsViewModel @Inject constructor(
                         e
                     )
                     _uiState.value = _uiState.value.copy(
-                        errorRaw = "Failed to save notification setting. Please try again."
+                        errorKey = UiTextKey.SettingsMsgNotificationSaveFailed
                     )
                 }
         }

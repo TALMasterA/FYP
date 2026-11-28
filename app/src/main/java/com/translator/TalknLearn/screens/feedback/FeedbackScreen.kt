@@ -61,7 +61,7 @@ fun FeedbackScreen(
             title = { Text(t(UiTextKey.FeedbackErrorTitle)) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                    Text(uiState.errorMessage ?: t(UiTextKey.FeedbackErrorMessage))
+                    Text(uiState.errorMessage?.resolve(t) ?: t(UiTextKey.FeedbackErrorMessage))
                 }
             },
             confirmButton = {
@@ -108,7 +108,7 @@ fun FeedbackScreen(
             Button(
                 onClick = {
                     if (feedbackMessage.isBlank()) {
-                        viewModel.setError(t(UiTextKey.FeedbackMessageRequired))
+                        viewModel.setError(UiTextKey.FeedbackMessageRequired)
                     } else {
                         viewModel.submitFeedback(feedbackMessage)
                         feedbackMessage = ""
@@ -130,9 +130,9 @@ fun FeedbackScreen(
             }
 
             // Error message
-            if (uiState.errorMessage != null) {
+            uiState.errorMessage?.let { error ->
                 Text(
-                    text = uiState.errorMessage!!,
+                    text = error.resolve(t),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error
                 )

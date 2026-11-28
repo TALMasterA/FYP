@@ -92,7 +92,7 @@ fun SettingsScreen(
     }
 
     // Auto-dismiss error after delay
-    val settingsErrorText = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+    val settingsErrorText = uiState.errorKey?.let { t(it) }
     LaunchedEffect(settingsErrorText) {
         if (settingsErrorText != null) {
             delay(UiConstants.ERROR_AUTO_DISMISS_MS)

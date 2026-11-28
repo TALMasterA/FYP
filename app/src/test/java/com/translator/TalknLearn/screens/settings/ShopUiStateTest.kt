@@ -1,5 +1,8 @@
 package com.translator.TalknLearn.screens.settings
 
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.ui.english
 import com.translator.TalknLearn.model.user.UserSettings
 import org.junit.Assert.*
 import org.junit.Test
@@ -91,32 +94,34 @@ class ShopUiStateTest {
         val state = ShopUiState(
             isPurchasing = false,
             purchaseError = null,
-            purchaseSuccess = "Expanded!"
+            purchaseSuccess = StatusText(UiTextKey.ShopMsgPaletteUnlocked)
         )
         assertFalse(state.isPurchasing)
         assertNull(state.purchaseError)
-        assertEquals("Expanded!", state.purchaseSuccess)
+        assertEquals(UiTextKey.ShopMsgPaletteUnlocked, state.purchaseSuccess?.key)
     }
 
     // ── Error States ──────────────────────────────────────────────
 
     @Test
     fun `purchase error preserved in state`() {
-        val state = ShopUiState(purchaseError = "Insufficient coins")
-        assertEquals("Insufficient coins", state.purchaseError)
+        val state = ShopUiState(purchaseError = StatusText(UiTextKey.ShopInsufficientCoins))
+        assertEquals(UiTextKey.ShopInsufficientCoins, state.purchaseError?.key)
     }
 
     @Test
     fun `unlock error preserved in state`() {
-        val state = ShopUiState(unlockError = "Insufficient coins")
-        assertEquals("Insufficient coins", state.unlockError)
+        val state = ShopUiState(unlockError = StatusText(UiTextKey.ShopInsufficientCoins))
+        assertEquals(UiTextKey.ShopInsufficientCoins, state.unlockError?.key)
     }
 
     @Test
     fun `purchase success preserved in state`() {
-        val state = ShopUiState(purchaseSuccess = "History limit expanded to 40 records!")
+        val state = ShopUiState(
+            purchaseSuccess = StatusText(UiTextKey.ShopMsgHistoryExpanded, mapOf("limit" to "40"))
+        )
         assertNotNull(state.purchaseSuccess)
-        assertTrue(state.purchaseSuccess!!.contains("expanded"))
+        assertEquals("History limit expanded to 40 records!", state.purchaseSuccess.english())
     }
 
     // ── Copy Semantics ────────────────────────────────────────────

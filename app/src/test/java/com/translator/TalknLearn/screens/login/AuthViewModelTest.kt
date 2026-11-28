@@ -1,7 +1,11 @@
 package com.translator.TalknLearn.screens.login
 
 import com.translator.TalknLearn.core.SessionDataCleaner
+import com.translator.TalknLearn.core.security.FakePersistentRateLimiter
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.ui.english
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +15,6 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import com.translator.TalknLearn.core.security.FakePersistentRateLimiter
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -75,8 +78,7 @@ class AuthViewModelTest {
 
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
-        assertNull(state.errorRaw)
-        assertNull(state.errorKey)
+        assertNull(state.error)
     }
 
     // ── Login failure ───────────────────────────────────────────────
@@ -90,7 +92,8 @@ class AuthViewModelTest {
 
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
-        assertNotNull(state.errorRaw)
+        assertEquals(UiTextKey.ErrUnexpected, state.error?.key)
+        assertEquals("An unexpected error occurred. Please try again.", state.error.english())
     }
 
     // ── Invalid email rejected before repo call ─────────────────────
@@ -100,8 +103,9 @@ class AuthViewModelTest {
         viewModel.login("not-an-email", "Password1")
 
         val state = viewModel.uiState.value
-        assertNotNull(state.errorRaw)
-        assertTrue(state.errorRaw!!.contains("email", ignoreCase = true))
+        assertNotNull(state.error)
+        assertEquals(UiTextKey.AuthMsgEmailInvalid, state.error?.key)
+        assertTrue(state.error.english()!!.contains("email", ignoreCase = true))
         // Repo should never be called
         verify(authRepo, never()).login(any(), any())
     }
@@ -111,7 +115,7 @@ class AuthViewModelTest {
         viewModel.login("", "Password1")
 
         val state = viewModel.uiState.value
-        assertNotNull(state.errorRaw)
+        assertEquals(UiTextKey.AuthMsgEmailEmpty, state.error?.key)
         verify(authRepo, never()).login(any(), any())
     }
 
@@ -131,8 +135,9 @@ class AuthViewModelTest {
         viewModel.login("rate@example.com", "wrong")
 
         val state = viewModel.uiState.value
-        assertNotNull(state.errorRaw)
-        assertTrue(state.errorRaw!!.contains("Too many", ignoreCase = true))
+        assertNotNull(state.error)
+        assertEquals(UiTextKey.AuthMsgTooManyLogins, state.error?.key)
+        assertTrue(state.error.english()!!.contains("Too many", ignoreCase = true))
         // Repo should only be called 5 times (6th blocked)
         verify(authRepo, times(5)).login(eq("rate@example.com"), any())
     }
@@ -172,7 +177,7 @@ class AuthViewModelTest {
 
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
-        assertNull(state.errorRaw)
+        assertNull(state.error)
         assertNotNull(state.messageKey)
     }
 
@@ -187,7 +192,7 @@ class AuthViewModelTest {
 
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
-        assertNotNull(state.errorRaw)
+        assertNotNull(state.error)
         assertNull(state.messageKey)
     }
 
@@ -197,7 +202,7 @@ class AuthViewModelTest {
     fun `resetPassword with invalid email rejects before repo call`() = runTest {
         viewModel.resetPassword("invalid")
 
-        assertNotNull(viewModel.uiState.value.errorRaw)
+        assertNotNull(viewModel.uiState.value.error)
         verify(authRepo, never()).sendPasswordResetEmail(any())
     }
 
@@ -216,7 +221,8 @@ class AuthViewModelTest {
         viewModel.resetPassword("limit@example.com")
 
         val state = viewModel.uiState.value
-        assertTrue(state.errorRaw!!.contains("Too many", ignoreCase = true))
+        assertEquals(UiTextKey.AuthMsgTooManyResets, state.error?.key)
+        assertTrue(state.error.english()!!.contains("Too many", ignoreCase = true))
         verify(authRepo, times(3)).sendPasswordResetEmail(eq("limit@example.com"))
     }
 
@@ -227,7 +233,7 @@ class AuthViewModelTest {
         viewModel.register("test@example.com", "Password1")
 
         val state = viewModel.uiState.value
-        assertNotNull(state.errorKey)
+        assertEquals(UiTextKey.AuthRegistrationDisabled, state.error?.key)
         assertFalse(state.isLoading)
     }
 
@@ -239,15 +245,13 @@ class AuthViewModelTest {
         whenever(authRepo.login("test@example.com", "wrong"))
             .thenReturn(Result.failure(RuntimeException("fail")))
         viewModel.login("test@example.com", "wrong")
-        assertNotNull(viewModel.uiState.value.errorRaw)
+        assertNotNull(viewModel.uiState.value.error)
 
         viewModel.logout()
 
         val state = viewModel.uiState.value
-        assertNull(state.errorRaw)
-        assertNull(state.errorKey)
+        assertNull(state.error)
         assertNull(state.messageKey)
-        assertNull(state.messageRaw)
         assertFalse(state.isLoading)
         verify(authRepo).logout()
     }
@@ -259,12 +263,11 @@ class AuthViewModelTest {
         whenever(authRepo.sendPasswordResetEmail("test@example.com"))
             .thenReturn(Result.failure(RuntimeException("fail")))
         viewModel.resetPassword("test@example.com")
-        assertNotNull(viewModel.uiState.value.errorRaw)
+        assertNotNull(viewModel.uiState.value.error)
 
         viewModel.clearError()
 
-        assertNull(viewModel.uiState.value.errorRaw)
-        assertNull(viewModel.uiState.value.errorKey)
+        assertNull(viewModel.uiState.value.error)
     }
 
     // ── clearMessage ────────────────────────────────────────────────
@@ -279,7 +282,6 @@ class AuthViewModelTest {
         viewModel.clearMessage()
 
         assertNull(viewModel.uiState.value.messageKey)
-        assertNull(viewModel.uiState.value.messageRaw)
     }
 
     // ── Google Sign-In ──────────────────────────────────────────────
@@ -294,8 +296,7 @@ class AuthViewModelTest {
 
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
-        assertNull(state.errorRaw)
-        assertNull(state.errorKey)
+        assertNull(state.error)
         verify(authRepo).signInWithGoogle(token)
     }
 
@@ -309,7 +310,7 @@ class AuthViewModelTest {
 
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
-        assertNotNull(state.errorRaw)
+        assertNotNull(state.error)
     }
 
     @Test
@@ -317,17 +318,18 @@ class AuthViewModelTest {
         viewModel.signInWithGoogle("   ")
 
         val state = viewModel.uiState.value
-        assertNotNull(state.errorRaw)
-        assertTrue(state.errorRaw!!.contains("empty", ignoreCase = true))
+        assertNotNull(state.error)
+        assertEquals(UiTextKey.AuthMsgGoogleEmptyToken, state.error?.key)
+        assertTrue(state.error.english()!!.contains("empty", ignoreCase = true))
         verify(authRepo, never()).signInWithGoogle(any())
     }
 
     @Test
     fun `reportGoogleSignInError surfaces message and stops loading`() = runTest {
-        viewModel.reportGoogleSignInError("user cancelled")
+        viewModel.reportGoogleSignInError(StatusText.raw("user cancelled"))
 
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
-        assertEquals("user cancelled", state.errorRaw)
+        assertEquals("user cancelled", state.error.english())
     }
 }
