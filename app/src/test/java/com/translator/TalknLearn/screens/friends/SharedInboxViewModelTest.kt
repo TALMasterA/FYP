@@ -1,5 +1,6 @@
 package com.translator.TalknLearn.screens.friends
 
+import com.google.firebase.Timestamp
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.friends.AcceptSharedItemUseCase
@@ -8,9 +9,10 @@ import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.SharedItem
 import com.translator.TalknLearn.model.friends.SharedItemStatus
 import com.translator.TalknLearn.model.friends.SharedItemType
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -221,7 +223,7 @@ class SharedInboxViewModelTest {
         // Advance only enough to complete the deleteItem coroutine but not the 3-second delay
         testScheduler.runCurrent()
 
-        assertEquals("Item deleted", viewModel.uiState.value.successMessage)
+        assertEquals(StatusText(UiTextKey.SharedMsgDeleted), viewModel.uiState.value.successMessage)
     }
 
     // ── Logout resets state ───────────────────────────────────────────────────

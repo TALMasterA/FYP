@@ -82,7 +82,7 @@ fun BlockedUsersScreen(
                 .padding(padding)
         ) {
             // Error/Success messages
-            uiState.error?.let { error ->
+            uiState.error?.resolve(t)?.let { error ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -96,7 +96,7 @@ fun BlockedUsersScreen(
                     )
                 }
             }
-            uiState.successMessage?.let { message ->
+            uiState.successMessage?.resolve(t)?.let { message ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()

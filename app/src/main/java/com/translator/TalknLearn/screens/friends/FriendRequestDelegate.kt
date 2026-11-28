@@ -11,6 +11,8 @@ import com.translator.TalknLearn.domain.friends.CancelFriendRequestUseCase
 import com.translator.TalknLearn.domain.friends.RejectFriendRequestUseCase
 import com.translator.TalknLearn.domain.friends.SendFriendRequestUseCase
 import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.observability.FunnelAnalyticsTracker
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +24,9 @@ import kotlin.math.ceil
 
 /** Maximum pending outgoing friend requests a user can have at any one time. */
 private const val MAX_PENDING_REQUESTS = 20
+
+/** Maximum length of the optional note sent with a friend request. */
+private const val MAX_NOTE_LENGTH = 200
 
 /**
  * Handles friend-request send / accept / reject / cancel and batch operations.
@@ -38,7 +43,7 @@ internal class FriendRequestDelegate(
     private val funnelTracker: FunnelAnalyticsTracker,
     private val getCurrentUserId: () -> UserId?,
     private val requireUsername: () -> Boolean,
-    private val showSuccess: (String) -> Unit
+    private val showSuccess: (StatusText) -> Unit
 ) {
     private var batchJob: Job? = null
 
@@ -47,8 +52,10 @@ internal class FriendRequestDelegate(
         if (!requireUsername()) return
         if (uiState.value.outgoingRequests.size >= MAX_PENDING_REQUESTS) {
             uiState.value = uiState.value.copy(
-                error = "You have reached the maximum of 20 pending friend requests. " +
-                        "Please wait for some to be accepted or cancel them before sending more."
+                error = StatusText(
+                    UiTextKey.FriendsMsgMaxPending,
+                    mapOf("limit" to MAX_PENDING_REQUESTS.toString()),
+                ),
             )
             return
         }
@@ -59,14 +66,22 @@ internal class FriendRequestDelegate(
                 .toInt()
                 .coerceAtLeast(1)
             uiState.value = uiState.value.copy(
-                error = "Rate limit exceeded. You can send up to $MAX_FRIEND_REQUESTS_PER_HOUR friend requests per hour. Try again in about $retryAfterMinutes minute(s)."
+                error = StatusText(
+                    UiTextKey.FriendsMsgRateLimit,
+                    mapOf(
+                        "limit" to MAX_FRIEND_REQUESTS_PER_HOUR.toString(),
+                        "minutes" to retryAfterMinutes.toString(),
+                    ),
+                ),
             )
             return
         }
 
-        val noteValidation = validateTextLength(note, minLength = 0, maxLength = 200, fieldName = "Note")
+        val noteValidation = validateTextLength(note, minLength = 0, maxLength = MAX_NOTE_LENGTH, fieldName = "Note")
         if (noteValidation is ValidationResult.Invalid) {
-            uiState.value = uiState.value.copy(error = noteValidation.message)
+            uiState.value = uiState.value.copy(
+                error = StatusText(UiTextKey.FriendsMsgNoteTooLong, mapOf("max" to MAX_NOTE_LENGTH.toString())),
+            )
             return
         }
 
@@ -82,23 +97,23 @@ internal class FriendRequestDelegate(
                         searchResults = emptyList(),
                         searchQuery = ""
                     )
-                    showSuccess("Friend request sent! They will be notified.")
+                    showSuccess(StatusText(UiTextKey.FriendsMsgRequestSent))
                 },
                 onFailure = { e ->
-                    val message = when {
+                    val key = when {
                         e.message?.contains("Already friends", ignoreCase = true) == true ->
-                            "You are already friends with this user."
+                            UiTextKey.FriendsMsgAlreadyFriends
                         e.message?.contains("already sent", ignoreCase = true) == true ->
-                            "You already have a pending request to this user. Please wait for their reply."
+                            UiTextKey.FriendsMsgRequestPending
                         e.message?.contains("profile not found", ignoreCase = true) == true ->
-                            "Could not find the user's profile. They may have deleted their account."
+                            UiTextKey.FriendsMsgProfileMissing
                         e.message?.contains("blocked this user", ignoreCase = true) == true ->
-                            "You have blocked this user. Unblock them first."
+                            UiTextKey.FriendsMsgYouBlocked
                         e.message?.contains("Unable to send", ignoreCase = true) == true ->
-                            "Unable to send friend request."
-                        else -> "Failed to send friend request. Please try again."
+                            UiTextKey.FriendsMsgUnableToSend
+                        else -> UiTextKey.FriendsMsgSendFailed
                     }
-                    uiState.value = uiState.value.copy(error = message)
+                    uiState.value = uiState.value.copy(error = StatusText(key))
                 }
             )
         }
@@ -117,17 +132,17 @@ internal class FriendRequestDelegate(
                     AuditLogger.logFriendRequestAccepted(userId.value, friendUserId.value)
                     funnelTracker.logFirstFriendAdd()
                     uiState.value = uiState.value.copy(error = null)
-                    showSuccess("Friend request accepted! You are now friends.")
+                    showSuccess(StatusText(UiTextKey.FriendsMsgAccepted))
                 },
                 onFailure = { e ->
-                    val message = when {
+                    val key = when {
                         e.message?.contains("not found", ignoreCase = true) == true ->
-                            "This request no longer exists — it may have been cancelled."
+                            UiTextKey.FriendsMsgAcceptGone
                         e.message?.contains("not authorized", ignoreCase = true) == true ->
-                            "You are not authorized to accept this request."
-                        else -> "Failed to accept request. Please try again."
+                            UiTextKey.FriendsMsgAcceptNotAuthorized
+                        else -> UiTextKey.FriendsMsgAcceptFailed
                     }
-                    uiState.value = uiState.value.copy(error = message)
+                    uiState.value = uiState.value.copy(error = StatusText(key))
                 }
             )
         }
@@ -142,15 +157,15 @@ internal class FriendRequestDelegate(
                 onSuccess = {
                     AuditLogger.logFriendRequestRejected(uid, fromUser)
                     uiState.value = uiState.value.copy(error = null)
-                    showSuccess("Request declined.")
+                    showSuccess(StatusText(UiTextKey.FriendsMsgDeclined))
                 },
                 onFailure = { e ->
-                    val message = when {
+                    val key = when {
                         e.message?.contains("not found", ignoreCase = true) == true ->
-                            "This request no longer exists."
-                        else -> "Failed to decline request. Please try again."
+                            UiTextKey.FriendsMsgDeclineGone
+                        else -> UiTextKey.FriendsMsgDeclineFailed
                     }
-                    uiState.value = uiState.value.copy(error = message)
+                    uiState.value = uiState.value.copy(error = StatusText(key))
                 }
             )
         }
@@ -161,15 +176,15 @@ internal class FriendRequestDelegate(
             cancelFriendRequestUseCase(requestId).fold(
                 onSuccess = {
                     uiState.value = uiState.value.copy(error = null)
-                    showSuccess("Friend request cancelled.")
+                    showSuccess(StatusText(UiTextKey.FriendsMsgCancelled))
                 },
                 onFailure = { e ->
-                    val message = when {
+                    val key = when {
                         e.message?.contains("not found", ignoreCase = true) == true ->
-                            "This request no longer exists — it may have already been accepted or declined."
-                        else -> "Failed to cancel request. Please try again."
+                            UiTextKey.FriendsMsgCancelGone
+                        else -> UiTextKey.FriendsMsgCancelFailed
                     }
-                    uiState.value = uiState.value.copy(error = message)
+                    uiState.value = uiState.value.copy(error = StatusText(key))
                 }
             )
         }
@@ -203,9 +218,15 @@ internal class FriendRequestDelegate(
                 }
 
                 val message = when {
-                    failCount == 0 -> "All $successCount friend requests accepted!"
-                    successCount == 0 -> "Failed to accept requests. Please try again."
-                    else -> "$successCount accepted, $failCount failed. Please retry for failed ones."
+                    failCount == 0 -> StatusText(
+                        UiTextKey.FriendsMsgBatchAcceptAll,
+                        mapOf("count" to successCount.toString()),
+                    )
+                    successCount == 0 -> StatusText(UiTextKey.FriendsMsgBatchAcceptFailed)
+                    else -> StatusText(
+                        UiTextKey.FriendsMsgBatchAcceptMixed,
+                        mapOf("success" to successCount.toString(), "failed" to failCount.toString()),
+                    )
                 }
 
                 if (successCount == 0 && failCount > 0) {
@@ -218,9 +239,12 @@ internal class FriendRequestDelegate(
                 uiState.value = uiState.value.copy(error = null)
                 showSuccess(
                     if (processedCount > 0) {
-                        "Batch accept cancelled after $processedCount/$total request(s)."
+                        StatusText(
+                            UiTextKey.FriendsMsgBatchAcceptStoppedAt,
+                            mapOf("processed" to processedCount.toString(), "total" to total.toString()),
+                        )
                     } else {
-                        "Batch accept cancelled."
+                        StatusText(UiTextKey.FriendsMsgBatchAcceptStopped)
                     }
                 )
             } finally {
@@ -249,14 +273,19 @@ internal class FriendRequestDelegate(
                     processedCount = index + 1
                 }
                 uiState.value = uiState.value.copy(error = null)
-                showSuccess("Declined $successCount request(s).")
+                showSuccess(
+                    StatusText(UiTextKey.FriendsMsgBatchDeclined, mapOf("count" to successCount.toString())),
+                )
             } catch (_: CancellationException) {
                 uiState.value = uiState.value.copy(error = null)
                 showSuccess(
                     if (processedCount > 0) {
-                        "Batch reject cancelled after $processedCount/$total request(s)."
+                        StatusText(
+                            UiTextKey.FriendsMsgBatchDeclineStoppedAt,
+                            mapOf("processed" to processedCount.toString(), "total" to total.toString()),
+                        )
                     } else {
-                        "Batch reject cancelled."
+                        StatusText(UiTextKey.FriendsMsgBatchDeclineStopped)
                     }
                 )
             } finally {

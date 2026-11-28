@@ -6,14 +6,15 @@ import com.translator.TalknLearn.data.friends.FriendsRepository
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
-import com.translator.TalknLearn.model.user.UserSettings
 import com.translator.TalknLearn.domain.friends.*
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.FriendRelation
 import com.translator.TalknLearn.model.friends.FriendRequest
 import com.translator.TalknLearn.model.friends.PublicUserProfile
+import com.translator.TalknLearn.model.ui.english
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
+import com.translator.TalknLearn.model.user.UserSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -200,7 +201,7 @@ class FriendsViewModelTest {
         vm.sendFriendRequest("target1")
 
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("username", ignoreCase = true))
     }
 
     // ── sendFriendRequest success ───────────────────────────────────
@@ -235,7 +236,7 @@ class FriendsViewModelTest {
         vm.sendFriendRequest("target1")
 
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("pending", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("pending", ignoreCase = true))
     }
 
     // ── acceptFriendRequest success ─────────────────────────────────
@@ -456,7 +457,7 @@ class FriendsViewModelTest {
         vm.sendFriendRequest("newTarget")
 
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("maximum", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("maximum", ignoreCase = true))
         verifyNoInteractions(sendFriendRequestUseCase)
     }
 
@@ -471,7 +472,7 @@ class FriendsViewModelTest {
         vm.sendFriendRequest("newTarget")
 
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("rate limit", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("rate limit", ignoreCase = true))
         verifyNoInteractions(sendFriendRequestUseCase)
     }
 
@@ -517,7 +518,7 @@ class FriendsViewModelTest {
         // Should report partial success
         val state = vm.uiState.value
         assertNotNull(state.successMessage)
-        assertTrue(state.successMessage!!.contains("1 accepted", ignoreCase = true))
+        assertTrue(state.successMessage.english()!!.contains("1 accepted", ignoreCase = true))
     }
 
     // ── requireUsernameForAddFriends ────────────────────────────────
@@ -563,7 +564,7 @@ class FriendsViewModelTest {
 
         // Should have set the same error as requireUsernameForAddFriends
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("username", ignoreCase = true))
         // sendFriendRequestUseCase should NOT have been called
         verifyNoInteractions(sendFriendRequestUseCase)
     }
@@ -585,7 +586,7 @@ class FriendsViewModelTest {
         vm.acceptFriendRequest("req1")
 
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("username", ignoreCase = true))
         // acceptFriendRequestUseCase should NOT have been called
         verifyNoInteractions(acceptFriendRequestUseCase)
     }
@@ -610,7 +611,7 @@ class FriendsViewModelTest {
         vm.acceptAllRequests()
 
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("username", ignoreCase = true))
         // acceptFriendRequestUseCase should NOT have been called
         verifyNoInteractions(acceptFriendRequestUseCase)
     }
@@ -630,7 +631,7 @@ class FriendsViewModelTest {
 
         assertFalse(result)
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("username", ignoreCase = true))
     }
 
     @Test
@@ -663,7 +664,7 @@ class FriendsViewModelTest {
         vm.rejectAllRequests()
 
         assertNotNull(vm.uiState.value.successMessage)
-        assertTrue(vm.uiState.value.successMessage!!.contains("2"))
+        assertTrue(vm.uiState.value.successMessage.english()!!.contains("2"))
     }
 
     // ── exitDeleteMode ──────────────────────────────────────────────

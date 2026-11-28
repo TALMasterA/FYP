@@ -6,9 +6,12 @@ import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.friends.EnsurePublicProfileExistsUseCase
 import com.translator.TalknLearn.domain.friends.GetCurrentUserProfileUseCase
 import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.friends.PublicUserProfile
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.ui.english
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
-import com.translator.TalknLearn.model.friends.PublicUserProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -153,7 +156,7 @@ class MyProfileViewModelTest {
         val state = vm.uiState.value
         assertFalse(state.isLoading)
         assertNotNull(state.error)
-        assertTrue(state.error!!.contains("Failed to load profile"))
+        assertTrue(state.error.english()!!.contains("Failed to load profile"))
     }
 
     // ── Test 5: LoggedOut resets state ──
@@ -222,7 +225,7 @@ class MyProfileViewModelTest {
         val state = vm.uiState.value
         assertFalse(state.isUpdatingVisibility)
         assertNotNull(state.error)
-        assertTrue(state.error!!.contains("Failed to update visibility"))
+        assertTrue(state.error.english()!!.contains("Failed to update visibility"))
     }
 
     // ── Test 9: updateVisibility with no userId is no-op ──
@@ -247,7 +250,7 @@ class MyProfileViewModelTest {
 
         vm.updateVisibility(true)
 
-        assertEquals("Set a username before making your profile public.", vm.uiState.value.error)
+        assertEquals(StatusText(UiTextKey.MyProfileMsgNeedUsername), vm.uiState.value.error)
         verifyNoInteractions(friendsRepo)
     }
 

@@ -235,5 +235,154 @@ val OnboardingExtrasScreenTexts: List<String> = listOf(
     // ContinuousStatusStartError
     "Could not start continuous mode: {detail}",
 
+    // --- Phase 1 part 3: social area messages ---
+    // StatusRaw
+    "{detail}",
+    // ErrGeneric
+    "Something went wrong. Please try again.",
+    // ErrNoInternet
+    "No internet connection. Please check your network and try again.",
+    // ErrPermissionDenied
+    "You don't have permission to perform this action.",
+    // ErrSessionExpired
+    "Your session has expired. Please sign in again.",
+    // ErrItemNotFound
+    "The requested item was not found. It may have been deleted.",
+    // ErrAccessDenied
+    "Access denied.",
+    // ErrAlreadyFriends
+    "You're already friends with this user.",
+    // ErrUserMaybeBlocked
+    "Unable to complete this action. The user may be blocked.",
+    // ErrRequestGone
+    "This friend request no longer exists.",
+    // ErrRequestHandled
+    "This request has already been handled by someone else.",
+    // ErrNotAuthorized
+    "You're not authorized to perform this action.",
+    // ErrTooManyRequests
+    "Too many requests. Please wait a moment and try again.",
+    // ErrInvalidInput
+    "Invalid input. Please check and try again.",
+    // ErrCannotCompleteNow
+    "Operation cannot be completed right now.",
+    // ErrTimedOut
+    "The operation timed out. Please try again.",
+    // FriendsMsgRemoved
+    "Friend removed successfully.",
+    // FriendsMsgRemoveFailed
+    "Unable to remove friend. Please check your connection and try again.",
+    // FriendsMsgRemovedMany
+    "Friend(s) removed.",
+    // FriendsMsgNeedUsername
+    "Please set a username in your profile before managing friend requests.",
+    // FriendsMsgMaxPending
+    "You have reached the maximum of {limit} pending friend requests. Please wait for some to be accepted or " +
+        "cancel them before sending more.",
+    // FriendsMsgRateLimit
+    "Rate limit exceeded. You can send up to {limit} friend requests per hour. Try again in about {minutes} minute(s).",
+    // FriendsMsgNoteTooLong
+    "Note must not exceed {max} characters",
+    // FriendsMsgRequestSent
+    "Friend request sent! They will be notified.",
+    // FriendsMsgAlreadyFriends
+    "You are already friends with this user.",
+    // FriendsMsgRequestPending
+    "You already have a pending request to this user. Please wait for their reply.",
+    // FriendsMsgProfileMissing
+    "Could not find the user's profile. They may have deleted their account.",
+    // FriendsMsgYouBlocked
+    "You have blocked this user. Unblock them first.",
+    // FriendsMsgUnableToSend
+    "Unable to send friend request.",
+    // FriendsMsgSendFailed
+    "Failed to send friend request. Please try again.",
+    // FriendsMsgAccepted
+    "Friend request accepted! You are now friends.",
+    // FriendsMsgAcceptGone
+    "This request no longer exists — it may have been cancelled.",
+    // FriendsMsgAcceptNotAuthorized
+    "You are not authorized to accept this request.",
+    // FriendsMsgAcceptFailed
+    "Failed to accept request. Please try again.",
+    // FriendsMsgDeclined
+    "Request declined.",
+    // FriendsMsgDeclineGone
+    "This request no longer exists.",
+    // FriendsMsgDeclineFailed
+    "Failed to decline request. Please try again.",
+    // FriendsMsgCancelled
+    "Friend request cancelled.",
+    // FriendsMsgCancelGone
+    "This request no longer exists — it may have already been accepted or declined.",
+    // FriendsMsgCancelFailed
+    "Failed to cancel request. Please try again.",
+    // FriendsMsgBatchAcceptAll
+    "All {count} friend requests accepted!",
+    // FriendsMsgBatchAcceptFailed
+    "Failed to accept requests. Please try again.",
+    // FriendsMsgBatchAcceptMixed
+    "{success} accepted, {failed} failed. Please retry for failed ones.",
+    // FriendsMsgBatchAcceptStoppedAt
+    "Batch accept cancelled after {processed}/{total} request(s).",
+    // FriendsMsgBatchAcceptStopped
+    "Batch accept cancelled.",
+    // FriendsMsgBatchDeclined
+    "Declined {count} request(s).",
+    // FriendsMsgBatchDeclineStoppedAt
+    "Batch reject cancelled after {processed}/{total} request(s).",
+    // FriendsMsgBatchDeclineStopped
+    "Batch reject cancelled.",
+    // FriendsMsgBlockedRemoved
+    "User blocked and removed from friends.",
+    // FriendsMsgBlockFailed
+    "Failed to block user. Please try again.",
+    // FriendsMsgBlocked
+    "User blocked.",
+    // FriendsMsgUnblocked
+    "User unblocked.",
+    // FriendsMsgUnblockFailed
+    "Failed to unblock user. Please try again.",
+    // ChatMsgLoadFailed
+    "Failed to load messages. Please try again.",
+    // ChatMsgBlockFailed
+    "Failed to block user.",
+    // ChatMsgUnblockFailed
+    "Failed to unblock user.",
+    // ChatMsgTooLong
+    "Message must not exceed {max} characters",
+    // ChatMsgTooFast
+    "You are sending messages too quickly. Please wait a moment.",
+    // ChatMsgSendFailed
+    "Failed to send message",
+    // ChatMsgTranslateFailed
+    "Translation failed. Please try again.",
+    // MyProfileMsgLoadFailed
+    "Failed to load profile. Please try again.",
+    // MyProfileMsgNeedUsername
+    "Set a username before making your profile public.",
+    // MyProfileMsgPublic
+    "Profile set to Public",
+    // MyProfileMsgPrivate
+    "Profile set to Private",
+    // MyProfileMsgVisibilityFailed
+    "Failed to update visibility. Please try again.",
+    // SharedMsgAdded
+    "Added to your collection",
+    // SharedMsgDeleted
+    "Item deleted",
+    // SharedMsgDismissed
+    "Item dismissed",
+    // SharedMsgAcceptFailed
+    "Failed to accept item",
+    // SharedMsgDeleteFailed
+    "Failed to delete item",
+    // SharedMsgDismissFailed
+    "Failed to dismiss item",
+    // SharedMsgNoItemId
+    "No item ID",
+    // SharedMsgLoadFailed
+    "Failed to load shared material. Please try again.",
+
     // --- Extended Error Messages (localized) ---
 )

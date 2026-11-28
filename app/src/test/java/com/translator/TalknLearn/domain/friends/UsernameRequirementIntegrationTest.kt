@@ -10,6 +10,7 @@ import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.FriendRelation
 import com.translator.TalknLearn.model.friends.FriendRequest
 import com.translator.TalknLearn.model.friends.PublicUserProfile
+import com.translator.TalknLearn.model.ui.english
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings
@@ -189,7 +190,7 @@ class UsernameRequirementIntegrationTest {
 
         assertFalse(result)
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("username", ignoreCase = true))
     }
 
     // ── Test 2: requireUsernameForFriendActions allows set username ──────────
@@ -218,7 +219,7 @@ class UsernameRequirementIntegrationTest {
 
         assertFalse(result)
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("username", ignoreCase = true))
     }
 
     // ── Test 4: sendFriendRequest blocked without username ──────────────────
@@ -232,7 +233,7 @@ class UsernameRequirementIntegrationTest {
         vm.sendFriendRequest("target1")
 
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("username", ignoreCase = true))
         verifyNoInteractions(sendFriendRequestUseCase)
     }
 
@@ -250,7 +251,7 @@ class UsernameRequirementIntegrationTest {
         vm.acceptFriendRequest("req1")
 
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("username", ignoreCase = true))
         verifyNoInteractions(acceptFriendRequestUseCase)
     }
 
@@ -271,7 +272,7 @@ class UsernameRequirementIntegrationTest {
         vm.acceptAllRequests()
 
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("username", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("username", ignoreCase = true))
         verifyNoInteractions(acceptFriendRequestUseCase)
     }
 
@@ -317,7 +318,7 @@ class UsernameRequirementIntegrationTest {
         vm.acceptAllRequests()
 
         assertNotNull(vm.uiState.value.successMessage)
-        assertTrue(vm.uiState.value.successMessage!!.contains("2", ignoreCase = true))
+        assertTrue(vm.uiState.value.successMessage.english()!!.contains("2", ignoreCase = true))
     }
 
     // ── Test 9: rejectFriendRequest is NOT gated by username ────────────────
@@ -355,7 +356,7 @@ class UsernameRequirementIntegrationTest {
         vm.rejectAllRequests()
 
         assertNotNull(vm.uiState.value.successMessage)
-        assertTrue(vm.uiState.value.successMessage!!.contains("2"))
+        assertTrue(vm.uiState.value.successMessage.english()!!.contains("2"))
     }
 
     // ── Test 11: Error message is cleared after successful action ───────────

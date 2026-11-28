@@ -16,7 +16,7 @@ the FYP was graded. Keep the status table up to date in every PR.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 0 | Agent docs (AGENTS.md), roadmap, screenshot tests, baseline screenshots | Done |
-| 1 | Correctness fixes, no new look | Part 1 done; part 2 in review; part 3 next |
+| 1 | Correctness fixes, no new look | Parts 1–2 done; part 3 in review; parts 4–5 next |
 | 2 | Design system: mockup approval, theme, component kit, navigation shell | Not started |
 | 3 | Home dashboard and translation tools | Not started |
 | 4 | Learning loop: review (SRS), streak, daily goal, stats, quiz feedback | Not started |
@@ -42,7 +42,7 @@ phase that carries it out.
 
 ## Phase 1 — correctness fixes
 
-Phase 1 is split into three PRs so each one stays small enough to review.
+Phase 1 is split into five PRs so each one stays small enough to review.
 
 **Part 1 (fixed):**
 - **Learning-sheet and word-bank prompts sent the oldest history records**, in all languages.
@@ -68,8 +68,21 @@ Phase 1 is split into three PRs so each one stays small enough to review.
 
 **Decision — `StatusText` for ViewModel messages** (`model/ui/StatusText.kt`). A ViewModel has no translator, and some messages contain data ("Detected: Japanese"). So a ViewModel emits `StatusText(key, args)` and the screen calls `.resolve(t)`. Args hold data only (a service error, a language name), never English UI text. Fixed messages without data use an `errorKey: UiTextKey?` field next to the raw `error: String?` from the data layer, like `SettingsViewModel`. Logic that used to compare English strings (the auto-clear of "Detected: …") now compares keys.
 
-**Part 3 (next PR) — localization sweep, second half:**
-- The remaining English strings in `ChatViewModel`, `ShopViewModel`, the Profile and Friends ViewModels, `SharedInbox`/`SharedMaterialDetail`, Feedback, `ErrorMessages.kt`, the `EmptyStateView` titles, Startup and Login.
+**Part 3 (fixed) — localization sweep, social area:**
+- **Friends:** every message from `FriendsViewModel` and its delegates (send, accept, decline, cancel, batch, remove, block, unblock) is a `StatusText`. Numbers (limits, counts, minutes) are args.
+- **Chat, My profile, Shared inbox, Shared material detail:** the `error`, `successMessage` and `translationError` fields are `StatusText?`, and the screens call `.resolve(t)`.
+- **`ErrorMessages.kt`:** the new `statusFromException(e, fallbackKey)` returns a `StatusText`. The old `fromException(e, fallback): String` still works for callers that are not migrated yet. It now builds its text from the same English keys, so both forms always agree (tested in `ErrorMessagesTest`).
+- 73 new keys, in English and all 16 locale maps.
+
+**Decision — `StatusText.raw(text)` for data-layer text.** Some exceptions carry a message from our own checks (`SecurityException("Cannot share with this user")`). We have no key for every such message, so `ErrorMessages` passes it through with the `StatusRaw` key (template `{detail}`). This is the same behavior as before; it is only for data, never for UI text written in a ViewModel.
+
+**Decision — Shared inbox and Chat send errors go through `ErrorMessages`.** Before, they showed the raw `error.message` (for example a Firestore message). Now known errors (no network, permission, not found …) show a localized message, and unknown ones show the localized fallback.
+
+**Decision — the shared `validateTextLength` stays English.** It has 7 callers. The Chat message and friend-request note now check its result and emit their own key ("Message must not exceed {max} characters"). The other callers move in parts 4 and 5.
+
+**Part 4 (next PR):** the English strings in `SettingsViewModel`, `ShopViewModel`, `ProfileViewModel`, `AuthViewModel` (Login) and `FeedbackViewModel`.
+
+**Part 5:** Learning and learning sheets, the Word bank delegates, custom words, Favorites, the other `ErrorMessages.fromException` callers, the `EmptyStateView` titles and Startup. "Session {id}" in `HistoryViewModel` stays as it is, because it is saved data, not UI text.
 
 ## Later (needs a backend deploy or paid calls)
 

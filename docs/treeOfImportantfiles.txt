@@ -97,7 +97,7 @@ FYP/
 │       │       │   └── ErrorMessageMapper.kt
 │       │       │
 │       │       ├── core/                                ← Organized into focused sub-groups
-│       │       │   ├── ErrorMessages.kt                 ← Centralized error message mapper (fromException, isNetworkError)
+│       │       │   ├── ErrorMessages.kt                 ← Centralized error mapper (statusFromException → StatusText, fromException, isNetworkError)
 │       │       │   ├── SessionDataCleaner.kt            ← Wipes per-session local caches on logout / account deletion
 │       │       │   ├── foundation/                      ← Basic utilities & logger
 │       │       │   │   ├── Logger.kt                      ← Central logger; Crashlytics receives safe tags + hashes only
@@ -589,6 +589,7 @@ FYP/
 │       │   │   │   ├── SharedItemExtendedTest.kt          ← Enum & default tests
 │       │   │   │   └── SharedItemTest.kt
 │       │   │   ├── ui/
+│       │   │   │   ├── StatusTextEnglish.kt               ← Test helper: StatusText?.english() resolves with the English table
 │       │   │   │   ├── TranslationCompletenessTest.kt     ← Translation map completeness guard
 │       │   │   │   ├── TranslationConsistencyTest.kt      ← Translation consistency across languages
 │       │   │   │   ├── UiTextAlignmentTest.kt

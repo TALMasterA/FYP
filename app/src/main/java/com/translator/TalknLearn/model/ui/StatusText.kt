@@ -19,4 +19,13 @@ data class StatusText(
     /** Builds the final text with the screen's translator [t]. */
     fun resolve(t: (UiTextKey) -> String): String =
         args.entries.fold(t(key)) { text, (name, value) -> text.replace("{$name}", value) }
+
+    companion object {
+        /**
+         * Wraps text that is already final, such as an error detail from a
+         * service or a validation message. Use it only for data, never for
+         * English UI text that should have its own key.
+         */
+        fun raw(text: String): StatusText = StatusText(UiTextKey.StatusRaw, mapOf("detail" to text))
+    }
 }

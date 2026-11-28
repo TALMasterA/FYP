@@ -1,5 +1,8 @@
 package com.translator.TalknLearn.core
 
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.ui.english
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.IOException
@@ -226,8 +229,69 @@ class ErrorMessagesTest {
 
     @Test
     fun `pre-built messages are not blank`() {
-        assertTrue(ErrorMessages.FRIEND_REMOVED.isNotBlank())
-        assertTrue(ErrorMessages.FRIEND_REMOVE_FAILED.isNotBlank())
         assertTrue(ErrorMessages.GENERIC_RETRY.isNotBlank())
+    }
+
+    // ── statusFromException: localizable form ──────────────────────
+
+    @Test
+    fun `statusFromException - null exception returns fallback key`() {
+        assertEquals(
+            StatusText(UiTextKey.FriendsMsgRemoveFailed),
+            ErrorMessages.statusFromException(null, UiTextKey.FriendsMsgRemoveFailed),
+        )
+    }
+
+    @Test
+    fun `statusFromException - default fallback is ErrGeneric`() {
+        assertEquals(StatusText(UiTextKey.ErrGeneric), ErrorMessages.statusFromException(RuntimeException("x")))
+    }
+
+    @Test
+    fun `statusFromException - network error maps to ErrNoInternet`() {
+        assertEquals(
+            StatusText(UiTextKey.ErrNoInternet),
+            ErrorMessages.statusFromException(UnknownHostException("host")),
+        )
+    }
+
+    @Test
+    fun `statusFromException - SecurityException keeps its detail as raw text`() {
+        val status = ErrorMessages.statusFromException(SecurityException("Cannot share with this user"))
+        assertEquals(UiTextKey.StatusRaw, status.key)
+        assertEquals("Cannot share with this user", status.english())
+    }
+
+    @Test
+    fun `statusFromException - SecurityException without message maps to ErrAccessDenied`() {
+        assertEquals(StatusText(UiTextKey.ErrAccessDenied), ErrorMessages.statusFromException(SecurityException()))
+    }
+
+    @Test
+    fun `fromException English matches statusFromException for every case`() {
+        val cases = listOf(
+            UnknownHostException("host"),
+            RuntimeException("PERMISSION_DENIED"),
+            RuntimeException("UNAUTHENTICATED"),
+            RuntimeException("NOT_FOUND"),
+            SecurityException("custom"),
+            RuntimeException("Already friends"),
+            RuntimeException("user blocked"),
+            RuntimeException("Request not found"),
+            RuntimeException("already been handled"),
+            RuntimeException("Not authorized"),
+            RuntimeException("RESOURCE_EXHAUSTED"),
+            IllegalArgumentException("bad"),
+            IllegalStateException(),
+            RuntimeException("DEADLINE_EXCEEDED"),
+        )
+        cases.forEach { e ->
+            assertEquals(e.toString(), ErrorMessages.fromException(e), ErrorMessages.statusFromException(e).english())
+        }
+    }
+
+    @Test
+    fun `StatusText raw resolves to the text unchanged`() {
+        assertEquals("Item not found", StatusText.raw("Item not found").english())
     }
 }

@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.first
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.translator.TalknLearn.core.StandardScreenScaffold
@@ -27,6 +26,7 @@ import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.ui.components.EmptyStates
+import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -181,7 +181,7 @@ fun SharedInboxScreen(
             }
 
             // Success message
-            uiState.successMessage?.let { message ->
+            uiState.successMessage?.resolve(t)?.let { message ->
                 Card(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -211,7 +211,7 @@ fun SharedInboxScreen(
             }
 
             // Error message
-            uiState.error?.let { error ->
+            uiState.error?.resolve(t)?.let { error ->
                 Card(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
