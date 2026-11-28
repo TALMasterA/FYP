@@ -750,5 +750,13 @@ val JaJpUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "ユーザー名変更の確認",
     UiTextKey.SettingsUsernameConfirmMessage to "ユーザー名を変更すると、30日間変更できなくなります。続行しますか？",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "パスワードは Google で管理されています",
+    UiTextKey.SpeechListeningLabel to "聞き取り中… 話してください",
+    UiTextKey.QuizLeaveTitle to "クイズを終了しますか？",
+    UiTextKey.QuizLeaveMessage to "回答は失われます。",
+    UiTextKey.QuizLeaveConfirm to "終了",
+    UiTextKey.QuizLeaveStay to "続ける",
+
     // Extended Error Messages
 )

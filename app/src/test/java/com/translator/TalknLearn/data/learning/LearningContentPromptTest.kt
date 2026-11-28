@@ -1,15 +1,17 @@
 package com.translator.TalknLearn.data.learning
 
+import com.google.firebase.Timestamp
+import com.translator.TalknLearn.domain.learning.PromptRecordSelector
 import com.translator.TalknLearn.model.TranslationRecord
-import org.junit.Test
 import org.junit.Assert.*
+import org.junit.Test
 
 /**
  * Tests for LearningContentRepositoryImpl prompt construction logic.
  *
  * Verifies:
  * - Record formatting (joinToString pattern)
- * - takeLast(20) limit
+ * - the 20-record limit (newest first, via PromptRecordSelector)
  * - MAX_VOCABULARY_ITEMS constant (8)
  * - Language code embedding
  * - Prompt structural requirements
@@ -18,14 +20,24 @@ class LearningContentPromptTest {
 
     private val maxVocabularyItems = 8
 
-    private fun buildRecordLine(r: TranslationRecord): String =
-        "- [${r.sourceLang}→${r.targetLang}] ${r.sourceText} => ${r.targetText}"
+    private fun buildRecordLine(r: TranslationRecord): String = PromptRecordSelector.formatLine(r)
 
     private fun buildRecentBlock(records: List<TranslationRecord>): String =
-        records.takeLast(20).joinToString("\n") { buildRecordLine(it) }
+        PromptRecordSelector.buildBlock(records, "ja-JP", PromptRecordSelector.LEARNING_SHEET_LIMIT)
 
-    private fun makeRecord(source: String, target: String, srcLang: String = "en-US", tgtLang: String = "ja-JP") =
-        TranslationRecord(sourceText = source, targetText = target, sourceLang = srcLang, targetLang = tgtLang)
+    private fun makeRecord(
+        source: String,
+        target: String,
+        srcLang: String = "en-US",
+        tgtLang: String = "ja-JP",
+        seconds: Long = 0
+    ) = TranslationRecord(
+        sourceText = source,
+        targetText = target,
+        sourceLang = srcLang,
+        targetLang = tgtLang,
+        timestamp = Timestamp(seconds, 0)
+    )
 
     // --- Record formatting ---
 
@@ -42,15 +54,16 @@ class LearningContentPromptTest {
         assertEquals(2, block.lines().size)
     }
 
-    // --- takeLast(20) limit ---
+    // --- 20-record limit, newest first ---
 
     @Test
-    fun `only last 20 records are included`() {
-        val records = (1..35).map { makeRecord("w$it", "t$it") }
-        val block = buildRecentBlock(records)
-        assertEquals(20, block.lines().size)
-        assertTrue(block.lines()[0].contains("w16"))
-        assertTrue(block.lines()[19].contains("w35"))
+    fun `only the newest 20 records are included`() {
+        // Newest-first, the order Firestore returns history in.
+        val records = (35 downTo 1).map { makeRecord("w$it", "t$it", seconds = it.toLong()) }
+        val lines = buildRecentBlock(records).lines()
+        assertEquals(20, lines.size)
+        assertEquals("- [en-US→ja-JP] w35 => t35", lines[0])
+        assertEquals("- [en-US→ja-JP] w16 => t16", lines[19])
     }
 
     @Test

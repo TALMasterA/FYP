@@ -21,7 +21,7 @@ Measured on 2026-11-28 HKT. Baseline `13d37d3d4c84590fc56429782d159ec890f92df6`.
 | Backend lines | 94.85% | 95.61% |
 | Firestore emulator | No executed suite | 5 passed |
 
-**Latest count (Phase 0, 2026-11-28):** after adding the Roborazzi screenshot tests (`screenshots/BaselineScreenshotTest.kt`, 7 tests), `testDebugUnitTest` reports **197 suites and 2,491 tests**, with 0 failures, 0 errors and 0 skipped. There are now 199 JVM test files. The Kover numbers above were not re-measured; screenshot tests do not change production code.
+**Latest count (Phase 1 part 1, 2026-11-28):** after adding `PromptRecordSelectorTest` (7 tests) and `DeviceLocaleMatcherTest` (6 tests), `testDebugUnitTest` reports **199 suites and 2,504 tests**, with 0 failures, 0 errors and 0 skipped. There are now 201 JVM test files. The Kover numbers above were not re-measured. (Phase 0 count: 197 suites, 2,491 tests, after adding the 7 Roborazzi screenshot tests.)
 
 The six additional Android measured lines came from request ID handling. Covered lines stayed at 13,643 and covered branches at 1,393. Detekt, the mock-config debug APK build and macrobenchmark assembly passed on both revisions. The app has 269 tracked production Kotlin files and 197 JVM test files, including the shared `FakePersistentRateLimiter.kt` test double.
 

@@ -58,6 +58,12 @@ naming:
     # leading digits or punctuation.
     active: true
     packagePattern: '[a-z]+(\.[A-Za-z][A-Za-z0-9]*)*'
+  FunctionNaming:
+    # Compose convention: @Composable functions are PascalCase (QuizLeaveDialog).
+    # Without this, every new composable is a Detekt issue. Old ones stay in the
+    # baseline; new ones are allowed by this setting.
+    active: true
+    ignoreAnnotated: ['Composable']
 
 potential-bugs:
   active: true

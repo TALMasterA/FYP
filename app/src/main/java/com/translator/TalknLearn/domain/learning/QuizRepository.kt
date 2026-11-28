@@ -41,7 +41,7 @@ interface QuizRepository {
     suspend fun getAttempt(uid: UserId, attemptId: String): QuizAttempt?
 
     /**
-     * Gets all quiz attempts for a language pair.
+     * Gets quiz attempts for a language pair, newest first (by `completedAt`).
      */
     suspend fun getAttemptsByLanguagePair(
         uid: UserId,
@@ -60,7 +60,7 @@ interface QuizRepository {
     ): QuizStats?
 
     /**
-     * Gets recent quiz attempts.
+     * Gets recent quiz attempts, newest first (by `completedAt`).
      */
     suspend fun getRecentAttempts(uid: UserId, limit: Long = 10): List<QuizAttempt>
 

@@ -750,5 +750,13 @@ val ZhCnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "确认更改用户名",
     UiTextKey.SettingsUsernameConfirmMessage to "更改用户名后，需要等 30 天才能再次更改。继续？",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "密码由 Google 管理",
+    UiTextKey.SpeechListeningLabel to "正在聆听… 请说话",
+    UiTextKey.QuizLeaveTitle to "要离开测验吗？",
+    UiTextKey.QuizLeaveMessage to "你的答案将会丢失。",
+    UiTextKey.QuizLeaveConfirm to "离开",
+    UiTextKey.QuizLeaveStay to "留下",
+
     // Extended Error Messages
 )

@@ -750,5 +750,13 @@ val RuRuUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "Подтвердите смену имени",
     UiTextKey.SettingsUsernameConfirmMessage to "Смена имени пользователя необратима в течение 30 дней. Продолжить?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "Пароль управляется Google",
+    UiTextKey.SpeechListeningLabel to "Слушаю… говорите",
+    UiTextKey.QuizLeaveTitle to "Выйти из теста?",
+    UiTextKey.QuizLeaveMessage to "Ваши ответы будут потеряны.",
+    UiTextKey.QuizLeaveConfirm to "Выйти",
+    UiTextKey.QuizLeaveStay to "Остаться",
+
     // Extended Error Messages
 )

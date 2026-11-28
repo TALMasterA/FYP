@@ -1,5 +1,6 @@
 package com.translator.TalknLearn.screens.learning
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.translator.TalknLearn.core.StandardScreenScaffold
 import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.model.ui.AppLanguageState
@@ -123,9 +124,27 @@ fun QuizScreen(
         appLanguageState = appLanguageState
     )
 
+    // Leaving a quiz with answers drops them, so ask first (system back and the
+    // top-bar arrow both go through requestBack).
+    var showLeaveDialog by remember { mutableStateOf(false) }
+    val hasUnsavedAnswers = uiState.currentAttempt?.answers?.isNotEmpty() == true &&
+        !uiState.isQuizTaken
+    val requestBack = { if (hasUnsavedAnswers) showLeaveDialog = true else onBack() }
+    BackHandler(enabled = hasUnsavedAnswers) { showLeaveDialog = true }
+
+    QuizLeaveConfirmDialog(
+        isVisible = showLeaveDialog,
+        onLeave = {
+            showLeaveDialog = false
+            onBack()
+        },
+        onStay = { showLeaveDialog = false },
+        appLanguageState = appLanguageState
+    )
+
     StandardScreenScaffold(
         title = t(UiTextKey.QuizTitleTemplate).replace("{language}", targetName),
-        onBack = onBack,
+        onBack = requestBack,
         backContentDescription = t(UiTextKey.NavBack),
         actions = {
             // Info icon in top right corner for coin rules

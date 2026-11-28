@@ -1,5 +1,6 @@
 package com.translator.TalknLearn.screens.history
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -7,32 +8,32 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.translator.TalknLearn.core.LanguageDropdownField
+import com.translator.TalknLearn.core.PaginationRow
 import com.translator.TalknLearn.core.StandardScreenBody
 import com.translator.TalknLearn.core.StandardScreenScaffold
+import com.translator.TalknLearn.core.UiConstants
+import com.translator.TalknLearn.core.pageCount
+import com.translator.TalknLearn.core.performance.rememberDebouncedValue
+import com.translator.TalknLearn.core.rememberHapticFeedback
 import com.translator.TalknLearn.core.rememberUiTextFunctions
+import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
-import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.ui.UiTextKey
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.translator.TalknLearn.core.PaginationRow
-import com.translator.TalknLearn.core.pageCount
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.runtime.LaunchedEffect
-import com.translator.TalknLearn.core.LanguageDropdownField
-import com.translator.TalknLearn.core.rememberHapticFeedback
-import com.translator.TalknLearn.core.UiConstants
-import com.translator.TalknLearn.core.performance.rememberDebouncedValue
 import com.translator.TalknLearn.ui.components.TranslationCardSkeleton
 import com.translator.TalknLearn.ui.theme.AppSpacing
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -291,6 +292,11 @@ fun HistoryScreen(
                 }
             }
         )
+    }
+
+    // System back leaves the open session first, like the top-bar arrow.
+    BackHandler(enabled = selectedTab == 1 && selectedSessionId != null) {
+        selectedSessionId = null
     }
 
     StandardScreenScaffold(

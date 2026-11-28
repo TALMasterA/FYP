@@ -63,7 +63,7 @@ Other locations:
 - **Firestore writes:** use `update()` with dot-notation for nested fields ([ARCHITECTURE_NOTES §2](docs/ARCHITECTURE_NOTES.md)).
 - **Screens:** build them with `StandardScreenScaffold` and the tokens in `ui/theme/Dimens.kt`. Do not hardcode colors; use `MaterialTheme.colorScheme`.
 - **User-facing text:** always use `t(UiTextKey.X)`. No English literals in UI or ViewModels, and that includes `contentDescription`.
-- **Formatting:** Detekt and ktlint. New code must not add Detekt issues; the baseline only covers old code.
+- **Formatting:** Detekt and ktlint. New code must not add Detekt issues; the baseline only covers old code. Keep imports sorted (lexicographic, with `java`, `javax` and `kotlin` last). `@Composable` functions use PascalCase names; Detekt allows this (`FunctionNaming.ignoreAnnotated` in `config/detekt/detekt.yml`).
 - **Previews are allowed.** Write them as `private @Preview` functions wrapped in `FYPTheme(dynamicColor = false) { }`. They are the one exception to the "no unwired code" rule in §7.
 - **Screenshot tests:** screens must render from plain parameters, as stateless composables, so they can be screenshot-tested. Test helpers (`ScreenshotTheme`, `SampleData`) are in `screenshots/ScreenshotSupport.kt` in the test sources.
 

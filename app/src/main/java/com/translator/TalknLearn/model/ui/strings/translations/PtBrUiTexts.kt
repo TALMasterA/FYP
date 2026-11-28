@@ -750,5 +750,13 @@ val PtBrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "Confirmar alteração de nome de usuário",
     UiTextKey.SettingsUsernameConfirmMessage to "Alterar o nome de usuário não pode ser revertido por 30 dias. Continuar?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "Senha gerenciada pelo Google",
+    UiTextKey.SpeechListeningLabel to "Ouvindo… fale agora",
+    UiTextKey.QuizLeaveTitle to "Sair do quiz?",
+    UiTextKey.QuizLeaveMessage to "Suas respostas serão perdidas.",
+    UiTextKey.QuizLeaveConfirm to "Sair",
+    UiTextKey.QuizLeaveStay to "Ficar",
+
     // Extended Error Messages
 )

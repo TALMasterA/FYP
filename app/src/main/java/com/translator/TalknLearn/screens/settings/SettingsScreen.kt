@@ -15,9 +15,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,21 +37,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.translator.TalknLearn.BuildConfig
 import com.translator.TalknLearn.R
 import com.translator.TalknLearn.core.AppLanguageDropdown
 import com.translator.TalknLearn.core.LanguageDropdownField
 import com.translator.TalknLearn.core.StandardScreenScaffold
+import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.core.validateScale
-import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.data.azure.AzureLanguageConfig
 import com.translator.TalknLearn.data.azure.AzureVoiceConfig
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
-import kotlinx.coroutines.delay
-import com.translator.TalknLearn.ui.theme.AppSpacing
 import com.translator.TalknLearn.ui.theme.AppCorners
+import com.translator.TalknLearn.ui.theme.AppSpacing
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -243,8 +244,9 @@ fun SettingsScreen(
                 }
             }
 
-            // Reset Password Button with larger text — hidden for Google Sign-In accounts
-            if (!uiState.isGoogleUser) {
+            // Reset Password: only for signed-in email accounts. Google accounts
+            // manage their password at Google; guests have no password.
+            if (isLoggedIn && !uiState.isGoogleUser) {
                 TextButton(onClick = onOpenResetPassword) {
                     Text(
                         text = t(UiTextKey.SettingsResetPW),
@@ -252,9 +254,9 @@ fun SettingsScreen(
                         fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
                     )
                 }
-            } else {
+            } else if (isLoggedIn) {
                 Text(
-                    text = "Password managed by Google",
+                    text = t(UiTextKey.SettingsPasswordManagedByGoogle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -334,29 +336,35 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                         ) {
-                            // Tester Feedback (Firebase App Distribution — debug builds only)
-                            TextButton(
-                                onClick = {
-                                    try {
-                                        // Use reflection so this compiles in release builds where
-                                        // the firebase-appdistribution SDK is not included.
-                                        val cls = Class.forName("com.google.firebase.appdistribution.FirebaseAppDistribution")
-                                        val getInstance = cls.getMethod("getInstance")
-                                        val instance = getInstance.invoke(null)
-                                        val startFeedback = cls.getMethod("startFeedback", Int::class.javaPrimitiveType)
-                                        startFeedback.invoke(instance, R.string.feedback_additional_info)
-                                    } catch (e: Exception) {
-                                        android.util.Log.e("SettingsScreen", "Firebase App Distribution not available: ${e.message}")
-                                        // Silently fail - this feature is only available in debug/tester builds
-                                    }
-                                },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = t(UiTextKey.SettingsTesterFeedback),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
+                            // Tester Feedback (Firebase App Distribution — debug builds only).
+                            // The SDK is debugImplementation, so the button would do nothing in release.
+                            if (BuildConfig.DEBUG) {
+                                TextButton(
+                                    onClick = {
+                                        try {
+                                            // Use reflection so this compiles in release builds where
+                                            // the firebase-appdistribution SDK is not included.
+                                            val cls = Class.forName("com.google.firebase.appdistribution.FirebaseAppDistribution")
+                                            val getInstance = cls.getMethod("getInstance")
+                                            val instance = getInstance.invoke(null)
+                                            val startFeedback = cls.getMethod(
+                                                "startFeedback",
+                                                Int::class.javaPrimitiveType
+                                            )
+                                            startFeedback.invoke(instance, R.string.feedback_additional_info)
+                                        } catch (e: Exception) {
+                                            android.util.Log.e("SettingsScreen", "Firebase App Distribution not available: ${e.message}")
+                                            // Silently fail - this feature is only available in debug/tester builds
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = t(UiTextKey.SettingsTesterFeedback),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                }
                             }
 
                             // General Feedback (Custom Form)

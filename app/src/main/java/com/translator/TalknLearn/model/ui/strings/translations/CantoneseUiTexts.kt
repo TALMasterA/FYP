@@ -750,5 +750,13 @@ val CantoneseUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "確認更改用戶名",
     UiTextKey.SettingsUsernameConfirmMessage to "更改用戶名後，需要等 30 日先可以再改。繼續？",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "密碼由 Google 管理",
+    UiTextKey.SpeechListeningLabel to "聆聽緊… 請講嘢",
+    UiTextKey.QuizLeaveTitle to "離開測驗？",
+    UiTextKey.QuizLeaveMessage to "你嘅答案會冇咗。",
+    UiTextKey.QuizLeaveConfirm to "離開",
+    UiTextKey.QuizLeaveStay to "留低",
+
     // Extended Error Messages
 )

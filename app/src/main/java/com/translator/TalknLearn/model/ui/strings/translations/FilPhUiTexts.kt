@@ -750,5 +750,13 @@ val FilPhUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "Kumpirmahin ang pagpapalit ng username",
     UiTextKey.SettingsUsernameConfirmMessage to "Ang pagpapalit ng username ay hindi na mababago sa loob ng 30 araw. Magpatuloy?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "Ang password ay pinamamahalaan ng Google",
+    UiTextKey.SpeechListeningLabel to "Nakikinig… magsalita na",
+    UiTextKey.QuizLeaveTitle to "Umalis sa quiz?",
+    UiTextKey.QuizLeaveMessage to "Mawawala ang iyong mga sagot.",
+    UiTextKey.QuizLeaveConfirm to "Umalis",
+    UiTextKey.QuizLeaveStay to "Manatili",
+
     // Extended Error Messages
 )

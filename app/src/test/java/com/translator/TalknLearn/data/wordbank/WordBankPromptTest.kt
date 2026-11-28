@@ -1,28 +1,40 @@
 package com.translator.TalknLearn.data.wordbank
 
+import com.google.firebase.Timestamp
+import com.translator.TalknLearn.domain.learning.PromptRecordSelector
 import com.translator.TalknLearn.model.TranslationRecord
-import org.junit.Test
 import org.junit.Assert.*
+import org.junit.Test
 
 /**
  * Tests for WordBankGenerationRepository prompt construction logic.
  *
  * Verifies:
  * - Record formatting (joinToString pattern)
- * - takeLast(30) limit
+ * - the 30-record limit (newest first, via PromptRecordSelector)
  * - Language code embedding in prompt
  * - Prompt structure integrity
  */
 class WordBankPromptTest {
 
-    private fun buildRecordLine(r: TranslationRecord): String =
-        "- [${r.sourceLang}→${r.targetLang}] ${r.sourceText} => ${r.targetText}"
+    private fun buildRecordLine(r: TranslationRecord): String = PromptRecordSelector.formatLine(r)
 
     private fun buildRecentBlock(records: List<TranslationRecord>): String =
-        records.takeLast(30).joinToString("\n") { buildRecordLine(it) }
+        PromptRecordSelector.buildBlock(records, "ja-JP", PromptRecordSelector.WORD_BANK_LIMIT)
 
-    private fun makeRecord(source: String, target: String, srcLang: String = "en-US", tgtLang: String = "ja-JP") =
-        TranslationRecord(sourceText = source, targetText = target, sourceLang = srcLang, targetLang = tgtLang)
+    private fun makeRecord(
+        source: String,
+        target: String,
+        srcLang: String = "en-US",
+        tgtLang: String = "ja-JP",
+        seconds: Long = 0
+    ) = TranslationRecord(
+        sourceText = source,
+        targetText = target,
+        sourceLang = srcLang,
+        targetLang = tgtLang,
+        timestamp = Timestamp(seconds, 0)
+    )
 
     // --- Record formatting ---
 
@@ -45,19 +57,18 @@ class WordBankPromptTest {
         assertEquals(2, block.lines().size)
     }
 
-    // --- takeLast(30) limit ---
+    // --- 30-record limit, newest first ---
 
     @Test
-    fun `only last 30 records are included`() {
-        val records = (1..50).map { i ->
-            makeRecord("word$i", "translation$i")
+    fun `only the newest 30 records are included`() {
+        // Newest-first, the order Firestore returns history in.
+        val records = (50 downTo 1).map { i ->
+            makeRecord("word$i", "translation$i", seconds = i.toLong())
         }
-        val block = buildRecentBlock(records)
-        val lines = block.lines()
+        val lines = buildRecentBlock(records).lines()
         assertEquals(30, lines.size)
-        // First included record should be word21 (index 20 in 0-based, last 30 of 50)
-        assertTrue(lines[0].contains("word21"))
-        assertTrue(lines[29].contains("word50"))
+        assertTrue(lines[0].contains("word50 "))
+        assertTrue(lines[29].contains("word21 "))
     }
 
     @Test

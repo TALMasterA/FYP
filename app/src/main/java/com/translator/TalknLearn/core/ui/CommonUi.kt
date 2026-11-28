@@ -252,7 +252,17 @@ fun StandardScreenScaffold(
         // already handles insets via its bottomBar windowInsets parameter.
         // Screens WITHOUT bottom nav (detail screens) need to add navigation bar insets
         // to prevent content from being blocked by system bars (gesture nav, 3-button nav, etc.).
-        contentWindowInsets = if (hasBottomNav) WindowInsets(0) else WindowInsets.Companion.navigationBars,
+        // The keyboard (IME) inset is included too, so text fields and bottom input
+        // rows are pushed above the keyboard instead of being covered by it. On tab
+        // screens the system navigation bar is already below the bottom nav, so it is
+        // taken out of the keyboard inset there. (The keyboard also covers the bottom
+        // nav, so tab screens get a little extra space above the keyboard. Phase 2's
+        // navigation shell can hide the bottom nav while typing.)
+        contentWindowInsets = if (hasBottomNav) {
+            WindowInsets.ime.exclude(WindowInsets.navigationBars)
+        } else {
+            WindowInsets.navigationBars.union(WindowInsets.ime)
+        },
         topBar = {
             StandardTopAppBar(
                 title = title,

@@ -1,5 +1,6 @@
 package com.translator.TalknLearn.screens.wordbank
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,8 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.core.StandardScreenScaffold
+import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.domain.learning.GenerationEligibility
 import com.translator.TalknLearn.model.ui.AppLanguageState
@@ -75,15 +76,19 @@ fun WordBankScreen(
         )
     }
 
+    val isInSubView = selectedLanguage != null || uiState.isCustomWordBankSelected
+    val closeSubView = {
+        viewModel.clearSelection()
+        customWordsViewModel.clearSelection()
+    }
+
+    // System back closes the open word bank first, like the top-bar arrow.
+    BackHandler(enabled = isInSubView, onBack = closeSubView)
+
     StandardScreenScaffold(
         title = t(UiTextKey.WordBankTitle),
         onBack = {
-            if (selectedLanguage != null || uiState.isCustomWordBankSelected) {
-                viewModel.clearSelection()
-                customWordsViewModel.clearSelection()
-            } else {
-                onBack()
-            }
+            if (isInSubView) closeSubView() else onBack()
         },
         backContentDescription = t(UiTextKey.NavBack),
         actions = {

@@ -750,5 +750,13 @@ val ItItUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "Conferma cambio nome utente",
     UiTextKey.SettingsUsernameConfirmMessage to "Cambiare il nome utente non può essere annullato per 30 giorni. Continuare?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "Password gestita da Google",
+    UiTextKey.SpeechListeningLabel to "In ascolto… parla ora",
+    UiTextKey.QuizLeaveTitle to "Uscire dal quiz?",
+    UiTextKey.QuizLeaveMessage to "Le tue risposte andranno perse.",
+    UiTextKey.QuizLeaveConfirm to "Esci",
+    UiTextKey.QuizLeaveStay to "Resta",
+
     // Extended Error Messages
 )

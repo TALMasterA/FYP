@@ -97,6 +97,10 @@ fun LearningSheetScreen(
     val unchanged = previousSheetCount != null && previousSheetCount == countNowFromCluster
     val regenEnabled = metaReadyForTarget && !uiState.isLoading && !isAnyGenerationOngoing &&
         countNowFromCluster > 0 && !unchanged && countHigherThanPrevious && hasEnoughNewRecords
+    // Ready to regenerate except for "not enough new records": the button stays
+    // tappable and explains how many more records are needed.
+    val regenBlockedByRecords = metaReadyForTarget && !uiState.isLoading && !isAnyGenerationOngoing &&
+        countNowFromCluster > 0 && !regenEnabled
 
 
     // Reload the sheet whenever: the language pair changes, OR generation just completed
@@ -256,11 +260,12 @@ fun LearningSheetScreen(
                 ) {
                     Button(
                         onClick = {
-                            if (regenEnabled) {
-                                showConfirm = true
+                            when {
+                                regenEnabled -> showConfirm = true
+                                regenBlockedByRecords -> showRegenBlockedAlert = true
                             }
                         },
-                        enabled = regenEnabled,
+                        enabled = regenEnabled || regenBlockedByRecords,
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(

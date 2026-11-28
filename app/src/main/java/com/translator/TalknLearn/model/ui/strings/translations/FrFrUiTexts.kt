@@ -750,5 +750,13 @@ val FrFrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "Confirmer le changement de nom",
     UiTextKey.SettingsUsernameConfirmMessage to "Changer votre nom vous empêchera de le modifier pendant 30 jours. Continuer ?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "Mot de passe géré par Google",
+    UiTextKey.SpeechListeningLabel to "Écoute… parlez maintenant",
+    UiTextKey.QuizLeaveTitle to "Quitter le quiz ?",
+    UiTextKey.QuizLeaveMessage to "Vos réponses seront perdues.",
+    UiTextKey.QuizLeaveConfirm to "Quitter",
+    UiTextKey.QuizLeaveStay to "Rester",
+
     // Extended Error Messages
 )

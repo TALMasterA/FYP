@@ -127,5 +127,19 @@ val OnboardingExtrasScreenTexts: List<String> = listOf(
     // SettingsUsernameConfirmMessage
     "Changing your username will start a 30-day cooldown before you can change it again. Continue?",
 
+    // --- Phase 1 fixes ---
+    // SettingsPasswordManagedByGoogle
+    "Password managed by Google",
+    // SpeechListeningLabel
+    "Listening… speak now",
+    // QuizLeaveTitle
+    "Leave quiz?",
+    // QuizLeaveMessage
+    "Your answers will be lost.",
+    // QuizLeaveConfirm
+    "Leave",
+    // QuizLeaveStay
+    "Stay",
+
     // --- Extended Error Messages (localized) ---
 )

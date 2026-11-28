@@ -750,5 +750,13 @@ val ViVnUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "Xác nhận đổi tên",
     UiTextKey.SettingsUsernameConfirmMessage to "Đổi tên người dùng sẽ ngăn thay đổi trong 30 ngày. Tiếp tục?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "Mật khẩu do Google quản lý",
+    UiTextKey.SpeechListeningLabel to "Đang nghe… hãy nói",
+    UiTextKey.QuizLeaveTitle to "Rời khỏi bài kiểm tra?",
+    UiTextKey.QuizLeaveMessage to "Câu trả lời của bạn sẽ bị mất.",
+    UiTextKey.QuizLeaveConfirm to "Rời đi",
+    UiTextKey.QuizLeaveStay to "Ở lại",
+
     // Extended Error Messages
 )

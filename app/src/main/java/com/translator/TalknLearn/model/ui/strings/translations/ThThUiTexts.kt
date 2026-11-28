@@ -750,5 +750,13 @@ val ThThUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "ยืนยันเปลี่ยนชื่อ",
     UiTextKey.SettingsUsernameConfirmMessage to "เปลี่ยนชื่อผู้ใช้จะไม่สามารถเปลี่ยนได้ใน 30 วัน ดำเนินการต่อ?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "รหัสผ่านจัดการโดย Google",
+    UiTextKey.SpeechListeningLabel to "กำลังฟัง… พูดได้เลย",
+    UiTextKey.QuizLeaveTitle to "ออกจากแบบทดสอบหรือไม่?",
+    UiTextKey.QuizLeaveMessage to "คำตอบของคุณจะหายไป",
+    UiTextKey.QuizLeaveConfirm to "ออก",
+    UiTextKey.QuizLeaveStay to "อยู่ต่อ",
+
     // Extended Error Messages
 )
