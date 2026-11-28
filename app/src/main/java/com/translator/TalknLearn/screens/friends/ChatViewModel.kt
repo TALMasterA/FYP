@@ -3,6 +3,15 @@ package com.translator.TalknLearn.screens.friends
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.functions.FirebaseFunctionsException
+import com.translator.TalknLearn.core.AppLogger
+import com.translator.TalknLearn.core.ErrorMessages
+import com.translator.TalknLearn.core.security.PersistentRateLimiter
+import com.translator.TalknLearn.core.security.ValidationResult
+import com.translator.TalknLearn.core.security.decodeLegacyHtml
+import com.translator.TalknLearn.core.security.sanitizeInput
+import com.translator.TalknLearn.core.security.validateTextLength
+import com.translator.TalknLearn.data.friends.ChatRepository
 import com.translator.TalknLearn.data.friends.FriendsRepository
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.data.settings.UserSettingsRepository
@@ -11,18 +20,12 @@ import com.translator.TalknLearn.domain.friends.MarkMessagesAsReadUseCase
 import com.translator.TalknLearn.domain.friends.ObserveMessagesUseCase
 import com.translator.TalknLearn.domain.friends.SendMessageUseCase
 import com.translator.TalknLearn.domain.friends.TranslateAllMessagesUseCase
-import com.translator.TalknLearn.data.friends.ChatRepository
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.FriendMessage
 import com.translator.TalknLearn.model.friends.PublicUserProfile
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
-import com.translator.TalknLearn.core.AppLogger
-import com.translator.TalknLearn.core.security.PersistentRateLimiter
-import com.translator.TalknLearn.core.security.ValidationResult
-import com.translator.TalknLearn.core.security.decodeLegacyHtml
-import com.translator.TalknLearn.core.security.sanitizeInput
-import com.translator.TalknLearn.core.security.validateTextLength
-import com.google.firebase.functions.FirebaseFunctionsException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,13 +43,13 @@ data class ChatUiState(
     val messages: List<FriendMessage> = emptyList(),
     val messageText: String = "",
     val isSending: Boolean = false,
-    val error: String? = null,
+    val error: StatusText? = null,
     val friendUsername: String = "",
     val currentUserId: String = "",
     val isTranslating: Boolean = false,
     val translatedMessages: Map<String, String> = emptyMap(),
     val showTranslation: Boolean = false,
-    val translationError: String? = null,
+    val translationError: StatusText? = null,
     val isLoadingOlder: Boolean = false,
     val hasMoreMessages: Boolean = true,
     val clearSuccess: Boolean = false,
@@ -84,6 +87,7 @@ class ChatViewModel @Inject constructor(
     companion object {
         private const val CHAT_MAX = 10
         private const val CHAT_WINDOW_MS = 60_000L
+        private const val MAX_MESSAGE_LENGTH = 2000
     }
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -212,7 +216,7 @@ class ChatViewModel @Inject constructor(
                 updateUiState {
                     it.copy(
                         isLoading = false,
-                        error = "Failed to load messages. Please try again."
+                        error = StatusText(UiTextKey.ChatMsgLoadFailed)
                     )
                 }
             }
@@ -280,7 +284,7 @@ class ChatViewModel @Inject constructor(
                     updateUiState { it.copy(isBlocked = true, error = null) }
                 },
                 onFailure = {
-                    updateUiState { it.copy(error = "Failed to block user.") }
+                    updateUiState { it.copy(error = StatusText(UiTextKey.ChatMsgBlockFailed)) }
                 }
             )
         }
@@ -294,7 +298,7 @@ class ChatViewModel @Inject constructor(
                     updateUiState { it.copy(isBlocked = false, error = null) }
                 },
                 onFailure = {
-                    updateUiState { it.copy(error = "Failed to unblock user.") }
+                    updateUiState { it.copy(error = StatusText(UiTextKey.ChatMsgUnblockFailed)) }
                 }
             )
         }
@@ -311,9 +315,16 @@ class ChatViewModel @Inject constructor(
         if (messageText.isBlank() || _uiState.value.isSending) return
 
         // Validate message length (max 2000 chars)
-        val lengthValidation = validateTextLength(messageText, minLength = 1, maxLength = 2000, fieldName = "Message")
+        val lengthValidation = validateTextLength(
+            messageText,
+            minLength = 1,
+            maxLength = MAX_MESSAGE_LENGTH,
+            fieldName = "Message",
+        )
         if (lengthValidation is ValidationResult.Invalid) {
-            updateUiState { it.copy(error = lengthValidation.message) }
+            updateUiState {
+                it.copy(error = StatusText(UiTextKey.ChatMsgTooLong, mapOf("max" to MAX_MESSAGE_LENGTH.toString())))
+            }
             return
         }
 
@@ -325,13 +336,13 @@ class ChatViewModel @Inject constructor(
                 windowMillis = CHAT_WINDOW_MS
             )
         ) {
-            updateUiState { it.copy(error = "You are sending messages too quickly. Please wait a moment.") }
+            updateUiState { it.copy(error = StatusText(UiTextKey.ChatMsgTooFast)) }
             return
         }
 
         // Prevent sending if blocked by the friend
         if (_uiState.value.isBlockedBy) {
-            updateUiState { it.copy(error = "You cannot send messages to this user.") }
+            updateUiState { it.copy(error = StatusText(UiTextKey.ChatBlockedMessage)) }
             return
         }
 
@@ -357,7 +368,7 @@ class ChatViewModel @Inject constructor(
                 onFailure = { error ->
                     updateUiState {
                         it.copy(
-                            error = error.message ?: "Failed to send message",
+                            error = ErrorMessages.statusFromException(error, UiTextKey.ChatMsgSendFailed),
                             isSending = false
                         )
                     }
@@ -443,7 +454,7 @@ class ChatViewModel @Inject constructor(
                         logTranslationIssue("translateAllMessages failed", error)
                         updateUiState {
                             it.copy(
-                                translationError = "Translation failed. Please try again.",
+                                translationError = StatusText(UiTextKey.ChatMsgTranslateFailed),
                                 isTranslating = false
                             )
                         }
@@ -453,7 +464,7 @@ class ChatViewModel @Inject constructor(
                 logTranslationIssue("translateAllMessages catch failed", e)
                 updateUiState {
                     it.copy(
-                        translationError = "Translation failed. Please try again.",
+                        translationError = StatusText(UiTextKey.ChatMsgTranslateFailed),
                         isTranslating = false
                     )
                 }

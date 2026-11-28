@@ -1,71 +1,75 @@
 package com.translator.TalknLearn.core
 
+import com.translator.TalknLearn.model.ui.BaseUiTexts
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+
 /**
  * FIX 3.6: Centralized error message mapper.
  *
  * Maps technical exceptions to user-friendly messages following a consistent
  * format: [What failed] + [Why] + [What to do].
  *
+ * New code should use [statusFromException]. It returns a [StatusText] that
+ * the screen shows in the user's UI language. [fromException] is the older
+ * English-only form, kept for callers that still hold plain strings.
+ *
  * Usage:
  * ```
- * val message = ErrorMessages.fromException(e)
- * _errorState.value = message
+ * _uiState.update { it.copy(error = ErrorMessages.statusFromException(e, UiTextKey.ErrGeneric)) }
  * ```
  */
 object ErrorMessages {
 
     /**
+     * Convert an exception into a localizable message. Unknown errors use
+     * [fallback].
+     */
+    fun statusFromException(e: Throwable?, fallback: UiTextKey = UiTextKey.ErrGeneric): StatusText =
+        e?.let(::classify) ?: StatusText(fallback)
+
+    /**
      * Convert an exception into a user-friendly error message (English only).
      */
-    fun fromException(e: Throwable?, fallback: String = "Something went wrong. Please try again."): String {
-        if (e == null) return fallback
+    fun fromException(e: Throwable?, fallback: String = GENERIC_RETRY): String =
+        e?.let(::classify)?.resolve { BaseUiTexts[it.ordinal] } ?: fallback
+
+    @Suppress("CyclomaticComplexMethod")
+    private fun classify(e: Throwable): StatusText? {
+        val message = e.message
+        fun has(text: String) = message?.contains(text, ignoreCase = true) == true
 
         return when {
             // Network errors
-            isNetworkError(e) ->
-                "No internet connection. Please check your network and try again."
+            isNetworkError(e) -> StatusText(UiTextKey.ErrNoInternet)
 
             // Firebase auth errors
-            e.message?.contains("PERMISSION_DENIED", ignoreCase = true) == true ->
-                "You don't have permission to perform this action."
-            e.message?.contains("UNAUTHENTICATED", ignoreCase = true) == true ->
-                "Your session has expired. Please sign in again."
-            e.message?.contains("NOT_FOUND", ignoreCase = true) == true ->
-                "The requested item was not found. It may have been deleted."
+            has("PERMISSION_DENIED") -> StatusText(UiTextKey.ErrPermissionDenied)
+            has("UNAUTHENTICATED") -> StatusText(UiTextKey.ErrSessionExpired)
+            has("NOT_FOUND") -> StatusText(UiTextKey.ErrItemNotFound)
 
             // Security exceptions (from our own checks)
-            e is SecurityException ->
-                e.message ?: "Access denied."
+            e is SecurityException -> message?.let(StatusText::raw) ?: StatusText(UiTextKey.ErrAccessDenied)
 
             // Friend-specific errors
-            e.message?.contains("Already friends", ignoreCase = true) == true ->
-                "You're already friends with this user."
-            e.message?.contains("blocked", ignoreCase = true) == true ->
-                "Unable to complete this action. The user may be blocked."
-            e.message?.contains("Request not found", ignoreCase = true) == true ->
-                "This friend request no longer exists."
-            e.message?.contains("already been handled", ignoreCase = true) == true ->
-                "This request has already been handled by someone else."
-            e.message?.contains("Not authorized", ignoreCase = true) == true ->
-                "You're not authorized to perform this action."
+            has("Already friends") -> StatusText(UiTextKey.ErrAlreadyFriends)
+            has("blocked") -> StatusText(UiTextKey.ErrUserMaybeBlocked)
+            has("Request not found") -> StatusText(UiTextKey.ErrRequestGone)
+            has("already been handled") -> StatusText(UiTextKey.ErrRequestHandled)
+            has("Not authorized") -> StatusText(UiTextKey.ErrNotAuthorized)
 
             // Rate limiting
-            e.message?.contains("RESOURCE_EXHAUSTED", ignoreCase = true) == true ||
-            e.message?.contains("rate limit", ignoreCase = true) == true ->
-                "Too many requests. Please wait a moment and try again."
+            has("RESOURCE_EXHAUSTED") || has("rate limit") -> StatusText(UiTextKey.ErrTooManyRequests)
 
             // Validation errors
-            e is IllegalArgumentException ->
-                e.message ?: "Invalid input. Please check and try again."
-            e is IllegalStateException ->
-                e.message ?: "Operation cannot be completed right now."
+            e is IllegalArgumentException -> message?.let(StatusText::raw) ?: StatusText(UiTextKey.ErrInvalidInput)
+            e is IllegalStateException -> message?.let(StatusText::raw) ?: StatusText(UiTextKey.ErrCannotCompleteNow)
 
             // Size/quota errors
-            e.message?.contains("DEADLINE_EXCEEDED", ignoreCase = true) == true ->
-                "The operation timed out. Please try again."
+            has("DEADLINE_EXCEEDED") -> StatusText(UiTextKey.ErrTimedOut)
 
             // Default
-            else -> fallback
+            else -> null
         }
     }
 
@@ -86,7 +90,5 @@ object ErrorMessages {
 
     // ── Pre-built messages for common scenarios ─────────────────────────────
 
-    const val FRIEND_REMOVED = "Friend removed successfully."
-    const val FRIEND_REMOVE_FAILED = "Unable to remove friend. Please check your connection and try again."
     const val GENERIC_RETRY = "Something went wrong. Please try again."
 }

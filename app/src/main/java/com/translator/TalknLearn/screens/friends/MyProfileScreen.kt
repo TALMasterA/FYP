@@ -23,6 +23,7 @@ import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.data.azure.LanguageDisplayNames
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
+import com.translator.TalknLearn.model.ui.StatusText
 import com.translator.TalknLearn.model.ui.UiTextKey
 
 @Composable
@@ -48,7 +49,7 @@ fun MyProfileScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             // Success message
-            uiState.successMessage?.let { message ->
+            uiState.successMessage?.resolve(t)?.let { message ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -66,7 +67,7 @@ fun MyProfileScreen(
             }
 
             // Error message
-            uiState.error?.let { error ->
+            uiState.error?.resolve(t)?.let { error ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -126,7 +127,7 @@ fun MyProfileScreen(
                             icon = Icons.Default.Person,
                             onCopy = {
                                 copyToClipboard(context, "User ID", uiState.userId)
-                                viewModel.showSuccessMessage(t(UiTextKey.MyProfileCopied))
+                                viewModel.showSuccessMessage(StatusText(UiTextKey.MyProfileCopied))
                             },
                             copyButtonText = t(UiTextKey.MyProfileCopyUserId)
                         )
@@ -141,7 +142,7 @@ fun MyProfileScreen(
                             onCopy = if (profile.username.isNotEmpty()) {
                                 {
                                     copyToClipboard(context, "Username", profile.username)
-                                    viewModel.showSuccessMessage(t(UiTextKey.MyProfileCopied))
+                                    viewModel.showSuccessMessage(StatusText(UiTextKey.MyProfileCopied))
                                 }
                             } else null,
                             copyButtonText = t(UiTextKey.MyProfileCopyUsername)

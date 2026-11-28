@@ -8,6 +8,8 @@ import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.friends.*
 import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -31,8 +33,8 @@ data class FriendsUiState(
     val searchQuery: String = "",
     val searchResults: List<com.translator.TalknLearn.model.friends.PublicUserProfile> = emptyList(),
     val isSearching: Boolean = false,
-    val error: String? = null,
-    val successMessage: String? = null,
+    val error: StatusText? = null,
+    val successMessage: StatusText? = null,
     val newRequestCount: Int = 0,
     val unreadCountPerFriend: Map<String, Int> = emptyMap(),
     val isDeleteMode: Boolean = false,
@@ -255,7 +257,7 @@ class FriendsViewModel @Inject constructor(
         }
     }
 
-    private fun showSuccessMessage(message: String) {
+    private fun showSuccessMessage(message: StatusText) {
         _uiState.value = _uiState.value.copy(successMessage = message)
         viewModelScope.launch {
             delay(3000)
@@ -272,7 +274,7 @@ class FriendsViewModel @Inject constructor(
     fun requireUsernameForFriendActions(): Boolean {
         return if (!_uiState.value.currentUserHasUsername) {
             _uiState.value = _uiState.value.copy(
-                error = "Please set a username in your profile before managing friend requests."
+                error = StatusText(UiTextKey.FriendsMsgNeedUsername)
             )
             false
         } else {

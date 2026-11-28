@@ -2,27 +2,30 @@ package com.translator.TalknLearn.screens.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.translator.TalknLearn.core.ErrorMessages
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.friends.AcceptSharedItemUseCase
 import com.translator.TalknLearn.domain.friends.DismissSharedItemUseCase
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.SharedItem
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SharedInboxUiState(
     val isLoading: Boolean = true,
     val sharedItems: List<SharedItem> = emptyList(),
-    val error: String? = null,
-    val successMessage: String? = null,
+    val error: StatusText? = null,
+    val successMessage: StatusText? = null,
     val isProcessing: Boolean = false,
     val newItemCount: Int = 0,          // items that arrived since screen was last opened
     val newItemIds: Set<String> = emptySet(), // IDs of items that are new/unread (red dot)
@@ -120,12 +123,17 @@ class SharedInboxViewModel @Inject constructor(
             _uiState.update { it.copy(isProcessing = true, error = null) }
             acceptSharedItemUseCase(itemId, userId)
                 .onSuccess {
-                    _uiState.update { it.copy(isProcessing = false, successMessage = "Added to your collection") }
+                    _uiState.update { it.copy(isProcessing = false, successMessage = StatusText(UiTextKey.SharedMsgAdded)) }
                     kotlinx.coroutines.delay(3000)
                     _uiState.update { it.copy(successMessage = null) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isProcessing = false, error = error.message ?: "Failed to accept item") }
+                    _uiState.update {
+                        it.copy(
+                            isProcessing = false,
+                            error = ErrorMessages.statusFromException(error, UiTextKey.SharedMsgAcceptFailed),
+                        )
+                    }
                 }
         }
     }
@@ -137,12 +145,17 @@ class SharedInboxViewModel @Inject constructor(
             _uiState.update { it.copy(isProcessing = true, error = null) }
             dismissSharedItemUseCase(itemId, userId)
                 .onSuccess {
-                    _uiState.update { it.copy(isProcessing = false, successMessage = "Item deleted") }
+                    _uiState.update { it.copy(isProcessing = false, successMessage = StatusText(UiTextKey.SharedMsgDeleted)) }
                     kotlinx.coroutines.delay(3000)
                     _uiState.update { it.copy(successMessage = null) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isProcessing = false, error = error.message ?: "Failed to delete item") }
+                    _uiState.update {
+                        it.copy(
+                            isProcessing = false,
+                            error = ErrorMessages.statusFromException(error, UiTextKey.SharedMsgDeleteFailed),
+                        )
+                    }
                 }
         }
     }
@@ -154,12 +167,17 @@ class SharedInboxViewModel @Inject constructor(
             _uiState.update { it.copy(isProcessing = true, error = null) }
             dismissSharedItemUseCase(itemId, userId)
                 .onSuccess {
-                    _uiState.update { it.copy(isProcessing = false, successMessage = "Item dismissed") }
+                    _uiState.update { it.copy(isProcessing = false, successMessage = StatusText(UiTextKey.SharedMsgDismissed)) }
                     kotlinx.coroutines.delay(3000)
                     _uiState.update { it.copy(successMessage = null) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isProcessing = false, error = error.message ?: "Failed to dismiss item") }
+                    _uiState.update {
+                        it.copy(
+                            isProcessing = false,
+                            error = ErrorMessages.statusFromException(error, UiTextKey.SharedMsgDismissFailed),
+                        )
+                    }
                 }
         }
     }

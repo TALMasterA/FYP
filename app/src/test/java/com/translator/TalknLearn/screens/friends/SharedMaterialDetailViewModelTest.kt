@@ -6,6 +6,8 @@ import com.translator.TalknLearn.data.friends.SharingRepository
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.SharedItem
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -79,7 +81,7 @@ class SharedMaterialDetailViewModelTest {
     fun `blank itemId sets error without loading`() = runTest {
         val vm = buildViewModel(itemId = "")
 
-        assertEquals("No item ID", vm.uiState.value.error)
+        assertEquals(StatusText(UiTextKey.SharedMsgNoItemId), vm.uiState.value.error)
         assertFalse(vm.uiState.value.isLoading)
         verifyNoInteractions(sharingRepo)
     }
@@ -91,7 +93,7 @@ class SharedMaterialDetailViewModelTest {
         }
         val vm = buildViewModel(authRepository = nullAuthRepo)
 
-        assertEquals("Not logged in", vm.uiState.value.error)
+        assertEquals(StatusText(UiTextKey.ErrorNotLoggedIn), vm.uiState.value.error)
         assertFalse(vm.uiState.value.isLoading)
     }
 
@@ -105,7 +107,7 @@ class SharedMaterialDetailViewModelTest {
 
         val vm = buildViewModel()
 
-        assertEquals("Item not found", vm.uiState.value.error)
+        assertEquals(StatusText(UiTextKey.ShareItemNotFound), vm.uiState.value.error)
     }
 
     @Test
@@ -188,7 +190,7 @@ class SharedMaterialDetailViewModelTest {
 
         val vm = buildViewModel()
 
-        assertEquals("Failed to load shared material. Please try again.", vm.uiState.value.error)
+        assertEquals(StatusText(UiTextKey.SharedMsgLoadFailed), vm.uiState.value.error)
         assertFalse(vm.uiState.value.isLoading)
     }
 }

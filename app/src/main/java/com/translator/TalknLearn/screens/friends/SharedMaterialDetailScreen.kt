@@ -89,7 +89,7 @@ fun SharedMaterialDetailScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = uiState.error ?: t(UiTextKey.ShareItemNotFound),
+                    text = uiState.error?.resolve(t) ?: t(UiTextKey.ShareItemNotFound),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

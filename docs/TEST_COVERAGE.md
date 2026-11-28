@@ -21,7 +21,9 @@ Measured on 2026-11-28 HKT. Baseline `13d37d3d4c84590fc56429782d159ec890f92df6`.
 | Backend lines | 94.85% | 95.61% |
 | Firestore emulator | No executed suite | 5 passed |
 
-**Latest count (Phase 1 part 2, 2026-11-28):** after adding `StatusTextTest` (4 tests), `testDebugUnitTest` reports **200 suites and 2,508 tests**, with 0 failures, 0 errors and 0 skipped. The Kover numbers above were not re-measured.
+**Latest count (Phase 1 part 3, 2026-11-28):** after adding 7 `statusFromException` / `StatusText.raw` tests to `ErrorMessagesTest`, `testDebugUnitTest` reports **200 suites and 2,515 tests**, with 0 failures, 0 errors and 0 skipped. Social ViewModel tests now resolve messages with the `StatusText?.english()` helper (`model/ui/StatusTextEnglish.kt` in the test sources) or compare keys. The Kover numbers above were not re-measured.
+
+**Phase 1 part 2 count:** after adding `StatusTextTest` (4 tests), **200 suites and 2,508 tests**.
 
 **Phase 1 part 1 count:** after adding `PromptRecordSelectorTest` (7 tests) and `DeviceLocaleMatcherTest` (6 tests), `testDebugUnitTest` reports **199 suites and 2,504 tests**, with 0 failures, 0 errors and 0 skipped. There are now 201 JVM test files. The Kover numbers above were not re-measured. (Phase 0 count: 197 suites, 2,491 tests, after adding the 7 Roborazzi screenshot tests.)
 

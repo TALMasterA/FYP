@@ -1,11 +1,12 @@
 package com.translator.TalknLearn.screens.friends
 
-import com.translator.TalknLearn.core.ErrorMessages
 import com.translator.TalknLearn.core.security.AuditLogger
 import com.translator.TalknLearn.data.friends.BlockedUser
 import com.translator.TalknLearn.data.friends.FriendsRepository
 import com.translator.TalknLearn.domain.friends.RemoveFriendUseCase
 import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -20,7 +21,7 @@ internal class BlockUserDelegate(
     private val friendsRepository: FriendsRepository,
     private val removeFriendUseCase: RemoveFriendUseCase,
     private val getCurrentUserId: () -> UserId?,
-    private val showSuccess: (String) -> Unit
+    private val showSuccess: (StatusText) -> Unit
 ) {
     fun loadBlockedUsers(userId: UserId) {
         scope.launch {
@@ -42,7 +43,7 @@ internal class BlockUserDelegate(
             // Step 1: remove friend relationship AND delete chat
             val removeResult = removeFriendUseCase(userId, UserId(targetUserId))
             if (removeResult.isFailure) {
-                uiState.value = uiState.value.copy(error = ErrorMessages.FRIEND_REMOVE_FAILED)
+                uiState.value = uiState.value.copy(error = StatusText(UiTextKey.FriendsMsgRemoveFailed))
                 return@launch
             }
 
@@ -64,10 +65,10 @@ internal class BlockUserDelegate(
                         searchResults = emptyList(),
                         error = null
                     )
-                    showSuccess("User blocked and removed from friends.")
+                    showSuccess(StatusText(UiTextKey.FriendsMsgBlockedRemoved))
                 },
                 onFailure = {
-                    uiState.value = uiState.value.copy(error = "Failed to block user. Please try again.")
+                    uiState.value = uiState.value.copy(error = StatusText(UiTextKey.FriendsMsgBlockFailed))
                 }
             )
         }
@@ -84,10 +85,10 @@ internal class BlockUserDelegate(
                         blockedUserIds = updated,
                         error = null
                     )
-                    showSuccess("User blocked.")
+                    showSuccess(StatusText(UiTextKey.FriendsMsgBlocked))
                 },
                 onFailure = {
-                    uiState.value = uiState.value.copy(error = "Failed to block user. Please try again.")
+                    uiState.value = uiState.value.copy(error = StatusText(UiTextKey.FriendsMsgBlockFailed))
                 }
             )
         }
@@ -106,10 +107,10 @@ internal class BlockUserDelegate(
                         blockedUsers = updatedList,
                         error = null
                     )
-                    showSuccess("User unblocked.")
+                    showSuccess(StatusText(UiTextKey.FriendsMsgUnblocked))
                 },
                 onFailure = {
-                    uiState.value = uiState.value.copy(error = "Failed to unblock user. Please try again.")
+                    uiState.value = uiState.value.copy(error = StatusText(UiTextKey.FriendsMsgUnblockFailed))
                 }
             )
         }

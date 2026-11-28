@@ -288,7 +288,7 @@ fun ChatScreen(
                 }
             }
             // Error message
-            uiState.error?.let { error ->
+            uiState.error?.resolve(t)?.let { error ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -317,7 +317,7 @@ fun ChatScreen(
             }
             
             // Translation error message
-            uiState.translationError?.let { error ->
+            uiState.translationError?.resolve(t)?.let { error ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()

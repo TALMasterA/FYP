@@ -3,12 +3,14 @@ package com.translator.TalknLearn.screens.friends
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.translator.TalknLearn.core.AppLogger
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.data.friends.SharingRepository
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.SharedItem
-import com.translator.TalknLearn.core.AppLogger
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +22,7 @@ data class SharedMaterialDetailUiState(
     val isLoading: Boolean = true,
     val item: SharedItem? = null,
     val fullContent: String? = null,
-    val error: String? = null
+    val error: StatusText? = null
 )
 
 /**
@@ -47,13 +49,13 @@ class SharedMaterialDetailViewModel @Inject constructor(
         if (itemId.isNotBlank()) {
             loadItem()
         } else {
-            _uiState.value = SharedMaterialDetailUiState(isLoading = false, error = "No item ID")
+            _uiState.value = SharedMaterialDetailUiState(isLoading = false, error = StatusText(UiTextKey.SharedMsgNoItemId))
         }
     }
 
     private fun loadItem() {
         val currentUser = authRepository.currentUser ?: run {
-            _uiState.value = SharedMaterialDetailUiState(isLoading = false, error = "Not logged in")
+            _uiState.value = SharedMaterialDetailUiState(isLoading = false, error = StatusText(UiTextKey.ErrorNotLoggedIn))
             return
         }
         val userId = UserId(currentUser.uid)
@@ -63,7 +65,7 @@ class SharedMaterialDetailViewModel @Inject constructor(
                 // Fetch item metadata
                 val item = sharingRepository.fetchSharedItemById(userId, itemId)
                 if (item == null) {
-                    _uiState.value = SharedMaterialDetailUiState(isLoading = false, error = "Item not found")
+                    _uiState.value = SharedMaterialDetailUiState(isLoading = false, error = StatusText(UiTextKey.ShareItemNotFound))
                     return@launch
                 }
 
@@ -87,7 +89,7 @@ class SharedMaterialDetailViewModel @Inject constructor(
                 AppLogger.e("SharedMaterialDetailViewModel", "Failed to load shared material: $itemId", e)
                 _uiState.value = SharedMaterialDetailUiState(
                     isLoading = false,
-                    error = "Failed to load shared material. Please try again."
+                    error = StatusText(UiTextKey.SharedMsgLoadFailed)
                 )
             }
         }

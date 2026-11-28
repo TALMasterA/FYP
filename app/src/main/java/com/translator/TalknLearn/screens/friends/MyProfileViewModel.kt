@@ -2,15 +2,17 @@ package com.translator.TalknLearn.screens.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.translator.TalknLearn.core.AppLogger
 import com.translator.TalknLearn.data.friends.FriendsRepository
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.friends.EnsurePublicProfileExistsUseCase
 import com.translator.TalknLearn.domain.friends.GetCurrentUserProfileUseCase
 import com.translator.TalknLearn.model.UserId
-import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.friends.PublicUserProfile
-import com.translator.TalknLearn.core.AppLogger
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.user.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,8 +25,8 @@ data class MyProfileUiState(
     val isLoading: Boolean = true,
     val profile: PublicUserProfile? = null,
     val userId: String = "",
-    val error: String? = null,
-    val successMessage: String? = null,
+    val error: StatusText? = null,
+    val successMessage: StatusText? = null,
     val isUpdatingVisibility: Boolean = false
 )
 
@@ -87,13 +89,13 @@ class MyProfileViewModel @Inject constructor(
             } catch (e: Exception) {
                 AppLogger.e("MyProfileViewModel", "loadProfile failed", e)
                 _uiState.update {
-                    it.copy(isLoading = false, error = "Failed to load profile. Please try again.")
+                    it.copy(isLoading = false, error = StatusText(UiTextKey.MyProfileMsgLoadFailed))
                 }
             }
         }
     }
 
-    fun showSuccessMessage(message: String) {
+    fun showSuccessMessage(message: StatusText) {
         _uiState.update { it.copy(successMessage = message) }
         viewModelScope.launch {
             kotlinx.coroutines.delay(3000)
@@ -106,7 +108,7 @@ class MyProfileViewModel @Inject constructor(
         val currentUsername = _uiState.value.profile?.username?.trim().orEmpty()
         if (isPublic && currentUsername.isBlank()) {
             _uiState.update {
-                it.copy(error = "Set a username before making your profile public.")
+                it.copy(error = StatusText(UiTextKey.MyProfileMsgNeedUsername))
             }
             return
         }
@@ -122,11 +124,13 @@ class MyProfileViewModel @Inject constructor(
                         profile = it.profile?.copy(isDiscoverable = isPublic)
                     )
                 }
-                showSuccessMessage(if (isPublic) "Profile set to Public" else "Profile set to Private")
+                showSuccessMessage(
+                    StatusText(if (isPublic) UiTextKey.MyProfileMsgPublic else UiTextKey.MyProfileMsgPrivate),
+                )
             }.onFailure { e ->
                 AppLogger.e("MyProfileViewModel", "updateVisibility failed", e)
                 _uiState.update {
-                    it.copy(isUpdatingVisibility = false, error = "Failed to update visibility. Please try again.")
+                    it.copy(isUpdatingVisibility = false, error = StatusText(UiTextKey.MyProfileMsgVisibilityFailed))
                 }
             }
         }

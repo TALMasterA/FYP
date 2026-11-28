@@ -6,6 +6,8 @@ import com.translator.TalknLearn.data.friends.FriendsRepository
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.domain.friends.RemoveFriendUseCase
 import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -21,7 +23,7 @@ internal class FriendListDelegate(
     private val sharedFriendsDataSource: SharedFriendsDataSource,
     private val removeFriendUseCase: RemoveFriendUseCase,
     private val getCurrentUserId: () -> UserId?,
-    private val showSuccess: (String) -> Unit
+    private val showSuccess: (StatusText) -> Unit
 ) {
     fun toggleDeleteMode() {
         val state = uiState.value
@@ -71,11 +73,11 @@ internal class FriendListDelegate(
                 val restoredFriends = previousFriends.filter { it.friendId in failedRemovals }
                 uiState.value = uiState.value.copy(
                     friends = uiState.value.friends + restoredFriends,
-                    error = ErrorMessages.FRIEND_REMOVE_FAILED
+                    error = StatusText(UiTextKey.FriendsMsgRemoveFailed)
                 )
             } else {
                 uiState.value = uiState.value.copy(error = null)
-                showSuccess("Friend(s) removed.")
+                showSuccess(StatusText(UiTextKey.FriendsMsgRemovedMany))
             }
 
             refreshFriendsList()
@@ -97,13 +99,13 @@ internal class FriendListDelegate(
                 onSuccess = {
                     AuditLogger.logFriendRemoved(userId.value, friendId)
                     uiState.value = uiState.value.copy(error = null)
-                    showSuccess(ErrorMessages.FRIEND_REMOVED)
+                    showSuccess(StatusText(UiTextKey.FriendsMsgRemoved))
                     refreshFriendsList()
                 },
                 onFailure = { e ->
                     uiState.value = uiState.value.copy(
                         friends = previousFriends,
-                        error = ErrorMessages.fromException(e, ErrorMessages.FRIEND_REMOVE_FAILED)
+                        error = ErrorMessages.statusFromException(e, UiTextKey.FriendsMsgRemoveFailed)
                     )
                 }
             )

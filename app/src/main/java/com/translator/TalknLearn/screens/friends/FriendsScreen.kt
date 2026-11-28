@@ -18,17 +18,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.translator.TalknLearn.core.StandardScreenScaffold
+import com.translator.TalknLearn.core.performance.ThrottledLaunchedEffect
+import com.translator.TalknLearn.core.performance.generateStableKeys
 import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
-import com.translator.TalknLearn.core.performance.ThrottledLaunchedEffect
-import com.translator.TalknLearn.core.performance.generateStableKeys
-import com.translator.TalknLearn.ui.components.EmptyStateView
 import com.translator.TalknLearn.screens.friends.components.FriendCard
 import com.translator.TalknLearn.screens.friends.components.FriendRequestCard
 import com.translator.TalknLearn.screens.friends.components.OutgoingRequestCard
 import com.translator.TalknLearn.screens.friends.components.SearchUsersDialog
+import com.translator.TalknLearn.ui.components.EmptyStateView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -238,7 +238,7 @@ fun FriendsScreen(
             Column(modifier = Modifier.fillMaxSize()) {
 
                 // Error/Success messages
-                uiState.error?.let { error ->
+                uiState.error?.resolve(t)?.let { error ->
                     val isUsernameError = !uiState.currentUserHasUsername &&
                         error.contains("username", ignoreCase = true)
                     Card(
@@ -276,7 +276,7 @@ fun FriendsScreen(
                     }
                 }
 
-                uiState.successMessage?.let { message ->
+                uiState.successMessage?.resolve(t)?.let { message ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()

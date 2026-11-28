@@ -1,6 +1,7 @@
 package com.translator.TalknLearn.screens.friends
 
 import androidx.lifecycle.SavedStateHandle
+import com.translator.TalknLearn.core.security.FakePersistentRateLimiter
 import com.translator.TalknLearn.data.friends.ChatRepository
 import com.translator.TalknLearn.data.friends.FriendsRepository
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
@@ -12,9 +13,9 @@ import com.translator.TalknLearn.domain.friends.SendMessageUseCase
 import com.translator.TalknLearn.domain.friends.TranslateAllMessagesUseCase
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.PublicUserProfile
+import com.translator.TalknLearn.model.ui.english
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
-import com.translator.TalknLearn.core.security.FakePersistentRateLimiter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -249,7 +250,7 @@ class ChatViewModelTest {
         vm.onMessageTextChange("One more")
         vm.sendMessage()
 
-        assertTrue(vm.uiState.value.error?.contains("too quickly", ignoreCase = true) == true)
+        assertTrue(vm.uiState.value.error.english()?.contains("too quickly", ignoreCase = true) == true)
     }
 
     // ── Message over 2000 chars rejected ────────────────────────────
@@ -279,7 +280,7 @@ class ChatViewModelTest {
         vm.sendMessage()
 
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("cannot send", ignoreCase = true))
+        assertTrue(vm.uiState.value.error.english()!!.contains("cannot send", ignoreCase = true))
     }
 
     // ── blockFriend ─────────────────────────────────────────────────
