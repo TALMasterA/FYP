@@ -52,9 +52,9 @@ import com.translator.TalknLearn.core.StandardScreenScaffold
 import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.data.azure.AzureLanguageConfig
 import com.translator.TalknLearn.model.ui.AppLanguageState
-import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.ui.theme.AppSpacing
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
@@ -196,7 +196,7 @@ fun ContinuousConversationScreen(
                             isPreparing = isPreparing,
                             isProcessing = isProcessing,
                             isTtsRunning = viewModel.isTtsRunning,
-                            ttsStatus = viewModel.ttsStatus,
+                            ttsStatus = viewModel.ttsStatus?.resolve(t).orEmpty(),
                             partial = partial,
                             onPersonToggle = { isPersonATalking = it },
                             onStartStop = { start ->
@@ -318,6 +318,7 @@ private fun ConversationSheet(
             partial = partial,
             isTtsRunning = isTtsRunning,
             ttsStatus = ttsStatus,
+            speakingFallback = t(UiTextKey.TtsSpeaking),
         )
 
         LazyColumn(

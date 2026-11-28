@@ -22,6 +22,8 @@ import com.translator.TalknLearn.domain.speech.TranslateTextUseCase
 import com.translator.TalknLearn.model.OcrResult
 import com.translator.TalknLearn.model.SpeechResult
 import com.translator.TalknLearn.model.TranslationRecord
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.observability.FunnelAnalyticsTracker
 import com.translator.TalknLearn.observability.PerformanceTracer
@@ -75,8 +77,8 @@ class SpeechViewModel @Inject constructor(
 
     val recognizedText: String get() = speechState.recognizedText
     val translatedText: String get() = speechState.translatedText
-    val ttsStatus: String get() = speechState.ttsStatus
-    val statusMessage: String get() = speechState.statusMessage
+    val ttsStatus: StatusText? get() = speechState.ttsStatus
+    val statusMessage: StatusText? get() = speechState.statusMessage
     val isTtsRunning: Boolean get() = speechState.isTtsRunning
     val recognizePhase: RecognizePhase get() = speechState.recognizePhase
 
@@ -187,7 +189,7 @@ class SpeechViewModel @Inject constructor(
     fun recognize(languageCode: String) {
         viewModelScope.launch {
             speechState = speechState.copy(
-                statusMessage = "",
+                statusMessage = null,
                 recognizePhase = RecognizePhase.Preparing,
             )
             delay(UiConstants.SPEECH_PREPARE_DELAY_MS)
@@ -198,14 +200,14 @@ class SpeechViewModel @Inject constructor(
                     speechState = speechState.copy(
                         recognizedText = result.text,
                         recognizePhase = RecognizePhase.Idle,
-                        statusMessage = "",
+                        statusMessage = null,
                     )
                 }
 
                 is SpeechResult.Error -> {
                     speechState = speechState.copy(
                         recognizePhase = RecognizePhase.Idle,
-                        statusMessage = "Azure error: ${result.message}",
+                        statusMessage = StatusText(UiTextKey.SpeechStatusRecognitionError, mapOf("detail" to result.message)),
                     )
                 }
             }
@@ -224,7 +226,7 @@ class SpeechViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             speechState = speechState.copy(
-                statusMessage = "Auto-detecting language...",
+                statusMessage = StatusText(UiTextKey.SpeechStatusAutoDetecting),
                 recognizePhase = RecognizePhase.Preparing,
             )
             delay(UiConstants.SPEECH_PREPARE_DELAY_MS)
@@ -235,7 +237,7 @@ class SpeechViewModel @Inject constructor(
                     speechState = speechState.copy(
                         recognizedText = result.text,
                         recognizePhase = RecognizePhase.Idle,
-                        statusMessage = "Detected: ${result.detectedLanguage}",
+                        statusMessage = StatusText(UiTextKey.SpeechStatusDetected, mapOf("language" to result.detectedLanguage)),
                     )
                     scheduleDetectedStatusAutoClear()
                     onDetectedLanguage(result.detectedLanguage)
@@ -243,7 +245,7 @@ class SpeechViewModel @Inject constructor(
                 .onFailure { error ->
                     speechState = speechState.copy(
                         recognizePhase = RecognizePhase.Idle,
-                        statusMessage = "Recognition error: ${error.message}",
+                        statusMessage = StatusText(UiTextKey.SpeechStatusRecognitionError, mapOf("detail" to error.message.orEmpty())),
                     )
                 }
         }
@@ -256,14 +258,14 @@ class SpeechViewModel @Inject constructor(
     ) {
         if (recognizedText.isBlank()) {
             speechState = speechState.copy(
-                statusMessage = "Please enter or speak text to translate.",
+                statusMessage = StatusText(UiTextKey.SpeechStatusEnterText),
             )
             return
         }
 
         if (!isLoggedIn()) {
             speechState = speechState.copy(
-                statusMessage = "Login is required to use translation.",
+                statusMessage = StatusText(UiTextKey.SpeechStatusLoginRequired),
             )
             return
         }
@@ -273,7 +275,7 @@ class SpeechViewModel @Inject constructor(
             // Pass empty string for auto-detect so Azure detects during translation
             val requestFromLanguage = if (isAutoDetect) "" else fromLanguage
 
-            speechState = speechState.copy(statusMessage = "Translating...")
+            speechState = speechState.copy(statusMessage = StatusText(UiTextKey.ContinuousTranslatingText))
 
             // Item 50: bracket the full translate flow with a custom Performance
             // trace the first time the user successfully triggers a translation
@@ -301,7 +303,7 @@ class SpeechViewModel @Inject constructor(
                             )
 
                             if (resolvedDetection == null) {
-                                speechState = speechState.copy(statusMessage = "Could not detect source language. Please select manually.")
+                                speechState = speechState.copy(statusMessage = StatusText(UiTextKey.SpeechStatusDetectFailed))
                                 return@launch
                             }
 
@@ -313,7 +315,7 @@ class SpeechViewModel @Inject constructor(
                         speechState = speechState.copy(
                             translatedText = tr.text,
                             // Keep auto-detect status visible briefly, then clear it.
-                            statusMessage = if (isAutoDetect) speechState.statusMessage else "",
+                            statusMessage = if (isAutoDetect) speechState.statusMessage else null,
                         )
                         // Item 51: emit the first_translation funnel event
                         // (one-shot per install). The trace is closed in the
@@ -338,7 +340,7 @@ class SpeechViewModel @Inject constructor(
 
                     is SpeechResult.Error -> {
                         speechState = speechState.copy(
-                            statusMessage = "Translation error: ${tr.message}",
+                            statusMessage = StatusText(UiTextKey.SpeechStatusTranslationError, mapOf("detail" to tr.message)),
                         )
                     }
                 }
@@ -360,7 +362,7 @@ class SpeechViewModel @Inject constructor(
     fun recognizeTextFromImage(imageUri: Uri, languageCode: String? = null) {
         viewModelScope.launch {
             speechState = speechState.copy(
-                statusMessage = "Scanning image for text...",
+                statusMessage = StatusText(UiTextKey.SpeechStatusScanningImage),
                 recognizePhase = RecognizePhase.Preparing
             )
 
@@ -369,7 +371,7 @@ class SpeechViewModel @Inject constructor(
 
             when (val result = recognizeTextFromImageUseCase(imageUri, lang)) {
                 is OcrResult.Success -> {
-                    val successMessage = "Text extracted successfully"
+                    val successMessage = StatusText(UiTextKey.SpeechStatusTextExtracted)
                     speechState = speechState.copy(
                         recognizedText = result.text,
                         recognizePhase = RecognizePhase.Idle,
@@ -380,7 +382,7 @@ class SpeechViewModel @Inject constructor(
                 is OcrResult.Error -> {
                     speechState = speechState.copy(
                         recognizePhase = RecognizePhase.Idle,
-                        statusMessage = "OCR error: ${result.message}"
+                        statusMessage = StatusText(UiTextKey.SpeechStatusOcrError, mapOf("detail" to result.message))
                     )
                 }
             }
@@ -391,7 +393,7 @@ class SpeechViewModel @Inject constructor(
 
     fun speakOriginal(languageCode: String, onDetectedSourceLanguage: ((String) -> Unit)? = null) {
         if (recognizedText.isBlank()) {
-            speechState = speechState.copy(statusMessage = "Please enter or speak text first.")
+            speechState = speechState.copy(statusMessage = StatusText(UiTextKey.SpeechStatusEnterTextFirst))
             return
         }
 
@@ -403,7 +405,7 @@ class SpeechViewModel @Inject constructor(
         viewModelScope.launch {
             val detected = resolveDetectedLanguage()
             if (detected == null) {
-                speechState = speechState.copy(statusMessage = "Could not detect source language for speech. Please select a source language.")
+                speechState = speechState.copy(statusMessage = StatusText(UiTextKey.SpeechStatusDetectFailedForSpeech))
                 return@launch
             }
 
@@ -471,7 +473,7 @@ class SpeechViewModel @Inject constructor(
         detectedStatusClearJob?.cancel()
         speechState = speechState.copy(
             translatedText = "",
-            statusMessage = "Refreshed. Auto-detect will run again on your next translate or speak action."
+            statusMessage = StatusText(UiTextKey.SpeechStatusRefreshed)
         )
     }
 
@@ -493,14 +495,21 @@ class SpeechViewModel @Inject constructor(
         val displayName = LanguageDisplayNames.displayName(mappedCode)
         val displayText = if (displayName != mappedCode) displayName else rawDetectedCode
         val confidence = score?.takeIf { it > 0.0 }?.let { (it * 100).toInt() }
-        val statusSuffix = if (confidence != null) " ($confidence% confidence)" else ""
-        speechState = speechState.copy(statusMessage = "Detected: $displayText$statusSuffix")
+        val status = if (confidence != null) {
+            StatusText(
+                UiTextKey.SpeechStatusDetectedConfidence,
+                mapOf("language" to displayText, "confidence" to confidence.toString())
+            )
+        } else {
+            StatusText(UiTextKey.SpeechStatusDetected, mapOf("language" to displayText))
+        }
+        speechState = speechState.copy(statusMessage = status)
         scheduleDetectedStatusAutoClear()
     }
 
     private fun scheduleDetectedStatusAutoClear() {
-        val snapshot = speechState.statusMessage
-        if (!snapshot.startsWith("Detected:")) return
+        val snapshot = speechState.statusMessage ?: return
+        if (!snapshot.isDetectedStatus()) return
         scheduleStatusAutoClear(snapshot, DETECTED_STATUS_AUTO_CLEAR_MS)
     }
 
@@ -512,16 +521,16 @@ class SpeechViewModel @Inject constructor(
      * For detected-language clears use [scheduleDetectedStatusAutoClear] which targets
      * [detectedStatusClearJob]. This helper is the shared implementation used by both paths.
      */
-    private fun scheduleStatusAutoClear(matchMessage: String, delayMs: Long) {
+    private fun scheduleStatusAutoClear(matchMessage: StatusText, delayMs: Long) {
         // Choose the right job slot based on which type of status is being cleared
         // so the two auto-clear paths don't cancel each other.
-        val isDetected = matchMessage.startsWith("Detected:")
+        val isDetected = matchMessage.isDetectedStatus()
         if (isDetected) {
             detectedStatusClearJob?.cancel()
             detectedStatusClearJob = viewModelScope.launch {
                 delay(delayMs)
                 if (speechState.statusMessage == matchMessage) {
-                    speechState = speechState.copy(statusMessage = "")
+                    speechState = speechState.copy(statusMessage = null)
                 }
             }
         } else {
@@ -529,11 +538,14 @@ class SpeechViewModel @Inject constructor(
             ocrStatusClearJob = viewModelScope.launch {
                 delay(delayMs)
                 if (speechState.statusMessage == matchMessage) {
-                    speechState = speechState.copy(statusMessage = "")
+                    speechState = speechState.copy(statusMessage = null)
                 }
             }
         }
     }
+
+    private fun StatusText.isDetectedStatus(): Boolean =
+        key == UiTextKey.SpeechStatusDetected || key == UiTextKey.SpeechStatusDetectedConfidence
 
     private fun speakOriginalWithResolvedLanguage(languageCode: String) {
         val voiceName = sharedSettings.settings.value.voiceSettings[languageCode]

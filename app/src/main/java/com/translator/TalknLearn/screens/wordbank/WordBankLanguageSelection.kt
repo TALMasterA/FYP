@@ -174,7 +174,7 @@ private fun CustomWordBankCard(
 
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Add custom words",
+                contentDescription = t(UiTextKey.A11yAddCustomWords),
                 tint = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.size(24.dp)
             )

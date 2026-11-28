@@ -151,7 +151,7 @@ fun QuizScreen(
             IconButton(onClick = { showCoinRulesDialog = true }) {
                 Icon(
                     imageVector = Icons.Filled.Info,
-                    contentDescription = "Coin Rules",
+                    contentDescription = t(UiTextKey.A11yCoinRules),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }

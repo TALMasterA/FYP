@@ -1,9 +1,11 @@
 package com.translator.TalknLearn.screens.speech
 
+import com.microsoft.cognitiveservices.speech.SpeechRecognizer
 import com.translator.TalknLearn.domain.speech.StartContinuousConversationUseCase
 import com.translator.TalknLearn.domain.speech.TranslateTextUseCase
 import com.translator.TalknLearn.model.SpeechResult
-import com.microsoft.cognitiveservices.speech.SpeechRecognizer
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
@@ -50,7 +52,7 @@ class ContinuousConversationControllerTest {
     private lateinit var continuousUseCase: StartContinuousConversationUseCase
     private lateinit var translateTextUseCase: TranslateTextUseCase
 
-    private val statusMessages = mutableListOf<String>()
+    private val statusMessages = mutableListOf<StatusText?>()
     private val savedHistoryEntries = mutableListOf<Map<String, Any?>>()
     private var loggedIn = true
 
@@ -135,7 +137,7 @@ class ContinuousConversationControllerTest {
         advanceUntilIdle()
 
         assertEquals(1, statusMessages.size)
-        assertEquals("Please login to use continuous translation.", statusMessages[0])
+        assertEquals(StatusText(UiTextKey.ContinuousStatusLoginRequired), statusMessages[0])
         assertFalse(controller.isContinuousPreparing)
         assertFalse(controller.isContinuousRunning)
         assertFalse(controller.isContinuousProcessing)
@@ -453,7 +455,7 @@ class ContinuousConversationControllerTest {
         // Error status should be reported.
         assertTrue(
             "Should contain translation error status",
-            statusMessages.any { it.contains("Continuous translation error") },
+            statusMessages.any { it?.key == UiTextKey.ContinuousStatusTranslationError },
         )
 
         // No history entry saved on translation failure.
@@ -479,7 +481,10 @@ class ContinuousConversationControllerTest {
         assertTrue(
             "Should contain recognition error status",
             statusMessages.any {
-                it.contains("Continuous recognition error: Microphone disconnected")
+                it == StatusText(
+                    UiTextKey.ContinuousStatusRecognitionError,
+                    mapOf("detail" to "Microphone disconnected"),
+                )
             },
         )
     }
@@ -500,7 +505,9 @@ class ContinuousConversationControllerTest {
         assertFalse(controller.isContinuousProcessing)
         assertTrue(
             "Should contain start error status",
-            statusMessages.any { it.contains("Continuous start error: Azure SDK init failed") },
+            statusMessages.any {
+                it == StatusText(UiTextKey.ContinuousStatusStartError, mapOf("detail" to "Azure SDK init failed"))
+            },
         )
     }
 

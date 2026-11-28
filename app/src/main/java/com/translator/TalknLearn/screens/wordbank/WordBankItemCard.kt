@@ -118,7 +118,7 @@ fun WordBankItemCard(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                contentDescription = "Speak original",
+                                contentDescription = t(UiTextKey.A11ySpeakOriginal),
                                 modifier = Modifier.size(22.dp),
                                 tint = if (speakingType == SpeakingType.ORIGINAL)
                                     MaterialTheme.colorScheme.primary
@@ -161,7 +161,7 @@ fun WordBankItemCard(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                contentDescription = "Speak translation",
+                                contentDescription = t(UiTextKey.A11ySpeakTranslation),
                                 modifier = Modifier.size(22.dp),
                                 tint = if (speakingType == SpeakingType.TRANSLATED)
                                     MaterialTheme.colorScheme.secondary
@@ -184,7 +184,7 @@ fun WordBankItemCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = t(UiTextKey.ActionDelete),
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(20.dp)
                         )
@@ -246,7 +246,7 @@ fun WordBankItemCard(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                    contentDescription = "Speak example",
+                                    contentDescription = t(UiTextKey.A11ySpeakExample),
                                     modifier = Modifier.size(16.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

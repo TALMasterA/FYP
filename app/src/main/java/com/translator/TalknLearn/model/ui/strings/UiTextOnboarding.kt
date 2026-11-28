@@ -141,5 +141,99 @@ val OnboardingExtrasScreenTexts: List<String> = listOf(
     // QuizLeaveStay
     "Stay",
 
+    // --- Phase 1 part 2: a11y labels and status text ---
+    // A11yAddFavorite
+    "Add to favorites",
+    // A11yRemoveFavorite
+    "Remove from favorites",
+    // A11yViewFriendProfile
+    "View friend profile",
+    // A11yRefreshAutoDetect
+    "Refresh auto-detect",
+    // A11yInstructions
+    "Instructions",
+    // A11yClearText
+    "Clear text",
+    // A11yAddCustomWords
+    "Add custom words",
+    // A11yFilter
+    "Filter",
+    // A11ySpeakOriginal
+    "Speak original",
+    // A11ySpeakTranslation
+    "Speak translation",
+    // A11ySpeakExample
+    "Speak example",
+    // A11yCoinRules
+    "Coin rules",
+    // StatusWaiting
+    "Waiting…",
+    // ErrorNotLoggedIn
+    "Not logged in",
+    // HistoryErrorDeleteFailed
+    "Delete failed. Please try again.",
+    // HistoryErrorRenameFailed
+    "Rename failed. Please try again.",
+    // HistoryErrorDeleteSessionFailed
+    "Could not delete the session. Please try again.",
+    // HistoryErrorLoadMoreFailed
+    "Could not load more records.",
+    // HistoryErrorRemoveFavoriteFailed
+    "Could not remove from favorites.",
+    // HistoryErrorAddFavoriteFailed
+    "Could not add to favorites.",
+    // HistoryErrorFavoriteSessionFailed
+    "Could not save the session to favorites.",
+    // HistoryErrorUnfavoriteSessionFailed
+    "Could not remove the session from favorites.",
+    // TtsSpeaking
+    "Speaking…",
+    // TtsSpeakingTranslation
+    "Speaking translation…",
+    // TtsSpoken
+    "✓ Spoken",
+    // TtsError
+    "✗ {detail}",
+    // SpeechStatusRecognitionError
+    "Recognition error: {detail}",
+    // SpeechStatusAutoDetecting
+    "Auto-detecting language…",
+    // SpeechStatusDetected
+    "Detected: {language}",
+    // SpeechStatusDetectedConfidence
+    "Detected: {language} ({confidence}% confidence)",
+    // SpeechStatusEnterText
+    "Please enter or speak text to translate.",
+    // SpeechStatusLoginRequired
+    "Login is required to use translation.",
+    // SpeechStatusDetectFailed
+    "Could not detect the source language. Please select it manually.",
+    // SpeechStatusTranslationError
+    "Translation error: {detail}",
+    // SpeechStatusScanningImage
+    "Scanning image for text…",
+    // SpeechStatusTextExtracted
+    "Text extracted successfully",
+    // SpeechStatusOcrError
+    "Image scan error: {detail}",
+    // SpeechStatusEnterTextFirst
+    "Please enter or speak text first.",
+    // SpeechStatusDetectFailedForSpeech
+    "Could not detect the source language for speech. Please select a source language.",
+    // SpeechStatusRefreshed
+    "Refreshed. Auto-detect will run again on your next translate or speak action.",
+    // ContinuousStatusLoginRequired
+    "Please log in to use continuous translation.",
+    // ContinuousStatusPreparingMic
+    "Preparing mic…",
+    // ContinuousStatusTranslationError
+    "Continuous translation error: {detail}",
+    // ContinuousStatusRateLimited
+    "{detail} Continuous mode stopped to avoid repeated failed requests.",
+    // ContinuousStatusRecognitionError
+    "Continuous recognition error: {detail}",
+    // ContinuousStatusStartError
+    "Could not start continuous mode: {detail}",
+
     // --- Extended Error Messages (localized) ---
 )

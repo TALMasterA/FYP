@@ -2,26 +2,28 @@ package com.translator.TalknLearn.screens.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.translator.TalknLearn.data.user.FirebaseAuthRepository
-import com.translator.TalknLearn.data.user.FirestoreFavoritesRepository
-import com.translator.TalknLearn.data.history.SharedHistoryDataSource
 import com.translator.TalknLearn.core.AppLogger
 import com.translator.TalknLearn.core.UiConstants
-import com.translator.TalknLearn.domain.learning.QuizRepository
+import com.translator.TalknLearn.data.history.SharedHistoryDataSource
 import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
+import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.data.user.FirestoreFavoritesRepository
 import com.translator.TalknLearn.domain.history.DeleteHistoryRecordUseCase
 import com.translator.TalknLearn.domain.history.DeleteSessionUseCase
 import com.translator.TalknLearn.domain.history.ObserveSessionNamesUseCase
 import com.translator.TalknLearn.domain.history.RenameSessionUseCase
+import com.translator.TalknLearn.domain.learning.QuizRepository
 import com.translator.TalknLearn.domain.speech.SpeakTextUseCase
-import com.translator.TalknLearn.model.SpeechResult
-import com.translator.TalknLearn.model.user.AuthState
-import com.translator.TalknLearn.model.user.UserSettings
-import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.FavoriteSessionRecord
+import com.translator.TalknLearn.model.SessionId
+import com.translator.TalknLearn.model.SpeechResult
+import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.UserCoinStats
 import com.translator.TalknLearn.model.UserId
-import com.translator.TalknLearn.model.SessionId
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.user.AuthState
+import com.translator.TalknLearn.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -37,7 +39,10 @@ import javax.inject.Inject
 
 data class HistoryUiState(
     val isLoading: Boolean = true,
+    /** Raw error text from the data layer (already a message, shown as is). */
     val error: String? = null,
+    /** Localized error; the screen turns it into text with `t(...)`. */
+    val errorKey: UiTextKey? = null,
     val records: List<TranslationRecord> = emptyList(),
     val sessionNames: Map<String, String> = emptyMap(),
     val coinStats: UserCoinStats = UserCoinStats(),
@@ -51,9 +56,11 @@ data class HistoryUiState(
     val isLoadingMore: Boolean = false, // Whether we're currently loading more records
     val totalRecordsCount: Int = 0, // Total count of all records
     val isTtsRunning: Boolean = false,
-    val ttsStatus: String = "",
+    val ttsStatus: StatusText? = null,
     val favoriteLimitExceeded: Boolean = false
-)
+) {
+    val hasError: Boolean get() = error != null || errorKey != null
+}
 
 /**
  * ViewModel for the History screen.
@@ -104,7 +111,7 @@ class HistoryViewModel @Inject constructor(
                         sharedHistoryDataSource.stopObserving()
                         _uiState.value = HistoryUiState(
                             isLoading = false,
-                            error = "Not logged in",
+                            errorKey = UiTextKey.ErrorNotLoggedIn,
                             records = emptyList(),
                             sessionNames = emptyMap()
                         )
@@ -136,7 +143,7 @@ class HistoryViewModel @Inject constructor(
             runCatching { deleteHistoryRecord(uid, record.id, record.sourceLang, record.targetLang) }
                 .onFailure { e ->
                     AppLogger.e("HistoryViewModel", "deleteRecord failed", e)
-                    _uiState.value = _uiState.value.copy(error = "Delete failed. Please try again.")
+                    _uiState.value = _uiState.value.copy(errorKey = UiTextKey.HistoryErrorDeleteFailed)
                 }
         }
     }
@@ -149,7 +156,7 @@ class HistoryViewModel @Inject constructor(
             runCatching { renameSession(UserId(uid), SessionId(sessionId), name) }
                 .onFailure { e ->
                     AppLogger.e("HistoryViewModel", "renameSession failed", e)
-                    _uiState.value = _uiState.value.copy(error = "Rename failed. Please try again.")
+                    _uiState.value = _uiState.value.copy(errorKey = UiTextKey.HistoryErrorRenameFailed)
                 }
         }
     }
@@ -162,7 +169,7 @@ class HistoryViewModel @Inject constructor(
             runCatching { this@HistoryViewModel.deleteSession.invoke(uid, sessionId) }
                 .onFailure { e ->
                     AppLogger.e("HistoryViewModel", "deleteSession failed", e)
-                    _uiState.value = _uiState.value.copy(error = "Delete session failed. Please try again.")
+                    _uiState.value = _uiState.value.copy(errorKey = UiTextKey.HistoryErrorDeleteSessionFailed)
                 }
         }
     }
@@ -202,7 +209,7 @@ class HistoryViewModel @Inject constructor(
                 AppLogger.e("HistoryViewModel", "loadMoreHistory failed", e)
                 _uiState.value = _uiState.value.copy(
                     isLoadingMore = false,
-                    error = "Failed to load more records"
+                    errorKey = UiTextKey.HistoryErrorLoadMoreFailed
                 )
             }
         }
@@ -235,7 +242,7 @@ class HistoryViewModel @Inject constructor(
                         .onFailure {
                             _uiState.value = _uiState.value.copy(
                                 addingFavoriteId = null,
-                                error = "Failed to remove from favorites"
+                                errorKey = UiTextKey.HistoryErrorRemoveFavoriteFailed
                             )
                         }
                 } else {
@@ -264,7 +271,7 @@ class HistoryViewModel @Inject constructor(
                     }.onFailure {
                         _uiState.value = _uiState.value.copy(
                             addingFavoriteId = null,
-                            error = "Failed to add to favorites"
+                            errorKey = UiTextKey.HistoryErrorAddFavoriteFailed
                         )
                     }
                 }
@@ -322,7 +329,7 @@ class HistoryViewModel @Inject constructor(
             }.onFailure {
                 _uiState.value = _uiState.value.copy(
                     favouritingSessionId = null,
-                    error = "Failed to favourite session"
+                    errorKey = UiTextKey.HistoryErrorFavoriteSessionFailed
                 )
             }
         }
@@ -350,7 +357,7 @@ class HistoryViewModel @Inject constructor(
                     .onFailure {
                         _uiState.value = _uiState.value.copy(
                             favouritingSessionId = null,
-                            error = "Failed to unfavourite session"
+                            errorKey = UiTextKey.HistoryErrorUnfavoriteSessionFailed
                         )
                     }
             } else {
@@ -411,7 +418,7 @@ class HistoryViewModel @Inject constructor(
         historyJob?.cancel()
         sessionsJob?.cancel()
         settingsJob?.cancel()
-        _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+        _uiState.value = _uiState.value.copy(isLoading = true, error = null, errorKey = null)
 
         // Observe settings for history limit
         sharedSettings.startObserving(userId)
@@ -473,7 +480,7 @@ class HistoryViewModel @Inject constructor(
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(error = null)
+        _uiState.value = _uiState.value.copy(error = null, errorKey = null)
     }
 
     fun clearFavoriteLimitExceeded() {
@@ -497,21 +504,23 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(
                 isTtsRunning = true,
-                ttsStatus = if (isTranslation) "Speaking translation..." else "Speaking..."
+                ttsStatus = StatusText(
+                    if (isTranslation) UiTextKey.TtsSpeakingTranslation else UiTextKey.TtsSpeaking
+                )
             )
             try {
                 when (val result = speakTextUseCase(text, languageCode, voiceName)) {
                     is SpeechResult.Success -> {
-                        _uiState.value = _uiState.value.copy(ttsStatus = "✓ Spoken")
+                        _uiState.value = _uiState.value.copy(ttsStatus = StatusText(UiTextKey.TtsSpoken))
                         delay(UiConstants.TTS_START_DELAY_MS)
                     }
                     is SpeechResult.Error -> {
-                        _uiState.value = _uiState.value.copy(ttsStatus = "✗ ${result.message}")
+                        _uiState.value = _uiState.value.copy(ttsStatus = StatusText(UiTextKey.TtsError, mapOf("detail" to result.message)))
                         delay(UiConstants.TTS_ERROR_WAIT_MS)
                     }
                 }
             } finally {
-                _uiState.value = _uiState.value.copy(isTtsRunning = false, ttsStatus = "")
+                _uiState.value = _uiState.value.copy(isTtsRunning = false, ttsStatus = null)
             }
         }
     }

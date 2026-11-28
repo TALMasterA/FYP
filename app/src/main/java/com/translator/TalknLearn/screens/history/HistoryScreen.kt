@@ -50,8 +50,8 @@ fun HistoryScreen(
     val haptic = rememberHapticFeedback()
 
     // Auto-dismiss error after 3 seconds
-    LaunchedEffect(uiState.error) {
-        if (uiState.error != null) {
+    LaunchedEffect(uiState.error, uiState.errorKey) {
+        if (uiState.hasError) {
             kotlinx.coroutines.delay(UiConstants.ERROR_AUTO_DISMISS_MS)
             viewModel.clearError()
         }
@@ -310,12 +310,12 @@ fun HistoryScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // Info button - shows history limit info
                 IconButton(onClick = { showHistoryInfoDialog = true }) {
-                    Icon(Icons.Default.Info, contentDescription = "History Info")
+                    Icon(Icons.Default.Info, contentDescription = t(UiTextKey.HistoryInfoTitle))
                 }
 
                 // Favorites button - navigates to favorites screen
                 IconButton(onClick = onOpenFavorites) {
-                    Icon(Icons.Default.Favorite, contentDescription = "Favorites")
+                    Icon(Icons.Default.Favorite, contentDescription = t(UiTextKey.FavoritesTitle))
                 }
 
                 TextButton(onClick = { showFilterDialog = true }) { Text(t(UiTextKey.FilterHistoryScreenTitle)) }
@@ -408,7 +408,7 @@ fun HistoryScreen(
                         }
                     }
 
-                    uiState.error != null -> Card(
+                    uiState.hasError -> Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(AppSpacing.small),
@@ -418,7 +418,7 @@ fun HistoryScreen(
                     ) {
                         Column(modifier = Modifier.padding(AppSpacing.large)) {
                             Text(
-                                text = uiState.error.orEmpty(),
+                                text = uiState.errorKey?.let(t) ?: uiState.error.orEmpty(),
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 style = MaterialTheme.typography.bodyMedium
                             )
@@ -440,7 +440,7 @@ fun HistoryScreen(
                                 speakingRecordId = speakingRecordId,
                                 speakingType = speakingType,
                                 isTtsRunning = uiState.isTtsRunning,
-                                ttsStatus = uiState.ttsStatus,
+                                ttsStatus = uiState.ttsStatus?.resolve(t).orEmpty(),
                                 noRecordsText = t(UiTextKey.HistoryNoDiscreteRecords),
                                 onSpeakOriginal = { rec ->
                                     speakingRecordId = rec.id
@@ -544,7 +544,7 @@ fun HistoryScreen(
                                     speakingRecordId = speakingRecordId,
                                     speakingType = speakingType,
                                     isTtsRunning = uiState.isTtsRunning,
-                                    ttsStatus = uiState.ttsStatus,
+                                    ttsStatus = uiState.ttsStatus?.resolve(t).orEmpty(),
                                     onSpeakOriginal = { rec ->
                                         speakingRecordId = rec.id
                                         speakingType = "O"

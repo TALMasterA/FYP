@@ -1,10 +1,10 @@
 package com.translator.TalknLearn.screens.history
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,7 +28,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.translator.TalknLearn.core.LocalAppLanguageState
+import com.translator.TalknLearn.core.rememberTranslator
 import com.translator.TalknLearn.model.TranslationRecord
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.ui.components.EmptyStates
 
 @Composable
@@ -104,6 +107,7 @@ fun HistoryList(
     totalRecordsCount: Int = 0,
     onLoadMore: () -> Unit = {},
 ) {
+    val t = rememberTranslator(LocalAppLanguageState.current)
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -141,12 +145,12 @@ fun HistoryList(
                                 )
                                 isFavorited -> Icon(
                                     imageVector = Icons.Filled.Favorite,
-                                    contentDescription = "Remove from Favorites",
+                                    contentDescription = t(UiTextKey.A11yRemoveFavorite),
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                                 else -> Icon(
                                     imageVector = Icons.Filled.FavoriteBorder,
-                                    contentDescription = "Add to Favorites",
+                                    contentDescription = t(UiTextKey.A11yAddFavorite),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -165,12 +169,12 @@ fun HistoryList(
                         Button(
                             onClick = { onSpeakOriginal(rec) },
                             enabled = !isTtsRunning
-                        ) { Text(if (busyOriginal) "Waiting..." else "🗣️O") }
+                        ) { Text(if (busyOriginal) t(UiTextKey.StatusWaiting) else "🗣️O") }
 
                         Button(
                             onClick = { onSpeakTranslation(rec) },
                             enabled = !isTtsRunning
-                        ) { Text(if (busyTranslation) "Waiting..." else "🔊T") }
+                        ) { Text(if (busyTranslation) t(UiTextKey.StatusWaiting) else "🔊T") }
 
                         Button(
                             onClick = { onDelete(rec) },
@@ -184,7 +188,7 @@ fun HistoryList(
                     if (busyAny) {
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = ttsStatus.ifBlank { "Waiting..." },
+                            text = ttsStatus.ifBlank { t(UiTextKey.StatusWaiting) },
                             style = MaterialTheme.typography.bodySmall
                         )
                     }

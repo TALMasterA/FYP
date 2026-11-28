@@ -2,6 +2,8 @@ package com.translator.TalknLearn.screens.speech
 
 import com.translator.TalknLearn.domain.speech.SpeakTextUseCase
 import com.translator.TalknLearn.model.SpeechResult
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -64,7 +66,7 @@ class TtsControllerTest {
         advanceUntilIdle()
 
         assertFalse("isTtsRunning should remain false", state.isTtsRunning)
-        assertEquals("ttsStatus should remain empty", "", state.ttsStatus)
+        assertNull("ttsStatus should remain empty", state.ttsStatus)
         verifyNoInteractions(speakTextUseCase)
     }
 
@@ -116,7 +118,7 @@ class TtsControllerTest {
         advanceUntilIdle()
 
         assertTrue(stateHistory.isNotEmpty())
-        assertEquals("Speaking translation...", stateHistory[0].ttsStatus)
+        assertEquals(StatusText(UiTextKey.TtsSpeakingTranslation), stateHistory[0].ttsStatus)
     }
 
     // ── 5. Shows "Speaking..." for non-translations ─────────────────────
@@ -130,7 +132,7 @@ class TtsControllerTest {
         advanceUntilIdle()
 
         assertTrue(stateHistory.isNotEmpty())
-        assertEquals("Speaking...", stateHistory[0].ttsStatus)
+        assertEquals(StatusText(UiTextKey.TtsSpeaking), stateHistory[0].ttsStatus)
     }
 
     // ── 6. On success, shows "✓ Spoken" then resets ─────────────────────
@@ -145,7 +147,7 @@ class TtsControllerTest {
 
         // State history: [0] = Speaking..., [1] = ✓ Spoken, [2] = reset
         assertTrue("Should have at least 3 state updates", stateHistory.size >= 3)
-        assertEquals("✓ Spoken", stateHistory[1].ttsStatus)
+        assertEquals(StatusText(UiTextKey.TtsSpoken), stateHistory[1].ttsStatus)
     }
 
     // ── 7. On error, shows error message then resets ────────────────────
@@ -160,7 +162,7 @@ class TtsControllerTest {
 
         // State history: [0] = Speaking..., [1] = ✗ Network error, [2] = reset
         assertTrue("Should have at least 3 state updates", stateHistory.size >= 3)
-        assertEquals("✗ Network error", stateHistory[1].ttsStatus)
+        assertEquals(StatusText(UiTextKey.TtsError, mapOf("detail" to "Network error")), stateHistory[1].ttsStatus)
     }
 
     // ── 8. After completion, isTtsRunning is false and ttsStatus empty ──
@@ -174,7 +176,7 @@ class TtsControllerTest {
         advanceUntilIdle()
 
         assertFalse("isTtsRunning should be false after completion", state.isTtsRunning)
-        assertEquals("ttsStatus should be empty after completion", "", state.ttsStatus)
+        assertNull("ttsStatus should be empty after completion", state.ttsStatus)
     }
 
     @Test
@@ -186,7 +188,7 @@ class TtsControllerTest {
         advanceUntilIdle()
 
         assertFalse("isTtsRunning should be false after error", state.isTtsRunning)
-        assertEquals("ttsStatus should be empty after error", "", state.ttsStatus)
+        assertNull("ttsStatus should be empty after error", state.ttsStatus)
     }
 
     // ── 9. Passes voiceName to speakTextUseCase ─────────────────────────

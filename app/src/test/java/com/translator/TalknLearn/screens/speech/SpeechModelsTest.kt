@@ -17,8 +17,8 @@ class SpeechModelsTest {
         val state = SpeechScreenState()
         assertEquals("", state.recognizedText)
         assertEquals("", state.translatedText)
-        assertEquals("", state.ttsStatus)
-        assertEquals("", state.statusMessage)
+        assertNull(state.ttsStatus)
+        assertNull(state.statusMessage)
         assertFalse(state.isTtsRunning)
         assertEquals(RecognizePhase.Idle, state.recognizePhase)
     }

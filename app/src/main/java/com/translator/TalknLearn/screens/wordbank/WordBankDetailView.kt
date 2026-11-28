@@ -213,7 +213,7 @@ private fun WordBankHeader(
                     IconButton(onClick = onShowRegenInfo) {
                         Icon(
                             imageVector = Icons.Default.Info,
-                            contentDescription = "Refresh Rules",
+                            contentDescription = t(UiTextKey.WordBankRegenInfoTitle),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -222,7 +222,7 @@ private fun WordBankHeader(
                         IconButton(onClick = onShowFilterDialog) {
                             Icon(
                                 imageVector = Icons.Default.FilterList,
-                                contentDescription = "Filter",
+                                contentDescription = t(UiTextKey.A11yFilter),
                                 tint = if (hasActiveFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -326,7 +326,7 @@ private fun WordBankHeader(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Cancel",
+                                contentDescription = t(UiTextKey.ActionCancel),
                                 modifier = Modifier.size(20.dp)
                             )
                         }

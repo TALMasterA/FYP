@@ -273,6 +273,7 @@ FYP/
 │       │       │   │   └── SharedItem.kt
 │       │       │   ├── ui/
 │       │       │   │   ├── AppLanguageState.kt
+│       │       │   │   ├── StatusText.kt                ← ViewModel status line: UiTextKey + data args, resolved by the screen
 │       │       │   │   ├── strings/                      ← Localized UI text definitions
 │       │       │   │   │   ├── UiTextCore.kt            ← UiTextKey enum + BaseUiTexts list
 │       │       │   │   │   ├── UiTextScreens.kt         ← Thin combiner aggregating 10 sub-list files
