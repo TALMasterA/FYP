@@ -26,8 +26,8 @@ explain why it does not apply.
 
 - [ ] `docs/treeOfImportantfiles.txt` updated (or N/A — no files added / removed / renamed).
 - [ ] `docs/ARCHITECTURE_NOTES.md` updated when invariants or architecture changed (or N/A).
-- [ ] `docs/TEST_COVERAGE.md` and `README.md` test counts match the latest `testDebugUnitTest` XML output (or N/A — tests unchanged).
-- [ ] `docs/CLOUD_FUNCTIONS_API.md` matches `exports.*` in `fyp-backend/functions/src/index.ts` (or N/A — backend API unchanged).
+- [ ] `docs/TEST_COVERAGE.md` and `README.md` test counts match the latest test reports (or N/A if counts are unchanged).
+- [ ] `docs/CLOUD_FUNCTIONS_API.md` matches the named exports in `fyp-backend/functions/src/index.ts` (or N/A — backend API unchanged).
 - [ ] No gitignored files (`google-services.json`, `local.properties`, `firebase-sa.json`) are referenced as included in submission docs.
 
 ### UI text & localization
@@ -44,7 +44,7 @@ explain why it does not apply.
 ### Dead-code & report truthfulness
 
 - [ ] Every new file / function / dependency is wired into a production code path (no dead code).
-- [ ] No code referenced in `report-audit/Project_Report_ISA_22235876.md` was removed without an equivalent replacement.
+- [ ] No code referenced in the submitted coursework report was removed without an equivalent replacement.
 
 ## Test counts
 

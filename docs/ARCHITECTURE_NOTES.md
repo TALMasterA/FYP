@@ -13,7 +13,9 @@ graph LR
     UC --> REPO["Repository<br/>(data layer)"]
     REPO --> FS["Cloud Firestore<br/>+ Cloud Functions<br/>(App Check enforced)"]
     REPO --> ANALYTICS["Observability<br/>(Crashlytics / Analytics /<br/>Performance traces)"]
-    FS --> AZURE["Azure backends<br/>(Translator / OCR /<br/>OpenAI)"]
+    FS --> AZURE["Azure Translator and<br/>OpenAI-compatible generation"]
+    REPO --> SPEECH["Azure Speech SDK<br/>using callable-issued tokens"]
+    REPO --> OCR["On-device ML Kit OCR"]
     UI -. composes .-> VM
 ```
 
@@ -66,6 +68,10 @@ graph LR
 **Rule:** Update Firebase backend dependencies through an intentional `package.json` edit followed by a clean `npm install`. Do **not** use `npm audit fix --force` for this backend: npm currently suggests incompatible downgrade paths for `firebase-admin` / `firebase-functions`, which can break local manifest generation and cause Firebase CLI deploy-analysis failures.
 
 ---
+
+## 1.3.2 Provider spending
+
+`reserveProviderAllowance` uses Firestore transactions to enforce shared monthly cost and unit limits before provider dispatch. The Android clients generate one request ID per operation. Transport retries reuse the ID. Older builds remain compatible and reserve the full cost for each dispatch. Azure enforces the free Speech tier because audio usage happens directly from the SDK. See [Demo spending and rollout](DEMO_SPENDING.md).
 
 ## 1.4 UI Language Switching — Hardcoded Translations
 

@@ -3,7 +3,8 @@
 > **Scope:** Migrate the Android-only `com.translator.TalknLearn` app to Kotlin Multiplatform (KMP), targeting Android + iOS.
 > **Goal:** Share ~70% of code (models, domain logic, repositories, Compose UI) across platforms.
 > **Date drafted:** April 2026
-> **Branch:** `postFYP`
+> **Planning branch:** `postFYP`
+> **Status:** Proposed architecture. The current Android build does not include the planned shared or iOS modules.
 
 ---
 

@@ -26,6 +26,7 @@ jest.mock("firebase-admin", () => ({
           get: mockDocGet,
           where: mockWhere,
           orderBy: mockOrderBy,
+          limit: jest.fn(() => ({get: mockDocGet})),
         })),
         get: mockDocGet,
       })),

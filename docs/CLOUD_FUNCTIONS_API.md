@@ -24,9 +24,9 @@ go through `onPublicRequest`, making the exception explicit in review.
 
 ## Per-function runtime options (§2.10)
 
-`translateText` and `translateTexts` are configured with
-`{ concurrency: 80, cpu: 1, maxInstances: 50, memory: "512MiB" }` to keep
-the high-frequency translate path on warm instances while bounding cost.
+The backend default is 10 maximum instances per function. The provider callables each use a maximum of two instances and 90-second timeouts. Concurrency is four for translation, detection and Speech token issuance, and two for generation.
+
+All five provider callables accept an optional `requestId` using 16–64 letters, digits, underscores or hyphens. `already-exists` indicates a previously reserved request. `resource-exhausted` also covers paused or exhausted monthly allowances. `unavailable` covers reservation infrastructure failure. See [Demo spending and rollout](DEMO_SPENDING.md).
 
 ---
 
@@ -47,7 +47,7 @@ All currently shipped callables are `stable`. Future additions (e.g. learning-co
 ## Translation & Speech
 
 ### `getSpeechToken`
-Returns an Azure Speech SDK token for client-side speech recognition.
+Returns a short-lived Azure Speech SDK token for recognition and synthesis, including History read-aloud.
 
 **Stability:** stable
 **Auth:** Required
@@ -99,7 +99,7 @@ When `from` is omitted (auto-detect mode), the response also includes:
 ---
 
 ### `translateTexts`
-Batch-translates multiple texts in a single API call. Server internally chunks into 100-element Azure API requests with **350 ms inter-chunk throttle** and **per-chunk retry** (up to 3 retries for Azure HTTP 429, honoring Azure `Retry-After` when provided and otherwise using exponential back-off).
+Batch-translates multiple texts in a single API call. Server internally chunks into 100-element Azure API requests with **350 ms inter-chunk throttle** and **per-chunk retry** (up to 3 retries for Azure HTTP 429, honoring Azure `Retry-After` up to six seconds when provided and otherwise using exponential backoff).
 
 **Stability:** stable
 **Auth:** Required
@@ -108,7 +108,7 @@ Batch-translates multiple texts in a single API call. Server internally chunks i
 **Request:**
 | Field   | Type     | Required | Description                  |
 |---------|----------|----------|------------------------------|
-| `texts` | string[] | yes      | Array of texts (max 800)     |
+| `texts` | string[] | yes      | Up to 800 items, 5,000 UTF-16 code units each, 50,000 total |
 | `to`    | string   | yes      | Target language code         |
 | `from`  | string   | no       | Source language code         |
 
@@ -157,7 +157,7 @@ Detects the language of a given text.
 ## AI Learning Content
 
 ### `generateLearningContent`
-Generates learning content through an Azure OpenAI-compatible endpoint.
+Generates learning content through an OpenAI-compatible endpoint. The branch caps prompts at 32,768 UTF-8 bytes and requests at most 4,096 output tokens.
 
 **Stability:** stable
 **Auth:** Required

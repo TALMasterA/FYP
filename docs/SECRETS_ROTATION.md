@@ -5,8 +5,8 @@ All Cloud Function secrets are managed via Firebase Functions secrets (backed by
 ## Prerequisites
 
 - Firebase CLI installed and authenticated (`firebase login`)
-- Project selected: `firebase use <project-id>`
-- Access to Azure Portal for generating new keys
+- The authorized target project ID, used explicitly with each command
+- Access to Azure and the selected learning gateway for generating credentials
 
 ## Secrets Inventory
 
@@ -16,9 +16,9 @@ All Cloud Function secrets are managed via Firebase Functions secrets (backed by
 | `AZURE_SPEECH_REGION`    | Azure Speech Services      | Rarely changes     |
 | `AZURE_TRANSLATOR_KEY`   | Azure Translator API       | 90 days            |
 | `AZURE_TRANSLATOR_REGION`| Azure Translator API       | Rarely changes     |
-| `GENAI_BASE_URL`         | Azure OpenAI               | On endpoint change |
-| `GENAI_API_VERSION`      | Azure OpenAI               | On API upgrade     |
-| `GENAI_API_KEY`          | Azure OpenAI               | 90 days            |
+| `GENAI_BASE_URL`         | Learning gateway               | On endpoint change |
+| `GENAI_API_VERSION`      | Learning gateway               | On API upgrade     |
+| `GENAI_API_KEY`          | Learning gateway               | 90 days            |
 
 ## Rotation Steps
 
@@ -30,18 +30,19 @@ All Cloud Function secrets are managed via Firebase Functions secrets (backed by
 ### 2. Set the New Secret
 
 ```bash
-firebase functions:secrets:set AZURE_SPEECH_KEY
+read -r -p "Firebase project ID: " FYP_FIREBASE_PROJECT
+firebase functions:secrets:set AZURE_SPEECH_KEY --project "$FYP_FIREBASE_PROJECT"
 # Paste the new key when prompted
 ```
 
 ### 3. Deploy Functions
 
 ```bash
-cd fyp-backend/functions
-npm run deploy
+cd fyp-backend
+firebase deploy --project <project-id> --only functions:<affected-function>
 ```
 
-Functions automatically pick up the latest secret version on next cold start.
+Functions bind a secret version at deployment. Verify metadata for the affected revisions before revoking earlier credentials. Coordinate the monthly provider policy with any tier or gateway changes.
 
 ### 4. Verify
 

@@ -1,10 +1,11 @@
 package com.translator.TalknLearn.data.clients
 
 import android.util.Log
-import com.translator.TalknLearn.core.NetworkRetry
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.FirebaseFunctionsException
+import com.translator.TalknLearn.core.NetworkRetry
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 data class SpeechTokenResponse(
@@ -27,6 +28,7 @@ class CloudSpeechTokenClient(
     suspend fun getSpeechToken(): SpeechTokenResponse {
         Log.i("CloudSpeechToken", "getSpeechToken() called")
 
+        val data = mapOf("requestId" to UUID.randomUUID().toString())
         return try {
             NetworkRetry.withRetry(
                 maxAttempts = 3,
@@ -34,7 +36,7 @@ class CloudSpeechTokenClient(
             ) {
                 val result = speechTokenCallable
                     .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                    .call()
+                    .call(data)
                     .await()
 
                 @Suppress("UNCHECKED_CAST")

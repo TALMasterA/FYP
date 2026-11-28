@@ -10,7 +10,7 @@ Before marking a task complete, the agent must do all items below:
 2. Audit and update documentation for accuracy using the **docs-accuracy-audit** skill (`.github/skills/docs-accuracy-audit/SKILL.md`). This is mandatory for every repository-changing task. At minimum verify:
    - Test counts in `docs/TEST_COVERAGE.md` and `README.md` match the actual `testDebugUnitTest` XML output exactly.
    - Security constants (e.g., password minimum length in `SecurityUtils.kt`) match all 17 UI string files (English + 16 locales).
-   - Cloud Functions callable names in `docs/CLOUD_FUNCTIONS_API.md` match actual `exports.*` in `fyp-backend/functions/src/index.ts`.
+   - Cloud Functions callable names in `docs/CLOUD_FUNCTIONS_API.md` match actual named exports in `fyp-backend/functions/src/index.ts`.
    - Symbols named in `docs/ARCHITECTURE_NOTES.md` still exist in the codebase.
    - No file listed in `docs/treeOfImportantfiles.txt` is absent from the workspace.
    - Gitignored files (`google-services.json`, `local.properties`, `firebase-sa.json`) do NOT appear in the tree file or in any submission document.
@@ -45,6 +45,6 @@ Do not finalize until code changes, tree maintenance, documentation updates, and
 ## Dead Code / Report Truthfulness Guard
 
 1. **Never create code that is not wired into the live app.** Every new file, function, or class must be called from at least one production code path. Run a grep/usage check before finalizing.
-2. **Never remove code that is referenced in the submitted report** (`report-audit/Project_Report_ISA_22235876.md`) without re-implementing equivalent functionality first.
+2. **Never remove code that is referenced in the submitted report** without re-implementing equivalent functionality first.
 3. **Never write report content about code that does not actually work.** If a feature is described in the report, the corresponding code must exist, compile, be reachable, and be tested.
-4. When deleting or refactoring, check whether the affected symbol appears in the submitted report. If it does, either preserve the functionality or flag it to the user before proceeding.
+4. When deleting or refactoring, check whether the affected symbol appears in the submitted coursework report, when available. If it does, either preserve the functionality or flag it to the user before proceeding.

@@ -38,7 +38,7 @@ Priority legend:
 1. ✅ Package renamed to `com.translator.TalknLearn`.
 2. ✅ Updated `namespace`, `applicationId`, and `testInstrumentationRunner` in [app/build.gradle.kts](../app/build.gradle.kts).
 3. ✅ Renamed all Kotlin package declarations and imports under `app/src/main`, `app/src/test`, `app/src/androidTest`, and `app/src/debug`.
-4. ⚠️ **Pending (manual):** Re-register the Android app in Firebase Console with the new package name, provide SHA-1 from debug/release keystore, and download a fresh `google-services.json`.
+4. **Partially verified (2026-11-28 HKT):** Firebase has an Android app for the new package. Google Sign-In worked on private debug APKs after their signer was registered. The signed Play build and its release SHA-256 still require verification.
 5. ⚠️ **Pending (manual):** Re-check Firebase Auth, Crashlytics, Analytics, FCM, Cloud Functions, and App Check — all are tied to the package name and signing fingerprints.
 
 ### 1.2 Add release signing and enrol in Play App Signing
@@ -118,14 +118,14 @@ Priority legend:
 
 **Actions:**
 
-1. Register the upload key SHA-256 in Firebase App Check.
+1. Register the Play app-signing SHA-256 in Firebase App Check. Verify the certificate on the distributed build.
 2. Register the Play App Signing SHA-256 after Play generates it.
 3. Verify debug, internal, and release tracks use the intended App Check provider.
 4. After testing, enforce App Check on Firestore, Cloud Functions, and any other Firebase products used by the app.
 
 ### 1.8 Verify backend deployment, billing, and rules
 
-**Current state:** The app depends on Firestore and callable Cloud Functions documented in [docs/CLOUD_FUNCTIONS_API.md](CLOUD_FUNCTIONS_API.md).
+**Current state:** The app depends on Firestore and [callable Cloud Functions](CLOUD_FUNCTIONS_API.md). Review [demo spending and rollout](DEMO_SPENDING.md) before enabling a production release.
 
 **Why it matters:** A signed release can still fail in production if Functions are not deployed, billing is not enabled, Firestore rules are still permissive, or App Check enforcement is inconsistent.
 
@@ -134,7 +134,7 @@ Priority legend:
 1. Deploy Firestore rules, indexes, and Functions to the intended production Firebase project.
 2. Confirm the Firebase project is on the required billing plan for callable Functions and outbound API calls.
 3. Confirm every Android callable name matches [docs/CLOUD_FUNCTIONS_API.md](CLOUD_FUNCTIONS_API.md).
-4. Run the live Firestore audit tool at [report-audit/tools/audit_firestore_live.py](../report-audit/tools/audit_firestore_live.py) before launch.
+4. Compare the active Firestore rules and index readiness with the checked-in Firebase config. Run the synthetic emulator suite before launch.
 
 ---
 

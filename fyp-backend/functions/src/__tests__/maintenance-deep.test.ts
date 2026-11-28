@@ -14,6 +14,12 @@ const queues = {
 };
 
 const tokensByUser = new Map<string, any>();
+const mockLimitTokens = jest.fn((userId: string, max: number) => ({
+  get: jest.fn(async () => {
+    const snap = tokensByUser.get(userId) ?? createSnap([]);
+    return {...snap, docs: snap.docs.slice(0, max), size: Math.min(snap.size, max)};
+  }),
+}));
 const publicProfileByUser = new Map<string, any>();
 
 function createSnap(
@@ -50,7 +56,7 @@ function usersCollection(): any {
       if (sub === "fcm_tokens") {
         return {
           where: jest.fn(() => ({
-            get: jest.fn(async () => tokensByUser.get(userId) ?? createSnap([])),
+            limit: (max: number) => mockLimitTokens(userId, max),
           })),
         };
       }

@@ -16,9 +16,9 @@ windows, processors, lawful basis, and the right-to-erasure procedure.
 | Coin/award ledger | App-driven | `users/{uid}/coin_awards`, `users/{uid}/last_awarded_quiz`, `users/{uid}/user_stats` |
 | FCM push tokens | Device | `users/{uid}/fcm_tokens` (server-side); `EncryptedSharedPreferences` (device cache) |
 | Audio capture for speech-to-text | Microphone | Streamed to Azure Speech; not persisted by the app |
-| Image capture for OCR | Camera/Gallery | Sent to Azure Computer Vision; not persisted by the app |
+| Image capture for OCR | Camera/Gallery | Processed on-device by ML Kit |
 | Translation requests | User input | Sent to Azure Translator; cached locally in `TranslationCache` DataStore |
-| AI prompts (quiz generation, chat assist) | User input | Sent to Azure OpenAI; not persisted server-side beyond the response |
+| Learning prompts (sheets, quizzes, Word Bank) | Translation history and app-generated instructions | Sent via Functions to the configured learning gateway. Consult the provider for retention. |
 
 ## 2. Retention Windows
 
@@ -40,12 +40,9 @@ windows, processors, lawful basis, and the right-to-erasure procedure.
 | Google Firebase (Auth, Firestore, Cloud Functions, FCM, App Check) | Identity, primary data store, push delivery | per Firebase project setting |
 | Microsoft Azure Translator | Text translation | configured Azure region |
 | Microsoft Azure Speech | Speech-to-text and text-to-speech | configured Azure region |
-| Microsoft Azure Computer Vision | OCR text extraction | configured Azure region |
-| Microsoft Azure OpenAI | Quiz generation and chat assistance | configured Azure region |
+| Configured OpenAI-compatible gateway | Learning sheet, quiz and Word Bank generation | Verified by the operator for the selected gateway |
 
-All Azure traffic is brokered through Cloud Functions; the Android client
-never holds long-lived Azure keys. See `docs/CLOUD_FUNCTIONS_API.md` for the
-callable contract.
+Cloud Functions broker text translation, learning generation and Speech token issuance. The Android Speech SDK streams audio to Azure and requests synthesis directly with a short-lived token. The provider ledger stores monthly totals and hashes of request identifiers. The ledger does not store prompts or provider responses. See [Cloud Functions API](CLOUD_FUNCTIONS_API.md).
 
 ## 4. Lawful Basis
 
@@ -64,7 +61,7 @@ The user can erase their account at any time from
 (`screens/settings/ProfileScreen` →
 `ProfileViewModel.deleteAccount`).
 
-The deletion path is enforced by **two regression guards**:
+The deletion path has three Android regression guards.
 
 1. `AccountDeletionGuardTest` asserts every user subcollection in the
    server-side `deleteAccountAndData` callable (currently 18 subcollections,
@@ -75,16 +72,12 @@ The deletion path is enforced by **two regression guards**:
    target list (currently `secureStorage`, `okHttpClient`, `translationCache`,
    `languageDetectionCache`) is complete.
 
-Server-side deletion order is: Firestore subcollections → profile docs →
-top-level lookup docs → `users/{uid}` → Firebase Auth user. Device-side,
-`SessionDataCleaner` runs on logout AND on successful deletion so no stale cache
-survives.
+Server-side deletion processes the enumerated user subcollections, including nested payloads under existing inbox items, then removes profile documents, lookup documents, the user document and the Firebase Auth account. Shared chat threads, copies previously sent to other accounts, historical orphaned inbox payloads, feedback, provider records and retained logs need separate retention handling. The app runs session cleanup after logout and successful deletion.
 
 Confirmation email is queued after successful Auth deletion only when the
 deployment explicitly enables it with `ACCOUNT_DELETION_EMAIL_ENABLED=true` and
 has a Firebase Trigger Email-compatible `mail` collection processor configured.
-The queued mail document includes `ttlAt`; enable Firestore TTL on that field so
-email-delivery metadata is short-lived.
+The queued mail document includes `ttlAt`. Deletion of expired mail requires an active Firestore TTL policy.
 
 WordBank cleanup is performed separately by `AppViewModel` on
 `AuthState.LoggedOut`. The FCM token is revoked by

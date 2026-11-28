@@ -14,6 +14,11 @@ class MockHttpsError extends Error {
   }
 }
 
+const mockReserveProviderAllowance = jest.fn();
+jest.mock("../providerAllowance.js", () => ({
+  reserveProviderAllowance: mockReserveProviderAllowance,
+}));
+
 const mockFetch = jest.fn();
 jest.mock("node-fetch", () => ({
   __esModule: true,
@@ -76,6 +81,7 @@ describe("generateLearningContent", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockReserveProviderAllowance.mockReset();
     mockEnforceRateLimit.mockResolvedValue(undefined);
     mockValidateGenAiConfig.mockReturnValue({
       baseUrl: "https://test.openai.azure.com",
@@ -311,6 +317,7 @@ describe("generateLearningContent", () => {
         {role: "user", content: validData.prompt},
       ],
       temperature: 1,
+      max_completion_tokens: 4096,
     });
   });
 
@@ -360,4 +367,22 @@ describe("generateLearningContent", () => {
       env.restore();
     }
   });
+});
+
+
+it("bounds learning output and rejects a request when the allowance is unavailable", async () => {
+  jest.clearAllMocks();
+  mockEnforceRateLimit.mockResolvedValue(undefined);
+  mockValidateGenAiConfig.mockReturnValue({
+    baseUrl: "https://test.openai.azure.com",
+    apiVersion: "2024-10-01-preview",
+    apiKey: "test",
+  });
+  mockReserveProviderAllowance.mockRejectedValueOnce(new MockHttpsError("resource-exhausted", "Monthly allowance"));
+  const request = {auth: {uid: "u1"}, data: {deployment: "gpt-5-mini", prompt: "hello", requestId: "test-request-123456"}};
+  await expect((generateLearningContent as any)(request)).rejects.toMatchObject({code: "resource-exhausted"});
+  expect(mockFetch).not.toHaveBeenCalled();
+  mockFetch.mockResolvedValueOnce({ok: true, text: async () => JSON.stringify({choices: [{message: {content: "Hi"}}]})});
+  await expect((generateLearningContent as any)(request)).resolves.toEqual({content: "Hi"});
+  expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toMatchObject({max_completion_tokens: 4096});
 });

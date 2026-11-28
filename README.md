@@ -8,20 +8,10 @@ Poster Showcase: [Click here](https://fyp.comp.hkbu.edu.hk/poster/2025/poster.ph
 
 --------------------------------------------------------------
 
-## 📱 Try the App
-
-Register to try this app!
-
-Link: [Click here to register](https://appdistribution.firebase.dev/i/5ebf3d592700b0f7)
-
-Please use your gmail to register.
-
---------------------------------------------------------------
-
 ## 🛠️ Tech Stack
 
 **Frontend:** Android Studio, Kotlin, Compose
-**Backend:** Firebase (Auth, Firestore, Cloud Functions), Azure (Speech, Translation, OpenAI)
+**Backend:** Firebase Auth, Firestore and Cloud Functions, Azure Speech and Translator, and an OpenAI-compatible learning gateway
 **Key Libraries:** Hilt (DI), Coroutines & Flow, Serialization, OkHttp, DataStore
 
 --------------------------------------------------------------
@@ -29,8 +19,8 @@ Please use your gmail to register.
 ## 🛠️ CI & Quality Checks
 
 **GitHub Actions workflows:**
-1. **CI (`ci.yml`)**: Android unit tests, debug APK build, backend linting, backend build, and Jest coverage (90/78/90/90 threshold)
-2. **CodeQL (`codeql.yml`)**: Weekly + on-demand semantic analysis for security vulnerabilities
+1. **CI (`ci.yml`)**: Android unit tests, debug APK build, backend linting, backend build, Jest coverage (90/78/90/90 threshold), and Firestore emulator tests
+2. **CodeQL (`codeql.yml`)**: Defines scheduled, main-push and PR semantic analysis when the workflow is enabled
 
 **Status:**
 ![CI](https://github.com/TALMasterA/FYP/actions/workflows/ci.yml/badge.svg)
@@ -40,15 +30,15 @@ Please use your gmail to register.
 
 ## ⚠️ Development Cautions
 
-**Secrets in CI:** GitHub secret `GOOGLE_SERVICES_JSON` required for builds (valid `app/google-services.json` content).
+**Firebase in CI:** Pull requests build with the mock configuration. Other CI runs use the authorized configuration when the repository secret is available.
 
 **USB Debugging:** Enable in Developer Options when testing; disable after (security risk for online banking). Alternatively, use Android Studio emulator.
 
-**Firebase Setup:** Requires own Firebase project + `google-services.json` in `app/` folder. Firebase login required.
+**Firebase setup:** Use the mock config for a local build or test. Live demo flows require authorized Firebase configuration and App Check.
 
 **Backup/Security Posture:** App manifest sets `android:allowBackup="false"` to avoid unintended cloud/device backup of app data by default.
 
-**Registration Disabled:** The account registration action is disabled during development stage (whole project).
+**Demo access:** The app disables email/password registration in its ViewModel. Google Sign-In can create a Firebase account when project signup is enabled.
 
 **Language Pair Visibility:** When there are no related translation records, the Learning screen and Word Bank screen will NOT show that language/sheet pair for generation. Users must first create translation history for a language pair before it becomes visible for learning content generation.
 
@@ -151,7 +141,7 @@ Key directories:
 - `ui/` — Theme (colors, typography, dimensions)
 - `fyp-backend/functions/` — Firebase Cloud Functions (TypeScript): translation, speech token, AI generation, FCM, maintenance
 
-See `docs/treeOfImportantfiles.txt` for complete file tree.
+See [Important files](docs/treeOfImportantfiles.txt) for the project map.
 
 --------------------------------------------------------------
 
@@ -159,44 +149,33 @@ See `docs/treeOfImportantfiles.txt` for complete file tree.
 
 **Prerequisites:**
 - Android Studio (latest)
-- JDK 17+
-- Firebase project with Auth, Firestore, Cloud Functions, Crashlytics
-- Azure Speech/Translation API keys
-- Azure OpenAI deployment
+- JDK 17 and Android SDK Platform 36. The minimum device version is API 26.
+- Node 24 and npm for backend checks.
+- For live demo setup, see the [installation guide](INSTALLATION_GUIDE.md).
 
 **Configuration:**
-1. Place `google-services.json` in `app/` (from Firebase Console)
-2. Backend secrets via Firebase:
-   ```bash
-   firebase functions:secrets:set AZURE_SPEECH_KEY
-   firebase functions:secrets:set AZURE_SPEECH_REGION
-   firebase functions:secrets:set AZURE_TRANSLATOR_KEY
-   firebase functions:secrets:set AZURE_TRANSLATOR_REGION
-   firebase functions:secrets:set GENAI_BASE_URL
-   firebase functions:secrets:set GENAI_API_VERSION
-   firebase functions:secrets:set GENAI_API_KEY
-   ```
+1. In a clean checkout, copy `ci/google-services-mock.json` to `app/google-services.json`. For live features use the authorized configuration for the current Android package.
+2. Operators configure backend secrets for their explicitly selected Firebase project. See [Secrets rotation](docs/SECRETS_ROTATION.md).
 
 **Backend setup:**
 ```bash
 cd fyp-backend/functions
-npm install
+npm ci
 npm run lint
 npm run build
 npm run test:coverage -- --runInBand
-npm run deploy
 ```
 
 Keep `fyp-backend/functions/package-lock.json` committed. If Firebase backend dependencies need updating, edit `fyp-backend/functions/package.json` intentionally and run a clean `npm install`; avoid `npm audit fix --force` here because npm can suggest incompatible Firebase package downgrades that break deploy analysis.
 
-See `docs/SECRETS_ROTATION.md` for rotation runbook.
+See [Demo spending and rollout](docs/DEMO_SPENDING.md) before making production changes.
 
 **Firebase App Check (debug builds):**
 
 Release builds attest with the Play Integrity provider. Debug builds use the
 Firebase Debug provider. For local debug APKs, keep the registered debug token
 in gitignored `local.properties` as `appCheckDebugToken=...`, or provide it in
-CI with the `APP_CHECK_DEBUG_TOKEN` environment variable. The debug build wires
+private build tooling with the `APP_CHECK_DEBUG_TOKEN` environment variable. Never share a build with an embedded debug token. The debug build wires
 that value through Firebase Component Discovery so callable Functions receive a
 valid App Check token. If no token is configured, the Firebase SDK falls back to
 printing `Enter this debug secret into the allow list in the Firebase Console`;
@@ -269,8 +248,8 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 196 test suites, 2,484 unit tests (from the latest `testDebugUnitTest` report); Kover line coverage 87.09% (35% CI floor, non-blocking)
-- **Backend:** 17 test files, 193 tests
+- **Android:** 196 test suites, 2,484 unit tests (from the latest `testDebugUnitTest` report); Kover line coverage 82.93% (35% CI floor, non-blocking)
+- **Backend:** 18 Jest suites, 213 tests plus 5 Firestore emulator cases
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown, including Kover tasks (`koverHtmlReportDebug`, `koverXmlReportDebug`, `koverVerifyDebug`) and the `:macrobenchmark` startup benchmark module (run locally with `:macrobenchmark:connectedBenchmarkAndroidTest`; CI assembles only).
 

@@ -5,6 +5,7 @@ import com.google.firebase.functions.FirebaseFunctionsException
 import com.google.firebase.functions.FirebaseFunctionsException.Code
 import com.translator.TalknLearn.model.GeneratedLearningContent
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,7 +44,8 @@ class CloudGenAiClient @Inject constructor(
     ): GeneratedLearningContent {
         val data = hashMapOf(
             "deployment" to deployment,
-            "prompt" to prompt
+            "prompt" to prompt,
+            "requestId" to UUID.randomUUID().toString()
         )
 
         try {
