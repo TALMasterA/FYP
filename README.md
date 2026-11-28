@@ -6,6 +6,26 @@ Develop in Android Studio, Android ONLY.
 
 Poster Showcase: [Click here](https://fyp.comp.hkbu.edu.hk/poster/2025/poster.php?id=935)
 
+**For AI agents and contributors:** read [AGENTS.md](AGENTS.md) first. It holds the rules, the checks to run and the invariants.
+
+--------------------------------------------------------------
+
+## 📌 Current status
+
+The FYP has been graded. The current work is **portfolio polish**: a full UI/UX redesign plus client-only learning features. Client-only means no new paid AI or Azure calls. The plan and the status of each phase are in [docs/ROADMAP.md](docs/ROADMAP.md).
+
+- **Done:** all of the FYP features listed below.
+- **In progress:**
+  - Phase 0: the agent rules file (`AGENTS.md`), the roadmap, and JVM screenshot tests (Roborazzi) with baseline screenshots.
+- **Next:**
+  - Phase 1: correctness fixes (prompt record selection, quiz history order, back navigation, mic stop, localization sweep).
+  - Phase 2: the design system.
+- **Known problems** (each one is tracked in the roadmap):
+  - Learning-sheet and word-bank prompts use the oldest history records.
+  - System back skips in-screen sub-views.
+  - Some English text bypasses the 17-language system.
+  - Some color palettes fail WCAG contrast.
+
 --------------------------------------------------------------
 
 ## 🛠️ Tech Stack
@@ -191,13 +211,13 @@ CI if a production source file imports `onCall` / `onRequest` directly.
 
 ## 💻 Development Workflow
 
-**Adding New UI Text:**
-1. Add key to `enum class UiTextKey` in `UiTextCore.kt`
-2. Add English text to `val BaseUiTexts` in `UiTextScreens.kt` (keep order in sync)
-3. Use capitalised placeholders (e.g., `{Coins}`) to prevent Azure translation of tokens
-4. Add to `ZhTwUiTexts.kt` and `CantoneseUiTexts.kt` (hardcoded, same placeholders)
-5. Use composable via `t(UiTextKey.YourKey)`
-6. Run `UiTextAlignmentTest` to verify enum count == list count
+**Adding New UI Text** (full steps in `.github/skills/ui-text-localization/SKILL.md`):
+1. Add the key to `enum class UiTextKey` in `UiTextCore.kt`.
+2. Add the English text to the matching base list, in the same order as the enum.
+3. Use capitalised placeholders (for example `{Coins}`) so translation does not change the tokens.
+4. Add the key to **all 16** locale maps in `model/ui/strings/translations/`, with the same placeholders.
+5. Use it in a composable with `t(UiTextKey.YourKey)`.
+6. Run `UiTextAlignmentTest` and `UiTextCompletenessTest`.
 
 **UI Language System:**
 - All 17 UI languages are hardcoded — switching is instant with zero API calls
@@ -211,12 +231,14 @@ CI if a production source file imports `onCall` / `onRequest` directly.
 - Includes language count caching with debounced refresh (5s) to reduce reads
 
 **Agent Completion Policy (mandatory for repository-changing prompts):**
-- Refresh `docs/treeOfImportantfiles.txt` when files/structure or key entries change
-- Audit and update affected docs in `docs/` plus `README.md` when behavior/workflow/metrics change
-- If a repeated FYP workflow is likely to recur, prefer creating or refining a shared repo skill under `.github/skills/` instead of leaving the process ad hoc
-- Run Android verification before finalizing: `.\\gradlew.bat :app:testDebugUnitTest` and `.\\gradlew.bat :app:assembleDebug`
-- Include verification outcomes in task summary
-- Policy source: `.github/copilot-instructions.md`
+- The single source is [AGENTS.md](AGENTS.md). `CLAUDE.md` and `.github/copilot-instructions.md` only point to it.
+- Before you finish, follow its end-of-task checklist:
+  - tree file;
+  - the docs-accuracy-audit skill;
+  - UI text in all 17 languages;
+  - the unit tests, debug build, Detekt and screenshot checks;
+  - the audit table.
+- If a repeated workflow is likely to recur, create or refine a shared repo skill under `.github/skills/`.
 
 --------------------------------------------------------------
 
@@ -228,6 +250,8 @@ CI if a production source file imports `onCall` / `onRequest` directly.
 ./gradlew testDebugUnitTest
 ./gradlew testDebugUnitTest --tests "com.translator.TalknLearn.domain.learning.GenerationEligibilityTest"
 ./gradlew assembleDebug
+./gradlew :app:recordRoborazziDebug   # re-record screenshots after an intended UI change
+./gradlew :app:verifyRoborazziDebug   # fail if a screen no longer matches its screenshot
 ```
 
 **Firebase:**
@@ -248,7 +272,7 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 196 test suites, 2,484 unit tests (from the latest `testDebugUnitTest` report); Kover line coverage 82.93% (35% CI floor, non-blocking)
+- **Android:** 197 test suites, 2,491 unit tests (from the latest `testDebugUnitTest` report, including 7 Roborazzi screenshot tests); Kover line coverage 82.93% (35% CI floor, non-blocking)
 - **Backend:** 18 Jest suites, 213 tests plus 5 Firestore emulator cases
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown, including Kover tasks (`koverHtmlReportDebug`, `koverXmlReportDebug`, `koverVerifyDebug`) and the `:macrobenchmark` startup benchmark module (run locally with `:macrobenchmark:connectedBenchmarkAndroidTest`; CI assembles only).
@@ -262,6 +286,11 @@ See `docs/TEST_COVERAGE.md` for detailed breakdown, including Kover tasks (`kove
 - `ChatRepositoryLogicTest` — Chat ID generation, unread math
 - `FriendSystemIntegrationTest` — Full friend workflow rules
 - `DataLayerIntegrationTest` — Cross-repository consistency
+
+**Screenshot tests:**
+- Roborazzi with Robolectric renders key screens on the JVM, so no emulator is needed ([ADR 0006](docs/adr/0006-roborazzi-screenshot-tests.md)).
+- The tests are in `app/src/test/java/com/translator/TalknLearn/screenshots/`.
+- The reference images are in `app/src/test/screenshots/`.
 
 **Running tests:**
 ```bash
@@ -322,4 +351,4 @@ cd fyp-backend/functions && npm test
 
 --------------------------------------------------------------
 
-**Last Updated:** April 18, 2026
+**Last Updated:** November 28, 2026

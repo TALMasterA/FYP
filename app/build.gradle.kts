@@ -14,6 +14,8 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kover)
     alias(libs.plugins.detekt)
+    // JVM screenshot tests (ADR 0006): recordRoborazziDebug / verifyRoborazziDebug
+    alias(libs.plugins.roborazzi)
     kotlin("plugin.serialization")
 }
 
@@ -86,6 +88,8 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
+        // Robolectric screenshot tests need merged resources and the manifest.
+        unitTests.isIncludeAndroidResources = true
     }
 
     buildFeatures {
@@ -169,6 +173,12 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.json)
+    // Screenshot tests (ADR 0006): Robolectric renders Compose on the JVM, Roborazzi saves/compares PNGs.
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.ui.test.junit4)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
