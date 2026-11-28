@@ -10,6 +10,7 @@ import {getFirestore, checkWriteRateLimit, logUid, logChat} from "./helpers.js";
 import {logger} from "./logger.js";
 
 const MAX_MESSAGE_PREVIEW_LENGTH = 100;
+const MAX_NOTIFICATION_TOKENS_PER_USER = 100;
 const MAX_FRIEND_REQUESTS_PER_HOUR = 5;
 const MAX_CHAT_MESSAGES_PER_MINUTE = 10;
 const CHAT_RATE_WINDOW_MS = 60 * 1000; // 1 minute
@@ -76,6 +77,7 @@ async function sendFcmToUser(
   const tokensSnap = await getFirestore()
     .collection("users").doc(receiverId)
     .collection("fcm_tokens")
+    .limit(MAX_NOTIFICATION_TOKENS_PER_USER)
     .get();
 
   if (tokensSnap.empty) {
@@ -83,9 +85,9 @@ async function sendFcmToUser(
     return;
   }
 
-  const tokens: string[] = tokensSnap.docs
-    .map((doc) => doc.data().token as string)
-    .filter((t) => !!t);
+  const tokens = [...new Set(
+    tokensSnap.docs.map((doc) => doc.data().token).filter((token): token is string => typeof token === "string" && !!token)
+  )];
 
   if (tokens.length === 0) return;
 

@@ -40,13 +40,18 @@ function accountDeletionEmailEnabled(): boolean {
   return process.env.ACCOUNT_DELETION_EMAIL_ENABLED === "true";
 }
 
-async function deleteCollection(ref: admin.firestore.CollectionReference): Promise<number> {
+async function deleteCollection(ref: admin.firestore.CollectionReference, childName?: string): Promise<number> {
   let deleted = 0;
 
   while (true) {
     const snap = await ref.limit(DELETE_BATCH_SIZE).get();
     if (snap.empty) break;
 
+    if (childName) {
+      for (const doc of snap.docs) {
+        deleted += await deleteCollection(doc.ref.collection(childName));
+      }
+    }
     const batch = getFirestore().batch();
     snap.docs.forEach((doc) => batch.delete(doc.ref));
     await batch.commit();
@@ -61,7 +66,7 @@ async function deleteUserSubcollections(uid: string): Promise<number> {
   let deleted = 0;
 
   for (const collectionName of USER_SUBCOLLECTIONS) {
-    deleted += await deleteCollection(userRef.collection(collectionName));
+    deleted += await deleteCollection(userRef.collection(collectionName), collectionName === "shared_inbox" ? "content" : undefined);
   }
 
   return deleted;

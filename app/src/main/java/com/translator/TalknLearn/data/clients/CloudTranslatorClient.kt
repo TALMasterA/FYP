@@ -1,9 +1,10 @@
 package com.translator.TalknLearn.data.clients
 
-import com.translator.TalknLearn.core.NetworkRetry
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.FirebaseFunctionsException
+import com.translator.TalknLearn.core.NetworkRetry
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 data class DetectedLanguage(
@@ -55,6 +56,7 @@ class CloudTranslatorClient(
         from: String?,
         to: String
     ): TranslationResult {
+        val requestId = UUID.randomUUID().toString()
         return try {
             NetworkRetry.withRetry(
                 maxAttempts = 3,
@@ -62,7 +64,8 @@ class CloudTranslatorClient(
             ) {
                 val data = hashMapOf(
                     "text" to text,
-                    "to" to to
+                    "to" to to,
+                    "requestId" to requestId
                 )
                 if (!from.isNullOrBlank()) data["from"] = from
 
@@ -100,6 +103,7 @@ class CloudTranslatorClient(
         from: String?,
         to: String
     ): List<String> {
+        val requestId = UUID.randomUUID().toString()
         return try {
             NetworkRetry.withRetry(
                 maxAttempts = 3,
@@ -107,7 +111,8 @@ class CloudTranslatorClient(
             ) {
                 val data = hashMapOf(
                     "texts" to texts,
-                    "to" to to
+                    "to" to to,
+                    "requestId" to requestId
                 )
                 if (!from.isNullOrBlank()) data["from"] = from
 
@@ -135,11 +140,12 @@ class CloudTranslatorClient(
      * Returns detected language code and confidence score.
      */
     suspend fun detectLanguage(text: String): DetectedLanguage {
+        val requestId = UUID.randomUUID().toString()
         return NetworkRetry.withRetry(
             maxAttempts = 3,
             shouldRetry = NetworkRetry::isRetryableFirebaseException
         ) {
-            val data = hashMapOf("text" to text)
+            val data = hashMapOf("text" to text, "requestId" to requestId)
 
             val result = detectLanguageCallable
                 .withTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)

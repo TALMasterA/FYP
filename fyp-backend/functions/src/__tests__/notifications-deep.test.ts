@@ -8,6 +8,7 @@ const updatedHandlers: Record<string, any> = {};
 const mockGetFriendRequests = jest.fn();
 const mockGetSpamMessages = jest.fn();
 const mockGetTokens = jest.fn();
+const mockLimitTokens = jest.fn(() => ({get: mockGetTokens}));
 const mockGetSenderPublicProfile = jest.fn();
 const mockSendEachForMulticast = jest.fn();
 const mockBatchDelete = jest.fn();
@@ -47,7 +48,7 @@ const mockFirestore = {
           collection: jest.fn((sub: string) => {
             if (sub === "fcm_tokens") {
               return {
-                get: mockGetTokens,
+                limit: mockLimitTokens,
                 doc: jest.fn((token: string) => ({
                   path: `users/${userId}/fcm_tokens/${token}`,
                 })),
@@ -173,6 +174,7 @@ describe("notifications deep branches", () => {
       },
     });
 
+    expect(mockLimitTokens).toHaveBeenCalledWith(100);
     expect(mockSendEachForMulticast).toHaveBeenCalledWith(
       expect.objectContaining({
         tokens: ["tok-1"],
@@ -265,6 +267,7 @@ describe("notifications deep branches", () => {
       },
     });
 
+    expect(mockLimitTokens).toHaveBeenCalledWith(100);
     expect(mockSendEachForMulticast).toHaveBeenCalledWith(
       expect.objectContaining({
         android: {priority: "high"},

@@ -45,6 +45,7 @@ export const pruneStaleTokens = onSchedule(
           .collection("users").doc(userDoc.id)
           .collection("fcm_tokens")
           .where("updatedAt", "<", cutoff)
+          .limit(PAGE_SIZE)
           .get();
 
         if (!tokensSnap.empty) {

@@ -23,21 +23,23 @@ import {
 } from "./helpers.js";
 import {onAppCheckCall} from "./functionWrappers.js";
 import {logger} from "./logger.js";
+import {reserveProviderAllowance} from "./providerAllowance.js";
 
 // ── Batch content-translation rate limits ────────────────────────────
 // Each translateTexts call = 1 Cloud Function call (server-side Azure chunking).
 const CONTENT_TRANSLATE_AUTH_MAX = 20;
 const CONTENT_TRANSLATE_AUTH_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
-// Azure Translator API limits: max 100 elements per request.
+// App-level bound to keep Translator requests and retries small.
 const AZURE_CHUNK_SIZE = 100;
+const MAX_BATCH_CHARACTERS = 50_000;
+const PROVIDER_TIMEOUT_MS = 15_000;
+const DEMO_SCALING = {maxInstances: 2, concurrency: 4, timeoutSeconds: 90};
 
 // ── Azure chunk throttling ───────────────────────────────────────────
 // Delay between consecutive Azure Translator API calls within a single
 // batch to avoid hitting Azure's per-second request rate limit.
-// With ~7 chunks per language change, 350 ms spacing keeps the burst
-// comfortably under Azure's free-tier request ceiling and reduces the
-// chance of consecutive chunks colliding with the same short window.
+// This smooths each invocation. Azure separately applies resource-wide quotas.
 const AZURE_INTER_CHUNK_DELAY_MS = 350;
 
 // If an individual Azure chunk is throttled (HTTP 429), retry that chunk
@@ -75,7 +77,7 @@ function getChunkRetryDelayMs(
 ): number {
   const retryAfterMs = parseRetryAfterMs(response.headers?.get?.("retry-after"));
   if (retryAfterMs != null) {
-    return retryAfterMs;
+    return Math.min(retryAfterMs, AZURE_CHUNK_RETRY_MAX_MS);
   }
 
   return Math.min(
@@ -131,6 +133,7 @@ function throwTranslationApiError(
 
 export const getSpeechToken = onAppCheckCall(
   {
+    ...DEMO_SCALING,
     secrets: [AZURE_SPEECH_KEY, AZURE_SPEECH_REGION],
   },
   async (request) => {
@@ -141,7 +144,16 @@ export const getSpeechToken = onAppCheckCall(
 
     const url = `https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`;
 
+    await reserveProviderAllowance({
+      uid: request.auth.uid,
+      operation: "getSpeechToken",
+      requestId: request.data?.requestId,
+      charges: [{unit: "speechTokens", quantity: 1}],
+    });
+
     const resp = await fetch(url, {
+      timeout: PROVIDER_TIMEOUT_MS,
+      redirect: "error",
       method: "POST",
       headers: {
         "Ocp-Apim-Subscription-Key": key,
@@ -167,9 +179,8 @@ export const getSpeechToken = onAppCheckCall(
 export const translateText = onAppCheckCall(
   {
     secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
-    concurrency: 80,
+    ...DEMO_SCALING,
     cpu: 1,
-    maxInstances: 50,
     memory: "512MiB",
   },
   async (request) => {
@@ -190,9 +201,18 @@ export const translateText = onAppCheckCall(
 
     const url = buildTranslateUrl({to, from: from || undefined});
 
+    await reserveProviderAllowance({
+      uid: request.auth.uid,
+      operation: "translateText",
+      requestId: request.data?.requestId,
+      charges: [{unit: "translatorCharacters", quantity: text.length}],
+    });
+
     let resp;
     try {
       resp = await fetch(url, {
+        timeout: PROVIDER_TIMEOUT_MS,
+        redirect: "error",
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",
@@ -241,45 +261,32 @@ export const translateText = onAppCheckCall(
 export const translateTexts = onAppCheckCall(
   {
     secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
-    concurrency: 80,
+    ...DEMO_SCALING,
     cpu: 1,
-    maxInstances: 50,
     memory: "512MiB",
   },
   async (request) => {
     requireAuth(request.auth);
 
-    // ── Rate-limit check (before any heavy work) ──────────────────────
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guaranteed by requireAuth above
-    const uid = request.auth!.uid;
-    const allowed = await checkWriteRateLimit(
-      uid, "content_translate", CONTENT_TRANSLATE_AUTH_MAX, CONTENT_TRANSLATE_AUTH_WINDOW_MS
-    );
-    if (!allowed) {
-      throw new HttpsError(
-        "resource-exhausted",
-        "Rate limit hit. Please wait and try again."
-      );
-    }
+    const uid = request.auth.uid;
 
     const MAX_BATCH_TEXTS = 800;
-    const MAX_TEXT_LENGTH = 5000; // Azure limit per text element
+    const MAX_TEXT_LENGTH = 5000; // App limit per text element
 
     const to = validateLanguageCode(request.data?.to, "to");
     const from = request.data?.from ? validateLanguageCode(request.data.from, "from") : "";
+    if (Array.isArray(request.data?.texts) && request.data.texts.length > MAX_BATCH_TEXTS) {
+      throw new HttpsError("invalid-argument", `Too many texts (max ${MAX_BATCH_TEXTS})`);
+    }
     const texts: string[] = Array.isArray(request.data?.texts)
       ? request.data.texts.map((t: unknown) => String(t ?? ""))
       : [];
 
-    if (texts.length > MAX_BATCH_TEXTS) {
-      throw new HttpsError(
-        "invalid-argument",
-        `Too many texts (max ${MAX_BATCH_TEXTS})`
-      );
-    }
+    let characters = 0;
 
     // Validate each text's length
     for (let i = 0; i < texts.length; i++) {
+      characters += texts[i].length;
       if (texts[i].length > MAX_TEXT_LENGTH) {
         throw new HttpsError(
           "invalid-argument",
@@ -293,15 +300,29 @@ export const translateTexts = onAppCheckCall(
 
     const url = buildTranslateUrl({to, from: from || undefined});
 
+    if (characters > MAX_BATCH_CHARACTERS) {
+      throw new HttpsError("invalid-argument", "Batch exceeds the maximum total character count.");
+    }
+    if (characters === 0) return {translatedTexts: texts};
+    const allowed = await checkWriteRateLimit(
+      uid, "content_translate", CONTENT_TRANSLATE_AUTH_MAX, CONTENT_TRANSLATE_AUTH_WINDOW_MS
+    );
+    if (!allowed) {
+      throw new HttpsError("resource-exhausted", "Rate limit hit. Please wait and try again.");
+    }
+    await reserveProviderAllowance({
+      uid,
+      operation: "translateTexts",
+      requestId: request.data?.requestId,
+      charges: [{unit: "translatorCharacters", quantity: characters * (AZURE_CHUNK_MAX_RETRIES + 1)}],
+    });
+
     // ── Server-side Azure chunking (throttled + per-chunk retry) ────
     // Azure Translator limits each request to 100 elements.
     // We chunk here so the client sends ONE Cloud Function call per
     // language change, keeping the rate-limit count at 1.
     //
-    // Inter-chunk delay prevents hitting Azure's per-second rate limit
-    // when ~7 chunks fire in sequence (or when two devices translate
-    // concurrently).  Per-chunk retry absorbs transient Azure 429s so
-    // the client almost never sees a rate-limit error.
+    // Spacing and bounded retries reduce the impact of transient throttling.
     const translatedTexts: string[] = [];
     let chunkIndex = 0;
 
@@ -322,6 +343,8 @@ export const translateTexts = onAppCheckCall(
       for (let attempt = 0; attempt <= AZURE_CHUNK_MAX_RETRIES; attempt++) {
         try {
           resp = await fetch(url, {
+            timeout: PROVIDER_TIMEOUT_MS,
+            redirect: "error",
             method: "POST",
             headers: {
               "Content-Type": "application/json; charset=utf-8",
@@ -386,6 +409,7 @@ export const translateTexts = onAppCheckCall(
 
 export const detectLanguage = onAppCheckCall(
   {
+    ...DEMO_SCALING,
     secrets: [AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION],
   },
   async (request) => {
@@ -399,9 +423,21 @@ export const detectLanguage = onAppCheckCall(
     const url = new URL(`${ENDPOINT}/detect`);
     url.searchParams.set("api-version", API_VERSION);
 
+    if (text.length > MAX_TRANSLATE_TEXT_LENGTH) {
+      throw new HttpsError("invalid-argument", "Text exceeds the maximum length for language detection.");
+    }
+    await reserveProviderAllowance({
+      uid: request.auth.uid,
+      operation: "detectLanguage",
+      requestId: request.data?.requestId,
+      charges: [{unit: "translatorCharacters", quantity: text.length}],
+    });
+
     let resp;
     try {
       resp = await fetch(url.toString(), {
+        timeout: PROVIDER_TIMEOUT_MS,
+        redirect: "error",
         method: "POST",
         headers: {
           "Content-Type": "application/json; charset=utf-8",

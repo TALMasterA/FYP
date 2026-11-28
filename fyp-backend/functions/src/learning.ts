@@ -20,9 +20,14 @@ import {
 } from "./helpers.js";
 import {onAppCheckCall} from "./functionWrappers.js";
 import {logger} from "./logger.js";
+import {reserveProviderAllowance} from "./providerAllowance.js";
 
 const LANG_CODE_RE = /^[a-z]{2}(-[A-Z]{2})?$/;
 const DEFAULT_DEPLOYMENT = "gpt-6-luna";
+const MAX_PROMPT_BYTES = 32_768;
+const MAX_COMPLETION_TOKENS = 4096;
+const INPUT_FRAMING_TOKEN_ALLOWANCE = 256;
+const SYSTEM_PROMPT = "You are a helpful language learning assistant.";
 
 async function getLanguageHistoryCount(uid: string, languageCode: string): Promise<number> {
   const historyRef = getFirestore()
@@ -124,15 +129,15 @@ export const syncQuizVersionFromLearningSheet = onDocumentWritten(
 export const generateLearningContent = onAppCheckCall(
   {
     secrets: [GENAI_BASE_URL, GENAI_API_VERSION, GENAI_API_KEY],
-    timeoutSeconds: 300, // 5 minutes timeout for AI generation
+    maxInstances: 2,
+    concurrency: 2,
+    timeoutSeconds: 90,
   },
   async (request) => {
     try {
       requireAuth(request.auth);
 
-      // Enforce per-user rate limiting for AI generation
       const uid = (request.auth as {uid: string}).uid;
-      await enforceRateLimit(uid);
 
       const requestedDeployment = requireString(request.data?.deployment, "deployment");
       // Existing Android builds use this ID for sheets, quizzes, and Word Bank.
@@ -140,7 +145,11 @@ export const generateLearningContent = onAppCheckCall(
         process.env.GENAI_DEFAULT_DEPLOYMENT?.trim() || DEFAULT_DEPLOYMENT : requestedDeployment;
       const prompt = requireString(request.data?.prompt, "prompt");
 
-      // No max-length restriction needed — the prompt is system-generated.
+      const promptBytes = Buffer.byteLength(prompt, "utf8");
+      if (promptBytes > MAX_PROMPT_BYTES) {
+        throw new HttpsError("invalid-argument", "The learning prompt is too long.");
+      }
+      await enforceRateLimit(uid);
 
       let baseUrl: string;
       let apiVersion: string;
@@ -184,24 +193,39 @@ export const generateLearningContent = onAppCheckCall(
         );
       }
 
-      logger.info("generateLearningContent: calling Azure OpenAI", {
+      await reserveProviderAllowance({
+        uid,
+        operation: "generateLearningContent",
+        requestId: request.data?.requestId,
+        deployment,
+        charges: [
+          {unit: "learningInputTokens",
+            quantity: promptBytes + Buffer.byteLength(SYSTEM_PROMPT, "utf8") + INPUT_FRAMING_TOKEN_ALLOWANCE},
+          {unit: "learningOutputTokens", quantity: MAX_COMPLETION_TOKENS},
+        ],
+      });
+
+      logger.info("generateLearningContent: calling GenAI", {
         uid,
         deployment,
         promptLength: prompt.length,
-        url: url.toString().replace(apiKey, "***"),
+
       });
 
       const body = {
         messages: [
-          {role: "system", content: "You are a helpful language learning assistant."},
+          {role: "system", content: SYSTEM_PROMPT},
           {role: "user", content: prompt},
         ],
         temperature: 1,
+        max_completion_tokens: MAX_COMPLETION_TOKENS,
       };
 
       let resp;
       try {
         resp = await fetch(url.toString(), {
+          timeout: 75_000,
+          redirect: "error",
           method: "POST",
           headers: {
             "Content-Type": "application/json",

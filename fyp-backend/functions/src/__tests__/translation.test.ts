@@ -3,6 +3,11 @@
  */
 // ── Mock setup ────────────────────────────────────────────────────────
 
+const mockReserveProviderAllowance = jest.fn();
+jest.mock("../providerAllowance.js", () => ({
+  reserveProviderAllowance: mockReserveProviderAllowance,
+}));
+
 const mockFetch = jest.fn();
 jest.mock("node-fetch", () => ({
   __esModule: true,
@@ -61,6 +66,7 @@ import {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockReserveProviderAllowance.mockReset();
   mockCheckWriteRateLimit.mockResolvedValue(true);
 });
 
@@ -541,5 +547,37 @@ describe("detectLanguage", () => {
       isTranslationSupported: false,
       alternatives: [],
     });
+  });
+});
+
+
+describe("provider allowance dispatch guard", () => {
+  it.each([
+    ["translation", translateText, {text: "hello", to: "ja"}, "translatorCharacters", 5],
+    ["batch", translateTexts, {texts: ["hello", "bye"], to: "ja"}, "translatorCharacters", 32],
+    ["detection", detectLanguage, {text: "hello"}, "translatorCharacters", 5],
+    ["speech", getSpeechToken, {}, "speechTokens", 1],
+  ])("blocks %s on allowance rejection without contacting the provider",
+    async (_name, handler, data, unit, quantity) => {
+      const requestId = "test-request-123456";
+      mockReserveProviderAllowance.mockRejectedValueOnce(new Error("Allowance paused"));
+      await expect((handler as any)({auth: {uid: "u1"}, data: {...data, requestId}}))
+        .rejects.toThrow("Allowance paused");
+      expect(mockReserveProviderAllowance).toHaveBeenCalledWith(expect.objectContaining({
+        requestId,
+        charges: [{unit, quantity}],
+      }));
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+  it("rejects overlong detection and aggregate batch input before any reservation", async () => {
+    await expect((detectLanguage as any)({auth: {uid: "u1"}, data: {text: "a".repeat(5001)}}))
+      .rejects.toMatchObject({code: "invalid-argument"});
+    await expect((translateTexts as any)({
+      auth: {uid: "u1"},
+      data: {to: "ja", texts: Array(11).fill("a".repeat(5000))},
+    })).rejects.toMatchObject({code: "invalid-argument"});
+    expect(mockReserveProviderAllowance).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });

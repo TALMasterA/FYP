@@ -24,11 +24,14 @@ const mockUsernameDelete = jest.fn(async () => undefined);
 const collectionNames: string[] = [];
 
 const emptySnapshot = {empty: true, size: 0, docs: []};
+const collectionPages = new Map<string, any[]>();
+const inboxItem = {collection: (name: string) => collectionRef(name)};
+const sharedContent = {path: "content/payload"};
 
 function collectionRef(name: string): any {
   collectionNames.push(name);
   return {
-    limit: jest.fn(() => ({get: jest.fn(async () => emptySnapshot)})),
+    limit: jest.fn(() => ({get: jest.fn(async () => collectionPages.get(name)?.shift() ?? emptySnapshot)})),
     doc: jest.fn((id: string) => {
       if (name === "users") return userDocRef(id);
       if (name === "user_search") return {delete: mockUserSearchDelete};
@@ -104,6 +107,7 @@ describe("deleteAccountAndData", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     collectionNames.length = 0;
+    collectionPages.clear();
     delete process.env.ACCOUNT_DELETION_EMAIL_ENABLED;
     mockGetUser.mockResolvedValue({email: "user@example.com"});
     mockDeleteUser.mockResolvedValue(undefined);
@@ -157,4 +161,14 @@ describe("deleteAccountAndData", () => {
       type: "account_deletion_confirmation",
     }));
   });
+});
+
+
+it("deletes nested shared content before deleting the inbox item and Auth user", async () => {
+  collectionPages.set("shared_inbox", [{empty: false, size: 1, docs: [{ref: inboxItem}]}]);
+  collectionPages.set("content", [{empty: false, size: 1, docs: [{ref: sharedContent}]}]);
+  jest.clearAllMocks();
+  await (deleteAccountAndData as any)({auth: {uid: "user1"}, data: {}});
+  expect(mockBatchDelete.mock.calls).toEqual([[sharedContent], [inboxItem]]);
+  expect(mockBatchCommit.mock.invocationCallOrder[1]).toBeLessThan(mockDeleteUser.mock.invocationCallOrder[0]);
 });

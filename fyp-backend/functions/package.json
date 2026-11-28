@@ -10,6 +10,7 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "test": "jest",
+    "test:emulator": "node --test test/firestore-emulator.cjs",
     "test:coverage": "jest --coverage --collectCoverageFrom=\"src/**/*.ts\" --coverageReporters=text-summary --coverageReporters=lcov --coverageReporters=json-summary"
   },
   "engines": {
@@ -22,6 +23,7 @@
     "node-fetch": "^2.7.0"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node-fetch": "^2.6.13",
     "@typescript-eslint/eslint-plugin": "^5.12.0",

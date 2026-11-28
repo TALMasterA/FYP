@@ -1,6 +1,8 @@
 # 4. Azure OpenAI for content generation (quizzes, learning sheets)
 
-- **Status:** Accepted
+- **Status:** Accepted as a historical design decision.
+
+The current learning callable supports an OpenAI-compatible gateway. Android uses short-lived tokens for direct Speech SDK access. See [Cloud Functions API](../CLOUD_FUNCTIONS_API.md) and [demo spending](../DEMO_SPENDING.md) for current behavior.
 - **Date:** 2025-10-10
 
 ## Context

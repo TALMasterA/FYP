@@ -1,6 +1,6 @@
 # NNNN. <Decision title in present tense>
 
-- **Status:** Proposed | Accepted | Superseded by [ADR-XXXX](XXXX-slug.md)
+- **Status:** Proposed | Accepted | Superseded by ADR-XXXX
 - **Date:** YYYY-MM-DD
 
 ## Context
