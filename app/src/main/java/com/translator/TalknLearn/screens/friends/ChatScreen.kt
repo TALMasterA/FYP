@@ -20,15 +20,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.firebase.Timestamp
 import com.translator.TalknLearn.core.StandardScreenScaffold
 import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.model.friends.FriendMessage
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
-import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -223,7 +223,7 @@ fun ChatScreen(
             IconButton(onClick = { showProfileDialog = true }) {
                 Icon(
                     imageVector = Icons.Default.Info,
-                    contentDescription = "View friend profile",
+                    contentDescription = t(UiTextKey.A11yViewFriendProfile),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -232,7 +232,7 @@ fun ChatScreen(
                 IconButton(onClick = { showClearDialog = true }) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Clear chat",
+                        contentDescription = t(UiTextKey.ChatClearConversationTitle),
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
                     )
                 }

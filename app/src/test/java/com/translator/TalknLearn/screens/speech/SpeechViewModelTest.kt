@@ -3,23 +3,24 @@ package com.translator.TalknLearn.screens.speech
 import android.net.Uri
 import com.translator.TalknLearn.data.clients.DetectedLanguage
 import com.translator.TalknLearn.data.history.FirestoreHistoryRepository
+import com.translator.TalknLearn.data.repositories.AutoDetectRecognitionResult
 import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.ocr.RecognizeTextFromImageUseCase
-import com.translator.TalknLearn.data.repositories.AutoDetectRecognitionResult
 import com.translator.TalknLearn.domain.speech.*
 import com.translator.TalknLearn.model.OcrResult
 import com.translator.TalknLearn.model.SpeechResult
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -117,7 +118,7 @@ class SpeechViewModelTest {
 
         assertEquals("Hello world", vm.recognizedText)
         assertEquals(RecognizePhase.Idle, vm.recognizePhase)
-        assertTrue(vm.statusMessage.isEmpty())
+        assertNull(vm.statusMessage)
     }
 
     // ── recognize error ─────────────────────────────────────────────
@@ -132,7 +133,8 @@ class SpeechViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(RecognizePhase.Idle, vm.recognizePhase)
-        assertTrue(vm.statusMessage.contains("Mic not available"))
+        assertEquals(UiTextKey.SpeechStatusRecognitionError, vm.statusMessage?.key)
+        assertEquals("Mic not available", vm.statusMessage?.args?.get("detail"))
     }
 
     // ── translate requires text ─────────────────────────────────────
@@ -144,7 +146,7 @@ class SpeechViewModelTest {
 
         vm.translate("en", "ja")
 
-        assertTrue(vm.statusMessage.contains("enter or speak", ignoreCase = true))
+        assertEquals(UiTextKey.SpeechStatusEnterText, vm.statusMessage?.key)
     }
 
     // ── translate requires login ────────────────────────────────────
@@ -156,7 +158,7 @@ class SpeechViewModelTest {
         vm.updateSourceText("Hello")
         vm.translate("en", "ja")
 
-        assertTrue(vm.statusMessage.contains("Login", ignoreCase = true))
+        assertEquals(UiTextKey.SpeechStatusLoginRequired, vm.statusMessage?.key)
     }
 
     // ── translate success ───────────────────────────────────────────
@@ -172,7 +174,7 @@ class SpeechViewModelTest {
         vm.translate("en", "ja")
 
         assertEquals("こんにちは", vm.translatedText)
-        assertTrue(vm.statusMessage.isEmpty())
+        assertNull(vm.statusMessage)
         verify(historyRepo).save(any())
     }
 
@@ -188,7 +190,8 @@ class SpeechViewModelTest {
         vm.updateSourceText("Hello")
         vm.translate("en", "ja")
 
-        assertTrue(vm.statusMessage.contains("Service unavailable"))
+        assertEquals(UiTextKey.SpeechStatusTranslationError, vm.statusMessage?.key)
+        assertEquals("Service unavailable", vm.statusMessage?.args?.get("detail"))
     }
 
     // ── translate with auto-detect ──────────────────────────────────
@@ -283,7 +286,8 @@ class SpeechViewModelTest {
         val vm = buildViewModel()
         vm.recognizeTextFromImage(uri)
 
-        assertTrue(vm.statusMessage.contains("Image too blurry"))
+        assertEquals(UiTextKey.SpeechStatusOcrError, vm.statusMessage?.key)
+        assertEquals("Image too blurry", vm.statusMessage?.args?.get("detail"))
     }
 
     // ── updateSourceText ────────────────────────────────────────────
@@ -334,7 +338,7 @@ class SpeechViewModelTest {
         assertEquals("Detected speech", vm.recognizedText)
         assertEquals(RecognizePhase.Idle, vm.recognizePhase)
         assertEquals("en-US", callbackLang)
-        assertTrue("Detected status should auto-clear", vm.statusMessage.isEmpty())
+        assertNull("Detected status should auto-clear", vm.statusMessage)
     }
 
     @Test
@@ -351,7 +355,7 @@ class SpeechViewModelTest {
         vm.refreshQuickTranslateState()
 
         assertTrue(vm.translatedText.isEmpty())
-        assertTrue(vm.statusMessage.contains("Auto-detect", ignoreCase = true))
+        assertEquals(UiTextKey.SpeechStatusRefreshed, vm.statusMessage?.key)
     }
 
     // ── recognizeWithAutoDetect error ───────────────────────────────
@@ -365,7 +369,7 @@ class SpeechViewModelTest {
         vm.recognizeWithAutoDetect(listOf("en-US")) {}
         testDispatcher.scheduler.advanceUntilIdle()
 
-        assertTrue(vm.statusMessage.contains("Recognition error"))
+        assertEquals(UiTextKey.SpeechStatusRecognitionError, vm.statusMessage?.key)
         assertEquals(RecognizePhase.Idle, vm.recognizePhase)
     }
 

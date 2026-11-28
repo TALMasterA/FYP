@@ -1,12 +1,14 @@
 package com.translator.TalknLearn.screens.speech
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
+import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.domain.speech.SpeakTextUseCase
 import com.translator.TalknLearn.model.SpeechResult
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import com.translator.TalknLearn.core.UiConstants
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 
 internal class TtsController(
     private val scope: CoroutineScope,
@@ -28,7 +30,9 @@ internal class TtsController(
                 setSpeechState(
                     getSpeechState().copy(
                         isTtsRunning = true,
-                        ttsStatus = if (isTranslation) "Speaking translation..." else "Speaking..."
+                        ttsStatus = StatusText(
+                            if (isTranslation) UiTextKey.TtsSpeakingTranslation else UiTextKey.TtsSpeaking
+                        )
                     )
                 )
             } finally {
@@ -40,13 +44,15 @@ internal class TtsController(
                 when (result) {
                     is SpeechResult.Success -> {
                         setSpeechState(
-                            getSpeechState().copy(ttsStatus = "✓ Spoken")
+                            getSpeechState().copy(ttsStatus = StatusText(UiTextKey.TtsSpoken))
                         )
                         delay(UiConstants.TTS_START_DELAY_MS)
                     }
                     is SpeechResult.Error -> {
                         setSpeechState(
-                            getSpeechState().copy(ttsStatus = "✗ ${result.message}")
+                            getSpeechState().copy(
+                                ttsStatus = StatusText(UiTextKey.TtsError, mapOf("detail" to result.message)),
+                            )
                         )
                         delay(UiConstants.TTS_ERROR_WAIT_MS)
                     }
@@ -55,7 +61,7 @@ internal class TtsController(
                 setSpeechState(
                     getSpeechState().copy(
                         isTtsRunning = false,
-                        ttsStatus = ""
+                        ttsStatus = null
                     )
                 )
             }

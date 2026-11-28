@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Delete
@@ -43,34 +44,35 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.translator.TalknLearn.core.LocalAppLanguageState
 import com.translator.TalknLearn.core.PaginationRow
 import com.translator.TalknLearn.core.StandardScreenScaffold
-import com.translator.TalknLearn.core.pageCount
-import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.core.UiConstants
+import com.translator.TalknLearn.core.pageCount
 import com.translator.TalknLearn.core.rememberHapticFeedback
-import com.translator.TalknLearn.model.ui.AppLanguageState
-import com.translator.TalknLearn.model.ui.BaseUiTexts
+import com.translator.TalknLearn.core.rememberTranslator
+import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.model.FavoriteRecord
 import com.translator.TalknLearn.model.FavoriteSession
 import com.translator.TalknLearn.model.FavoriteSessionRecord
+import com.translator.TalknLearn.model.ui.AppLanguageState
+import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
-import com.translator.TalknLearn.ui.components.EmptyStates
 import com.translator.TalknLearn.ui.components.EmptyStateView
+import com.translator.TalknLearn.ui.components.EmptyStates
 import com.translator.TalknLearn.ui.components.TranslationCardSkeleton
 import kotlinx.coroutines.delay
 
@@ -179,7 +181,7 @@ fun FavoritesScreen(
                 IconButton(onClick = { showInfoDialog = true }) {
                     Icon(
                         imageVector = Icons.Default.Info,
-                        contentDescription = "Favorites Info"
+                        contentDescription = t(UiTextKey.FavoritesInfoTitle)
                     )
                 }
                 if (uiState.isDeleting) {
@@ -493,6 +495,7 @@ private fun FavoriteSessionBubble(
     speakingId: String?,
     onSpeak: (text: String, lang: String, id: String) -> Unit
 ) {
+    val t = rememberTranslator(LocalAppLanguageState.current)
     val isPersonA = record.speaker == "A"
     val alignment = if (isPersonA) Alignment.Start else Alignment.End
     val bubbleColor = if (isPersonA)
@@ -535,7 +538,7 @@ private fun FavoriteSessionBubble(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                contentDescription = "Speak",
+                                contentDescription = t(UiTextKey.SpeakScriptButton),
                                 modifier = Modifier.size(16.dp),
                                 tint = if (speakingId == speakSourceId) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurfaceVariant
@@ -561,7 +564,7 @@ private fun FavoriteSessionBubble(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                    contentDescription = "Speak translation",
+                                    contentDescription = t(UiTextKey.A11ySpeakTranslation),
                                     modifier = Modifier.size(16.dp),
                                     tint = if (speakingId == speakTargetId) MaterialTheme.colorScheme.primary
                                     else MaterialTheme.colorScheme.onSurfaceVariant
@@ -638,7 +641,7 @@ fun FavoriteCard(
                 IconButton(onClick = onSpeakSource) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                        contentDescription = "Speak source",
+                        contentDescription = t(UiTextKey.A11ySpeakOriginal),
                         tint = if (isSpeakingSource) MaterialTheme.colorScheme.primary
                                else MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -659,7 +662,7 @@ fun FavoriteCard(
                 IconButton(onClick = onSpeakTarget) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                        contentDescription = "Speak translation",
+                        contentDescription = t(UiTextKey.A11ySpeakTranslation),
                         tint = if (isSpeakingTarget) MaterialTheme.colorScheme.primary
                                else MaterialTheme.colorScheme.onSurfaceVariant
                     )

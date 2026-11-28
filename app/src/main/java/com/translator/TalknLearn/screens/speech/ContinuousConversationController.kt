@@ -3,21 +3,23 @@ package com.translator.TalknLearn.screens.speech
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.microsoft.cognitiveservices.speech.SpeechRecognizer
+import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.domain.speech.StartContinuousConversationUseCase
 import com.translator.TalknLearn.domain.speech.TranslateTextUseCase
 import com.translator.TalknLearn.model.SpeechResult
-import com.microsoft.cognitiveservices.speech.SpeechRecognizer
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
-import com.translator.TalknLearn.core.UiConstants
 
 internal class ContinuousConversationController(
     private val scope: CoroutineScope,
     private val continuousUseCase: StartContinuousConversationUseCase,
     private val translateTextUseCase: TranslateTextUseCase,
-    private val setStatus: (String) -> Unit,
+    private val setStatus: (StatusText?) -> Unit,
     private val saveHistory: suspend (
         mode: String,
         sourceText: String,
@@ -83,7 +85,7 @@ internal class ContinuousConversationController(
         resetSession: Boolean,
     ) {
         if (!isLoggedIn()) {
-            setStatus("Please login to use continuous translation.")
+            setStatus(StatusText(UiTextKey.ContinuousStatusLoginRequired))
             return
         }
 
@@ -103,7 +105,7 @@ internal class ContinuousConversationController(
             isContinuousPreparing = true
             isContinuousRunning = false
             isContinuousProcessing = false
-            setStatus("Preparing mic...")
+            setStatus(StatusText(UiTextKey.ContinuousStatusPreparingMic))
             delay(UiConstants.SPEECH_PREPARE_DELAY_MS)
 
             val startedAt = System.currentTimeMillis()
@@ -123,7 +125,7 @@ internal class ContinuousConversationController(
 
                             // 2) translate (lock UI while processing)
                             isContinuousProcessing = true
-                            setStatus("Translating...")
+                            setStatus(StatusText(UiTextKey.ContinuousTranslatingText))
 
                             when (val tr = translateTextUseCase(finalText, speakingLang, targetLang)) {
                                 is SpeechResult.Success -> {
@@ -153,9 +155,9 @@ internal class ContinuousConversationController(
                                 }
 
                                 is SpeechResult.Error -> {
-                                    setStatus("Continuous translation error: ${tr.message}")
+                                    setStatus(StatusText(UiTextKey.ContinuousStatusTranslationError, mapOf("detail" to tr.message)))
                                     if (isRateLimitError(tr.message)) {
-                                        setStatus("${tr.message} Continuous mode stopped to avoid repeated failed requests.")
+                                        setStatus(StatusText(UiTextKey.ContinuousStatusRateLimited, mapOf("detail" to tr.message)))
                                         stop()
                                     }
                                 }
@@ -166,7 +168,7 @@ internal class ContinuousConversationController(
                     },
                     onError = { msg ->
                         scope.launch {
-                            setStatus("Continuous recognition error: $msg")
+                            setStatus(StatusText(UiTextKey.ContinuousStatusRecognitionError, mapOf("detail" to msg)))
                             stop()
                         }
                     },
@@ -174,12 +176,12 @@ internal class ContinuousConversationController(
 
                 isContinuousPreparing = false
                 isContinuousRunning = true
-                setStatus("Listening...")
+                setStatus(StatusText(UiTextKey.SpeechListeningLabel))
             } catch (e: Exception) {
                 isContinuousPreparing = false
                 isContinuousRunning = false
                 isContinuousProcessing = false
-                setStatus("Continuous start error: ${e.message}")
+                setStatus(StatusText(UiTextKey.ContinuousStatusStartError, mapOf("detail" to e.message.orEmpty())))
                 stop()
             }
         }

@@ -90,8 +90,8 @@ fun SpeechRecognitionScreen(
         }
     }
 
-    val ttsStatus = viewModel.ttsStatus
-    val statusMessage = viewModel.statusMessage
+    val ttsStatus = viewModel.ttsStatus?.resolve(t).orEmpty()
+    val statusMessage = viewModel.statusMessage?.resolve(t)
     val recognizePhase = viewModel.recognizePhase
     val isTtsRunning = viewModel.isTtsRunning
 
@@ -257,14 +257,14 @@ fun SpeechRecognitionScreen(
             }) {
                 Icon(
                     imageVector = Icons.Filled.Refresh,
-                    contentDescription = "Refresh auto-detect"
+                    contentDescription = t(UiTextKey.A11yRefreshAutoDetect)
                 )
             }
             
             IconButton(onClick = { showInfoDialog = true }) {
                 Icon(
                     imageVector = Icons.Filled.Info,
-                    contentDescription = "Instructions"
+                    contentDescription = t(UiTextKey.A11yInstructions)
                 )
             }
         }

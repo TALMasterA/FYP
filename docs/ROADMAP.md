@@ -16,7 +16,7 @@ the FYP was graded. Keep the status table up to date in every PR.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 0 | Agent docs (AGENTS.md), roadmap, screenshot tests, baseline screenshots | Done |
-| 1 | Correctness fixes, no new look | Part 1 in review; part 2 (localization sweep) next |
+| 1 | Correctness fixes, no new look | Part 1 done; part 2 in review; part 3 next |
 | 2 | Design system: mockup approval, theme, component kit, navigation shell | Not started |
 | 3 | Home dashboard and translation tools | Not started |
 | 4 | Learning loop: review (SRS), streak, daily goal, stats, quiz feedback | Not started |
@@ -42,7 +42,7 @@ phase that carries it out.
 
 ## Phase 1 — correctness fixes
 
-Phase 1 is split into two PRs so each one stays small enough to review.
+Phase 1 is split into three PRs so each one stays small enough to review.
 
 **Part 1 (fixed):**
 - **Learning-sheet and word-bank prompts sent the oldest history records**, in all languages.
@@ -60,8 +60,16 @@ Phase 1 is split into two PRs so each one stays small enough to review.
 
 **Decision — Detekt allows PascalCase `@Composable` names** (`FunctionNaming.ignoreAnnotated: ['Composable']` in `config/detekt/detekt.yml`). This is the Compose naming rule. Without it, every new composable is a Detekt issue.
 
-**Part 2 (next PR) — localization sweep:**
-- About 70 English strings in ViewModels and about 30 English `contentDescription`s still bypass the 17-language system. They move to `UiTextKey`.
+**Part 2 (fixed) — localization sweep, first half:**
+- **Icon labels:** 29 English `contentDescription`s (History, Favorites, Chat, Speech, Word bank, Quiz) now use `UiTextKey`, so TalkBack reads them in the UI language.
+- **History:** error messages use `errorKey`, and the text-to-speech status ("Speaking…", "✓ Spoken") is localized.
+- **Speech / Translate / Continuous:** every status line (detecting, translating, errors, image scan) is localized.
+- 46 new keys, in English and all 16 locale maps.
+
+**Decision — `StatusText` for ViewModel messages** (`model/ui/StatusText.kt`). A ViewModel has no translator, and some messages contain data ("Detected: Japanese"). So a ViewModel emits `StatusText(key, args)` and the screen calls `.resolve(t)`. Args hold data only (a service error, a language name), never English UI text. Fixed messages without data use an `errorKey: UiTextKey?` field next to the raw `error: String?` from the data layer, like `SettingsViewModel`. Logic that used to compare English strings (the auto-clear of "Detected: …") now compares keys.
+
+**Part 3 (next PR) — localization sweep, second half:**
+- The remaining English strings in `ChatViewModel`, `ShopViewModel`, the Profile and Friends ViewModels, `SharedInbox`/`SharedMaterialDetail`, Feedback, `ErrorMessages.kt`, the `EmptyStateView` titles, Startup and Login.
 
 ## Later (needs a backend deploy or paid calls)
 

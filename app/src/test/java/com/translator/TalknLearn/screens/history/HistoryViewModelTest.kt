@@ -7,16 +7,17 @@ import com.translator.TalknLearn.data.user.FirestoreFavoritesRepository
 import com.translator.TalknLearn.domain.history.DeleteHistoryRecordUseCase
 import com.translator.TalknLearn.domain.history.DeleteSessionUseCase
 import com.translator.TalknLearn.domain.history.HistoryRepository
-import com.translator.TalknLearn.model.SpeechResult
 import com.translator.TalknLearn.domain.history.ObserveSessionNamesUseCase
 import com.translator.TalknLearn.domain.history.RenameSessionUseCase
 import com.translator.TalknLearn.domain.learning.QuizRepository
 import com.translator.TalknLearn.domain.speech.SpeakTextUseCase
 import com.translator.TalknLearn.model.FavoriteRecord
 import com.translator.TalknLearn.model.FavoriteSession
+import com.translator.TalknLearn.model.SpeechResult
 import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.UserCoinStats
 import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings
@@ -128,7 +129,7 @@ class HistoryViewModelTest {
     fun `logged out shows not logged in error`() = runTest {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedOut
-        assertEquals("Not logged in", vm.uiState.value.error)
+        assertEquals(UiTextKey.ErrorNotLoggedIn, vm.uiState.value.errorKey)
         assertTrue(vm.uiState.value.records.isEmpty())
     }
 
@@ -209,7 +210,7 @@ class HistoryViewModelTest {
 
         vm.favouriteSession("sess1", listOf(TranslationRecord(id = "r1")))
 
-        assertEquals("Failed to favourite session", vm.uiState.value.error)
+        assertEquals(UiTextKey.HistoryErrorFavoriteSessionFailed, vm.uiState.value.errorKey)
         assertFalse(vm.uiState.value.favouritedSessionIds.contains("sess1"))
     }
 
@@ -370,10 +371,12 @@ class HistoryViewModelTest {
     fun `clearError removes error`() = runTest {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedOut
-        assertNotNull(vm.uiState.value.error)
+        assertTrue(vm.uiState.value.hasError)
 
         vm.clearError()
         assertNull(vm.uiState.value.error)
+        assertNull(vm.uiState.value.errorKey)
+        assertFalse(vm.uiState.value.hasError)
     }
 
     @Test
@@ -390,7 +393,7 @@ class HistoryViewModelTest {
             sourceLang = "en", targetLang = "es"
         ))
 
-        assertEquals("Delete failed. Please try again.", vm.uiState.value.error)
+        assertEquals(UiTextKey.HistoryErrorDeleteFailed, vm.uiState.value.errorKey)
     }
 
     // ── Retry ──

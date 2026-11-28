@@ -1,24 +1,24 @@
 package com.translator.TalknLearn.screens.speech
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Switch
-import androidx.compose.ui.Alignment
 
 @Composable
 fun ContinuousStartStopButton(
@@ -66,6 +66,7 @@ fun ContinuousStatusBlock(
     partial: String,
     isTtsRunning: Boolean,
     ttsStatus: String,
+    speakingFallback: String,
 ) {
     Text(
         text = "$currentStringLabel $partial",
@@ -76,7 +77,7 @@ fun ContinuousStatusBlock(
     if (isTtsRunning || ttsStatus.isNotBlank()) {
         Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = ttsStatus.ifBlank { "Speaking..." },
+            text = ttsStatus.ifBlank { speakingFallback },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

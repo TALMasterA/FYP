@@ -25,6 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.translator.TalknLearn.core.LanguageDropdownField
+import com.translator.TalknLearn.core.LocalAppLanguageState
+import com.translator.TalknLearn.core.rememberTranslator
+import com.translator.TalknLearn.model.ui.UiTextKey
 
 @Composable
 fun SpeechLanguagePickers(
@@ -232,6 +235,7 @@ fun SourceTextEditor(
     onSpeak: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val t = rememberTranslator(LocalAppLanguageState.current)
     Column(modifier = modifier) {
         // Use Box to overlay the clear button on top-right corner
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -258,7 +262,7 @@ fun SourceTextEditor(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Clear,
-                        contentDescription = "Clear",
+                        contentDescription = t(UiTextKey.A11yClearText),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )

@@ -368,7 +368,7 @@ private fun CustomWordCard(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                contentDescription = "Speak original",
+                                contentDescription = t(UiTextKey.A11ySpeakOriginal),
                                 tint = if (isSpeaking && speakingType == SpeakingType.ORIGINAL)
                                     MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurfaceVariant
@@ -392,7 +392,7 @@ private fun CustomWordCard(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                contentDescription = "Speak translated",
+                                contentDescription = t(UiTextKey.A11ySpeakTranslation),
                                 tint = if (isSpeaking && speakingType == SpeakingType.TRANSLATED)
                                     MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurfaceVariant
@@ -439,7 +439,7 @@ private fun CustomWordCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Delete",
+                            contentDescription = t(UiTextKey.ActionDelete),
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(20.dp)
                         )
@@ -553,7 +553,7 @@ private fun AddCustomWordFullDialog(
                                     }
                                 }
                             ) {
-                                Icon(Icons.Default.Translate, contentDescription = "Translate")
+                                Icon(Icons.Default.Translate, contentDescription = t(UiTextKey.TranslateButton))
                             }
                         } else if (isTranslating) {
                             CircularProgressIndicator(
