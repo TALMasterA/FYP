@@ -90,6 +90,16 @@ android {
         unitTests.isReturnDefaultValues = true
         // Robolectric screenshot tests need merged resources and the manifest.
         unitTests.isIncludeAndroidResources = true
+        // Robolectric downloads its ~200 MB android-all jar while the tests run.
+        // Maven Central answers it with HTTP 429 on CI, so use Google's mirror
+        // of Maven Central instead (ADR 0006).
+        unitTests.all {
+            it.systemProperty(
+                "robolectric.dependency.repo.url",
+                "https://maven-central.storage-download.googleapis.com/maven2"
+            )
+            it.systemProperty("robolectric.dependency.repo.id", "maven-central-google-mirror")
+        }
     }
 
     buildFeatures {
