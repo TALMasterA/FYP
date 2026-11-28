@@ -52,12 +52,11 @@ graph LR
 
 **Invariant:** For any prompt that changes repository files, completion requires tree maintenance, docs audit/update, and Android verification.
 
-**Rule:** Follow `.github/copilot-instructions.md` before finalizing:
-1. Update `docs/treeOfImportantfiles.txt` when files/structure/important entries change
-2. Update impacted files in `docs/` and `README.md`
-3. Run `.\\gradlew.bat :app:testDebugUnitTest`
-4. Run `.\\gradlew.bat :app:assembleDebug`
-5. Report outcomes in summary
+**Rule:** Follow the end-of-task checklist in `AGENTS.md` §7, the single rules file for agents, before finalizing:
+1. Update `docs/treeOfImportantfiles.txt` when files, structure or important entries change.
+2. Update the affected files in `docs/` and `README.md`.
+3. Run `./gradlew :app:testDebugUnitTest`, `:app:assembleDebug`, `:app:detekt` and `:app:verifyRoborazziDebug`.
+4. Report the outcomes in the summary.
 
 ---
 

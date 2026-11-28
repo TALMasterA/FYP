@@ -26,6 +26,7 @@ A blank starter is in [`0000-template.md`](0000-template.md).
 | 3   | [Firestore-only data layer (no Room)](0003-firestore-only-data-layer.md) | Accepted |
 | 4   | [Azure OpenAI for content generation](0004-azure-openai-for-generation.md) | Accepted |
 | 5   | [Hardcoded UI translations (no `res/values-*/strings.xml`)](0005-hardcoded-ui-translations.md) | Accepted |
+| 6   | [Roborazzi JVM screenshot tests and private previews](0006-roborazzi-screenshot-tests.md) | Accepted |
 
 ## Adding a new ADR
 
