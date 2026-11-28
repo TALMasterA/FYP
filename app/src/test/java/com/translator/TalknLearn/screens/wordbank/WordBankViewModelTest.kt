@@ -16,6 +16,8 @@ import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.FriendRelation
 import com.translator.TalknLearn.model.friends.SharedItem
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings
@@ -133,7 +135,7 @@ class WordBankViewModelTest {
 
         val state = vm.uiState.value
         assertFalse(state.isLoading)
-        assertEquals("Not logged in", state.error)
+        assertEquals(StatusText(UiTextKey.ErrorNotLoggedIn), state.error)
     }
 
     // ── Loading state during auth loading ───────────────────────────
@@ -331,7 +333,7 @@ class WordBankViewModelTest {
     // ── shareWord success ───────────────────────────────────────────
 
     @Test
-    fun `shareWord success sets shareSuccess message`() = runTest {
+    fun `shareWord success sets shareSuccessKey`() = runTest {
         val word = WordBankItem(id = "w1", originalWord = "hello", translatedWord = "こんにちは",
             pronunciation = "", example = "Hello example", category = "", difficulty = "")
         val wordBank = WordBank(primaryLanguageCode = "en-US", targetLanguageCode = "ja", words = listOf(word))
@@ -358,7 +360,7 @@ class WordBankViewModelTest {
             "en-US",
             "Hello example"
         )
-        assertNotNull(vm.uiState.value.shareSuccess)
+        assertEquals(UiTextKey.ShareSuccess, vm.uiState.value.shareSuccessKey)
         assertFalse(vm.uiState.value.isSharing)
     }
 
@@ -406,7 +408,7 @@ class WordBankViewModelTest {
         vm.shareWord(customWord, UserId("friend1"))
 
         verifyNoInteractions(shareWordUseCase)
-        assertEquals("Word data is incomplete. Refresh and try again.", vm.uiState.value.shareError)
+        assertEquals(StatusText(UiTextKey.WordBankMsgShareIncomplete), vm.uiState.value.shareError)
         assertFalse(vm.uiState.value.isSharing)
     }
 
@@ -419,7 +421,7 @@ class WordBankViewModelTest {
 
         vm.clearShareMessages()
 
-        assertNull(vm.uiState.value.shareSuccess)
+        assertNull(vm.uiState.value.shareSuccessKey)
         assertNull(vm.uiState.value.shareError)
     }
 

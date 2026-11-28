@@ -58,6 +58,7 @@ fun HistoryDiscreteTab(
 ) {
     if (records.isEmpty()) {
         EmptyStates.NoHistory(
+            t = rememberTranslator(LocalAppLanguageState.current),
             message = noRecordsText,
             modifier = Modifier.fillMaxSize()
         )

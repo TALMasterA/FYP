@@ -7,6 +7,8 @@ import com.translator.TalknLearn.domain.speech.SpeakTextUseCase
 import com.translator.TalknLearn.model.FavoriteRecord
 import com.translator.TalknLearn.model.FavoriteSession
 import com.translator.TalknLearn.model.FavoriteSessionRecord
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings
@@ -18,9 +20,9 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.*
 import org.mockito.kotlin.*
 
 /**
@@ -209,9 +211,9 @@ class FavoritesViewModelTest {
 
         authStateFlow.value = AuthState.LoggedIn(User(uid = userId, email = "test@test.com"))
 
-        // Verify error is displayed (ErrorMessages.fromException returns fallback for plain RuntimeException)
+        // "Network error" is classified as a network problem by ErrorMessages.statusFromException.
         assertEquals(false, viewModel.uiState.value.isLoading)
-        assertNotNull(viewModel.uiState.value.error)
+        assertEquals(StatusText(UiTextKey.ErrNoInternet), viewModel.uiState.value.error)
     }
 
     @Test
@@ -550,7 +552,7 @@ class FavoritesViewModelTest {
         viewModel.toggleRecordSelection("fav1")
         viewModel.deleteSelected()
 
-        assertEquals("Failed to delete selected items", viewModel.uiState.value.error)
+        assertEquals(StatusText(UiTextKey.FavoritesMsgDeleteSelectedFailed), viewModel.uiState.value.error)
         assertFalse(viewModel.uiState.value.isDeleting)
     }
 }

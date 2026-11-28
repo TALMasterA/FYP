@@ -9,6 +9,8 @@ import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.LanguageCode
 import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings
@@ -113,7 +115,7 @@ class LearningViewModelTest {
 
         val state = vm.uiState.value
         assertFalse(state.isLoading)
-        assertEquals("Not logged in", state.error)
+        assertEquals(StatusText(UiTextKey.ErrorNotLoggedIn), state.error)
     }
 
     // ── Login starts observing ──────────────────────────────────────
@@ -354,7 +356,7 @@ class LearningViewModelTest {
         val vm = buildViewModel()
         authStateFlow.value = AuthState.LoggedOut
         testDispatcher.scheduler.advanceUntilIdle()
-        assertEquals("Not logged in", vm.uiState.value.error)
+        assertEquals(StatusText(UiTextKey.ErrorNotLoggedIn), vm.uiState.value.error)
 
         authStateFlow.value = AuthState.LoggedIn(testUser)
         testDispatcher.scheduler.advanceUntilIdle()

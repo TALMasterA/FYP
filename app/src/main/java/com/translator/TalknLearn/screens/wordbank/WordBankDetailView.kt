@@ -198,7 +198,7 @@ private fun WordBankHeader(
                     }
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        contentDescription = if (isExpanded) t(UiTextKey.A11yCollapse) else t(UiTextKey.A11yExpand),
                         modifier = Modifier.size(24.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )

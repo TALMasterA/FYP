@@ -49,7 +49,7 @@ fun WordBankScreen(
 
 
     LaunchedEffect(uiState.error) {
-        if (!uiState.error.isNullOrBlank()) {
+        if (uiState.error != null) {
             delay(UiConstants.ERROR_AUTO_DISMISS_MS)
             viewModel.clearError()
         }
@@ -142,7 +142,7 @@ fun WordBankScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = uiState.error ?: "",
+                            text = uiState.error?.resolve(t).orEmpty(),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -184,6 +184,20 @@ fun WordBankScreen(
                         uiLanguageNameFor = uiLanguageNameFor,
                         t = t
                     )
+                    // Custom word errors (validation, duplicates, translation) were set but never shown before.
+                    customWordsState.error?.let { err ->
+                        LaunchedEffect(err) {
+                            delay(UiConstants.ERROR_AUTO_DISMISS_MS)
+                            customWordsViewModel.clearError()
+                        }
+                        Snackbar(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(16.dp),
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        ) { Text(err.resolve(t)) }
+                    }
                 }
                 selectedLanguage != null -> {
                     val canRegen = viewModel.canRegenerate(selectedLanguage)
@@ -211,8 +225,8 @@ fun WordBankScreen(
                     }
 
                     // Share feedback
-                    uiState.shareSuccess?.let { msg ->
-                        LaunchedEffect(msg) {
+                    uiState.shareSuccessKey?.let { successKey ->
+                        LaunchedEffect(successKey) {
                             kotlinx.coroutines.delay(3000)
                             viewModel.clearShareMessages()
                         }
@@ -220,7 +234,7 @@ fun WordBankScreen(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
                                 .padding(16.dp)
-                        ) { Text(msg) }
+                        ) { Text(t(successKey)) }
                     }
                     uiState.shareError?.let { err ->
                         LaunchedEffect(err) {
@@ -233,7 +247,7 @@ fun WordBankScreen(
                                 .padding(16.dp),
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        ) { Text(err) }
+                        ) { Text(err.resolve(t)) }
                     }
 
                     WordBankDetailView(
@@ -247,7 +261,7 @@ fun WordBankScreen(
                         isSpeaking = uiState.isSpeaking,
                         speakingItemId = uiState.speakingItemId,
                         speakingType = uiState.speakingType,
-                        error = uiState.error,
+                        error = uiState.error?.resolve(t),
                         onGenerate = { viewModel.generateWordBank(selectedLanguage) },
                         onCancel = { viewModel.cancelGeneration() },
                         onSpeakWord = { word, type -> viewModel.speakWord(word, type) },

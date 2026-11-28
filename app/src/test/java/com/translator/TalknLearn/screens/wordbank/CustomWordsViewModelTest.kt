@@ -4,11 +4,14 @@ import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.data.wordbank.FirestoreCustomWordsRepository
 import com.translator.TalknLearn.domain.speech.TranslateTextUseCase
+import com.translator.TalknLearn.model.CustomWord
 import com.translator.TalknLearn.model.SpeechResult
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.ui.english
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
 import com.translator.TalknLearn.model.user.UserSettings
-import com.translator.TalknLearn.model.CustomWord
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -153,8 +156,7 @@ class CustomWordsViewModelTest {
         val vm = buildViewModel()
         vm.addCustomWord("", "translation", sourceLang = "en-US", targetLang = "ja-JP")
 
-        assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("Original word"))
+        assertEquals(StatusText(UiTextKey.CustomWordsMsgOriginalRequired), vm.uiState.value.error)
         verifyNoInteractions(customWordsRepo)
     }
 
@@ -164,8 +166,7 @@ class CustomWordsViewModelTest {
         val longWord = "a".repeat(101)
         vm.addCustomWord(longWord, "translation", sourceLang = "en-US", targetLang = "ja-JP")
 
-        assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("Original word"))
+        assertEquals("Original word must not exceed 100 characters", vm.uiState.value.error.english())
     }
 
     @Test
@@ -173,8 +174,7 @@ class CustomWordsViewModelTest {
         val vm = buildViewModel()
         vm.addCustomWord("hello", "", sourceLang = "en-US", targetLang = "ja-JP")
 
-        assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("Translated word"))
+        assertEquals(StatusText(UiTextKey.CustomWordsMsgTranslatedRequired), vm.uiState.value.error)
     }
 
     @Test
@@ -183,8 +183,7 @@ class CustomWordsViewModelTest {
         val longPronunciation = "p".repeat(201)
         vm.addCustomWord("hello", "world", pronunciation = longPronunciation, sourceLang = "en-US", targetLang = "ja-JP")
 
-        assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("Pronunciation"))
+        assertEquals("Pronunciation must not exceed 200 characters", vm.uiState.value.error.english())
     }
 
     @Test
@@ -193,8 +192,7 @@ class CustomWordsViewModelTest {
         val longExample = "e".repeat(501)
         vm.addCustomWord("hello", "world", example = longExample, sourceLang = "en-US", targetLang = "ja-JP")
 
-        assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("Example"))
+        assertEquals("Example must not exceed 500 characters", vm.uiState.value.error.english())
     }
 
     // ── addCustomWord success / failure ──
@@ -231,7 +229,7 @@ class CustomWordsViewModelTest {
         val vm = buildViewModel()
         vm.addCustomWord("hello", "world", sourceLang = "en-US", targetLang = "ja-JP")
 
-        assertEquals("Failed to add word", vm.uiState.value.error)
+        assertEquals(StatusText(UiTextKey.CustomWordsMsgAddFailed), vm.uiState.value.error)
     }
 
     @Test
@@ -333,7 +331,7 @@ class CustomWordsViewModelTest {
             newTargetLang = "fr-FR"
         )
 
-        assertTrue(vm.uiState.value.error?.contains("Translation failed") == true)
+        assertEquals(UiTextKey.CustomWordsMsgTranslateFailed, vm.uiState.value.error?.key)
         verify(customWordsRepo, never()).updateCustomWord(
             any(), any(), any(), any(), any(), any(), any(), any()
         )
@@ -493,7 +491,7 @@ class CustomWordsViewModelTest {
         vm.translateCustomWord("hello", "ja-JP") { }
 
         assertNotNull(vm.uiState.value.error)
-        assertTrue(vm.uiState.value.error!!.contains("Translation failed"))
+        assertEquals(UiTextKey.CustomWordsMsgTranslateFailed, vm.uiState.value.error?.key)
         assertFalse(vm.uiState.value.isTranslatingCustomWord)
     }
 
@@ -551,7 +549,7 @@ class CustomWordsViewModelTest {
         val vm = buildViewModel()
         vm.selectCustomWordBank()
 
-        assertEquals("Failed to load custom words", vm.uiState.value.error)
+        assertEquals(StatusText(UiTextKey.CustomWordsMsgLoadFailed), vm.uiState.value.error)
         assertFalse(vm.uiState.value.isLoading)
     }
 }

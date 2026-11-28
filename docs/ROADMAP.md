@@ -16,7 +16,7 @@ the FYP was graded. Keep the status table up to date in every PR.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 0 | Agent docs (AGENTS.md), roadmap, screenshot tests, baseline screenshots | Done |
-| 1 | Correctness fixes, no new look | Parts 1–3 done; part 4 in review; part 5 next |
+| 1 | Correctness fixes, no new look | Parts 1–4 done; part 5 in review |
 | 2 | Design system: mockup approval, theme, component kit, navigation shell | Not started |
 | 3 | Home dashboard and translation tools | Not started |
 | 4 | Learning loop: review (SRS), streak, daily goal, stats, quiz feedback | Not started |
@@ -71,7 +71,7 @@ Phase 1 is split into five PRs so each one stays small enough to review.
 **Part 3 (fixed) — localization sweep, social area:**
 - **Friends:** every message from `FriendsViewModel` and its delegates (send, accept, decline, cancel, batch, remove, block, unblock) is a `StatusText`. Numbers (limits, counts, minutes) are args.
 - **Chat, My profile, Shared inbox, Shared material detail:** the `error`, `successMessage` and `translationError` fields are `StatusText?`, and the screens call `.resolve(t)`.
-- **`ErrorMessages.kt`:** the new `statusFromException(e, fallbackKey)` returns a `StatusText`. The old `fromException(e, fallback): String` still works for callers that are not migrated yet. It now builds its text from the same English keys, so both forms always agree (tested in `ErrorMessagesTest`).
+- **`ErrorMessages.kt`:** the new `statusFromException(e, fallbackKey)` returns a `StatusText`. The old `fromException(e, fallback): String` kept working for callers that were not migrated yet, and built its text from the same English keys. (It was removed in part 5, once it had no callers.)
 - 73 new keys, in English and all 16 locale maps.
 
 **Decision — `StatusText.raw(text)` for data-layer text.** Some exceptions carry a message from our own checks (`SecurityException("Cannot share with this user")`). We have no key for every such message, so `ErrorMessages` passes it through with the `StatusRaw` key (template `{detail}`). This is the same behavior as before; it is only for data, never for UI text written in a ViewModel.
@@ -96,7 +96,27 @@ Phase 1 is split into five PRs so each one stays small enough to review.
 
 **Decision — Shop no longer shows raw server reasons or exception messages.** An unknown `reason` from the coin Cloud Function shows "Purchase failed" or "Failed to unlock palette". Exceptions go through `ErrorMessages.statusFromException` with the same fallback keys.
 
-**Part 5:** Learning and learning sheets, the Word bank delegates, custom words, Favorites, the other `ErrorMessages.fromException` callers, the `EmptyStateView` titles and Startup. "Session {id}" in `HistoryViewModel` stays as it is, because it is saved data, not UI text.
+**Part 5 (fixed) — Learning, Word bank, custom words, Favorites, empty states and Startup:**
+- **Learning and learning sheets:** `LearningUiState.error` and `LearningSheetUiState.error`, `quizError` and `shareError` are `StatusText?`. Load, generate, cancel, quiz parse ("{parsed} of {total}"), quiz load, submit and share each have a key. `QuizScreen` now checks `quizError?.key == QuizMsgNotGenerated` instead of matching English text.
+- **Word bank:** `error` and `shareError` are `StatusText?`; the delegates use keys for "need {count} more records", "no history", generate, load, delete and "word data incomplete".
+- **Custom words:** `error` is a `StatusText?`. The errors were set but never shown, so the Word bank screen now shows them in a snackbar that closes by itself.
+- **Favorites:** load, load more, refresh, remove and delete-selected each have a key; "Load More", the delete-mode icon labels and "Person A/B" in saved sessions are localized.
+- **Empty states:** `EmptyStates.NoHistory`, `NoFavorites` and `NoLearningSheets` take `t` and use title keys; `NoSharedItems` has a localized default message.
+- **Other:** the friend picker's "No friends yet", the shared material "Loading content...", Help's "Version: …", the expand/collapse icon labels and the Continuous conversation back label.
+- 48 new keys, in English and all 16 locale maps. The zh-TW and Cantonese strings use 最愛 for "favorites", as the rest of those files do (checked by `TranslationConsistencyTest`).
+- "Session {id}" in `HistoryViewModel` and the "Learning Sheet: X → Y" share title stay as they are, because they are saved data, not UI text.
+
+**Decision — `LearningSheetUiState.coinsAwarded: Boolean` replaces `coinRewardMessage: String?`.** The message text was never shown; the quiz screen only checked whether it was set.
+
+**Decision — `ErrorMessages.fromException` and `GENERIC_RETRY` are removed.** Every caller now uses `statusFromException`. Its tests were converted to `statusFromException(e).english()` with the same expected English text.
+
+**Decision — AI errors show the server's message as raw text.** `CloudGenAiClient` wraps every AI error in an `IllegalStateException` with the server's message, and `statusFromException` passes that message through as `StatusText.raw`. This matches the `StatusText` rule that error detail from a service is data. Localizing it would need the server to send codes instead of text.
+
+**Decision — the Word bank uses `shareSuccessKey: UiTextKey?`,** like `LearningSheetUiState`, instead of an English success string.
+
+**Decision — `StartupScreen` takes `appLanguageState`,** like the other screens. It shows `HomeTitle` and the new `StartupTagline`, so its English screenshot baseline is unchanged. The logo and text block moved into a private `StartupBranding` composable to keep the function under the Detekt length limit.
+
+**Decision — custom word validation has one key per field** (`validateCustomWordInput` in `CustomWordsViewModel.kt`, tested in `CustomWordValidationTest`). The shared `validateTextLength` in `SecurityUtils` builds English text from a field name, so it cannot be localized; it stays for its other callers.
 
 ## Later (needs a backend deploy or paid calls)
 

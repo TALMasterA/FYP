@@ -1,8 +1,11 @@
 package com.translator.TalknLearn.screens.wordbank
 
+import com.translator.TalknLearn.core.ErrorMessages
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.domain.friends.ShareWordUseCase
 import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -20,7 +23,7 @@ internal class WordBankShareDelegate(
     private val getPrimaryLanguageCode: () -> String
 ) {
     fun setPendingShareWord(word: WordBankItem?) {
-        uiState.value = uiState.value.copy(pendingShareWord = word, shareError = null, shareSuccess = null)
+        uiState.value = uiState.value.copy(pendingShareWord = word, shareError = null, shareSuccessKey = null)
     }
 
     fun shareWord(word: WordBankItem, toUserId: UserId) {
@@ -41,8 +44,8 @@ internal class WordBankShareDelegate(
         if (word.originalWord.isBlank() || word.translatedWord.isBlank() || sourceLang.isBlank() || targetLang.isBlank()) {
             uiState.value = state.copy(
                 isSharing = false,
-                shareSuccess = null,
-                shareError = "Word data is incomplete. Refresh and try again.",
+                shareSuccessKey = null,
+                shareError = StatusText(UiTextKey.WordBankMsgShareIncomplete),
                 pendingShareWord = null
             )
             return
@@ -51,7 +54,7 @@ internal class WordBankShareDelegate(
         val fromUsername = sharedFriendsDataSource.getCachedUsername(fromId) ?: ""
 
         scope.launch {
-            uiState.value = uiState.value.copy(isSharing = true, shareError = null, shareSuccess = null, pendingShareWord = null)
+            uiState.value = uiState.value.copy(isSharing = true, shareError = null, shareSuccessKey = null, pendingShareWord = null)
             shareWordUseCase(
                 fromUserId = UserId(fromId),
                 fromUsername = fromUsername,
@@ -62,15 +65,18 @@ internal class WordBankShareDelegate(
                 targetLang = targetLang,
                 notes = word.example
             ).onSuccess {
-                uiState.value = uiState.value.copy(isSharing = false, shareSuccess = "Shared successfully!")
+                uiState.value = uiState.value.copy(isSharing = false, shareSuccessKey = UiTextKey.ShareSuccess)
             }.onFailure { e ->
-                uiState.value = uiState.value.copy(isSharing = false, shareError = e.message ?: "Failed to share")
+                uiState.value = uiState.value.copy(
+                    isSharing = false,
+                    shareError = ErrorMessages.statusFromException(e, UiTextKey.ShareMsgFailed)
+                )
             }
         }
     }
 
     fun clearShareMessages() {
-        uiState.value = uiState.value.copy(shareSuccess = null, shareError = null)
+        uiState.value = uiState.value.copy(shareSuccessKey = null, shareError = null)
     }
 
     private fun parseLanguagePair(category: String): Pair<String, String> {

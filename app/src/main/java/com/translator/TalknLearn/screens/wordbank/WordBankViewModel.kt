@@ -15,8 +15,10 @@ import com.translator.TalknLearn.data.wordbank.WordBankCacheDataStore
 import com.translator.TalknLearn.data.wordbank.WordBankGenerationRepository
 import com.translator.TalknLearn.domain.friends.ShareWordUseCase
 import com.translator.TalknLearn.domain.speech.SpeakTextUseCase
-import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.TranslationRecord
+import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -164,7 +166,7 @@ class WordBankViewModel @Inject constructor(
                         cachedCustomWordsCount = null
                         _uiState.value = WordBankUiState(
                             isLoading = false,
-                            error = "Not logged in"
+                            error = StatusText(UiTextKey.ErrorNotLoggedIn)
                         )
                     }
                     AuthState.Loading -> {
@@ -209,7 +211,9 @@ class WordBankViewModel @Inject constructor(
                     currentWordBank = currentWordBank.copy(words = updatedWords)
                 )
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = ErrorMessages.fromException(e, ErrorMessages.GENERIC_RETRY))
+                _uiState.value = _uiState.value.copy(
+                    error = ErrorMessages.statusFromException(e, UiTextKey.WordBankMsgDeleteFailed)
+                )
             }
         }
     }
@@ -394,7 +398,7 @@ class WordBankViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message
+                    error = ErrorMessages.statusFromException(e, UiTextKey.WordBankMsgLoadFailed)
                 )
             }
         }

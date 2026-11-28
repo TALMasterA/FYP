@@ -2,11 +2,14 @@ package com.translator.TalknLearn.screens.wordbank
 
 import com.translator.TalknLearn.core.AiConfig
 import com.translator.TalknLearn.core.AppLogger
+import com.translator.TalknLearn.core.ErrorMessages
 import com.translator.TalknLearn.data.history.SharedHistoryDataSource
 import com.translator.TalknLearn.data.wordbank.FirestoreWordBankRepository
 import com.translator.TalknLearn.data.wordbank.WordBankGenerationRepository
 import com.translator.TalknLearn.domain.learning.GenerationEligibility
 import com.translator.TalknLearn.model.TranslationRecord
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -87,7 +90,10 @@ internal class WordBankGenerationDelegate(
         val existingWordBank = uiState.value.currentWordBank
         if (existingWordBank != null && !canRegenerate(targetLanguageCode)) {
             uiState.value = uiState.value.copy(
-                error = "Need ${GenerationEligibility.MIN_RECORDS_FOR_REGEN} more records to refresh word bank"
+                error = StatusText(
+                    UiTextKey.WordBankMsgNeedMoreRecords,
+                    mapOf("count" to GenerationEligibility.MIN_RECORDS_FOR_REGEN.toString())
+                )
             )
             return
         }
@@ -105,7 +111,7 @@ internal class WordBankGenerationDelegate(
                 if (relevantRecords.isEmpty()) {
                     uiState.value = uiState.value.copy(
                         isGenerating = false,
-                        error = "No translation history found for this language"
+                        error = StatusText(UiTextKey.WordBankMsgNoHistory)
                     )
                     return@launch
                 }
@@ -128,7 +134,7 @@ internal class WordBankGenerationDelegate(
                 if (words.isEmpty()) {
                     uiState.value = uiState.value.copy(
                         isGenerating = false,
-                        error = "Failed to generate word bank. Please try again."
+                        error = StatusText(UiTextKey.WordBankMsgGenerateFailed)
                     )
                     return@launch
                 }
@@ -172,7 +178,7 @@ internal class WordBankGenerationDelegate(
             } catch (e: Exception) {
                 uiState.value = uiState.value.copy(
                     isGenerating = false,
-                    error = "Generation failed: ${e.message}"
+                    error = ErrorMessages.statusFromException(e, UiTextKey.WordBankMsgGenerateFailed)
                 )
             } finally {
                 generationJob = null

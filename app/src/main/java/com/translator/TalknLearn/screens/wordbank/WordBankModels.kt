@@ -1,7 +1,9 @@
 package com.translator.TalknLearn.screens.wordbank
 
-import com.translator.TalknLearn.model.friends.FriendRelation
 import com.google.firebase.Timestamp
+import com.translator.TalknLearn.model.friends.FriendRelation
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 
 /**
  * A single word/phrase in the word bank
@@ -34,7 +36,7 @@ data class WordBank(
  */
 data class WordBankUiState(
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val error: StatusText? = null,
     val languageClusters: List<WordBankLanguageCluster> = emptyList(),
     val selectedLanguageCode: String? = null,
     val currentWordBank: WordBank? = null,
@@ -48,8 +50,8 @@ data class WordBankUiState(
     // Share feature state
     val friends: List<FriendRelation> = emptyList(),
     val isSharing: Boolean = false,
-    val shareSuccess: String? = null,
-    val shareError: String? = null,
+    val shareSuccessKey: UiTextKey? = null,
+    val shareError: StatusText? = null,
     val pendingShareWord: WordBankItem? = null,
     // Generation completion event (consumed once by banner)
     val wordBankGenerationCompleted: String? = null

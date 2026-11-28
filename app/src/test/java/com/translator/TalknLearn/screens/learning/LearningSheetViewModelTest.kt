@@ -19,6 +19,7 @@ import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.FriendRelation
 import com.translator.TalknLearn.model.friends.SharedItem
 import com.translator.TalknLearn.model.friends.SharedItemType
+import com.translator.TalknLearn.model.ui.StatusText
 import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.User
@@ -144,7 +145,7 @@ class LearningSheetViewModelTest {
             PerformanceTracer(), mock()
         )
 
-        assertEquals("Not logged in", vm.uiState.value.error)
+        assertEquals(StatusText(UiTextKey.ErrorNotLoggedIn), vm.uiState.value.error)
         assertFalse(vm.uiState.value.isLoading)
         assertTrue(vm.uiState.value.quizQuestions.isEmpty())
         assertNull(vm.uiState.value.currentAttempt)
@@ -203,7 +204,8 @@ class LearningSheetViewModelTest {
 
         val vm = buildViewModel()
 
-        assertEquals("Network error", vm.uiState.value.error)
+        // "Network error" is classified as a network problem.
+        assertEquals(StatusText(UiTextKey.ErrNoInternet), vm.uiState.value.error)
         assertFalse(vm.uiState.value.isLoading)
     }
 
@@ -233,7 +235,7 @@ class LearningSheetViewModelTest {
         val vm = buildViewModel()
         vm.initializeQuiz()
 
-        assertEquals("No quiz generated yet.", vm.uiState.value.quizError)
+        assertEquals(StatusText(UiTextKey.QuizMsgNotGenerated), vm.uiState.value.quizError)
         assertTrue(vm.uiState.value.quizQuestions.isEmpty())
     }
 
@@ -248,7 +250,7 @@ class LearningSheetViewModelTest {
         val vm = buildViewModel()
         vm.initializeQuiz()
 
-        assertEquals("Stored quiz is corrupted. Please regenerate.", vm.uiState.value.quizError)
+        assertEquals(StatusText(UiTextKey.QuizMsgCorrupted), vm.uiState.value.quizError)
         assertTrue(vm.uiState.value.isQuizOutdated)
     }
 
@@ -295,7 +297,7 @@ class LearningSheetViewModelTest {
         val vm = buildViewModel()
         vm.initializeQuiz()
 
-        assertEquals("DB fail", vm.uiState.value.quizError)
+        assertEquals(StatusText(UiTextKey.QuizMsgLoadFailed), vm.uiState.value.quizError)
     }
 
     // ── recordQuizAnswer ──
@@ -332,7 +334,7 @@ class LearningSheetViewModelTest {
         vm.initializeQuiz()
         vm.submitQuiz()
 
-        assertEquals("Submit failed", vm.uiState.value.quizError)
+        assertEquals(StatusText(UiTextKey.QuizMsgSubmitFailed), vm.uiState.value.quizError)
     }
 
     // ── resetQuiz ──
@@ -359,7 +361,7 @@ class LearningSheetViewModelTest {
         val vm = buildViewModel()
         vm.shareSheet(UserId("friend1"))
 
-        assertEquals("Sheet content is not ready. Please wait for it to load.", vm.uiState.value.shareError)
+        assertEquals(StatusText(UiTextKey.LearningMsgShareNotReady), vm.uiState.value.shareError)
     }
 
     @Test
@@ -422,7 +424,7 @@ class LearningSheetViewModelTest {
         val vm = buildViewModel()
         vm.shareSheet(UserId("friend1"))
 
-        assertEquals("Share failed", vm.uiState.value.shareError)
+        assertEquals(StatusText(UiTextKey.ShareMsgFailed), vm.uiState.value.shareError)
     }
 
     @Test

@@ -179,7 +179,7 @@ fun LearningSheetScreen(
             )
 
             uiState.error?.let { err ->
-                Text(t(UiTextKey.LearningErrorTemplate).format(err), color = MaterialTheme.colorScheme.error)
+                Text(t(UiTextKey.LearningErrorTemplate).format(err.resolve(t)), color = MaterialTheme.colorScheme.error)
             }
 
             if (showConfirm) {
@@ -286,7 +286,7 @@ fun LearningSheetScreen(
 
 
                 uiState.quizError?.let { err ->
-                    Text(err, color = MaterialTheme.colorScheme.error)
+                    Text(err.resolve(t), color = MaterialTheme.colorScheme.error)
                 }
             }
 
@@ -327,7 +327,7 @@ fun LearningSheetScreen(
                     .padding(16.dp),
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.onErrorContainer
-            ) { Text(err) }
+            ) { Text(err.resolve(t)) }
         }
     } // end Box
     }

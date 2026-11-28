@@ -502,5 +502,103 @@ val OnboardingExtrasScreenTexts: List<String> = listOf(
     // ErrDbGeneric
     "Database error. Please try again.",
 
+    // --- Phase 1 part 5: learning, word bank, custom words, favorites and empty states ---
+    // LearningMsgLoadFailed
+    "Failed to load learning sheets.",
+    // LearningMsgSheetLoadFailed
+    "Failed to load the learning sheet.",
+    // LearningMsgSheetGenerateCancelled
+    "Learning sheet generation cancelled.",
+    // LearningMsgSheetGenerateFailed
+    "Failed to generate the learning sheet. Please try again.",
+    // LearningMsgQuizParseIncomplete
+    "The quiz has only {parsed} of {total} questions. Please regenerate it.",
+    // LearningMsgQuizGenerateCancelled
+    "Quiz generation cancelled.",
+    // LearningMsgQuizGenerateFailed
+    "Failed to generate the quiz. Please try again.",
+    // LearningMsgShareNotReady
+    "Sheet content is not ready. Please wait for it to load.",
+    // QuizMsgNotGenerated
+    "No quiz generated yet.",
+    // QuizMsgCorrupted
+    "Stored quiz is corrupted. Please regenerate.",
+    // QuizMsgLoadFailed
+    "Failed to load quiz.",
+    // QuizMsgSubmitFailed
+    "Failed to submit quiz. Please try again.",
+    // ShareMsgFailed
+    "Failed to share. Please try again.",
+    // WordBankMsgLoadFailed
+    "Failed to load the word bank.",
+    // WordBankMsgDeleteFailed
+    "Failed to delete the word. Please try again.",
+    // WordBankMsgNeedMoreRecords
+    "Need {count} more records to refresh word bank",
+    // WordBankMsgNoHistory
+    "No translation history found for this language",
+    // WordBankMsgGenerateFailed
+    "Failed to generate word bank. Please try again.",
+    // WordBankMsgShareIncomplete
+    "Word data is incomplete. Refresh and try again.",
+    // CustomWordsMsgOriginalRequired
+    "Original word is required",
+    // CustomWordsMsgOriginalTooLong
+    "Original word must not exceed {max} characters",
+    // CustomWordsMsgTranslatedRequired
+    "Translated word is required",
+    // CustomWordsMsgTranslatedTooLong
+    "Translated word must not exceed {max} characters",
+    // CustomWordsMsgPronunciationTooLong
+    "Pronunciation must not exceed {max} characters",
+    // CustomWordsMsgExampleTooLong
+    "Example must not exceed {max} characters",
+    // CustomWordsMsgDuplicate
+    "This word already exists in your custom word bank",
+    // CustomWordsMsgAddFailed
+    "Failed to add word",
+    // CustomWordsMsgInvalidLanguageUpdate
+    "Invalid language update request",
+    // CustomWordsMsgTranslateFailed
+    "Translation failed: {detail}",
+    // CustomWordsMsgUpdateLanguageFailed
+    "Failed to update word language",
+    // CustomWordsMsgLoadFailed
+    "Failed to load custom words",
+    // FavoritesMsgLoadFailed
+    "Failed to load favorites",
+    // FavoritesMsgLoadMoreFailed
+    "Failed to load more favorites",
+    // FavoritesMsgRefreshFailed
+    "Failed to refresh favorites",
+    // FavoritesMsgRemoveFailed
+    "Failed to remove favorite",
+    // FavoritesMsgDeleteSelectedFailed
+    "Failed to delete selected items",
+    // FavoritesLoadMore
+    "Load More",
+    // A11yConfirmDelete
+    "Confirm delete",
+    // A11yDeleteMode
+    "Delete mode",
+    // A11yExpand
+    "Expand",
+    // A11yCollapse
+    "Collapse",
+    // EmptyNoHistoryTitle
+    "No History Yet",
+    // EmptyNoFavoritesTitle
+    "No Favorites",
+    // EmptyNoLearningTitle
+    "No Learning Materials",
+    // EmptySharedItemsMessage
+    "No items shared with you yet",
+    // SharedMaterialLoadingContent
+    "Loading content...",
+    // HelpVersionTemplate
+    "Version: {version}",
+    // StartupTagline
+    "Translate & Learn",
+
     // --- Extended Error Messages (localized) ---
 )

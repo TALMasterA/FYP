@@ -140,6 +140,7 @@ fun ContinuousConversationScreen(
     StandardScreenScaffold(
         title = t(UiTextKey.ContinuousTitle),
         onBack = onBack,
+        backContentDescription = t(UiTextKey.NavBack),
         actions = {
             IconButton(onClick = { showInfoDialog = true }) {
                 Icon(
