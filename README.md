@@ -20,7 +20,7 @@ Poster Showcase: [Click here](https://fyp.comp.hkbu.edu.hk/poster/2025/poster.ph
 
 **GitHub Actions workflows:**
 1. **CI (`ci.yml`)**: Android unit tests, debug APK build, backend linting, backend build, Jest coverage (90/78/90/90 threshold), and Firestore emulator tests
-2. **CodeQL (`codeql.yml`)**: Scheduled, main-push and PR semantic analysis for security vulnerabilities
+2. **CodeQL (`codeql.yml`)**: Defines scheduled, main-push and PR semantic analysis when the workflow is enabled
 
 **Status:**
 ![CI](https://github.com/TALMasterA/FYP/actions/workflows/ci.yml/badge.svg)

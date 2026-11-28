@@ -6,10 +6,12 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.translator.TalknLearn.HiltTestActivity
 import com.translator.TalknLearn.model.ui.AppLanguageState
+import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.ui.theme.FYPTheme
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -25,8 +27,7 @@ import org.junit.runner.RunWith
  * Verifies that key UI elements render, text input works, and
  * the login/register toggle switches modes correctly.
  *
- * Note: These tests use a standalone composable without Hilt injection,
- * so they exercise the UI layer only (no real ViewModel or Firebase).
+ * Uses a Hilt test activity and exercises the form without signing in.
  */
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
@@ -85,9 +86,10 @@ class LoginScreenSmokeTest {
     @Test
     fun loginScreen_toggleToRegisterShowsConfirmPassword() {
         setContent()
-        composeTestRule.onNodeWithTag("toggleAuthMode").performClick()
+        composeTestRule.onNodeWithTag("toggleAuthMode").performScrollTo().performClick()
         composeTestRule.waitForIdle()
         // In register mode, the confirm password field should appear
-        composeTestRule.onNodeWithText("Confirm Password").assertIsDisplayed()
+        val confirmLabel = BaseUiTexts[UiTextKey.AuthConfirmPasswordLabel.ordinal]
+        composeTestRule.onNodeWithText(confirmLabel).performScrollTo().assertIsDisplayed()
     }
 }

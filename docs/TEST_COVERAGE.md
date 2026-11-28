@@ -55,6 +55,29 @@ JVM tests do not exercise emulator hardware, signed Google Sign-In, Play Integri
 
 Kover excludes selected Hilt/Dagger/KSP classes, localization tables, DI modules, `BuildConfig`, resources, and functions or classes matched by the Compose, Hilt module and singleton annotations. Some generated Hilt Java files still appear in the XML. `CloudGenAiClient` is annotated with `Singleton` and therefore outside the measured report. Android device execution is needed for the direct Azure Speech SDK, Android permissions and audible output.
 
+## Android emulator smoke
+
+On a dedicated API 30 x86_64 emulator, the mock-config APK cold-launched and all four `LoginScreenSmokeTest` cases passed. They exercise email and password display, typing, the enabled login button, and scrolling to the confirmation field after switching form modes. Google Sign-In, real translation, audio, learning generation, and a second account require an authorized live installation. No macrobenchmark measurements were taken.
+
+The checked-in mock key is sufficient to build. Firebase Performance validates key format at runtime, so the local emulator run used a syntactically valid dummy value in the ignored config. Use the following only in a clean test checkout and on a dedicated offline emulator:
+
+```powershell
+$config = Get-Content ci/google-services-mock.json -Raw | ConvertFrom-Json
+foreach ($client in $config.client) {
+    foreach ($entry in $client.api_key) {
+        $entry.current_key = 'AIza' + ('0' * 35)
+    }
+}
+$config | ConvertTo-Json -Depth 20 | Set-Content -Encoding utf8 app/google-services.json
+.\gradlew.bat :app:assembleDebug :app:assembleDebugAndroidTest
+```
+
+Install the x86_64 debug APK and instrumentation APK on that emulator. Target its serial explicitly:
+
+```text
+adb -s <emulator-serial> shell am instrument -w -r -e class com.translator.TalknLearn.screens.login.LoginScreenSmokeTest com.translator.TalknLearn.test/com.translator.TalknLearn.HiltTestRunner
+```
+
 ## Backend files with partial coverage
 
 No production backend file has zero lines. Each Jest run reports the exact uncovered lines and branches in LCOV.
