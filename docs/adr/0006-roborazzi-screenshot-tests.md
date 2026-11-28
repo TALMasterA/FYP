@@ -50,6 +50,7 @@ tests. These tests run on the JVM as part of `testDebugUnitTest`.
 ### Negative / accepted trade-offs
 
 - The libraries are test-only (`testImplementation`) and add nothing to the APK. They do add build time: Robolectric downloads an Android runtime jar on its first run.
+- Robolectric's native graphics jar (`nativeruntime-dist-compat`) is about 160 MB, and Maven Central answers it with HTTP 429 (too many requests), on CI too. `settings.gradle.kts` therefore fetches only the `org.robolectric` group from Google's mirror of Maven Central (`maven-central.storage-download.googleapis.com`). Every other dependency still comes from Maven Central and Google. Do not remove this repository unless CI stays green without it.
 - Robolectric rendering is close to a device but not identical. It does not replace a final check on a real device.
 - The reference PNGs make the repository bigger. We keep the set small: key screens only, in light and dark.
 
