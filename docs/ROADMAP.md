@@ -16,7 +16,7 @@ the FYP was graded. Keep the status table up to date in every PR.
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 0 | Agent docs (AGENTS.md), roadmap, screenshot tests, baseline screenshots | Done |
-| 1 | Correctness fixes, no new look | Parts 1–2 done; part 3 in review; parts 4–5 next |
+| 1 | Correctness fixes, no new look | Parts 1–3 done; part 4 in review; part 5 next |
 | 2 | Design system: mockup approval, theme, component kit, navigation shell | Not started |
 | 3 | Home dashboard and translation tools | Not started |
 | 4 | Learning loop: review (SRS), streak, daily goal, stats, quiz feedback | Not started |
@@ -66,7 +66,7 @@ Phase 1 is split into five PRs so each one stays small enough to review.
 - **Speech / Translate / Continuous:** every status line (detecting, translating, errors, image scan) is localized.
 - 46 new keys, in English and all 16 locale maps.
 
-**Decision — `StatusText` for ViewModel messages** (`model/ui/StatusText.kt`). A ViewModel has no translator, and some messages contain data ("Detected: Japanese"). So a ViewModel emits `StatusText(key, args)` and the screen calls `.resolve(t)`. Args hold data only (a service error, a language name), never English UI text. Fixed messages without data use an `errorKey: UiTextKey?` field next to the raw `error: String?` from the data layer, like `SettingsViewModel`. Logic that used to compare English strings (the auto-clear of "Detected: …") now compares keys.
+**Decision — `StatusText` for ViewModel messages** (`model/ui/StatusText.kt`). A ViewModel has no translator, and some messages contain data ("Detected: Japanese"). So a ViewModel emits `StatusText(key, args)` and the screen calls `.resolve(t)`. Args hold data only (a service error, a language name), never English UI text. Fixed messages without data can use a plain `errorKey: UiTextKey?` field, like `SettingsViewModel`. Logic that used to compare English strings (the auto-clear of "Detected: …") now compares keys.
 
 **Part 3 (fixed) — localization sweep, social area:**
 - **Friends:** every message from `FriendsViewModel` and its delegates (send, accept, decline, cancel, batch, remove, block, unblock) is a `StatusText`. Numbers (limits, counts, minutes) are args.
@@ -80,7 +80,21 @@ Phase 1 is split into five PRs so each one stays small enough to review.
 
 **Decision — the shared `validateTextLength` stays English.** It has 7 callers. The Chat message and friend-request note now check its result and emit their own key ("Message must not exceed {max} characters"). The other callers move in parts 4 and 5.
 
-**Part 4 (next PR):** the English strings in `SettingsViewModel`, `ShopViewModel`, `ProfileViewModel`, `AuthViewModel` (Login) and `FeedbackViewModel`.
+**Part 4 (fixed) — localization sweep, Settings, Shop, Profile, Login and Feedback:**
+- **Feedback:** `errorMessage` is a `StatusText?`. Empty, too short ({min}), too long ({max}), rate limit and send failure each have a key. `setError` takes a `UiTextKey`.
+- **Shop:** `purchaseError`, `purchaseSuccess` and `unlockError` are `StatusText?`. "Not enough coins" and "Maximum limit reached" reuse the existing `ShopInsufficientCoins` and `ShopMaxLimitReached` keys.
+- **Profile:** `error`, `successMessage` and `deleteError` are `StatusText?`. Username rules, "taken", the update results and the delete and Google re-auth errors each have a key. The Google re-auth hint and the "Continue with Google" button on the delete dialog are localized too.
+- **Settings:** the save-failure messages (language, font size, theme, auto theme, voice, notifications) each have a key.
+- **Login and Reset password:** see the `AuthUiState` decision below.
+- 58 new keys, in English and all 16 locale maps.
+
+**Decision — `ErrorMessageMapper.mapKey(throwable): UiTextKey`.** The mapper turns Firebase Auth, Firestore and network exceptions into safe messages. `mapKey` returns a key; the old `map` now returns `BaseUiTexts[mapKey(t).ordinal]`, so its English text is the same as before (tested in `ErrorMessageMapperKeyTest`). Login uses `mapKey`. `mapSpeechRecognitionError`, `mapTranslationError` and `mapOcrError` stay English for now; they are data-layer text and move in a later part.
+
+**Decision — `SettingsUiState` drops `errorRaw`.** Every Settings message now has a key, so the screen reads only `errorKey`.
+
+**Decision — `AuthUiState` has one `error: StatusText?`.** It replaces `errorKey` + `errorRaw`. `messageRaw` was never set, so it is removed; `messageKey` stays. `reportGoogleSignInError` takes a `StatusText`, and the Google error code is an arg ("Google sign-in failed (code {code}).").
+
+**Decision — Shop no longer shows raw server reasons or exception messages.** An unknown `reason` from the coin Cloud Function shows "Purchase failed" or "Failed to unlock palette". Exceptions go through `ErrorMessages.statusFromException` with the same fallback keys.
 
 **Part 5:** Learning and learning sheets, the Word bank delegates, custom words, Favorites, the other `ErrorMessages.fromException` callers, the `EmptyStateView` titles and Startup. "Session {id}" in `HistoryViewModel` stays as it is, because it is saved data, not UI text.
 

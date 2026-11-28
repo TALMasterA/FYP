@@ -2,11 +2,14 @@ package com.translator.TalknLearn.screens.feedback
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.translator.TalknLearn.domain.feedback.FeedbackRepository
+import com.translator.TalknLearn.core.ErrorMessages
 import com.translator.TalknLearn.core.security.PersistentRateLimiter
 import com.translator.TalknLearn.core.security.ValidationResult
 import com.translator.TalknLearn.core.security.sanitizeInput
 import com.translator.TalknLearn.core.security.validateTextLength
+import com.translator.TalknLearn.domain.feedback.FeedbackRepository
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +21,7 @@ data class FeedbackUiState(
     val isSubmitting: Boolean = false,
     val showSuccessDialog: Boolean = false,
     val showErrorDialog: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: StatusText? = null
 )
 
 @HiltViewModel
@@ -30,6 +33,8 @@ class FeedbackViewModel @Inject constructor(
     companion object {
         private const val FEEDBACK_MAX = 3
         private const val FEEDBACK_WINDOW_MS = 3_600_000L
+        private const val FEEDBACK_MIN_LENGTH = 10
+        private const val FEEDBACK_MAX_LENGTH = 5000
     }
 
     private val _uiState = MutableStateFlow(FeedbackUiState())
@@ -38,17 +43,27 @@ class FeedbackViewModel @Inject constructor(
     fun submitFeedback(message: String) {
         if (message.isBlank()) {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "Message cannot be empty",
+                errorMessage = StatusText(UiTextKey.FeedbackMsgEmpty),
                 showErrorDialog = true
             )
             return
         }
 
         // Validate text length (min 10, max 5000)
-        val lengthValidation = validateTextLength(message, minLength = 10, maxLength = 5000, fieldName = "Feedback")
+        val lengthValidation = validateTextLength(
+            message,
+            minLength = FEEDBACK_MIN_LENGTH,
+            maxLength = FEEDBACK_MAX_LENGTH,
+            fieldName = "Feedback"
+        )
         if (lengthValidation is ValidationResult.Invalid) {
+            val lengthError = if (message.length < FEEDBACK_MIN_LENGTH) {
+                StatusText(UiTextKey.FeedbackMsgTooShort, mapOf("min" to FEEDBACK_MIN_LENGTH.toString()))
+            } else {
+                StatusText(UiTextKey.FeedbackMsgTooLong, mapOf("max" to FEEDBACK_MAX_LENGTH.toString()))
+            }
             _uiState.value = _uiState.value.copy(
-                errorMessage = lengthValidation.message,
+                errorMessage = lengthError,
                 showErrorDialog = true
             )
             return
@@ -63,7 +78,7 @@ class FeedbackViewModel @Inject constructor(
             )
         ) {
             _uiState.value = _uiState.value.copy(
-                errorMessage = "You have submitted too much feedback recently. Please try again later.",
+                errorMessage = StatusText(UiTextKey.FeedbackMsgRateLimited),
                 showErrorDialog = true
             )
             return
@@ -82,7 +97,7 @@ class FeedbackViewModel @Inject constructor(
                 android.util.Log.e("FeedbackViewModel", "Failed to submit feedback", e)
                 _uiState.value = FeedbackUiState(
                     showErrorDialog = true,
-                    errorMessage = com.translator.TalknLearn.core.ErrorMessages.fromException(e, "Failed to submit feedback. Please check your internet connection.")
+                    errorMessage = ErrorMessages.statusFromException(e, UiTextKey.FeedbackMsgSubmitFailed)
                 )
             }
         }
@@ -96,7 +111,7 @@ class FeedbackViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(showErrorDialog = false, isSubmitting = false)
     }
 
-    fun setError(message: String) {
-        _uiState.value = _uiState.value.copy(errorMessage = message)
+    fun setError(key: UiTextKey) {
+        _uiState.value = _uiState.value.copy(errorMessage = StatusText(key))
     }
 }

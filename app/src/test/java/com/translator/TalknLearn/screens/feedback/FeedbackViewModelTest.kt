@@ -1,7 +1,9 @@
 package com.translator.TalknLearn.screens.feedback
 
-import com.translator.TalknLearn.domain.feedback.FeedbackRepository
 import com.translator.TalknLearn.core.security.FakePersistentRateLimiter
+import com.translator.TalknLearn.domain.feedback.FeedbackRepository
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.ui.english
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -71,7 +73,8 @@ class FeedbackViewModelTest {
 
         val state = viewModel.uiState.value
         assertTrue(state.showErrorDialog)
-        assertEquals("Message cannot be empty", state.errorMessage)
+        assertEquals(UiTextKey.FeedbackMsgEmpty, state.errorMessage?.key)
+        assertEquals("Message cannot be empty", state.errorMessage.english())
     }
 
     @Test
@@ -106,7 +109,7 @@ class FeedbackViewModelTest {
         assertTrue(state.showErrorDialog)
         assertEquals(
             "No internet connection. Please check your network and try again.",
-            state.errorMessage
+            state.errorMessage.english()
         )
         assertFalse(state.isSubmitting)
     }
@@ -126,7 +129,38 @@ class FeedbackViewModelTest {
 
     @Test
     fun `setError updates error message`() {
-        viewModel.setError("Custom error")
-        assertEquals("Custom error", viewModel.uiState.value.errorMessage)
+        viewModel.setError(UiTextKey.FeedbackMessageRequired)
+        assertEquals(UiTextKey.FeedbackMessageRequired, viewModel.uiState.value.errorMessage?.key)
+    }
+
+    @Test
+    fun `too short message shows min length error`() = runTest {
+        viewModel.submitFeedback("short")
+
+        val state = viewModel.uiState.value
+        assertTrue(state.showErrorDialog)
+        assertEquals("Feedback must be at least 10 characters", state.errorMessage.english())
+        verify(feedbackRepo, never()).submitFeedback(any())
+    }
+
+    @Test
+    fun `too long message shows max length error`() = runTest {
+        viewModel.submitFeedback("a".repeat(5001))
+
+        val state = viewModel.uiState.value
+        assertTrue(state.showErrorDialog)
+        assertEquals("Feedback must not exceed 5000 characters", state.errorMessage.english())
+        verify(feedbackRepo, never()).submitFeedback(any())
+    }
+
+    @Test
+    fun `unknown submit error falls back to submit failed message`() = runTest {
+        feedbackRepo.stub {
+            onBlocking { submitFeedback(any()) } doAnswer { throw UnsupportedOperationException("boom") }
+        }
+
+        viewModel.submitFeedback("Feedback text")
+
+        assertEquals(UiTextKey.FeedbackMsgSubmitFailed, viewModel.uiState.value.errorMessage?.key)
     }
 }

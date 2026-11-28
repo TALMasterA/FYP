@@ -384,5 +384,123 @@ val OnboardingExtrasScreenTexts: List<String> = listOf(
     // SharedMsgLoadFailed
     "Failed to load shared material. Please try again.",
 
+    // --- Phase 1 part 4: settings, shop, profile, login and feedback messages ---
+    // FeedbackMsgEmpty
+    "Message cannot be empty",
+    // FeedbackMsgTooShort
+    "Feedback must be at least {min} characters",
+    // FeedbackMsgTooLong
+    "Feedback must not exceed {max} characters",
+    // FeedbackMsgRateLimited
+    "You have submitted too much feedback recently. Please try again later.",
+    // FeedbackMsgSubmitFailed
+    "Failed to submit feedback. Please check your internet connection.",
+    // ShopMsgLoadFailed
+    "Failed to load shop data",
+    // ShopMsgPurchaseFailed
+    "Purchase failed",
+    // ShopMsgHistoryExpanded
+    "History limit expanded to {limit} records!",
+    // ShopMsgPaletteAlreadyUnlocked
+    "Palette already unlocked",
+    // ShopMsgUnlockFailed
+    "Failed to unlock palette",
+    // ShopMsgPaletteUnlocked
+    "Palette unlocked!",
+    // ShopMsgPaletteSelectFailed
+    "Failed to change the color palette. Please try again.",
+    // ProfileMsgLoadFailed
+    "Failed to load profile",
+    // ProfileMsgUsernameTooShort
+    "Username must be at least {min} characters",
+    // ProfileMsgUsernameTooLong
+    "Username must not exceed {max} characters",
+    // ProfileMsgUsernameInvalidChars
+    "Username can only contain letters, numbers, and underscores",
+    // ProfileMsgVerifyFailed
+    "Unable to verify account status. Please try again.",
+    // ProfileMsgUsernameTaken
+    "Username already taken",
+    // ProfileMsgUsernameUpdatedSyncing
+    "Username updated. Your friends list may take a moment to refresh.",
+    // ProfileMsgUsernameUpdated
+    "Username updated successfully",
+    // ProfileMsgUpdateFailed
+    "Failed to update profile",
+    // ProfileMsgSetUsernameFailed
+    "Failed to set username",
+    // ProfileMsgDeleteFailed
+    "Failed to delete account",
+    // ProfileMsgInvalidPassword
+    "Invalid password. Please try again.",
+    // ProfileMsgGoogleReauthFailed
+    "Google re-authentication failed. Please try again.",
+    // ProfileMsgGoogleNoToken
+    "Google sign-in failed: no ID token.",
+    // ProfileMsgGoogleSignInFailed
+    "Google sign-in failed. Please try again.",
+    // ProfileGoogleReauthHint
+    "Re-authenticate with your Google account to confirm.",
+    // ProfileContinueWithGoogle
+    "Continue with Google",
+    // SettingsMsgLanguageSaveFailed
+    "Failed to save language setting. Please try again.",
+    // SettingsMsgFontSaveFailed
+    "Failed to save font size. Please try again.",
+    // SettingsMsgThemeSaveFailed
+    "Failed to save theme setting. Please try again.",
+    // SettingsMsgAutoThemeFailed
+    "Failed to disable auto theme. Please try again.",
+    // SettingsMsgVoiceSaveFailed
+    "Failed to save voice setting. Please try again.",
+    // SettingsMsgNotificationSaveFailed
+    "Failed to save notification setting. Please try again.",
+    // AuthMsgEmailEmpty
+    "Email cannot be empty",
+    // AuthMsgEmailInvalid
+    "Invalid email format",
+    // AuthMsgTooManyLogins
+    "Too many login attempts. Please try again later.",
+    // AuthMsgTooManyResets
+    "Too many password reset attempts. Please try again later.",
+    // AuthMsgGoogleEmptyToken
+    "Google sign-in failed: empty ID token.",
+    // AuthMsgGoogleNoToken
+    "Google sign-in failed: no ID token returned.",
+    // AuthMsgGoogleFailedCode
+    "Google sign-in failed (code {code}).",
+    // AuthMsgGoogleNotConfigured
+    "Google sign-in is not configured for this build.",
+    // ErrUnknown
+    "Unknown error occurred.",
+    // ErrNetworkFailed
+    "Network connection failed. Please check your internet connection.",
+    // ErrOperationTimedOut
+    "The operation timed out. Please try again.",
+    // ErrCancelled
+    "Operation was cancelled.",
+    // ErrUnexpected
+    "An unexpected error occurred. Please try again.",
+    // ErrAuthInvalidEmail
+    "The email address is badly formatted.",
+    // ErrAuthWrongPassword
+    "Invalid password.",
+    // ErrAuthUserNotFound
+    "No account found with this email.",
+    // ErrAuthUserDisabled
+    "This account has been disabled.",
+    // ErrAuthTooManyRequests
+    "Too many requests. Please try again later.",
+    // ErrAuthEmailInUse
+    "The email address is already in use by another account.",
+    // ErrAuthFailed
+    "Authentication failed. Please try again.",
+    // ErrDbPermission
+    "You do not have permission to access this data.",
+    // ErrDbUnavailable
+    "Service currently unavailable. Please try again later.",
+    // ErrDbGeneric
+    "Database error. Please try again.",
+
     // --- Extended Error Messages (localized) ---
 )

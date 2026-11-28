@@ -15,14 +15,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.translator.TalknLearn.core.StandardScreenScaffold
+import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.UserSettings
-import kotlinx.coroutines.delay
-import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.ui.theme.AppSpacing
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -277,7 +277,7 @@ fun ShopScreen(
                         coinBalance = uiState.coinBalance,
                         onPaletteSelected = { viewModel.selectPalette(it) },
                         onUnlockClicked = { paletteId, cost -> viewModel.unlockPalette(paletteId, cost) },
-                        unlockError = uiState.unlockError,
+                        unlockError = uiState.unlockError?.resolve(t),
                         t = t
                     )
                 }
@@ -292,7 +292,7 @@ fun ShopScreen(
                     )
                 ) {
                     Text(
-                        text = error,
+                        text = error.resolve(t),
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(AppSpacing.large)

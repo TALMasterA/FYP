@@ -53,13 +53,11 @@ class LoginScreenLogicTest {
     }
 
     @Test
-    fun `local error takes precedence even when VM has errorKey`() {
+    fun `local error takes precedence even when VM has an error`() {
         val localError: String? = "Local validation failed"
-        val vmErrorKey: String? = "AuthErrorGeneric"
-        val vmErrorRaw: String? = null
+        // The VM error text is the resolved AuthUiState.error
+        val vmErrorText: String? = "Authentication failed. Please try again."
 
-        // The VM error text is derived from errorKey or errorRaw
-        val vmErrorText = vmErrorKey ?: vmErrorRaw
         val displayedError = localError ?: vmErrorText
 
         assertEquals("Local validation failed", displayedError)

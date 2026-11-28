@@ -2,6 +2,8 @@ package com.translator.TalknLearn.utils
 
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.firestore.FirebaseFirestoreException
+import com.translator.TalknLearn.model.ui.BaseUiTexts
+import com.translator.TalknLearn.model.ui.UiTextKey
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.concurrent.CancellationException
@@ -17,34 +19,42 @@ import java.util.concurrent.TimeoutException
 object ErrorMessageMapper {
 
     /**
-     * Maps a throwable to a user-friendly error message.
+     * Maps a throwable to a user-friendly error message in English.
+     *
+     * Screens should prefer [mapKey], which gives a key the screen shows in
+     * the user's UI language. This English form is the same text.
      *
      * @param throwable The exception to map
      * @return A sanitized, user-friendly error message
      */
-    fun map(throwable: Throwable?): String {
+    fun map(throwable: Throwable?): String = BaseUiTexts[mapKey(throwable).ordinal]
+
+    /**
+     * Maps a throwable to the [UiTextKey] of a user-friendly error message.
+     *
+     * @param throwable The exception to map
+     * @return The key of a sanitized, user-friendly error message
+     */
+    fun mapKey(throwable: Throwable?): UiTextKey {
         return when (throwable) {
-            null -> "Unknown error occurred."
+            null -> UiTextKey.ErrUnknown
 
             // Network Errors
-            is IOException, is SocketTimeoutException ->
-                "Network connection failed. Please check your internet connection."
+            is IOException, is SocketTimeoutException -> UiTextKey.ErrNetworkFailed
 
-            is TimeoutException ->
-                "The operation timed out. Please try again."
+            is TimeoutException -> UiTextKey.ErrOperationTimedOut
 
             // Cancellation
-            is CancellationException ->
-                "Operation was cancelled."
+            is CancellationException -> UiTextKey.ErrCancelled
 
             // Firebase Auth Errors
-            is FirebaseAuthException -> mapAuthError(throwable)
+            is FirebaseAuthException -> mapAuthErrorKey(throwable)
 
             // Firebase Firestore Errors
-            is FirebaseFirestoreException -> mapFirestoreError(throwable)
+            is FirebaseFirestoreException -> mapFirestoreErrorKey(throwable)
 
             // Generic
-            else -> "An unexpected error occurred. Please try again."
+            else -> UiTextKey.ErrUnexpected
         }
     }
 
@@ -131,24 +141,23 @@ object ErrorMessageMapper {
         }
     }
 
-    private fun mapAuthError(e: FirebaseAuthException): String {
+    private fun mapAuthErrorKey(e: FirebaseAuthException): UiTextKey {
         return when (e.errorCode) {
-            "ERROR_INVALID_EMAIL" -> "The email address is badly formatted."
-            "ERROR_WRONG_PASSWORD" -> "Invalid password."
-            "ERROR_USER_NOT_FOUND" -> "No account found with this email."
-            "ERROR_USER_DISABLED" -> "This account has been disabled."
-            "ERROR_TOO_MANY_REQUESTS" -> "Too many requests. Please try again later."
-            "ERROR_EMAIL_ALREADY_IN_USE" -> "The email address is already in use by another account."
-            else -> "Authentication failed. Please try again."
+            "ERROR_INVALID_EMAIL" -> UiTextKey.ErrAuthInvalidEmail
+            "ERROR_WRONG_PASSWORD" -> UiTextKey.ErrAuthWrongPassword
+            "ERROR_USER_NOT_FOUND" -> UiTextKey.ErrAuthUserNotFound
+            "ERROR_USER_DISABLED" -> UiTextKey.ErrAuthUserDisabled
+            "ERROR_TOO_MANY_REQUESTS" -> UiTextKey.ErrAuthTooManyRequests
+            "ERROR_EMAIL_ALREADY_IN_USE" -> UiTextKey.ErrAuthEmailInUse
+            else -> UiTextKey.ErrAuthFailed
         }
     }
 
-    private fun mapFirestoreError(e: FirebaseFirestoreException): String {
+    private fun mapFirestoreErrorKey(e: FirebaseFirestoreException): UiTextKey {
         return when (e.code) {
-            FirebaseFirestoreException.Code.PERMISSION_DENIED -> "You do not have permission to access this data."
-            FirebaseFirestoreException.Code.UNAVAILABLE -> "Service currently unavailable. Please try again later."
-            else -> "Database error. Please try again."
+            FirebaseFirestoreException.Code.PERMISSION_DENIED -> UiTextKey.ErrDbPermission
+            FirebaseFirestoreException.Code.UNAVAILABLE -> UiTextKey.ErrDbUnavailable
+            else -> UiTextKey.ErrDbGeneric
         }
     }
 }
-

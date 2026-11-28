@@ -18,13 +18,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.translator.TalknLearn.core.AppLanguageDropdown
 import com.translator.TalknLearn.core.StandardScreenBody
 import com.translator.TalknLearn.core.StandardScreenScaffold
+import com.translator.TalknLearn.core.UiConstants
 import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.model.ui.AppLanguageState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import kotlinx.coroutines.delay
-import com.translator.TalknLearn.core.UiConstants
 
 @Composable
 fun ResetPasswordScreen(
@@ -43,7 +43,7 @@ fun ResetPasswordScreen(
     var email by remember { mutableStateOf("") }
 
     // Auto-dismiss error after delay
-    val err = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+    val err = uiState.error?.resolve(t)
     LaunchedEffect(err) {
         if (err != null) {
             delay(UiConstants.ERROR_AUTO_DISMISS_MS)
@@ -52,7 +52,7 @@ fun ResetPasswordScreen(
     }
 
     // Auto-dismiss message after delay
-    val msg = uiState.messageKey?.let { t(it) } ?: uiState.messageRaw
+    val msg = uiState.messageKey?.let { t(it) }
     LaunchedEffect(msg) {
         if (msg != null) {
             delay(UiConstants.PASSWORD_RESET_SUCCESS_DURATION_MS)
@@ -99,7 +99,7 @@ fun ResetPasswordScreen(
                 Text(if (uiState.isLoading) t(UiTextKey.ResetSendingText) else t(UiTextKey.ResetSendText))
             }
 
-            val msg = uiState.messageKey?.let { t(it) } ?: uiState.messageRaw
+            val msg = uiState.messageKey?.let { t(it) }
             msg?.let { message ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -117,7 +117,7 @@ fun ResetPasswordScreen(
                 }
             }
 
-            val err = uiState.errorKey?.let { t(it) } ?: uiState.errorRaw
+            val err = uiState.error?.resolve(t)
             err?.let { errorMsg ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),

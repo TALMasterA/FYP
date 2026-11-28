@@ -2,18 +2,21 @@ package com.translator.TalknLearn.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.translator.TalknLearn.data.friends.FriendsRepository
-import com.translator.TalknLearn.data.user.FirebaseAuthRepository
-import com.translator.TalknLearn.data.user.FirestoreProfileRepository
-import com.translator.TalknLearn.model.UserId
-import com.translator.TalknLearn.model.Username
-import com.translator.TalknLearn.model.user.AuthState
-import com.translator.TalknLearn.model.friends.PublicUserProfile
+import com.translator.TalknLearn.core.ErrorMessages
 import com.translator.TalknLearn.core.SessionDataCleaner
 import com.translator.TalknLearn.core.security.AuditLogger
 import com.translator.TalknLearn.core.security.ValidationResult
 import com.translator.TalknLearn.core.security.validateUsername
+import com.translator.TalknLearn.data.friends.FriendsRepository
 import com.translator.TalknLearn.data.settings.FirestoreUserSettingsRepository
+import com.translator.TalknLearn.data.user.FirebaseAuthRepository
+import com.translator.TalknLearn.data.user.FirestoreProfileRepository
+import com.translator.TalknLearn.model.UserId
+import com.translator.TalknLearn.model.Username
+import com.translator.TalknLearn.model.friends.PublicUserProfile
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -28,10 +31,10 @@ data class ProfileUiState(
     val profile: PublicUserProfile = PublicUserProfile(),
     val email: String? = null,
     val isGoogleUser: Boolean = false,
-    val error: String? = null,
-    val successMessage: String? = null,
+    val error: StatusText? = null,
+    val successMessage: StatusText? = null,
     val isDeletingAccount: Boolean = false,
-    val deleteError: String? = null,
+    val deleteError: StatusText? = null,
     val accountDeleted: Boolean = false,
     val usernameCooldownDays: Int? = null,
     val usernameCooldownHours: Int? = null,
@@ -45,6 +48,11 @@ class ProfileViewModel @Inject constructor(
     private val settingsRepo: FirestoreUserSettingsRepository,
     private val sessionDataCleaner: SessionDataCleaner
 ) : ViewModel() {
+
+    private companion object {
+        const val USERNAME_MIN_LENGTH = 3
+        const val USERNAME_MAX_LENGTH = 20
+    }
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
@@ -92,7 +100,7 @@ class ProfileViewModel @Inject constructor(
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Failed to load profile",
+                    error = ErrorMessages.statusFromException(e, UiTextKey.ProfileMsgLoadFailed),
                     isLoading = false
                 )
             }
@@ -103,9 +111,9 @@ class ProfileViewModel @Inject constructor(
         val userId = currentUserId ?: return
 
         // Use shared validation function for consistent username rules
-        val validation = validateUsername(username, minLength = 3, maxLength = 20)
+        val validation = validateUsername(username, minLength = USERNAME_MIN_LENGTH, maxLength = USERNAME_MAX_LENGTH)
         if (validation is ValidationResult.Invalid) {
-            _uiState.value = _uiState.value.copy(error = validation.message)
+            _uiState.value = _uiState.value.copy(error = usernameValidationError(username))
             return
         }
 
@@ -142,7 +150,7 @@ class ProfileViewModel @Inject constructor(
                 android.util.Log.w("ProfileViewModel", "Settings fetch failed during cooldown check", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Unable to verify account status. Please try again."
+                    error = StatusText(UiTextKey.ProfileMsgVerifyFailed)
                 )
                 return@launch
             }
@@ -152,7 +160,7 @@ class ProfileViewModel @Inject constructor(
             if (!isAvailable && username != _uiState.value.profile.username) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Username already taken"
+                    error = StatusText(UiTextKey.ProfileMsgUsernameTaken)
                 )
                 return@launch
             }
@@ -173,9 +181,9 @@ class ProfileViewModel @Inject constructor(
                         // so they see the updated name immediately in their Friends list.
                         val propagateResult = friendsRepo.propagateUsernameChange(UserId(userId), username)
                         val successMsg = if (propagateResult.isFailure) {
-                            "Username updated. Your friends list may take a moment to refresh."
+                            StatusText(UiTextKey.ProfileMsgUsernameUpdatedSyncing)
                         } else {
-                            "Username updated successfully"
+                            StatusText(UiTextKey.ProfileMsgUsernameUpdated)
                         }
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
@@ -186,17 +194,26 @@ class ProfileViewModel @Inject constructor(
                     }.onFailure { e ->
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            error = e.message ?: "Failed to update profile"
+                            error = ErrorMessages.statusFromException(e, UiTextKey.ProfileMsgUpdateFailed)
                         )
                     }
                 }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = e.message ?: "Failed to set username"
+                        error = ErrorMessages.statusFromException(e, UiTextKey.ProfileMsgSetUsernameFailed)
                     )
                 }
         }
+    }
+
+    /** Picks the message for a username that failed [validateUsername]. */
+    private fun usernameValidationError(username: String): StatusText = when {
+        username.length < USERNAME_MIN_LENGTH ->
+            StatusText(UiTextKey.ProfileMsgUsernameTooShort, mapOf("min" to USERNAME_MIN_LENGTH.toString()))
+        username.length > USERNAME_MAX_LENGTH ->
+            StatusText(UiTextKey.ProfileMsgUsernameTooLong, mapOf("max" to USERNAME_MAX_LENGTH.toString()))
+        else -> StatusText(UiTextKey.ProfileMsgUsernameInvalidChars)
     }
 
     fun dismissUsernameCooldownDialog() {
@@ -232,14 +249,14 @@ class ProfileViewModel @Inject constructor(
                         .onFailure { e ->
                             _uiState.value = _uiState.value.copy(
                                 isDeletingAccount = false,
-                                deleteError = e.message ?: "Failed to delete account"
+                                deleteError = ErrorMessages.statusFromException(e, UiTextKey.ProfileMsgDeleteFailed)
                             )
                         }
                 }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(
                         isDeletingAccount = false,
-                        deleteError = "Invalid password. Please try again."
+                        deleteError = StatusText(UiTextKey.ProfileMsgInvalidPassword)
                     )
                 }
         }
@@ -271,14 +288,14 @@ class ProfileViewModel @Inject constructor(
                         .onFailure { e ->
                             _uiState.value = _uiState.value.copy(
                                 isDeletingAccount = false,
-                                deleteError = e.message ?: "Failed to delete account"
+                                deleteError = ErrorMessages.statusFromException(e, UiTextKey.ProfileMsgDeleteFailed)
                             )
                         }
                 }
                 .onFailure { _ ->
                     _uiState.value = _uiState.value.copy(
                         isDeletingAccount = false,
-                        deleteError = "Google re-authentication failed. Please try again."
+                        deleteError = StatusText(UiTextKey.ProfileMsgGoogleReauthFailed)
                     )
                 }
         }
