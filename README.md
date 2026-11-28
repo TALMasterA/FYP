@@ -20,13 +20,13 @@ The FYP has been graded. The current work is **portfolio polish**: a full UI/UX 
   - Phase 1 part 1: correctness fixes (newest same-language records in AI prompts, quiz history order, system back, keyboard insets, Settings fixes, device language on first launch).
   - Phase 1 part 2: localization sweep for icon labels, History and Speech/Translate (46 new keys in all 17 languages).
   - Phase 1 part 3: localization of the social area messages (Friends, requests, block, Chat, My profile, Shared inbox, Shared material) and `ErrorMessages.kt` (73 new keys in all 17 languages).
-- **In progress:**
   - Phase 1 part 4: localization of the Settings, Shop, Profile, Login and Feedback messages, and a key-based `ErrorMessageMapper.mapKey` (58 new keys in all 17 languages).
+- **In progress (in review):**
+  - Phase 1 part 5: localization of Learning, learning sheets and quiz, Word bank, custom words, Favorites, the `EmptyStateView` titles, Help and Startup (48 new keys in all 17 languages). Custom word errors now show in a snackbar; before, they were set but never shown.
 - **Next:**
-  - Phase 1 part 5: Learning, Word bank, Favorites, the `EmptyStateView` titles and Startup.
   - Phase 2: the design system.
 - **Known problems** (each one is tracked in the roadmap):
-  - Some English text still bypasses the 17-language system (Phase 1 part 5, and the speech, translation and OCR error mappers).
+  - Some English text still bypasses the 17-language system: the speech, translation and OCR error mappers, and error details that come straight from a service (for example the AI server's message).
   - Some color palettes fail WCAG contrast.
   - The mic cannot be stopped mid-recognition; it stops by itself at the end of speech.
 
@@ -276,7 +276,7 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 201 test suites, 2,521 unit tests (from the latest `testDebugUnitTest` report, including 7 Roborazzi screenshot tests); Kover line coverage 82.93% (35% CI floor, non-blocking)
+- **Android:** 202 test suites, 2,529 unit tests (from the latest `testDebugUnitTest` report, including 7 Roborazzi screenshot tests); Kover line coverage 82.93% (35% CI floor, non-blocking)
 - **Backend:** 18 Jest suites, 213 tests plus 5 Firestore emulator cases
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown, including Kover tasks (`koverHtmlReportDebug`, `koverXmlReportDebug`, `koverVerifyDebug`) and the `:macrobenchmark` startup benchmark module (run locally with `:macrobenchmark:connectedBenchmarkAndroidTest`; CI assembles only).

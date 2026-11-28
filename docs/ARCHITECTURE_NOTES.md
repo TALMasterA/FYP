@@ -812,7 +812,7 @@ The following components cannot be unit tested due to Android framework dependen
 **Invariant:** Every catch block in ViewModel/repository code must produce BOTH a log entry AND a user-facing message (or be explicitly documented as non-fatal with log-only).
 
 **Rules:**
-1. **User-facing errors:** Use `ErrorMessages.statusFromException(e, fallbackKey)` to map exceptions to consistent, user-friendly messages as a localizable `StatusText`. The English-only `ErrorMessages.fromException(e, fallback)` remains for callers not yet migrated. Never expose raw `e.message` to the UI (the mapper only passes through messages from our own `SecurityException` / `IllegalArgumentException` / `IllegalStateException` checks).
+1. **User-facing errors:** Use `ErrorMessages.statusFromException(e, fallbackKey)` to map exceptions to consistent, user-friendly messages as a localizable `StatusText`. Never expose raw `e.message` to the UI (the mapper only passes through messages from our own `SecurityException` / `IllegalArgumentException` / `IllegalStateException` checks).
 2. **Logging:** Use `Log.e(TAG, ...)` for errors affecting user flow, `Log.w(TAG, ...)` for non-fatal/best-effort failures, `Log.i(TAG, ...)` for expected fallbacks (e.g., network-to-cache).
 3. **Fail-closed security:** When a security-relevant check (cooldown, permissions) cannot verify state due to an exception, block the action rather than proceeding. Example: `ProfileViewModel` cooldown check fails closed when `fetchUserSettings` throws.
 4. **No empty catch blocks:** Every `catch` must at minimum log the exception. Silent swallowing is prohibited.

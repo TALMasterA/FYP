@@ -22,6 +22,7 @@ internal fun NavGraphBuilder.startupAuthGraph(
 ) {
     composable(AppScreen.Startup.route) {
         StartupScreen(
+            appLanguageState = appLanguageState,
             onFinished = {
                 val destination = if (isOnboardingDone) AppScreen.Home.route
                                   else AppScreen.Onboarding.route

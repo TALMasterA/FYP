@@ -97,7 +97,7 @@ FYP/
 │       │       │   └── ErrorMessageMapper.kt
 │       │       │
 │       │       ├── core/                                ← Organized into focused sub-groups
-│       │       │   ├── ErrorMessages.kt                 ← Centralized error mapper (statusFromException → StatusText, fromException, isNetworkError)
+│       │       │   ├── ErrorMessages.kt                 ← Centralized error mapper (statusFromException → StatusText, isNetworkError)
 │       │       │   ├── SessionDataCleaner.kt            ← Wipes per-session local caches on logout / account deletion
 │       │       │   ├── foundation/                      ← Basic utilities & logger
 │       │       │   │   ├── Logger.kt                      ← Central logger; Crashlytics receives safe tags + hashes only
@@ -672,6 +672,7 @@ FYP/
 │       │   │   ├── startup/
 │       │   │   │   └── StartupScreenLogicTest.kt
 │       │   │   └── wordbank/
+│       │   │       ├── CustomWordValidationTest.kt        ← Custom word field validation keys
 │       │   │       ├── CustomWordsViewModelTest.kt        ← Custom words ViewModel tests
 │       │   │       ├── WordBankLogicTest.kt
 │       │   │       └── WordBankViewModelTest.kt

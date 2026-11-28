@@ -113,7 +113,7 @@ fun FriendSelectorDialog(
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    "No friends yet",
+                                    t(UiTextKey.FriendsEmptyTitle),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

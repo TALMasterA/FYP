@@ -3,38 +3,41 @@ package com.translator.TalknLearn.screens.learning
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.translator.TalknLearn.core.AiConfig
+import com.translator.TalknLearn.core.ErrorMessages
 import com.translator.TalknLearn.data.azure.AzureLanguageConfig
-import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.data.history.SharedHistoryDataSource
-import com.translator.TalknLearn.domain.learning.LearningSheetsRepository
-import com.translator.TalknLearn.domain.learning.QuizRepository
 import com.translator.TalknLearn.data.learning.QuizParser
+import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
+import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.domain.learning.GenerateLearningMaterialsUseCase
 import com.translator.TalknLearn.domain.learning.GenerateQuizUseCase
 import com.translator.TalknLearn.domain.learning.GenerationEligibility
-import com.translator.TalknLearn.core.AiConfig
-import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
-import com.translator.TalknLearn.model.user.AuthState
+import com.translator.TalknLearn.domain.learning.LearningSheetsRepository
+import com.translator.TalknLearn.domain.learning.QuizRepository
+import com.translator.TalknLearn.model.LanguageCode
 import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.UserId
-import com.translator.TalknLearn.model.LanguageCode
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.user.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.Collections
+import javax.inject.Inject
 
 data class LearningUiState(
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val error: StatusText? = null,
     val isSheetMetaLoading: Boolean = true,
     val primaryLanguageCode: String = "en-US",
     val records: List<TranslationRecord> = emptyList(),
@@ -140,7 +143,7 @@ class LearningViewModel @Inject constructor(
                     AuthState.LoggedOut -> {
                         stopJobs()
                         sharedHistoryDataSource.stopObserving()
-                        _uiState.value = LearningUiState(isLoading = false, error = "Not logged in")
+                        _uiState.value = LearningUiState(isLoading = false, error = StatusText(UiTextKey.ErrorNotLoggedIn))
                     }
                 }
             }
@@ -312,7 +315,7 @@ class LearningViewModel @Inject constructor(
             val countMap = mutableMapOf<String, Int>()
             val quizCountMap = mutableMapOf<String, Int>()
             val lastAwardedCountMap = mutableMapOf<String, Int>()
-            var firstError: String? = null
+            var firstError: StatusText? = null
 
             // Only fetch metadata for languages not in cache
             val languagesToFetch = languages.filter { it !in sheetMetaCache }
@@ -342,13 +345,13 @@ class LearningViewModel @Inject constructor(
                                 )
                             }
                         } catch (e: Exception) {
-                            if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
+                            if (firstError == null) firstError = ErrorMessages.statusFromException(e, UiTextKey.LearningMsgLoadFailed)
                         }
                     }
                 } catch (ce: CancellationException) {
                     throw ce
                 } catch (e: Exception) {
-                    if (firstError == null) firstError = e.message ?: "Failed to load learning sheets."
+                    if (firstError == null) firstError = ErrorMessages.statusFromException(e, UiTextKey.LearningMsgLoadFailed)
                 }
             }
 
@@ -383,7 +386,7 @@ class LearningViewModel @Inject constructor(
 
     fun generateFor(languageCode: String) {
         val uid = this.uid ?: run {
-            _uiState.value = uiState.value.copy(error = "Not logged in")
+            _uiState.value = uiState.value.copy(error = StatusText(UiTextKey.ErrorNotLoggedIn))
             return
         }
 
@@ -445,12 +448,12 @@ class LearningViewModel @Inject constructor(
             } catch (ce: CancellationException) {
                 _uiState.value = uiState.value.copy(
                     generatingLanguageCode = null,
-                    error = ce.message ?: "Generate cancelled"
+                    error = StatusText(UiTextKey.LearningMsgSheetGenerateCancelled)
                 )
             } catch (e: Exception) {
                 _uiState.value = uiState.value.copy(
                     generatingLanguageCode = null,
-                    error = e.message ?: "Generate failed"
+                    error = ErrorMessages.statusFromException(e, UiTextKey.LearningMsgSheetGenerateFailed)
                 )
             } finally {
                 generationJob = null
@@ -468,7 +471,7 @@ class LearningViewModel @Inject constructor(
         lastQuizGenerationTime = now
 
         val uid = this.uid ?: run {
-            _uiState.value = uiState.value.copy(error = "Not logged in")
+            _uiState.value = uiState.value.copy(error = StatusText(UiTextKey.ErrorNotLoggedIn))
             return
         }
 
@@ -509,7 +512,10 @@ class LearningViewModel @Inject constructor(
                 if (questions.size < QUIZ_QUESTIONS_COUNT) {
                     _uiState.value = uiState.value.copy(
                         generatingQuizLanguageCode = null,
-                        error = "Quiz generated but only parsed ${questions.size}/$QUIZ_QUESTIONS_COUNT questions. Try regenerate."
+                        error = StatusText(
+                            UiTextKey.LearningMsgQuizParseIncomplete,
+                            mapOf("parsed" to questions.size.toString(), "total" to QUIZ_QUESTIONS_COUNT.toString())
+                        )
                     )
                     return@launch
                 }
@@ -532,12 +538,12 @@ class LearningViewModel @Inject constructor(
             } catch (ce: CancellationException) {
                 _uiState.value = uiState.value.copy(
                     generatingQuizLanguageCode = null,
-                    error = "Quiz generation cancelled"
+                    error = StatusText(UiTextKey.LearningMsgQuizGenerateCancelled)
                 )
             } catch (e: Exception) {
                 _uiState.value = uiState.value.copy(
                     generatingQuizLanguageCode = null,
-                    error = e.message ?: "Quiz generation failed"
+                    error = ErrorMessages.statusFromException(e, UiTextKey.LearningMsgQuizGenerateFailed)
                 )
             } finally {
                 quizGenerationJob = null

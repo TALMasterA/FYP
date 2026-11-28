@@ -12,169 +12,169 @@ import java.net.UnknownHostException
 
 class ErrorMessagesTest {
 
-    // ── fromException: null and fallback ─────────────────────────────
+    // ── classify: null and fallback ─────────────────────────────
 
     @Test
-    fun `fromException - null exception returns default fallback`() {
-        val msg = ErrorMessages.fromException(null)
+    fun `classify - null exception returns default fallback`() {
+        val msg = ErrorMessages.statusFromException(null).english()
         assertEquals("Something went wrong. Please try again.", msg)
     }
 
     @Test
-    fun `fromException - null exception returns custom fallback`() {
-        val msg = ErrorMessages.fromException(null, "Custom fallback")
-        assertEquals("Custom fallback", msg)
+    fun `classify - null exception returns custom fallback key`() {
+        val status = ErrorMessages.statusFromException(null, UiTextKey.ErrTimedOut)
+        assertEquals(StatusText(UiTextKey.ErrTimedOut), status)
     }
 
     @Test
-    fun `fromException - unknown exception returns default fallback`() {
-        val msg = ErrorMessages.fromException(RuntimeException("some random error"))
+    fun `classify - unknown exception returns default fallback`() {
+        val msg = ErrorMessages.statusFromException(RuntimeException("some random error")).english()
         assertEquals("Something went wrong. Please try again.", msg)
     }
 
     @Test
-    fun `fromException - unknown exception returns custom fallback`() {
-        val msg = ErrorMessages.fromException(RuntimeException("random"), "Try later")
-        assertEquals("Try later", msg)
+    fun `classify - unknown exception returns custom fallback key`() {
+        val status = ErrorMessages.statusFromException(RuntimeException("random"), UiTextKey.ErrTimedOut)
+        assertEquals(StatusText(UiTextKey.ErrTimedOut), status)
     }
 
-    // ── fromException: network errors ───────────────────────────────
+    // ── classify: network errors ───────────────────────────────
 
     @Test
-    fun `fromException - UnknownHostException returns network message`() {
-        val msg = ErrorMessages.fromException(UnknownHostException("host not found"))
+    fun `classify - UnknownHostException returns network message`() {
+        val msg = ErrorMessages.statusFromException(UnknownHostException("host not found")).english()
         assertEquals("No internet connection. Please check your network and try again.", msg)
     }
 
     @Test
-    fun `fromException - SocketTimeoutException returns network message`() {
-        val msg = ErrorMessages.fromException(SocketTimeoutException("timed out"))
+    fun `classify - SocketTimeoutException returns network message`() {
+        val msg = ErrorMessages.statusFromException(SocketTimeoutException("timed out")).english()
         assertEquals("No internet connection. Please check your network and try again.", msg)
     }
 
     @Test
-    fun `fromException - ConnectException returns network message`() {
-        val msg = ErrorMessages.fromException(ConnectException("connection refused"))
+    fun `classify - ConnectException returns network message`() {
+        val msg = ErrorMessages.statusFromException(ConnectException("connection refused")).english()
         assertEquals("No internet connection. Please check your network and try again.", msg)
     }
 
     @Test
-    fun `fromException - IOException with network in message returns network message`() {
-        val msg = ErrorMessages.fromException(IOException("network is unreachable"))
+    fun `classify - IOException with network in message returns network message`() {
+        val msg = ErrorMessages.statusFromException(IOException("network is unreachable")).english()
         assertEquals("No internet connection. Please check your network and try again.", msg)
     }
 
-    // ── fromException: Firebase auth errors ─────────────────────────
+    // ── classify: Firebase auth errors ─────────────────────────
 
     @Test
-    fun `fromException - PERMISSION_DENIED returns permission message`() {
-        val msg = ErrorMessages.fromException(Exception("PERMISSION_DENIED: insufficient permissions"))
+    fun `classify - PERMISSION_DENIED returns permission message`() {
+        val msg = ErrorMessages.statusFromException(Exception("PERMISSION_DENIED: insufficient permissions")).english()
         assertEquals("You don't have permission to perform this action.", msg)
     }
 
     @Test
-    fun `fromException - UNAUTHENTICATED returns session expired message`() {
-        val msg = ErrorMessages.fromException(Exception("UNAUTHENTICATED"))
+    fun `classify - UNAUTHENTICATED returns session expired message`() {
+        val msg = ErrorMessages.statusFromException(Exception("UNAUTHENTICATED")).english()
         assertEquals("Your session has expired. Please sign in again.", msg)
     }
 
     @Test
-    fun `fromException - NOT_FOUND returns not found message`() {
-        val msg = ErrorMessages.fromException(Exception("NOT_FOUND: document missing"))
+    fun `classify - NOT_FOUND returns not found message`() {
+        val msg = ErrorMessages.statusFromException(Exception("NOT_FOUND: document missing")).english()
         assertEquals("The requested item was not found. It may have been deleted.", msg)
     }
 
-    // ── fromException: SecurityException ────────────────────────────
+    // ── classify: SecurityException ────────────────────────────
 
     @Test
-    fun `fromException - SecurityException uses its message`() {
-        val msg = ErrorMessages.fromException(SecurityException("Custom security error"))
+    fun `classify - SecurityException uses its message`() {
+        val msg = ErrorMessages.statusFromException(SecurityException("Custom security error")).english()
         assertEquals("Custom security error", msg)
     }
 
     @Test
-    fun `fromException - SecurityException with null message returns Access denied`() {
-        val msg = ErrorMessages.fromException(SecurityException())
+    fun `classify - SecurityException with null message returns Access denied`() {
+        val msg = ErrorMessages.statusFromException(SecurityException()).english()
         assertEquals("Access denied.", msg)
     }
 
-    // ── fromException: friend-specific errors ───────────────────────
+    // ── classify: friend-specific errors ───────────────────────
 
     @Test
-    fun `fromException - Already friends message`() {
-        val msg = ErrorMessages.fromException(Exception("Already friends with user"))
+    fun `classify - Already friends message`() {
+        val msg = ErrorMessages.statusFromException(Exception("Already friends with user")).english()
         assertEquals("You're already friends with this user.", msg)
     }
 
     @Test
-    fun `fromException - blocked message`() {
-        val msg = ErrorMessages.fromException(Exception("User is blocked"))
+    fun `classify - blocked message`() {
+        val msg = ErrorMessages.statusFromException(Exception("User is blocked")).english()
         assertEquals("Unable to complete this action. The user may be blocked.", msg)
     }
 
     @Test
-    fun `fromException - Request not found message`() {
-        val msg = ErrorMessages.fromException(Exception("Request not found in database"))
+    fun `classify - Request not found message`() {
+        val msg = ErrorMessages.statusFromException(Exception("Request not found in database")).english()
         assertEquals("This friend request no longer exists.", msg)
     }
 
     @Test
-    fun `fromException - already been handled message`() {
-        val msg = ErrorMessages.fromException(Exception("Request has already been handled"))
+    fun `classify - already been handled message`() {
+        val msg = ErrorMessages.statusFromException(Exception("Request has already been handled")).english()
         assertEquals("This request has already been handled by someone else.", msg)
     }
 
     @Test
-    fun `fromException - Not authorized message`() {
-        val msg = ErrorMessages.fromException(Exception("Not authorized to do this"))
+    fun `classify - Not authorized message`() {
+        val msg = ErrorMessages.statusFromException(Exception("Not authorized to do this")).english()
         assertEquals("You're not authorized to perform this action.", msg)
     }
 
-    // ── fromException: rate limiting ────────────────────────────────
+    // ── classify: rate limiting ────────────────────────────────
 
     @Test
-    fun `fromException - RESOURCE_EXHAUSTED returns rate limit message`() {
-        val msg = ErrorMessages.fromException(Exception("RESOURCE_EXHAUSTED"))
+    fun `classify - RESOURCE_EXHAUSTED returns rate limit message`() {
+        val msg = ErrorMessages.statusFromException(Exception("RESOURCE_EXHAUSTED")).english()
         assertEquals("Too many requests. Please wait a moment and try again.", msg)
     }
 
     @Test
-    fun `fromException - rate limit message`() {
-        val msg = ErrorMessages.fromException(Exception("rate limit exceeded"))
+    fun `classify - rate limit message`() {
+        val msg = ErrorMessages.statusFromException(Exception("rate limit exceeded")).english()
         assertEquals("Too many requests. Please wait a moment and try again.", msg)
     }
 
-    // ── fromException: validation errors ────────────────────────────
+    // ── classify: validation errors ────────────────────────────
 
     @Test
-    fun `fromException - IllegalArgumentException uses its message`() {
-        val msg = ErrorMessages.fromException(IllegalArgumentException("Bad input"))
+    fun `classify - IllegalArgumentException uses its message`() {
+        val msg = ErrorMessages.statusFromException(IllegalArgumentException("Bad input")).english()
         assertEquals("Bad input", msg)
     }
 
     @Test
-    fun `fromException - IllegalArgumentException with null message`() {
-        val msg = ErrorMessages.fromException(IllegalArgumentException())
+    fun `classify - IllegalArgumentException with null message`() {
+        val msg = ErrorMessages.statusFromException(IllegalArgumentException()).english()
         assertEquals("Invalid input. Please check and try again.", msg)
     }
 
     @Test
-    fun `fromException - IllegalStateException uses its message`() {
-        val msg = ErrorMessages.fromException(IllegalStateException("Not ready"))
+    fun `classify - IllegalStateException uses its message`() {
+        val msg = ErrorMessages.statusFromException(IllegalStateException("Not ready")).english()
         assertEquals("Not ready", msg)
     }
 
     @Test
-    fun `fromException - IllegalStateException with null message`() {
-        val msg = ErrorMessages.fromException(IllegalStateException())
+    fun `classify - IllegalStateException with null message`() {
+        val msg = ErrorMessages.statusFromException(IllegalStateException()).english()
         assertEquals("Operation cannot be completed right now.", msg)
     }
 
-    // ── fromException: deadline ─────────────────────────────────────
+    // ── classify: deadline ─────────────────────────────────────
 
     @Test
-    fun `fromException - DEADLINE_EXCEEDED returns timeout message`() {
-        val msg = ErrorMessages.fromException(Exception("DEADLINE_EXCEEDED"))
+    fun `classify - DEADLINE_EXCEEDED returns timeout message`() {
+        val msg = ErrorMessages.statusFromException(Exception("DEADLINE_EXCEEDED")).english()
         assertEquals("The operation timed out. Please try again.", msg)
     }
 
@@ -225,11 +225,11 @@ class ErrorMessagesTest {
         assertFalse(ErrorMessages.isNetworkError(IllegalArgumentException("bad input")))
     }
 
-    // ── Pre-built messages are non-empty ────────────────────────────
+    // ── Default fallback ────────────────────────────────────────────
 
     @Test
-    fun `pre-built messages are not blank`() {
-        assertTrue(ErrorMessages.GENERIC_RETRY.isNotBlank())
+    fun `default fallback is ErrGeneric`() {
+        assertEquals(StatusText(UiTextKey.ErrGeneric), ErrorMessages.statusFromException(null))
     }
 
     // ── statusFromException: localizable form ──────────────────────
@@ -268,7 +268,7 @@ class ErrorMessagesTest {
     }
 
     @Test
-    fun `fromException English matches statusFromException for every case`() {
+    fun `statusFromException classifies every known case without the fallback`() {
         val cases = listOf(
             UnknownHostException("host"),
             RuntimeException("PERMISSION_DENIED"),
@@ -286,7 +286,7 @@ class ErrorMessagesTest {
             RuntimeException("DEADLINE_EXCEEDED"),
         )
         cases.forEach { e ->
-            assertEquals(e.toString(), ErrorMessages.fromException(e), ErrorMessages.statusFromException(e).english())
+            assertNotEquals(e.toString(), StatusText(UiTextKey.ErrGeneric), ErrorMessages.statusFromException(e))
         }
     }
 

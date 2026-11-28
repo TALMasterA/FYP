@@ -37,7 +37,11 @@ class BaselineScreenshotTest {
     @Test
     fun startup() {
         composeRule.mainClock.autoAdvance = false
-        composeRule.setContent { ScreenshotTheme(darkTheme = false) { StartupScreen(onFinished = {}) } }
+        composeRule.setContent {
+            ScreenshotTheme(darkTheme = false) {
+                StartupScreen(appLanguageState = englishLanguageState, onFinished = {})
+            }
+        }
         composeRule.mainClock.advanceTimeBy(FRAME_MS)
         capture("startup_light")
     }

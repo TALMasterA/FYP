@@ -80,12 +80,13 @@ fun EmptyStateView(
 object EmptyStates {
     @Composable
     fun NoHistory(
+        t: (UiTextKey) -> String,
         message: String,
         modifier: Modifier = Modifier
     ) {
         EmptyStateView(
             icon = Icons.Filled.History,
-            title = "No History Yet",
+            title = t(UiTextKey.EmptyNoHistoryTitle),
             message = message,
             modifier = modifier
         )
@@ -93,6 +94,7 @@ object EmptyStates {
 
     @Composable
     fun NoFavorites(
+        t: (UiTextKey) -> String,
         message: String,
         modifier: Modifier = Modifier,
         actionLabel: String? = null,
@@ -100,7 +102,7 @@ object EmptyStates {
     ) {
         EmptyStateView(
             icon = Icons.Filled.FavoriteBorder,
-            title = "No Favorites",
+            title = t(UiTextKey.EmptyNoFavoritesTitle),
             message = message,
             modifier = modifier,
             actionLabel = actionLabel,
@@ -110,6 +112,7 @@ object EmptyStates {
 
     @Composable
     fun NoLearningSheets(
+        t: (UiTextKey) -> String,
         message: String,
         modifier: Modifier = Modifier,
         actionLabel: String? = null,
@@ -117,7 +120,7 @@ object EmptyStates {
     ) {
         EmptyStateView(
             icon = Icons.Filled.School,
-            title = "No Learning Materials",
+            title = t(UiTextKey.EmptyNoLearningTitle),
             message = message,
             modifier = modifier,
             actionLabel = actionLabel,
@@ -128,7 +131,7 @@ object EmptyStates {
     @Composable
     fun NoSharedItems(
         t: (UiTextKey) -> String,
-        message: String = "No items shared with you yet",
+        message: String = t(UiTextKey.EmptySharedItemsMessage),
         modifier: Modifier = Modifier
     ) {
         EmptyStateView(

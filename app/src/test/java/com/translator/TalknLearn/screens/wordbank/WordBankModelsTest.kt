@@ -1,5 +1,7 @@
 package com.translator.TalknLearn.screens.wordbank
 
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -129,7 +131,7 @@ class WordBankModelsTest {
         assertEquals(0, state.customWordsCount)
         assertTrue(state.friends.isEmpty())
         assertFalse(state.isSharing)
-        assertNull(state.shareSuccess)
+        assertNull(state.shareSuccessKey)
         assertNull(state.shareError)
         assertNull(state.pendingShareWord)
         assertNull(state.wordBankGenerationCompleted)
@@ -147,10 +149,10 @@ class WordBankModelsTest {
     fun `WordBankUiState with error clears loading`() {
         val state = WordBankUiState().copy(
             isLoading = false,
-            error = "Network error"
+            error = StatusText(UiTextKey.ErrNoInternet)
         )
         assertFalse(state.isLoading)
-        assertEquals("Network error", state.error)
+        assertEquals(StatusText(UiTextKey.ErrNoInternet), state.error)
     }
 
     @Test

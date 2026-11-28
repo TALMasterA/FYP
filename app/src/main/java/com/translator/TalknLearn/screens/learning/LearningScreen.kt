@@ -211,6 +211,7 @@ fun LearningScreen(
             if (!uiState.isLoading && uiState.clusters.isEmpty() && uiState.error == null) {
                 item {
                     EmptyStates.NoLearningSheets(
+                        t = t,
                         message = t(UiTextKey.LearningEmptyMessage),
                         modifier = androidx.compose.ui.Modifier.fillParentMaxSize()
                     )
@@ -227,7 +228,7 @@ fun LearningScreen(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = t(UiTextKey.LearningErrorTemplate).format(errorMsg),
+                            text = t(UiTextKey.LearningErrorTemplate).format(errorMsg.resolve(t)),
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(16.dp)

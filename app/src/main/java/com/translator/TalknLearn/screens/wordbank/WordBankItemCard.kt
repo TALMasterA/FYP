@@ -212,7 +212,7 @@ fun WordBankItemCard(
                     ) {
                         Icon(
                             imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = if (expanded) "Collapse" else "Expand",
+                            contentDescription = if (expanded) t(UiTextKey.A11yCollapse) else t(UiTextKey.A11yExpand),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(24.dp)
                         )

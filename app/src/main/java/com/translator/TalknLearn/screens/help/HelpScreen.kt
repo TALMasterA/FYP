@@ -259,7 +259,8 @@ fun HelpScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                        text = t(UiTextKey.HelpVersionTemplate)
+                            .replace("{version}", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(

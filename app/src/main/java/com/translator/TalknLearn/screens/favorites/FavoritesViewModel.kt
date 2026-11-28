@@ -3,18 +3,20 @@ package com.translator.TalknLearn.screens.favorites
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.translator.TalknLearn.core.ErrorMessages
+import com.translator.TalknLearn.core.performance.OperationBatcher
+import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.data.user.FirestoreFavoritesRepository
 import com.translator.TalknLearn.domain.speech.SpeakTextUseCase
-import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
-import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.FavoriteRecord
 import com.translator.TalknLearn.model.FavoriteSession
 import com.translator.TalknLearn.model.SpeechResult
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.user.UserSettings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
-import com.translator.TalknLearn.core.performance.OperationBatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +28,7 @@ data class FavoritesUiState(
     val isRefreshing: Boolean = false,
     val favorites: List<FavoriteRecord> = emptyList(),
     val sessions: List<FavoriteSession> = emptyList(),
-    val error: String? = null,
+    val error: StatusText? = null,
     val speakingId: String? = null,
     val visibleCount: Int = 20, // Initial visible count for lazy loading
     val hasMore: Boolean = false, // Whether there are more favorites to load
@@ -106,7 +108,7 @@ class FavoritesViewModel @Inject constructor(
                 android.util.Log.e("FavoritesViewModel", "Failed to load favorites", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = ErrorMessages.fromException(e, "Failed to load favorites")
+                    error = ErrorMessages.statusFromException(e, UiTextKey.FavoritesMsgLoadFailed)
                 )
             }
         }
@@ -132,7 +134,7 @@ class FavoritesViewModel @Inject constructor(
             } catch (e: Exception) {
                 android.util.Log.e("FavoritesViewModel", "Failed to load more favorites", e)
                 _uiState.value = _uiState.value.copy(
-                    error = ErrorMessages.fromException(e, "Failed to load more favorites")
+                    error = ErrorMessages.statusFromException(e, UiTextKey.FavoritesMsgLoadMoreFailed)
                 )
             }
         }
@@ -163,7 +165,7 @@ class FavoritesViewModel @Inject constructor(
                 android.util.Log.e("FavoritesViewModel", "Failed to refresh favorites", e)
                 _uiState.value = _uiState.value.copy(
                     isRefreshing = false,
-                    error = ErrorMessages.fromException(e, "Failed to refresh favorites")
+                    error = ErrorMessages.statusFromException(e, UiTextKey.FavoritesMsgRefreshFailed)
                 )
             }
         }
@@ -180,7 +182,7 @@ class FavoritesViewModel @Inject constructor(
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Failed to remove favorite"
+                    error = ErrorMessages.statusFromException(e, UiTextKey.FavoritesMsgRemoveFailed)
                 )
             }
         }
@@ -197,7 +199,7 @@ class FavoritesViewModel @Inject constructor(
                 is SpeechResult.Error -> {
                     _uiState.value = _uiState.value.copy(
                         speakingId = null,
-                        error = result.message
+                        error = StatusText.raw(result.message)
                     )
                 }
             }
@@ -276,7 +278,7 @@ class FavoritesViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isDeleting = false,
-                    error = "Failed to delete selected items"
+                    error = StatusText(UiTextKey.FavoritesMsgDeleteSelectedFailed)
                 )
             }
         }

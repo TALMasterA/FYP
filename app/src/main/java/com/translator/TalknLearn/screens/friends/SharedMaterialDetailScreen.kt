@@ -215,7 +215,7 @@ fun SharedMaterialDetailScreen(
                             ) {
                                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                                 Text(
-                                    text = "Loading content...",
+                                    text = t(UiTextKey.SharedMaterialLoadingContent),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

@@ -77,7 +77,7 @@ fun QuizScreen(
 
     // Show coins alert when quiz is taken and has coin message
     LaunchedEffect(uiState.isQuizTaken) {
-        if (uiState.isQuizTaken && uiState.coinRewardMessage != null) {
+        if (uiState.isQuizTaken && uiState.coinsAwarded) {
             showCoinsAlert = true
         }
     }
@@ -198,7 +198,7 @@ fun QuizScreen(
                     onSubmit = viewModel::submitQuiz,
                     isLoading = uiState.quizLoading || isGeneratingQuiz,
                     appLanguageState = appLanguageState,
-                    errorMessage = uiState.quizError,
+                    errorMessage = uiState.quizError?.resolve(t),
                     isQuizOutdated = uiState.isQuizOutdated,
                     onRegenerate = {
                         val content = uiState.content.orEmpty()
@@ -259,13 +259,13 @@ fun QuizScreen(
                                     modifier = Modifier.padding(bottom = 12.dp)
                                 )
                                 Text(
-                                    uiState.quizError ?: "Unknown error",
+                                    uiState.quizError?.resolve(t).orEmpty(),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     style = MaterialTheme.typography.bodyLarge,
                                     modifier = Modifier.padding(bottom = 24.dp),
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
-                                if (uiState.quizError?.contains("No quiz") == true) {
+                                if (uiState.quizError?.key == UiTextKey.QuizMsgNotGenerated) {
                                     Text(
                                         t(UiTextKey.QuizErrorSuggestion),
                                         style = MaterialTheme.typography.bodySmall,

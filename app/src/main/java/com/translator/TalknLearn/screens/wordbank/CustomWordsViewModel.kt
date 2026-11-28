@@ -2,21 +2,21 @@ package com.translator.TalknLearn.screens.wordbank
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.translator.TalknLearn.core.security.decodeLegacyHtml
+import com.translator.TalknLearn.core.security.sanitizeInput
 import com.translator.TalknLearn.data.settings.SharedSettingsDataSource
 import com.translator.TalknLearn.data.user.FirebaseAuthRepository
 import com.translator.TalknLearn.data.wordbank.FirestoreCustomWordsRepository
 import com.translator.TalknLearn.domain.speech.TranslateTextUseCase
 import com.translator.TalknLearn.model.SpeechResult
+import com.translator.TalknLearn.model.ui.StatusText
+import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
-import com.translator.TalknLearn.core.security.ValidationResult
-import com.translator.TalknLearn.core.security.decodeLegacyHtml
-import com.translator.TalknLearn.core.security.sanitizeInput
-import com.translator.TalknLearn.core.security.validateTextLength
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,7 +30,7 @@ data class CustomWordsUiState(
     val customWordsCount: Int = 0,
     val isTranslatingCustomWord: Boolean = false,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: StatusText? = null
 )
 
 /**
@@ -136,31 +136,9 @@ class CustomWordsViewModel @Inject constructor(
     ) {
         val uid = currentUserId ?: return
 
-        // Validate originalWord (1-100 chars) - required field
-        val originalValidation = validateTextLength(originalWord, minLength = 1, maxLength = 100, fieldName = "Original word")
-        if (originalValidation is ValidationResult.Invalid) {
-            _uiState.value = _uiState.value.copy(error = originalValidation.message)
-            return
-        }
-
-        // Validate translatedWord (1-100 chars) - required field
-        val translatedValidation = validateTextLength(translatedWord, minLength = 1, maxLength = 100, fieldName = "Translated word")
-        if (translatedValidation is ValidationResult.Invalid) {
-            _uiState.value = _uiState.value.copy(error = translatedValidation.message)
-            return
-        }
-
-        // Validate pronunciation (0-200 chars) - optional field
-        val pronunciationValidation = validateTextLength(pronunciation, minLength = 0, maxLength = 200, fieldName = "Pronunciation")
-        if (pronunciationValidation is ValidationResult.Invalid) {
-            _uiState.value = _uiState.value.copy(error = pronunciationValidation.message)
-            return
-        }
-
-        // Validate example (0-500 chars) - optional field
-        val exampleValidation = validateTextLength(example, minLength = 0, maxLength = 500, fieldName = "Example")
-        if (exampleValidation is ValidationResult.Invalid) {
-            _uiState.value = _uiState.value.copy(error = exampleValidation.message)
+        val validationError = validateCustomWordInput(originalWord, translatedWord, pronunciation, example)
+        if (validationError != null) {
+            _uiState.value = _uiState.value.copy(error = validationError)
             return
         }
 
@@ -173,7 +151,7 @@ class CustomWordsViewModel @Inject constructor(
         viewModelScope.launch {
             // Check for duplicates before adding
             if (customWordsRepo.wordExists(uid, sanitizedOriginal, sourceLang, targetLang)) {
-                _uiState.value = _uiState.value.copy(error = "This word already exists in your custom word bank")
+                _uiState.value = _uiState.value.copy(error = StatusText(UiTextKey.CustomWordsMsgDuplicate))
                 return@launch
             }
 
@@ -190,7 +168,7 @@ class CustomWordsViewModel @Inject constructor(
                     loadCustomWords()
                 }
             }.onFailure {
-                _uiState.value = _uiState.value.copy(error = "Failed to add word")
+                _uiState.value = _uiState.value.copy(error = StatusText(UiTextKey.CustomWordsMsgAddFailed))
             }
         }
     }
@@ -215,7 +193,7 @@ class CustomWordsViewModel @Inject constructor(
         val currentTargetLang = normalizeLanguageCode(parsedTargetLang)
         val targetLang = normalizeLanguageCode(newTargetLang)
         if (wordId.isBlank() || sourceLang.isBlank() || targetLang.isBlank()) {
-            _uiState.value = _uiState.value.copy(error = "Invalid language update request")
+            _uiState.value = _uiState.value.copy(error = StatusText(UiTextKey.CustomWordsMsgInvalidLanguageUpdate))
             return
         }
 
@@ -233,7 +211,7 @@ class CustomWordsViewModel @Inject constructor(
                 is SpeechResult.Error -> {
                     _uiState.value = _uiState.value.copy(
                         isTranslatingCustomWord = false,
-                        error = "Translation failed: ${translation.message}"
+                        error = translateFailed(translation.message)
                     )
                     return@launch
                 }
@@ -253,7 +231,7 @@ class CustomWordsViewModel @Inject constructor(
                     loadCustomWords()
                 }
             }.onFailure {
-                _uiState.value = _uiState.value.copy(error = "Failed to update word language")
+                _uiState.value = _uiState.value.copy(error = StatusText(UiTextKey.CustomWordsMsgUpdateLanguageFailed))
             }
 
             _uiState.value = _uiState.value.copy(isTranslatingCustomWord = false)
@@ -280,7 +258,7 @@ class CustomWordsViewModel @Inject constructor(
             when (val result = translateTextUseCase(text, primaryLanguageCode, targetLanguageCode)) {
                 is SpeechResult.Success -> onResult(result.text)
                 is SpeechResult.Error -> {
-                    _uiState.value = _uiState.value.copy(error = "Translation failed: ${result.message}")
+                    _uiState.value = _uiState.value.copy(error = translateFailed(result.message))
                 }
             }
 
@@ -308,13 +286,16 @@ class CustomWordsViewModel @Inject constructor(
             when (val result = translateTextUseCase(text, sourceLang, targetLang)) {
                 is SpeechResult.Success -> onResult(result.text)
                 is SpeechResult.Error -> {
-                    _uiState.value = _uiState.value.copy(error = "Translation failed: ${result.message}")
+                    _uiState.value = _uiState.value.copy(error = translateFailed(result.message))
                 }
             }
 
             _uiState.value = _uiState.value.copy(isTranslatingCustomWord = false)
         }
     }
+
+    private fun translateFailed(detail: String) =
+        StatusText(UiTextKey.CustomWordsMsgTranslateFailed, mapOf("detail" to detail))
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
@@ -424,9 +405,40 @@ class CustomWordsViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Failed to load custom words"
+                    error = StatusText(UiTextKey.CustomWordsMsgLoadFailed)
                 )
             }
         }
+    }
+}
+
+internal const val CUSTOM_WORD_MAX_LENGTH = 100
+internal const val CUSTOM_PRONUNCIATION_MAX_LENGTH = 200
+internal const val CUSTOM_EXAMPLE_MAX_LENGTH = 500
+
+/**
+ * Checks the fields of a new custom word.
+ * Returns the first problem as a [StatusText], or null when all fields are valid.
+ * The original and translated words are required; pronunciation and example are optional.
+ */
+internal fun validateCustomWordInput(
+    originalWord: String,
+    translatedWord: String,
+    pronunciation: String,
+    example: String
+): StatusText? {
+    fun tooLong(key: UiTextKey, max: Int) = StatusText(key, mapOf("max" to max.toString()))
+    return when {
+        originalWord.isEmpty() -> StatusText(UiTextKey.CustomWordsMsgOriginalRequired)
+        originalWord.length > CUSTOM_WORD_MAX_LENGTH ->
+            tooLong(UiTextKey.CustomWordsMsgOriginalTooLong, CUSTOM_WORD_MAX_LENGTH)
+        translatedWord.isEmpty() -> StatusText(UiTextKey.CustomWordsMsgTranslatedRequired)
+        translatedWord.length > CUSTOM_WORD_MAX_LENGTH ->
+            tooLong(UiTextKey.CustomWordsMsgTranslatedTooLong, CUSTOM_WORD_MAX_LENGTH)
+        pronunciation.length > CUSTOM_PRONUNCIATION_MAX_LENGTH ->
+            tooLong(UiTextKey.CustomWordsMsgPronunciationTooLong, CUSTOM_PRONUNCIATION_MAX_LENGTH)
+        example.length > CUSTOM_EXAMPLE_MAX_LENGTH ->
+            tooLong(UiTextKey.CustomWordsMsgExampleTooLong, CUSTOM_EXAMPLE_MAX_LENGTH)
+        else -> null
     }
 }

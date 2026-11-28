@@ -33,6 +33,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.translator.TalknLearn.R
+import com.translator.TalknLearn.core.rememberTranslator
+import com.translator.TalknLearn.model.ui.AppLanguageState
+import com.translator.TalknLearn.model.ui.UiTextKey
 import kotlinx.coroutines.delay
 
 private val BgColor  = Color(0xFFFAFAFA)
@@ -48,7 +51,8 @@ private val Gold     = Color(0xFFFFD700)
  * Automatically navigates away after [DISPLAY_DURATION_MS] ms.
  */
 @Composable
-fun StartupScreen(onFinished: () -> Unit) {
+fun StartupScreen(appLanguageState: AppLanguageState, onFinished: () -> Unit) {
+    val t = rememberTranslator(appLanguageState)
     LaunchedEffect(Unit) {
         delay(DISPLAY_DURATION_MS)
         onFinished()
@@ -103,45 +107,12 @@ fun StartupScreen(onFinished: () -> Unit) {
         )
 
         // ── Main content: circle logo + text ──────────────────────────────
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+        StartupBranding(
+            t = t,
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.Center),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Navy circle with speech bubbles (ic_splash_logo vector)
-            Icon(
-                painter = painterResource(id = R.drawable.ic_splash_logo),
-                contentDescription = null,
-                tint = Color.Unspecified,
-                modifier = Modifier.size(160.dp)
-            )
-
-            Spacer(modifier = Modifier.height(36.dp))
-
-            Text(
-                text = "Translator",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = NavyBlue,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Translate & Learn",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Normal,
-                color = LightBlue,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(48.dp))
-        }
+                .align(Alignment.Center)
+        )
 
         // ── Bottom: three accent dots + short navy bar ────────────────────
         Column(
@@ -173,3 +144,45 @@ fun StartupScreen(onFinished: () -> Unit) {
 }
 
 private const val DISPLAY_DURATION_MS = 1800L
+
+/** Logo, app name and tagline in the middle of the startup screen. */
+@Composable
+private fun StartupBranding(t: (UiTextKey) -> String, modifier: Modifier = Modifier) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Spacer(modifier = Modifier.height(48.dp))
+
+        // Navy circle with speech bubbles (ic_splash_logo vector)
+        Icon(
+            painter = painterResource(id = R.drawable.ic_splash_logo),
+            contentDescription = null,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(160.dp)
+        )
+
+        Spacer(modifier = Modifier.height(36.dp))
+
+        Text(
+            text = t(UiTextKey.HomeTitle),
+            fontSize = 36.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = NavyBlue,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = t(UiTextKey.StartupTagline),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Normal,
+            color = LightBlue,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+    }
+}

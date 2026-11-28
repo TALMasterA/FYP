@@ -1,6 +1,5 @@
 package com.translator.TalknLearn.core
 
-import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.StatusText
 import com.translator.TalknLearn.model.ui.UiTextKey
 
@@ -10,9 +9,9 @@ import com.translator.TalknLearn.model.ui.UiTextKey
  * Maps technical exceptions to user-friendly messages following a consistent
  * format: [What failed] + [Why] + [What to do].
  *
- * New code should use [statusFromException]. It returns a [StatusText] that
- * the screen shows in the user's UI language. [fromException] is the older
- * English-only form, kept for callers that still hold plain strings.
+ * [statusFromException] returns a [StatusText] that the screen shows in the
+ * user's UI language. (The older English-only `fromException` was removed in
+ * Phase 1 part 5, once every caller used [StatusText].)
  *
  * Usage:
  * ```
@@ -27,12 +26,6 @@ object ErrorMessages {
      */
     fun statusFromException(e: Throwable?, fallback: UiTextKey = UiTextKey.ErrGeneric): StatusText =
         e?.let(::classify) ?: StatusText(fallback)
-
-    /**
-     * Convert an exception into a user-friendly error message (English only).
-     */
-    fun fromException(e: Throwable?, fallback: String = GENERIC_RETRY): String =
-        e?.let(::classify)?.resolve { BaseUiTexts[it.ordinal] } ?: fallback
 
     @Suppress("CyclomaticComplexMethod")
     private fun classify(e: Throwable): StatusText? {
@@ -87,8 +80,4 @@ object ErrorMessages {
                 message.contains("timeout") ||
                 message.contains("UNAVAILABLE")
     }
-
-    // ── Pre-built messages for common scenarios ─────────────────────────────
-
-    const val GENERIC_RETRY = "Something went wrong. Please try again."
 }

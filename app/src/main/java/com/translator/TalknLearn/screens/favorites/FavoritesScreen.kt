@@ -200,7 +200,9 @@ fun FavoritesScreen(
                     }) {
                         Icon(
                             imageVector = if (uiState.isDeleteMode) Icons.Default.DeleteForever else Icons.Default.Delete,
-                            contentDescription = if (uiState.isDeleteMode) "Confirm delete" else "Delete mode",
+                            contentDescription = t(
+                                if (uiState.isDeleteMode) UiTextKey.A11yConfirmDelete else UiTextKey.A11yDeleteMode
+                            ),
                             tint = if (uiState.isDeleteMode) MaterialTheme.colorScheme.error
                                    else MaterialTheme.colorScheme.onSurface
                         )
@@ -226,7 +228,7 @@ fun FavoritesScreen(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = errorMsg,
+                        text = errorMsg.resolve(t),
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(16.dp)
@@ -276,6 +278,7 @@ fun FavoritesScreen(
                         // Records tab
                         if (uiState.favorites.isEmpty()) {
                             EmptyStates.NoFavorites(
+                                t = t,
                                 message = t(UiTextKey.FavoritesEmpty),
                                 modifier = Modifier.fillMaxSize()
                             )
@@ -323,7 +326,7 @@ fun FavoritesScreen(
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 ) {
-                                    Text(text = "Load More")
+                                    Text(text = t(UiTextKey.FavoritesLoadMore))
                                 }
                         }
                     }
@@ -512,7 +515,7 @@ private fun FavoriteSessionBubble(
     ) {
         // Speaker label
         Text(
-            text = if (isPersonA) "Person A" else "Person B",
+            text = if (isPersonA) t(UiTextKey.ContinuousSpeakerAName) else t(UiTextKey.ContinuousSpeakerBName),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 8.dp)

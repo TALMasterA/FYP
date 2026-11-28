@@ -3,6 +3,7 @@ package com.translator.TalknLearn.screens.learning
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.translator.TalknLearn.core.ErrorMessages
 import com.translator.TalknLearn.core.decodeOrDefault
 import com.translator.TalknLearn.data.friends.SharedFriendsDataSource
 import com.translator.TalknLearn.data.history.SharedHistoryDataSource
@@ -20,6 +21,7 @@ import com.translator.TalknLearn.model.TranslationRecord
 import com.translator.TalknLearn.model.UserId
 import com.translator.TalknLearn.model.friends.FriendRelation
 import com.translator.TalknLearn.model.friends.SharedItemType
+import com.translator.TalknLearn.model.ui.StatusText
 import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.observability.FunnelAnalyticsTracker
@@ -35,7 +37,7 @@ import javax.inject.Inject
 
 data class LearningSheetUiState(
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val error: StatusText? = null,
     val primaryLanguageCode: String = "en-US",
     val targetLanguageCode: String = "",
     val content: String? = null,
@@ -50,8 +52,9 @@ data class LearningSheetUiState(
     val isQuizTaken: Boolean = false,
     val currentAttempt: QuizAttempt? = null,
     val quizLoading: Boolean = false,
-    val quizError: String? = null,
-    val coinRewardMessage: String? = null,
+    val quizError: StatusText? = null,
+    /** True after a submit that awarded coins; the screen then shows the coins dialog. */
+    val coinsAwarded: Boolean = false,
 
     // Generated quiz metadata
     val generatedQuizHistoryCountAtGenerate: Int? = null,
@@ -61,7 +64,7 @@ data class LearningSheetUiState(
     val friends: List<FriendRelation> = emptyList(),
     val isSharing: Boolean = false,
     val shareSuccessKey: UiTextKey? = null,
-    val shareError: String? = null,
+    val shareError: StatusText? = null,
     val showShareDialog: Boolean = false,
 )
 
@@ -113,7 +116,7 @@ class LearningSheetViewModel @Inject constructor(
                         pendingInitQuiz = false
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            error = "Not logged in",
+                            error = StatusText(UiTextKey.ErrorNotLoggedIn),
                             quizQuestions = emptyList(),
                             currentAttempt = null,
                             isQuizTaken = false,
@@ -201,7 +204,7 @@ class LearningSheetViewModel @Inject constructor(
                     .onFailure { e ->
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            error = e.message ?: "Load sheet failed"
+                            error = ErrorMessages.statusFromException(e, UiTextKey.LearningMsgSheetLoadFailed)
                         )
                     }
             } finally {
@@ -231,7 +234,7 @@ class LearningSheetViewModel @Inject constructor(
                 if (doc == null) {
                     _uiState.value = _uiState.value.copy(
                         quizLoading = false,
-                        quizError = "No quiz generated yet.",
+                        quizError = StatusText(UiTextKey.QuizMsgNotGenerated),
                         quizQuestions = emptyList(),
                         currentAttempt = null,
                         generatedQuizHistoryCountAtGenerate = null,
@@ -246,7 +249,7 @@ class LearningSheetViewModel @Inject constructor(
                 if (questions.isEmpty()) {
                     _uiState.value = _uiState.value.copy(
                         quizLoading = false,
-                        quizError = "Stored quiz is corrupted. Please regenerate.",
+                        quizError = StatusText(UiTextKey.QuizMsgCorrupted),
                         quizQuestions = emptyList(),
                         currentAttempt = null,
                         generatedQuizHistoryCountAtGenerate = doc.historyCountAtGenerate,
@@ -278,7 +281,7 @@ class LearningSheetViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,
-                    quizError = e.message ?: "Failed to load quiz"
+                    quizError = ErrorMessages.statusFromException(e, UiTextKey.QuizMsgLoadFailed)
                 )
             } finally {
                 quizReadyTrace.stop()
@@ -314,23 +317,19 @@ class LearningSheetViewModel @Inject constructor(
                 val coinsAwarded = quizRepo.awardCoinsIfEligible(UserId(uidNow), finalAttempt, latestSheetCount)
 
                 // Only show coins alert if coins were actually awarded
-                val coinMessage = if (coinsAwarded && finalAttempt.totalScore > 0) {
-                    "✨ You earned ${finalAttempt.totalScore} coins!"
-                } else {
-                    null
-                }
+                val showCoins = coinsAwarded && finalAttempt.totalScore > 0
 
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,
                     currentAttempt = finalAttempt,
                     isQuizTaken = true,
                     quizError = null,
-                    coinRewardMessage = coinMessage
+                    coinsAwarded = showCoins
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     quizLoading = false,
-                    quizError = e.message ?: "Failed to submit quiz"
+                    quizError = ErrorMessages.statusFromException(e, UiTextKey.QuizMsgSubmitFailed)
                 )
             }
         }
@@ -342,7 +341,7 @@ class LearningSheetViewModel @Inject constructor(
             currentAttempt = null,
             isQuizTaken = false,
             quizError = null,
-            coinRewardMessage = null
+            coinsAwarded = false
         )
     }
 
@@ -388,7 +387,7 @@ class LearningSheetViewModel @Inject constructor(
             // Guard: content must be loaded before sharing. Sharing with empty content
             // would produce an inbox item the recipient cannot read (no full text stored).
             if (state.content.isNullOrBlank()) {
-                _uiState.value = _uiState.value.copy(isSharing = false, shareError = "Sheet content is not ready. Please wait for it to load.")
+                _uiState.value = _uiState.value.copy(isSharing = false, shareError = StatusText(UiTextKey.LearningMsgShareNotReady))
                 return@launch
             }
 
@@ -406,7 +405,10 @@ class LearningSheetViewModel @Inject constructor(
             ).onSuccess {
                 _uiState.value = _uiState.value.copy(isSharing = false, shareSuccessKey = successKey)
             }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(isSharing = false, shareError = e.message ?: "Failed to share")
+                _uiState.value = _uiState.value.copy(
+                    isSharing = false,
+                    shareError = ErrorMessages.statusFromException(e, UiTextKey.ShareMsgFailed)
+                )
             }
         }
     }
