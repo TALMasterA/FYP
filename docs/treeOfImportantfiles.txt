@@ -196,6 +196,7 @@ FYP/
 │       │       │   │   ├── SharedSettingsDataSource.kt
 │       │       │   │   └── UserSettingsRepository.kt
 │       │       │   ├── ui/
+│       │       │   │   ├── DeviceLocaleMatcher.kt                ← First-launch UI language from the device locale
 │       │       │   │   ├── UiLanguageCacheStore.kt
 │       │       │   │   └── UiLanguageStateController.kt
 │       │       │   ├── user/
@@ -243,6 +244,7 @@ FYP/
 │       │       │   │   ├── LearningContentRepository.kt
 │       │       │   │   ├── LearningSheetsRepository.kt
 │       │       │   │   ├── ParseAndStoreQuizUseCase.kt
+│       │       │   │   ├── PromptRecordSelector.kt               ← Newest same-language history records for AI prompts
 │       │       │   │   ├── QuizGenerationRepository.kt
 │       │       │   │   └── QuizRepository.kt
 │       │       │   ├── ocr/
@@ -491,7 +493,7 @@ FYP/
 │       │   │   │   └── SharedHistoryLogicTest.kt          ← Shared history logic tests
 │       │   │   ├── learning/
 │       │   │   │   ├── ContentCleanerExtendedTest.kt
-│       │   │   │   ├── LearningContentPromptTest.kt        ← Prompt construction & takeLast(20) tests
+│       │   │   │   ├── LearningContentPromptTest.kt        ← Prompt construction & newest-20 record tests
 │       │   │   │   ├── LearningSheetsLogicTest.kt          ← Learning sheets logic tests
 │       │   │   │   ├── QuizGenerationRepositoryImplTest.kt ← Quiz generation repository tests
 │       │   │   │   ├── QuizParserTest.kt
@@ -509,6 +511,8 @@ FYP/
 │       │   │   │   ├── SettingsNotificationFieldsTest.kt  ← Notification fields, history clamping, parse defaults
 │       │   │   │   ├── SharedSettingsDataSourceLogicTest.kt ← Settings data source logic tests
 │       │   │   │   └── SharedSettingsLogicTest.kt          ← Shared settings logic tests
+│       │   │   ├── ui/
+│       │   │   │   └── DeviceLocaleMatcherTest.kt         ← Device locale → UI language matching tests
 │       │   │   ├── user/
 │       │   │   │   └── AccountDeletionGuardTest.kt        ← Server-side account deletion cleanup guard test
 │       │   │   └── wordbank/
@@ -557,6 +561,7 @@ FYP/
 │       │   │   │   ├── LearningCountLogicTest.kt
 │       │   │   │   ├── LearningGenerationRulesTest.kt
 │       │   │   │   ├── ParseAndStoreQuizUseCaseTest.kt
+│       │   │   │   ├── PromptRecordSelectorTest.kt        ← Newest same-language prompt record tests
 │       │   │   │   ├── QuizCoinEarningGuardTest.kt
 │       │   │   │   └── QuizFlowIntegrationTest.kt              ← Quiz flow integration tests
 │       │   │   ├── ocr/

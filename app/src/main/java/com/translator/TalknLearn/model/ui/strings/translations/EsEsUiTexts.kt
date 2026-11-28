@@ -750,5 +750,13 @@ val EsEsUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "Confirmar cambio de nombre",
     UiTextKey.SettingsUsernameConfirmMessage to "Cambiar el nombre de usuario impedirá cambiarlo durante 30 días. ¿Continuar?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "Contraseña gestionada por Google",
+    UiTextKey.SpeechListeningLabel to "Escuchando… habla ahora",
+    UiTextKey.QuizLeaveTitle to "¿Salir del cuestionario?",
+    UiTextKey.QuizLeaveMessage to "Se perderán tus respuestas.",
+    UiTextKey.QuizLeaveConfirm to "Salir",
+    UiTextKey.QuizLeaveStay to "Quedarse",
+
     // Extended Error Messages
 )

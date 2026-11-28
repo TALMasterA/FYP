@@ -1,21 +1,22 @@
 package com.translator.TalknLearn.data.learning
 
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.translator.TalknLearn.core.decodeOrDefault
 import com.translator.TalknLearn.data.cloud.CloudQuizClient
 import com.translator.TalknLearn.domain.learning.CoinEligibility
 import com.translator.TalknLearn.domain.learning.GeneratedQuizDoc
-import com.translator.TalknLearn.domain.learning.QuizRepository
 import com.translator.TalknLearn.domain.learning.QuizMetadata
+import com.translator.TalknLearn.domain.learning.QuizRepository
 import com.translator.TalknLearn.model.*
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -108,7 +109,7 @@ class FirestoreQuizRepository @Inject constructor(
         val snap = collectionRef(uid.value)
             .whereEqualTo("primaryLanguageCode", primaryCode.value)
             .whereEqualTo("targetLanguageCode", targetCode.value)
-            .orderBy("completedAt")
+            .orderBy("completedAt", Query.Direction.DESCENDING)
             .limit(limit)
             .get()
             .await()
@@ -144,7 +145,7 @@ class FirestoreQuizRepository @Inject constructor(
 
     override suspend fun getRecentAttempts(uid: UserId, limit: Long): List<QuizAttempt> {
         val snap = collectionRef(uid.value)
-            .orderBy("completedAt")
+            .orderBy("completedAt", Query.Direction.DESCENDING)
             .limit(limit)
             .get()
             .await()

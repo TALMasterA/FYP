@@ -1,5 +1,6 @@
 package com.translator.TalknLearn
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import com.translator.TalknLearn.core.composableRequireLogin
@@ -10,9 +11,9 @@ import com.translator.TalknLearn.screens.learning.LearningScreen
 import com.translator.TalknLearn.screens.learning.LearningSheetScreen
 import com.translator.TalknLearn.screens.learning.LearningViewModel
 import com.translator.TalknLearn.screens.learning.QuizScreen
+import com.translator.TalknLearn.screens.wordbank.CustomWordsViewModel
 import com.translator.TalknLearn.screens.wordbank.WordBankScreen
 import com.translator.TalknLearn.screens.wordbank.WordBankViewModel
-import com.translator.TalknLearn.screens.wordbank.CustomWordsViewModel
 
 /**
  * Navigation sub-graph: Learning sheets, quizzes, and word bank.
@@ -64,7 +65,8 @@ internal fun NavGraphBuilder.learningWordBankGraph(
         val targetCode  = backStackEntry.arguments?.getString("targetCode").orEmpty()
 
         if (primaryCode.isBlank() || targetCode.isBlank()) {
-            navController.popBackStack()
+            // Navigate in an effect, never directly during composition.
+            LaunchedEffect(Unit) { navController.popBackStack() }
             return@composableRequireLoginWithArgs
         }
 
@@ -93,7 +95,8 @@ internal fun NavGraphBuilder.learningWordBankGraph(
         val targetCode  = backStackEntry.arguments?.getString("targetCode").orEmpty()
 
         if (primaryCode.isBlank() || targetCode.isBlank()) {
-            navController.popBackStack()
+            // Navigate in an effect, never directly during composition.
+            LaunchedEffect(Unit) { navController.popBackStack() }
             return@composableRequireLoginWithArgs
         }
 

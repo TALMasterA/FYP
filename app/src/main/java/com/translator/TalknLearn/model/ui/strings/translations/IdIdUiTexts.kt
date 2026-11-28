@@ -750,5 +750,13 @@ val IdIdUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "Konfirmasi perubahan nama",
     UiTextKey.SettingsUsernameConfirmMessage to "Mengubah nama pengguna akan mencegah perubahan selama 30 hari. Lanjutkan?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "Kata sandi dikelola oleh Google",
+    UiTextKey.SpeechListeningLabel to "Mendengarkan… silakan bicara",
+    UiTextKey.QuizLeaveTitle to "Keluar dari kuis?",
+    UiTextKey.QuizLeaveMessage to "Jawaban Anda akan hilang.",
+    UiTextKey.QuizLeaveConfirm to "Keluar",
+    UiTextKey.QuizLeaveStay to "Tetap",
+
     // Extended Error Messages
 )

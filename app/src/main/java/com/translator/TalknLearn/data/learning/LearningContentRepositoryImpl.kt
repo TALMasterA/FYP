@@ -2,6 +2,7 @@ package com.translator.TalknLearn.data.learning
 
 import com.translator.TalknLearn.data.cloud.CloudGenAiClient
 import com.translator.TalknLearn.domain.learning.LearningContentRepository
+import com.translator.TalknLearn.domain.learning.PromptRecordSelector
 import com.translator.TalknLearn.model.DeploymentName
 import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.LanguageCode
@@ -20,9 +21,11 @@ class LearningContentRepositoryImpl @Inject constructor(
         targetLanguageCode: LanguageCode,
         records: List<TranslationRecord>
     ): GeneratedLearningContent {
-        val recent = records.takeLast(20).joinToString("\n") { r ->
-            "- [${r.sourceLang}→${r.targetLang}] ${r.sourceText} => ${r.targetText}"
-        }
+        val recent = PromptRecordSelector.buildBlock(
+            records = records,
+            languageCode = targetLanguageCode.value,
+            limit = PromptRecordSelector.LEARNING_SHEET_LIMIT
+        )
 
         val prompt = """
 Create a concise study sheet for target language: $targetLanguageCode.

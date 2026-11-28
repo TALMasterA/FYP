@@ -750,5 +750,13 @@ val DeDeUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "Namensänderung bestätigen",
     UiTextKey.SettingsUsernameConfirmMessage to "Die Änderung des Benutzernamens verhindert weitere Änderungen für 30 Tage. Fortfahren?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "Passwort wird von Google verwaltet",
+    UiTextKey.SpeechListeningLabel to "Hört zu… jetzt sprechen",
+    UiTextKey.QuizLeaveTitle to "Quiz verlassen?",
+    UiTextKey.QuizLeaveMessage to "Deine Antworten gehen verloren.",
+    UiTextKey.QuizLeaveConfirm to "Verlassen",
+    UiTextKey.QuizLeaveStay to "Bleiben",
+
     // Extended Error Messages
 )

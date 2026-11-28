@@ -750,5 +750,13 @@ val KoKrUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "사용자명 변경 확인",
     UiTextKey.SettingsUsernameConfirmMessage to "사용자명을 변경하면 30일간 변경할 수 없습니다. 계속하시겠습니까?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "비밀번호는 Google에서 관리합니다",
+    UiTextKey.SpeechListeningLabel to "듣는 중… 말씀하세요",
+    UiTextKey.QuizLeaveTitle to "퀴즈를 나가시겠습니까?",
+    UiTextKey.QuizLeaveMessage to "답변이 사라집니다.",
+    UiTextKey.QuizLeaveConfirm to "나가기",
+    UiTextKey.QuizLeaveStay to "계속하기",
+
     // Extended Error Messages
 )

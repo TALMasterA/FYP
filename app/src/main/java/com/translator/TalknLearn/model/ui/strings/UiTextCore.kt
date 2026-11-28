@@ -667,6 +667,14 @@ enum class UiTextKey {
     SettingsUsernameConfirmTitle,
     SettingsUsernameConfirmMessage,
 
+    // --- Phase 1 fixes ---
+    SettingsPasswordManagedByGoogle,
+    SpeechListeningLabel,
+    QuizLeaveTitle,
+    QuizLeaveMessage,
+    QuizLeaveConfirm,
+    QuizLeaveStay,
+
     // --- Extended Error Messages (localized) ---
 }
 

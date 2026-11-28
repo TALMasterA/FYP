@@ -14,17 +14,18 @@ Poster Showcase: [Click here](https://fyp.comp.hkbu.edu.hk/poster/2025/poster.ph
 
 The FYP has been graded. The current work is **portfolio polish**: a full UI/UX redesign plus client-only learning features. Client-only means no new paid AI or Azure calls. The plan and the status of each phase are in [docs/ROADMAP.md](docs/ROADMAP.md).
 
-- **Done:** all of the FYP features listed below.
+- **Done:**
+  - All of the FYP features listed below.
+  - Phase 0: the agent rules file (`AGENTS.md`), the roadmap, and JVM screenshot tests (Roborazzi).
 - **In progress:**
-  - Phase 0: the agent rules file (`AGENTS.md`), the roadmap, and JVM screenshot tests (Roborazzi) with baseline screenshots.
+  - Phase 1 part 1: correctness fixes (newest same-language records in AI prompts, quiz history order, system back, keyboard insets, Settings fixes, device language on first launch).
 - **Next:**
-  - Phase 1: correctness fixes (prompt record selection, quiz history order, back navigation, mic stop, localization sweep).
+  - Phase 1 part 2: the localization sweep.
   - Phase 2: the design system.
 - **Known problems** (each one is tracked in the roadmap):
-  - Learning-sheet and word-bank prompts use the oldest history records.
-  - System back skips in-screen sub-views.
   - Some English text bypasses the 17-language system.
   - Some color palettes fail WCAG contrast.
+  - The mic cannot be stopped mid-recognition; it stops by itself at the end of speech.
 
 --------------------------------------------------------------
 
@@ -272,7 +273,7 @@ gh pr checkout "PR number"
 ## 🧪 Testing
 
 **Coverage:**
-- **Android:** 197 test suites, 2,491 unit tests (from the latest `testDebugUnitTest` report, including 7 Roborazzi screenshot tests); Kover line coverage 82.93% (35% CI floor, non-blocking)
+- **Android:** 199 test suites, 2,504 unit tests (from the latest `testDebugUnitTest` report, including 7 Roborazzi screenshot tests); Kover line coverage 82.93% (35% CI floor, non-blocking)
 - **Backend:** 18 Jest suites, 213 tests plus 5 Firestore emulator cases
 
 See `docs/TEST_COVERAGE.md` for detailed breakdown, including Kover tasks (`koverHtmlReportDebug`, `koverXmlReportDebug`, `koverVerifyDebug`) and the `:macrobenchmark` startup benchmark module (run locally with `:macrobenchmark:connectedBenchmarkAndroidTest`; CI assembles only).

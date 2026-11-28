@@ -1,6 +1,7 @@
 package com.translator.TalknLearn.data.wordbank
 
 import com.translator.TalknLearn.data.cloud.CloudGenAiClient
+import com.translator.TalknLearn.domain.learning.PromptRecordSelector
 import com.translator.TalknLearn.model.GeneratedLearningContent
 import com.translator.TalknLearn.model.TranslationRecord
 import javax.inject.Inject
@@ -14,9 +15,11 @@ class WordBankGenerationRepository @Inject constructor(
         targetLanguageCode: String,
         records: List<TranslationRecord>
     ): GeneratedLearningContent {
-        val recent = records.takeLast(30).joinToString("\n") { r ->
-            "- [${r.sourceLang}→${r.targetLang}] ${r.sourceText} => ${r.targetText}"
-        }
+        val recent = PromptRecordSelector.buildBlock(
+            records = records,
+            languageCode = targetLanguageCode,
+            limit = PromptRecordSelector.WORD_BANK_LIMIT
+        )
 
         val prompt = """
 You are creating a WORD BANK from the user's translation history.

@@ -181,3 +181,31 @@ fun CoinsEarnedDialog(
         }
     )
 }
+
+/**
+ * Asks before leaving a quiz that has answers, because leaving drops the
+ * attempt (it is only saved on submit).
+ */
+@Composable
+fun QuizLeaveConfirmDialog(
+    isVisible: Boolean,
+    onLeave: () -> Unit,
+    onStay: () -> Unit,
+    appLanguageState: AppLanguageState,
+) {
+    if (!isVisible) return
+
+    val t = rememberTranslator(appLanguageState)
+
+    AlertDialog(
+        onDismissRequest = onStay,
+        title = { Text(t(UiTextKey.QuizLeaveTitle)) },
+        text = { Text(t(UiTextKey.QuizLeaveMessage)) },
+        confirmButton = {
+            TextButton(onClick = onLeave) { Text(t(UiTextKey.QuizLeaveConfirm)) }
+        },
+        dismissButton = {
+            Button(onClick = onStay) { Text(t(UiTextKey.QuizLeaveStay)) }
+        }
+    )
+}

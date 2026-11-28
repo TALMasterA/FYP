@@ -15,8 +15,8 @@ the FYP was graded. Keep the status table up to date in every PR.
 
 | Phase | Scope | Status |
 | --- | --- | --- |
-| 0 | Agent docs (AGENTS.md), roadmap, screenshot tests, baseline screenshots | In review |
-| 1 | Correctness fixes, no new look | Not started |
+| 0 | Agent docs (AGENTS.md), roadmap, screenshot tests, baseline screenshots | Done |
+| 1 | Correctness fixes, no new look | Part 1 in review; part 2 (localization sweep) next |
 | 2 | Design system: mockup approval, theme, component kit, navigation shell | Not started |
 | 3 | Home dashboard and translation tools | Not started |
 | 4 | Learning loop: review (SRS), streak, daily goal, stats, quiz feedback | Not started |
@@ -40,17 +40,28 @@ phase that carries it out.
 4. **Roborazzi screenshot tests** run on the JVM, so every UI change can be seen without an emulator ([ADR 0006](adr/0006-roborazzi-screenshot-tests.md)).
 5. **A small in-house Markdown renderer** for learning sheets (headings, bullets, bold), unit-tested. The sheet format does not need a library.
 
-## Known bugs that Phase 1 fixes
+## Phase 1 — correctness fixes
 
-- **Learning-sheet and word-bank prompts send the oldest history records**, and the records cover all languages.
-  - Cause: `takeLast(N)` is used on a list sorted newest first.
-  - Locations: `LearningContentRepositoryImpl.kt`, `WordBankGenerationRepository.kt` and `LearningViewModel.generateFor`.
-- **`FirestoreQuizRepository.getRecentAttempts` and `getAttemptsByLanguagePair` return the oldest attempts**, because they sort in ascending order.
-- **System back does not close in-screen sub-views** (WordBank, the History session view), and it leaves a quiz without asking.
-- **The mic button shows "Stop" while listening, but it is disabled**, so the user cannot stop.
-- **The "regeneration blocked" dialog in the learning sheet is never shown.**
-- **The Tester Feedback button shows in release builds.**
-- **English text bypasses the 17-language system:** about 70 strings in ViewModels and about 30 `contentDescription`s.
+Phase 1 is split into two PRs so each one stays small enough to review.
+
+**Part 1 (fixed):**
+- **Learning-sheet and word-bank prompts sent the oldest history records**, in all languages.
+  - Cause: `takeLast(N)` on a list sorted newest first.
+  - Fix: `domain/learning/PromptRecordSelector.kt` keeps only records in the target language and sorts by timestamp itself, so the input order does not matter. Tested in `PromptRecordSelectorTest`.
+- **Quiz history returned the oldest attempts.** `FirestoreQuizRepository` now sorts `completedAt` descending. The composite index already exists in `fyp-backend/firestore.indexes.json`, so no deploy is needed.
+- **System back** now closes the WordBank sub-views and the History session view, and asks "Leave quiz?" when a quiz has answers.
+- **`popBackStack()` ran during composition** in `LearningWordBankGraph.kt` when an argument was blank. It now runs in a `LaunchedEffect`.
+- **The "regeneration blocked" dialog** in the learning sheet now shows when new records are needed.
+- **Settings:** Tester Feedback shows only in debug builds. Reset Password shows only for email accounts; Google accounts see "Password managed by Google".
+- **Keyboard:** `adjustResize` plus the IME inset in `StandardScreenScaffold`, so the keyboard no longer covers Chat, Login or word inputs.
+- **First launch** uses the device language when the app has texts for it (`data/ui/DeviceLocaleMatcher.kt`). The choice is not saved, so it follows the device until the user picks a language.
+
+**Decision — the mic has no real Stop.** Azure's `recognizeOnceAsync()` stops by itself at the end of speech and has no safe cancel call. Closing the native recognizer mid-call cannot be tested without a device. So instead of a disabled Stop icon, the button now shows a clear "Listening… speak now" state. A real start/stop toggle comes with continuous recognition in Phase 3.
+
+**Decision — Detekt allows PascalCase `@Composable` names** (`FunctionNaming.ignoreAnnotated: ['Composable']` in `config/detekt/detekt.yml`). This is the Compose naming rule. Without it, every new composable is a Detekt issue.
+
+**Part 2 (next PR) — localization sweep:**
+- About 70 English strings in ViewModels and about 30 English `contentDescription`s still bypass the 17-language system. They move to `UiTextKey`.
 
 ## Later (needs a backend deploy or paid calls)
 

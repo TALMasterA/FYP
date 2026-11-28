@@ -8,23 +8,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.translator.TalknLearn.model.ui.AppLanguageState
-import com.translator.TalknLearn.model.ui.UiTextKey
 import com.translator.TalknLearn.model.ui.CantoneseUiTexts
-import com.translator.TalknLearn.model.ui.ZhTwUiTexts
-import com.translator.TalknLearn.model.ui.ZhCnUiTexts
-import com.translator.TalknLearn.model.ui.JaJpUiTexts
-import com.translator.TalknLearn.model.ui.KoKrUiTexts
-import com.translator.TalknLearn.model.ui.FrFrUiTexts
 import com.translator.TalknLearn.model.ui.DeDeUiTexts
 import com.translator.TalknLearn.model.ui.EsEsUiTexts
-import com.translator.TalknLearn.model.ui.IdIdUiTexts
-import com.translator.TalknLearn.model.ui.ViVnUiTexts
-import com.translator.TalknLearn.model.ui.ThThUiTexts
 import com.translator.TalknLearn.model.ui.FilPhUiTexts
+import com.translator.TalknLearn.model.ui.FrFrUiTexts
+import com.translator.TalknLearn.model.ui.IdIdUiTexts
+import com.translator.TalknLearn.model.ui.ItItUiTexts
+import com.translator.TalknLearn.model.ui.JaJpUiTexts
+import com.translator.TalknLearn.model.ui.KoKrUiTexts
 import com.translator.TalknLearn.model.ui.MsMyUiTexts
 import com.translator.TalknLearn.model.ui.PtBrUiTexts
-import com.translator.TalknLearn.model.ui.ItItUiTexts
 import com.translator.TalknLearn.model.ui.RuRuUiTexts
+import com.translator.TalknLearn.model.ui.ThThUiTexts
+import com.translator.TalknLearn.model.ui.UiTextKey
+import com.translator.TalknLearn.model.ui.ViVnUiTexts
+import com.translator.TalknLearn.model.ui.ZhCnUiTexts
+import com.translator.TalknLearn.model.ui.ZhTwUiTexts
+import java.util.Locale
 
 typealias UiTextMap = Map<UiTextKey, String>
 typealias UpdateAppLanguage = (String, UiTextMap) -> Unit
@@ -66,7 +67,14 @@ fun rememberUiLanguageState(
     }
 
     LaunchedEffect(Unit) {
-        val defaultCode = uiLanguages[0].first
+        // Before the user picks a UI language, follow the device language when the
+        // app has texts for it. The choice is not saved, so it keeps following the
+        // device until the user picks one in the language menu.
+        val defaultCode = DeviceLocaleMatcher.match(
+            locale = Locale.getDefault(),
+            supported = hardcodedUiTexts.keys + uiLanguages[0].first,
+            fallback = uiLanguages[0].first
+        )
         val selected = cache.getSelectedLanguage(defaultCode)
 
         // All languages are now hardcoded — instant restore, no cache-hash check needed.

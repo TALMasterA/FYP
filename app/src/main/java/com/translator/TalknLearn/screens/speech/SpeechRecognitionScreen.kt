@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
@@ -20,7 +21,6 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,16 +47,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.translator.TalknLearn.core.RecordAudioPermissionRequest
 import com.translator.TalknLearn.core.RequestCameraPermission
 import com.translator.TalknLearn.core.StandardScreenScaffold
+import com.translator.TalknLearn.core.UiConstants
+import com.translator.TalknLearn.core.rememberHapticFeedback
 import com.translator.TalknLearn.core.rememberUiTextFunctions
 import com.translator.TalknLearn.data.azure.AzureLanguageConfig
 import com.translator.TalknLearn.model.ui.AppLanguageState
-import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.model.ui.BaseUiTexts
 import com.translator.TalknLearn.model.ui.UiTextKey
-import kotlinx.coroutines.delay
-import com.translator.TalknLearn.core.UiConstants
-import com.translator.TalknLearn.core.rememberHapticFeedback
+import com.translator.TalknLearn.model.user.AuthState
 import com.translator.TalknLearn.ui.theme.AppSpacing
+import kotlinx.coroutines.delay
 
 /** Maximum number of candidate languages for auto-detection (Azure SDK limit) */
 private const val MAX_AUTO_DETECT_LANGUAGES = 4
@@ -324,7 +324,8 @@ fun SpeechRecognitionScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
                     ) {
-                        // Microphone button (icon-only)
+                        // Microphone button (icon-only; shows a label while listening)
+                        val isListening = recognizePhase == RecognizePhase.Listening
                         Button(
                             onClick = {
                                 haptic.click()
@@ -342,15 +343,27 @@ fun SpeechRecognitionScreen(
                             enabled = !isRecognizing,
                             modifier = Modifier.weight(1f),
                             contentPadding = PaddingValues(vertical = 14.dp),
-                            colors = if (recognizePhase == RecognizePhase.Listening)
-                                ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                            else ButtonDefaults.buttonColors(),
+                            // While listening the button is disabled (Azure's one-shot
+                            // recognition has no stop call), so the disabled colors are
+                            // used to show a clear "live" state instead of a grey button
+                            // with a Stop icon that cannot be tapped.
+                            colors = if (isListening) {
+                                ButtonDefaults.buttonColors(
+                                    disabledContainerColor = MaterialTheme.colorScheme.errorContainer,
+                                    disabledContentColor = MaterialTheme.colorScheme.onErrorContainer,
+                                )
+                            } else {
+                                ButtonDefaults.buttonColors()
+                            },
                         ) {
                             Icon(
-                                imageVector = if (recognizePhase == RecognizePhase.Listening)
-                                    Icons.Filled.Stop else Icons.Filled.Mic,
-                                contentDescription = t(UiTextKey.AzureRecognizeButton),
+                                imageVector = Icons.Filled.Mic,
+                                contentDescription = if (isListening) null else t(UiTextKey.AzureRecognizeButton),
                             )
+                            if (isListening) {
+                                Spacer(modifier = Modifier.width(AppSpacing.small))
+                                Text(text = t(UiTextKey.SpeechListeningLabel))
+                            }
                         }
 
                         // Camera / OCR button (icon-only)

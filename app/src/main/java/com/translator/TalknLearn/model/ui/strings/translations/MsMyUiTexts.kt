@@ -750,5 +750,13 @@ val MsMyUiTexts: Map<UiTextKey, String> = mapOf(
     UiTextKey.SettingsUsernameConfirmTitle to "Sahkan pertukaran nama pengguna",
     UiTextKey.SettingsUsernameConfirmMessage to "Menukar nama pengguna tidak boleh ditukar selama 30 hari. Teruskan?",
 
+    // Phase 1 fixes
+    UiTextKey.SettingsPasswordManagedByGoogle to "Kata laluan diurus oleh Google",
+    UiTextKey.SpeechListeningLabel to "Mendengar… sila bercakap",
+    UiTextKey.QuizLeaveTitle to "Keluar dari kuiz?",
+    UiTextKey.QuizLeaveMessage to "Jawapan anda akan hilang.",
+    UiTextKey.QuizLeaveConfirm to "Keluar",
+    UiTextKey.QuizLeaveStay to "Kekal",
+
     // Extended Error Messages
 )
